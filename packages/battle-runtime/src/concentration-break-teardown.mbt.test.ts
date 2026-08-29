@@ -384,7 +384,7 @@ function concentrationSpellCastAct(state: BattleRuntimeSession): ReturnType<
     } =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "blurAttackRollDefense",
+        "perceptionGatedAttackRollDefense",
   );
   if (act === undefined) {
     throw new Error("Expected Concentration spell cast act.");
@@ -574,7 +574,7 @@ function stateWithPreexistingBlurConcentration(
         kind: "activeEffect",
         ownerId: spellCasterId,
         effect: {
-          kind: "blurred",
+          kind: "perceptionGatedAttackRollDefense",
           sourceProcedureRef: procedureRef,
           sourceCombatantId: spellCasterId,
           expiresAt: {
@@ -619,7 +619,7 @@ function concentrationBreakTeardownProjection(
 ): ConcentrationBreakTeardownProjection {
   const caster = requireCombatant(state.battle.state, spellCasterId);
   const blurredEffect = caster.activeEffects.find(
-    (effect) => effect.kind === "blurred",
+    (effect) => effect.kind === "perceptionGatedAttackRollDefense",
   );
   return {
     scenario: state.scenario,
@@ -640,7 +640,7 @@ function concentrationBreakTeardownProjection(
 
 function blurredEffectCount(state: BattleState): number {
   return requireCombatant(state, spellCasterId).activeEffects.filter(
-    (effect) => effect.kind === "blurred",
+    (effect) => effect.kind === "perceptionGatedAttackRollDefense",
   ).length;
 }
 

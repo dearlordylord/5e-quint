@@ -68,10 +68,10 @@ import {
   type CombatantId,
 } from "./index.ts";
 import type {
-  BattleCloudkillAreaHazardDamageRollHole,
-  BattleCloudkillAreaHazardSavingThrowOutcomeHole,
-  BattleCloudkillMovementFill,
-  BattleCloudkillMovementHole,
+  BattleTranslatingPersistentAreaSaveDamageRollHole,
+  BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole,
+  BattlePersistentAreaSourceTurnTranslationFill,
+  BattlePersistentAreaSourceTurnTranslationHole,
 } from "./battle-state-execution.ts";
 
 type CloudkillMbtTarget = "none" | "source" | "primary" | "secondary";
@@ -142,7 +142,10 @@ type CloudkillMbtRuntimeState = {
 
 type CloudkillEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "cloudkillAreaHazard" }
+  {
+    readonly kind: "persistentAreaSaveDamage";
+    readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+  }
 >;
 
 const secondaryTargetId = combatantId("cloudkill-mbt-secondary-target");
@@ -570,13 +573,19 @@ function beginSourceTurnMovement(
     frontier = endTurn({ state: boundaryState, actorId: boundaryActorId });
   }
   requireNeedsHoles(frontier, "Expected Cloudkill movement frontier.");
-  const movementHole = requireResultHole(frontier, "cloudkillMovement");
+  const movementHole = requireResultHole(
+    frontier,
+    "persistentAreaSourceTurnTranslation",
+  );
   expect(movementHole).toMatchObject({
     distanceFeet: movementFeet(10),
     directionRequirement: "awayFromSource",
     requiresTableSpatialFact: true,
   });
-  const movementFill = cloudkillMovementFill(movementHole, orderedTargets);
+  const movementFill = persistentAreaSourceTurnTranslationFill(
+    movementHole,
+    orderedTargets,
+  );
   const result = endTurn({
     state: boundaryState,
     actorId: boundaryActorId,
@@ -622,7 +631,7 @@ function resolvePendingSave(
   );
   const fill = singleTargetSavingThrowOutcomeFill(
     saveHole,
-    saveHole.cloudkillAreaHazard.targetId,
+    saveHole.persistentAreaSaveDamage.targetId,
     succeeded,
   );
   const fills = [...pending.fills, fill];
@@ -667,7 +676,7 @@ function resolvePendingDamage(
   const damageHole = cloudkillDamageHole(
     requireResultHole(pending.result, "rolledDice"),
   );
-  const dice = damageHole.cloudkillAreaHazard.damage.expr.dice;
+  const dice = damageHole.persistentAreaSaveDamage.damage.expr.dice;
   const fill = damageRollFillWithGroups(damageHole, [
     Array.from({ length: dice }, () => damageDiePip),
   ]);
@@ -767,7 +776,7 @@ function disperseWithStrongWind(
   const act = discoverBattleActs(state.battle).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "disperseCloudkill",
+      candidate.subject.command === "endPersistentAreaSaveDamageForEnvironment",
   );
   if (act === undefined) {
     throw new Error("Expected active Cloudkill strong-wind dispersal act.");
@@ -872,7 +881,7 @@ function activeCloudkill(state: BattleState): CloudkillEffect | undefined {
     .flatMap((combatant) => combatant.activeEffects)
     .find(
       (effect): effect is CloudkillEffect =>
-        effect.kind === "cloudkillAreaHazard" &&
+        effect.kind === "persistentAreaSaveDamage" &&
         effect.sourceCombatantId === spellCasterId,
     );
 }
@@ -906,19 +915,21 @@ function pendingTargetFromResult(
     return "source";
   }
   const save = result.holes.find(
-    (hole): hole is BattleCloudkillAreaHazardSavingThrowOutcomeHole =>
-      hole.kind === "savingThrowOutcome" && "cloudkillAreaHazard" in hole,
+    (
+      hole,
+    ): hole is BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole =>
+      hole.kind === "savingThrowOutcome" && "persistentAreaSaveDamage" in hole,
   );
   if (save !== undefined) {
-    return targetRole(save.cloudkillAreaHazard.targetId);
+    return targetRole(save.persistentAreaSaveDamage.targetId);
   }
   const damage = result.holes.find(
-    (hole): hole is BattleCloudkillAreaHazardDamageRollHole =>
-      hole.kind === "rolledDice" && "cloudkillAreaHazard" in hole,
+    (hole): hole is BattleTranslatingPersistentAreaSaveDamageRollHole =>
+      hole.kind === "rolledDice" && "persistentAreaSaveDamage" in hole,
   );
   return damage === undefined
     ? "none"
-    : targetRole(damage.cloudkillAreaHazard.targetId);
+    : targetRole(damage.persistentAreaSaveDamage.targetId);
 }
 
 function targetRole(targetId: CombatantId | undefined): CloudkillMbtTarget {
@@ -928,12 +939,12 @@ function targetRole(targetId: CombatantId | undefined): CloudkillMbtTarget {
   return "none";
 }
 
-function cloudkillMovementFill(
-  hole: BattleCloudkillMovementHole,
+function persistentAreaSourceTurnTranslationFill(
+  hole: BattlePersistentAreaSourceTurnTranslationHole,
   affectedCombatantIdsInResolutionOrder: readonly CombatantId[],
-): BattleCloudkillMovementFill {
+): BattlePersistentAreaSourceTurnTranslationFill {
   return {
-    kind: "cloudkillMovement",
+    kind: "persistentAreaSourceTurnTranslation",
     holeId: hole.holeId,
     value: { affectedCombatantIdsInResolutionOrder },
   };
@@ -944,8 +955,8 @@ function cloudkillSaveHole(
     import("./index.ts").BattleHole,
     { readonly kind: "savingThrowOutcome" }
   >,
-): BattleCloudkillAreaHazardSavingThrowOutcomeHole {
-  if (!("cloudkillAreaHazard" in hole)) {
+): BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole {
+  if (!("persistentAreaSaveDamage" in hole)) {
     throw new Error("Expected Cloudkill saving throw hole.");
   }
   return hole;
@@ -956,8 +967,8 @@ function cloudkillDamageHole(
     import("./index.ts").BattleHole,
     { readonly kind: "rolledDice" }
   >,
-): BattleCloudkillAreaHazardDamageRollHole {
-  if (!("cloudkillAreaHazard" in hole)) {
+): BattleTranslatingPersistentAreaSaveDamageRollHole {
+  if (!("persistentAreaSaveDamage" in hole)) {
     throw new Error("Expected Cloudkill damage roll hole.");
   }
   return hole;

@@ -9,16 +9,16 @@ import type { Ability, Size } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 import {
   type BattleActiveEffect,
-  type BattleCloudkillAreaHazardTrigger,
-  type BattleInsectPlagueAreaHazardTrigger,
-  type BattleSleetStormAreaHazardTrigger,
+  type BattlePersistentAreaSaveCompositeTrigger,
+  type BattleStationaryPersistentAreaSaveDamageTrigger,
+  type BattleTranslatingPersistentAreaSaveDamageTrigger,
   type BattleSpellTargetListRelationshipFact,
 } from "./battle-state-execution.ts";
 import {
-  insectPlagueAreaHazardSavingThrowOutcomeHole,
-  cloudkillAreaHazardSavingThrowOutcomeHole,
+  stationaryPersistentAreaSaveDamageSavingThrowOutcomeHole,
+  translatingPersistentAreaSaveDamageSavingThrowOutcomeHole,
 } from "./battle-reducer/persistent-area-save-damage.ts";
-import { sleetStormAreaHazardSavingThrowOutcomeHole } from "./battle-reducer/persistent-spatial-spell-procedures.ts";
+import { persistentAreaSaveCompositeSavingThrowOutcomeHole } from "./battle-reducer/persistent-spatial-spell-procedures.ts";
 import {
   battleAreaId,
   battleActSpellPresentation,
@@ -28,7 +28,7 @@ import {
   discoverBattleActs,
   type AvailableBattleAct,
   type BattleAreaId,
-  type BattleAntimagicFieldTransitWitness,
+  type BattleMagicSuppressionTransitWitness,
   type BattleFill,
   type BattleHole,
   type BattleLineDirectionId,
@@ -131,6 +131,28 @@ import {
   characterSpellProcedure,
   type SpellProcedureExecution,
 } from "./character-execution-admission.ts";
+import type {
+  BattleStationaryPersistentAreaSaveDamageTrigger as BattleStationaryPersistentAreaMembershipTrigger,
+  BattleTranslatingPersistentAreaSaveDamageTrigger as BattleTranslatingPersistentAreaMembershipTrigger,
+} from "./battle-subjects.ts";
+
+type StationaryPersistentAreaSaveDamageSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "persistentAreaSaveDamageSave";
+    readonly areaMembershipTrigger: BattleStationaryPersistentAreaMembershipTrigger;
+  }
+>;
+
+type TranslatingPersistentAreaSaveDamageSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "persistentAreaSaveDamageSave";
+    readonly areaMembershipTrigger: BattleTranslatingPersistentAreaMembershipTrigger;
+  }
+>;
 function spellInvocationForAvailableAct(
   _state: BattleState,
   act: AvailableBattleAct,
@@ -140,15 +162,21 @@ function spellInvocationForAvailableAct(
 
 type SleetStormAreaHazardEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "sleetStormAreaHazard" }
+  { readonly kind: "persistentAreaSaveComposite" }
 >;
 type InsectPlagueAreaHazardEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "insectPlagueAreaHazard" }
+  {
+    readonly kind: "persistentAreaSaveDamage";
+    readonly lifecycle: { readonly kind: "stationary" };
+  }
 >;
 type CloudkillAreaHazardEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "cloudkillAreaHazard" }
+  {
+    readonly kind: "persistentAreaSaveDamage";
+    readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+  }
 >;
 const tableSelectedPointAreaOriginAnchor = {
   kind: "tableSelectedPoint",
@@ -275,15 +303,21 @@ function characterSpellProcedureObjectId(
       : undefined;
 }
 
-export function magicWeaponTargetItemFill(
-  hole: Extract<BattleHole, { readonly kind: "magicWeaponTargetItem" }>,
+export function weaponAttackDamageEnhancementTargetItemFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "weaponAttackDamageEnhancementTargetItem" }
+  >,
   target: {
     readonly holderCombatantId: CombatantId;
     readonly itemId: BattleObjectId;
   },
-): Extract<BattleFill, { readonly kind: "magicWeaponTargetItem" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "weaponAttackDamageEnhancementTargetItem" }
+> {
   return {
-    kind: "magicWeaponTargetItem",
+    kind: "weaponAttackDamageEnhancementTargetItem",
     holeId: hole.holeId,
     value: {
       kind: "nonmagicalWeaponItem",
@@ -316,14 +350,14 @@ export function bonusActionDashSpellAct(input: {
   return act;
 }
 
-export function jumpMovementReplacementAct(state: BattleState): ReturnType<
+export function fixedCostMovementReplacementAct(state: BattleState): ReturnType<
   typeof discoverBattleActCandidates
 >[number] & {
   readonly subject: Extract<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "jumpMovementReplacement";
+      readonly command: "fixedCostMovementReplacement";
     }
   >;
 } {
@@ -341,7 +375,7 @@ export function maybeJumpMovementReplacementAct(state: BattleState):
         BattleSubject,
         {
           readonly tag: "runtimeCommand";
-          readonly command: "jumpMovementReplacement";
+          readonly command: "fixedCostMovementReplacement";
         }
       >;
     })
@@ -356,13 +390,13 @@ function isJumpMovementReplacementAct(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "jumpMovementReplacement";
+      readonly command: "fixedCostMovementReplacement";
     }
   >;
 } {
   return (
     candidate.subject.tag === "runtimeCommand" &&
-    candidate.subject.command === "jumpMovementReplacement"
+    candidate.subject.command === "fixedCostMovementReplacement"
   );
 }
 
@@ -453,7 +487,7 @@ export function damageTypeChoiceFill(
   return { kind: "damageTypeChoice", holeId: hole.holeId, value };
 }
 
-export function spiritualWeaponTargetFill(
+export function spatialMeleeSpellAttackProxyTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   _spellId: string,
   casterId: CombatantId,
@@ -468,7 +502,7 @@ export function spiritualWeaponTargetFill(
     value: targetId,
     spatialFacts: [
       {
-        kind: "spiritualWeaponTargetWithinForceReach",
+        kind: "spatialMeleeSpellAttackProxyTargetWithinReach",
         casterId,
         targetId,
         sourceProcedureRef,
@@ -571,7 +605,7 @@ export function teleportDestinationFill(input: {
   readonly hole: Extract<BattleHole, { readonly kind: "teleportDestination" }>;
   readonly destinationId?: string;
   readonly distanceFeet?: number;
-  readonly antimagicFieldTransit?: readonly BattleAntimagicFieldTransitWitness[];
+  readonly magicSuppressionTransit?: readonly BattleMagicSuppressionTransitWitness[];
 }): Extract<BattleFill, { readonly kind: "teleportDestination" }> {
   return {
     kind: "teleportDestination",
@@ -586,7 +620,7 @@ export function teleportDestinationFill(input: {
         input.destinationId ?? "misty-step-destination",
       ),
       distanceFeet: movementFeet(input.distanceFeet ?? 30),
-      antimagicFieldTransit: input.antimagicFieldTransit ?? [],
+      magicSuppressionTransit: input.magicSuppressionTransit ?? [],
     },
   };
 }
@@ -1066,7 +1100,7 @@ export function faerieFireObjectOutlineFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "faerieFireArea",
+        kind: "saveGatedTargetProjectionArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: [],
         affectedObjectIds,
@@ -1145,7 +1179,7 @@ export function greaseSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "greaseGroundArea",
+        kind: "persistentAreaSaveConditionArea",
         areaId: greaseAreaId,
         originAnchorId: spellCasterId,
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
@@ -1155,7 +1189,7 @@ export function greaseSavingThrowOutcomeFill(
   };
 }
 
-export function gustOfWindLineSavingThrowOutcomeFill(
+export function directionalPersistentAreaSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   outcomes: readonly {
     readonly targetId: CombatantId;
@@ -1166,7 +1200,7 @@ export function gustOfWindLineSavingThrowOutcomeFill(
     readonly directionId?: BattleLineDirectionId;
     readonly creaturePushes?: Extract<
       BattleSpellAreaChoice,
-      { readonly kind: "gustOfWindLineArea" }
+      { readonly kind: "directionalPersistentAreaArea" }
     >["creaturePushes"];
   } = {},
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
@@ -1178,7 +1212,7 @@ export function gustOfWindLineSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "gustOfWindLineArea",
+        kind: "directionalPersistentAreaArea",
         areaId: options.areaId ?? gustOfWindAreaId,
         directionId: options.directionId ?? gustOfWindNorthDirectionId,
         originAnchorId: spellCasterId,
@@ -1202,12 +1236,18 @@ export function gustOfWindLineSavingThrowOutcomeFill(
   };
 }
 
-export function gustOfWindLineDirectionChoiceFill(
-  hole: Extract<BattleHole, { readonly kind: "gustOfWindLineDirectionChoice" }>,
+export function directionalPersistentAreaDirectionChoiceFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "directionalPersistentAreaDirectionChoice" }
+  >,
   directionId: BattleLineDirectionId = gustOfWindEastDirectionId,
-): Extract<BattleFill, { readonly kind: "gustOfWindLineDirectionChoice" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "directionalPersistentAreaDirectionChoice" }
+> {
   return {
-    kind: "gustOfWindLineDirectionChoice",
+    kind: "directionalPersistentAreaDirectionChoice",
     holeId: hole.holeId,
     value: { directionId },
   };
@@ -1221,7 +1261,7 @@ export function flamingSphereAreaFill(
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "flamingSphereArea", areaId, originAnchor },
+    value: { kind: "pointOriginSphereDiameterArea", areaId, originAnchor },
   };
 }
 
@@ -1233,7 +1273,7 @@ export function spikeGrowthAreaFill(
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "spikeGrowthArea", areaId, originAnchor },
+    value: { kind: "anchoredPointOriginSphereArea", areaId, originAnchor },
   };
 }
 
@@ -1245,40 +1285,43 @@ export function moonbeamAreaFill(
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "moonbeamCylinderArea", areaId, originAnchor },
+    value: { kind: "anchoredPointOriginCylinderArea", areaId, originAnchor },
   };
 }
 
 export function sleetStormAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   areaId = sleetStormAreaId,
+  originAnchor: BattleSpellAreaOriginAnchor = tableSelectedPointAreaOriginAnchor,
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "sleetStormCylinderArea", areaId },
+    value: { kind: "anchoredPointOriginCylinderArea", areaId, originAnchor },
   };
 }
 
 export function insectPlagueAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   areaId = insectPlagueAreaId,
+  originAnchor: BattleSpellAreaOriginAnchor = tableSelectedPointAreaOriginAnchor,
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "insectPlagueSphereArea", areaId },
+    value: { kind: "anchoredPointOriginSphereArea", areaId, originAnchor },
   };
 }
 
 export function cloudkillAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   areaId = cloudkillAreaId,
+  originAnchor: BattleSpellAreaOriginAnchor = tableSelectedPointAreaOriginAnchor,
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "cloudkillSphereArea", areaId },
+    value: { kind: "anchoredPointOriginSphereArea", areaId, originAnchor },
   };
 }
 
@@ -1290,7 +1333,11 @@ export function webAreaFill(
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "webCubeArea", areaId, originAnchor },
+    value: {
+      kind: "pointOriginCubeArea",
+      areaId,
+      originAnchor,
+    },
   };
 }
 
@@ -1328,7 +1375,7 @@ export function singleTargetSavingThrowOutcomeFill(
   };
 }
 
-export function commandApproachMovementFill(
+export function executeCompelledApproachMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
     readonly movementCostFeet: number;
@@ -1346,15 +1393,15 @@ export function commandApproachMovementFill(
       speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
-      commandApproach: {
-        kind: "commandApproachShortestDirectRouteTowardCaster",
-        movedWithinFiveFeetOfCaster: value.movedWithinFiveFeetOfCaster,
+      compelledApproach: {
+        kind: "compelledApproachShortestDirectRouteTowardSource",
+        movedWithinFiveFeetOfSource: value.movedWithinFiveFeetOfCaster,
       },
     },
   };
 }
 
-export function commandFleeMovementFill(
+export function executeCompelledFleeMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   value: {
     readonly movementCostFeet: number;
@@ -1371,14 +1418,14 @@ export function commandFleeMovementFill(
       speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
-      commandFlee: {
-        kind: "commandFleeFastestAvailableRouteAwayFromCaster",
+      compelledFlee: {
+        kind: "compelledFleeFastestAvailableRouteAwayFromSource",
       },
     },
   };
 }
 
-export function greaseGroundHazardSaveAct(
+export function persistentAreaSaveConditionSaveAct(
   session: BattleRuntimeSession,
   actorId: CombatantId,
   trigger: "entersArea" | "endsTurnInArea",
@@ -1387,7 +1434,7 @@ export function greaseGroundHazardSaveAct(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "greaseGroundHazardSave";
+      readonly command: "persistentAreaSaveConditionSave";
     }
   >;
 } {
@@ -1399,12 +1446,12 @@ export function greaseGroundHazardSaveAct(
         BattleSubject,
         {
           readonly tag: "runtimeCommand";
-          readonly command: "greaseGroundHazardSave";
+          readonly command: "persistentAreaSaveConditionSave";
         }
       >;
     } =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "greaseGroundHazardSave" &&
+      candidate.subject.command === "persistentAreaSaveConditionSave" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.trigger === trigger &&
       candidate.subject.areaId === greaseAreaId,
@@ -1415,14 +1462,14 @@ export function greaseGroundHazardSaveAct(
   return act;
 }
 
-export function greaseGroundHazardEndTurnAct(
+export function persistentAreaSaveConditionEndTurnAct(
   session: BattleRuntimeSession,
   actorId: CombatantId,
-): ReturnType<typeof greaseGroundHazardSaveAct> {
-  return greaseGroundHazardSaveAct(session, actorId, "endsTurnInArea");
+): ReturnType<typeof persistentAreaSaveConditionSaveAct> {
+  return persistentAreaSaveConditionSaveAct(session, actorId, "endsTurnInArea");
 }
 
-export function webRestraintSaveAct(
+export function persistentAreaSaveConditionEscapeSaveAct(
   session: BattleRuntimeSession,
   actorId: CombatantId,
   trigger: "entersArea" | "startsTurnInArea",
@@ -1431,7 +1478,7 @@ export function webRestraintSaveAct(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "webRestraintSave";
+      readonly command: "persistentAreaSaveConditionEscapeSave";
     }
   >;
 } {
@@ -1443,12 +1490,12 @@ export function webRestraintSaveAct(
         BattleSubject,
         {
           readonly tag: "runtimeCommand";
-          readonly command: "webRestraintSave";
+          readonly command: "persistentAreaSaveConditionEscapeSave";
         }
       >;
     } =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "webRestraintSave" &&
+      candidate.subject.command === "persistentAreaSaveConditionEscapeSave" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.trigger === trigger &&
       candidate.subject.areaId === webAreaId,
@@ -1459,16 +1506,16 @@ export function webRestraintSaveAct(
   return act;
 }
 
-export function sleetStormAreaHazardSaveAct(
+export function persistentAreaSaveCompositeSaveAct(
   state: BattleState,
   actorId: CombatantId,
-  trigger: BattleSleetStormAreaHazardTrigger,
+  trigger: BattlePersistentAreaSaveCompositeTrigger,
 ): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "sleetStormAreaHazardSave";
+      readonly command: "persistentAreaSaveCompositeSave";
     }
   >;
 } {
@@ -1480,12 +1527,12 @@ export function sleetStormAreaHazardSaveAct(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "sleetStormAreaHazardSave";
+      readonly command: "persistentAreaSaveCompositeSave";
     }
   > = {
     tag: "runtimeCommand",
     actorId,
-    command: "sleetStormAreaHazardSave",
+    command: "persistentAreaSaveCompositeSave",
     areaMembershipTrigger: {
       kind: trigger === "entersArea" ? "firstEntryOnTurn" : "turnStartInArea",
       areaId: effect.areaId,
@@ -1504,7 +1551,7 @@ export function sleetStormAreaHazardSaveAct(
         ? "Resolve the caller-supplied first-entry Sleet Storm Dexterity Saving Throw."
         : "Resolve the caller-supplied start-turn Sleet Storm Dexterity Saving Throw.",
     initialHoles: [
-      sleetStormAreaHazardSavingThrowOutcomeHole(
+      persistentAreaSaveCompositeSavingThrowOutcomeHole(
         state,
         actorId,
         effect,
@@ -1517,30 +1564,18 @@ export function sleetStormAreaHazardSaveAct(
 export function insectPlagueAreaHazardSaveAct(
   session: BattleRuntimeSession,
   actorId: CombatantId,
-  trigger: BattleInsectPlagueAreaHazardTrigger,
+  trigger: BattleStationaryPersistentAreaSaveDamageTrigger,
 ): AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "insectPlagueAreaHazardSave";
-    }
-  >;
+  readonly subject: StationaryPersistentAreaSaveDamageSubject;
 } {
   const effect = activeInsectPlagueAreaHazardEffect(session.state);
   if (effect === undefined) {
     throw new Error("Expected active Insect Plague area hazard.");
   }
-  const subject: Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "insectPlagueAreaHazardSave";
-    }
-  > = {
+  const subject: StationaryPersistentAreaSaveDamageSubject = {
     tag: "runtimeCommand",
     actorId,
-    command: "insectPlagueAreaHazardSave",
+    command: "persistentAreaSaveDamageSave",
     areaMembershipTrigger: Match.value(trigger).pipe(
       Match.when("appearsInArea", () => ({
         kind: "appearsInArea" as const,
@@ -1572,7 +1607,7 @@ export function insectPlagueAreaHazardSaveAct(
     summary:
       "Resolve the caller-supplied Insect Plague Constitution Saving Throw and Piercing damage.",
     initialHoles: [
-      insectPlagueAreaHazardSavingThrowOutcomeHole(
+      stationaryPersistentAreaSaveDamageSavingThrowOutcomeHole(
         session.state,
         actorId,
         effect,
@@ -1585,30 +1620,18 @@ export function insectPlagueAreaHazardSaveAct(
 export function cloudkillAreaHazardSaveAct(
   session: BattleRuntimeSession,
   actorId: CombatantId,
-  trigger: BattleCloudkillAreaHazardTrigger,
+  trigger: BattleTranslatingPersistentAreaSaveDamageTrigger,
 ): AvailableBattleAct & {
-  readonly subject: Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "cloudkillAreaHazardSave";
-    }
-  >;
+  readonly subject: TranslatingPersistentAreaSaveDamageSubject;
 } {
   const effect = activeCloudkillAreaHazardEffect(session.state);
   if (effect === undefined) {
     throw new Error("Expected active Cloudkill area hazard.");
   }
-  const subject: Extract<
-    BattleSubject,
-    {
-      readonly tag: "runtimeCommand";
-      readonly command: "cloudkillAreaHazardSave";
-    }
-  > = {
+  const subject: TranslatingPersistentAreaSaveDamageSubject = {
     tag: "runtimeCommand",
     actorId,
-    command: "cloudkillAreaHazardSave",
+    command: "persistentAreaSaveDamageSave",
     areaMembershipTrigger: Match.value(trigger).pipe(
       Match.when("appearsInArea", () => ({
         kind: "appearsInArea" as const,
@@ -1647,7 +1670,7 @@ export function cloudkillAreaHazardSaveAct(
     summary:
       "Resolve the caller-supplied Cloudkill Constitution Saving Throw and Poison damage.",
     initialHoles: [
-      cloudkillAreaHazardSavingThrowOutcomeHole(
+      translatingPersistentAreaSaveDamageSavingThrowOutcomeHole(
         session.state,
         actorId,
         effect,
@@ -1664,7 +1687,7 @@ function activeInsectPlagueAreaHazardEffect(
     .flatMap((combatant) => combatant.activeEffects)
     .find(
       (effect): effect is InsectPlagueAreaHazardEffect =>
-        effect.kind === "insectPlagueAreaHazard" &&
+        effect.kind === "persistentAreaSaveDamage" &&
         effect.sourceCombatantId === spellCasterId &&
         effect.areaId === insectPlagueAreaId,
     );
@@ -1677,7 +1700,7 @@ function activeCloudkillAreaHazardEffect(
     .flatMap((combatant) => combatant.activeEffects)
     .find(
       (effect): effect is CloudkillAreaHazardEffect =>
-        effect.kind === "cloudkillAreaHazard" &&
+        effect.kind === "persistentAreaSaveDamage" &&
         effect.sourceCombatantId === spellCasterId &&
         effect.areaId === cloudkillAreaId,
     );
@@ -1690,7 +1713,7 @@ function activeSleetStormAreaHazardEffect(
     .flatMap((combatant) => combatant.activeEffects)
     .find(
       (effect): effect is SleetStormAreaHazardEffect =>
-        effect.kind === "sleetStormAreaHazard" &&
+        effect.kind === "persistentAreaSaveComposite" &&
         effect.sourceCombatantId === spellCasterId &&
         effect.areaId === sleetStormAreaId,
     );
@@ -1704,7 +1727,7 @@ export function webRestrainedNoLongerInAreaAct(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "webRestrainedNoLongerInArea";
+      readonly command: "endPersistentAreaSaveConditionEscapeForDeparture";
     }
   >;
 } {
@@ -1716,12 +1739,13 @@ export function webRestrainedNoLongerInAreaAct(
         BattleSubject,
         {
           readonly tag: "runtimeCommand";
-          readonly command: "webRestrainedNoLongerInArea";
+          readonly command: "endPersistentAreaSaveConditionEscapeForDeparture";
         }
       >;
     } =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "webRestrainedNoLongerInArea" &&
+      candidate.subject.command ===
+        "endPersistentAreaSaveConditionEscapeForDeparture" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.areaId === webAreaId,
   );
@@ -1731,14 +1755,14 @@ export function webRestrainedNoLongerInAreaAct(
   return act;
 }
 
-export function webAreaRemovedAct(
+export function persistentAreaSaveConditionEscapeAreaRemovedAct(
   session: BattleRuntimeSession,
 ): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "webAreaRemoved";
+      readonly command: "endPersistentAreaSaveConditionEscapeForAreaRemoval";
     }
   >;
 } {
@@ -1750,12 +1774,13 @@ export function webAreaRemovedAct(
         BattleSubject,
         {
           readonly tag: "runtimeCommand";
-          readonly command: "webAreaRemoved";
+          readonly command: "endPersistentAreaSaveConditionEscapeForAreaRemoval";
         }
       >;
     } =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "webAreaRemoved" &&
+      candidate.subject.command ===
+        "endPersistentAreaSaveConditionEscapeForAreaRemoval" &&
       candidate.subject.areaId === webAreaId,
   );
   if (act === undefined) {
@@ -1764,7 +1789,7 @@ export function webAreaRemovedAct(
   return act;
 }
 
-export function gustOfWindLineEndTurnSaveAct(
+export function directionalPersistentAreaEndTurnSaveAct(
   state: BattleState,
   actorId: CombatantId = spellTargetId,
   areaId: BattleAreaId = gustOfWindAreaId,
@@ -1774,7 +1799,7 @@ export function gustOfWindLineEndTurnSaveAct(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "gustOfWindLineSave";
+      readonly command: "directionalPersistentAreaSave";
     }
   >;
 } {
@@ -1786,12 +1811,12 @@ export function gustOfWindLineEndTurnSaveAct(
         BattleSubject,
         {
           readonly tag: "runtimeCommand";
-          readonly command: "gustOfWindLineSave";
+          readonly command: "directionalPersistentAreaSave";
         }
       >;
     } =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "gustOfWindLineSave" &&
+      candidate.subject.command === "directionalPersistentAreaSave" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.areaId === areaId &&
       candidate.subject.directionId === directionId,
@@ -1802,7 +1827,7 @@ export function gustOfWindLineEndTurnSaveAct(
   return act;
 }
 
-export function gustOfWindLineDirectionChangeAct(
+export function directionalPersistentAreaDirectionChangeAct(
   state: BattleState,
   actorId: CombatantId = spellCasterId,
   areaId: BattleAreaId = gustOfWindAreaId,
@@ -1812,7 +1837,7 @@ export function gustOfWindLineDirectionChangeAct(
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "gustOfWindLineDirectionChange";
+      readonly command: "directionalPersistentAreaDirectionChange";
     }
   >;
 } {
@@ -1824,12 +1849,13 @@ export function gustOfWindLineDirectionChangeAct(
         BattleSubject,
         {
           readonly tag: "runtimeCommand";
-          readonly command: "gustOfWindLineDirectionChange";
+          readonly command: "directionalPersistentAreaDirectionChange";
         }
       >;
     } =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "gustOfWindLineDirectionChange" &&
+      candidate.subject.command ===
+        "directionalPersistentAreaDirectionChange" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.areaId === areaId &&
       candidate.subject.directionId === directionId,

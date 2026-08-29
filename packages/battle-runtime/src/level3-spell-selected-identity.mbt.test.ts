@@ -53,10 +53,10 @@ const LEVEL3_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   GlyphDurableOccurrence: "glyphDurableOccurrence",
   GlyphExplosiveRuneRelease: "glyphExplosiveRuneRelease",
   GlyphStoredSpellRelease: "glyphStoredSpellRelease",
-  HastePositiveEffects: "hastePositiveEffects",
+  HastePositiveEffects: "compositeTargetBuffWithAftermathEffects",
   ProtectionFromEnergyResistance: "protectionFromEnergyResistance",
-  SleetStormAreaHazard: "sleetStormAreaHazard",
-  SlowActivePenalties: "slowActivePenalties",
+  SleetStormAreaHazard: "persistentAreaSaveComposite",
+  SlowActivePenalties: "saveGatedTurnConstraintBundle",
 } as const satisfies Readonly<
   Record<string, Level3SpellSelectedIdentityResult>
 >;
@@ -66,10 +66,10 @@ type Level3SpellSelectedIdentityResult =
   | "glyphDurableOccurrence"
   | "glyphExplosiveRuneRelease"
   | "glyphStoredSpellRelease"
-  | "hastePositiveEffects"
+  | "compositeTargetBuffWithAftermathEffects"
   | "protectionFromEnergyResistance"
-  | "sleetStormAreaHazard"
-  | "slowActivePenalties";
+  | "persistentAreaSaveComposite"
+  | "saveGatedTurnConstraintBundle";
 type Level3SpellSelectedIdentityProjection = {
   readonly lastResult: Level3SpellSelectedIdentityResult;
 };
@@ -120,8 +120,8 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedProcedure("doDiscoverHastePositiveEffects", () =>
           discoverLevel3ActionSpell({
             spellId: hasteUnitId,
-            procedure: "hastePositive",
-            result: "hastePositiveEffects",
+            procedure: "compositeTargetBuffWithAftermath",
+            result: "compositeTargetBuffWithAftermathEffects",
             verify: verifyHastePositiveEffects,
           }),
         ),
@@ -146,8 +146,8 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedProcedure("doDiscoverSleetStormAreaHazard", () =>
           discoverLevel3ActionSpell({
             spellId: sleetStormUnitId,
-            procedure: "sleetStormAreaHazard",
-            result: "sleetStormAreaHazard",
+            procedure: "persistentAreaSaveComposite",
+            result: "persistentAreaSaveComposite",
             verify: verifySleetStormAreaHazard,
           }),
         ),
@@ -159,8 +159,8 @@ defineSelectedIdentityReplayAndQntReplay({
         selectedProcedure("doDiscoverSlowActivePenalties", () =>
           discoverLevel3ActionSpell({
             spellId: slowUnitId,
-            procedure: "slowActivePenalties",
-            result: "slowActivePenalties",
+            procedure: "saveGatedTurnConstraintBundle",
+            result: "saveGatedTurnConstraintBundle",
             verify: verifySlowActivePenalties,
           }),
         ),
@@ -328,7 +328,7 @@ function verifySleetStormAreaHazard(input: {
     requireCombatant(resolved.state, spellCasterId).activeEffects,
   ).toContainEqual(
     expect.objectContaining({
-      kind: "sleetStormAreaHazard",
+      kind: "persistentAreaSaveComposite",
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(sleetStormUnitId),
       ),

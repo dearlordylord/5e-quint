@@ -7,6 +7,7 @@ import { describe, expect, test } from "vitest";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import cloudkillInput from "../../surface/content/cloudkill.json";
+import type { BattleActiveEffect } from "./index.ts";
 
 import {
   damageRollFillWithGroups,
@@ -40,8 +41,8 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
-import type { BattleCloudkillAreaHazardTrigger } from "./battle-state-execution.ts";
-import { resolveCloudkillAreaSaveDamage } from "./battle-reducer/persistent-area-save-damage.ts";
+import type { BattleTranslatingPersistentAreaSaveDamageTrigger } from "./battle-state-execution.ts";
+import { resolveTranslatingPersistentAreaAreaSaveDamage } from "./battle-reducer/persistent-area-save-damage.ts";
 
 function castCloudkill() {
   const spell = cloudkillSpellRecord();
@@ -90,7 +91,7 @@ function resolveCloudkillSave(input: {
   readonly session: ReturnType<typeof castCloudkill>["session"];
   readonly state: ReturnType<typeof castCloudkill>["cast"];
   readonly succeeded: boolean;
-  readonly trigger: BattleCloudkillAreaHazardTrigger;
+  readonly trigger: BattleTranslatingPersistentAreaSaveDamageTrigger;
 }) {
   const saveAct = cloudkillAreaHazardSaveAct(
     battleRuntimeSessionForTest({ ...input.session, state: input.state }),
@@ -136,10 +137,22 @@ function resolveCloudkillSave(input: {
 function cloudkillSavedThisTurn(
   state: ReturnType<typeof castCloudkill>["cast"],
 ) {
+  type CloudkillEffect = Extract<
+    BattleActiveEffect,
+    {
+      readonly kind: "persistentAreaSaveDamage";
+      readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+    }
+  >;
   const effect = requireCombatant(state, spellCasterId).activeEffects.find(
-    (candidate) => candidate.kind === "cloudkillAreaHazard",
+    (candidate): candidate is CloudkillEffect =>
+      candidate.kind === "persistentAreaSaveDamage" &&
+      candidate.lifecycle.kind === "sourceTurnTranslation",
   );
-  if (effect?.kind !== "cloudkillAreaHazard") {
+  if (
+    effect?.kind !== "persistentAreaSaveDamage" ||
+    effect.lifecycle.kind !== "sourceTurnTranslation"
+  ) {
     throw new Error("Expected active Cloudkill area hazard.");
   }
   return effect.savedThisTurn;
@@ -169,7 +182,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
       invocation: spellSlotInvocationRef(
         cloudkillUnitId,
         5,
-        "cloudkillAreaHazard",
+        "persistentAreaSaveDamage",
       ),
       mode: { tag: "cast" },
     });
@@ -182,7 +195,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     );
     expect(spellHoleInvocation(session, [area])).toEqual(
       expect.objectContaining({
-        procedure: "cloudkillAreaHazard",
+        procedure: "persistentAreaSaveDamage",
         resource: { tag: "spellSlot", slotLevel: 5 },
         ability: "con",
         targeting: { kind: "pointOriginSphere", radiusFeet: movementFeet(20) },
@@ -206,7 +219,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
       },
       activeEffects: [
         expect.objectContaining({
-          kind: "cloudkillAreaHazard",
+          kind: "persistentAreaSaveDamage",
           sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           areaId: cloudkillAreaId,
@@ -337,7 +350,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
       spellTargetId,
       "entersArea",
     );
-    const duplicate = resolveCloudkillAreaSaveDamage({
+    const duplicate = resolveTranslatingPersistentAreaAreaSaveDamage({
       state: appeared.state,
       subject: entryAct.subject,
       fills: [],
@@ -431,7 +444,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     const stateWithoutTarget = { ...targetTurn, combatants };
 
     expect(
-      resolveCloudkillAreaSaveDamage({
+      resolveTranslatingPersistentAreaAreaSaveDamage({
         state: stateWithoutTarget,
         subject: saveAct.subject,
         fills: [],
@@ -453,9 +466,9 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     );
     const caster = requireCombatant(targetTurn, spellCasterId);
     const effect = caster.activeEffects.find(
-      (candidate) => candidate.kind === "cloudkillAreaHazard",
+      (candidate) => candidate.kind === "persistentAreaSaveDamage",
     );
-    if (effect?.kind !== "cloudkillAreaHazard") {
+    if (effect?.kind !== "persistentAreaSaveDamage") {
       throw new Error("Expected active Cloudkill.");
     }
     const allocation = allocateBattleEffectExecutionRefForCreature({
@@ -490,9 +503,9 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     const caster = requireCombatant(targetTurn, spellCasterId);
     const target = requireCombatant(targetTurn, spellTargetId);
     const effect = caster.activeEffects.find(
-      (candidate) => candidate.kind === "cloudkillAreaHazard",
+      (candidate) => candidate.kind === "persistentAreaSaveDamage",
     );
-    if (effect?.kind !== "cloudkillAreaHazard") {
+    if (effect?.kind !== "persistentAreaSaveDamage") {
       throw new Error("Expected active Cloudkill.");
     }
     const allocation = allocateBattleEffectExecutionRefForCreature({
@@ -512,7 +525,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     const subject = {
       tag: "runtimeCommand" as const,
       actorId: spellTargetId,
-      command: "cloudkillAreaHazardSave" as const,
+      command: "persistentAreaSaveDamageSave" as const,
       areaMembershipTrigger: {
         kind: "turnEndInArea" as const,
         areaId: relocatedEffect.areaId,
@@ -548,14 +561,14 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     expect(
       requireCombatant(resolved.state, spellTargetId).activeEffects.find(
         (candidate) =>
-          candidate.kind === "cloudkillAreaHazard" &&
+          candidate.kind === "persistentAreaSaveDamage" &&
           candidate.effectRef === relocatedEffect.effectRef,
       ),
     ).toMatchObject({ savedThisTurn: [spellTargetId] });
     expect(
       requireCombatant(resolved.state, spellCasterId).activeEffects.find(
         (candidate) =>
-          candidate.kind === "cloudkillAreaHazard" &&
+          candidate.kind === "persistentAreaSaveDamage" &&
           candidate.effectRef === effect.effectRef,
       ),
     ).toMatchObject({ savedThisTurn: [] });

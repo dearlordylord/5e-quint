@@ -139,7 +139,7 @@ type LevitateAltitudeControlAct = BattleActDiscoveryCandidate & {
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "levitateAltitudeControl";
+      readonly command: "controlledVerticalSuspensionAltitudeControl";
     }
   >;
 };
@@ -452,7 +452,7 @@ function resolveUnwillingFailedSaveWithInitialRise(
   }
   const initialRise = requireHole(
     needsInitialRise.holes,
-    "levitateInitialRise",
+    "controlledVerticalSuspensionInitialRise",
   );
   return requireResolved(
     resolveBattleSubject({
@@ -461,7 +461,10 @@ function resolveUnwillingFailedSaveWithInitialRise(
       fills: [
         targetFill,
         saveFill,
-        levitateInitialRiseFill(initialRise, initialRiseFeet),
+        controlledVerticalSuspensionInitialRiseFill(
+          initialRise,
+          initialRiseFeet,
+        ),
       ],
     }),
     "Expected failed Levitate save with selected initial rise to resolve.",
@@ -502,7 +505,10 @@ function castWillingLevitate(
 ): LevitateCreatureRuntimeState {
   const act = levitateActInState(state.battle);
   const target = requireHole(act.initialHoles, "targetChoice");
-  const initialRise = requireHole(state.holes, "levitateInitialRise");
+  const initialRise = requireHole(
+    state.holes,
+    "controlledVerticalSuspensionInitialRise",
+  );
   const resolved = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
@@ -514,7 +520,10 @@ function castWillingLevitate(
           spellCasterId,
           spellTargetId,
         ),
-        levitateInitialRiseFill(initialRise, initialRiseFeet),
+        controlledVerticalSuspensionInitialRiseFill(
+          initialRise,
+          initialRiseFeet,
+        ),
       ],
     }),
     "Expected willing Levitate with selected initial rise to resolve.",
@@ -578,8 +587,8 @@ function moveTargetWithWitnessUp5Feet(
         movementFill(movement, {
           movementCostFeet: 10,
           provokedOpportunityAttacks: [],
-          levitatedMovement: {
-            kind: "levitatedMovement",
+          controlledVerticalSuspensionMovement: {
+            kind: "controlledVerticalSuspensionMovement",
             effectRef: effect.effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: effect.sourceProcedureRef,
@@ -609,7 +618,7 @@ function discoverCasterControl(
   state: LevitateCreatureRuntimeState,
 ): LevitateCreatureRuntimeState {
   const battle = advanceToCasterControlTurn(state.battle.state);
-  const act = levitateAltitudeControlActInState(battle);
+  const act = controlledVerticalSuspensionAltitudeControlActInState(battle);
   return {
     ...state,
     battle: battleRuntimeSessionForTest({ ...state.battle, state: battle }),
@@ -621,11 +630,16 @@ function discoverCasterControl(
 function rejectOutOfRangeCasterControl(
   state: LevitateCreatureRuntimeState,
 ): LevitateCreatureRuntimeState {
-  const hole = requireHole(state.holes, "levitateAltitudeChange");
+  const hole = requireHole(
+    state.holes,
+    "controlledVerticalSuspensionAltitudeChange",
+  );
   const result = resolveBattleSubject({
     state: state.battle.state,
-    subject: levitateAltitudeControlActInState(state.battle.state).subject,
-    fills: [levitateAltitudeChangeFill(hole, "up", 10, [])],
+    subject: controlledVerticalSuspensionAltitudeControlActInState(
+      state.battle.state,
+    ).subject,
+    fills: [controlledVerticalSuspensionAltitudeChangeFill(hole, "up", 10, [])],
   });
   expect(result).toMatchObject({ tag: "invalid" });
   return {
@@ -638,16 +652,21 @@ function rejectOutOfRangeCasterControl(
 function controlAltitudeDown10Feet(
   state: LevitateCreatureRuntimeState,
 ): LevitateCreatureRuntimeState {
-  const hole = requireHole(state.holes, "levitateAltitudeChange");
+  const hole = requireHole(
+    state.holes,
+    "controlledVerticalSuspensionAltitudeChange",
+  );
   const effect = requireLevitateCreatureEffect(state.battle.state);
   const resolved = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
-      subject: levitateAltitudeControlActInState(state.battle.state).subject,
+      subject: controlledVerticalSuspensionAltitudeControlActInState(
+        state.battle.state,
+      ).subject,
       fills: [
-        levitateAltitudeChangeFill(hole, "down", 10, [
+        controlledVerticalSuspensionAltitudeChangeFill(hole, "down", 10, [
           {
-            kind: "levitatedTargetWithinSpellRange",
+            kind: "controlledVerticalSuspensionTargetWithinRange",
             effectRef: effect.effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: effect.sourceProcedureRef,
@@ -672,9 +691,12 @@ function controlAltitudeDown10Feet(
 
 function requireLevitateCreatureEffect(
   state: BattleState,
-): Extract<BattleActiveEffect, { readonly kind: "spellLevitatedCreature" }> {
+): Extract<
+  BattleActiveEffect,
+  { readonly kind: "controlledVerticalSuspension" }
+> {
   const effect = requireCombatant(state, spellTargetId).activeEffects.find(
-    (candidate) => candidate.kind === "spellLevitatedCreature",
+    (candidate) => candidate.kind === "controlledVerticalSuspension",
   );
   if (effect === undefined) {
     throw new Error("Expected active Levitate creature effect.");
@@ -705,7 +727,7 @@ function expireLevitateDuration(
     combatants: new Map(state.battle.state.combatants).set(spellTargetId, {
       ...target,
       activeEffects: target.activeEffects.map((effect) =>
-        effect.kind === "spellLevitatedCreature" &&
+        effect.kind === "controlledVerticalSuspension" &&
         effect.expiresAt.kind === "concentration"
           ? {
               ...effect,
@@ -751,7 +773,7 @@ function moveActInState(state: BattleState): MoveAct {
   return act;
 }
 
-function levitateAltitudeControlActInState(
+function controlledVerticalSuspensionAltitudeControlActInState(
   state: BattleState,
 ): LevitateAltitudeControlAct {
   const act = discoverBattleActCandidates(state).find(
@@ -779,33 +801,45 @@ function isLevitateAltitudeControlAct(
 ): candidate is LevitateAltitudeControlAct {
   return (
     candidate.subject.tag === "runtimeCommand" &&
-    candidate.subject.command === "levitateAltitudeControl"
+    candidate.subject.command === "controlledVerticalSuspensionAltitudeControl"
   );
 }
 
-function levitateAltitudeChangeFill(
-  hole: Extract<BattleHole, { readonly kind: "levitateAltitudeChange" }>,
+function controlledVerticalSuspensionAltitudeChangeFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "controlledVerticalSuspensionAltitudeChange" }
+  >,
   direction: "up" | "down",
   distanceFeet: number,
   spatialFacts: Extract<
     BattleFill,
-    { readonly kind: "levitateAltitudeChange" }
+    { readonly kind: "controlledVerticalSuspensionAltitudeChange" }
   >["spatialFacts"],
-): Extract<BattleFill, { readonly kind: "levitateAltitudeChange" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "controlledVerticalSuspensionAltitudeChange" }
+> {
   return {
-    kind: "levitateAltitudeChange",
+    kind: "controlledVerticalSuspensionAltitudeChange",
     holeId: hole.holeId,
     value: { direction, distanceFeet: movementFeet(distanceFeet) },
     spatialFacts,
   };
 }
 
-function levitateInitialRiseFill(
-  hole: Extract<BattleHole, { readonly kind: "levitateInitialRise" }>,
+function controlledVerticalSuspensionInitialRiseFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "controlledVerticalSuspensionInitialRise" }
+  >,
   distanceFeet: number,
-): Extract<BattleFill, { readonly kind: "levitateInitialRise" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "controlledVerticalSuspensionInitialRise" }
+> {
   return {
-    kind: "levitateInitialRise",
+    kind: "controlledVerticalSuspensionInitialRise",
     holeId: hole.holeId,
     value: { distanceFeet: movementFeet(distanceFeet) },
   };
@@ -850,7 +884,7 @@ function levitateCreatureProjection(
 ): LevitateCreatureProjection {
   const target = requireCombatant(state.battle.state, spellTargetId);
   const effect = target.activeEffects.find(
-    (candidate) => candidate.kind === "spellLevitatedCreature",
+    (candidate) => candidate.kind === "controlledVerticalSuspension",
   );
   return {
     actionAvailable: canSpendAction(
@@ -882,13 +916,13 @@ function battleHolesToLevitateCreatureHoles(
       if (hole.kind === "savingThrowOutcome") {
         return "SavingThrowOutcome";
       }
-      if (hole.kind === "levitateInitialRise") {
+      if (hole.kind === "controlledVerticalSuspensionInitialRise") {
         return "LevitateInitialRise";
       }
       if (hole.kind === "movement") {
         return "Movement";
       }
-      if (hole.kind === "levitateAltitudeChange") {
+      if (hole.kind === "controlledVerticalSuspensionAltitudeChange") {
         return "LevitateAltitudeChange";
       }
       throw new Error(`Unexpected Levitate creature hole ${hole.kind}.`);

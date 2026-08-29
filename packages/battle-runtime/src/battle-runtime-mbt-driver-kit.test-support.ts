@@ -127,6 +127,11 @@ import {
   type BattleInvalidReasonCode,
   type BattleProcedureExecutionRef,
   type BattleResolutionResult,
+  type BattleReducerRouteEvent,
+  type BattleReducerRouteFill,
+  type BattleReducerRouteHole,
+  type BattleReducerRouteOwnerGroup,
+  type BattleReducerRouteSubjectFamily,
   type BattleState,
   type BattleRuntimeSession,
   type BattleSubject,
@@ -758,13 +763,13 @@ type CommandOrderingStage =
 type CommandOrderingError =
   | ""
   | "commandTargetListRequired"
-  | "commandOptionChoiceRequired"
+  | "compelledBehaviorOptionChoiceRequired"
   | "commandSavingThrowRequired"
   | "commandHeldObjectFactsRequired"
   | "commandMovementRequired";
 type CommandOrderingHole =
   | "spellTargetList"
-  | "commandOptionChoice"
+  | "compelledBehaviorOptionChoice"
   | "savingThrowOutcome"
   | "movement"
   | "interruptDecision";
@@ -872,240 +877,14 @@ type BattleCombatantState =
   BattleState["combatants"] extends ReadonlyMap<CombatantId, infer Combatant>
     ? Combatant
     : never;
-type ReducerRouteSubjectFamily =
-  | "battleAction"
-  | "abilityCheckSearch"
-  | "slotSpell"
-  | "saveGatedSpell"
-  | "hitPointRestoration"
-  | "weaponAttack"
-  | "weaponMasteryProperty"
-  | "attackActionAreaSaveDamageReplacement"
-  | "spellAttack"
-  | "spellAttackProcedure"
-  | "spellHostedWeaponAttack"
-  | "weaponDamageRider"
-  | "heldWeaponActiveEffect"
-  | "weaponEnhancementItemTarget"
-  | "weaponHostedSpellEffectCleanup"
-  | "afterHitSpell"
-  | "statBlockAction"
-  | "deathSavingThrow"
-  | "zeroHitPointStabilization"
-  | "concentrationTeardown"
-  | "commandEffect"
-  | "reactionSpell"
-  | "reactionArmorClassEffect"
-  | "reactionAfterDamageEffect"
-  | "reactionSpellInterruption"
-  | "reactionFallMitigation"
-  | "interruptStackResume"
-  | "rollModifierEffect"
-  | "spellDamageReduction"
-  | "scalarBuffEffect"
-  | "repeatSaveConditionEffect"
-  | "turnBoundaryEffectLifecycle"
-  | "zeroHitPointSpellEffectTeardown"
-  | "unitFeatureBonusAction"
-  | "activeFeatureSpellSaveDc"
-  | "activeFeatureSpellAttackRollMode"
-  | "companionLifecycle"
-  | "companionSharedSenses"
-  | "companionTouchDelivery"
-  | "companionReactionAttack"
-  | "objectTargetSpellAttack"
-  | "passiveDamageAdjustment"
-  | "passiveSavingThrowRollMode"
-  | "passiveAbilityCheckRollMode"
-  | "creatureSpaceMovementPermission"
-  | "creatureStatProjection"
-  | "movementResource"
-  | "specialSpeedProjection"
-  | "compelledMovement"
-  | "movementPresentation"
-  | "activeFormLifecycle"
-  | "creatureTypeTargetAdmission"
-  | "protectionCharmActiveEffect"
-  | "charmSourceDamageBreak"
-  | "wardedTargetInterdiction"
-  | "metamagicSpellGovernor"
-  | "metamagicBonusActionCastingTime"
-  | "metamagicSavingThrowProtection"
-  | "metamagicSavingThrowRollMode"
-  | "metamagicDamageTypeSubstitution"
-  | "metamagicEffectiveSpellLevel"
-  | "metamagicSpellRangeProjection"
-  | "metamagicSpellDurationProjection"
-  | "metamagicSpellComponentProjection"
-  | "metamagicMissedSpellAttackReroll"
-  | "metamagicDamageDiceReroll"
-  | "spellBaseArmorClassEffect"
-  | "hitPointRegainPrevention"
-  | "nextAttackRollMode"
-  | "reactionInterdiction"
-  | "conditionRider"
-  | "objectLightRider"
-  | "spatialEffect"
-  | "mixedTargetOutcomeSpell"
-  | "markedDamageRiderEffect"
-  | "conditionImmunityTemporaryHitPointEffect";
-type ReducerRouteOwnerGroup =
-  | "battleActionEconomy"
-  | "battleSpellSlotAndActionEconomy"
-  | "battleHoleFrontier"
-  | "battleTargetSelection"
-  | "battleAttackRoll"
-  | "battleAttackActionProcedure"
-  | "battleSpellAttackProcedure"
-  | "battleAbilityCheck"
-  | "battleHitPoint"
-  | "battleDamageRoll"
-  | "battleDamageType"
-  | "battleHitPointAndZeroHpLifecycle"
-  | "battleConditionLifecycle"
-  | "battleStatBlockAction"
-  | "battleConcentration"
-  | "battleActiveEffect"
-  | "battleItemTargetBoundary"
-  | "battleMovementResource"
-  | "battleInterruptStack"
-  | "battleFeatureResource"
-  | "battleTemporaryHitPoint"
-  | "battleTurnBoundary"
-  | "battleCompanion"
-  | "battleObjectTargetBoundary"
-  | "battleAreaShape"
-  | "battleSavingThrowOutcome"
-  | "battleDamageAdjustment"
-  | "battleSavingThrowRollMode"
-  | "battleAbilityCheckRollMode"
-  | "battleAttackRollMode"
-  | "battleCreatureSpaceMovement"
-  | "battleCreatureState"
-  | "battleArmorClass"
-  | "battleLightProjection"
-  | "battleSightProjection"
-  | "battleObscurementProjection"
-  | "battleAreaHazard"
-  | "battleSpellInvocation"
-  | "battleTablePresentation";
-type ReducerRouteHole =
-  | "abilityCheck"
-  | "abilityChoice"
-  | "attackDamageDisposition"
-  | "attackRoll"
-  | "commandOptionChoice"
-  | "companionReappearanceInitiative"
-  | "concentrationSavingThrow"
-  | "conditionChoice"
-  | "damageTypeChoice"
-  | "deathSavingThrow"
-  | "grappleOutcome"
-  | "gustOfWindLineDirectionChoice"
-  | "hitPointHealingDistribution"
-  | "interruptDecision"
-  | "levitateAltitudeChange"
-  | "levitateInitialRise"
-  | "movement"
-  | "objectDropResolution"
-  | "ongoingSpellTargetChoice"
-  | "rolledDice"
-  | "sanctuaryInterdictionOutcome"
-  | "savingThrowOutcome"
-  | "selfTransformationModeChoice"
-  | "shoveOutcome"
-  | "skillChoice"
-  | "slowSomaticSpellFailureOutcome"
-  | "spellcastingAbilityCheck"
-  | "spellTargetAllocation"
-  | "spellTargetList"
-  | "statBlockRechargeRoll"
-  | "targetAbilityChoices"
-  | "targetChoice"
-  | "unitFeatureDecision"
-  | "wildShapeEquipmentDisposition";
-type ReducerRouteFillKind =
-  | "abilityCheck"
-  | "attackDamageDisposition"
-  | "attackRoll"
-  | "commandOptionChoice"
-  | "companionReappearanceInitiative"
-  | "concentrationSavingThrow"
-  | "conditionChoice"
-  | "damageTypeChoice"
-  | "deathSavingThrow"
-  | "grappleOutcome"
-  | "gustOfWindLineDirectionChoice"
-  | "hitPointHealingDistribution"
-  | "interruptDecision"
-  | "levitateAltitudeChange"
-  | "levitateInitialRise"
-  | "magicWeaponTargetItem"
-  | "movement"
-  | "objectDropResolution"
-  | "ongoingSpellTargetChoice"
-  | "rolledDice"
-  | "sanctuaryInterdictionOutcome"
-  | "savingThrowOutcome"
-  | "selfTransformationModeChoice"
-  | "shoveOutcome"
-  | "slowSomaticSpellFailureOutcome"
-  | "spellTargetAllocation"
-  | "spellTargetList"
-  | "statBlockRechargeRoll"
-  | "targetChoice"
-  | "unitFeatureDecision"
-  | "wildShapeEquipmentDisposition";
+type ReducerRouteSubjectFamily = BattleReducerRouteSubjectFamily;
+type ReducerRouteOwnerGroup = BattleReducerRouteOwnerGroup;
+type ReducerRouteHole = BattleReducerRouteHole;
+type ReducerRouteFill = BattleReducerRouteFill;
+type ReducerRouteFillKind = Extract<BattleReducerRouteFill, string>;
 type ReducerRouteAbilityChoice = Ability;
 type ReducerRouteSkillChoice = SurfaceSkill;
-type ReducerRouteFill =
-  | ReducerRouteFillKind
-  | {
-      readonly kind: "skillChoice";
-      readonly skill: ReducerRouteSkillChoice;
-    }
-  | {
-      readonly kind: "abilityChoice";
-      readonly ability: ReducerRouteAbilityChoice;
-    }
-  | {
-      readonly kind: "targetAbilityChoices";
-      readonly choices: {
-        readonly primary: ReducerRouteAbilityChoice;
-        readonly secondary: ReducerRouteAbilityChoice;
-      };
-    };
-type ReducerRouteEvent =
-  | {
-      readonly kind: "startBattle";
-      readonly owner: ReducerRouteOwnerGroup;
-    }
-  | {
-      readonly kind: "discoverBattleActs";
-      readonly subject: ReducerRouteSubjectFamily;
-      readonly holes: readonly ReducerRouteHole[];
-      readonly owner: ReducerRouteOwnerGroup;
-    }
-  | {
-      readonly kind: "resolveBattleSubject";
-      readonly subject: ReducerRouteSubjectFamily;
-      readonly fill: ReducerRouteFill;
-      readonly holes: readonly ReducerRouteHole[];
-      readonly owner: ReducerRouteOwnerGroup;
-    }
-  | {
-      readonly kind: "resolveBattleSubjectWithoutFill";
-      readonly subject: ReducerRouteSubjectFamily;
-      readonly holes: readonly ReducerRouteHole[];
-      readonly owner: ReducerRouteOwnerGroup;
-    }
-  | {
-      readonly kind: "resolveBattleInterrupt";
-      readonly subject: ReducerRouteSubjectFamily;
-      readonly fill: ReducerRouteFill;
-      readonly holes: readonly ReducerRouteHole[];
-      readonly owner: ReducerRouteOwnerGroup;
-    };
+type ReducerRouteEvent = BattleReducerRouteEvent;
 export type {
   ReducerRouteEvent,
   ReducerRouteFill,
@@ -1459,10 +1238,10 @@ type ReducerRoutedSpatialEffectProjection = {
 };
 type SelectedConcentrationHazardRow =
   | "none"
-  | "flamingSphereHazard"
-  | "moonbeamMovableZone"
-  | "spikeGrowthMovementHazard"
-  | "webRestraintHazard";
+  | "persistentAreaSaveDamageHazard"
+  | "persistentAreaSaveDamageMovableZone"
+  | "areaMovementDistanceDamage"
+  | "persistentAreaSaveConditionEscape";
 type ReducerRoutedSelectedConcentrationHazardProjection = {
   readonly selectedRow: SelectedConcentrationHazardRow;
   readonly route: readonly ReducerRouteEvent[];
@@ -3974,7 +3753,7 @@ const METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT =
 const METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT =
   "metamagicSavingThrowProtection" satisfies ReducerRouteSubjectFamily;
 const METAMAGIC_COMMAND_EFFECT_ROUTE_SUBJECT =
-  "commandEffect" satisfies ReducerRouteSubjectFamily;
+  "compelledBehaviorEffect" satisfies ReducerRouteSubjectFamily;
 const METAMAGIC_SAVING_THROW_ROLL_MODE_ROUTE_SUBJECT =
   "metamagicSavingThrowRollMode" satisfies ReducerRouteSubjectFamily;
 const METAMAGIC_DAMAGE_TYPE_SUBSTITUTION_ROUTE_SUBJECT =
@@ -4012,7 +3791,7 @@ const METAMAGIC_TARGET_LIST_HOLES = [
   "spellTargetList",
 ] as const satisfies readonly ReducerRouteHole[];
 const METAMAGIC_COMMAND_OPTION_AND_TARGET_LIST_HOLES = [
-  "commandOptionChoice",
+  "compelledBehaviorOptionChoice",
   "spellTargetList",
 ] as const satisfies readonly ReducerRouteHole[];
 
@@ -4306,7 +4085,7 @@ function metamagicSavingThrowProtectionNoEffectRoute(): readonly ReducerRouteEve
     }),
     metamagicResolveRoute({
       subject: METAMAGIC_COMMAND_EFFECT_ROUTE_SUBJECT,
-      fill: "commandOptionChoice",
+      fill: "compelledBehaviorOptionChoice",
       holes: METAMAGIC_SAVING_THROW_HOLES,
       owner: "battleHoleFrontier",
     }),
@@ -4609,7 +4388,7 @@ const NEXT_ATTACK_ROLL_MODE_ROUTE_SUBJECT =
 const REACTION_INTERDICTION_ROUTE_SUBJECT =
   "reactionInterdiction" satisfies ReducerRouteSubjectFamily;
 const CONDITION_RIDER_ROUTE_SUBJECT =
-  "conditionRider" satisfies ReducerRouteSubjectFamily;
+  "repeatSaveConditionEffect" satisfies ReducerRouteSubjectFamily;
 const OBJECT_LIGHT_RIDER_ROUTE_SUBJECT =
   "objectLightRider" satisfies ReducerRouteSubjectFamily;
 const NO_ROUTE_HOLES = [] as const satisfies readonly ReducerRouteHole[];
@@ -4643,10 +4422,10 @@ const TARGET_AND_SAVE_ROUTE_HOLES = [
   "targetChoice",
 ] as const satisfies readonly ReducerRouteHole[];
 const SANCTUARY_OUTCOME_ROUTE_HOLES = [
-  "sanctuaryInterdictionOutcome",
+  "targetingSaveInterdictionOutcome",
 ] as const satisfies readonly ReducerRouteHole[];
 const SANCTUARY_OUTCOME_AND_TARGET_ROUTE_HOLES = [
-  "sanctuaryInterdictionOutcome",
+  "targetingSaveInterdictionOutcome",
   "targetChoice",
 ] as const satisfies readonly ReducerRouteHole[];
 
@@ -4927,7 +4706,7 @@ function wardedTargetFailedSaveLossRoute(): readonly ReducerRouteEvent[] {
     wardedTargetDiscovery(SANCTUARY_OUTCOME_ROUTE_HOLES, "battleActiveEffect"),
     routeResolveSubject({
       subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
-      fill: "sanctuaryInterdictionOutcome",
+      fill: "targetingSaveInterdictionOutcome",
       holes: NO_ROUTE_HOLES,
       owner: "battleSavingThrowOutcome",
     }),
@@ -4945,7 +4724,7 @@ function wardedTargetSuccessfulSavePassThroughRoute(): readonly ReducerRouteEven
     wardedTargetDiscovery(SANCTUARY_OUTCOME_ROUTE_HOLES, "battleActiveEffect"),
     routeResolveSubject({
       subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
-      fill: "sanctuaryInterdictionOutcome",
+      fill: "targetingSaveInterdictionOutcome",
       holes: NO_ROUTE_HOLES,
       owner: "battleSavingThrowOutcome",
     }),
@@ -4966,7 +4745,7 @@ function wardedTargetLegalReplacementRoute(): readonly ReducerRouteEvent[] {
     ),
     routeResolveSubject({
       subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
-      fill: "sanctuaryInterdictionOutcome",
+      fill: "targetingSaveInterdictionOutcome",
       holes: TARGET_CHOICE_ROUTE_HOLES,
       owner: "battleSavingThrowOutcome",
     }),
@@ -4988,7 +4767,7 @@ function wardedTargetIllegalReplacementRoute(): readonly ReducerRouteEvent[] {
     ),
     routeResolveSubject({
       subject: WARDED_TARGET_INTERDICTION_ROUTE_SUBJECT,
-      fill: "sanctuaryInterdictionOutcome",
+      fill: "targetingSaveInterdictionOutcome",
       holes: TARGET_CHOICE_ROUTE_HOLES,
       owner: "battleSavingThrowOutcome",
     }),
@@ -5225,24 +5004,24 @@ function hitPointRegainPreventionInitialRoute(): readonly ReducerRouteEvent[] {
 function hitPointRegainPreventionAdmissionRoute(): readonly ReducerRouteEvent[] {
   return [
     routeDiscoverSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       holes: TARGET_CHOICE_ROUTE_HOLES,
       owner: "battleActionEconomy",
     }),
     routeResolveSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       fill: "targetChoice",
       holes: ATTACK_ROLL_ROUTE_HOLES,
       owner: "battleTargetSelection",
     }),
     routeResolveSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       fill: "attackRoll",
       holes: ROLLED_DICE_ROUTE_HOLES,
       owner: "battleAttackRoll",
     }),
     routeResolveSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       fill: "rolledDice",
       holes: NO_ROUTE_HOLES,
       owner: "battleHitPoint",
@@ -5384,24 +5163,24 @@ function nextAttackRollModeInitialRoute(): readonly ReducerRouteEvent[] {
 function nextAttackRollModeAdvantageAdmissionRoute(): readonly ReducerRouteEvent[] {
   return [
     routeDiscoverSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       holes: TARGET_CHOICE_ROUTE_HOLES,
       owner: "battleActionEconomy",
     }),
     routeResolveSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       fill: "targetChoice",
       holes: ATTACK_ROLL_ROUTE_HOLES,
       owner: "battleTargetSelection",
     }),
     routeResolveSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       fill: "attackRoll",
       holes: ROLLED_DICE_ROUTE_HOLES,
       owner: "battleAttackRoll",
     }),
     routeResolveSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       fill: "rolledDice",
       holes: NO_ROUTE_HOLES,
       owner: "battleHitPoint",
@@ -5818,24 +5597,24 @@ function opportunityAttackDenialInitialRoute(): readonly ReducerRouteEvent[] {
 function opportunityAttackDenialAdmissionRoute(): readonly ReducerRouteEvent[] {
   return [
     routeDiscoverSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       holes: TARGET_CHOICE_ROUTE_HOLES,
       owner: "battleActionEconomy",
     }),
     routeResolveSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       fill: "targetChoice",
       holes: ATTACK_ROLL_ROUTE_HOLES,
       owner: "battleTargetSelection",
     }),
     routeResolveSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       fill: "attackRoll",
       holes: ROLLED_DICE_ROUTE_HOLES,
       owner: "battleAttackRoll",
     }),
     routeResolveSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       fill: "rolledDice",
       holes: NO_ROUTE_HOLES,
       owner: "battleHitPoint",
@@ -5926,24 +5705,24 @@ function conditionRiderInitialRoute(): readonly ReducerRouteEvent[] {
 function conditionRiderAttackHitHostOutcomeRoute(): readonly ReducerRouteEvent[] {
   return [
     routeDiscoverSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       holes: TARGET_CHOICE_ROUTE_HOLES,
       owner: "battleActionEconomy",
     }),
     routeResolveSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       fill: "targetChoice",
       holes: ATTACK_ROLL_ROUTE_HOLES,
       owner: "battleTargetSelection",
     }),
     routeResolveSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       fill: "attackRoll",
       holes: ROLLED_DICE_ROUTE_HOLES,
       owner: "battleAttackRoll",
     }),
     routeResolveSubject({
-      subject: "spellAttack",
+      subject: "spellAttackProcedure",
       fill: "rolledDice",
       holes: NO_ROUTE_HOLES,
       owner: "battleHitPoint",
@@ -7339,19 +7118,19 @@ export function createSelectedConcentrationHazardRouteDriver() {
       init: reset,
       doDiscoverFlamingSphereHazard: () => {
         recordSaveHazard({
-          row: "flamingSphereHazard",
+          row: "persistentAreaSaveDamageHazard",
           rowFacts: SELECTED_FLAMING_SPHERE_HAZARD_FACTS,
         });
       },
       doDiscoverMoonbeamMovableZone: () => {
         recordSaveHazard({
-          row: "moonbeamMovableZone",
+          row: "persistentAreaSaveDamageMovableZone",
           projectionRoute: spatialEffectLightProjectionRoute(),
           rowFacts: SELECTED_MOONBEAM_HAZARD_FACTS,
         });
       },
       doDiscoverSpikeGrowthMovementHazard: () => {
-        selectedRow = "spikeGrowthMovementHazard";
+        selectedRow = "areaMovementDistanceDamage";
         route = [
           ...spatialEffectInitialRoute(),
           ...selectedConcentrationHazardMovementDamageRoute(),
@@ -7365,7 +7144,7 @@ export function createSelectedConcentrationHazardRouteDriver() {
       },
       doDiscoverWebRestraintHazard: () => {
         recordSaveHazard({
-          row: "webRestraintHazard",
+          row: "persistentAreaSaveConditionEscape",
           projectionRoute: spatialEffectObscurementProjectionRoute(),
           rowFacts: [
             ...SELECTED_CONCENTRATION_HAZARD_DIFFICULT_TERRAIN_FACTS,
@@ -7824,9 +7603,9 @@ export function createLevel1WeaponHostedSelectedRouteDriver() {
 }
 
 const MIXED_TARGET_OUTCOME_ROUTE_SUBJECT =
-  "mixedTargetOutcomeSpell" satisfies ReducerRouteSubjectFamily;
+  "saveGatedSpell" satisfies ReducerRouteSubjectFamily;
 const MIXED_TARGET_OUTCOME_OWNER =
-  "battleSpellInvocation" satisfies ReducerRouteOwnerGroup;
+  "battleSpellSlotAndActionEconomy" satisfies ReducerRouteOwnerGroup;
 
 function mixedTargetOutcomeInitialRoute(): readonly ReducerRouteEvent[] {
   return [routeStart()];
@@ -10762,7 +10541,7 @@ function createCommandOrderingDriverWithRoute<
         orderingError = "";
         droppedObjectCount =
           "droppedObjects" in result ? (result.droppedObjects?.length ?? 0) : 0;
-        pendingCommandOption = commandPendingOption(state);
+        pendingCommandOption = compelledNextTurnBehaviorOption(state);
         return;
       }
       if (result.tag === "needsHoles") {
@@ -10774,7 +10553,7 @@ function createCommandOrderingDriverWithRoute<
         holes = result.holes;
         stage = nextStage;
         orderingError = "";
-        pendingCommandOption = commandPendingOption(state);
+        pendingCommandOption = compelledNextTurnBehaviorOption(state);
         return;
       }
       throw new Error(
@@ -10799,7 +10578,7 @@ function createCommandOrderingDriverWithRoute<
       holes = result.holes;
       stage = expectedStage;
       orderingError = expectedOrderingError;
-      pendingCommandOption = commandPendingOption(state);
+      pendingCommandOption = compelledNextTurnBehaviorOption(state);
     }
 
     function recordInvalid(
@@ -10814,7 +10593,7 @@ function createCommandOrderingDriverWithRoute<
       }
       lastResult = result.tag;
       orderingError = expectedOrderingError;
-      pendingCommandOption = commandPendingOption(state);
+      pendingCommandOption = compelledNextTurnBehaviorOption(state);
     }
 
     function discoverCommand(): void {
@@ -10847,7 +10626,7 @@ function createCommandOrderingDriverWithRoute<
       holes = act.initialHoles;
       lastResult = holes.length === 0 ? "resolved" : "needsHoles";
       orderingError = "";
-      pendingCommandOption = commandPendingOption(state);
+      pendingCommandOption = compelledNextTurnBehaviorOption(state);
       droppedObjectCount = 0;
       return act;
     }
@@ -10878,7 +10657,10 @@ function createCommandOrderingDriverWithRoute<
       init: reset,
       doDiscoverCommand: discoverCommand,
       doSubmitOptionBeforeTargetList: () => {
-        const commandOption = requireHole(holes, "commandOptionChoice");
+        const commandOption = requireHole(
+          holes,
+          "compelledBehaviorOptionChoice",
+        );
         const result = resolveBattleSubject({
           state,
           subject,
@@ -10903,7 +10685,10 @@ function createCommandOrderingDriverWithRoute<
         appendCommandOrderingRouteEvents(result);
       },
       doSubmitSavingThrowBeforeOption: () => {
-        const commandOption = requireHole(holes, "commandOptionChoice");
+        const commandOption = requireHole(
+          holes,
+          "compelledBehaviorOptionChoice",
+        );
         if (subject.tag !== "actionSpell") {
           throw new Error("Expected Command cast subject.");
         }
@@ -10926,13 +10711,16 @@ function createCommandOrderingDriverWithRoute<
         });
         recordNeedsEarlierHole(
           result,
-          "commandOptionChoiceRequired",
+          "compelledBehaviorOptionChoiceRequired",
           "optionChoice",
         );
         appendCommandOrderingRouteEvents(result);
       },
       doFillGrovelOption: () => {
-        const commandOption = requireHole(holes, "commandOptionChoice");
+        const commandOption = requireHole(
+          holes,
+          "compelledBehaviorOptionChoice",
+        );
         fills = [...fills, commandOptionFill(commandOption, "grovel")];
         const result = resolveBattleSubject({ state, subject, fills });
         recordAccepted(result, "savingThrowOutcome");
@@ -11005,7 +10793,7 @@ function createCommandOrderingDriverWithRoute<
         stage = "resolved";
         lastResult = "resolved";
         orderingError = "";
-        pendingCommandOption = commandPendingOption(state);
+        pendingCommandOption = compelledNextTurnBehaviorOption(state);
         droppedObjectCount = 0;
         appendCommandOrderingRouteEvents(
           resolveBattleSubject({ state, subject, fills }),
@@ -11019,7 +10807,7 @@ function createCommandOrderingDriverWithRoute<
       doFillApproachMovementContinues: () => {
         const movement = requireHole(holes, "movement");
         fills = [
-          commandApproachMovementFill(movement, {
+          executeCompelledApproachMovementFill(movement, {
             movementCostFeet: 10,
             movedWithinFiveFeetOfCaster: false,
           }),
@@ -11031,7 +10819,7 @@ function createCommandOrderingDriverWithRoute<
       doFillApproachMovementWithinFive: () => {
         const movement = requireHole(holes, "movement");
         fills = [
-          commandApproachMovementFill(movement, {
+          executeCompelledApproachMovementFill(movement, {
             movementCostFeet: 10,
             movedWithinFiveFeetOfCaster: true,
           }),
@@ -11054,7 +10842,7 @@ function createCommandOrderingDriverWithRoute<
       doFillFleeMovement: () => {
         const movement = requireHole(holes, "movement");
         fills = [
-          commandFleeMovementFill(movement, {
+          executeCompelledFleeMovementFill(movement, {
             movementCostFeet: 30,
             provokedOpportunityAttacks: [],
           }),
@@ -11069,7 +10857,7 @@ function createCommandOrderingDriverWithRoute<
           state,
           subject,
           fills: [
-            commandFleeMovementFill(movement, {
+            executeCompelledFleeMovementFill(movement, {
               movementCostFeet: 10,
               provokedOpportunityAttacks: [],
             }),
@@ -11087,7 +10875,7 @@ function createCommandOrderingDriverWithRoute<
       doFleeOpportunityAttack: () => {
         const movement = requireHole(holes, "movement");
         fills = [
-          commandFleeMovementFill(movement, {
+          executeCompelledFleeMovementFill(movement, {
             movementCostFeet: 30,
             provokedOpportunityAttacks: [
               {
@@ -12264,7 +12052,7 @@ export function createRogueSteadyAimDriver(
 
 const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   BattleActionRouteSubject: "battleAction",
-  AbilityCheckSearchRouteSubject: "abilityCheckSearch",
+  AbilityCheckSearchRouteSubject: "passiveAbilityCheckRollMode",
   SlotSpellRouteSubject: "slotSpell",
   SaveGatedSpellRouteSubject: "saveGatedSpell",
   HitPointRestorationRouteSubject: "hitPointRestoration",
@@ -12272,7 +12060,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   WeaponMasteryPropertyRouteSubject: "weaponMasteryProperty",
   AttackActionAreaSaveDamageReplacementRouteSubject:
     "attackActionAreaSaveDamageReplacement",
-  SpellAttackRouteSubject: "spellAttack",
+  SpellAttackRouteSubject: "spellAttackProcedure",
   SpellAttackProcedureRouteSubject: "spellAttackProcedure",
   SpellHostedWeaponAttackRouteSubject: "spellHostedWeaponAttack",
   WeaponDamageRiderRouteSubject: "weaponDamageRider",
@@ -12284,7 +12072,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   DeathSavingThrowRouteSubject: "deathSavingThrow",
   ZeroHitPointStabilizationRouteSubject: "zeroHitPointStabilization",
   ConcentrationTeardownRouteSubject: "concentrationTeardown",
-  CommandEffectRouteSubject: "commandEffect",
+  CommandEffectRouteSubject: "compelledBehaviorEffect",
   ReactionSpellRouteSubject: "reactionSpell",
   ReactionArmorClassEffectRouteSubject: "reactionArmorClassEffect",
   ReactionAfterDamageEffectRouteSubject: "reactionAfterDamageEffect",
@@ -12342,10 +12130,10 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   HitPointRegainPreventionRouteSubject: "hitPointRegainPrevention",
   NextAttackRollModeRouteSubject: "nextAttackRollMode",
   ReactionInterdictionRouteSubject: "reactionInterdiction",
-  ConditionRiderRouteSubject: "conditionRider",
+  ConditionRiderRouteSubject: "repeatSaveConditionEffect",
   ObjectLightRiderRouteSubject: "objectLightRider",
   SpatialEffectRouteSubject: "spatialEffect",
-  MixedTargetOutcomeSpellRouteSubject: "mixedTargetOutcomeSpell",
+  MixedTargetOutcomeSpellRouteSubject: "saveGatedSpell",
   MarkedDamageRiderEffectRouteSubject: "markedDamageRiderEffect",
   ConditionImmunityTemporaryHitPointEffectRouteSubject:
     "conditionImmunityTemporaryHitPointEffect",
@@ -12389,7 +12177,7 @@ const REDUCER_ROUTE_OWNER_BY_VARIANT_TAG = {
   BattleSightProjectionOwner: "battleSightProjection",
   BattleObscurementProjectionOwner: "battleObscurementProjection",
   BattleAreaHazardOwner: "battleAreaHazard",
-  BattleSpellInvocationOwner: "battleSpellInvocation",
+  BattleSpellInvocationOwner: "battleSpellSlotAndActionEconomy",
   BattleTablePresentationOwner: "battleTablePresentation",
 } as const satisfies Readonly<Record<string, ReducerRouteOwnerGroup>>;
 
@@ -12614,10 +12402,10 @@ const SPATIAL_EFFECT_CLEANUP_OWNER_BY_VARIANT_TAG = {
 
 const SELECTED_CONCENTRATION_HAZARD_ROW_BY_VARIANT_TAG = {
   NoSelectedConcentrationHazardRow: "none",
-  FlamingSphereHazardRow: "flamingSphereHazard",
-  MoonbeamMovableZoneRow: "moonbeamMovableZone",
-  SpikeGrowthMovementHazardRow: "spikeGrowthMovementHazard",
-  WebRestraintHazardRow: "webRestraintHazard",
+  FlamingSphereHazardRow: "persistentAreaSaveDamageHazard",
+  MoonbeamMovableZoneRow: "persistentAreaSaveDamageMovableZone",
+  SpikeGrowthMovementHazardRow: "areaMovementDistanceDamage",
+  WebRestraintHazardRow: "persistentAreaSaveConditionEscape",
 } as const satisfies Readonly<Record<string, SelectedConcentrationHazardRow>>;
 
 const MIXED_TARGET_OUTCOME_TARGET_BY_VARIANT_TAG = {
@@ -12738,28 +12526,30 @@ const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
   AbilityChoiceHoleKind: "abilityChoice",
   AttackDamageDispositionHoleKind: "attackDamageDisposition",
   AttackRollHoleKind: "attackRoll",
-  CommandOptionChoiceHoleKind: "commandOptionChoice",
+  CommandOptionChoiceHoleKind: "compelledBehaviorOptionChoice",
   CompanionReappearanceInitiativeHoleKind: "companionReappearanceInitiative",
   ConcentrationSavingThrowHoleKind: "concentrationSavingThrow",
   ConditionChoiceHoleKind: "conditionChoice",
   DamageTypeChoiceHoleKind: "damageTypeChoice",
   DeathSavingThrowHoleKind: "deathSavingThrow",
   GrappleOutcomeHoleKind: "grappleOutcome",
-  GustOfWindLineDirectionChoiceHoleKind: "gustOfWindLineDirectionChoice",
+  GustOfWindLineDirectionChoiceHoleKind:
+    "directionalPersistentAreaDirectionChoice",
   HitPointHealingDistributionHoleKind: "hitPointHealingDistribution",
   InterruptDecisionHoleKind: "interruptDecision",
-  LevitateAltitudeChangeHoleKind: "levitateAltitudeChange",
-  LevitateInitialRiseHoleKind: "levitateInitialRise",
+  LevitateAltitudeChangeHoleKind: "controlledVerticalSuspensionAltitudeChange",
+  LevitateInitialRiseHoleKind: "controlledVerticalSuspensionInitialRise",
   MovementHoleKind: "movement",
   ObjectDropResolutionHoleKind: "objectDropResolution",
   OngoingSpellTargetChoiceHoleKind: "ongoingSpellTargetChoice",
   RolledDiceHoleKind: "rolledDice",
-  SanctuaryInterdictionOutcomeHoleKind: "sanctuaryInterdictionOutcome",
+  SanctuaryInterdictionOutcomeHoleKind: "targetingSaveInterdictionOutcome",
   SavingThrowOutcomeHoleKind: "savingThrowOutcome",
   SelfTransformationModeChoiceHoleKind: "selfTransformationModeChoice",
   ShoveOutcomeHoleKind: "shoveOutcome",
   SkillChoiceHoleKind: "skillChoice",
-  SlowSomaticSpellFailureOutcomeHoleKind: "slowSomaticSpellFailureOutcome",
+  SlowSomaticSpellFailureOutcomeHoleKind:
+    "turnConstraintSomaticSpellFailureOutcome",
   SpellcastingAbilityCheckHoleKind: "spellcastingAbilityCheck",
   SpellTargetAllocationHoleKind: "spellTargetAllocation",
   SpellTargetListHoleKind: "spellTargetList",
@@ -12774,28 +12564,30 @@ const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = {
   AbilityCheckFillKind: "abilityCheck",
   AttackDamageDispositionFillKind: "attackDamageDisposition",
   AttackRollFillKind: "attackRoll",
-  CommandOptionChoiceFillKind: "commandOptionChoice",
+  CommandOptionChoiceFillKind: "compelledBehaviorOptionChoice",
   CompanionReappearanceInitiativeFillKind: "companionReappearanceInitiative",
   ConcentrationSavingThrowFillKind: "concentrationSavingThrow",
   ConditionChoiceFillKind: "conditionChoice",
   DamageTypeChoiceFillKind: "damageTypeChoice",
   DeathSavingThrowFillKind: "deathSavingThrow",
   GrappleOutcomeFillKind: "grappleOutcome",
-  GustOfWindLineDirectionChoiceFillKind: "gustOfWindLineDirectionChoice",
+  GustOfWindLineDirectionChoiceFillKind:
+    "directionalPersistentAreaDirectionChoice",
   HitPointHealingDistributionFillKind: "hitPointHealingDistribution",
   InterruptDecisionFillKind: "interruptDecision",
-  LevitateAltitudeChangeFillKind: "levitateAltitudeChange",
-  LevitateInitialRiseFillKind: "levitateInitialRise",
-  MagicWeaponTargetItemFillKind: "magicWeaponTargetItem",
+  LevitateAltitudeChangeFillKind: "controlledVerticalSuspensionAltitudeChange",
+  LevitateInitialRiseFillKind: "controlledVerticalSuspensionInitialRise",
+  MagicWeaponTargetItemFillKind: "weaponAttackDamageEnhancementTargetItem",
   MovementFillKind: "movement",
   ObjectDropResolutionFillKind: "objectDropResolution",
   OngoingSpellTargetChoiceFillKind: "ongoingSpellTargetChoice",
   RolledDiceFillKind: "rolledDice",
-  SanctuaryInterdictionOutcomeFillKind: "sanctuaryInterdictionOutcome",
+  SanctuaryInterdictionOutcomeFillKind: "targetingSaveInterdictionOutcome",
   SavingThrowOutcomeFillKind: "savingThrowOutcome",
   SelfTransformationModeChoiceFillKind: "selfTransformationModeChoice",
   ShoveOutcomeFillKind: "shoveOutcome",
-  SlowSomaticSpellFailureOutcomeFillKind: "slowSomaticSpellFailureOutcome",
+  SlowSomaticSpellFailureOutcomeFillKind:
+    "turnConstraintSomaticSpellFailureOutcome",
   SpellTargetAllocationFillKind: "spellTargetAllocation",
   SpellTargetListFillKind: "spellTargetList",
   StatBlockRechargeRollFillKind: "statBlockRechargeRoll",
@@ -15272,7 +15064,7 @@ function projectCommandOrderingState(input: {
     pendingCommandOption: input.pendingCommandOption,
     targetProne: targetSnapshot?.conditions.includes("prone") ?? false,
     droppedObjectCount: input.droppedObjectCount,
-    haltSuppressed: input.state.currentTurnResources.commandHalt !== null,
+    haltSuppressed: input.state.currentTurnResources.compelledHalt !== null,
     movementSpentFeet:
       targetSnapshot === undefined
         ? 0
@@ -15539,7 +15331,7 @@ function concentrationBreakTeardownCastAct(
     } =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "blurAttackRollDefense",
+        "perceptionGatedAttackRollDefense",
   );
   if (act === undefined) {
     throw new Error("Expected Concentration spell cast act.");
@@ -15592,7 +15384,7 @@ function stateWithPreexistingBlurConcentration(
     state: concentratingState,
     ownerId: fighterId,
     effect: {
-      kind: "blurred",
+      kind: "perceptionGatedAttackRollDefense",
       sourceProcedureRef,
       sourceCombatantId: fighterId,
       expiresAt: {
@@ -15627,7 +15419,7 @@ function concentrationTeardownIsVisibleBeforeNextCommand(
 
 function blurredEffectCount(state: BattleState): number {
   return requireBattleCombatant(state, fighterId).activeEffects.filter(
-    (effect) => effect.kind === "blurred",
+    (effect) => effect.kind === "perceptionGatedAttackRollDefense",
   ).length;
 }
 
@@ -16264,7 +16056,7 @@ function requireInterruptShieldReactionChoice(
         invocation.tag === "spellSlot" &&
         // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
         invocation.spellId === interruptShieldUnitId &&
-        invocation.procedure === "shieldReaction"
+        invocation.procedure === "triggeredArmorDefense"
       );
     },
   );
@@ -16928,7 +16720,11 @@ function commandOrderingCastSubject(
   const subject = requireAdmittedCharacterProcedureSubject(session, {
     tag: "actionSpell",
     actorId: fighterId,
-    invocation: spellSlotInvocationRef("command", 1, "command"),
+    invocation: spellSlotInvocationRef(
+      "command",
+      1,
+      "compelledNextTurnBehavior",
+    ),
     mode: { tag: "cast" },
   });
   if (subject.tag !== "actionSpell") throw new Error("Expected action Spell.");
@@ -16947,7 +16743,8 @@ function commandOrderingCastAct(session: BattleRuntimeSession): ReturnType<
       readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
     } =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.procedure === "command",
+      battleActSpellPresentation(candidate)?.invocation.procedure ===
+        "compelledNextTurnBehavior",
   );
   if (act === undefined) {
     throw new Error("Expected Command cast act.");
@@ -16989,10 +16786,10 @@ function commandRuntimeAct(
 function commandSubjectForOption(
   option: RuntimeCommandOption,
 ): CommandRuntimeSubject["command"] {
-  if (option === "grovel") return "commandGrovel";
-  if (option === "drop") return "commandDrop";
-  if (option === "approach") return "commandApproach";
-  if (option === "flee") return "commandFlee";
+  if (option === "grovel") return "executeCompelledGrovel";
+  if (option === "drop") return "executeCompelledDrop";
+  if (option === "approach") return "executeCompelledApproach";
+  if (option === "flee") return "executeCompelledFlee";
   throw new Error("Command Halt does not expose a runtime command act.");
 }
 
@@ -17019,7 +16816,10 @@ function castCommandForOrdering(
   const session = commandOrderingBattle();
   const act = commandOrderingCastAct(session);
   const target = requireHole(act.initialHoles, "spellTargetList");
-  const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+  const commandOption = requireHole(
+    act.initialHoles,
+    "compelledBehaviorOptionChoice",
+  );
   const targetSelection = spellTargetListFill(target, act.subject, [
     skeletonId,
   ]);
@@ -17055,14 +16855,14 @@ function endTurnSubjectFor(
   return { tag: "runtimeCommand", actorId, command: "endTurn" };
 }
 
-function commandPendingOption(
+function compelledNextTurnBehaviorOption(
   state: BattleState,
 ): CommandOrderingPendingOption {
   const target = state.combatants.get(skeletonId);
   const effect = target?.activeEffects.find(
-    (candidate) => candidate.kind === "commandPending",
+    (candidate) => candidate.kind === "compelledNextTurnBehavior",
   );
-  return effect?.kind === "commandPending" ? effect.option : "none";
+  return effect?.kind === "compelledNextTurnBehavior" ? effect.option : "none";
 }
 
 function commandOrderingActorId(
@@ -18394,12 +18194,12 @@ function concentrationSavingThrowFill(
 function commandOptionFill(
   hole: BattleHole,
   value: Exclude<CommandOrderingPendingOption, "none">,
-): Extract<BattleFill, { readonly kind: "commandOptionChoice" }> {
-  if (hole.kind !== "commandOptionChoice") {
+): Extract<BattleFill, { readonly kind: "compelledBehaviorOptionChoice" }> {
+  if (hole.kind !== "compelledBehaviorOptionChoice") {
     throw new Error("Expected Command option-choice hole.");
   }
   return {
-    kind: "commandOptionChoice",
+    kind: "compelledBehaviorOptionChoice",
     holeId: hole.holeId,
     value,
   };
@@ -18424,7 +18224,7 @@ function movementFill(
   };
 }
 
-function commandApproachMovementFill(
+function executeCompelledApproachMovementFill(
   hole: BattleHole,
   value: {
     readonly movementCostFeet: number;
@@ -18441,15 +18241,15 @@ function commandApproachMovementFill(
       speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: [],
-      commandApproach: {
-        kind: "commandApproachShortestDirectRouteTowardCaster",
-        movedWithinFiveFeetOfCaster: value.movedWithinFiveFeetOfCaster,
+      compelledApproach: {
+        kind: "compelledApproachShortestDirectRouteTowardSource",
+        movedWithinFiveFeetOfSource: value.movedWithinFiveFeetOfCaster,
       },
     },
   };
 }
 
-function commandFleeMovementFill(
+function executeCompelledFleeMovementFill(
   hole: BattleHole,
   value: {
     readonly movementCostFeet: number;
@@ -18469,8 +18269,8 @@ function commandFleeMovementFill(
       speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
       provokedOpportunityAttacks: value.provokedOpportunityAttacks,
-      commandFlee: {
-        kind: "commandFleeFastestAvailableRouteAwayFromCaster",
+      compelledFlee: {
+        kind: "compelledFleeFastestAvailableRouteAwayFromSource",
       },
     },
   };
@@ -18626,7 +18426,8 @@ function reducerRouteHolesFromRuntimeHole(
     return ["attackDamageDisposition"];
   }
   if (hole.kind === "attackRoll") return ["attackRoll"];
-  if (hole.kind === "commandOptionChoice") return ["commandOptionChoice"];
+  if (hole.kind === "compelledBehaviorOptionChoice")
+    return ["compelledBehaviorOptionChoice"];
   if (hole.kind === "companionReappearanceInitiative") {
     return ["companionReappearanceInitiative"];
   }
@@ -18637,8 +18438,8 @@ function reducerRouteHolesFromRuntimeHole(
   if (hole.kind === "damageTypeChoice") return ["damageTypeChoice"];
   if (hole.kind === "deathSavingThrow") return ["deathSavingThrow"];
   if (hole.kind === "grappleOutcome") return ["grappleOutcome"];
-  if (hole.kind === "gustOfWindLineDirectionChoice") {
-    return ["gustOfWindLineDirectionChoice"];
+  if (hole.kind === "directionalPersistentAreaDirectionChoice") {
+    return ["directionalPersistentAreaDirectionChoice"];
   }
   // Area wind strength is caller/table-supplied environmental evidence, not a
   // durable reducer-route frontier.
@@ -18650,13 +18451,14 @@ function reducerRouteHolesFromRuntimeHole(
     return ["hitPointHealingDistribution"];
   }
   if (hole.kind === "interruptDecision") return ["interruptDecision"];
-  if (hole.kind === "levitateAltitudeChange") {
-    return ["levitateAltitudeChange"];
+  if (hole.kind === "controlledVerticalSuspensionAltitudeChange") {
+    return ["controlledVerticalSuspensionAltitudeChange"];
   }
-  if (hole.kind === "levitateInitialRise") return ["levitateInitialRise"];
+  if (hole.kind === "controlledVerticalSuspensionInitialRise")
+    return ["controlledVerticalSuspensionInitialRise"];
   // Magic Weapon target item identity is caller/table-supplied inventory
   // evidence, not a durable reducer-route frontier.
-  if (hole.kind === "magicWeaponTargetItem") return [];
+  if (hole.kind === "weaponAttackDamageEnhancementTargetItem") return [];
   if (hole.kind === "movement") return ["movement"];
   if (hole.kind === "objectDropResolution") return ["objectDropResolution"];
   // Object target choice is a table-owned boundary fact, outside this route vocabulary.
@@ -18665,8 +18467,8 @@ function reducerRouteHolesFromRuntimeHole(
     return ["ongoingSpellTargetChoice"];
   }
   if (hole.kind === "rolledDice") return ["rolledDice"];
-  if (hole.kind === "sanctuaryInterdictionOutcome") {
-    return ["sanctuaryInterdictionOutcome"];
+  if (hole.kind === "targetingSaveInterdictionOutcome") {
+    return ["targetingSaveInterdictionOutcome"];
   }
   if (hole.kind === "savingThrowOutcome") return ["savingThrowOutcome"];
   if (hole.kind === "selfTransformationModeChoice") {
@@ -18682,8 +18484,8 @@ function reducerRouteHolesFromRuntimeHole(
   }
   if (hole.kind === "shoveOutcome") return ["shoveOutcome"];
   if (hole.kind === "skillChoice") return ["skillChoice"];
-  if (hole.kind === "slowSomaticSpellFailureOutcome") {
-    return ["slowSomaticSpellFailureOutcome"];
+  if (hole.kind === "turnConstraintSomaticSpellFailureOutcome") {
+    return ["turnConstraintSomaticSpellFailureOutcome"];
   }
   if (hole.kind === "spellcastingAbilityCheck") {
     return ["spellcastingAbilityCheck"];
@@ -18737,15 +18539,15 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
   if (hole.kind === "spellAreaChoice") {
     throw new Error("Battle runtime MBT does not model spell area holes.");
   }
-  if (hole.kind === "sanctuaryInterdictionOutcome") {
+  if (hole.kind === "targetingSaveInterdictionOutcome") {
     throw new Error("Battle runtime MBT does not model Sanctuary holes.");
   }
-  if (hole.kind === "dancingLightsPlacement") {
+  if (hole.kind === "movableLightPlacement") {
     throw new Error(
       "Battle runtime MBT does not model Dancing Lights placement holes.",
     );
   }
-  if (hole.kind === "thaumaturgyActiveOneMinuteEffectCount") {
+  if (hole.kind === "temporaryAbilityCheckRollModeActiveEffectCount") {
     throw new Error(
       "Battle runtime MBT does not model Thaumaturgy active-effect count holes.",
     );
@@ -18760,7 +18562,7 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model teleport destination holes.",
     );
   }
-  if (hole.kind === "spiritualWeaponForcePosition") {
+  if (hole.kind === "spatialMeleeSpellAttackProxyPosition") {
     throw new Error(
       "Battle runtime aggregate MBT does not model Spiritual Weapon force-position holes.",
     );
@@ -18785,7 +18587,7 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model object contact target holes.",
     );
   }
-  if (hole.kind === "gustOfWindLineDirectionChoice") {
+  if (hole.kind === "directionalPersistentAreaDirectionChoice") {
     throw new Error(
       "Battle runtime MBT does not model Gust of Wind direction-choice holes.",
     );
@@ -18795,7 +18597,7 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model object drop resolution holes.",
     );
   }
-  if (hole.kind === "magicWeaponTargetItem") {
+  if (hole.kind === "weaponAttackDamageEnhancementTargetItem") {
     throw new Error(
       "Battle runtime MBT does not model Magic Weapon target-item holes.",
     );
@@ -18810,13 +18612,13 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Battle runtime MBT does not model spellcasting ability check holes.",
     );
   }
-  if (hole.kind === "levitateAltitudeChange") {
+  if (hole.kind === "controlledVerticalSuspensionAltitudeChange") {
     return ["LevitateAltitudeChange"];
   }
-  if (hole.kind === "levitateInitialRise") {
+  if (hole.kind === "controlledVerticalSuspensionInitialRise") {
     return ["LevitateInitialRise"];
   }
-  if (hole.kind === "slowSomaticSpellFailureOutcome") {
+  if (hole.kind === "turnConstraintSomaticSpellFailureOutcome") {
     return ["SlowSomaticSpellFailureOutcome"];
   }
   if (hole.kind === "targetAbilityChoices") {
@@ -18834,7 +18636,7 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
       "Generic battle runtime MBT leaves Wild Shape equipment disposition holes to focused Wild Shape equipment witnesses.",
     );
   }
-  if (hole.kind === "findFamiliarConnection") {
+  if (hole.kind === "spawnedCompanionConnection") {
     throw new Error(
       "Generic battle runtime MBT leaves companion connection holes to focused companion witnesses.",
     );
@@ -18889,7 +18691,7 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
             "Battle runtime MBT does not model skill choice holes.",
           );
         }),
-        Match.when({ kind: "commandOptionChoice" }, () => {
+        Match.when({ kind: "compelledBehaviorOptionChoice" }, () => {
           throw new Error(
             "Battle runtime MBT does not model Command option holes.",
           );
@@ -18915,7 +18717,7 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
         Match.when({ kind: "movement" }, () => {
           throw new Error("Battle runtime MBT does not model movement holes.");
         }),
-        Match.when({ kind: "cloudkillMovement" }, () => {
+        Match.when({ kind: "persistentAreaSourceTurnTranslation" }, () => {
           throw new Error(
             "Generic battle runtime MBT leaves Cloudkill movement to its focused witness.",
           );
@@ -19291,7 +19093,8 @@ function commandOrderingStage(raw: unknown): CommandOrderingStage {
 function commandOrderingHole(raw: unknown): CommandOrderingHole {
   const tag = quintVariantTag(raw);
   if (tag === "SpellTargetListHoleKind") return "spellTargetList";
-  if (tag === "CommandOptionChoiceHoleKind") return "commandOptionChoice";
+  if (tag === "CommandOptionChoiceHoleKind")
+    return "compelledBehaviorOptionChoice";
   if (tag === "SavingThrowOutcomeHoleKind") return "savingThrowOutcome";
   if (tag === "MovementHoleKind") return "movement";
   if (tag === "InterruptDecisionHoleKind") return "interruptDecision";
@@ -19303,7 +19106,8 @@ function commandOrderingHoleFromRuntime(
   hole: Pick<BattleHole, "kind">,
 ): readonly CommandOrderingHole[] {
   if (hole.kind === "spellTargetList") return ["spellTargetList"];
-  if (hole.kind === "commandOptionChoice") return ["commandOptionChoice"];
+  if (hole.kind === "compelledBehaviorOptionChoice")
+    return ["compelledBehaviorOptionChoice"];
   if (hole.kind === "savingThrowOutcome") return ["savingThrowOutcome"];
   if (hole.kind === "movement") return ["movement"];
   if (hole.kind === "interruptDecision") return ["interruptDecision"];
@@ -19316,7 +19120,7 @@ function commandOrderingError(raw: unknown): CommandOrderingError {
   if (
     raw === "" ||
     raw === "commandTargetListRequired" ||
-    raw === "commandOptionChoiceRequired" ||
+    raw === "compelledBehaviorOptionChoiceRequired" ||
     raw === "commandSavingThrowRequired" ||
     raw === "commandHeldObjectFactsRequired" ||
     raw === "commandMovementRequired"

@@ -1689,7 +1689,7 @@ describe("Stat Block execution references", () => {
                   {
                     kind: "activeEffect" as const,
                     effectRef,
-                    activeEffectKind: "hideousLaughter" as const,
+                    activeEffectKind: "saveGatedConditionWithRepeat" as const,
                     location: { kind: "nonSpatial" as const },
                   },
                 ],
@@ -1748,7 +1748,8 @@ describe("Stat Block execution references", () => {
                       {
                         kind: "activeEffect" as const,
                         effectRef: fighterEffectRef,
-                        activeEffectKind: "hideousLaughter" as const,
+                        activeEffectKind:
+                          "saveGatedConditionWithRepeat" as const,
                         location: { kind: "nonSpatial" as const },
                       },
                     ],

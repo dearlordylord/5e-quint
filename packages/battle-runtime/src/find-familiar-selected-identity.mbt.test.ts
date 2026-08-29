@@ -72,17 +72,19 @@ type FindFamiliarSelectedIdentityProjection = {
     | "dismissedAndReappeared"
     | "touchDelivered";
 };
-const findFamiliarUnitId = "find_familiar";
+const spawnedCompanionLifecycleUnitId = "find_familiar";
 const casterId = combatantId("find-familiar-selected-caster");
 const familiarId = combatantId("find-familiar-selected-companion");
 const replacementFamiliarId = combatantId("find-familiar-selected-replacement");
 const targetId = combatantId("find-familiar-selected-target");
 
-const findFamiliarSpell = requireSpellRecord(findFamiliarUnitId);
+const spawnedCompanionLifecycleSpell = requireSpellRecord(
+  spawnedCompanionLifecycleUnitId,
+);
 const cureWoundsSpell = requireSpellRecord(cureWoundsUnitId);
 const healingWordSpell = requireSpellRecord(healingWordUnitId);
 const familiarEligibility = requireFindFamiliarEligibility(
-  findFamiliarFormEligibilityForSpell(findFamiliarSpell),
+  findFamiliarFormEligibilityForSpell(spawnedCompanionLifecycleSpell),
 );
 const firstTypeOverride = familiarEligibility.creatureTypeOverrideChoices[0];
 if (firstTypeOverride === undefined) {
@@ -104,16 +106,16 @@ const FIND_FAMILIAR_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
 
 it("observes selected Find Familiar qRoute through public reducer events", () => {
   expect(observeCastFindFamiliarRoute()).toEqual(
-    findFamiliarCompanionLifecycleRoute(),
+    spawnedCompanionLifecycleCompanionLifecycleRoute(),
   );
   expect(observeRecastFindFamiliarReplacementRoute()).toEqual(
-    findFamiliarCompanionLifecycleRoute(),
+    spawnedCompanionLifecycleCompanionLifecycleRoute(),
   );
   expect(observeDismissAndReappearFindFamiliarRoute()).toEqual(
-    findFamiliarCompanionLifecycleRoute(),
+    spawnedCompanionLifecycleCompanionLifecycleRoute(),
   );
   expect(observeDeliverTouchSpellThroughFindFamiliarRoute()).toEqual(
-    findFamiliarTouchDeliveryRoute(),
+    spawnedCompanionLifecycleTouchDeliveryRoute(),
   );
 });
 
@@ -145,7 +147,7 @@ defineSelectedIdentityReplayAndQntReplay({
   initialProjection: expectedFindFamiliarProjection({}),
   units: [
     {
-      unitId: findFamiliarUnitId,
+      unitId: spawnedCompanionLifecycleUnitId,
       procedures: [
         {
           actionName: "doCastFindFamiliar",
@@ -247,7 +249,7 @@ function observeDeliverTouchSpellThroughFindFamiliarRoute(): readonly BattleRedu
   ];
 }
 
-function findFamiliarCompanionLifecycleRoute(): readonly BattleReducerRouteEvent[] {
+function spawnedCompanionLifecycleCompanionLifecycleRoute(): readonly BattleReducerRouteEvent[] {
   return [
     battleReducerStartRouteEvent(),
     {
@@ -265,7 +267,7 @@ function findFamiliarCompanionLifecycleRoute(): readonly BattleReducerRouteEvent
   ];
 }
 
-function findFamiliarTouchDeliveryRoute(): readonly BattleReducerRouteEvent[] {
+function spawnedCompanionLifecycleTouchDeliveryRoute(): readonly BattleReducerRouteEvent[] {
   return [
     battleReducerStartRouteEvent(),
     {

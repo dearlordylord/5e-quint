@@ -188,7 +188,7 @@ describe("battle runtime: class action features", () => {
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
-        commandHalt: null,
+        compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
         spellSlotUsesThisTurn: [],
@@ -357,7 +357,7 @@ describe("battle runtime: class action features", () => {
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
-        commandHalt: null,
+        compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
         spellSlotUsesThisTurn: [],
@@ -414,7 +414,7 @@ describe("battle runtime: class action features", () => {
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
-        commandHalt: null,
+        compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
         spellSlotUsesThisTurn: [],
@@ -597,7 +597,7 @@ describe("battle runtime: class action features", () => {
         currentHasBonusAction: false,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
-        commandHalt: null,
+        compelledHalt: null,
         jumpDistanceMultiplier: null,
         heightenedStepOfTheWindCarriedCreatures: [],
         spellSlotUsesThisTurn: [],
@@ -3914,10 +3914,11 @@ describe("battle runtime: class action features", () => {
         provokedOpportunityAttacks: [],
       });
       const {
-        jumpMovementReplacement: _jumpMovementReplacement,
-        levitatedMovement: _levitatedMovement,
-        commandApproach: _commandApproach,
-        commandFlee: _commandFlee,
+        fixedCostMovementReplacement: _fixedCostMovementReplacement,
+        controlledVerticalSuspensionMovement:
+          _controlledVerticalSuspensionMovement,
+        compelledApproach: _executeCompelledApproach,
+        compelledFlee: _executeCompelledFlee,
         brutalStrikeForcefulBlow: _brutalStrikeForcefulBlow,
         ...movementValue
       } = fill.value;

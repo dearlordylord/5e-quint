@@ -40,7 +40,7 @@ import {
   spellAct,
   spellTargetFill,
   webAreaFill,
-  webRestraintSaveAct,
+  persistentAreaSaveConditionEscapeSaveAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
@@ -113,7 +113,7 @@ describe("GH-227 active spell lifecycle coverage", () => {
 
   test("a failed Web save can resolve a public readied Ray of Frost release before resuming the spell", () => {
     const { targetTurn } = castWebWithReadiedRay();
-    const entryAct = webRestraintSaveAct(
+    const entryAct = persistentAreaSaveConditionEscapeSaveAct(
       targetTurn,
       spellTargetId,
       "entersArea",
@@ -226,7 +226,7 @@ describe("GH-227 active spell lifecycle coverage", () => {
     expect(caster.activeEffects).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "webRestraintHazard",
+          kind: "persistentAreaSaveConditionEscape",
           areaId: webAreaId,
           entrySavedThisTurn: [spellTargetId],
         }),

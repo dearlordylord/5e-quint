@@ -210,7 +210,7 @@ describe("Ice Knife attack-burst boundaries", () => {
     });
     const sanctuary = requireHole(
       needsSanctuary,
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     const replacementChoice = targetFill(target, replacementTargetId);
     const replacementSpatialFacts =
@@ -229,7 +229,7 @@ describe("Ice Knife attack-burst boundaries", () => {
         targetChoice,
         reactionFacts,
         {
-          kind: "sanctuaryInterdictionOutcome",
+          kind: "targetingSaveInterdictionOutcome",
           holeId: sanctuary.holeId,
           value: {
             saveSucceeded: false,
@@ -242,7 +242,7 @@ describe("Ice Knife attack-burst boundaries", () => {
           },
         } satisfies Extract<
           BattleFill,
-          { readonly kind: "sanctuaryInterdictionOutcome" }
+          { readonly kind: "targetingSaveInterdictionOutcome" }
         >,
       ],
     });

@@ -380,28 +380,34 @@ describe("Table-authored per-test D20 circumstances", () => {
     ["spellTurnStartSave", { spellTurnStartSave: { targetId: firstTargetId } }],
     ["sleepRepeatSave", { sleepRepeatSave: { targetId: firstTargetId } }],
     [
-      "hideousLaughterRepeatSave",
-      { hideousLaughterRepeatSave: { targetId: firstTargetId } },
+      "saveGatedConditionRepeatSave",
+      { saveGatedConditionRepeatSave: { targetId: firstTargetId } },
     ],
     [
       "spellConditionCountedEndTurnSave",
       { spellConditionCountedEndTurnSave: { targetId: firstTargetId } },
     ],
-    ["greaseGroundHazard", { greaseGroundHazard: { targetId: firstTargetId } }],
+    [
+      "persistentAreaSaveCondition",
+      { persistentAreaSaveCondition: { targetId: firstTargetId } },
+    ],
     ["webRestraint", { webRestraint: { targetId: firstTargetId } }],
     [
-      "sleetStormAreaHazard",
-      { sleetStormAreaHazard: { targetId: firstTargetId } },
+      "persistentAreaSaveComposite",
+      { persistentAreaSaveComposite: { targetId: firstTargetId } },
     ],
     [
-      "insectPlagueAreaHazard",
-      { insectPlagueAreaHazard: { targetId: firstTargetId } },
+      "persistentAreaSaveDamage",
+      { persistentAreaSaveDamage: { targetId: firstTargetId } },
     ],
     [
-      "cloudkillAreaHazard",
-      { cloudkillAreaHazard: { targetId: firstTargetId } },
+      "persistentAreaSaveDamage",
+      { persistentAreaSaveDamage: { targetId: firstTargetId } },
     ],
-    ["gustOfWindLine", { gustOfWindLine: { targetId: firstTargetId } }],
+    [
+      "directionalPersistentArea",
+      { directionalPersistentArea: { targetId: firstTargetId } },
+    ],
     [
       "spellConditionEndTurnSave",
       { spellConditionEndTurnSave: { targetId: firstTargetId } },
@@ -411,8 +417,8 @@ describe("Table-authored per-test D20 circumstances", () => {
       { unitFeatureConditionEndTurnSave: { targetId: firstTargetId } },
     ],
     [
-      "slowActivePenaltiesEndTurnSave",
-      { slowActivePenaltiesEndTurnSave: { targetId: firstTargetId } },
+      "saveGatedTurnConstraintBundleEndTurnSave",
+      { saveGatedTurnConstraintBundleEndTurnSave: { targetId: firstTargetId } },
     ],
     [
       "abilityD20TestRollModeEndTurnSave",

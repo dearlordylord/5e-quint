@@ -50,7 +50,7 @@ const thaumaturgySubject = {
   actorId: fighterId,
   invocation: cantripSpellInvocationRef(
     "thaumaturgy",
-    "thaumaturgyBoomingVoice",
+    "temporaryAbilityCheckRollMode",
   ),
   mode: { tag: "cast" as const },
 };
@@ -200,15 +200,18 @@ function thaumaturgyCountFill(
   const act = findAct(session, thaumaturgySubject);
   const hole = findThaumaturgyCountHole(act.initialHoles);
   return {
-    kind: "thaumaturgyActiveOneMinuteEffectCount",
+    kind: "temporaryAbilityCheckRollModeActiveEffectCount",
     holeId: hole.holeId,
     value: { activeOneMinuteEffectCount },
   };
 }
 
 function findThaumaturgyCountHole(holes: readonly BattleHole[]) {
-  const hole = findHole(holes, "thaumaturgyActiveOneMinuteEffectCount");
-  if (hole.kind !== "thaumaturgyActiveOneMinuteEffectCount") {
+  const hole = findHole(
+    holes,
+    "temporaryAbilityCheckRollModeActiveEffectCount",
+  );
+  if (hole.kind !== "temporaryAbilityCheckRollModeActiveEffectCount") {
     throw new Error("Expected Thaumaturgy active-effect count hole.");
   }
   return hole;
@@ -223,14 +226,14 @@ function projectThaumaturgyState(
       session.state.combatants
         .get(fighterId)
         ?.activeEffects.filter(
-          (effect) => effect.kind === "thaumaturgyBoomingVoice",
+          (effect) => effect.kind === "temporaryAbilityCheckRollMode",
         ).length ?? 0,
     actionAvailable: discoverBattleActs(session).some(
       (act) =>
         act.subject.tag === "actionSpell" &&
         battleActSpellPresentation(act)?.invocation.spellId === "thaumaturgy" &&
         battleActSpellPresentation(act)?.invocation.procedure ===
-          "thaumaturgyBoomingVoice",
+          "temporaryAbilityCheckRollMode",
     ),
     intimidationRollMode:
       requiredAbilityCheckRollMode(session.state, fighterId, "cha", {

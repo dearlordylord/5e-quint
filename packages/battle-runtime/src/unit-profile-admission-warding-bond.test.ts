@@ -32,8 +32,8 @@ import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-ev
 import {
   burningHandsUnitId,
   flameStrikeUnitId,
-  hideousLaughterDurationTicks,
-  hideousLaughterUnitId,
+  saveGatedConditionWithRepeatDurationTicks,
+  saveGatedConditionWithRepeatUnitId,
   iceKnifeUnitId,
   magicMissileUnitId,
   searingSmiteUnitId,
@@ -802,7 +802,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       "savingThrowOutcome",
     );
     expect(repeatSave).toMatchObject({
-      saveGatedConditionWithRepeatDamageRepeatSave: {
+      saveGatedConditionWithRepeatRepeatSave: {
         targetId: spellTargetId,
         trigger: "damage",
       },
@@ -1106,10 +1106,10 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         hole,
       ): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
         hole.kind === "savingThrowOutcome" &&
-        "saveGatedConditionWithRepeatDamageRepeatSave" in hole &&
-        hole.saveGatedConditionWithRepeatDamageRepeatSave.targetId ===
+        "saveGatedConditionWithRepeatRepeatSave" in hole &&
+        hole.saveGatedConditionWithRepeatRepeatSave.targetId ===
           spellCasterId &&
-        hole.saveGatedConditionWithRepeatDamageRepeatSave.trigger === "endTurn",
+        hole.saveGatedConditionWithRepeatRepeatSave.trigger === "endTurn",
     );
     if (endTurnRepeatSave === undefined) {
       throw new Error("Expected Hideous Laughter end-turn save.");
@@ -1157,15 +1157,14 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
         hole,
       ): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
         hole.kind === "savingThrowOutcome" &&
-        "saveGatedConditionWithRepeatDamageRepeatSave" in hole &&
-        hole.saveGatedConditionWithRepeatDamageRepeatSave.targetId ===
-          spellCasterId,
+        "saveGatedConditionWithRepeatRepeatSave" in hole &&
+        hole.saveGatedConditionWithRepeatRepeatSave.targetId === spellCasterId,
     );
     if (repeatSave === undefined) {
       throw new Error("Expected caster Hideous Laughter damage repeat save.");
     }
     expect(repeatSave).toMatchObject({
-      saveGatedConditionWithRepeatDamageRepeatSave: {
+      saveGatedConditionWithRepeatRepeatSave: {
         targetId: spellCasterId,
         sourceProcedureRef: expect.any(String),
         trigger: "damage",
@@ -1534,7 +1533,7 @@ function withHideousLaughterOnTarget(state: BattleState): BattleState {
         ...caster,
         concentration: {
           sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(hideousLaughterUnitId),
+            String(saveGatedConditionWithRepeatUnitId),
           ),
           effectKind: "spellEffect",
         },
@@ -1555,7 +1554,7 @@ function withHideousLaughterOnTarget(state: BattleState): BattleState {
     effect: {
       kind: "saveGatedConditionWithRepeat" as const,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(hideousLaughterUnitId),
+        String(saveGatedConditionWithRepeatUnitId),
       ),
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
@@ -1568,7 +1567,7 @@ function withHideousLaughterOnTarget(state: BattleState): BattleState {
       expiresAt: {
         kind: "concentration" as const,
         combatantId: spellCasterId,
-        durationTicks: hideousLaughterDurationTicks,
+        durationTicks: saveGatedConditionWithRepeatDurationTicks,
       },
     },
   });
@@ -1593,7 +1592,7 @@ function withHideousLaughterOnCaster(state: BattleState): BattleState {
         ...target,
         concentration: {
           sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(hideousLaughterUnitId),
+            String(saveGatedConditionWithRepeatUnitId),
           ),
           effectKind: "spellEffect",
         },
@@ -1605,7 +1604,7 @@ function withHideousLaughterOnCaster(state: BattleState): BattleState {
     effect: {
       kind: "saveGatedConditionWithRepeat" as const,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(hideousLaughterUnitId),
+        String(saveGatedConditionWithRepeatUnitId),
       ),
       sourceCombatantId: spellTargetId,
       conditionHadNonSpellProneSource: false,
@@ -1618,7 +1617,7 @@ function withHideousLaughterOnCaster(state: BattleState): BattleState {
       expiresAt: {
         kind: "concentration" as const,
         combatantId: spellTargetId,
-        durationTicks: hideousLaughterDurationTicks,
+        durationTicks: saveGatedConditionWithRepeatDurationTicks,
       },
     },
   });

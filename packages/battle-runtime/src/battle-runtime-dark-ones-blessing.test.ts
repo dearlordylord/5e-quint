@@ -400,7 +400,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       concentrationSavingThrow: undefined,
       damageDisposition: { kind: "ordinaryDamage" },
       linkedDefenseResistanceDamageShareConcentrationSavingThrows: [],
-      hideousLaughterDamageRepeatSaves: [],
+      saveGatedConditionWithRepeatDamageRepeatSaves: [],
       damageSourceId: warlockId,
       spatialFacts: [],
       relationshipDecisions: [darkOnesBlessingEnemyDecision(enemyId)],

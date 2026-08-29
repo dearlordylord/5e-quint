@@ -111,7 +111,7 @@ type SpikeGrowthRuntimeState = {
 
 type SpikeGrowthHazardEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "spikeGrowthHazard" }
+  { readonly kind: "areaMovementDistanceDamage" }
 >;
 
 const driverSchema = {
@@ -338,7 +338,7 @@ function discoverMovementDamage(
     spellCasterId,
   ).activeEffects.find(
     (effect): effect is SpikeGrowthHazardEffect =>
-      effect.kind === "spikeGrowthHazard" &&
+      effect.kind === "areaMovementDistanceDamage" &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === spikeGrowthAreaId,
   );
@@ -425,7 +425,7 @@ function spikeGrowthMovementFill(
       kind: "areaDifficultTerrain",
       sources: [
         {
-          kind: "spikeGrowthHazard",
+          kind: "areaMovementDistanceDamage",
           effectRef: hazard.effectRef,
           sourceCombatantId: spellCasterId,
           sourceProcedureRef: hazard.sourceProcedureRef,
@@ -446,7 +446,7 @@ function spikeGrowthProjection(
   const target = requireCombatant(state.battle, spellTargetId);
   const hazard = caster.activeEffects.find(
     (effect): effect is SpikeGrowthHazardEffect =>
-      effect.kind === "spikeGrowthHazard" &&
+      effect.kind === "areaMovementDistanceDamage" &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === spikeGrowthAreaId,
   );

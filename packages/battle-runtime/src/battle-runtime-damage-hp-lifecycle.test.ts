@@ -641,13 +641,17 @@ describe("damage and hit point lifecycle helpers", () => {
     const concentrationProcedureRef = requireCharacterSpellProcedureRefForTest(
       session,
       fighterId,
-      spellSlotInvocationRef("hideous_laughter", 1, "hideousLaughter"),
+      spellSlotInvocationRef(
+        "hideous_laughter",
+        1,
+        "saveGatedConditionWithRepeat",
+      ),
     );
     const concentrationEscapeEffect = allocateBattleEffectOccurrenceForCreature(
       {
         owner: target,
         effect: {
-          kind: "hideousLaughter",
+          kind: "saveGatedConditionWithRepeat",
           sourceProcedureRef: concentrationProcedureRef,
           sourceCombatantId: fighterId,
           conditionHadNonSpellProneSource: false,

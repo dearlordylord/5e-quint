@@ -887,7 +887,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       Result.isFailure(
         Schema.decodeUnknownResult(BattleHoleSchema)({
           ...encoded,
-          procedure: "jumpMovementReplacement",
+          procedure: "fixedCostMovementReplacement",
         }),
       ),
     ).toBe(true);
@@ -1030,8 +1030,8 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
           ...fill,
           value: {
             ...fill.value,
-            commandFlee: {
-              kind: "commandFleeFastestAvailableRouteAwayFromCaster",
+            compelledFlee: {
+              kind: "compelledFleeFastestAvailableRouteAwayFromSource",
             },
           },
         }),
@@ -1043,12 +1043,12 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     const invalidGreaseArea = {
       originAnchorId: wizardId,
       affectedTargetIds: [goblinId],
-      kind: "greaseGroundArea",
+      kind: "persistentAreaSaveConditionArea",
     };
     const greaseInvocation = {
       access: { tag: "prepared" },
       resource: { tag: "spellSlot", slotLevel: 1 },
-      procedure: "greaseGroundHazard",
+      procedure: "persistentAreaSaveCondition",
       spell: { id: "grease" },
       ability: "dex",
       dc: { kind: "caster_spell_save_dc" },
@@ -1092,7 +1092,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     expect(
       Result.isFailure(
         Schema.decodeUnknownResult(BattleHoleSchema)({
-          kind: "sanctuaryInterdictionOutcome",
+          kind: "targetingSaveInterdictionOutcome",
           holeId: holeId("battle:test:invalid-sanctuary-save"),
           holeInstanceKey: holeInstanceKey(
             "battle:test:invalid-sanctuary-save",
@@ -1119,7 +1119,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     expect(
       Result.isFailure(
         Schema.decodeUnknownResult(BattleFillSchema)({
-          kind: "sanctuaryInterdictionOutcome",
+          kind: "targetingSaveInterdictionOutcome",
           holeId: holeId("battle:test:invalid-sanctuary-replacement-fact"),
           value: {
             saveSucceeded: false,

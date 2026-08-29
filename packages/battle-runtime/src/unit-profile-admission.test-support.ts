@@ -58,7 +58,7 @@ import type {
 } from "./battle-state-execution.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-state.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
-import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./battle-reducer/hideous-laughter-repeat-save.ts";
+import { saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole } from "./battle-reducer/hideous-laughter-repeat-save.ts";
 import { conditionApplicationPreventedByCreatureTypeProtection } from "./battle-reducer/spell-condition-effects-helpers.ts";
 import {
   applyFailedSaveSpellConditionEffects,
@@ -70,12 +70,12 @@ import {
   spellSavingThrowOutcomeHole,
   validateSpellDamageFill,
 } from "./battle-reducer/spells-damage-fills.ts";
-import { supportedPreparedHideousLaughterProfile } from "./battle-reducer/spell-procedure-profiles/hideous-laughter.ts";
+import { supportedPreparedSaveGatedConditionWithRepeatProfile } from "./battle-reducer/spell-procedure-profiles/hideous-laughter.ts";
 import {
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
 } from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
-import { supportedPreparedSleepTargetAdmissionProfile } from "./battle-reducer/spell-procedure-profiles/sleep-target-admission.ts";
+import { supportedPreparedStagedSaveConditionProfile } from "./battle-reducer/spell-procedure-profiles/sleep-target-admission.ts";
 import { supportedPreparedHellishRebukeReactionSpellProfile } from "./battle-reducer/spells-profiles.ts";
 import { validateSavingThrowOutcomes } from "./battle-reducer/spells-resolve-save-gates.ts";
 import { characterBattleResourceForUnit } from "./character-battle-resources.ts";
@@ -111,8 +111,8 @@ import {
   battleSightObscurement,
   battleTablePositionId,
   battleUnitRefWithSupportProfiles,
-  battleWeaponItemHasMagicWeaponEnhancement,
-  battleWeaponItemMagicWeaponEnhancementBonus,
+  battleWeaponItemHasWeaponAttackDamageEnhancement,
+  battleWeaponItemWeaponAttackDamageEnhancementBonus,
   breakBattleConcentration,
   cantripSpellInvocationRef,
   characterId,
@@ -295,8 +295,8 @@ export {
   battleStunningStrikeSupportForUnit,
   battleTablePositionId,
   battleUnitRefWithSupportProfiles,
-  battleWeaponItemHasMagicWeaponEnhancement,
-  battleWeaponItemMagicWeaponEnhancementBonus,
+  battleWeaponItemHasWeaponAttackDamageEnhancement,
+  battleWeaponItemWeaponAttackDamageEnhancementBonus,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   bonusActionDashTemporaryHitPointsProfileForUnit,
@@ -330,7 +330,7 @@ export {
   hasCondition,
   HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
   hideActionObscurementPermissionProfileForUnit,
-  hideousLaughterRepeatSavingThrowOutcomeHole,
+  saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
   holeId,
   Hp,
   HUNTERS_PREY_SUPPORT_PROFILE,
@@ -390,10 +390,10 @@ export {
   startBattleWithInitialInitiativeSetup,
   STUNNING_STRIKE_SUPPORT_PROFILE,
   supportedPreparedHellishRebukeReactionSpellProfile,
-  supportedPreparedHideousLaughterProfile,
+  supportedPreparedSaveGatedConditionWithRepeatProfile,
   supportedPreparedSaveGateAttackRollAdvantageProfile,
   supportedPreparedSaveGateConditionProfile,
-  supportedPreparedSleepTargetAdmissionProfile,
+  supportedPreparedStagedSaveConditionProfile,
   trueStrikeInput,
   validateSavingThrowOutcomes,
   validateSpellDamageFill,

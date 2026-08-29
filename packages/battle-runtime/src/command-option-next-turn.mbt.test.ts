@@ -34,8 +34,8 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  commandApproachMovementFill,
-  commandFleeMovementFill,
+  executeCompelledApproachMovementFill,
+  executeCompelledFleeMovementFill,
   savingThrowOutcomeFill,
   spellAct,
   spellTargetListFill,
@@ -285,20 +285,24 @@ function applyScenarioSegment(
   const applicators = {
     "failed-save-records-pending": () =>
       commandCastScenario("grovel", scenario),
-    "follow-grovel": commandGrovelScenario,
-    "follow-drop": commandDropScenario,
-    "halt-suppresses": commandHaltScenario,
-    "halt-end-turn-cleanup": commandHaltEndTurnCleanupScenario,
-    "approach-continues": commandApproachContinuesScenario,
-    "approach-within-five-ends-turn": commandApproachWithinFiveScenario,
-    "approach-movement-rejected": commandApproachMovementRejectedScenario,
-    "approach-no-movement-cleanup": commandApproachNoMovementScenario,
-    "flee-full-movement-ends-turn": commandFleeScenario,
-    "flee-partial-movement-rejected": commandFleePartialRejectedScenario,
-    "flee-no-movement-cleanup": commandFleeNoMovementScenario,
-    "flee-opportunity-attack-window": commandFleeOpportunityAttackScenario,
+    "follow-grovel": executeCompelledGrovelScenario,
+    "follow-drop": executeCompelledDropScenario,
+    "halt-suppresses": compelledHaltScenario,
+    "halt-end-turn-cleanup": compelledHaltEndTurnCleanupScenario,
+    "approach-continues": executeCompelledApproachContinuesScenario,
+    "approach-within-five-ends-turn":
+      executeCompelledApproachWithinFiveScenario,
+    "approach-movement-rejected":
+      executeCompelledApproachMovementRejectedScenario,
+    "approach-no-movement-cleanup": executeCompelledApproachNoMovementScenario,
+    "flee-full-movement-ends-turn": executeCompelledFleeScenario,
+    "flee-partial-movement-rejected":
+      executeCompelledFleePartialRejectedScenario,
+    "flee-no-movement-cleanup": executeCompelledFleeNoMovementScenario,
+    "flee-opportunity-attack-window":
+      executeCompelledFleeOpportunityAttackScenario,
     "flee-opportunity-attack-declined-continuation":
-      commandFleeOpportunityAttackDeclinedScenario,
+      executeCompelledFleeOpportunityAttackDeclinedScenario,
   } satisfies Record<
     CommandOptionNextTurnReplayScenario,
     () => CommandOptionNextTurnProjection
@@ -320,9 +324,9 @@ function commandCastScenario(
   });
 }
 
-function commandGrovelScenario(): CommandOptionNextTurnProjection {
+function executeCompelledGrovelScenario(): CommandOptionNextTurnProjection {
   const targetTurn = commandTargetTurn("grovel");
-  const command = requireRuntimeCommand(targetTurn, "commandGrovel");
+  const command = requireRuntimeCommand(targetTurn, "executeCompelledGrovel");
   const grovelled = requireResolved(
     resolveBattleSubject({
       state: targetTurn,
@@ -339,11 +343,11 @@ function commandGrovelScenario(): CommandOptionNextTurnProjection {
   });
 }
 
-function commandDropScenario(): CommandOptionNextTurnProjection {
+function executeCompelledDropScenario(): CommandOptionNextTurnProjection {
   const targetTurn = commandTargetTurn("drop", {
     targetAttack: zeroAbilityWeaponAttack("weapon_longsword"),
   });
-  const command = requireRuntimeCommand(targetTurn, "commandDrop");
+  const command = requireRuntimeCommand(targetTurn, "executeCompelledDrop");
   const dropped = requireResolved(
     resolveBattleSubject({
       state: targetTurn,
@@ -361,8 +365,8 @@ function commandDropScenario(): CommandOptionNextTurnProjection {
   });
 }
 
-function commandHaltScenario(): CommandOptionNextTurnProjection {
-  const targetTurn = commandHaltTargetTurn();
+function compelledHaltScenario(): CommandOptionNextTurnProjection {
+  const targetTurn = compelledHaltTargetTurn();
   return projectState({
     state: targetTurn.state,
     scenario: "halt-suppresses",
@@ -372,7 +376,7 @@ function commandHaltScenario(): CommandOptionNextTurnProjection {
   });
 }
 
-function commandHaltEndTurnCleanupScenario(): CommandOptionNextTurnProjection {
+function compelledHaltEndTurnCleanupScenario(): CommandOptionNextTurnProjection {
   const targetTurn = commandTargetTurn("halt");
   const ended = requireResolved(
     resolveBattleSubject({
@@ -390,16 +394,16 @@ function commandHaltEndTurnCleanupScenario(): CommandOptionNextTurnProjection {
   });
 }
 
-function commandApproachContinuesScenario(): CommandOptionNextTurnProjection {
+function executeCompelledApproachContinuesScenario(): CommandOptionNextTurnProjection {
   const targetTurn = commandTargetTurn("approach");
-  const command = requireRuntimeCommand(targetTurn, "commandApproach");
+  const command = requireRuntimeCommand(targetTurn, "executeCompelledApproach");
   const movement = requireHole(command.initialHoles, "movement");
   const approached = requireResolved(
     resolveBattleSubject({
       state: targetTurn,
       subject: command.subject,
       fills: [
-        commandApproachMovementFill(movement, {
+        executeCompelledApproachMovementFill(movement, {
           movementCostFeet: 10,
           movedWithinFiveFeetOfCaster: false,
           provokedOpportunityAttacks: [],
@@ -419,16 +423,16 @@ function commandApproachContinuesScenario(): CommandOptionNextTurnProjection {
   });
 }
 
-function commandApproachWithinFiveScenario(): CommandOptionNextTurnProjection {
+function executeCompelledApproachWithinFiveScenario(): CommandOptionNextTurnProjection {
   const targetTurn = commandTargetTurn("approach");
-  const command = requireRuntimeCommand(targetTurn, "commandApproach");
+  const command = requireRuntimeCommand(targetTurn, "executeCompelledApproach");
   const movement = requireHole(command.initialHoles, "movement");
   const approached = requireResolved(
     resolveBattleSubject({
       state: targetTurn,
       subject: command.subject,
       fills: [
-        commandApproachMovementFill(movement, {
+        executeCompelledApproachMovementFill(movement, {
           movementCostFeet: 10,
           movedWithinFiveFeetOfCaster: true,
           provokedOpportunityAttacks: [],
@@ -448,15 +452,15 @@ function commandApproachWithinFiveScenario(): CommandOptionNextTurnProjection {
   });
 }
 
-function commandApproachMovementRejectedScenario(): CommandOptionNextTurnProjection {
+function executeCompelledApproachMovementRejectedScenario(): CommandOptionNextTurnProjection {
   const targetTurn = commandTargetTurn("approach");
-  const command = requireRuntimeCommand(targetTurn, "commandApproach");
+  const command = requireRuntimeCommand(targetTurn, "executeCompelledApproach");
   const movement = requireHole(command.initialHoles, "movement");
   const rejected = resolveBattleSubject({
     state: targetTurn,
     subject: command.subject,
     fills: [
-      commandApproachMovementFill(movement, {
+      executeCompelledApproachMovementFill(movement, {
         movementCostFeet: 35,
         movedWithinFiveFeetOfCaster: false,
         provokedOpportunityAttacks: [],
@@ -480,9 +484,9 @@ function commandApproachMovementRejectedScenario(): CommandOptionNextTurnProject
   });
 }
 
-function commandApproachNoMovementScenario(): CommandOptionNextTurnProjection {
+function executeCompelledApproachNoMovementScenario(): CommandOptionNextTurnProjection {
   const targetTurn = grappledByCaster(commandTargetTurn("approach"));
-  const command = requireRuntimeCommand(targetTurn, "commandApproach");
+  const command = requireRuntimeCommand(targetTurn, "executeCompelledApproach");
   const approached = requireResolved(
     resolveBattleSubject({
       state: targetTurn,
@@ -499,16 +503,16 @@ function commandApproachNoMovementScenario(): CommandOptionNextTurnProjection {
   });
 }
 
-function commandFleeScenario(): CommandOptionNextTurnProjection {
+function executeCompelledFleeScenario(): CommandOptionNextTurnProjection {
   const targetTurn = commandTargetTurn("flee");
-  const command = requireRuntimeCommand(targetTurn, "commandFlee");
+  const command = requireRuntimeCommand(targetTurn, "executeCompelledFlee");
   const movement = requireHole(command.initialHoles, "movement");
   const fled = requireResolved(
     resolveBattleSubject({
       state: targetTurn,
       subject: command.subject,
       fills: [
-        commandFleeMovementFill(movement, {
+        executeCompelledFleeMovementFill(movement, {
           movementCostFeet: 30,
           provokedOpportunityAttacks: [],
         }),
@@ -527,15 +531,15 @@ function commandFleeScenario(): CommandOptionNextTurnProjection {
   });
 }
 
-function commandFleePartialRejectedScenario(): CommandOptionNextTurnProjection {
+function executeCompelledFleePartialRejectedScenario(): CommandOptionNextTurnProjection {
   const targetTurn = commandTargetTurn("flee");
-  const command = requireRuntimeCommand(targetTurn, "commandFlee");
+  const command = requireRuntimeCommand(targetTurn, "executeCompelledFlee");
   const movement = requireHole(command.initialHoles, "movement");
   const rejected = resolveBattleSubject({
     state: targetTurn,
     subject: command.subject,
     fills: [
-      commandFleeMovementFill(movement, {
+      executeCompelledFleeMovementFill(movement, {
         movementCostFeet: 10,
         provokedOpportunityAttacks: [],
       }),
@@ -556,9 +560,9 @@ function commandFleePartialRejectedScenario(): CommandOptionNextTurnProjection {
   });
 }
 
-function commandFleeNoMovementScenario(): CommandOptionNextTurnProjection {
+function executeCompelledFleeNoMovementScenario(): CommandOptionNextTurnProjection {
   const targetTurn = grappledByCaster(commandTargetTurn("flee"));
-  const command = requireRuntimeCommand(targetTurn, "commandFlee");
+  const command = requireRuntimeCommand(targetTurn, "executeCompelledFlee");
   const fled = requireResolved(
     resolveBattleSubject({
       state: targetTurn,
@@ -575,8 +579,8 @@ function commandFleeNoMovementScenario(): CommandOptionNextTurnProjection {
   });
 }
 
-function commandFleeOpportunityAttackScenario(): CommandOptionNextTurnProjection {
-  const fled = commandFleeOpportunityAttackWindow();
+function executeCompelledFleeOpportunityAttackScenario(): CommandOptionNextTurnProjection {
+  const fled = executeCompelledFleeOpportunityAttackWindow();
   return projectState({
     state: fled.state,
     scenario: "flee-opportunity-attack-window",
@@ -586,8 +590,8 @@ function commandFleeOpportunityAttackScenario(): CommandOptionNextTurnProjection
   });
 }
 
-function commandFleeOpportunityAttackDeclinedScenario(): CommandOptionNextTurnProjection {
-  const fled = commandFleeOpportunityAttackWindow();
+function executeCompelledFleeOpportunityAttackDeclinedScenario(): CommandOptionNextTurnProjection {
+  const fled = executeCompelledFleeOpportunityAttackWindow();
   const reaction = requireResultHole(fled, "interruptDecision");
   const declined = requireResolved(
     resolveBattleInterrupt({
@@ -607,18 +611,18 @@ function commandFleeOpportunityAttackDeclinedScenario(): CommandOptionNextTurnPr
   });
 }
 
-function commandFleeOpportunityAttackWindow(): Extract<
+function executeCompelledFleeOpportunityAttackWindow(): Extract<
   BattleResolutionResult,
   { readonly tag: "needsHoles" }
 > & { readonly route: readonly ReducerRouteEvent[] } {
   const targetTurn = commandTargetTurn("flee");
-  const command = requireRuntimeCommand(targetTurn, "commandFlee");
+  const command = requireRuntimeCommand(targetTurn, "executeCompelledFlee");
   const movement = requireHole(command.initialHoles, "movement");
   const fled = resolveBattleSubject({
     state: targetTurn,
     subject: command.subject,
     fills: [
-      commandFleeMovementFill(movement, {
+      executeCompelledFleeMovementFill(movement, {
         movementCostFeet: 30,
         provokedOpportunityAttacks: [
           {
@@ -651,7 +655,7 @@ function commandFleeOpportunityAttackWindow(): Extract<
 
 type CommandOptionFillValue = Extract<
   BattleFill,
-  { readonly kind: "commandOptionChoice" }
+  { readonly kind: "compelledBehaviorOptionChoice" }
 >["value"];
 
 function commandTargetTurn(
@@ -664,7 +668,7 @@ function commandTargetTurn(
   ).state;
 }
 
-function commandHaltTargetTurn(): {
+function compelledHaltTargetTurn(): {
   readonly state: BattleState;
   readonly result: Extract<
     BattleResolutionResult,
@@ -708,7 +712,10 @@ function castCommand(
     slotLevel: 1,
   });
   const target = requireHole(act.initialHoles, "spellTargetList");
-  const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+  const commandOption = requireHole(
+    act.initialHoles,
+    "compelledBehaviorOptionChoice",
+  );
   const targetSelection = spellTargetListFill(
     target,
     spellCasterId,
@@ -717,9 +724,9 @@ function castCommand(
   );
   const optionSelection: Extract<
     BattleFill,
-    { readonly kind: "commandOptionChoice" }
+    { readonly kind: "compelledBehaviorOptionChoice" }
   > = {
-    kind: "commandOptionChoice",
+    kind: "compelledBehaviorOptionChoice",
     holeId: commandOption.holeId,
     value: option,
   };
@@ -834,7 +841,7 @@ function projectState(input: {
     pendingCommandOption: pendingCommandOption(target.activeEffects),
     droppedObjectCount: input.droppedObjectCount ?? 0,
     reactionWindowOpen: input.state.interruptStack.length > 0,
-    haltSuppressed: input.state.currentTurnResources.commandHalt !== null,
+    haltSuppressed: input.state.currentTurnResources.compelledHalt !== null,
     route: input.route,
   };
 }
@@ -869,9 +876,9 @@ function pendingCommandOption(
   effects: readonly BattleActiveEffect[],
 ): PendingCommandOption {
   const effect = effects.find(
-    (candidate) => candidate.kind === "commandPending",
+    (candidate) => candidate.kind === "compelledNextTurnBehavior",
   );
-  return effect?.kind === "commandPending" ? effect.option : "none";
+  return effect?.kind === "compelledNextTurnBehavior" ? effect.option : "none";
 }
 
 function requireResolved(

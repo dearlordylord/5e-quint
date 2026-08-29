@@ -11,8 +11,8 @@ import {
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import {
-  antimagicFieldAuraEffectTemplateForTest,
-  antimagicFieldAuraMembershipForTest,
+  magicSuppressionEmanationEffectTemplateForTest,
+  magicSuppressionEmanationMembershipForTest,
 } from "./antimagic-field.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
@@ -1094,7 +1094,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       kind: "magicalEffect" as const,
       effect: {
         kind: "spellActiveEffect" as const,
-        activeEffectKind: "spiritualWeapon" as const,
+        activeEffectKind: "spatialMeleeSpellAttackProxy" as const,
         effectRef: effect.effectRef,
       },
     };
@@ -1226,7 +1226,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
 
   test("magical-effect targeting leaves an Antimagic Field aura active", () => {
     const areaId = battleAreaId("dispel-antimagic-field-aura-target");
-    const auraTemplate = antimagicFieldAuraEffect(areaId);
+    const auraTemplate = magicSuppressionEmanationEffect(areaId);
     const state = stateWithCombatantActiveEffects({
       target: {
         concentration: {
@@ -1256,7 +1256,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const target = {
       kind: "magicalEffect" as const,
       effect: {
-        kind: "antimagicFieldAura" as const,
+        kind: "magicSuppressionEmanation" as const,
         effectRef: aura.effectRef,
         areaId,
         sourceCombatantId: spellTargetId,
@@ -1295,7 +1295,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
 
   test("magical-effect targeting rejects a stale recast Antimagic Field aura", () => {
     const areaId = battleAreaId("dispel-recast-antimagic-aura-target");
-    const auraTemplate = antimagicFieldAuraEffect(areaId);
+    const auraTemplate = magicSuppressionEmanationEffect(areaId);
     const base = stateWithCombatantActiveEffects({
       target: {
         concentration: {
@@ -1356,7 +1356,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const staleTarget = {
       kind: "magicalEffect" as const,
       effect: {
-        kind: "antimagicFieldAura" as const,
+        kind: "magicSuppressionEmanation" as const,
         effectRef: staleAura.effectRef,
         areaId,
         sourceCombatantId: spellTargetId,
@@ -1365,7 +1365,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const activeTarget = {
       kind: "magicalEffect" as const,
       effect: {
-        kind: "antimagicFieldAura" as const,
+        kind: "magicSuppressionEmanation" as const,
         effectRef: activeAura.effectRef,
         areaId,
         sourceCombatantId: spellTargetId,
@@ -1414,7 +1414,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       kind: "magicalEffect" as const,
       effect: {
         kind: "spellActiveEffect" as const,
-        activeEffectKind: "spiritualWeapon" as const,
+        activeEffectKind: "spatialMeleeSpellAttackProxy" as const,
         effectRef: effect.effectRef,
       },
     };
@@ -1549,7 +1549,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
               checkedOccurrence: {
                 ownerId: spellCasterId,
                 effect: {
-                  kind: "antimagicFieldAura",
+                  kind: "magicSuppressionEmanation",
                   areaId: battleAreaId("forged-ability-check-aura"),
                   sourceCombatantId: spellCasterId,
                 },
@@ -1774,7 +1774,7 @@ function stateWithBoundSpiritualWeaponEffect(sourceSpellLevel: 2 | 4): {
   readonly state: BattleRuntimeSession;
   readonly effect: Extract<
     BattleActiveEffect,
-    { readonly kind: "spiritualWeapon" }
+    { readonly kind: "spatialMeleeSpellAttackProxy" }
   >;
 } {
   const clericClassLevel = {
@@ -1804,7 +1804,7 @@ function stateWithBoundSpiritualWeaponEffect(sourceSpellLevel: 2 | 4): {
     spellSlotInvocationRef(
       spiritualWeaponUnitId,
       sourceSpellLevel,
-      "spiritualWeaponAttackProxy",
+      "spatialMeleeSpellAttackProxy",
     ),
   );
   const caster = baseState.state.combatants.get(spellCasterId);
@@ -1815,7 +1815,7 @@ function stateWithBoundSpiritualWeaponEffect(sourceSpellLevel: 2 | 4): {
     owner: caster,
   });
   const effect = {
-    ...spiritualWeaponEffect({
+    ...spatialMeleeSpellAttackProxyEffect({
       sourceSpellLevel,
     }),
     effectRef: effectAllocation.effectRef,
@@ -2008,14 +2008,14 @@ function heatMetalObjectContactDamageEffect(input: {
   };
 }
 
-function spiritualWeaponEffect(input: {
+function spatialMeleeSpellAttackProxyEffect(input: {
   readonly sourceSpellLevel: number;
 }): Extract<
   BattleActiveEffectOccurrenceTemplate,
-  { readonly kind: "spiritualWeapon" }
+  { readonly kind: "spatialMeleeSpellAttackProxy" }
 > {
   return {
-    kind: "spiritualWeapon",
+    kind: "spatialMeleeSpellAttackProxy",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(spiritualWeaponUnitId),
     ),
@@ -2041,15 +2041,15 @@ function spiritualWeaponEffect(input: {
   };
 }
 
-function antimagicFieldAuraEffect(
+function magicSuppressionEmanationEffect(
   areaId: ReturnType<typeof battleAreaId>,
 ): Extract<
   BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "magicSuppressionEmanation" }
 > {
-  return antimagicFieldAuraEffectTemplateForTest({
+  return magicSuppressionEmanationEffectTemplateForTest({
     areaId,
-    aura: antimagicFieldAuraMembershipForTest({
+    aura: magicSuppressionEmanationMembershipForTest({
       sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],

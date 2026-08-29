@@ -53,7 +53,7 @@ import { requireHole } from "../unit-profile-admission-creature-fixture.test-sup
 import {
   blessUnitId,
   baneUnitId,
-  hideousLaughterUnitId,
+  saveGatedConditionWithRepeatUnitId,
   longstriderUnitId,
   resistanceUnitId,
   spellCasterId,
@@ -492,19 +492,19 @@ describe("effect lifecycle route boundary", () => {
 
   test("routes Hideous Laughter end-turn repeat-save discovery and failed-save lifecycle", () => {
     const session = spellBattle({
-      preparedSpells: [spellRecord(hideousLaughterUnitId)],
+      preparedSpells: [spellRecord(saveGatedConditionWithRepeatUnitId)],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const act = spellAct({
       session,
-      spellId: hideousLaughterUnitId,
+      spellId: saveGatedConditionWithRepeatUnitId,
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const target = spellTargetListFill(
       targetHole,
       spellCasterId,
-      hideousLaughterUnitId,
+      saveGatedConditionWithRepeatUnitId,
       [spellTargetId],
     );
     const initialSave = requireBattleHole(
@@ -582,7 +582,9 @@ describe("effect lifecycle route boundary", () => {
     expect(
       retained.state.combatants
         .get(spellTargetId)
-        ?.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
+        ?.activeEffects.some(
+          (effect) => effect.kind === "saveGatedConditionWithRepeat",
+        ),
     ).toBe(true);
   });
 

@@ -16,7 +16,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   blurUnitId,
-  counterspellUnitId,
+  spellCastInterruptionReactionUnitId,
   invisibilityDurationTicks,
   invisibilityUnitId,
   magicMissileUnitId,
@@ -344,7 +344,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         },
         activeEffects: expect.arrayContaining([
           expect.objectContaining({
-            kind: "blurred",
+            kind: "perceptionGatedAttackRollDefense",
             sourceProcedureRef: blur.subject.procedureRef,
           }),
         ]),
@@ -352,20 +352,20 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     );
   });
 
-  test("invisibility ends when the target casts a spell that is counterspelled", () => {
-    const counterspellerId = combatantId(
-      "unit-profile-invisibility-counterspeller",
+  test("invisibility ends when the target casts a spell that is spellCastInterruptionReactioned", () => {
+    const spellCastInterruptionReactionerId = combatantId(
+      "unit-profile-invisibility-spellCastInterruptionReactioner",
     );
     const session = invisibilityReactionBattle({
       targetPreparedSpells: [spellRecord(blurUnitId)],
       targetSpellSlots: [{ spellLevel: 2, count: 1 }],
       extraCombatants: [
         characterCreature({
-          combatantId: counterspellerId,
+          combatantId: spellCastInterruptionReactionerId,
           displayName: "Counterspeller",
           initiative: 5,
           spellcasting: wizardSpellcasting({
-            preparedSpells: [spellRecord(counterspellUnitId)],
+            preparedSpells: [spellRecord(spellCastInterruptionReactionUnitId)],
             spellSlots: [{ spellLevel: 3, count: 1 }],
           }),
         }),
@@ -391,12 +391,12 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         subject: blur.subject,
         fills: [
           spellCastReactionFactsFill([
-            counterspellTriggerFact({
+            spellCastInterruptionReactionTriggerFact({
               session: battleRuntimeSessionForTest({
                 state: targetTurn.state,
                 context: session.context,
               }),
-              reactorId: counterspellerId,
+              reactorId: spellCastInterruptionReactionerId,
               casterId: spellTargetId,
             }),
           ]),
@@ -412,8 +412,8 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     const choice = requireTriggeredReactionSpellChoice({
       session,
       result: awaitingCounterspell,
-      reactorId: counterspellerId,
-      spellId: counterspellUnitId,
+      reactorId: spellCastInterruptionReactionerId,
+      spellId: spellCastInterruptionReactionUnitId,
       procedure: "spellCastInterruptionReaction",
       slotLevel: 3,
     });
@@ -423,11 +423,15 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
         state: awaitingCounterspell.state,
         fill: interruptDecisionFill(
           requireHole(awaitingCounterspell.holes, "interruptDecision"),
-          triggeredReactionSpellDecision(counterspellerId, choice, [
-            savingThrowOutcomeFill(save, [
-              { targetId: spellTargetId, succeeded: false },
-            ]),
-          ]),
+          triggeredReactionSpellDecision(
+            spellCastInterruptionReactionerId,
+            choice,
+            [
+              savingThrowOutcomeFill(save, [
+                { targetId: spellTargetId, succeeded: false },
+              ]),
+            ],
+          ),
         ),
       }),
     );
@@ -503,7 +507,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       result: awaitingShield,
       reactorId: spellTargetId,
       spellId: shieldUnitId,
-      procedure: "shieldReaction",
+      procedure: "triggeredArmorDefense",
       slotLevel: 1,
     });
     const afterShield = requireNeedsHoles(
@@ -534,10 +538,10 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
 
   test("invisibility ends when the target casts Counterspell as a reaction", () => {
     const magicMissileCasterId = combatantId(
-      "unit-profile-invisibility-counterspell-trigger-caster",
+      "unit-profile-invisibility-spellCastInterruptionReaction-trigger-caster",
     );
     const session = invisibilityReactionBattle({
-      targetPreparedSpells: [spellRecord(counterspellUnitId)],
+      targetPreparedSpells: [spellRecord(spellCastInterruptionReactionUnitId)],
       targetSpellSlots: [{ spellLevel: 3, count: 1 }],
       extraCombatants: [
         characterCreature({
@@ -589,7 +593,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
             dartCount: targetAllocation.allocationCount,
           }),
           spellCastReactionFactsFill([
-            counterspellTriggerFact({
+            spellCastInterruptionReactionTriggerFact({
               session: battleRuntimeSessionForTest({
                 state: missileTurn.state,
                 context: session.context,
@@ -605,7 +609,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       session,
       result: awaitingCounterspell,
       reactorId: spellTargetId,
-      spellId: counterspellUnitId,
+      spellId: spellCastInterruptionReactionUnitId,
       procedure: "spellCastInterruptionReaction",
       slotLevel: 3,
     });
@@ -781,7 +785,7 @@ type CounterspellTriggerFact = Extract<
   { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(input: {
+function spellCastInterruptionReactionTriggerFact(input: {
   readonly session: BattleRuntimeSession;
   readonly reactorId: CombatantId;
   readonly casterId: CombatantId;
@@ -793,7 +797,11 @@ function counterspellTriggerFact(input: {
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
       input.session,
       input.reactorId,
-      spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
+      spellSlotInvocationRef(
+        spellCastInterruptionReactionUnitId,
+        3,
+        "spellCastInterruptionReaction",
+      ),
     ),
     rangeFeet: movementFeet(60),
   };

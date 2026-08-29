@@ -35,7 +35,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import hypnoticPatternInput from "../../surface/content/hypnotic_pattern.json";
+import saveGatedAreaControlInput from "../../surface/content/hypnotic_pattern.json";
 
 import {
   battleId,
@@ -120,7 +120,7 @@ if (unitCatalogResult.tag !== "ok") {
   );
 }
 const unitLibrary = unitCatalogResult.catalog;
-const hypnoticPatternSpell = decodeHypnoticPatternSpellRecord();
+const saveGatedAreaControlSpell = decodeHypnoticPatternSpellRecord();
 
 it("observes selected condition-saving-throw qRoute through public reducer events", () => {
   expect(resolveBlindnessDeafnessFailedSavingThrowRoute("blinded")).toEqual(
@@ -1140,7 +1140,7 @@ function expectedProjection(
 
 function srdSpellRecord(unitId: ConditionSavingThrowSpellUnitId): SpellRecord {
   if (unitId === "hypnotic_pattern") {
-    return hypnoticPatternSpell;
+    return saveGatedAreaControlSpell;
   }
   const unit = unitLibrary.requireUnit(unitId);
   if (unit.kind !== "spell") {
@@ -1150,7 +1150,7 @@ function srdSpellRecord(unitId: ConditionSavingThrowSpellUnitId): SpellRecord {
 }
 
 function decodeHypnoticPatternSpellRecord(): SpellRecord {
-  const unit = decodeUnitRecordSync(hypnoticPatternInput);
+  const unit = decodeUnitRecordSync(saveGatedAreaControlInput);
   if (unit.kind !== "spell") {
     throw new Error("Expected Hypnotic Pattern fixture to decode as a Spell.");
   }
@@ -1310,7 +1310,7 @@ function savingThrowOutcomeFill(
         battleProcedureExecutionRefForTest("hypnotic_pattern")
         ? {
             area: {
-              kind: "hypnoticPatternArea",
+              kind: "saveGatedAreaControlArea",
               originAnchorId: casterId,
               affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
               cubeSideFeet: 30,

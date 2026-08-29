@@ -75,7 +75,7 @@ export function spellWithSaveGateRepeatSaves(
   } as SpellRecord;
 }
 
-export function hideousLaughterWithPhase(
+export function saveGatedConditionWithRepeatWithPhase(
   base: SpellRecord,
   mapPhase: (
     phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,

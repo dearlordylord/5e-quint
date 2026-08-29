@@ -22,8 +22,8 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
-  commandApproachMovementFill,
-  commandFleeMovementFill,
+  executeCompelledApproachMovementFill,
+  executeCompelledFleeMovementFill,
   savingThrowOutcomeFill,
   spellAct,
   spellTargetListFill,
@@ -129,7 +129,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       state: targetTurn.state,
       subject: approachAct.subject,
       fills: [
-        commandApproachMovementFill(movement, {
+        executeCompelledApproachMovementFill(movement, {
           movementCostFeet: 10,
           movedWithinFiveFeetOfCaster: false,
           provokedOpportunityAttacks: [
@@ -251,7 +251,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     }
     const approachEffectRef = approachAct.subject.effectRef;
     const movement = requireHole(approachAct.initialHoles, "movement");
-    const movementFill = commandApproachMovementFill(movement, {
+    const movementFill = executeCompelledApproachMovementFill(movement, {
       movementCostFeet: 10,
       movedWithinFiveFeetOfCaster: true,
       provokedOpportunityAttacks: [],
@@ -491,7 +491,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       state: targetTurn.state,
       subject: fleeAct.subject,
       fills: [
-        commandFleeMovementFill(movement, {
+        executeCompelledFleeMovementFill(movement, {
           movementCostFeet: 30,
           provokedOpportunityAttacks: [],
         }),
@@ -579,7 +579,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         state: targetTurn.state,
         subject: fleeAct.subject,
         fills: [
-          commandFleeMovementFill(movement, {
+          executeCompelledFleeMovementFill(movement, {
             movementCostFeet: 10,
             provokedOpportunityAttacks: [],
           }),
@@ -763,7 +763,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       throw new Error("Expected Command Flee act.");
     }
     const movement = requireHole(fleeAct.initialHoles, "movement");
-    const movementFill = commandFleeMovementFill(movement, {
+    const movementFill = executeCompelledFleeMovementFill(movement, {
       movementCostFeet: 30,
       provokedOpportunityAttacks: [
         {
@@ -824,7 +824,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     expect(targetAfterDecline.movementSpentFeet).toBe(movementFeet(30));
     expect(
       targetAfterDecline.activeEffects.some(
-        (effect) => effect.kind === "commandPending",
+        (effect) => effect.kind === "compelledNextTurnBehavior",
       ),
     ).toBe(false);
     const endTurnSave = requireResultHole(afterDecline, "savingThrowOutcome");
@@ -902,7 +902,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     expect(targetAfterAcceptedMiss.movementSpentFeet).toBe(movementFeet(30));
     expect(
       targetAfterAcceptedMiss.activeEffects.some(
-        (effect) => effect.kind === "commandPending",
+        (effect) => effect.kind === "compelledNextTurnBehavior",
       ),
     ).toBe(false);
     const acceptedEndTurnSave = requireResultHole(

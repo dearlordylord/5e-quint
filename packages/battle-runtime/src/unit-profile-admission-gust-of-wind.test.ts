@@ -31,10 +31,10 @@ import {
 } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  gustOfWindLineDirectionChangeAct,
-  gustOfWindLineDirectionChoiceFill,
-  gustOfWindLineEndTurnSaveAct,
-  gustOfWindLineSavingThrowOutcomeFill,
+  directionalPersistentAreaDirectionChangeAct,
+  directionalPersistentAreaDirectionChoiceFill,
+  directionalPersistentAreaEndTurnSaveAct,
+  directionalPersistentAreaSavingThrowOutcomeFill,
   spellAct,
   spellHoleInvocation,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
@@ -94,7 +94,11 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         state,
         spellCasterId,
-        spellSlotInvocationRef(gustOfWindUnitId, 2, "gustOfWindLine"),
+        spellSlotInvocationRef(
+          gustOfWindUnitId,
+          2,
+          "directionalPersistentArea",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -108,7 +112,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     );
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
-        procedure: "gustOfWindLine",
+        procedure: "directionalPersistentArea",
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "str",
         targeting: {
@@ -158,7 +162,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         (act) =>
           act.subject.tag === "actionSpell" &&
           battleActSpellPresentation(act)?.invocation.procedure ===
-            "gustOfWindLine",
+            "directionalPersistentArea",
       ),
     ).toBe(false);
   });
@@ -178,7 +182,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
 
     expect(spellHoleInvocation(state, [savingThrow])).toEqual(
       expect.objectContaining({
-        procedure: "gustOfWindLine",
+        procedure: "directionalPersistentArea",
         targeting: {
           kind: "selfOriginLine",
           lengthFeet: movementFeet(60),
@@ -198,7 +202,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     });
     expect(caster.activeEffects).toEqual([
       expect.objectContaining({
-        kind: "gustOfWindLine",
+        kind: "directionalPersistentArea",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: gustOfWindAreaId,
@@ -245,7 +249,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         state: state.state,
         subject: act.subject,
         fills: [
-          gustOfWindLineSavingThrowOutcomeFill(
+          directionalPersistentAreaSavingThrowOutcomeFill(
             savingThrow,
             [{ targetId: spellTargetId, succeeded: false }],
             { creaturePushes: [] },
@@ -267,7 +271,9 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const endTurnAct = gustOfWindLineEndTurnSaveAct(targetTurn.state);
+    const endTurnAct = directionalPersistentAreaEndTurnSaveAct(
+      targetTurn.state,
+    );
     const endTurnSave = requireHole(
       endTurnAct.initialHoles,
       "savingThrowOutcome",
@@ -277,7 +283,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       state: targetTurn.state,
       subject: endTurnAct.subject,
       fills: [
-        gustOfWindLineSavingThrowOutcomeFill(endTurnSave, [
+        directionalPersistentAreaSavingThrowOutcomeFill(endTurnSave, [
           { targetId: spellTargetId, succeeded: false },
         ]),
       ],
@@ -304,7 +310,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       state: initialSession.state,
       subject: castAct.subject,
       fills: [
-        gustOfWindLineSavingThrowOutcomeFill(
+        directionalPersistentAreaSavingThrowOutcomeFill(
           requireHole(castAct.initialHoles, "savingThrowOutcome"),
           [],
         ),
@@ -326,7 +332,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         context: initialSession.context,
       }),
     );
-    const endTurnAct = gustOfWindLineEndTurnSaveAct(readied.state);
+    const endTurnAct = directionalPersistentAreaEndTurnSaveAct(readied.state);
     const endTurnSave = requireHole(
       endTurnAct.initialHoles,
       "savingThrowOutcome",
@@ -335,7 +341,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       state: readied.state,
       subject: endTurnAct.subject,
       fills: [
-        gustOfWindLineSavingThrowOutcomeFill(endTurnSave, [
+        directionalPersistentAreaSavingThrowOutcomeFill(endTurnSave, [
           { targetId: spellTargetId, succeeded: false },
         ]),
       ],
@@ -360,7 +366,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const lineEffect = gustOfWindLineEffect(targetTurn.state);
+    const lineEffect = directionalPersistentAreaEffect(targetTurn.state);
     const act = moveAct(targetTurn.state);
     const movement = requireHole(act.initialHoles, "movement");
     const resolved = resolveBattleSubject({
@@ -370,8 +376,8 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         movementFill(movement, {
           movementCostFeet: 10,
           provokedOpportunityAttacks: [],
-          gustOfWindLineMovement: {
-            kind: "gustOfWindLineMovement",
+          directionalPersistentAreaMovement: {
+            kind: "directionalPersistentAreaMovement",
             effectRef: lineEffect.effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: lineEffect.sourceProcedureRef,
@@ -400,7 +406,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
   test("movement through a recast Line requires the current occurrence reference", () => {
     const session = gustOfWindBattle(2);
     const firstCast = resolveGustOfWindCast({ session, outcomes: [] });
-    const staleEffect = gustOfWindLineEffect(firstCast.state);
+    const staleEffect = directionalPersistentAreaEffect(firstCast.state);
     const casterTurn = advanceToCasterLaterTurn(firstCast.state);
     const casterBeforeRecast = requireCombatant(casterTurn, spellCasterId);
     const recast = resolveGustOfWindCast({
@@ -410,7 +416,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       }),
       outcomes: [],
     });
-    const freshEffect = gustOfWindLineEffect(recast.state);
+    const freshEffect = directionalPersistentAreaEffect(recast.state);
     const casterAfterRecast = requireCombatant(recast.state, spellCasterId);
 
     expect(freshEffect.effectRef).not.toBe(staleEffect.effectRef);
@@ -438,8 +444,8 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       movementFill(movement, {
         movementCostFeet: 10,
         provokedOpportunityAttacks: [],
-        gustOfWindLineMovement: {
-          kind: "gustOfWindLineMovement",
+        directionalPersistentAreaMovement: {
+          kind: "directionalPersistentAreaMovement",
           effectRef,
           sourceCombatantId: spellCasterId,
           sourceProcedureRef: freshEffect.sourceProcedureRef,
@@ -479,7 +485,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const lineEffect = gustOfWindLineEffect(targetTurn.state);
+    const lineEffect = directionalPersistentAreaEffect(targetTurn.state);
     const act = moveAct(targetTurn.state);
     const movement = requireHole(act.initialHoles, "movement");
 
@@ -491,8 +497,8 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
           movementFill(movement, {
             movementCostFeet: 5,
             provokedOpportunityAttacks: [],
-            gustOfWindLineMovement: {
-              kind: "gustOfWindLineMovement",
+            directionalPersistentAreaMovement: {
+              kind: "directionalPersistentAreaMovement",
               effectRef: lineEffect.effectRef,
               sourceCombatantId: spellCasterId,
               sourceProcedureRef: lineEffect.sourceProcedureRef,
@@ -524,8 +530,8 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const lineEffect = gustOfWindLineEffect(targetTurn.state);
-    const greaseEffect = greaseGroundHazardEffect(targetTurn.state);
+    const lineEffect = directionalPersistentAreaEffect(targetTurn.state);
+    const greaseEffect = persistentAreaSaveConditionEffect(targetTurn.state);
     const act = moveAct(targetTurn.state);
     const movement = requireHole(act.initialHoles, "movement");
     const resolved = resolveBattleSubject({
@@ -539,7 +545,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
             kind: "areaDifficultTerrain",
             sources: [
               {
-                kind: "greaseGroundHazard",
+                kind: "persistentAreaSaveCondition",
                 effectRef: greaseEffect.effectRef,
                 sourceCombatantId: spellCasterId,
                 sourceProcedureRef: greaseEffect.sourceProcedureRef,
@@ -549,8 +555,8 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
             totalDistanceFeet: movementFeet(5),
             difficultTerrainDistanceFeet: movementFeet(5),
           },
-          gustOfWindLineMovement: {
-            kind: "gustOfWindLineMovement",
+          directionalPersistentAreaMovement: {
+            kind: "directionalPersistentAreaMovement",
             effectRef: lineEffect.effectRef,
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: lineEffect.sourceProcedureRef,
@@ -582,7 +588,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     const greased = withGreaseGroundHazard(
       battleRuntimeSessionForTest({ ...session, state: cast.state }),
     );
-    const staleEffect = greaseGroundHazardEffect(greased);
+    const staleEffect = persistentAreaSaveConditionEffect(greased);
     const casterBeforeReplacement = requireCombatant(greased, spellCasterId);
     const withReplacement = withGreaseGroundHazard(
       battleRuntimeSessionForTest({ ...session, state: greased }),
@@ -590,10 +596,10 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     const replacementCaster = requireCombatant(withReplacement, spellCasterId);
     const freshEffect = replacementCaster.activeEffects.find(
       (effect) =>
-        effect.kind === "greaseGroundHazard" &&
+        effect.kind === "persistentAreaSaveCondition" &&
         effect.effectRef !== staleEffect.effectRef,
     );
-    if (freshEffect?.kind !== "greaseGroundHazard") {
+    if (freshEffect?.kind !== "persistentAreaSaveCondition") {
       throw new Error("Expected a fresh allocated Grease occurrence.");
     }
     expect(Number(replacementCaster.nextEffectOrdinal)).toBe(
@@ -627,7 +633,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
           kind: "areaDifficultTerrain",
           sources: [
             {
-              kind: "greaseGroundHazard",
+              kind: "persistentAreaSaveCondition",
               effectRef,
               sourceCombatantId: spellCasterId,
               sourceProcedureRef: freshEffect.sourceProcedureRef,
@@ -668,7 +674,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       discoverBattleActCandidates(cast.state).some(
         (act) =>
           act.subject.tag === "runtimeCommand" &&
-          act.subject.command === "gustOfWindLineDirectionChange",
+          act.subject.command === "directionalPersistentAreaDirectionChange",
       ),
     ).toBe(false);
     const laterTurnBase = advanceToCasterLaterTurn(cast.state);
@@ -686,7 +692,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       ownerId: spellCasterId,
       effect: unrelatedEffect,
     });
-    const selectedGust = gustOfWindLineEffect(laterTurn);
+    const selectedGust = directionalPersistentAreaEffect(laterTurn);
     const { effectRef: _selectedEffectRef, ...overlappingGustTemplate } =
       selectedGust;
     const overlappingState = battleStateWithAllocatedEffectForTest({
@@ -694,10 +700,11 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       ownerId: spellCasterId,
       effect: overlappingGustTemplate,
     });
-    const directionAct = gustOfWindLineDirectionChangeAct(overlappingState);
+    const directionAct =
+      directionalPersistentAreaDirectionChangeAct(overlappingState);
     const directionHole = requireHole(
       directionAct.initialHoles,
-      "gustOfWindLineDirectionChoice",
+      "directionalPersistentAreaDirectionChoice",
     );
     const awaitingDirection = resolveBattleSubject({
       state: overlappingState,
@@ -712,7 +719,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     const resolved = resolveBattleSubject({
       state: overlappingState,
       subject: directionAct.subject,
-      fills: [gustOfWindLineDirectionChoiceFill(directionHole)],
+      fills: [directionalPersistentAreaDirectionChoiceFill(directionHole)],
     });
 
     expect(resolved).toMatchObject({
@@ -722,7 +729,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Gust of Wind direction change to resolve.");
     }
-    expect(gustOfWindLineEffect(resolved.state)).toEqual(
+    expect(directionalPersistentAreaEffect(resolved.state)).toEqual(
       expect.objectContaining({
         areaId: gustOfWindAreaId,
         directionId: gustOfWindEastDirectionId,
@@ -742,7 +749,9 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     const gustEffects = requireCombatant(
       resolved.state,
       spellCasterId,
-    ).activeEffects.filter((effect) => effect.kind === "gustOfWindLine");
+    ).activeEffects.filter(
+      (effect) => effect.kind === "directionalPersistentArea",
+    );
     expect(
       gustEffects.find(
         (effect) => effect.effectRef === directionAct.subject.effectRef,
@@ -762,7 +771,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
   test("Heightened Gust of Wind stores the selected target on the Line occurrence", () => {
     const cast = castHeightenedGustOfWindWithSelectedTarget();
 
-    expect(gustOfWindLineEffect(cast)).toEqual(
+    expect(directionalPersistentAreaEffect(cast)).toEqual(
       expect.objectContaining({
         areaId: gustOfWindAreaId,
         directionId: gustOfWindNorthDirectionId,
@@ -781,7 +790,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       throw new Error("Expected caster End Turn to resolve.");
     }
 
-    const selectedAct = gustOfWindLineEndTurnSaveAct(
+    const selectedAct = directionalPersistentAreaEndTurnSaveAct(
       targetTurn.state,
       spellTargetId,
     );
@@ -798,7 +807,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       state: targetTurn.state,
       subject: selectedAct.subject,
       fills: [
-        gustOfWindLineSavingThrowOutcomeFill(selectedSave, [
+        directionalPersistentAreaSavingThrowOutcomeFill(selectedSave, [
           { targetId: spellTargetId, succeeded: true },
         ]),
       ],
@@ -807,7 +816,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       throw new Error("Expected selected target End Turn to resolve.");
     }
 
-    const unselectedAct = gustOfWindLineEndTurnSaveAct(
+    const unselectedAct = directionalPersistentAreaEndTurnSaveAct(
       secondTargetTurn.state,
       thunderwaveSecondTargetId,
     );
@@ -824,21 +833,21 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
   test("Heightened Gust of Wind preserves the selected target through direction replacement", () => {
     const cast = castHeightenedGustOfWindWithSelectedTarget();
     const laterTurn = advanceHeightenedGustOfWindToCasterLaterTurn(cast);
-    const directionAct = gustOfWindLineDirectionChangeAct(laterTurn);
+    const directionAct = directionalPersistentAreaDirectionChangeAct(laterTurn);
     const directionHole = requireHole(
       directionAct.initialHoles,
-      "gustOfWindLineDirectionChoice",
+      "directionalPersistentAreaDirectionChoice",
     );
     const changed = resolveBattleSubject({
       state: laterTurn,
       subject: directionAct.subject,
-      fills: [gustOfWindLineDirectionChoiceFill(directionHole)],
+      fills: [directionalPersistentAreaDirectionChoiceFill(directionHole)],
     });
     if (changed.tag !== "resolved") {
       throw new Error("Expected Gust of Wind direction change to resolve.");
     }
 
-    expect(gustOfWindLineEffect(changed.state)).toEqual(
+    expect(directionalPersistentAreaEffect(changed.state)).toEqual(
       expect.objectContaining({
         areaId: gustOfWindAreaId,
         directionId: gustOfWindEastDirectionId,
@@ -856,7 +865,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const endTurnAct = gustOfWindLineEndTurnSaveAct(
+    const endTurnAct = directionalPersistentAreaEndTurnSaveAct(
       targetTurn.state,
       spellTargetId,
       gustOfWindAreaId,
@@ -892,7 +901,9 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const endTurnAct = gustOfWindLineEndTurnSaveAct(targetTurn.state);
+    const endTurnAct = directionalPersistentAreaEndTurnSaveAct(
+      targetTurn.state,
+    );
     const ended = breakBattleConcentration(targetTurn.state, spellCasterId);
     expect(
       resolveBattleSubject({
@@ -948,7 +959,12 @@ function resolveGustOfWindCast(input: {
   const resolved = resolveBattleSubject({
     state: input.session.state,
     subject: act.subject,
-    fills: [gustOfWindLineSavingThrowOutcomeFill(savingThrow, input.outcomes)],
+    fills: [
+      directionalPersistentAreaSavingThrowOutcomeFill(
+        savingThrow,
+        input.outcomes,
+      ),
+    ],
   });
   if (resolved.tag !== "resolved") {
     throw new Error("Expected Gust of Wind cast to resolve.");
@@ -1031,7 +1047,7 @@ function castHeightenedGustOfWindWithSelectedTarget(): BattleState {
     subject: act.subject,
     fills: [
       heightenedTargetFill,
-      gustOfWindLineSavingThrowOutcomeFill(savingThrow, [
+      directionalPersistentAreaSavingThrowOutcomeFill(savingThrow, [
         { targetId: spellTargetId, succeeded: true },
         { targetId: thunderwaveSecondTargetId, succeeded: true },
       ]),
@@ -1055,7 +1071,7 @@ function heightenedGustOfWindAct(state: BattleRuntimeSession): ActionSpellAct {
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "gustOfWindLine" &&
+        "directionalPersistentArea" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -1115,13 +1131,13 @@ function withGreaseGroundHazard(session: BattleRuntimeSession): BattleState {
   const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
     session,
     spellCasterId,
-    spellSlotInvocationRef(greaseUnitId, 1, "greaseGroundHazard"),
+    spellSlotInvocationRef(greaseUnitId, 1, "persistentAreaSaveCondition"),
   );
   return battleStateWithAllocatedEffectForTest({
     state: session.state,
     ownerId: spellCasterId,
     effect: {
-      kind: "greaseGroundHazard" as const,
+      kind: "persistentAreaSaveCondition" as const,
       sourceCombatantId: spellCasterId,
       sourceProcedureRef,
       areaId: greaseAreaId,
@@ -1138,11 +1154,11 @@ function withGreaseGroundHazard(session: BattleRuntimeSession): BattleState {
   });
 }
 
-function greaseGroundHazardEffect(state: BattleState) {
+function persistentAreaSaveConditionEffect(state: BattleState) {
   const effect = requireCombatant(state, spellCasterId).activeEffects.find(
-    (candidate) => candidate.kind === "greaseGroundHazard",
+    (candidate) => candidate.kind === "persistentAreaSaveCondition",
   );
-  if (effect?.kind !== "greaseGroundHazard") {
+  if (effect?.kind !== "persistentAreaSaveCondition") {
     throw new Error("Expected a Grease ground-hazard occurrence.");
   }
   return effect;
@@ -1168,7 +1184,7 @@ function advanceToCasterLaterTurn(state: BattleState) {
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected caster End Turn to resolve.");
   }
-  const endTurnAct = gustOfWindLineEndTurnSaveAct(targetTurn.state);
+  const endTurnAct = directionalPersistentAreaEndTurnSaveAct(targetTurn.state);
   const endTurnSave = requireHole(
     endTurnAct.initialHoles,
     "savingThrowOutcome",
@@ -1177,7 +1193,7 @@ function advanceToCasterLaterTurn(state: BattleState) {
     state: targetTurn.state,
     subject: endTurnAct.subject,
     fills: [
-      gustOfWindLineSavingThrowOutcomeFill(endTurnSave, [
+      directionalPersistentAreaSavingThrowOutcomeFill(endTurnSave, [
         { targetId: spellTargetId, succeeded: true },
       ]),
     ],
@@ -1190,7 +1206,7 @@ function advanceToCasterLaterTurn(state: BattleState) {
 
 function advanceHeightenedGustOfWindToCasterLaterTurn(state: BattleState) {
   const secondTargetTurn = advanceToCasterLaterTurn(state);
-  const endTurnAct = gustOfWindLineEndTurnSaveAct(
+  const endTurnAct = directionalPersistentAreaEndTurnSaveAct(
     secondTargetTurn,
     thunderwaveSecondTargetId,
   );
@@ -1202,7 +1218,7 @@ function advanceHeightenedGustOfWindToCasterLaterTurn(state: BattleState) {
     state: secondTargetTurn,
     subject: endTurnAct.subject,
     fills: [
-      gustOfWindLineSavingThrowOutcomeFill(endTurnSave, [
+      directionalPersistentAreaSavingThrowOutcomeFill(endTurnSave, [
         { targetId: thunderwaveSecondTargetId, succeeded: true },
       ]),
     ],
@@ -1215,9 +1231,9 @@ function advanceHeightenedGustOfWindToCasterLaterTurn(state: BattleState) {
   return casterNextTurn.state;
 }
 
-function gustOfWindLineEffect(state: BattleState) {
+function directionalPersistentAreaEffect(state: BattleState) {
   const effect = requireCombatant(state, spellCasterId).activeEffects.find(
-    (candidate) => candidate.kind === "gustOfWindLine",
+    (candidate) => candidate.kind === "directionalPersistentArea",
   );
   if (effect === undefined) {
     throw new Error("Expected active Gust of Wind Line effect.");

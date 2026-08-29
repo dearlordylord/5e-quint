@@ -15,12 +15,14 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
-  resolveFlamingSphereCast,
-  resolveFlamingSphereHazardRam,
-  type FlamingSphereHazardRamState,
+  resolveRamMovablePersistentAreaCast,
+  resolveRamMovablePersistentAreaHazardRam,
+  type RamMovablePersistentAreaHazardRamState,
 } from "./battle-reducer/flaming-sphere-hazard-ram.test-support.ts";
 
-function initialState(slotLedgerLevel: number): FlamingSphereHazardRamState {
+function initialState(
+  slotLedgerLevel: number,
+): RamMovablePersistentAreaHazardRamState {
   return {
     actionAvailable: true,
     casterHasBonusAction: true,
@@ -65,17 +67,21 @@ function createFlamingSphereHazardRamDriver() {
         state = initialState(slotLedgerLevel);
       },
       doCastFlamingSphere: ({ slotLevel }) => {
-        state = resolveFlamingSphereCast(state, slotLevel);
+        state = resolveRamMovablePersistentAreaCast(state, slotLevel);
       },
       doEndWithinFiveFeet: ({ savingThrowSucceeded, rolledDamage }) => {
-        state = resolveFlamingSphereHazardRam(state, "endWithinFiveFeet", {
-          savingThrowSucceeded,
-          rolledDamage,
-          moveFeet: 0,
-        });
+        state = resolveRamMovablePersistentAreaHazardRam(
+          state,
+          "endWithinFiveFeet",
+          {
+            savingThrowSucceeded,
+            rolledDamage,
+            moveFeet: 0,
+          },
+        );
       },
       doRam: ({ savingThrowSucceeded, rolledDamage, moveFeet }) => {
-        state = resolveFlamingSphereHazardRam(state, "ram", {
+        state = resolveRamMovablePersistentAreaHazardRam(state, "ram", {
           savingThrowSucceeded,
           rolledDamage,
           moveFeet,
@@ -87,20 +93,22 @@ function createFlamingSphereHazardRamDriver() {
   });
 }
 
-const flamingSphereHazardRamStateCheck = stateCheck(
+const persistentAreaSaveDamageHazardRamStateCheck = stateCheck(
   normalizeFlamingSphereHazardRamQuintState,
-  compareFlamingSphereHazardRamState,
+  compareRamMovablePersistentAreaHazardRamState,
 );
 
 describe("Flaming Sphere hazard/ram MBT parity", () => {
   it("rejects a cast whose requested slot level does not match the ledger", () => {
     const state = initialState(2);
 
-    expect(resolveFlamingSphereCast(state, 3)).toEqual(state);
+    expect(resolveRamMovablePersistentAreaCast(state, 3)).toEqual(state);
   });
 
   it("derives active sphere damage dice from the matching expended slot level", () => {
-    expect(resolveFlamingSphereCast(initialState(4), 4)).toMatchObject({
+    expect(
+      resolveRamMovablePersistentAreaCast(initialState(4), 4),
+    ).toMatchObject({
       sphere: {
         tag: "active",
         damageDice: 4,
@@ -113,10 +121,10 @@ describe("Flaming Sphere hazard/ram MBT parity", () => {
   });
 
   it("rejects damage rolls outside the active sphere dice bounds", () => {
-    const cast = resolveFlamingSphereCast(initialState(2), 2);
+    const cast = resolveRamMovablePersistentAreaCast(initialState(2), 2);
 
     expect(
-      resolveFlamingSphereHazardRam(cast, "endWithinFiveFeet", {
+      resolveRamMovablePersistentAreaHazardRam(cast, "endWithinFiveFeet", {
         savingThrowSucceeded: false,
         rolledDamage: 24,
         moveFeet: 0,
@@ -125,10 +133,10 @@ describe("Flaming Sphere hazard/ram MBT parity", () => {
   });
 
   it("accepts damage rolls at the active sphere dice upper bound", () => {
-    const cast = resolveFlamingSphereCast(initialState(4), 4);
+    const cast = resolveRamMovablePersistentAreaCast(initialState(4), 4);
 
     expect(
-      resolveFlamingSphereHazardRam(cast, "endWithinFiveFeet", {
+      resolveRamMovablePersistentAreaHazardRam(cast, "endWithinFiveFeet", {
         savingThrowSucceeded: false,
         rolledDamage: 24,
         moveFeet: 0,
@@ -153,7 +161,7 @@ describe("Flaming Sphere hazard/ram MBT parity", () => {
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(6),
-        stateCheck: flamingSphereHazardRamStateCheck,
+        stateCheck: persistentAreaSaveDamageHazardRamStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -162,7 +170,7 @@ describe("Flaming Sphere hazard/ram MBT parity", () => {
 
 function normalizeFlamingSphereHazardRamQuintState(
   raw: unknown,
-): FlamingSphereHazardRamState {
+): RamMovablePersistentAreaHazardRamState {
   const state = quintStateRecord(raw);
   return {
     actionAvailable: booleanValue(
@@ -213,7 +221,7 @@ function normalizeFlamingSphereHazardRamQuintState(
 
 function sphereFromQuintState(
   state: Readonly<Record<string, unknown>>,
-): FlamingSphereHazardRamState["sphere"] {
+): RamMovablePersistentAreaHazardRamState["sphere"] {
   const sphereActive = booleanValue(state["qSphereActive"], "qSphereActive");
   return sphereActive
     ? {
@@ -234,9 +242,9 @@ function sphereFromQuintState(
     : { tag: "absent" };
 }
 
-function compareFlamingSphereHazardRamState(
-  runtime: FlamingSphereHazardRamState,
-  quint: FlamingSphereHazardRamState,
+function compareRamMovablePersistentAreaHazardRamState(
+  runtime: RamMovablePersistentAreaHazardRamState,
+  quint: RamMovablePersistentAreaHazardRamState,
 ): boolean {
   try {
     expect(runtime).toEqual(quint);

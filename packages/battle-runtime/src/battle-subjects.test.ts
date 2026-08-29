@@ -103,37 +103,51 @@ describe("BattleSubject identity", () => {
         attackAbility: "str",
         attackDamageType: "slashing",
       },
-      greaseGroundHazardSave: { areaId, effectRef, trigger: "entersArea" },
-      webRestraintSave: { areaId, effectRef, trigger: "startsTurnInArea" },
-      sleetStormAreaHazardSave: {
+      persistentAreaSaveConditionSave: {
+        areaId,
+        effectRef,
+        trigger: "entersArea",
+      },
+      persistentAreaSaveConditionEscapeSave: {
+        areaId,
+        effectRef,
+        trigger: "startsTurnInArea",
+      },
+      persistentAreaSaveCompositeSave: {
         areaMembershipTrigger: { kind: "turnStartInArea", areaId, effectRef },
       },
-      insectPlagueAreaHazardSave: {
-        areaMembershipTrigger: { kind: "turnEndInArea", areaId, effectRef },
-      },
-      cloudkillAreaHazardSave: {
+      persistentAreaSaveDamageSave: {
         areaMembershipTrigger: {
           kind: "areaMovesIntoSpace",
           areaId,
           effectRef,
         },
       },
-      disperseCloudkill: { effectOwnerId: actorId, effectRef },
-      webRestrainedNoLongerInArea: { areaId, effectRef },
-      webAreaRemoved: { areaId, effectRef },
-      gustOfWindLineSave: {
+      endPersistentAreaSaveDamageForEnvironment: {
+        effectOwnerId: actorId,
+        effectRef,
+      },
+      endPersistentAreaSaveConditionEscapeForDeparture: {
+        areaId,
+        effectRef,
+      },
+      endPersistentAreaSaveConditionEscapeForAreaRemoval: {
+        areaId,
+        effectRef,
+      },
+      directionalPersistentAreaSave: {
         areaId,
         effectRef,
         directionId: "runtime-command-direction",
         trigger: "endsTurnInLine",
       },
-      gustOfWindLineDirectionChange: {
+      directionalPersistentAreaDirectionChange: {
         areaId,
         effectRef,
         directionId: "runtime-command-direction",
       },
       movableZoneSave: { areaId, effectRef, trigger: "entersArea" },
-      moonbeamCylinderExit: { areaId, effectRef },
+      persistentAreaSaveDamageExit: { areaId, effectRef },
       movableZoneReposition: { areaId, effectRef },
       movableZoneRam: {
         targetId,
@@ -150,20 +164,20 @@ describe("BattleSubject identity", () => {
       creatureTypeProtectionPossessionAttempt: {
         sourceCombatantId: targetId,
       },
-      disperseFogCloud: { areaId },
+      endPersistentAreaTraitForEnvironment: { areaId },
       linkedDefenseResistanceDamageShareSeparation: { effectRef, targetId },
-      jumpMovementReplacement: { effectRef },
-      dragonsBreathExhale: { effectRef },
+      fixedCostMovementReplacement: { effectRef },
+      grantedAreaSaveDamageAction: { effectRef },
       replaceSelfTransformationMode: {
         effectRef,
         mode: "naturalWeapons",
         naturalWeaponDamageType: "fire",
       },
-      commandGrovel: { effectRef },
-      commandDrop: { effectRef },
-      commandApproach: { effectRef },
-      commandFlee: { effectRef },
-      levitateAltitudeControl: { effectRef, targetId },
+      executeCompelledGrovel: { effectRef },
+      executeCompelledDrop: { effectRef },
+      executeCompelledApproach: { effectRef },
+      executeCompelledFlee: { effectRef },
+      controlledVerticalSuspensionAltitudeControl: { effectRef, targetId },
       creatureFalls: { fallingCreatureId: targetId },
     } as const satisfies Record<
       BattleRuntimeCommand,
@@ -231,8 +245,8 @@ describe("BattleSubject identity", () => {
       shove: {},
       escapeGrapple: {},
       escapeSpellRestraint: { targetId, effectRef },
-      shakeAwakeFromSleep: {},
-      shakeAwakeFromHypnoticPattern: {},
+      shakeAwakeFromStagedCondition: {},
+      shakeAwakeFromAreaControl: {},
     } as const satisfies Record<
       BattleSubjectAction,
       Readonly<Record<string, unknown>>
@@ -594,7 +608,7 @@ describe("BattleSubject identity", () => {
       {
         tag: "runtimeCommand",
         actorId,
-        command: "greaseGroundHazardSave",
+        command: "persistentAreaSaveConditionSave",
         areaId: "synthetic-area",
         effectRef: battleEffectExecutionRefForTest("synthetic-area-effect"),
         trigger: "entersArea",
@@ -606,7 +620,7 @@ describe("BattleSubject identity", () => {
       {
         tag: "runtimeCommand",
         actorId,
-        command: "commandGrovel",
+        command: "executeCompelledGrovel",
         sourceCombatantId: actorId,
         sourceProcedureRef: battleProcedureExecutionRefForTest(
           String("synthetic-spell"),

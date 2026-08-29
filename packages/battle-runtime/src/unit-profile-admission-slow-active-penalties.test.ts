@@ -503,7 +503,8 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
         spellSlots: [{ spellLevel: 3, count: 1 }],
       }),
     );
-    const flamingSphere = syntheticTargetOwnedFlamingSphereInteraction();
+    const persistentAreaSaveDamage =
+      syntheticTargetOwnedFlamingSphereInteraction();
     const slowedTarget = requireCombatant(
       slowedTargetTurn.state,
       spellTargetId,
@@ -515,7 +516,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
         {
           ...slowedTarget,
           concentration: {
-            sourceProcedureRef: flamingSphere.sourceProcedureRef,
+            sourceProcedureRef: persistentAreaSaveDamage.sourceProcedureRef,
             effectKind: "spellEffect" as const,
           },
         },
@@ -526,7 +527,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       state: battleStateWithAllocatedEffectForTest({
         state: stateWithConcentration,
         ownerId: spellTargetId,
-        effect: flamingSphere,
+        effect: persistentAreaSaveDamage,
       }),
     });
 
@@ -775,7 +776,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect(
       requireCombatant(failed.state, spellTargetId).activeEffects,
     ).not.toContainEqual(
-      expect.objectContaining({ kind: "greaseGroundHazard" }),
+      expect.objectContaining({ kind: "persistentAreaSaveCondition" }),
     );
     expect(failed.state.currentTurnResources.actionResources).toEqual([]);
     expect(
@@ -830,7 +831,9 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     }
     expect(
       requireCombatant(failed.state, spellTargetId).activeEffects,
-    ).not.toContainEqual(expect.objectContaining({ kind: "spiritualWeapon" }));
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "spatialMeleeSpellAttackProxy" }),
+    );
     expect(failed.state.currentTurnResources.currentHasBonusAction).toBe(false);
     expect(
       failed.state.currentTurnResources.spellSlotUsesThisTurn,
@@ -1075,10 +1078,16 @@ function targetTurnAfterFailedSlow(
 
 function syntheticTargetOwnedFlamingSphereInteraction(): Extract<
   BattleSourcedEffectOccurrenceTemplate,
-  { readonly kind: "flamingSphere" }
+  { readonly kind: "persistentAreaSaveDamage" }
 > {
   return {
-    kind: "flamingSphere",
+    kind: "persistentAreaSaveDamage",
+    lifecycle: {
+      kind: "casterActionReposition",
+      actionCost: "bonusAction",
+      movedAreaOperation: "saveDamage",
+      collisionDisposition: "stopAndAffectAdjacent",
+    },
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "synthetic-slow-target-flaming-sphere",
     ),

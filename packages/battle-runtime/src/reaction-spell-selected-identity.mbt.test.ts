@@ -2,10 +2,10 @@ import {
   battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
-// UNIT-IDENTITY-EVIDENCE: selected-identity-replay reaction-interruption shield hellish_rebuke counterspell
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay reaction-interruption shield hellish_rebuke spellCastInterruptionReaction
 // UNIT-IDENTITY-REPLAY: reaction-interruption shield doResolveShieldReactionSpellHit
 // UNIT-IDENTITY-REPLAY: reaction-interruption hellish_rebuke doResolveHellishRebukeFailedSavingThrow
-// UNIT-IDENTITY-REPLAY: reaction-interruption counterspell doResolveCounterspellMagicMissileCast
+// UNIT-IDENTITY-REPLAY: reaction-interruption spellCastInterruptionReaction doResolveCounterspellMagicMissileCast
 import { Result } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -86,7 +86,10 @@ type StartedMagicMissile = NeedsHolesResult & {
   >;
 };
 
-type ReactionSpellUnitId = "shield" | "hellish_rebuke" | "counterspell";
+type ReactionSpellUnitId =
+  | "shield"
+  | "hellish_rebuke"
+  | "spellCastInterruptionReaction";
 type SrdSpellUnitId = ReactionSpellUnitId | "magic_missile";
 
 type AttackAct = AvailableBattleAct & {
@@ -100,9 +103,9 @@ const reactorId = combatantId("reaction-spell-selected-identity-reactor");
 const triggerCreatureId = combatantId(
   "reaction-spell-selected-identity-trigger-creature",
 );
-const counterspellUnitId = "counterspell";
+const spellCastInterruptionReactionUnitId = "spellCastInterruptionReaction";
 const magicMissileUnitId = "magic_missile";
-const counterspellSlotLevel = 3;
+const spellCastInterruptionReactionSlotLevel = 3;
 const magicMissileSlotLevel = 1;
 const higherLevelMagicMissileSlotLevel = 4;
 const magicMissileDartCount = 3;
@@ -198,7 +201,7 @@ defineSelectedIdentityReplayAndQntReplay({
       ],
     },
     {
-      unitId: "counterspell",
+      unitId: "spellCastInterruptionReaction",
       procedures: [
         {
           actionName: "doResolveCounterspellMagicMissileCast",
@@ -387,7 +390,7 @@ function resolveHellishRebukeFailedSavingThrowRoute(): readonly BattleReducerRou
 }
 
 function resolveCounterspellMagicMissileCast(): ReactionSpellProjection {
-  const state = counterspellBattle();
+  const state = spellCastInterruptionReactionBattle();
   const awaitingReaction = startMagicMissileWithCounterspell({ state });
   const choice = requireCounterspellChoice(awaitingReaction);
   return projectResolvedReaction(
@@ -410,7 +413,7 @@ function resolveCounterspellMagicMissileCast(): ReactionSpellProjection {
 }
 
 function resolveCounterspellHigherLevelMagicMissileEndedRoute(): readonly ReducerRouteEvent[] {
-  const state = counterspellBattle({
+  const state = spellCastInterruptionReactionBattle({
     magicMissileSlotLevel: higherLevelMagicMissileSlotLevel,
   });
   const awaitingReaction = startMagicMissileWithCounterspell({
@@ -450,7 +453,7 @@ function resolveCounterspellHigherLevelMagicMissileEndedRoute(): readonly Reduce
 }
 
 function resolveCounterspellHigherLevelMagicMissileResumedRoute(): readonly ReducerRouteEvent[] {
-  const state = counterspellBattle({
+  const state = spellCastInterruptionReactionBattle({
     magicMissileSlotLevel: higherLevelMagicMissileSlotLevel,
   });
   const awaitingReaction = startMagicMissileWithCounterspell({
@@ -663,7 +666,7 @@ function reactionSpellBattle(spell: SpellRecord): BattleState {
   return result.success.state;
 }
 
-function counterspellBattle(
+function spellCastInterruptionReactionBattle(
   input: {
     readonly magicMissileSlotLevel?: number | undefined;
   } = {},
@@ -671,7 +674,9 @@ function counterspellBattle(
   const triggerSpellSlotLevel =
     input.magicMissileSlotLevel ?? magicMissileSlotLevel;
   const result = startBattle({
-    battleId: battleId("reaction-spell-selected-identity-counterspell"),
+    battleId: battleId(
+      "reaction-spell-selected-identity-spellCastInterruptionReaction",
+    ),
     combatants: [
       reactionSpellCreature({
         combatantId: triggerCreatureId,
@@ -708,12 +713,14 @@ function counterspellBattle(
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
-          preparedSpells: [srdSpellRecord(counterspellUnitId)],
+          preparedSpells: [srdSpellRecord(spellCastInterruptionReactionUnitId)],
           featurePreparedSpells: [],
           spellAccesses: [],
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
-          spellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
+          spellSlots: [
+            { spellLevel: spellCastInterruptionReactionSlotLevel, count: 1 },
+          ],
         },
       }),
     ],
@@ -810,7 +817,7 @@ function startMagicMissileWithCounterspell(input: {
             reactorId,
             casterId: triggerCreatureId,
             sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(counterspellUnitId),
+              String(spellCastInterruptionReactionUnitId),
             ),
             rangeFeet: movementFeet(60),
           },

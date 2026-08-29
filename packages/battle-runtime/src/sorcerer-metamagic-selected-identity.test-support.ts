@@ -519,11 +519,15 @@ export function resolveCarefulBurningHands(state: BattleState): BattleState {
 
 export function resolveCarefulCommand(state: BattleState): BattleState {
   const act = carefulCommandAct(state);
-  const target = targetListFill(act.initialHoles, "Spell targets", "command");
+  const target = targetListFill(
+    act.initialHoles,
+    "Spell targets",
+    "compelledNextTurnBehavior",
+  );
   const protectedTargets = targetListFill(
     act.initialHoles,
     "Spell Careful Spell protected targets",
-    "command",
+    "compelledNextTurnBehavior",
   );
   const option = commandOptionFill(act.initialHoles);
   const awaitingSave = resolveBattleSubject({
@@ -608,11 +612,15 @@ export function observeCarefulCommandNoEffectRoute(
   state: BattleState,
 ): readonly BattleReducerRouteEvent[] {
   const act = carefulCommandAct(state);
-  const target = targetListFill(act.initialHoles, "Spell targets", "command");
+  const target = targetListFill(
+    act.initialHoles,
+    "Spell targets",
+    "compelledNextTurnBehavior",
+  );
   const protectedTargets = targetListFill(
     act.initialHoles,
     "Spell Careful Spell protected targets",
-    "command",
+    "compelledNextTurnBehavior",
   );
   const option = commandOptionFill(act.initialHoles);
   const awaitingSave = resolveBattleSubject({
@@ -793,7 +801,7 @@ export function resolveHeightenedGreaseEntrySave(
           holeId: savingThrow.holeId,
           value: {
             area: {
-              kind: "greaseGroundArea",
+              kind: "persistentAreaSaveConditionArea",
               areaId: battleAreaId("heightened-grease-ground-area"),
               originAnchorId: wizardId,
               affectedTargetIds: [skeletonId],
@@ -810,7 +818,7 @@ export function resolveHeightenedGreaseEntrySave(
   const entryAct = discoverBattleActCandidates(targetTurn).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "greaseGroundHazardSave" &&
+      candidate.subject.command === "persistentAreaSaveConditionSave" &&
       candidate.subject.trigger === "entersArea",
   );
   if (entryAct === undefined) {
@@ -881,7 +889,7 @@ export function resolveHeightenedGustOfWindEndTurnSave(
           holeId: savingThrow.holeId,
           value: {
             area: {
-              kind: "gustOfWindLineArea",
+              kind: "directionalPersistentAreaArea",
               areaId,
               directionId,
               originAnchorId: wizardId,
@@ -900,7 +908,7 @@ export function resolveHeightenedGustOfWindEndTurnSave(
   const endTurnAct = discoverBattleActCandidates(targetTurn).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "gustOfWindLineSave" &&
+      candidate.subject.command === "directionalPersistentAreaSave" &&
       candidate.subject.areaId === areaId &&
       candidate.subject.directionId === directionId,
   );
@@ -932,7 +940,7 @@ export function resolveHeightenedGustOfWindEndTurnSave(
           holeId: endTurnSave.holeId,
           value: {
             area: {
-              kind: "gustOfWindLineArea",
+              kind: "directionalPersistentAreaArea",
               areaId,
               directionId,
               originAnchorId: wizardId,
@@ -1515,7 +1523,8 @@ function carefulCommandAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      spellInvocationForAct(state, candidate)?.procedure === "command" &&
+      spellInvocationForAct(state, candidate)?.procedure ===
+        "compelledNextTurnBehavior" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,
@@ -1548,7 +1557,7 @@ function heightenedHideousLaughterAct(state: BattleState): ActionSpellAct {
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure ===
-        "hideousLaughter" &&
+        "saveGatedConditionWithRepeat" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -1565,7 +1574,7 @@ function heightenedGreaseAct(state: BattleState): ActionSpellAct {
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellInvocationForAct(state, candidate)?.procedure ===
-        "greaseGroundHazard" &&
+        "persistentAreaSaveCondition" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -1581,7 +1590,8 @@ function heightenedGustOfWindAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      spellInvocationForAct(state, candidate)?.procedure === "gustOfWindLine" &&
+      spellInvocationForAct(state, candidate)?.procedure ===
+        "directionalPersistentArea" &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -1729,7 +1739,11 @@ function carefulBurningHandsMixedSaveFill(
 function targetListFill(
   holes: readonly BattleHole[],
   label: string,
-  _spellId: "bless" | "burning_hands" | "command" | "hideous_laughter",
+  _spellId:
+    | "bless"
+    | "burning_hands"
+    | "compelledNextTurnBehavior"
+    | "hideous_laughter",
   targetIds: readonly (typeof wizardId)[] = [skeletonId],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   const hole = holes.find(
@@ -1754,10 +1768,10 @@ function targetListFill(
 
 function commandOptionFill(
   holes: readonly BattleHole[],
-): Extract<BattleFill, { readonly kind: "commandOptionChoice" }> {
-  const hole = findHole(holes, "commandOptionChoice");
+): Extract<BattleFill, { readonly kind: "compelledBehaviorOptionChoice" }> {
+  const hole = findHole(holes, "compelledBehaviorOptionChoice");
   return {
-    kind: "commandOptionChoice",
+    kind: "compelledBehaviorOptionChoice",
     holeId: hole.holeId,
     value: "halt",
   };

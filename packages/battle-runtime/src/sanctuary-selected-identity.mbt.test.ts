@@ -173,18 +173,18 @@ type ResolvedBattleResult = Extract<
 >;
 type SanctuaryWardEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "sanctuaryWard" }
+  { readonly kind: "targetingSaveInterdiction" }
 >;
 
 const sanctuaryUnitId = "sanctuary";
 const burningHandsUnitId = "burning_hands";
 const fireBoltUnitId = "fire_bolt";
-const flamingSphereUnitId = "flaming_sphere";
+const persistentAreaSaveDamageUnitId = "flaming_sphere";
 const longstriderUnitId = "longstrider";
 type SanctuarySelectedIdentityActionSpellUnitId =
   | typeof burningHandsUnitId
   | typeof fireBoltUnitId
-  | typeof flamingSphereUnitId
+  | typeof persistentAreaSaveDamageUnitId
   | typeof longstriderUnitId;
 type SanctuarySelectedIdentitySpellUnitId =
   | typeof sanctuaryUnitId
@@ -1059,7 +1059,7 @@ function projectAreaEffectExclusion(): SanctuarySelectedIdentityProjection {
     "Expected area-effect spell to continue to damage roll.",
   );
   requireHole(needsDamage.holes, "rolledDice");
-  if (hasHole(needsDamage.holes, "sanctuaryInterdictionOutcome")) {
+  if (hasHole(needsDamage.holes, "targetingSaveInterdictionOutcome")) {
     throw new Error("Area-effect spell must not request Sanctuary outcome.");
   }
 
@@ -1219,7 +1219,7 @@ function battleSessionWithSanctuary(): BattleRuntimeSession {
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
-        preparedSpells: [srdSpellRecord(flamingSphereUnitId)],
+        preparedSpells: [srdSpellRecord(persistentAreaSaveDamageUnitId)],
         featurePreparedSpells: [],
         spellAccesses: [],
         spellbookRitualSpellAccesses: [],
@@ -1378,7 +1378,7 @@ function wardedFlamingSphereRamState(): BattleState {
 function castFlamingSphereAsAttacker(
   session: BattleRuntimeSession,
 ): BattleState {
-  const act = actionSpellAct(session, flamingSphereUnitId);
+  const act = actionSpellAct(session, persistentAreaSaveDamageUnitId);
   const resolved = requireResolved(
     resolveBattleSubject({
       state: session.state,
@@ -1394,7 +1394,7 @@ function castFlamingSphereAsAttacker(
 function resolveWardedFlamingSphereRamDamage(
   state: BattleState,
 ): ResolvedBattleResult {
-  const act = flamingSphereRamAct(state, wardedId);
+  const act = persistentAreaSaveDamageRamAct(state, wardedId);
   const movementFill = flamingSphereRamMovementFill(
     requireHole(act.initialHoles, "movableZoneRamMovement"),
   );
@@ -1422,7 +1422,7 @@ function resolveWardedFlamingSphereRamDamage(
   );
 }
 
-function flamingSphereRamAct(
+function persistentAreaSaveDamageRamAct(
   state: BattleState,
   targetId: CombatantId,
 ): FlamingSphereRamAct {
@@ -1589,19 +1589,26 @@ function savingThrowOutcomeFill(
 }
 
 function sanctuaryOutcomeFill(
-  hole: Extract<BattleHole, { readonly kind: "sanctuaryInterdictionOutcome" }>,
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "targetingSaveInterdictionOutcome" }
+  >,
   value: Extract<
     BattleFill,
-    { readonly kind: "sanctuaryInterdictionOutcome" }
+    { readonly kind: "targetingSaveInterdictionOutcome" }
   >["value"],
-): Extract<BattleFill, { readonly kind: "sanctuaryInterdictionOutcome" }> {
-  return { kind: "sanctuaryInterdictionOutcome", holeId: hole.holeId, value };
+): Extract<BattleFill, { readonly kind: "targetingSaveInterdictionOutcome" }> {
+  return {
+    kind: "targetingSaveInterdictionOutcome",
+    holeId: hole.holeId,
+    value,
+  };
 }
 
 function sanctuaryInterdictionHole(
   result: NeedsHolesBattleResult,
-): Extract<BattleHole, { readonly kind: "sanctuaryInterdictionOutcome" }> {
-  const hole = requireHole(result.holes, "sanctuaryInterdictionOutcome");
+): Extract<BattleHole, { readonly kind: "targetingSaveInterdictionOutcome" }> {
+  const hole = requireHole(result.holes, "targetingSaveInterdictionOutcome");
   if (hole.ability !== "wis") {
     throw new Error(`Expected Sanctuary Wisdom save, got ${hole.ability}.`);
   }
@@ -1666,6 +1673,7 @@ function sanctuaryWard(
   combatantIdValue: CombatantId,
 ): SanctuaryWardEffect | undefined {
   return combatant(state, combatantIdValue).activeEffects.find(
-    (effect): effect is SanctuaryWardEffect => effect.kind === "sanctuaryWard",
+    (effect): effect is SanctuaryWardEffect =>
+      effect.kind === "targetingSaveInterdiction",
   );
 }

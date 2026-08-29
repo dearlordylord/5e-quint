@@ -22,9 +22,10 @@ import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Find Familiar and Pact of the Chain", () => {
   test("Pact of the Chain Spell Access retains no-slot Find Familiar forms", () => {
-    const findFamiliar = spellRecord("find_familiar");
-    const eligibleForms =
-      pactOfTheChainFindFamiliarFormEligibilityForSpell(findFamiliar);
+    const spawnedCompanionLifecycle = spellRecord("find_familiar");
+    const eligibleForms = pactOfTheChainFindFamiliarFormEligibilityForSpell(
+      spawnedCompanionLifecycle,
+    );
 
     expect(eligibleForms).not.toBeNull();
     if (eligibleForms === null) {
@@ -45,7 +46,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
             invocationSpellAccesses: [
               {
                 tag: "pactOfTheChainFindFamiliar",
-                spell: findFamiliar,
+                spell: spawnedCompanionLifecycle,
               },
             ],
           }),
@@ -63,7 +64,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
     expect(spellcasting?.invocationSpellAccesses).toEqual([
       {
         tag: "pactOfTheChainFindFamiliar",
-        spell: findFamiliar,
+        spell: spawnedCompanionLifecycle,
         invocationMode: PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
         eligibleForms,
       },
@@ -395,7 +396,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
   });
 
   test("Pact of the Chain Spell Access rejects spells without its familiar-casting mechanics", () => {
-    const findFamiliarWithWrongMaterialCost = {
+    const spawnedCompanionLifecycleWithWrongMaterialCost = {
       ...spellRecord("find_familiar"),
       mechanics: {
         ...spellRecord("find_familiar").mechanics,
@@ -421,7 +422,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
               invocationSpellAccesses: [
                 {
                   tag: "pactOfTheChainFindFamiliar",
-                  spell: findFamiliarWithWrongMaterialCost,
+                  spell: spawnedCompanionLifecycleWithWrongMaterialCost,
                 },
               ],
             }),

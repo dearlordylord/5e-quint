@@ -1145,7 +1145,11 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const featherFallProcedureRef = requireCharacterSpellProcedureRefForTest(
       battleRuntimeSessionForTest({ ...session, state: broken }),
       spellCasterId,
-      spellSlotInvocationRef(featherFallUnitId, 1, "featherFallMitigation"),
+      spellSlotInvocationRef(
+        featherFallUnitId,
+        1,
+        "fallingCreatureMitigationReaction",
+      ),
     );
     const fallWitness = resolveFlySpeedGrantEndFallCleanup({
       state: broken,
@@ -1196,7 +1200,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       return (
         invocation.tag === "spellSlot" &&
         invocation.spellId === featherFallUnitId &&
-        invocation.procedure === "featherFallMitigation"
+        invocation.procedure === "fallingCreatureMitigationReaction"
       );
     });
     if (
@@ -2271,7 +2275,7 @@ function featherFallTriggerFacts(
 ): readonly BattleTargetSpatialFact[] {
   return [
     {
-      kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+      kind: "fallingCreatureMitigationTriggerWithinRange",
       reactorId: spellCasterId,
       fallingCreatureId,
       sourceProcedureRef,
@@ -2291,7 +2295,7 @@ function featherFallTargetListFill(
     holeId: hole.holeId,
     value: { targetIds },
     spatialFacts: targetIds.map((targetId) => ({
-      kind: "featherFallTargetFallingWithinRange",
+      kind: "fallingCreatureTargetWithinRange",
       casterId: casterIdValue,
       targetId,
       sourceProcedureRef,

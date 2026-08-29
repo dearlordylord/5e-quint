@@ -27,7 +27,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import {
   animalFriendshipUnitId,
   heatMetalUnitId,
-  hideousLaughterUnitId,
+  saveGatedConditionWithRepeatUnitId,
   orcRelentlessEnduranceUnitId,
   spellCasterId,
   spellTargetId,
@@ -50,7 +50,7 @@ import { requiredConditionEndAbilityCheckRollMode } from "./battle-reducer/hole-
 const heatMetalObjectId = battleObjectId(
   "object-contact-lifecycle-boundary-metal",
 );
-const hideousLaughterCasterId = combatantId(
+const saveGatedConditionWithRepeatCasterId = combatantId(
   "object-contact-hideous-laughter-caster",
 );
 const heatMetalCasterId = combatantId("object-contact-heat-metal-caster");
@@ -210,12 +210,12 @@ describe("object-contact damage public lifecycle boundaries", () => {
       battleId: battleId("object-contact-hideous-laughter-repeat-save"),
       combatants: [
         characterCreature({
-          combatantId: hideousLaughterCasterId,
+          combatantId: saveGatedConditionWithRepeatCasterId,
           displayName: "Hideous Laughter caster",
           initiative: 30,
           spellcasting: wizardSpellcasting({
             cantrips: [],
-            preparedSpells: [spellRecord(hideousLaughterUnitId)],
+            preparedSpells: [spellRecord(saveGatedConditionWithRepeatUnitId)],
             spellSlots: [{ spellLevel: 1, count: 1 }],
           }),
         }),
@@ -240,14 +240,16 @@ describe("object-contact damage public lifecycle boundaries", () => {
     });
     const laughterAct = spellAct({
       session,
-      spellId: hideousLaughterUnitId,
+      spellId: saveGatedConditionWithRepeatUnitId,
       slotLevel: 1,
     });
-    expect(laughterAct.subject.actorId).toBe(hideousLaughterCasterId);
+    expect(laughterAct.subject.actorId).toBe(
+      saveGatedConditionWithRepeatCasterId,
+    );
     const targetFill = spellTargetListFill(
       requireHole(laughterAct.initialHoles, "spellTargetList"),
-      hideousLaughterCasterId,
-      hideousLaughterUnitId,
+      saveGatedConditionWithRepeatCasterId,
+      saveGatedConditionWithRepeatUnitId,
       [spellTargetId],
     );
     const initialSave = requireResultHole(
@@ -273,7 +275,7 @@ describe("object-contact damage public lifecycle boundaries", () => {
 
     const heatCasterTurn = endTurn({
       state: laughed.state,
-      actorId: hideousLaughterCasterId,
+      actorId: saveGatedConditionWithRepeatCasterId,
     });
     expect(heatCasterTurn).toMatchObject({ tag: "resolved" });
     if (heatCasterTurn.tag !== "resolved") return;
@@ -325,7 +327,7 @@ describe("object-contact damage public lifecycle boundaries", () => {
       "savingThrowOutcome",
     );
     expect(laughterSave).toMatchObject({
-      hideousLaughterRepeatSave: {
+      saveGatedConditionRepeatSave: {
         targetId: spellTargetId,
         trigger: "damage",
       },
@@ -368,7 +370,7 @@ describe("object-contact damage public lifecycle boundaries", () => {
       requireCombatant(resolved.state, spellTargetId).activeEffects,
     ).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "hideousLaughter" }),
+        expect.objectContaining({ kind: "saveGatedConditionWithRepeat" }),
       ]),
     );
   });
