@@ -9,7 +9,7 @@
   },
   "id": "weapon_pike",
   "kind": "weapon",
-  "mastery": "push",
+  "masteryUnitId": "mastery_push",
   "name": "Pike",
   "properties": [
     {

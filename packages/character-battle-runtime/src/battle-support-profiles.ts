@@ -16,9 +16,9 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   DragonbornSpeciesRecord,
   UnitRecord,
-  WeaponMasteryName,
 } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import { resolveWeaponMasteryReference } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 import { omitRuntimeDetachedClassSpellChoices } from "./class-spell-choice-projection.ts";
 
@@ -31,16 +31,6 @@ type CharacterBattleWeaponMasterySelection = NonNullable<
 
 type AuthoredBattleUnitRef = Omit<BattleUnitRef, "unit"> & {
   readonly unit: UnitRecord;
-};
-
-const BATTLE_SUPPORTED_MASTERY_UNIT_IDS: Partial<
-  Record<WeaponMasteryName, UnitRecord["id"]>
-> = {
-  cleave: authoredUnitId("mastery_cleave"),
-  push: authoredUnitId("mastery_push"),
-  sap: authoredUnitId("mastery_sap"),
-  slow: authoredUnitId("mastery_slow"),
-  topple: authoredUnitId("mastery_topple"),
 };
 
 const TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS = [
@@ -327,9 +317,8 @@ function battleSupportedMasteryUnitIdsForSelectedWeapons(
     if (Option.isNone(weapon) || weapon.value.kind !== "weapon") {
       return [];
     }
-    const masteryUnitId =
-      BATTLE_SUPPORTED_MASTERY_UNIT_IDS[weapon.value.mastery];
-    return masteryUnitId === undefined ? [] : [masteryUnitId];
+    const mastery = resolveWeaponMasteryReference(weapon.value, unitLibrary);
+    return mastery.tag === "resolved" ? [mastery.mastery.id] : [];
   });
   return unitIds.filter((unitId, index) => unitIds.indexOf(unitId) === index);
 }

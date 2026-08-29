@@ -9,7 +9,7 @@
   },
   "id": "weapon_lance",
   "kind": "weapon",
-  "mastery": "topple",
+  "masteryUnitId": "mastery_topple",
   "name": "Lance",
   "properties": [
     {

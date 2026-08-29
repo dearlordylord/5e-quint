@@ -46,7 +46,6 @@ import {
   WeaponProficiencySchema,
   WeaponCategorySchema,
   WeaponDamageSchema,
-  WeaponMasteryNameSchema,
   WeaponPropertyDetailSchema,
   WeaponUsageSchema,
 } from "./schema-base.ts";
@@ -4426,7 +4425,11 @@ export const WeaponRecordSchema = Schema.Struct({
   usage: WeaponUsageSchema,
   damage: WeaponDamageSchema,
   properties: exactOptional(Schema.Array(WeaponPropertyDetailSchema)),
-  mastery: WeaponMasteryNameSchema,
+  // SRD Equipment#Weapons gives every weapon one Mastery Property. The
+  // authored catalog reference identifies the Surface Mastery Unit that owns
+  // that property's mechanics; it is intentionally a reference rather than a
+  // same-publication dependency because a bounded catalog may omit the target.
+  masteryUnitId: surfaceReference(NonEmptyStringSchema, "mastery-reference"),
   weightPounds: exactOptional(Schema.Number),
   costGp: Schema.Number,
 });

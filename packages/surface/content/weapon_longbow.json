@@ -9,7 +9,7 @@
   },
   "id": "weapon_longbow",
   "kind": "weapon",
-  "mastery": "slow",
+  "masteryUnitId": "mastery_slow",
   "name": "Longbow",
   "properties": [
     {

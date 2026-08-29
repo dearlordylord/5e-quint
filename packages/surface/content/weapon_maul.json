@@ -9,7 +9,7 @@
   },
   "id": "weapon_maul",
   "kind": "weapon",
-  "mastery": "topple",
+  "masteryUnitId": "mastery_topple",
   "name": "Maul",
   "properties": [
     {

@@ -9,7 +9,7 @@
   },
   "id": "weapon_halberd",
   "kind": "weapon",
-  "mastery": "cleave",
+  "masteryUnitId": "mastery_cleave",
   "name": "Halberd",
   "properties": [
     {

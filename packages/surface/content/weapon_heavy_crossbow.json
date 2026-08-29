@@ -9,7 +9,7 @@
   },
   "id": "weapon_heavy_crossbow",
   "kind": "weapon",
-  "mastery": "push",
+  "masteryUnitId": "mastery_push",
   "name": "Heavy Crossbow",
   "properties": [
     {

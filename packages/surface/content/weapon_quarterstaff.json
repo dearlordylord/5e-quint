@@ -12,7 +12,7 @@
   },
   "id": "weapon_quarterstaff",
   "kind": "weapon",
-  "mastery": "topple",
+  "masteryUnitId": "mastery_topple",
   "name": "Quarterstaff",
   "properties": [
     {

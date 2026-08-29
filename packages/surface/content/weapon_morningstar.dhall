@@ -33,7 +33,7 @@ let weapon =
         , damageType = "piercing"
         }
       , properties = [] : List WeaponProperty
-      , mastery = "sap"
+      , masteryUnitId = "mastery_sap"
       , weightPounds = Some 4
       , costGp = 15
       }

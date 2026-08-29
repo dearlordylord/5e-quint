@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
-import { Option } from "effect";
+import { Match, Option } from "effect";
 import { UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
 
 // Content JSON is generated from the matching content/*.dhall source.
@@ -440,13 +440,19 @@ import wordOfRecallInput from "../../content/word_of_recall.json";
 import acidSplashInput from "../../content/acid_splash.json";
 import { decodeUnitRecordSync } from "./schema.ts";
 import type {
+  MasteryRecord,
   SpellcastingClassRecord,
   Provenance,
   SrdProvenance,
   SrdUnitRecord,
   StartingEquipmentChoice,
   UnitRecord,
+  WeaponRecord,
 } from "./types.ts";
+import {
+  unitMechanicsPath,
+  type UnitMechanicsPath,
+} from "./mechanics-graph-path.ts";
 
 export type Srd521CollectionProvenance = Pick<SrdProvenance, "kind">;
 
@@ -467,6 +473,138 @@ export type UnitCatalog = {
   readonly listUnits: () => readonly UnitRecord[];
   readonly requireUnit: (id: string) => UnitRecord;
 };
+
+type NonMasteryUnitRecord = Exclude<UnitRecord, MasteryRecord>;
+
+export type WeaponMasteryReferenceResolution =
+  | {
+      readonly tag: "resolved";
+      readonly weapon: WeaponRecord;
+      readonly mastery: MasteryRecord;
+    }
+  | {
+      readonly tag: "missing";
+      readonly weapon: WeaponRecord;
+      readonly masteryUnitId: UnitId;
+    }
+  | {
+      readonly tag: "wrong-kind";
+      readonly weapon: WeaponRecord;
+      readonly masteryUnitId: UnitId;
+      readonly actualKind: NonMasteryUnitRecord["kind"];
+    };
+
+export type WeaponMasteryReferenceIssue =
+  | {
+      readonly code: "unknownWeaponMasteryReference";
+      readonly root: { readonly kind: "unit"; readonly id: UnitId };
+      readonly mechanicsPath: UnitMechanicsPath;
+      readonly fieldName: "masteryUnitId";
+      readonly masteryUnitId: UnitId;
+    }
+  | {
+      readonly code: "invalidWeaponMasteryReference";
+      readonly root: { readonly kind: "unit"; readonly id: UnitId };
+      readonly mechanicsPath: UnitMechanicsPath;
+      readonly fieldName: "masteryUnitId";
+      readonly masteryUnitId: UnitId;
+      readonly actualKind: NonMasteryUnitRecord["kind"];
+    };
+
+export type WeaponMasteryReferenceClosure = {
+  readonly referenceCount: number;
+  readonly resolvedCount: number;
+  readonly unresolvedCount: number;
+  readonly issues: readonly WeaponMasteryReferenceIssue[];
+};
+
+/**
+ * Resolve a weapon's authored mastery Unit reference against the installed
+ * catalog. Resolution is exact by branded Unit id; display names are never
+ * consulted at this boundary.
+ */
+export function resolveWeaponMasteryReference(
+  weapon: WeaponRecord,
+  unitCatalog: UnitCatalog,
+): WeaponMasteryReferenceResolution {
+  const referenced = unitCatalog.getUnit(weapon.masteryUnitId);
+  if (Option.isNone(referenced)) {
+    return {
+      tag: "missing",
+      weapon,
+      masteryUnitId: weapon.masteryUnitId,
+    };
+  }
+  if (referenced.value.kind !== "mastery") {
+    return {
+      tag: "wrong-kind",
+      weapon,
+      masteryUnitId: weapon.masteryUnitId,
+      actualKind: referenced.value.kind,
+    };
+  }
+  return { tag: "resolved", weapon, mastery: referenced.value };
+}
+
+/**
+ * Report exact authored weapon-to-mastery closure for caller-selected weapon
+ * roots against an installed catalog. Missing mastery content remains a
+ * diagnostic; this report does not invent a target or make an incomplete
+ * catalog appear executable.
+ */
+export function inspectWeaponMasteryReferenceClosure(input: {
+  readonly weaponRoots: readonly WeaponRecord[];
+  readonly unitCatalog: UnitCatalog;
+}): WeaponMasteryReferenceClosure {
+  const issues: WeaponMasteryReferenceIssue[] = [];
+  let resolvedCount = 0;
+
+  for (const weapon of input.weaponRoots) {
+    const resolution = resolveWeaponMasteryReference(weapon, input.unitCatalog);
+    Match.value(resolution).pipe(
+      Match.when({ tag: "resolved" }, () => {
+        resolvedCount += 1;
+      }),
+      Match.when(
+        { tag: "missing" },
+        ({ weapon: missingWeapon, masteryUnitId }) => {
+          issues.push({
+            code: "unknownWeaponMasteryReference",
+            root: { kind: "unit", id: missingWeapon.id },
+            mechanicsPath: weaponMasteryReferenceMechanicsPath(),
+            fieldName: "masteryUnitId",
+            masteryUnitId,
+          });
+        },
+      ),
+      Match.when(
+        { tag: "wrong-kind" },
+        ({ weapon: wrongKindWeapon, masteryUnitId, actualKind }) => {
+          issues.push({
+            code: "invalidWeaponMasteryReference",
+            root: { kind: "unit", id: wrongKindWeapon.id },
+            mechanicsPath: weaponMasteryReferenceMechanicsPath(),
+            fieldName: "masteryUnitId",
+            masteryUnitId,
+            actualKind,
+          });
+        },
+      ),
+      Match.exhaustive,
+    );
+  }
+
+  return {
+    referenceCount: input.weaponRoots.length,
+    resolvedCount,
+    unresolvedCount: issues.length,
+    issues,
+  };
+}
+
+function weaponMasteryReferenceMechanicsPath(): UnitMechanicsPath {
+  return unitMechanicsPath([{ kind: "singleton", role: "recordMechanics" }]);
+}
 
 export type AuthoredUnitReferenceResolution = {
   readonly authoredReference: string;

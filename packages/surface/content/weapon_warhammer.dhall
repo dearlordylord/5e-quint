@@ -47,7 +47,7 @@ let weapon =
               }
             ]
           : List WeaponProperty
-      , mastery = "push"
+      , masteryUnitId = "mastery_push"
       , weightPounds = Some 5
       , costGp = 15
       }

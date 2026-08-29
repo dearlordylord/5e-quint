@@ -32303,7 +32303,7 @@
                 "kind": "light"
               }
             ],
-            "mastery": "slow",
+            "masteryUnitId": "mastery_slow",
             "weightPounds": 2,
             "costGp": 0.1,
             "provenance": {
@@ -32339,7 +32339,7 @@
                 }
               }
             ],
-            "mastery": "nick",
+            "masteryUnitId": "mastery_nick",
             "weightPounds": 1,
             "costGp": 2,
             "provenance": {
@@ -32368,7 +32368,7 @@
                 "kind": "two_handed"
               }
             ],
-            "mastery": "cleave",
+            "masteryUnitId": "mastery_cleave",
             "weightPounds": 7,
             "costGp": 30,
             "provenance": {
@@ -32400,7 +32400,7 @@
                 }
               }
             ],
-            "mastery": "sap",
+            "masteryUnitId": "mastery_sap",
             "weightPounds": 3,
             "costGp": 15,
             "provenance": {
@@ -32439,7 +32439,7 @@
                 }
               }
             ],
-            "mastery": "sap",
+            "masteryUnitId": "mastery_sap",
             "weightPounds": 3,
             "costGp": 1,
             "provenance": {
@@ -32460,7 +32460,7 @@
               "dieSize": 8,
               "damageType": "bludgeoning"
             },
-            "mastery": "sap",
+            "masteryUnitId": "mastery_sap",
             "weightPounds": 2,
             "costGp": 10,
             "provenance": {
@@ -32494,7 +32494,7 @@
                 "kind": "two_handed"
               }
             ],
-            "mastery": "vex",
+            "masteryUnitId": "mastery_vex",
             "weightPounds": 2,
             "costGp": 25,
             "provenance": {
@@ -32523,7 +32523,7 @@
                 "kind": "light"
               }
             ],
-            "mastery": "vex",
+            "masteryUnitId": "mastery_vex",
             "weightPounds": 2,
             "costGp": 10,
             "provenance": {
@@ -32558,7 +32558,7 @@
                 }
               }
             ],
-            "mastery": "topple",
+            "masteryUnitId": "mastery_topple",
             "weightPounds": 4,
             "costGp": 0.2,
             "provenance": {
