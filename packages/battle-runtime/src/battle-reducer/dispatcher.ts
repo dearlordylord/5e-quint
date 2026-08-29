@@ -30,6 +30,7 @@
 
 import { Match } from "effect";
 import { resolveReportReadyTriggerCommand } from "./ready-trigger.ts";
+import { optionalProperty } from "../optional-property.ts";
 
 import { currentInterruptFrame, snapshotBattle } from "./battle-snapshot.ts";
 export {
@@ -404,76 +405,120 @@ function resolvePendingInterruptSubject(input: {
   );
 }
 
-function resolveBattleSubjectAfterD20TestNaturalOneReroll(
+function handledInterruptOccurrenceForRoute(
+  options: BattleInterruptRouteOptions,
+) {
+  return options.replayingInterruptedProcedure === true
+    ? options.handledInterruptOccurrence
+    : undefined;
+}
+
+function handledInterruptTriggerForRoute(
+  options: BattleInterruptRouteOptions,
+  occurrence: ReturnType<typeof handledInterruptOccurrenceForRoute>,
+) {
+  return options.replayingInterruptedProcedure === true
+    ? occurrence?.trigger
+    : options.handledInterruptTrigger;
+}
+
+function replayObjectOutcomesRouteOption(options: BattleInterruptRouteOptions) {
+  return options.replayingInterruptedProcedure === true
+    ? optionalProperty("replayObjectOutcomes", options.objectOutcomes)
+    : {};
+}
+
+function interruptConsumerRouteOptions(
+  options: BattleInterruptRouteOptions,
+  occurrence: ReturnType<typeof handledInterruptOccurrenceForRoute>,
+  handledInterruptRouteOption: ReturnType<
+    typeof optionalProperty<
+      "handledInterruptTrigger",
+      ReturnType<typeof handledInterruptTriggerForRoute>
+    >
+  >,
+  replayParentRouteOption: ReturnType<
+    typeof optionalProperty<
+      "replayParentPosition",
+      BattleInterruptRouteOptions["replayParentPosition"]
+    >
+  >,
+) {
+  if (
+    options.replayingInterruptedProcedure === true &&
+    occurrence !== undefined
+  ) {
+    return {
+      replayingInterruptedProcedure: true as const,
+      handledInterruptTrigger: occurrence.trigger,
+      ...replayParentRouteOption,
+      ...optionalProperty(
+        "pendingAttackDamageReductions",
+        options.pendingAttackDamageReductions,
+      ),
+      ...optionalProperty(
+        "pendingAttackDamageAdditions",
+        options.pendingAttackDamageAdditions,
+      ),
+    };
+  }
+  return handledInterruptRouteOption;
+}
+
+function handledSaveFailedOccurrenceForRoute(
+  occurrence: ReturnType<typeof handledInterruptOccurrenceForRoute>,
+) {
+  return occurrence?.trigger === "saveFailed" ? occurrence : undefined;
+}
+
+function battleSubjectInterruptRouteProjection(
+  options: BattleInterruptRouteOptions,
+) {
+  const handledInterruptOccurrence =
+    handledInterruptOccurrenceForRoute(options);
+  const handledInterruptTrigger = handledInterruptTriggerForRoute(
+    options,
+    handledInterruptOccurrence,
+  );
+  const handledInterruptRouteOption = optionalProperty(
+    "handledInterruptTrigger",
+    handledInterruptTrigger,
+  );
+  const replayParentRouteOption = optionalProperty(
+    "replayParentPosition",
+    options.replayParentPosition,
+  );
+  const handledSaveFailedOccurrence = handledSaveFailedOccurrenceForRoute(
+    handledInterruptOccurrence,
+  );
+  return {
+    handledInterruptOccurrence,
+    handledInterruptTrigger,
+    handledInterruptRouteOption,
+    replayParentRouteOption,
+    replayObjectOutcomesOption: replayObjectOutcomesRouteOption(options),
+    interruptConsumerOptions: interruptConsumerRouteOptions(
+      options,
+      handledInterruptOccurrence,
+      handledInterruptRouteOption,
+      replayParentRouteOption,
+    ),
+    persistentSpatialReplayRouteOption: {
+      ...optionalProperty(
+        "handledSaveFailedOccurrence",
+        handledSaveFailedOccurrence,
+      ),
+      ...replayParentRouteOption,
+    },
+  };
+}
+
+function battleSubjectActorAdmissionResult(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
-): BattleResolutionResult {
-  const interruptRouteOptions = options.interruptRouteOptions;
-  const handledInterruptOccurrence =
-    interruptRouteOptions.replayingInterruptedProcedure === true
-      ? interruptRouteOptions.handledInterruptOccurrence
-      : undefined;
-  const handledInterruptTrigger =
-    interruptRouteOptions.replayingInterruptedProcedure === true
-      ? handledInterruptOccurrence?.trigger
-      : interruptRouteOptions.handledInterruptTrigger;
-  const handledInterruptRouteOption =
-    handledInterruptTrigger === undefined ? {} : { handledInterruptTrigger };
-  const replayParentRouteOption =
-    interruptRouteOptions.replayParentPosition === undefined
-      ? {}
-      : { replayParentPosition: interruptRouteOptions.replayParentPosition };
-  const replayObjectOutcomesOption =
-    interruptRouteOptions.replayingInterruptedProcedure === true &&
-    interruptRouteOptions.objectOutcomes !== undefined
-      ? { replayObjectOutcomes: interruptRouteOptions.objectOutcomes }
-      : {};
-  const interruptConsumerOptions =
-    interruptRouteOptions.replayingInterruptedProcedure === true &&
-    handledInterruptOccurrence !== undefined
-      ? {
-          replayingInterruptedProcedure: true as const,
-          handledInterruptTrigger: handledInterruptOccurrence.trigger,
-          ...replayParentRouteOption,
-          ...(interruptRouteOptions.pendingAttackDamageReductions === undefined
-            ? {}
-            : {
-                pendingAttackDamageReductions:
-                  interruptRouteOptions.pendingAttackDamageReductions,
-              }),
-          ...(interruptRouteOptions.pendingAttackDamageAdditions === undefined
-            ? {}
-            : {
-                pendingAttackDamageAdditions:
-                  interruptRouteOptions.pendingAttackDamageAdditions,
-              }),
-        }
-      : handledInterruptRouteOption;
-  const handledSaveFailedOccurrence =
-    handledInterruptOccurrence?.trigger === "saveFailed"
-      ? handledInterruptOccurrence
-      : undefined;
-  const persistentSpatialReplayRouteOption = {
-    ...(handledSaveFailedOccurrence === undefined
-      ? {}
-      : { handledSaveFailedOccurrence }),
-    ...replayParentRouteOption,
-  };
-  const pendingInterruptResult = resolvePendingInterruptSubject({
-    input,
-    options,
-  });
-  if (pendingInterruptResult !== null) return pendingInterruptResult;
-
+): BattleResolutionResult | null {
   const actorId = battleSubjectActorId(input.subject);
-  if (
-    actorId !== currentActorId(input.state) &&
-    actorId !== options.readiedActionActorId &&
-    interruptRouteOptions.replayParentPosition === undefined &&
-    !isLegendaryAttackSubject(input.state, input.subject) &&
-    !isReleaseGrappleSubject(input.subject) &&
-    !isPersistentAreaSubjectAllowedOutsideCurrentActorTurn(input.subject)
-  ) {
+  if (battleSubjectHasWrongActor(input, options, actorId)) {
     return invalidResult(
       input.state,
       "wrongActor",
@@ -492,7 +537,6 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     );
   }
   /* v8 ignore stop -- @preserve */
-
   /* v8 ignore start -- @preserve -- Defensive malformed/stale subject rejection: admitted and rediscovered subjects always name a combatant still present in the battle. */
   if (!input.state.combatants.has(actorId)) {
     return invalidResult(
@@ -502,6 +546,28 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     );
   }
   /* v8 ignore stop -- @preserve */
+  return null;
+}
+
+function battleSubjectHasWrongActor(
+  input: AdmittedBattleResolutionInput,
+  options: ResolveBattleSubjectInternalOptions,
+  actorId: CombatantId,
+): boolean {
+  return (
+    actorId !== currentActorId(input.state) &&
+    actorId !== options.readiedActionActorId &&
+    options.interruptRouteOptions.replayParentPosition === undefined &&
+    !isLegendaryAttackSubject(input.state, input.subject) &&
+    !isReleaseGrappleSubject(input.subject) &&
+    !isPersistentAreaSubjectAllowedOutsideCurrentActorTurn(input.subject)
+  );
+}
+
+function battleSubjectObligationAdmissionResult(
+  input: AdmittedBattleResolutionInput,
+  options: ResolveBattleSubjectInternalOptions,
+): BattleResolutionResult | null {
   const commandObligationIssue = pendingCommandObligationIssue(
     input.state,
     input.subject,
@@ -539,14 +605,42 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       antimagicFieldInterdictionMessage(input.state, input.subject),
     );
   }
-
   const actionEligibilityIssue = battleSubjectActionEligibilityIssue(
     input.state,
     input.subject,
   );
-  if (actionEligibilityIssue !== null) {
-    return invalidResult(input.state, "staleSubject", actionEligibilityIssue);
-  }
+  return actionEligibilityIssue === null
+    ? null
+    : invalidResult(input.state, "staleSubject", actionEligibilityIssue);
+}
+
+function resolveBattleSubjectAfterD20TestNaturalOneReroll(
+  input: AdmittedBattleResolutionInput,
+  options: ResolveBattleSubjectInternalOptions,
+): BattleResolutionResult {
+  const interruptRouteOptions = options.interruptRouteOptions;
+  const route = battleSubjectInterruptRouteProjection(interruptRouteOptions);
+  const {
+    handledInterruptTrigger,
+    handledInterruptRouteOption,
+    replayParentRouteOption,
+    replayObjectOutcomesOption,
+    interruptConsumerOptions,
+    persistentSpatialReplayRouteOption,
+  } = route;
+  const pendingInterruptResult = resolvePendingInterruptSubject({
+    input,
+    options,
+  });
+  if (pendingInterruptResult !== null) return pendingInterruptResult;
+
+  const actorAdmission = battleSubjectActorAdmissionResult(input, options);
+  if (actorAdmission !== null) return actorAdmission;
+  const obligationAdmission = battleSubjectObligationAdmissionResult(
+    input,
+    options,
+  );
+  if (obligationAdmission !== null) return obligationAdmission;
   const result = (() => {
     if (input.admissionKind !== "general") {
       return resolveSpecializedAdmission(input);

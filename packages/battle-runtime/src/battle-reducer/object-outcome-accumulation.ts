@@ -53,13 +53,6 @@ export function appendObjectOutcomeAccumulation(
     current?.droppedObjects,
     source.droppedObjects,
   );
-  if (
-    objectDamages === undefined &&
-    objectIgnitions === undefined &&
-    droppedObjects === undefined
-  ) {
-    return undefined;
-  }
   if (objectDamages !== undefined) {
     return {
       objectDamages,
@@ -73,6 +66,12 @@ export function appendObjectOutcomeAccumulation(
       ...optionalProperty("droppedObjects", droppedObjects),
     };
   }
+  return droppedObjectAccumulation(droppedObjects);
+}
+
+function droppedObjectAccumulation(
+  droppedObjects: BattleObjectOutcomeAccumulation["droppedObjects"],
+): BattleObjectOutcomeAccumulation | undefined {
   return droppedObjects === undefined ? undefined : { droppedObjects };
 }
 

@@ -41,9 +41,6 @@
     "packages/battle-runtime/src/battle-reducer/antimagic-field-action-interdiction.ts": {
       "module/binding:antimagicFieldSubjectInterdiction": 13
     },
-    "packages/battle-runtime/src/battle-reducer/antimagic-field-suppression.ts": {
-      "module/binding:ongoingSpellEffectRefEquals": 12
-    },
     "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts": {
       "module/binding:admitBattleCombatant": 11,
       "module/binding:applyInitiativeSwap": 12
@@ -105,7 +102,7 @@
     "packages/battle-runtime/src/battle-reducer/battle-codecs.ts": {
       "module/binding:battleCreatureSnapshotInvariantsHold": 13,
       "module/binding:statBlockExecutionSnapshotGraphIsValid": 12,
-      "module/binding:statBlockExecutionSnapshotGraphIsValid/call:snapshot.procedureBindings.every:argument-0": 19
+      "module/binding:statBlockExecutionSnapshotGraphIsValid/call:snapshot.procedureBindings.every:argument-0": 13
     },
     "packages/battle-runtime/src/battle-reducer/battle-discovery.ts": {
       "module/binding:companionProtocolActs": 13,
@@ -176,7 +173,6 @@
       "module/binding:damageRelationshipQuestions": 14
     },
     "packages/battle-runtime/src/battle-reducer/dispatcher.ts": {
-      "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll": 18,
       "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll/call:iife:argument--1": 70
     },
     "packages/battle-runtime/src/battle-reducer/dragons-breath.ts": {
@@ -228,16 +224,12 @@
       "module/binding:stateForOpeningInterruptCheckpoint": 9
     },
     "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts": {
-      "module/binding:appendObjectOutcomesToContinuation": 10,
-      "module/binding:interruptCheckpointAfterModifier": 11,
+      "module/binding:interruptCheckpointAfterModifier": 10,
       "module/binding:resolveInterruptLifecycleDecision": 14,
       "module/binding:resolveReactionRollOrDamageReduction": 19
     },
     "packages/battle-runtime/src/battle-reducer/interrupt-stack-routes.ts": {
       "module/binding:interruptStackResumeDiscoveryRouteForResolution": 9
-    },
-    "packages/battle-runtime/src/battle-reducer/levitate-creature.ts": {
-      "module/binding:validateLevitatedMovementFact": 13
     },
     "packages/battle-runtime/src/battle-reducer/marked-damage-routes.ts": {
       "module/binding:markedDamageRiderRouteForResolution": 12
@@ -276,7 +268,7 @@
       "module/binding:resolveMovementEffectsAfterMovement": 16,
       "module/binding:validateAreaDifficultTerrainMovementFact": 18,
       "module/binding:validateGrappleDragMovementFact": 13,
-      "module/binding:validateGustOfWindLineMovementFact": 10,
+      "module/binding:validateGustOfWindLineMovementFact": 9,
       "module/binding:validateMovementCostFacts": 26
     },
     "packages/battle-runtime/src/battle-reducer/movement-routes.ts": {
@@ -305,18 +297,14 @@
       "module/binding:passiveProjectionRouteForResolution": 17,
       "module/binding:passiveSavingThrowRollModeDispositionForTarget": 10
     },
-    "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage.ts": {
-      "module/binding:resolveParsedPersistentAreaSaveDamage": 16
-    },
     "packages/battle-runtime/src/battle-reducer/persistent-spatial-spell-procedures.ts": {
       "module/binding:resolveFlamingSphereRamCommand": 30,
       "module/binding:resolveFlamingSphereRepositionCommand": 10,
-      "module/binding:resolveFlamingSphereSaveCommand": 19,
-      "module/binding:resolveGreaseGroundHazardEndTurnSaveCommand": 11,
+      "module/binding:resolveFlamingSphereSaveCommand": 17,
+      "module/binding:resolveGreaseGroundHazardEndTurnSaveCommand": 9,
       "module/binding:resolveGustOfWindLineDirectionChangeCommand": 12,
-      "module/binding:resolveGustOfWindLineSaveCommand": 10,
       "module/binding:resolveMoonbeamRepositionCommand": 10,
-      "module/binding:resolveMoonbeamSaveCommand": 25,
+      "module/binding:resolveMoonbeamSaveCommand": 21,
       "module/binding:resolveSleetStormAreaHazardSaveCommand": 11,
       "module/binding:resolveWebRestraintSaveCommand": 11,
       "module/binding:validateGustOfWindLineSavingThrowOutcome": 13
@@ -803,9 +791,8 @@
     },
     "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts": {
       "module/binding:expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames/call:[...combatants].map:argument-0": 10,
-      "module/binding:resolveEndTurn": 10,
-      "module/binding:resolveEndTurnCommand": 85,
-      "module/binding:tickDurationEffects/call:[...combatants].map:argument-0": 11
+      "module/binding:resolveEndTurn": 9,
+      "module/binding:resolveEndTurnCommandForParent": 76
     },
     "packages/battle-runtime/src/battle-reducer/unit-feature-discovery.ts": {
       "module/binding:sacredWeaponHeldMeleeWeapons": 13,
@@ -888,8 +875,7 @@
     "packages/battle-runtime/src/stat-block-execution.ts": {
       "module/binding:admitStatBlock": 19,
       "module/binding:allocateStatBlockExecution": 12,
-      "module/binding:persistedValuesEqual": 12,
-      "module/binding:restoreStatBlockExecutionAdmissions": 9
+      "module/binding:persistedValuesEqual": 12
     },
     "packages/battle-runtime/src/stat-block-presentation.ts": {
       "module/binding:attackActionOptionPresentationName": 21
@@ -967,7 +953,7 @@
       "module/binding:featurePreparedSpellAccess": 11
     },
     "packages/character-battle-runtime/src/battle-creature-init.ts": {
-      "module/binding:battleCreatureInitFromCharacterBuild/call:Either.gen:argument-0": 32,
+      "module/binding:battleCreatureInitFromCharacterBuild/call:Result.gen:argument-0": 32,
       "module/binding:characterBattlePersistedUsesRemaining": 18,
       "module/binding:characterBattleResourceInit": 10
     },
