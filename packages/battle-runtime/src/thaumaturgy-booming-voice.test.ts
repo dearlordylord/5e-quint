@@ -67,7 +67,7 @@ const thaumaturgySubject = {
   actorId: fighterId,
   invocation: cantripSpellInvocationRef(
     "thaumaturgy",
-    "thaumaturgyBoomingVoice",
+    "temporaryAbilityCheckRollMode",
   ),
   mode: { tag: "cast" as const },
 };
@@ -87,7 +87,7 @@ describe("Thaumaturgy Booming Voice", () => {
     expect(act.initialHoles).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "thaumaturgyActiveOneMinuteEffectCount",
+          kind: "temporaryAbilityCheckRollModeActiveEffectCount",
           label: "Spell total active 1-minute effects",
           maximumActiveOneMinuteEffects: 3,
           requiresTableSpellEffectCount: true,
@@ -127,8 +127,8 @@ describe("Thaumaturgy Booming Voice", () => {
     const first = castThaumaturgy(battleWithThaumaturgy(), 0);
     const refreshed = castThaumaturgy(withFreshMagicAction(first), 3);
 
-    expect(thaumaturgyBoomingVoiceEffectCount(first)).toBe(1);
-    expect(thaumaturgyBoomingVoiceEffectCount(refreshed)).toBe(1);
+    expect(temporaryAbilityCheckRollModeEffectCount(first)).toBe(1);
+    expect(temporaryAbilityCheckRollModeEffectCount(refreshed)).toBe(1);
     expect(refreshed.state.currentTurnResources.actionResources).toEqual([]);
     expect(
       thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
@@ -156,7 +156,7 @@ describe("Thaumaturgy Booming Voice", () => {
       fills: [thaumaturgyCountFill(countHole, 0)],
     });
 
-    expect(thaumaturgyBoomingVoiceEffectCount(first)).toBe(1);
+    expect(temporaryAbilityCheckRollModeEffectCount(first)).toBe(1);
     expect(rejected).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
@@ -170,7 +170,7 @@ describe("Thaumaturgy Booming Voice", () => {
 
     expect(caster?.activeEffects).toContainEqual(
       expect.objectContaining({
-        kind: "thaumaturgyBoomingVoice",
+        kind: "temporaryAbilityCheckRollMode",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: fighterId,
         expiresAt: {
@@ -223,8 +223,12 @@ describe("Thaumaturgy Booming Voice", () => {
   });
 
   test("rejects unsupported synthetic Booming Voice operation, filter, and attachment profiles", () => {
-    type ThaumaturgyEffectInput =
-      (typeof thaumaturgyInput.mechanics.operations)[number]["effect"];
+    type ThaumaturgyModeOptionInput =
+      (typeof thaumaturgyInput.mechanics.mode.options)[number];
+    type ThaumaturgyEffectInput = Extract<
+      ThaumaturgyModeOptionInput,
+      { readonly effects: readonly unknown[] }
+    >["effects"][number];
     const unsupportedEffectMutations = {
       synthetic_thaumaturgy_numeric_effect: () => ({
         kind: "modify_roll_numeric" as const,
@@ -267,12 +271,19 @@ describe("Thaumaturgy Booming Voice", () => {
         provenance: { kind: "synthetic-test", section: id },
         mechanics: {
           ...thaumaturgyInput.mechanics,
-          operations: thaumaturgyInput.mechanics.operations.map(
-            (operation) => ({
-              ...operation,
-              effect: mutateEffect(operation.effect),
-            }),
-          ),
+          mode: {
+            ...thaumaturgyInput.mechanics.mode,
+            options: thaumaturgyInput.mechanics.mode.options.map((option) =>
+              "effects" in option
+                ? {
+                    ...option,
+                    effects: option.effects.map((effect) =>
+                      mutateEffect(effect),
+                    ),
+                  }
+                : option,
+            ),
+          },
         },
       });
 
@@ -351,21 +362,24 @@ function withFreshMagicAction(
   });
 }
 
-function thaumaturgyBoomingVoiceEffectCount(
+function temporaryAbilityCheckRollModeEffectCount(
   session: BattleRuntimeSession,
 ): number {
   return (
     session.state.combatants
       .get(fighterId)
       ?.activeEffects.filter(
-        (effect) => effect.kind === "thaumaturgyBoomingVoice",
+        (effect) => effect.kind === "temporaryAbilityCheckRollMode",
       ).length ?? 0
   );
 }
 
 function findThaumaturgyCountHole(holes: readonly BattleHole[]) {
-  const hole = findHole(holes, "thaumaturgyActiveOneMinuteEffectCount");
-  if (hole.kind !== "thaumaturgyActiveOneMinuteEffectCount") {
+  const hole = findHole(
+    holes,
+    "temporaryAbilityCheckRollModeActiveEffectCount",
+  );
+  if (hole.kind !== "temporaryAbilityCheckRollModeActiveEffectCount") {
     throw new Error("Expected Thaumaturgy active-effect count hole.");
   }
   return hole;
@@ -376,7 +390,7 @@ function thaumaturgyCountFill(
   activeOneMinuteEffectCount: number,
 ): BattleFill {
   return {
-    kind: "thaumaturgyActiveOneMinuteEffectCount",
+    kind: "temporaryAbilityCheckRollModeActiveEffectCount",
     holeId: hole.holeId,
     value: { activeOneMinuteEffectCount },
   };

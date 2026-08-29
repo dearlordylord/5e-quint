@@ -21,7 +21,7 @@ describe("Reaction spell route subjects", () => {
     const featherFallInvocation = spellSlotInvocationRef(
       "feather_fall",
       1,
-      "featherFallMitigation",
+      "fallingCreatureMitigationReaction",
     );
     const session = spellBattle({
       preparedSpells: [spellRecord("feather_fall")],
@@ -32,7 +32,7 @@ describe("Reaction spell route subjects", () => {
       fallingCreatureId: spellTargetId,
       reactionSpellTargetFacts: [
         {
-          kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+          kind: "fallingCreatureMitigationTriggerWithinRange",
           reactorId: spellCasterId,
           fallingCreatureId: spellTargetId,
           sourceProcedureRef: requireCharacterSpellProcedureRefForTest(

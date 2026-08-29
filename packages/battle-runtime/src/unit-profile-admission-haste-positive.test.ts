@@ -90,7 +90,11 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         state,
         spellCasterId,
-        spellSlotInvocationRef(hasteUnitId, 3, "hastePositive"),
+        spellSlotInvocationRef(
+          hasteUnitId,
+          3,
+          "compositeTargetBuffWithAftermath",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -741,7 +745,7 @@ function stateWithSleepPendingRepeatSave(
 ): BattleState {
   const combatant = requireCombatant(state, combatantId);
   const sleepPendingEffect: BattleActiveEffect = {
-    kind: "sleepPendingRepeatSave",
+    kind: "stagedSaveConditionPendingRepeat",
     effectRef: battleEffectExecutionRefForTest(
       "synthetic-sleep-repeat-save-effect",
     ),
@@ -908,7 +912,7 @@ defineSelectedIdentityReplayWitness({
           actionName: "doReplayHastePositiveEffects",
           projectionAfter: {
             unitId: hasteUnitId,
-            procedure: "hastePositive",
+            procedure: "compositeTargetBuffWithAftermath",
             targetHasHaste: true,
             targetLethargic: false,
           },
@@ -916,7 +920,7 @@ defineSelectedIdentityReplayWitness({
             const resolved = replayHasteCast();
             return {
               unitId: hasteUnitId,
-              procedure: "hastePositive",
+              procedure: "compositeTargetBuffWithAftermath",
               targetHasHaste: hasHastePositiveEffects(
                 requireCombatant(resolved.state, spellTargetId),
               ),

@@ -1455,7 +1455,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     }).toMatchObject({
       tag: "actionSpell",
       actorId: spellCasterId,
-      invocation: spellSlotInvocationRef("sleep", 1, "sleepTargetAdmission"),
+      invocation: spellSlotInvocationRef("sleep", 1, "stagedSaveCondition"),
       mode: { tag: "cast" },
     });
     const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
@@ -1468,7 +1468,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     );
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
-        procedure: "sleepTargetAdmission",
+        procedure: "stagedSaveCondition",
         resource: {
           tag: "spellSlot",
           slotLevel: 1,
@@ -1545,7 +1545,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(requireCombatant(declined.state, spellTargetId)).toMatchObject({
       conditions: expect.objectContaining({ directIncapacitated: true }),
       activeEffects: [
-        expect.objectContaining({ kind: "sleepPendingRepeatSave" }),
+        expect.objectContaining({
+          kind: "stagedSaveConditionPendingRepeat",
+        }),
       ],
     });
   });
@@ -1573,7 +1575,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       ),
     ).toEqual([
       expect.objectContaining({
-        procedure: "sleepTargetAdmission",
+        procedure: "stagedSaveCondition",
         spell: expect.objectContaining({
           id: sleepUnitId,
           castingSource: {

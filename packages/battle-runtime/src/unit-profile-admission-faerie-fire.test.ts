@@ -142,7 +142,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       name: "Slow area facts on a non-Slow spell",
       spellId: faerieFireUnitId,
       area: {
-        kind: "slowArea",
+        kind: "saveGatedTurnConstraintBundleArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
       },
@@ -163,7 +163,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       name: "Faerie Fire area facts on a non-Faerie Fire spell",
       spellId: burningHandsUnitId,
       area: {
-        kind: "faerieFireArea",
+        kind: "saveGatedTargetProjectionArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: [],
         affectedObjectIds: [],
@@ -174,7 +174,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       name: "duplicate Faerie Fire object ids",
       spellId: faerieFireUnitId,
       area: {
-        kind: "faerieFireArea",
+        kind: "saveGatedTargetProjectionArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: [],
         affectedObjectIds: [
@@ -336,7 +336,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     expect(resolved.state.combatants.get(spellTargetId)?.activeEffects).toEqual(
       [
         expect.objectContaining({
-          kind: "faerieFireOutline",
+          kind: "saveGatedTargetProjection",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: spellCasterId,
           expiresAt: { kind: "concentration", combatantId: spellCasterId },
@@ -429,7 +429,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     }
     expect(target.activeEffects).toEqual([
       expect.objectContaining({
-        kind: "faerieFireOutline",
+        kind: "saveGatedTargetProjection",
         sourceCombatantId: spellCasterId,
       }),
     ]);
@@ -604,7 +604,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     }
     expect(resolved.state.objectOutlines).toEqual([
       {
-        kind: "faerieFireObjectOutline",
+        kind: "saveGatedTargetProjectionObject",
         objectId,
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
@@ -668,7 +668,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     if (
       !("area" in fill.value) ||
       !("kind" in fill.value.area) ||
-      fill.value.area.kind !== "faerieFireArea"
+      fill.value.area.kind !== "saveGatedTargetProjectionArea"
     ) {
       throw new Error("Expected Faerie Fire object-area facts.");
     }
@@ -751,7 +751,7 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
           const validation = validateSavingThrowOutcomes(
             {
               area: {
-                kind: "faerieFireArea",
+                kind: "saveGatedTargetProjectionArea",
                 originAnchorId: spellCasterId,
                 affectedTargetIds: generatedAffectedTargetIds,
                 affectedObjectIds: [],
