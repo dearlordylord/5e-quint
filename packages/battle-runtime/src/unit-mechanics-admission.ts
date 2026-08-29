@@ -35,6 +35,7 @@ export function admitCompleteUnitMechanicsGraph(
   input: UnitMechanicsAdmissionInput,
 ): UnitMechanicsAdmissionResult {
   const issues: AdmissionIssue[] = [];
+  inspectRootMembership(input, issues);
   inspectDependencies(input, issues);
   inspectExecutionSupport(input.unit, issues);
 
@@ -47,6 +48,24 @@ export function admitCompleteUnitMechanicsGraph(
 /** The callback shape expected by the atomic Surface installer. */
 export const admitCompleteUnitMechanics: SurfaceMechanicsAdmission["admitUnit"] =
   admitCompleteUnitMechanicsGraph;
+
+function inspectRootMembership(
+  input: UnitMechanicsAdmissionInput,
+  issues: AdmissionIssue[],
+): void {
+  const installedRoot = input.surface.units.find(
+    (candidate) => candidate.id === input.unit.id,
+  );
+  if (installedRoot === input.unit) return;
+  addIssue(
+    issues,
+    "incomplete_graph",
+    path({ kind: "singleton", role: "recordMechanics" }),
+    installedRoot === undefined
+      ? "The Unit admission root is absent from the decoded Surface."
+      : "The Unit admission root does not match the decoded Surface member with that authored identity.",
+  );
+}
 
 function inspectDependencies(
   input: UnitMechanicsAdmissionInput,

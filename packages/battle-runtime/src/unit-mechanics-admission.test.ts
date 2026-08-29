@@ -22,12 +22,13 @@ const decodeUnit = (input: unknown): SrdUnitRecord =>
     onExcessProperty: "error",
   })(input);
 
-const roving = decodeUnit(rangerRovingInput);
 const baseSurface = decodeSrdSurfaceSync({
   kind: "srd-5.2.1-surface-catalog",
   units: [rangerRovingInput],
   statBlocks: [goblinWarriorInput],
 });
+const roving = baseSurface.units[0];
+if (roving === undefined) throw new Error("Expected the decoded Unit fixture.");
 
 function surfaceWithUnit(unit: SrdUnitRecord): SrdSurface {
   return { ...baseSurface, units: [unit] };
@@ -66,14 +67,14 @@ describe("complete Unit mechanics admission", () => {
         parts: [
           ...rangerRovingInput.mechanics.parts,
           {
-            family: "passive" as const,
+            family: "passive",
             grants: [
               {
-                kind: "modify_max_hp" as const,
-                direction: "increase" as const,
+                kind: "modify_max_hp",
+                direction: "increase",
                 delta: {
-                  kind: "linear_per_level" as const,
-                  axis: "class" as const,
+                  kind: "linear_per_level",
+                  axis: "class",
                   base: { dice: 0, dieSize: 1, flat: 1 },
                   perLevel: { flat: 1 },
                   startingAtLevel: 3,
@@ -128,6 +129,46 @@ describe("complete Unit mechanics admission", () => {
     });
     expect(installation.tag).toBe("rejected");
     expect(installation).not.toHaveProperty("catalog");
+  });
+
+  test.each([
+    {
+      name: "absent",
+      surfaceUnit: decodeUnit({
+        ...rangerRovingInput,
+        id: unitId("synthetic_spore_stride_other_root"),
+        name: "Synthetic Spore Stride Other Root",
+      }),
+      message: "The Unit admission root is absent from the decoded Surface.",
+    },
+    {
+      name: "mismatched",
+      surfaceUnit: decodeUnit({
+        ...rangerRovingInput,
+        name: "Synthetic Spore Stride Mismatched Root",
+      }),
+      message:
+        "The Unit admission root does not match the decoded Surface member with that authored identity.",
+    },
+  ])("rejects an $name Unit root", ({ surfaceUnit, message }) => {
+    const result = admitCompleteUnitMechanicsGraph({
+      unit: roving,
+      surface: surfaceWithUnit(surfaceUnit),
+    });
+
+    expect(result).toEqual({
+      tag: "rejected",
+      issues: [
+        {
+          reason: "incomplete_graph",
+          mechanicsPath: {
+            family: "unit",
+            nodes: [{ kind: "singleton", role: "recordMechanics" }],
+          },
+          message,
+        },
+      ],
+    });
   });
 
   test("accumulates graph dependency and procedure issues without a Runtime Hole", () => {
