@@ -77,6 +77,10 @@
       },
       "onSuccess": {
         "kind": "half_damage"
+      },
+      "usageLimit": {
+        "kind": "once_per_turn",
+        "limitGroup": "cloudkill_save_per_turn"
       }
     },
     "level": 5,
@@ -87,6 +91,16 @@
         },
         "trigger": {
           "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "direction": "away_from_caster",
+          "distanceFeet": 10,
+          "kind": "move_area"
+        },
+        "trigger": {
+          "kind": "on_caster_turn_start"
         }
       },
       {
@@ -117,7 +131,11 @@
           }
         },
         "trigger": {
-          "kind": "on_attached_turn_start"
+          "kind": "on_area_moves_into_creature_space"
+        },
+        "usageLimit": {
+          "kind": "once_per_turn",
+          "limitGroup": "cloudkill_save_per_turn"
         }
       },
       {
@@ -151,7 +169,8 @@
           "kind": "on_creature_enters_area"
         },
         "usageLimit": {
-          "kind": "once_per_turn"
+          "kind": "once_per_turn",
+          "limitGroup": "cloudkill_save_per_turn"
         }
       },
       {
@@ -185,7 +204,8 @@
           "kind": "on_creature_ends_turn_in_area"
         },
         "usageLimit": {
-          "kind": "once_per_turn"
+          "kind": "once_per_turn",
+          "limitGroup": "cloudkill_save_per_turn"
         }
       }
     ],

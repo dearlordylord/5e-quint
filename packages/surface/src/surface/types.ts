@@ -476,6 +476,9 @@ export type PhaseContinuation = Schema.Schema.Type<
 export type OngoingEffectMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.OngoingEffectMechanicsSchema
 >;
+export type ModalOngoingEffectMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.ModalOngoingEffectMechanicsSchema
+>;
 export type ActivationMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ActivationMechanicsSchema
 >;
