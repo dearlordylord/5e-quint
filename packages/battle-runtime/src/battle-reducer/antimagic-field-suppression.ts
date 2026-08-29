@@ -30,7 +30,7 @@ export function ongoingSpellEffectRefForEmitter(
   };
 }
 
-export function antimagicFieldOngoingSpellEffectRefForEmitter(
+export function magicSuppressionOngoingSpellEffectRefForEmitter(
   emitter: BattleTrackedOngoingSpellLightEmitter,
 ): BattleMagicSuppressionOngoingSpellEffectRef {
   return {
@@ -49,7 +49,7 @@ export function ongoingSpellEffectRefForActiveEffect(
   };
 }
 
-export function antimagicFieldOngoingSpellEffectRefForActiveEffect(
+export function magicSuppressionOngoingSpellEffectRefForActiveEffect(
   effect: TrackedAntimagicFieldOngoingSpellActiveEffect,
 ): BattleMagicSuppressionOngoingSpellEffectRef {
   return {
@@ -137,7 +137,7 @@ export function isTrackedOngoingSpellLightEmitter<
   );
 }
 
-export function antimagicFieldSuppressedOngoingSpellEffectKeys(
+export function magicSuppressionOngoingSpellEffectKeys(
   state: BattleState,
 ): ReadonlySet<string> {
   return new Set(
@@ -155,7 +155,7 @@ export function ongoingSpellEffectSuppressedByAntimagicField(
   state: BattleState,
   effect: BattleMagicSuppressionOngoingSpellEffectRef,
 ): boolean {
-  return antimagicFieldSuppressedOngoingSpellEffectKeys(state).has(
+  return magicSuppressionOngoingSpellEffectKeys(state).has(
     ongoingSpellEffectRefKey(effect),
   );
 }

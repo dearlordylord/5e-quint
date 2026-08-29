@@ -185,7 +185,7 @@ import {
   spatialMeleeSpellAttackProxyPositionInvalidReason,
 } from "./spells-targeting.ts";
 import {
-  antimagicFieldOngoingSpellEffectRefForActiveEffect,
+  magicSuppressionOngoingSpellEffectRefForActiveEffect,
   ongoingSpellEffectSuppressedByAntimagicField,
 } from "./antimagic-field-suppression.ts";
 
@@ -1844,7 +1844,7 @@ function resolveSpellActInternal(
     invocation.procedure === "spatialMeleeSpellAttackProxy" &&
     ongoingSpellEffectSuppressedByAntimagicField(
       input.state,
-      antimagicFieldOngoingSpellEffectRefForActiveEffect(
+      magicSuppressionOngoingSpellEffectRefForActiveEffect(
         invocation.activeEffect,
       ),
     )

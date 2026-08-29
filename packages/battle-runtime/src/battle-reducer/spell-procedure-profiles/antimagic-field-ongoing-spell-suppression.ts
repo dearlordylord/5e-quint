@@ -45,8 +45,8 @@ import {
 } from "../../battle-state-execution.ts";
 import { type BattleAreaId, type CombatantId } from "../../identity.ts";
 import {
-  antimagicFieldOngoingSpellEffectRefForActiveEffect,
-  antimagicFieldOngoingSpellEffectRefForEmitter,
+  magicSuppressionOngoingSpellEffectRefForActiveEffect,
+  magicSuppressionOngoingSpellEffectRefForEmitter,
   isTrackedOngoingSpellLightEmitter,
   ongoingSpellEffectRefKey,
 } from "../antimagic-field-suppression.ts";
@@ -217,7 +217,7 @@ function resolveMagicSuppressionEmanation(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const invalidAffectedEffects = antimagicFieldAreaChoiceInvalidReason(
+  const invalidAffectedEffects = magicSuppressionAreaChoiceInvalidReason(
     input.input.state,
     input.fillSet.areaChoice,
   );
@@ -256,7 +256,7 @@ function resolveMagicSuppressionEmanation(
   };
 }
 
-function antimagicFieldAreaChoiceInvalidReason(
+function magicSuppressionAreaChoiceInvalidReason(
   state: ActionSpellBattleResolutionInput["state"],
   areaChoice: BattleMagicSuppressionAreaChoice,
 ): string | null {
@@ -277,7 +277,7 @@ function trackedOngoingSpellEffectKeys(
       isTrackedOngoingSpellLightEmitter(emitter)
         ? [
             ongoingSpellEffectRefKey(
-              antimagicFieldOngoingSpellEffectRefForEmitter(emitter),
+              magicSuppressionOngoingSpellEffectRefForEmitter(emitter),
             ),
           ]
         : [],
@@ -288,7 +288,7 @@ function trackedOngoingSpellEffectKeys(
         effect.kind === "spatialMeleeSpellAttackProxy"
           ? [
               ongoingSpellEffectRefKey(
-                antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
+                magicSuppressionOngoingSpellEffectRefForActiveEffect(effect),
               ),
             ]
           : [],

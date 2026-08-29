@@ -71,18 +71,18 @@ export function battleSubjectInterdictedByAntimagicField(
   state: BattleState,
   subject: BattleSubject,
 ): boolean {
-  const interdiction = antimagicFieldSubjectInterdiction(state, subject);
+  const interdiction = magicSuppressionSubjectInterdiction(state, subject);
   return (
     interdiction !== null &&
     combatantInsideActiveAntimagicFieldAura(state, interdiction.actorId)
   );
 }
 
-export function antimagicFieldInterdictionMessage(
+export function magicSuppressionInterdictionMessage(
   state: BattleState,
   subject: BattleSubject,
 ): string {
-  return antimagicFieldSubjectInterdiction(state, subject)?.kind ===
+  return magicSuppressionSubjectInterdiction(state, subject)?.kind ===
     "magicAction"
     ? "Magic Action is blocked inside an Antimagic Field aura."
     : "Spellcasting is blocked inside an Antimagic Field aura.";
@@ -124,7 +124,7 @@ export function magicSuppressionEmanationMembershipIncludesCombatant(
     : membership.membership.nonOriginCombatantIds.includes(combatantId);
 }
 
-function antimagicFieldSubjectInterdiction(
+function magicSuppressionSubjectInterdiction(
   state: BattleState,
   subject: BattleSubject,
 ): AntimagicFieldSubjectInterdiction | null {
