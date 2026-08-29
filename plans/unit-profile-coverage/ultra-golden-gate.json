@@ -1,12 +1,5 @@
 {
-  "blockedScopeIds": [
-    "level-1-5",
-    "level-1-6",
-    "level-1-7",
-    "level-1-8",
-    "level-1-9",
-    "level-1-10"
-  ],
+  "blockedScopeIds": [],
   "definition": {
     "aggregateRule": "Ultra-golden passes only when every required layer passes for every scoped level report. The checker deliberately does not publish a blended ultra-golden percentage.",
     "layers": [
@@ -1294,7 +1287,7 @@
     },
     {
       "layerResult": {
-        "completeLayers": 3,
+        "completeLayers": 4,
         "totalLayers": 4
       },
       "layers": [
@@ -1334,30 +1327,21 @@
           "status": "pass"
         },
         {
-          "blockingCount": 2,
+          "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 78,
-              "numerator": 76
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
-          "missingOrOpenObligations": [
-            {
-              "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
-              "status": "needs-qnt-owner"
-            },
-            {
-              "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
-              "status": "needs-qnt-owner"
-            }
-          ],
-          "status": "blocked"
+          "missingOrOpenObligations": [],
+          "status": "pass"
         },
         {
           "blockingCount": 0,
@@ -1546,12 +1530,12 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-5",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Levels 1-5"
     },
     {
       "layerResult": {
-        "completeLayers": 3,
+        "completeLayers": 4,
         "totalLayers": 4
       },
       "layers": [
@@ -1591,30 +1575,21 @@
           "status": "pass"
         },
         {
-          "blockingCount": 2,
+          "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 78,
-              "numerator": 76
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
-          "missingOrOpenObligations": [
-            {
-              "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
-              "status": "needs-qnt-owner"
-            },
-            {
-              "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
-              "status": "needs-qnt-owner"
-            }
-          ],
-          "status": "blocked"
+          "missingOrOpenObligations": [],
+          "status": "pass"
         },
         {
           "blockingCount": 0,
@@ -1803,12 +1778,12 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-6",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Levels 1-6"
     },
     {
       "layerResult": {
-        "completeLayers": 3,
+        "completeLayers": 4,
         "totalLayers": 4
       },
       "layers": [
@@ -1848,30 +1823,21 @@
           "status": "pass"
         },
         {
-          "blockingCount": 2,
+          "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 78,
-              "numerator": 76
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
-          "missingOrOpenObligations": [
-            {
-              "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
-              "status": "needs-qnt-owner"
-            },
-            {
-              "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
-              "status": "needs-qnt-owner"
-            }
-          ],
-          "status": "blocked"
+          "missingOrOpenObligations": [],
+          "status": "pass"
         },
         {
           "blockingCount": 0,
@@ -2060,12 +2026,12 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-7",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Levels 1-7"
     },
     {
       "layerResult": {
-        "completeLayers": 3,
+        "completeLayers": 4,
         "totalLayers": 4
       },
       "layers": [
@@ -2105,30 +2071,21 @@
           "status": "pass"
         },
         {
-          "blockingCount": 2,
+          "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 78,
-              "numerator": 76
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
-          "missingOrOpenObligations": [
-            {
-              "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
-              "status": "needs-qnt-owner"
-            },
-            {
-              "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
-              "status": "needs-qnt-owner"
-            }
-          ],
-          "status": "blocked"
+          "missingOrOpenObligations": [],
+          "status": "pass"
         },
         {
           "blockingCount": 0,
@@ -2317,12 +2274,12 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-8",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Levels 1-8"
     },
     {
       "layerResult": {
-        "completeLayers": 3,
+        "completeLayers": 4,
         "totalLayers": 4
       },
       "layers": [
@@ -2362,30 +2319,21 @@
           "status": "pass"
         },
         {
-          "blockingCount": 2,
+          "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 78,
-              "numerator": 76
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
-          "missingOrOpenObligations": [
-            {
-              "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
-              "status": "needs-qnt-owner"
-            },
-            {
-              "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
-              "status": "needs-qnt-owner"
-            }
-          ],
-          "status": "blocked"
+          "missingOrOpenObligations": [],
+          "status": "pass"
         },
         {
           "blockingCount": 0,
@@ -2562,12 +2510,12 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-9",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Levels 1-9"
     },
     {
       "layerResult": {
-        "completeLayers": 3,
+        "completeLayers": 4,
         "totalLayers": 4
       },
       "layers": [
@@ -2607,30 +2555,21 @@
           "status": "pass"
         },
         {
-          "blockingCount": 2,
+          "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 78,
-              "numerator": 76
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
           "id": "qnt-generator-readiness",
-          "missingOrOpenObligations": [
-            {
-              "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
-              "status": "needs-qnt-owner"
-            },
-            {
-              "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
-              "status": "needs-qnt-owner"
-            }
-          ],
-          "status": "blocked"
+          "missingOrOpenObligations": [],
+          "status": "pass"
         },
         {
           "blockingCount": 0,
@@ -2807,7 +2746,7 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-10",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Levels 1-10"
     }
   ],
@@ -3026,5 +2965,5 @@
     "rulesKernelMatrix": "plans/rules-kernel-coverage/matrix.json",
     "unitMatrix": "plans/unit-profile-coverage/unit-matrix.json"
   },
-  "status": "blocked"
+  "status": "pass"
 }

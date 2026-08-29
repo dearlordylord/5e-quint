@@ -73,18 +73,18 @@
     },
     "qntProfileModelingCoverage": {
       "denominator": 164,
-      "numerator": 151,
-      "percent": "92.1%"
+      "numerator": 152,
+      "percent": "92.7%"
     },
     "qntProofCoverage": {
       "denominator": 164,
-      "numerator": 146,
-      "percent": "89%"
+      "numerator": 147,
+      "percent": "89.6%"
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 203,
-      "numerator": 167,
-      "percent": "82.3%"
+      "numerator": 168,
+      "percent": "82.8%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 203,
@@ -93,8 +93,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 205,
-      "numerator": 173,
-      "percent": "84.4%"
+      "numerator": 174,
+      "percent": "84.9%"
     },
     "runtimeMappingCoverage": {
       "denominator": 164,
@@ -307,8 +307,10 @@
     {
       "id": "spell.invocation-slow-active-penalties",
       "profileKind": "spell-invocation",
-      "qntOwners": [],
-      "qntOwnershipStatus": "needs-qnt-owner",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-slow-stat-block-multiattack-core.qnt"
+      ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/active-effect/types.ts",
@@ -325,6 +327,7 @@
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
         "packages/battle-runtime/src/battle-reducer/slow-active-penalties-effects.ts",
         "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
+        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-turn-restriction.ts",
         "packages/battle-runtime/src/battle-reducer/statblock.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
         "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
@@ -338,13 +341,18 @@
         "packages/battle-runtime/src/battle-subjects.ts",
         "packages/shared-algebras/src/action-economy-algebra.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, active Slow effect state, action-economy state, Attack action resource state, and canonical spell component facts. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-turn Action or Bonus Action mutual exclusion, Attack action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic cast resource spending without applying the spell effect, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. The reusable Multiattack Quint core models a one-listed-dispatch allowance but does not derive that allowance from Slow; no semantic Quint owner covers the Slow trigger or this complete profile. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
+      "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, active Slow effect state, action-economy state, Attack action resource state, and canonical spell component facts. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, the target-turn at-most-one Action-or-Bonus-Action restriction including reconciliation when either was already spent, the Attack action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic cast resource spending without applying the spell effect or starting new Concentration, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. The identity-independent Slow semantic core owns those occurrence-local rules and consumes typed concentration-ended and duration-expired signals without replacing the canonical generic Concentration lifecycle or elapsed-time scheduler. The Slow Stat Block composition derives the one-listed-dispatch allowance from typed active Slow state at atomic Multiattack activation while preserving source, ordered list, multiplicity, and continuation. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
       "taskRefs": [
         "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
-        "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
+        "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
+        "GH-441"
       ],
       "title": "Spell invocation applies Slow active penalties with target-turn and Somatic runtime restrictions",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-inductive.qnt"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts"
@@ -7647,8 +7655,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 203,
-        "numerator": 167,
-        "percent": "82.3%"
+        "numerator": 168,
+        "percent": "82.8%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 203,
@@ -7705,30 +7713,27 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
-            "followUpTaskIds": [
-              "GH-441"
-            ],
             "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
             "runtime": "battle",
-            "status": "needs-qnt-owner",
+            "status": "covered",
             "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
           },
           {
-            "followUpTaskIds": [
-              "GH-441"
-            ],
             "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
             "runtime": "battle",
-            "status": "needs-qnt-owner",
+            "status": "covered",
             "title": "Battle Slow caps an activated Stat Block Multiattack to one listed attack"
           }
         ],
         "profileId": "spell.invocation-slow-active-penalties",
         "profileKind": "spell-invocation",
-        "qntOwners": []
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt",
+          "packages/shared-algebras/proofs/rule-core/spell-slow-stat-block-multiattack-core.qnt"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -11153,8 +11158,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 205,
-          "numerator": 173,
-          "percent": "84.4%"
+          "numerator": 174,
+          "percent": "84.9%"
         }
       },
       "units": [
@@ -16140,33 +16145,30 @@
           "unitId": "sleep"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
-                  "followUpTaskIds": [
-                    "GH-441"
-                  ],
                   "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
                   "runtime": "battle",
-                  "status": "needs-qnt-owner",
+                  "status": "covered",
                   "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
                 },
                 {
-                  "followUpTaskIds": [
-                    "GH-441"
-                  ],
                   "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
                   "runtime": "battle",
-                  "status": "needs-qnt-owner",
+                  "status": "covered",
                   "title": "Battle Slow caps an activated Stat Block Multiattack to one listed attack"
                 }
               ],
               "profileId": "spell.invocation-slow-active-penalties",
               "profileKind": "spell-invocation",
-              "qntOwners": []
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-slow-stat-block-multiattack-core.qnt"
+              ]
             }
           ],
           "unitId": "slow"
@@ -16972,6 +16974,14 @@
         "spell.invocation-slow-active-penalties"
       ],
       "taskId": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Identity-independent semantic QNT owns the admitted Slow occurrence lifecycle, at-most-one Action-or-Bonus-Action restriction with prior-resource reconciliation, Attack cap, effective-Somatic 25 percent failure, per-target repeat saves, exact-source cleanup, and Slow-derived Stat Block Multiattack allowance; focused MBT replays those facts through production runtime.",
+      "profileIds": [
+        "spell.invocation-slow-active-penalties"
+      ],
+      "taskId": "GH-441"
     },
     {
       "claimKind": "qnt-proof",
@@ -46990,8 +47000,10 @@
         {
           "id": "spell.invocation-slow-active-penalties",
           "profileKind": "spell-invocation",
-          "qntOwners": [],
-          "qntOwnershipStatus": "needs-qnt-owner",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-slow-stat-block-multiattack-core.qnt"
+          ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/active-effect/types.ts",
@@ -47008,6 +47020,7 @@
             "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
             "packages/battle-runtime/src/battle-reducer/slow-active-penalties-effects.ts",
             "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
+            "packages/battle-runtime/src/battle-reducer/slow-active-penalties-turn-restriction.ts",
             "packages/battle-runtime/src/battle-reducer/statblock.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
             "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
@@ -47021,13 +47034,18 @@
             "packages/battle-runtime/src/battle-subjects.ts",
             "packages/shared-algebras/src/action-economy-algebra.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, active Slow effect state, action-economy state, Attack action resource state, and canonical spell component facts. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-turn Action or Bonus Action mutual exclusion, Attack action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic cast resource spending without applying the spell effect, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. The reusable Multiattack Quint core models a one-listed-dispatch allowance but does not derive that allowance from Slow; no semantic Quint owner covers the Slow trigger or this complete profile. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
+          "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, active Slow effect state, action-economy state, Attack action resource state, and canonical spell component facts. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, the target-turn at-most-one Action-or-Bonus-Action restriction including reconciliation when either was already spent, the Attack action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic cast resource spending without applying the spell effect or starting new Concentration, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. The identity-independent Slow semantic core owns those occurrence-local rules and consumes typed concentration-ended and duration-expired signals without replacing the canonical generic Concentration lifecycle or elapsed-time scheduler. The Slow Stat Block composition derives the one-listed-dispatch allowance from typed active Slow state at atomic Multiattack activation while preserving source, ordered list, multiplicity, and continuation. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
           "taskRefs": [
             "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
-            "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
+            "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
+            "GH-441"
           ],
           "title": "Spell invocation applies Slow active penalties with target-turn and Somatic runtime restrictions",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-inductive.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts"

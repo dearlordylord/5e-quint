@@ -63,9 +63,8 @@ import {
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import { currentActorId } from "../creature-state-leaves.ts";
 import { failedSavingThrowTargetIds } from "../saving-throw-outcomes.ts";
-import { slowActionOrBonusActionTurnResources } from "../slow-active-penalties-runtime.ts";
+import { battleStateWithReconciledCurrentActorSlowTurnRestriction } from "../slow-active-penalties-turn-restriction.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -454,15 +453,12 @@ function applySlowActivePenaltyEffects(
     );
     appliedTargetIds.push(targetId);
   }
-  const currentTurnActorId = currentActorId(state);
-  const currentTurnResources = appliedTargetIds.includes(currentTurnActorId)
-    ? slowActionOrBonusActionTurnResources(
-        state.currentTurnResources,
-        combatants.get(currentTurnActorId),
-      )
-    : state.currentTurnResources;
+  const stateWithEffects = { ...state, combatants };
   return {
-    state: { ...state, combatants, currentTurnResources },
+    state:
+      battleStateWithReconciledCurrentActorSlowTurnRestriction(
+        stateWithEffects,
+      ),
     appliedTargetIds,
   };
 }

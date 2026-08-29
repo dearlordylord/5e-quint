@@ -1547,6 +1547,9 @@ describe("battle runtime: Stat Block actions", () => {
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
     ).state;
     assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(multiattackState));
+    expect(multiattackState.currentTurnResources.actionTakenThisTurn).toBe(
+      true,
+    );
 
     expect(multiattackState.currentTurnResources.actionResources).toEqual([
       {
@@ -1715,6 +1718,7 @@ describe("battle runtime: Stat Block actions", () => {
       }),
     ).state;
     assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(afterDispatch));
+    expect(afterDispatch.currentTurnResources.actionTakenThisTurn).toBe(true);
 
     expect(afterDispatch.currentTurnResources.actionResources).toEqual([
       expect.objectContaining({

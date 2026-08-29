@@ -1146,7 +1146,28 @@ describe("battle runtime: attack pipeline boundaries", () => {
     });
     expect(spent).toMatchObject({
       _tag: "Right",
-      right: { spentResource: turn },
+      right: {
+        spentResource: turn,
+        state: { actionTakenThisTurn: true },
+      },
+    });
+
+    const spentExtraAttack = spendAttackActionResource({
+      ...state.currentTurnResources,
+      actionResources: [extraAttack],
+    });
+    expect(spentExtraAttack).toMatchObject({
+      _tag: "Right",
+      right: { state: { actionTakenThisTurn: false } },
+    });
+
+    const spentUnitAction = spendAttackActionResource({
+      ...state.currentTurnResources,
+      actionResources: [restricted],
+    });
+    expect(spentUnitAction).toMatchObject({
+      _tag: "Right",
+      right: { state: { actionTakenThisTurn: true } },
     });
   });
 });

@@ -90,6 +90,7 @@ export type {
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
@@ -7422,6 +7423,7 @@ export type BattlePresentationIssues =
 
 export type BattleTurnSnapshot = {
   readonly actionResources: readonly RuntimeActionResource[];
+  readonly actionTakenThisTurn: boolean;
   /** The current turn's unspent Bonus Action quota, not discovered action availability. */
   readonly bonusActionQuotaAvailable: boolean;
   readonly jumpDistanceMultiplier: BattleJumpDistanceMultiplier | null;

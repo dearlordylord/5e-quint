@@ -1452,9 +1452,18 @@ describe("battle codec act ownership boundaries", () => {
         ],
       }),
     );
+    expect(readied.snapshot.turn.actionTakenThisTurn).toBe(true);
+    const encodedReadied = Schema.encodeSync(BattleSnapshotSchema)(
+      readied.snapshot,
+    );
+    expect(
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(encodedReadied).turn
+        .actionTakenThisTurn,
+    ).toBe(true);
     const goblinTurn = requireResolved(
       endTurn({ state: readied.state, actorId: fighterId }),
     );
+    expect(goblinTurn.snapshot.turn.actionTakenThisTurn).toBe(false);
     const reported = resolveBattleSubject({
       state: goblinTurn.state,
       subject: {

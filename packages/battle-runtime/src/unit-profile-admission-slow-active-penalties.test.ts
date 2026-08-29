@@ -342,7 +342,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     }
 
     expect(dodged.state.currentTurnResources.actionResources).toEqual([]);
-    expect(dodged.state.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(dodged.state.currentTurnResources.currentHasBonusAction).toBe(true);
     expect(
       dodged.state.currentTurnResources.actionOrBonusActionExclusion,
     ).toEqual({
@@ -382,7 +382,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       expect.objectContaining({ kind: "slowActivePenalties" }),
     ]);
     expect(cast.state.currentTurnResources.actionResources).toEqual([]);
-    expect(cast.state.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(cast.state.currentTurnResources.currentHasBonusAction).toBe(true);
     expect(
       cast.state.currentTurnResources.actionOrBonusActionExclusion,
     ).toEqual({
@@ -589,7 +589,9 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       );
     }
 
-    expect(moved.state.currentTurnResources.actionResources).toEqual([]);
+    expect(moved.state.currentTurnResources.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
     expect(moved.state.currentTurnResources.currentHasBonusAction).toBe(false);
     expect(
       moved.state.currentTurnResources.actionOrBonusActionExclusion,
@@ -699,7 +701,9 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect(target.activeEffects).toEqual([
       expect.objectContaining({ kind: "slowActivePenalties" }),
     ]);
-    expect(failed.state.currentTurnResources.actionResources).toEqual([]);
+    expect(failed.state.currentTurnResources.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
     expect(failed.state.currentTurnResources.currentHasBonusAction).toBe(false);
     expect(
       failed.state.currentTurnResources.actionOrBonusActionExclusion,
