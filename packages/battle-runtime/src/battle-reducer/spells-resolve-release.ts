@@ -60,7 +60,7 @@ import {
   breakBattleConcentration,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
   fillsMatchingHoleIds,
   damageLifecycleConcentrationSavingThrowHoles,
 } from "./damage-apply.ts";
@@ -1819,7 +1819,7 @@ function resolveTargetedSpellHideousLaughterLifecycle(
   input: TargetedSpellDamageAmountInput,
 ): TargetedSpellHideousLaughterPreparation {
   const hideousLaughterSaveCheck =
-    damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
       state: input.releaseDamageBaseState,
       target: input.target,
       damageAmount: input.spellDamageAmount,
@@ -2041,7 +2041,8 @@ function applyTargetedSpellDamageLifecycle(
       damageDisposition: input.damageDisposition,
       spellMarkedDamageRiders: input.spellMarkedDamageRiders,
       sourceDamageRollPenaltyRoll: input.sourceDamageRollPenaltyRoll,
-      hideousLaughterDamageRepeatSaves: input.hideousLaughterLifecycleFills,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        input.hideousLaughterLifecycleFills,
       damageSourceId: input.input.subject.actorId,
       spatialFacts: input.fillSet.targetSpatialFacts,
       ...optionalProperty("relationshipDecisions", input.relationshipDecisions),
