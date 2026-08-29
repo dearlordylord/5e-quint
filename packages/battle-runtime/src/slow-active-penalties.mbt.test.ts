@@ -46,6 +46,7 @@ import {
 } from "./battle-reducer/creature-state.ts";
 import {
   applyBattleHitPointDamage,
+  breakBattleConcentration,
   concentrationSavingThrowHole,
 } from "./battle-reducer/damage-apply.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
@@ -481,6 +482,32 @@ describe("Slow active-penalties MBT parity", () => {
       targetSlowed: false,
       casterConcentrating: false,
       lastResult: "durationExpiredAfterBonusAction",
+    });
+  });
+
+  it("preserves the Slow cast Action history through direct cleanup", () => {
+    const expectedCastEconomyAfterCleanup = {
+      currentTurnRole: "caster",
+      turnActionOrBonusChoice: "notRestricted",
+      actionTakenThisTurn: true,
+      actionTakingResourceCount: 0,
+      casterTurnCanSpendAction: false,
+      casterTurnCanSpendBonusAction: true,
+      targetSlowed: false,
+      affectedTargetCount: 0,
+      casterConcentrating: false,
+    } as const;
+
+    const concentrationEnded = endSlowConcentration(initialRuntimeState());
+    expect(slowActivePenaltiesProjection(concentrationEnded)).toMatchObject({
+      ...expectedCastEconomyAfterCleanup,
+      lastResult: "concentrationEnded",
+    });
+
+    const durationExpired = expireSlowDuration(initialRuntimeState());
+    expect(slowActivePenaltiesProjection(durationExpired)).toMatchObject({
+      ...expectedCastEconomyAfterCleanup,
+      lastResult: "durationExpired",
     });
   });
 
@@ -1193,20 +1220,14 @@ function endSlowConcentration(
     return state;
   }
   const cast = castSlowFailedSave(initialRuntimeState());
-  const act = endConcentrationAct(cast.battle);
-  const resolved = resolveBattleSubject({
-    state: cast.battle.state,
-    subject: act.subject,
-    fills: [],
-  });
-  expect(resolved).toMatchObject({ tag: "resolved" });
-  if (resolved.tag !== "resolved") {
-    throw new Error("Expected public Slow End Concentration to resolve.");
-  }
+  const concentrationEnded = breakBattleConcentration(
+    cast.battle.state,
+    spellCasterId,
+  );
   return {
     battle: battleRuntimeSessionForTest({
       ...cast.battle,
-      state: resolved.state,
+      state: concentrationEnded,
     }),
     currentTurnRole: "caster",
     holes: [],
@@ -1228,12 +1249,16 @@ function expireSlowDuration(
       state: stateWithSlowDurationTicks(cast.battle.state, elapsedTimeTicks(1)),
     }),
   };
-  const targetTurn = endCasterTurn(nearExpiry);
-  const needsSave = requestEndTurnSave(targetTurn);
-  const expired = fillEndTurnSave(needsSave, false);
+  const durationExpired = tickBattleStateDurationEffects(
+    nearExpiry.battle.state,
+  ).value;
   return {
-    ...expired,
+    battle: battleRuntimeSessionForTest({
+      ...nearExpiry.battle,
+      state: durationExpired,
+    }),
     currentTurnRole: "caster",
+    holes: [],
     lastResult: "durationExpired",
   };
 }
