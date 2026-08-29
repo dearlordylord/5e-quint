@@ -47,21 +47,21 @@ export type BattleD20RollModifierDelta = {
     }
 );
 
-export type BattleCommandOption = (typeof COMMAND_OPTIONS)[number];
+export type BattleCompelledBehaviorOption = (typeof COMMAND_OPTIONS)[number];
 
-export type BattleDancingLight = {
+export type BattleMovableLight = {
   readonly lightId: BattleDancingLightId;
   readonly positionId: BattleTablePositionId;
 };
-export type BattleDancingLightList =
-  | readonly [BattleDancingLight]
-  | readonly [BattleDancingLight, BattleDancingLight]
-  | readonly [BattleDancingLight, BattleDancingLight, BattleDancingLight]
+export type BattleMovableLightList =
+  | readonly [BattleMovableLight]
+  | readonly [BattleMovableLight, BattleMovableLight]
+  | readonly [BattleMovableLight, BattleMovableLight, BattleMovableLight]
   | readonly [
-      BattleDancingLight,
-      BattleDancingLight,
-      BattleDancingLight,
-      BattleDancingLight,
+      BattleMovableLight,
+      BattleMovableLight,
+      BattleMovableLight,
+      BattleMovableLight,
     ];
 
 export type SpellAttackKind = Extract<
@@ -81,24 +81,26 @@ export type BattleOngoingSpellEffectRef =
     }
   | {
       readonly kind: "spellActiveEffect";
-      readonly activeEffectKind: "spellObjectContactDamage" | "spiritualWeapon";
+      readonly activeEffectKind:
+        | "spellObjectContactDamage"
+        | "spatialMeleeSpellAttackProxy";
       readonly effectRef: BattleEffectExecutionRef;
     }
   | {
-      readonly kind: "antimagicFieldAura";
+      readonly kind: "magicSuppressionEmanation";
       readonly effectRef: BattleEffectExecutionRef;
       readonly areaId: BattleAreaId;
       readonly sourceCombatantId: CombatantId;
     };
 export type BattleOngoingSpellOccurrenceRef = Exclude<
   BattleOngoingSpellEffectRef,
-  { readonly kind: "antimagicFieldAura" }
+  { readonly kind: "magicSuppressionEmanation" }
 >;
-export type BattleAntimagicFieldOngoingSpellEffectRef =
+export type BattleMagicSuppressionOngoingSpellEffectRef =
   BattleOngoingSpellOccurrenceRef;
 
-export type BattleAntimagicFieldAuraMembership = {
-  readonly kind: "antimagicFieldAuraMembership";
+export type BattleMagicSuppressionEmanationMembership = {
+  readonly kind: "magicSuppressionEmanationMembership";
   readonly originIncluded: boolean;
   readonly nonOriginCombatantIds: readonly CombatantId[];
 };
