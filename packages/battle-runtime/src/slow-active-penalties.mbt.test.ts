@@ -12,11 +12,14 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Slot, Concentration, Saving
 //   Throw, Speed, Armor Class, Reaction, Area of Effect/Cube, and Spell Effect.
 import {
+  actionResourceConsumptionTakesAction,
   canSpendAction,
   canSpendBonusAction,
+  grantUnitActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import type { BattleProcedureExecutionRef } from "@dnd/shared/types";
 import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
@@ -35,6 +38,7 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { describe, expect, it } from "vitest";
+import { Either } from "effect";
 
 import {
   activeEffectArmorClass,
@@ -48,7 +52,7 @@ import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
 import { SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/domain-constants.ts";
 import type { SlowActivePenaltiesEffect } from "./battle-reducer/slow-active-penalties-effects.ts";
-import { slowActionOrBonusActionTurnResources } from "./battle-reducer/slow-active-penalties-turn-restriction.ts";
+import { battleStateWithReconciledCurrentActorSlowTurnRestriction } from "./battle-reducer/slow-active-penalties-turn-restriction.ts";
 import { tickBattleStateDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import { statBlockMultiattackBindings } from "./stat-block-execution-state.ts";
 import {
@@ -90,6 +94,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  battleProcedureExecutionRefForTest,
   concentrationSavingThrowFill,
   resolveBattleSubject,
   monsterMultiattackStatBlock,
@@ -111,6 +116,10 @@ type LastResult =
   | "somaticSpellFailed"
   | "selfFailedSave"
   | "priorBonusActionReconciled"
+  | "compatibleActionResourceSpent"
+  | "priorCompatibleActionReconciled"
+  | "priorCompatibleActionCleanup"
+  | "extraResourcesNoActionReconciled"
   | "multiattackFailedSave"
   | "multiattackTargetTurn"
   | "multiattackActivated"
@@ -137,6 +146,10 @@ const SCENARIO_OUTCOME_BY_TAG = {
   SomaticSpellFailed: "somaticSpellFailed",
   SelfFailedSave: "selfFailedSave",
   PriorBonusActionReconciled: "priorBonusActionReconciled",
+  CompatibleActionResourceSpent: "compatibleActionResourceSpent",
+  PriorCompatibleActionReconciled: "priorCompatibleActionReconciled",
+  PriorCompatibleActionCleanup: "priorCompatibleActionCleanup",
+  ExtraResourcesNoActionReconciled: "extraResourcesNoActionReconciled",
   MultiattackFailedSave: "multiattackFailedSave",
   MultiattackTargetTurn: "multiattackTargetTurn",
   MultiattackActivated: "multiattackActivated",
@@ -153,6 +166,15 @@ const slowMultiattackTargetId = combatantId(
 );
 const slowSecondTargetId = combatantId(
   "slow-active-penalties-mbt-second-target",
+);
+const slowPriorActionProcedureRef = battleProcedureExecutionRefForTest(
+  "slow-compatible-action-prior",
+);
+const slowCastActionProcedureRef = battleProcedureExecutionRefForTest(
+  "slow-compatible-action-cast",
+);
+const slowUnspentActionProcedureRef = battleProcedureExecutionRefForTest(
+  "slow-compatible-action-unspent",
 );
 
 type SlowHole = "EndTurnSave" | "SomaticFailure";
@@ -172,6 +194,9 @@ type SlowActivePenaltiesProjection = {
   readonly targetTurnCanSpendBonusAction: boolean;
   readonly targetCanMakeAttack: boolean;
   readonly extraAttackResourceCount: number;
+  readonly actionTakenThisTurn: boolean;
+  readonly actionTakingResourceCount: number;
+  readonly casterTurnCanSpendAction: boolean;
   readonly casterTurnCanSpendBonusAction: boolean;
   readonly targetSlowed: boolean;
   readonly secondTargetSlowed: boolean;
@@ -223,6 +248,10 @@ const driverSchema = {
   doFillSomaticSpellFailure: {},
   doCastSlowSelfFailedSave: {},
   doReconcileSlowAfterPriorBonusAction: {},
+  doSpendCompatibleActionResourceBeforeSlow: {},
+  doReconcileSlowAfterCompatibleAction: {},
+  doCleanupSlowAfterCompatibleAction: {},
+  doReconcileSlowWithUntakenExtraActionResource: {},
   doCastSlowMultiattackFailedSave: {},
   doEndCasterTurnForMultiattackTarget: {},
   doActivateSlowedStatBlockMultiattack: {},
@@ -285,6 +314,18 @@ function createSlowActivePenaltiesDriver() {
       },
       doReconcileSlowAfterPriorBonusAction: () => {
         state = reconcileSlowAfterPriorBonusAction(state);
+      },
+      doSpendCompatibleActionResourceBeforeSlow: () => {
+        state = spendCompatibleActionResourceBeforeSlow(state);
+      },
+      doReconcileSlowAfterCompatibleAction: () => {
+        state = reconcileSlowAfterCompatibleAction(state);
+      },
+      doCleanupSlowAfterCompatibleAction: () => {
+        state = cleanupSlowAfterCompatibleAction(state);
+      },
+      doReconcileSlowWithUntakenExtraActionResource: () => {
+        state = reconcileSlowWithUntakenExtraActionResource(state);
       },
       doCastSlowMultiattackFailedSave: () => {
         state = castSlowMultiattackFailedSave(state);
@@ -441,6 +482,76 @@ describe("Slow active-penalties MBT parity", () => {
       casterConcentrating: false,
       lastResult: "durationExpiredAfterBonusAction",
     });
+  });
+
+  it("reconciles prior Actions from canonical turn history with multiple compatible resources", () => {
+    const actionSpent = spendCompatibleActionResourceBeforeSlow(
+      initialRuntimeState(),
+    );
+    expect(slowActivePenaltiesProjection(actionSpent)).toMatchObject({
+      targetSlowed: false,
+      actionTakenThisTurn: true,
+      actionTakingResourceCount: 2,
+      casterTurnCanSpendAction: true,
+      casterTurnCanSpendBonusAction: true,
+      lastResult: "compatibleActionResourceSpent",
+    });
+    expect(
+      actionSpent.battle.state.currentTurnResources.actionResources.map(
+        (resource) => resource.source,
+      ),
+    ).toEqual(["turn", "unit"]);
+
+    const slowed = reconcileSlowAfterCompatibleAction(actionSpent);
+    expect(slowActivePenaltiesProjection(slowed)).toMatchObject({
+      targetSlowed: false,
+      affectedTargetCount: 1,
+      turnActionOrBonusChoice: "action",
+      actionTakenThisTurn: true,
+      actionTakingResourceCount: 1,
+      casterTurnCanSpendAction: false,
+      casterTurnCanSpendBonusAction: false,
+      lastResult: "priorCompatibleActionReconciled",
+    });
+    expect(
+      slowed.battle.state.currentTurnResources.actionResources.map(
+        (resource) => resource.source,
+      ),
+    ).toEqual(["turn"]);
+
+    const cleaned = cleanupSlowAfterCompatibleAction(slowed);
+    expect(slowActivePenaltiesProjection(cleaned)).toMatchObject({
+      affectedTargetCount: 0,
+      turnActionOrBonusChoice: "notRestricted",
+      actionTakenThisTurn: true,
+      actionTakingResourceCount: 1,
+      casterTurnCanSpendAction: true,
+      casterTurnCanSpendBonusAction: true,
+      lastResult: "priorCompatibleActionCleanup",
+    });
+    expect(
+      cleaned.battle.state.currentTurnResources.actionResources.map(
+        (resource) => resource.source,
+      ),
+    ).toEqual(["turn"]);
+
+    const unspent = reconcileSlowWithUntakenExtraActionResource(
+      initialRuntimeState(),
+    );
+    expect(slowActivePenaltiesProjection(unspent)).toMatchObject({
+      affectedTargetCount: 1,
+      turnActionOrBonusChoice: "notChosen",
+      actionTakenThisTurn: false,
+      actionTakingResourceCount: 2,
+      casterTurnCanSpendAction: true,
+      casterTurnCanSpendBonusAction: true,
+      lastResult: "extraResourcesNoActionReconciled",
+    });
+    expect(
+      unspent.battle.state.currentTurnResources.actionResources.map(
+        (resource) => resource.source,
+      ),
+    ).toEqual(["turn", "unit"]);
   });
 
   it(
@@ -635,10 +746,169 @@ function reconcileSlowAfterPriorBonusAction(
     spellId: slowUnitId,
     slotLevel: 3,
   });
-  const caster = requireCombatant(afterBonusAction.state, spellCasterId);
+  const reconciledState = battleStateWithSyntheticSelfSlow(
+    afterBonusAction.state,
+    slowAct.subject.procedureRef,
+  );
+  return {
+    battle: battleRuntimeSessionForTest({
+      ...afterBonusAction,
+      state: reconciledState,
+    }),
+    currentTurnRole: "caster",
+    holes: [],
+    lastResult: "priorBonusActionReconciled",
+  };
+}
+
+function spendCompatibleActionResourceBeforeSlow(
+  state: SlowActivePenaltiesRuntimeState,
+): SlowActivePenaltiesRuntimeState {
+  if (state.lastResult !== "init") return state;
+  const session = battleWithCompatibleActionResources(state.battle, [
+    slowPriorActionProcedureRef,
+    slowCastActionProcedureRef,
+  ]);
+  const dodge = actionAct(session, spellCasterId, "dodge");
+  const resolved = resolveBattleSubject({
+    state: session.state,
+    subject: dodge.subject,
+    fills: [],
+  });
+  expect(resolved).toMatchObject({ tag: "resolved" });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected the first compatible Action to resolve.");
+  }
+  return {
+    battle: battleRuntimeSessionForTest({
+      ...session,
+      state: resolved.state,
+    }),
+    currentTurnRole: "caster",
+    holes: [],
+    lastResult: "compatibleActionResourceSpent",
+  };
+}
+
+function reconcileSlowAfterCompatibleAction(
+  state: SlowActivePenaltiesRuntimeState,
+): SlowActivePenaltiesRuntimeState {
+  if (state.lastResult !== "compatibleActionResourceSpent") return state;
+  const act = spellAct({
+    session: state.battle,
+    spellId: slowUnitId,
+    slotLevel: 3,
+  });
+  const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+  const resolved = resolveBattleSubject({
+    state: state.battle.state,
+    subject: act.subject,
+    fills: [
+      slowSavingThrowOutcomeFill(savingThrow, [
+        { targetId: spellCasterId, succeeded: false },
+      ]),
+    ],
+  });
+  expect(resolved).toMatchObject({ tag: "resolved" });
+  if (resolved.tag !== "resolved") {
+    throw new Error(
+      "Expected Slow to resolve through the second Action resource.",
+    );
+  }
+  return {
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
+    currentTurnRole: "caster",
+    holes: [],
+    lastResult: "priorCompatibleActionReconciled",
+  };
+}
+
+function cleanupSlowAfterCompatibleAction(
+  state: SlowActivePenaltiesRuntimeState,
+): SlowActivePenaltiesRuntimeState {
+  if (state.lastResult !== "priorCompatibleActionReconciled") return state;
+  const act = endConcentrationAct(state.battle);
+  const resolved = resolveBattleSubject({
+    state: state.battle.state,
+    subject: act.subject,
+    fills: [],
+  });
+  expect(resolved).toMatchObject({ tag: "resolved" });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Slow Concentration cleanup to resolve.");
+  }
+  return {
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
+    currentTurnRole: "caster",
+    holes: [],
+    lastResult: "priorCompatibleActionCleanup",
+  };
+}
+
+function reconcileSlowWithUntakenExtraActionResource(
+  state: SlowActivePenaltiesRuntimeState,
+): SlowActivePenaltiesRuntimeState {
+  if (state.lastResult !== "init") return state;
+  const session = battleWithCompatibleActionResources(state.battle, [
+    slowUnspentActionProcedureRef,
+  ]);
+  const slowAct = spellAct({
+    session,
+    spellId: slowUnitId,
+    slotLevel: 3,
+  });
+  const reconciledState = battleStateWithSyntheticSelfSlow(
+    session.state,
+    slowAct.subject.procedureRef,
+  );
+  return {
+    battle: battleRuntimeSessionForTest({
+      ...session,
+      state: reconciledState,
+    }),
+    currentTurnRole: "caster",
+    holes: [],
+    lastResult: "extraResourcesNoActionReconciled",
+  };
+}
+
+function battleWithCompatibleActionResources(
+  session: BattleRuntimeSession,
+  sourceProcedureRefs: readonly BattleProcedureExecutionRef[],
+): BattleRuntimeSession {
+  let currentTurnResources = session.state.currentTurnResources;
+  for (const sourceProcedureRef of sourceProcedureRefs) {
+    const granted = grantUnitActionResource(
+      currentTurnResources,
+      spellCasterId,
+      sourceProcedureRef,
+      { kind: "none" },
+    );
+    if (Either.isLeft(granted)) {
+      throw new Error("Expected a compatible Action resource.");
+    }
+    currentTurnResources = granted.right;
+  }
+  return battleRuntimeSessionForTest({
+    ...session,
+    state: { ...session.state, currentTurnResources },
+  });
+}
+
+function battleStateWithSyntheticSelfSlow(
+  state: BattleState,
+  sourceProcedureRef: SlowActivePenaltiesEffect["sourceProcedureRef"],
+): BattleState {
+  const caster = requireCombatant(state, spellCasterId);
   const activeEffect: SlowActivePenaltiesEffect = {
     kind: "slowActivePenalties",
-    sourceProcedureRef: slowAct.subject.procedureRef,
+    sourceProcedureRef,
     sourceCombatantId: spellCasterId,
     save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
     expiresAt: {
@@ -650,31 +920,15 @@ function reconcileSlowAfterPriorBonusAction(
   const affectedCaster = {
     ...caster,
     concentration: {
-      sourceProcedureRef: slowAct.subject.procedureRef,
+      sourceProcedureRef,
       effectKind: "spellEffect" as const,
     },
     activeEffects: [...caster.activeEffects, activeEffect],
   };
-  const reconciledState: BattleState = {
-    ...afterBonusAction.state,
-    combatants: new Map(afterBonusAction.state.combatants).set(
-      spellCasterId,
-      affectedCaster,
-    ),
-    currentTurnResources: slowActionOrBonusActionTurnResources(
-      afterBonusAction.state.currentTurnResources,
-      affectedCaster,
-    ),
-  };
-  return {
-    battle: battleRuntimeSessionForTest({
-      ...afterBonusAction,
-      state: reconciledState,
-    }),
-    currentTurnRole: "caster",
-    holes: [],
-    lastResult: "priorBonusActionReconciled",
-  };
+  return battleStateWithReconciledCurrentActorSlowTurnRestriction({
+    ...state,
+    combatants: new Map(state.combatants).set(spellCasterId, affectedCaster),
+  });
 }
 
 function castSlowMultiattackFailedSave(
@@ -1395,6 +1649,13 @@ function slowActivePenaltiesProjection(
     extraAttackResourceCount: turnResources.actionResources.filter(
       (resource) => resource.source === "classFeatureExtraAttack",
     ).length,
+    actionTakenThisTurn: turnResources.actionTakenThisTurn,
+    actionTakingResourceCount: turnResources.actionResources.filter(
+      actionResourceConsumptionTakesAction,
+    ).length,
+    casterTurnCanSpendAction:
+      state.currentTurnRole === "caster" &&
+      canSpendAction(turnResources, "dodge"),
     casterTurnCanSpendBonusAction:
       state.currentTurnRole === "caster" && canSpendBonusAction(turnResources),
     targetSlowed: slowEffect !== undefined,
@@ -1618,6 +1879,12 @@ function normalizeSlowActivePenaltiesQuintState(
       state["extraAttackResourceCount"],
       "qState.extraAttackResourceCount",
     ),
+    actionTakenThisTurn: booleanField(state, "actionTakenThisTurn"),
+    actionTakingResourceCount: numberFromQuintInt(
+      state["actionTakingResourceCount"],
+      "qState.actionTakingResourceCount",
+    ),
+    casterTurnCanSpendAction: booleanField(state, "casterTurnCanSpendAction"),
     casterTurnCanSpendBonusAction: booleanField(
       state,
       "casterTurnCanSpendBonusAction",

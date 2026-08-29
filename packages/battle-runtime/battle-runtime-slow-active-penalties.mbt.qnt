@@ -8,7 +8,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
   // This focused replay projects production state from the reusable semantic
   // cores. It is intentionally still a bounded battle fixture, not a semantic
   // owner in its own right. Generic Action and Bonus Action availability is a
-  // literal projection input checked against production; the Slow core
+  // literal projection inputs checked against production; the Slow core
   // contributes only its temporary legality gate.
   type Hole =
     | NoHole
@@ -31,6 +31,10 @@ module battleRuntimeSlowActivePenaltiesMbt {
     | SomaticSpellFailed
     | SelfFailedSave
     | PriorBonusActionReconciled
+    | CompatibleActionResourceSpent
+    | PriorCompatibleActionReconciled
+    | PriorCompatibleActionCleanup
+    | ExtraResourcesNoActionReconciled
     | MultiattackFailedSave
     | MultiattackTargetTurn
     | MultiattackActivated
@@ -42,9 +46,10 @@ module battleRuntimeSlowActivePenaltiesMbt {
     | ConcentrationEnded
     | DurationExpired
 
-  type GenericActionAvailabilityProjection = {
-    actionAvailable: bool,
+  type GenericActionEconomyProjection = {
     bonusActionAvailable: bool,
+    actionTakenThisTurn: bool,
+    actionTakingResourceCount: int,
   }
 
   type SlowActivePenaltiesWitnessState = {
@@ -54,6 +59,9 @@ module battleRuntimeSlowActivePenaltiesMbt {
     targetTurnCanSpendBonusAction: bool,
     targetCanMakeAttack: bool,
     extraAttackResourceCount: int,
+    actionTakenThisTurn: bool,
+    actionTakingResourceCount: int,
+    casterTurnCanSpendAction: bool,
     casterTurnCanSpendBonusAction: bool,
     targetSlowed: bool,
     secondTargetSlowed: bool,
@@ -206,11 +214,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
       }
     )
 
-  action recordSlowStateWithGenericActionAvailability(
+  action recordSlowStateWithGenericActionEconomy(
     currentTurnRole: str,
     occurrence: SlowOccurrenceState,
     turn: SlowTargetTurnState,
-    genericAvailability: GenericActionAvailabilityProjection,
+    genericActionEconomy: GenericActionEconomyProjection,
     somatic: SlowSomaticResolutionState,
     multiattack: SlowStatBlockMultiattackState,
     scenarioOutcome: SlowActivePenaltiesScenarioOutcome,
@@ -221,20 +229,27 @@ module battleRuntimeSlowActivePenaltiesMbt {
       turnActionOrBonusChoice: qTurnChoice(turn),
       targetTurnCanSpendAction:
         currentTurnRole != "caster" and
-          genericAvailability.actionAvailable and
+          genericActionEconomy.actionTakingResourceCount > 0 and
           slowTurnCanSpendAction(turn),
       targetTurnCanSpendBonusAction:
         currentTurnRole != "caster" and
-          genericAvailability.bonusActionAvailable and
+          genericActionEconomy.bonusActionAvailable and
           slowTurnCanSpendBonusAction(turn),
       targetCanMakeAttack:
         currentTurnRole == "target" and
-          genericAvailability.actionAvailable and
+          genericActionEconomy.actionTakingResourceCount > 0 and
           qTurnCanMakeAttack(turn),
       extraAttackResourceCount: 0,
+      actionTakenThisTurn: genericActionEconomy.actionTakenThisTurn,
+      actionTakingResourceCount:
+        genericActionEconomy.actionTakingResourceCount,
+      casterTurnCanSpendAction:
+        currentTurnRole == "caster" and
+          genericActionEconomy.actionTakingResourceCount > 0 and
+          slowTurnCanSpendAction(turn),
       casterTurnCanSpendBonusAction:
         currentTurnRole == "caster" and
-          genericAvailability.bonusActionAvailable and
+          genericActionEconomy.bonusActionAvailable and
           slowTurnCanSpendBonusAction(turn),
       targetSlowed: slowTargetAffected(occurrence, 1),
       secondTargetSlowed: slowTargetAffected(occurrence, 2),
@@ -280,11 +295,15 @@ module battleRuntimeSlowActivePenaltiesMbt {
     scenarioOutcome: SlowActivePenaltiesScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool =
-    recordSlowStateWithGenericActionAvailability(
+    recordSlowStateWithGenericActionEconomy(
       currentTurnRole,
       occurrence,
       turn,
-      { actionAvailable: true, bonusActionAvailable: true },
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: false,
+        actionTakingResourceCount: 1,
+      },
       somatic,
       multiattack,
       scenarioOutcome,
@@ -303,10 +322,15 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action doCastSlowFailedSave = all {
     qState.scenarioOutcome == Init,
-    recordSlowState(
+    recordSlowStateWithGenericActionEconomy(
       "caster",
       qSingleTargetSlow,
       SlowTurnUnrestricted,
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 0,
+      },
       initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       FailedSave,
@@ -405,10 +429,15 @@ module battleRuntimeSlowActivePenaltiesMbt {
     )
     all {
       qState.scenarioOutcome == TargetTurn,
-      recordSlowState(
+      recordSlowStateWithGenericActionEconomy(
         "target",
         qSingleTargetSlow,
         spent,
+        {
+          bonusActionAvailable: true,
+          actionTakenThisTurn: true,
+          actionTakingResourceCount: 0,
+        },
         initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         SpentAction,
@@ -427,11 +456,15 @@ module battleRuntimeSlowActivePenaltiesMbt {
     )
     all {
       qState.scenarioOutcome == TargetTurn,
-      recordSlowStateWithGenericActionAvailability(
+      recordSlowStateWithGenericActionEconomy(
         "target",
         qSingleTargetSlow,
         spent,
-        { actionAvailable: true, bonusActionAvailable: false },
+        {
+          bonusActionAvailable: false,
+          actionTakenThisTurn: false,
+          actionTakingResourceCount: 1,
+        },
         initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         SpentBonusAction,
@@ -460,11 +493,15 @@ module battleRuntimeSlowActivePenaltiesMbt {
     )
     all {
       qState.scenarioOutcome == SpentAction,
-      recordSlowStateWithGenericActionAvailability(
+      recordSlowStateWithGenericActionEconomy(
         "target",
         cleaned.occurrence,
         reconciled,
-        { actionAvailable: false, bonusActionAvailable: true },
+        {
+          bonusActionAvailable: true,
+          actionTakenThisTurn: true,
+          actionTakingResourceCount: 0,
+        },
         initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         ConcentrationEndedAfterAction,
@@ -492,11 +529,15 @@ module battleRuntimeSlowActivePenaltiesMbt {
     )
     all {
       qState.scenarioOutcome == SpentBonusAction,
-      recordSlowStateWithGenericActionAvailability(
+      recordSlowStateWithGenericActionEconomy(
         "target",
         cleaned.occurrence,
         reconciled,
-        { actionAvailable: true, bonusActionAvailable: false },
+        {
+          bonusActionAvailable: false,
+          actionTakenThisTurn: false,
+          actionTakingResourceCount: 1,
+        },
         initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         DurationExpiredAfterBonusAction,
@@ -517,10 +558,15 @@ module battleRuntimeSlowActivePenaltiesMbt {
     val attacked = applySlowAttackActionAttack(attackAction)
     all {
       qState.scenarioOutcome == TargetTurn,
-      recordSlowState(
+      recordSlowStateWithGenericActionEconomy(
         "target",
         qSingleTargetSlow,
         attacked,
+        {
+          bonusActionAvailable: true,
+          actionTakenThisTurn: true,
+          actionTakingResourceCount: 0,
+        },
         initialSlowSomaticResolutionState,
         initialSlowStatBlockMultiattackState,
         AttackedOnce,
@@ -590,7 +636,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action doCastSlowSelfFailedSave = all {
     qState.scenarioOutcome == Init,
-    recordSlowState(
+    recordSlowStateWithGenericActionEconomy(
       "caster",
       qSelfSlow,
       beginSlowTargetTurnAfterPriorAction(
@@ -599,6 +645,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
         SlowTurnUnrestricted,
         SlowOtherAction
       ),
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 0,
+      },
       initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       SelfFailedSave,
@@ -623,12 +674,94 @@ module battleRuntimeSlowActivePenaltiesMbt {
     ),
   }
 
+  action doSpendCompatibleActionResourceBeforeSlow = all {
+    qState.scenarioOutcome == Init,
+    recordSlowStateWithGenericActionEconomy(
+      "caster",
+      initialSlowOccurrenceState,
+      SlowTurnUnrestricted,
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 2,
+      },
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      CompatibleActionResourceSpent,
+      witnessResolved(NoHole)
+    ),
+  }
+
+  action doReconcileSlowAfterCompatibleAction = all {
+    qState.scenarioOutcome == CompatibleActionResourceSpent,
+    recordSlowStateWithGenericActionEconomy(
+      "caster",
+      qSelfSlow,
+      beginSlowTargetTurnAfterPriorAction(
+        qSelfSlow,
+        0,
+        SlowTurnUnrestricted,
+        SlowOtherAction
+      ),
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 1,
+      },
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      PriorCompatibleActionReconciled,
+      witnessResolved(NoHole)
+    ),
+  }
+
+  action doCleanupSlowAfterCompatibleAction = all {
+    qState.scenarioOutcome == PriorCompatibleActionReconciled,
+    recordSlowStateWithGenericActionEconomy(
+      "caster",
+      initialSlowOccurrenceState,
+      SlowTurnUnrestricted,
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 1,
+      },
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      PriorCompatibleActionCleanup,
+      witnessResolved(NoHole)
+    ),
+  }
+
+  action doReconcileSlowWithUntakenExtraActionResource = all {
+    qState.scenarioOutcome == Init,
+    recordSlowStateWithGenericActionEconomy(
+      "caster",
+      qSelfSlow,
+      beginSlowTargetTurn(qSelfSlow, 0, SlowTurnUnrestricted),
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: false,
+        actionTakingResourceCount: 2,
+      },
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      ExtraResourcesNoActionReconciled,
+      witnessResolved(NoHole)
+    ),
+  }
+
   action doCastSlowMultiattackFailedSave = all {
     qState.scenarioOutcome == Init,
-    recordSlowState(
+    recordSlowStateWithGenericActionEconomy(
       "caster",
       qMultiattackTargetSlow,
       SlowTurnUnrestricted,
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 0,
+      },
       initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       MultiattackFailedSave,
@@ -658,7 +791,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
     slowStatBlockMultiattackOneListedAllowanceActive(
       qSlowedMultiattackActivated
     ),
-    recordSlowState(
+    recordSlowStateWithGenericActionEconomy(
       "multiattackTarget",
       qMultiattackTargetSlow,
       applySlowTurnAction(
@@ -669,6 +802,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
         ),
         SlowAttackAction
       ),
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 0,
+      },
       initialSlowSomaticResolutionState,
       qSlowedMultiattackActivated,
       MultiattackActivated,
@@ -678,7 +816,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action doResolveChosenSlowedStatBlockMultiattackDispatch = all {
     qState.scenarioOutcome == MultiattackActivated,
-    recordSlowState(
+    recordSlowStateWithGenericActionEconomy(
       "multiattackTarget",
       qMultiattackTargetSlow,
       applySlowAttackActionAttack(
@@ -691,6 +829,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
           SlowAttackAction
         )
       ),
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 0,
+      },
       initialSlowSomaticResolutionState,
       qSlowedMultiattackDispatched,
       MultiattackDispatched,
@@ -700,10 +843,15 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   action doCastSlowTwoTargetsFailedSave = all {
     qState.scenarioOutcome == Init,
-    recordSlowState(
+    recordSlowStateWithGenericActionEconomy(
       "caster",
       qTwoTargetSlow,
       SlowTurnUnrestricted,
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 0,
+      },
       initialSlowSomaticResolutionState,
       initialSlowStatBlockMultiattackState,
       TwoTargetsFailedSave,
@@ -822,6 +970,8 @@ module battleRuntimeSlowActivePenaltiesMbt {
       SomaticSpellFailed,
       SelfFailedSave,
       PriorBonusActionReconciled,
+      PriorCompatibleActionCleanup,
+      ExtraResourcesNoActionReconciled,
       MultiattackDispatched,
       OneTargetSaved,
       ConcentrationEnded,
@@ -845,6 +995,10 @@ module battleRuntimeSlowActivePenaltiesMbt {
     doFillSomaticSpellFailure,
     doCastSlowSelfFailedSave,
     doReconcileSlowAfterPriorBonusAction,
+    doSpendCompatibleActionResourceBeforeSlow,
+    doReconcileSlowAfterCompatibleAction,
+    doCleanupSlowAfterCompatibleAction,
+    doReconcileSlowWithUntakenExtraActionResource,
     doCastSlowMultiattackFailedSave,
     doEndCasterTurnForMultiattackTarget,
     doActivateSlowedStatBlockMultiattack,

@@ -7136,6 +7136,7 @@ export type BattleSnapshotPresentationIssues =
 
 export type BattleTurnSnapshot = {
   readonly actionResources: readonly RuntimeActionResource[];
+  readonly actionTakenThisTurn: boolean;
   readonly bonusActionAvailable: boolean;
   readonly jumpDistanceMultiplier: BattleJumpDistanceMultiplier | null;
   readonly heightenedStepOfTheWindCarriedCreatures: readonly HeightenedStepOfTheWindCarriedCreature[];

@@ -7,6 +7,7 @@ import {
   CONDITIONS,
   type BattleActiveEffectExecutionRef,
   type BattleProcedureExecutionRef,
+  type BattleStatBlockProcedureExecutionRef,
 } from "@dnd/shared/types";
 import { Index, Initiative, Round } from "@dnd/shared/types";
 
@@ -35,6 +36,7 @@ import {
   spendUnarmedStrikeActionResource,
   unarmedStrikeActionResourceAllows,
   type ActionEconomyState,
+  type RuntimeActionResource,
 } from "./action-economy-algebra.ts";
 import {
   EMPTY_CONDITION_STATE,
@@ -70,16 +72,84 @@ const battleProcedureExecutionRef =
   Brand.nominal<BattleProcedureExecutionRef>();
 const battleActiveEffectExecutionRef =
   Brand.nominal<BattleActiveEffectExecutionRef>();
+const battleStatBlockProcedureExecutionRef =
+  Brand.nominal<BattleStatBlockProcedureExecutionRef>();
 const unitActionProcedureRef = battleProcedureExecutionRef(
   "unit-action-procedure-a",
 );
 const spellEffectRef = battleActiveEffectExecutionRef(
   "synthetic-active-effect-ref-a",
 );
+const statBlockMultiattackProcedureRef = battleStatBlockProcedureExecutionRef(
+  "synthetic-multiattack-procedure-a",
+);
+const statBlockAttackProcedureRef = battleStatBlockProcedureExecutionRef(
+  "synthetic-multiattack-dispatch-a",
+);
 const attackOnlyRestriction: ActionRestriction = {
   kind: "exclude",
   actions: ["magic"],
 };
+const actionResourceConsumptionCases = [
+  {
+    resource: { kind: "action", source: "turn" },
+    takesAction: true,
+  },
+  {
+    resource: {
+      kind: "action",
+      source: "unit",
+      sourceOwnerId,
+      sourceProcedureRef: unitActionProcedureRef,
+      restriction: attackOnlyRestriction,
+    },
+    takesAction: true,
+  },
+  {
+    resource: {
+      kind: "action",
+      source: "spellEffect",
+      sourceEffectRef: spellEffectRef,
+      restriction: HASTE_ACTION_RESOURCE_RESTRICTION,
+    },
+    takesAction: true,
+  },
+  {
+    resource: {
+      kind: "action",
+      source: "statBlockMultiattack",
+      sourceOwnerId,
+      sourceProcedureRef: statBlockMultiattackProcedureRef,
+      dispatch: {
+        kind: "listedOccurrence",
+        attackProcedureRef: statBlockAttackProcedureRef,
+      },
+    },
+    takesAction: false,
+  },
+  {
+    resource: {
+      kind: "action",
+      source: "classFeatureExtraAttack",
+      sourceOwnerId,
+      sourceProcedureRef: unitActionProcedureRef,
+      restriction: attackOnlyRestriction,
+    },
+    takesAction: false,
+  },
+  {
+    resource: {
+      kind: "action",
+      source: "monkFocusFlurryOfBlows",
+      sourceOwnerId,
+      sourceProcedureRef: unitActionProcedureRef,
+    },
+    takesAction: false,
+  },
+] as const satisfies ReadonlyArray<{
+  readonly resource: RuntimeActionResource;
+  readonly takesAction: boolean;
+}>;
 describe("action-economy-algebra", () => {
   it("parses supported Surface activation resource costs", () => {
     expect(isSupportedSurfaceCastingTimeKind("action")).toBe(true);
@@ -135,7 +205,14 @@ describe("action-economy-algebra", () => {
     const state = resetTurnActionEconomy(emptyActionEconomyState());
 
     expect(state.actionResources).toEqual([{ kind: "action", source: "turn" }]);
+    expect(state.actionTakenThisTurn).toBe(false);
     expect(state.currentHasBonusAction).toBe(true);
+
+    const spent = spendAction(state, "attack");
+    expect(Either.isRight(spent)).toBe(true);
+    if (Either.isLeft(spent)) return;
+    expect(spent.right.actionTakenThisTurn).toBe(true);
+    expect(resetTurnActionEconomy(spent.right).actionTakenThisTurn).toBe(false);
   });
 
   it("spends restricted unit action resources before the ordinary turn action", () => {
@@ -148,6 +225,28 @@ describe("action-economy-algebra", () => {
     expect(spent.right.actionResources).toEqual([
       { kind: "action", source: "turn" },
     ]);
+    expect(spent.right.actionTakenThisTurn).toBe(true);
+  });
+
+  for (const { resource, takesAction } of actionResourceConsumptionCases) {
+    it(`${resource.source} consumption records Action history as ${takesAction}`, () => {
+      for (const priorActionTaken of [false, true]) {
+        const spent = spendActionResourceAtIndex(
+          {
+            ...emptyActionEconomyState(),
+            actionResources: [resource],
+            actionTakenThisTurn: priorActionTaken,
+          },
+          0,
+        );
+        expect(spent.actionTakenThisTurn).toBe(priorActionTaken || takesAction);
+      }
+    });
+  }
+
+  it("does not record Action history without an actual resource consumption", () => {
+    const state = resetTurnActionEconomy(emptyActionEconomyState());
+    expect(spendActionResourceAtIndex(state, -1)).toBe(state);
   });
 
   it("keeps bonus action spending separate from free activation", () => {
@@ -155,6 +254,8 @@ describe("action-economy-algebra", () => {
 
     const free = spendActivationResource(state, { kind: "free" });
     expect(free).toEqual(Either.right(state));
+    if (Either.isLeft(free)) return;
+    expect(free.right.actionTakenThisTurn).toBe(false);
 
     const spentBonusAction = spendActivationResource(state, {
       kind: "bonusAction",
@@ -162,6 +263,7 @@ describe("action-economy-algebra", () => {
     expect(Either.isRight(spentBonusAction)).toBe(true);
     if (Either.isLeft(spentBonusAction)) return;
     expect(spentBonusAction.right.currentHasBonusAction).toBe(false);
+    expect(spentBonusAction.right.actionTakenThisTurn).toBe(false);
     expect(
       spendActivationResource(spentBonusAction.right, { kind: "bonusAction" }),
     ).toEqual(Either.left("no bonus action available"));
@@ -243,6 +345,76 @@ describe("action-economy-algebra", () => {
     });
     expect(canSpendAction(restricted, "attack")).toBe(false);
     expect(canSpendBonusAction(restricted)).toBe(false);
+  });
+
+  it("reconciles a prior Action independently of which compatible action resource was consumed", () => {
+    const granted = grantTestUnitActionResource();
+    const spent = spendAction(granted, "attack");
+    expect(Either.isRight(spent)).toBe(true);
+    if (Either.isLeft(spent)) return;
+    expect(spent.right.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
+    expect(spent.right.actionTakenThisTurn).toBe(true);
+
+    const restricted = enableActionOrBonusActionExclusion(spent.right);
+    expect(restricted.actionOrBonusActionExclusion).toEqual({
+      kind: "restricted",
+      choice: "action",
+    });
+    expect(canSpendAction(restricted, "attack")).toBe(false);
+    expect(canSpendBonusAction(restricted)).toBe(false);
+
+    const unrestricted = disableActionOrBonusActionExclusion(restricted);
+    expect(unrestricted.actionTakenThisTurn).toBe(true);
+    expect(canSpendAction(unrestricted, "attack")).toBe(true);
+    expect(canSpendBonusAction(unrestricted)).toBe(true);
+
+    const movementRestricted = enableMovementActionBonusActionExclusion(
+      spent.right,
+      false,
+    );
+    expect(movementRestricted.movementActionBonusActionExclusion).toEqual({
+      kind: "restricted",
+      choice: "action",
+    });
+  });
+
+  it("does not infer prior Action history from extra resources or missing turn resources", () => {
+    const granted = grantTestUnitActionResource();
+    const restricted = enableActionOrBonusActionExclusion(granted);
+
+    expect(restricted.actionTakenThisTurn).toBe(false);
+    expect(restricted.actionOrBonusActionExclusion).toEqual({
+      kind: "restricted",
+      choice: "notChosen",
+    });
+    expect(canSpendAction(restricted, "attack")).toBe(true);
+    expect(canSpendBonusAction(restricted)).toBe(true);
+    expect(
+      enableMovementActionBonusActionExclusion(granted, false)
+        .movementActionBonusActionExclusion,
+    ).toEqual({ kind: "restricted", choice: "notChosen" });
+
+    const onlyExtraResource = {
+      ...granted,
+      actionResources: granted.actionResources.filter(
+        (resource) => resource.source !== "turn",
+      ),
+    };
+    const onlyExtraRestricted =
+      enableActionOrBonusActionExclusion(onlyExtraResource);
+    expect(onlyExtraRestricted.actionTakenThisTurn).toBe(false);
+    expect(onlyExtraRestricted.actionOrBonusActionExclusion).toEqual({
+      kind: "restricted",
+      choice: "notChosen",
+    });
+    expect(canSpendAction(onlyExtraRestricted, "attack")).toBe(true);
+    expect(canSpendBonusAction(onlyExtraRestricted)).toBe(true);
+    expect(
+      enableMovementActionBonusActionExclusion(onlyExtraResource, false)
+        .movementActionBonusActionExclusion,
+    ).toEqual({ kind: "restricted", choice: "notChosen" });
   });
 
   it("reconciles prior Bonus Action spending when the Action or Bonus Action restriction starts mid-turn", () => {
@@ -377,6 +549,7 @@ describe("action-economy-algebra", () => {
     expect(spentFlurry.right.actionResources).toEqual([
       { kind: "action", source: "turn" },
     ]);
+    expect(spentFlurry.right.actionTakenThisTurn).toBe(false);
 
     const selected = spendMatchingActionResource(
       grantTestUnitActionResource(),
@@ -460,11 +633,11 @@ describe("action-economy-algebra", () => {
       ).movementActionBonusActionExclusion,
     ).toEqual({ kind: "restricted", choice: "movement" });
 
-    const withoutAction = enableMovementActionBonusActionExclusion(
-      emptyActionEconomyState(),
+    const afterAction = enableMovementActionBonusActionExclusion(
+      { ...emptyActionEconomyState(), actionTakenThisTurn: true },
       false,
     );
-    expect(withoutAction.movementActionBonusActionExclusion).toEqual({
+    expect(afterAction.movementActionBonusActionExclusion).toEqual({
       kind: "restricted",
       choice: "action",
     });
@@ -748,6 +921,7 @@ describe("initiative-algebra", () => {
 function emptyActionEconomyState(): ActionEconomyState {
   return {
     actionResources: [],
+    actionTakenThisTurn: false,
     currentHasBonusAction: false,
     actionOrBonusActionExclusion: { kind: "notRestricted" },
     movementActionBonusActionExclusion: { kind: "notRestricted" },

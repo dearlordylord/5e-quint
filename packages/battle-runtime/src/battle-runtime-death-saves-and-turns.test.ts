@@ -1024,6 +1024,7 @@ describe("battle runtime: death saves and turns", () => {
       ...firstDamageResult.state,
       currentTurnResources: {
         actionResources: [{ kind: "action", source: "turn" }],
+        actionTakenThisTurn: false,
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
@@ -1252,6 +1253,7 @@ describe("battle runtime: death saves and turns", () => {
       }),
       currentTurnResources: {
         actionResources: [],
+        actionTakenThisTurn: false,
         currentHasBonusAction: false,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },
@@ -1291,6 +1293,7 @@ describe("battle runtime: death saves and turns", () => {
       }),
       currentTurnResources: {
         actionResources: [],
+        actionTakenThisTurn: false,
         currentHasBonusAction: false,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
         movementActionBonusActionExclusion: { kind: "notRestricted" },

@@ -5450,6 +5450,7 @@ export const RuntimeActionResourceSchema = Schema.Union(
 
 const BattleTurnSnapshotSchema = Schema.Struct({
   actionResources: Schema.Array(RuntimeActionResourceSchema),
+  actionTakenThisTurn: Schema.Boolean,
   bonusActionAvailable: Schema.Boolean,
   spellSlotUsesThisTurn: Schema.Array(
     Schema.Union(

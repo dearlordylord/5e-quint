@@ -152,6 +152,7 @@ export type MovementActionBonusActionExclusion =
 
 export type ActionEconomyState = {
   readonly actionResources: ReadonlyArray<RuntimeActionResource>;
+  readonly actionTakenThisTurn: boolean;
   readonly currentHasBonusAction: boolean;
   readonly actionOrBonusActionExclusion: ActionOrBonusActionExclusion;
   readonly movementActionBonusActionExclusion: MovementActionBonusActionExclusion;
@@ -497,10 +498,7 @@ export function enableActionOrBonusActionExclusion<
     return state;
   }
 
-  const turnActionAvailable = state.actionResources.some(
-    (resource) => resource.source === "turn",
-  );
-  if (!turnActionAvailable) {
+  if (state.actionTakenThisTurn) {
     return markActionSpentForActionOrBonusActionExclusion({
       ...state,
       actionOrBonusActionExclusion: {
@@ -556,10 +554,7 @@ export function enableMovementActionBonusActionExclusion<
   if (movementSpent) {
     return markMovementSpentForMovementActionBonusActionExclusion(restricted);
   }
-  const turnActionAvailable = restricted.actionResources.some(
-    (resource) => resource.source === "turn",
-  );
-  if (!turnActionAvailable) {
+  if (restricted.actionTakenThisTurn) {
     return markActionSpentForMovementActionBonusActionExclusion(restricted);
   }
   if (!restricted.currentHasBonusAction) {
@@ -574,9 +569,14 @@ export function spendActionResourceAtIndex<T extends ActionEconomyState>(
   state: T,
   actionResourceIndex: number,
 ): T {
+  const spentResource = state.actionResources[actionResourceIndex];
+  if (spentResource === undefined) return state;
   return markActionSpentForMovementActionBonusActionExclusion(
     markActionSpentForActionOrBonusActionExclusion({
       ...state,
+      actionTakenThisTurn:
+        state.actionTakenThisTurn ||
+        actionResourceConsumptionTakesAction(spentResource),
       actionResources: state.actionResources.filter(
         (_, index) => index !== actionResourceIndex,
       ),
@@ -599,15 +599,17 @@ function actionEconomyStateAfterSpendingBonusAction<
   );
 }
 
-function actionEconomyStateAfterSpendingActionResourceAtIndex<
-  T extends ActionEconomyState,
->(state: T, actionResourceIndex: number): T {
-  return markActionSpentForMovementActionBonusActionExclusion(
-    markActionSpentForActionOrBonusActionExclusion({
-      ...state,
-      actionResources: state.actionResources.filter(
-        (_, index) => index !== actionResourceIndex,
-      ),
+export function actionResourceConsumptionTakesAction(
+  resource: RuntimeActionResource,
+): boolean {
+  return Match.value(resource).pipe(
+    Match.discriminatorsExhaustive("source")({
+      turn: () => true,
+      unit: () => true,
+      spellEffect: () => true,
+      statBlockMultiattack: () => false,
+      classFeatureExtraAttack: () => false,
+      monkFocusFlurryOfBlows: () => false,
     }),
   );
 }
@@ -647,6 +649,7 @@ export function resetTurnActionEconomy<T extends ActionEconomyState>(
   return {
     ...state,
     actionResources: [{ kind: "action", source: "turn" }],
+    actionTakenThisTurn: false,
     currentHasBonusAction: true,
     actionOrBonusActionExclusion: { kind: "notRestricted" },
     movementActionBonusActionExclusion: { kind: "notRestricted" },
@@ -668,12 +671,7 @@ export function spendAction<T extends ActionEconomyState>(
   // TODO: If multiple compatible action resources are available and spending
   // one versus another can change later legality, expose resource choice as a
   // runtime hole instead of choosing deterministically here.
-  return Either.right(
-    actionEconomyStateAfterSpendingActionResourceAtIndex(
-      state,
-      actionResourceIndex,
-    ),
-  );
+  return Either.right(spendActionResourceAtIndex(state, actionResourceIndex));
 }
 
 export function spendUnarmedStrikeActionResource<T extends ActionEconomyState>(
@@ -686,12 +684,7 @@ export function spendUnarmedStrikeActionResource<T extends ActionEconomyState>(
     return Either.left("no action resource available");
   }
 
-  return Either.right(
-    actionEconomyStateAfterSpendingActionResourceAtIndex(
-      state,
-      actionResourceIndex,
-    ),
-  );
+  return Either.right(spendActionResourceAtIndex(state, actionResourceIndex));
 }
 
 export function spendMatchingActionResource<T extends ActionEconomyState>(
@@ -708,12 +701,7 @@ export function spendMatchingActionResource<T extends ActionEconomyState>(
     return Either.left("no action resource available");
   }
 
-  return Either.right(
-    actionEconomyStateAfterSpendingActionResourceAtIndex(
-      state,
-      actionResourceIndex,
-    ),
-  );
+  return Either.right(spendActionResourceAtIndex(state, actionResourceIndex));
 }
 
 export function spendActivationResource<T extends ActionEconomyState>(
