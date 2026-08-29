@@ -212,13 +212,13 @@ import {
 
 import { chainedSpellFillSet as parseChainedSpellFillSet } from "./spells-resolve-chained.ts";
 export {
-  resolveFlamingSphereSpellAct,
-  resolveFogCloudObscurementSpellAct,
-  resolveGustOfWindLineSpellAct,
+  resolveAreaMovementDistanceDamageSpellAct,
+  resolveDirectionalPersistentAreaSpellAct,
   resolveMagicalDarknessPointOriginSpellAct,
-  resolveMoonbeamSpellAct,
-  resolveSpikeGrowthMovementHazardSpellAct,
-  resolveWebRestraintHazardSpellAct,
+  resolveMovablePersistentAreaSpellAct,
+  resolvePersistentAreaSaveConditionEscapeSpellAct,
+  resolvePersistentAreaTraitSpellAct,
+  resolveRamMovablePersistentAreaSpellAct,
 } from "./spells-resolve-area-effects.ts";
 export {
   resolveObjectContactDamageRepeatSpellAct,
