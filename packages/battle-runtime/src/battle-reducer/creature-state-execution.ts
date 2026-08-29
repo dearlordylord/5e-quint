@@ -24,6 +24,7 @@ import {
 import type { BattleSubject } from "../battle-subjects.ts";
 import {
   battleAttackExecutionScopeRefForProcedureRef,
+  type BattleAreaId,
   type BattleObjectId,
   type CombatantId,
 } from "../identity.ts";
@@ -175,143 +176,111 @@ export type BattleActiveEffectOccurrenceSpatialClass =
   | "object"
   | "anchored";
 
-export function battleActiveEffectOccurrenceSpatialClass(
-  kind: BattleActiveEffect["kind"],
-): BattleActiveEffectOccurrenceSpatialClass {
-  return Match.value(kind).pipe(
-    Match.whenOr(
-      "antimagicFieldOngoingSpellSuppression",
-      "cloudkillAreaHazard",
-      "flamingSphere",
-      "fogCloudObscurement",
-      "greaseGroundHazard",
-      "insectPlagueAreaHazard",
-      "magicalDarknessPointOrigin",
-      "moonbeam",
-      "sleetStormAreaHazard",
-      "spikeGrowthHazard",
-      "webRestraintHazard",
-      () => "area" as const,
-    ),
-    Match.when("gustOfWindLine", () => "line" as const),
-    Match.when("spellObjectContactDamage", () => "object" as const),
-    Match.when("glyphDurableOccurrence", () => "anchored" as const),
-    Match.whenOr(
-      "abilityCheckRollMode",
-      "abilityD20TestRollModeEndTurnSave",
-      "bardicInspirationDie",
-      "blurred",
-      "brutalStrikeHamstring",
-      "commandPending",
-      "conditionImmunity",
-      "conditionSavingThrowRollMode",
-      "creatureTypeProtection",
-      "d20RollModifier",
-      "damageResistance",
-      "dancingLights",
-      "dragonsBreath",
-      "druidWildShapeForm",
-      "faerieFireOutline",
-      "featherFallMitigation",
-      "findFamiliarSharedSenses",
-      "heldLight",
-      "hideousLaughter",
-      "hitPointMaximumIncrease",
-      "hitPointRegainPrevented",
-      "hypnoticPatternControl",
-      "invisibleBenefitDenied",
-      "jumpMovementReplacement",
-      "mirrorImageDuplicates",
-      "nextAttackRollAgainstSelf",
-      "nextAttackRollBySelf",
-      "opportunityAttackDenied",
-      "paladinSacredWeapon",
-      "possession",
-      "sanctuaryWard",
-      "savingThrowRollMode",
-      "seeInvisibleAndEthereal",
-      "selfAttackRollAndAbilityCheckRollMode",
-      "selfSpeedZero",
-      "selfTransformation",
-      "shiningSmiteIllumination",
-      "sleepPendingRepeatSave",
-      "sleepUnconscious",
-      "slowActivePenalties",
-      "sourceDamageRollPenalty",
-      "specialSpeedGrant",
-      "speedDelta",
-      "speedHalved",
-      "speedRatio",
-      "spellArmorClassBonus",
-      "spellArmorClassFloor",
-      "spellBaseArmorClass",
-      "spellConcentrationDuration",
-      "spellCondition",
-      "spellConditionCountedEndTurnSave",
-      "spellConditionEndTurnSave",
-      "spellConditionRepeatSave",
-      "spellCreatedHeldObject",
-      "spellCreatureSizeChange",
-      "spellDamageReduction",
-      "spellDashBonusAction",
-      "spellEndTargetState",
-      "spellGrantedActionResource",
-      "spellLevitatedCreature",
-      "spellMagicWeaponEnhancement",
-      "spellMarkedDamageRider",
-      "spellShapeShiftedForm",
-      "spellSpeedZero",
-      "spellTurnEndDamage",
-      "spellTurnStartDamageAndSave",
-      "spellWeaponAttackOverride",
-      "spellWeaponDamageRider",
-      "spiritualWeapon",
-      "targetActionEndedSpellCondition",
-      "thaumaturgyBoomingVoice",
-      "turnStartTemporaryHitPoints",
-      "unitFeatureCondition",
-      "unitFeatureConditionEndTurnSave",
-      "unitFeatureSpeedDelta",
-      "wardingBond",
-      () => "nonSpatial" as const,
-    ),
-    Match.exhaustive,
-  );
+export type BattleActiveEffectOccurrenceSpatialProjection =
+  | {
+      readonly spatialClass: "nonSpatial";
+      readonly location: Extract<
+        BattleActiveEffectOccurrenceLocation,
+        { readonly kind: "nonSpatial" }
+      >;
+    }
+  | {
+      readonly spatialClass: "area";
+      readonly location: Extract<
+        BattleActiveEffectOccurrenceLocation,
+        { readonly kind: "area" }
+      >;
+    }
+  | {
+      readonly spatialClass: "line";
+      readonly location: Extract<
+        BattleActiveEffectOccurrenceLocation,
+        { readonly kind: "line" }
+      >;
+    }
+  | {
+      readonly spatialClass: "object";
+      readonly location: Extract<
+        BattleActiveEffectOccurrenceLocation,
+        { readonly kind: "object" }
+      >;
+    }
+  | {
+      readonly spatialClass: "anchored";
+      readonly location: Extract<
+        BattleActiveEffectOccurrenceLocation,
+        { readonly kind: "area" | "object" }
+      >;
+    };
+
+function spatialProjectionHandler<
+  SpatialClass extends BattleActiveEffectOccurrenceSpatialClass,
+  Effect,
+>(
+  spatialClass: SpatialClass,
+  project: (
+    effect: Effect,
+  ) => Extract<
+    BattleActiveEffectOccurrenceSpatialProjection,
+    { readonly spatialClass: SpatialClass }
+  >,
+): ((
+  effect: Effect,
+) => Extract<
+  BattleActiveEffectOccurrenceSpatialProjection,
+  { readonly spatialClass: SpatialClass }
+>) & { readonly spatialClass: SpatialClass } {
+  return Object.assign(project, { spatialClass });
 }
 
-function activeEffectOccurrenceLocation(
-  effect: BattleActiveEffect,
-): BattleActiveEffectOccurrenceLocation {
-  return Match.value(
-    battleActiveEffectOccurrenceSpatialClass(effect.kind),
-  ).pipe(
-    Match.when("object", () => {
-      if (effect.kind !== "spellObjectContactDamage") {
-        throw new Error(
-          "Object occurrence classification must bind an object-contact effect.",
-        );
-      }
-      return { kind: "object" as const, objectId: effect.objectId };
+const nonSpatialActiveEffectOccurrence = spatialProjectionHandler(
+  "nonSpatial",
+  () => ({
+    spatialClass: "nonSpatial" as const,
+    location: { kind: "nonSpatial" as const },
+  }),
+);
+
+const areaActiveEffectOccurrence = spatialProjectionHandler(
+  "area",
+  (effect: { readonly areaId: BattleAreaId }) => ({
+    spatialClass: "area" as const,
+    location: { kind: "area" as const, areaId: effect.areaId },
+  }),
+);
+
+const activeEffectOccurrenceSpatialProjectionHandlers = {
+  antimagicFieldOngoingSpellSuppression: areaActiveEffectOccurrence,
+  cloudkillAreaHazard: areaActiveEffectOccurrence,
+  flamingSphere: areaActiveEffectOccurrence,
+  fogCloudObscurement: areaActiveEffectOccurrence,
+  greaseGroundHazard: areaActiveEffectOccurrence,
+  insectPlagueAreaHazard: areaActiveEffectOccurrence,
+  magicalDarknessPointOrigin: areaActiveEffectOccurrence,
+  moonbeam: areaActiveEffectOccurrence,
+  sleetStormAreaHazard: areaActiveEffectOccurrence,
+  spikeGrowthHazard: areaActiveEffectOccurrence,
+  webRestraintHazard: areaActiveEffectOccurrence,
+  gustOfWindLine: spatialProjectionHandler("line", (line) => ({
+    spatialClass: "line" as const,
+    location: {
+      kind: "line" as const,
+      areaId: line.areaId,
+      directionId: line.directionId,
+    },
+  })),
+  spellObjectContactDamage: spatialProjectionHandler(
+    "object",
+    ({ objectId }) => ({
+      spatialClass: "object" as const,
+      location: { kind: "object" as const, objectId },
     }),
-    Match.when("line", () => {
-      if (effect.kind !== "gustOfWindLine") {
-        throw new Error(
-          "Line occurrence classification must bind a Gust of Wind effect.",
-        );
-      }
-      return {
-        kind: "line" as const,
-        areaId: effect.areaId,
-        directionId: effect.directionId,
-      };
-    }),
-    Match.when("anchored", () => {
-      if (effect.kind !== "glyphDurableOccurrence") {
-        throw new Error(
-          "Anchored occurrence classification must bind a Glyph effect.",
-        );
-      }
-      return Match.value(effect.anchor).pipe(
+  ),
+  glyphDurableOccurrence: spatialProjectionHandler(
+    "anchored",
+    ({ anchor }) => ({
+      spatialClass: "anchored" as const,
+      location: Match.value(anchor).pipe(
         Match.discriminatorsExhaustive("kind")({
           surface: ({ areaId }) => ({ kind: "area" as const, areaId }),
           closeableObject: ({ objectId }) => ({
@@ -319,18 +288,107 @@ function activeEffectOccurrenceLocation(
             objectId,
           }),
         }),
-      );
+      ),
     }),
-    Match.when("area", () => {
-      if (!("areaId" in effect)) {
-        throw new Error(
-          "Area occurrence classification must bind an area effect.",
-        );
-      }
-      return { kind: "area" as const, areaId: effect.areaId };
-    }),
-    Match.when("nonSpatial", () => ({ kind: "nonSpatial" as const })),
-    Match.exhaustive,
+  ),
+  abilityCheckRollMode: nonSpatialActiveEffectOccurrence,
+  abilityD20TestRollModeEndTurnSave: nonSpatialActiveEffectOccurrence,
+  bardicInspirationDie: nonSpatialActiveEffectOccurrence,
+  blurred: nonSpatialActiveEffectOccurrence,
+  brutalStrikeHamstring: nonSpatialActiveEffectOccurrence,
+  commandPending: nonSpatialActiveEffectOccurrence,
+  conditionImmunity: nonSpatialActiveEffectOccurrence,
+  conditionSavingThrowRollMode: nonSpatialActiveEffectOccurrence,
+  creatureTypeProtection: nonSpatialActiveEffectOccurrence,
+  d20RollModifier: nonSpatialActiveEffectOccurrence,
+  damageResistance: nonSpatialActiveEffectOccurrence,
+  dancingLights: nonSpatialActiveEffectOccurrence,
+  dragonsBreath: nonSpatialActiveEffectOccurrence,
+  druidWildShapeForm: nonSpatialActiveEffectOccurrence,
+  faerieFireOutline: nonSpatialActiveEffectOccurrence,
+  featherFallMitigation: nonSpatialActiveEffectOccurrence,
+  findFamiliarSharedSenses: nonSpatialActiveEffectOccurrence,
+  heldLight: nonSpatialActiveEffectOccurrence,
+  hideousLaughter: nonSpatialActiveEffectOccurrence,
+  hitPointMaximumIncrease: nonSpatialActiveEffectOccurrence,
+  hitPointRegainPrevented: nonSpatialActiveEffectOccurrence,
+  hypnoticPatternControl: nonSpatialActiveEffectOccurrence,
+  invisibleBenefitDenied: nonSpatialActiveEffectOccurrence,
+  jumpMovementReplacement: nonSpatialActiveEffectOccurrence,
+  mirrorImageDuplicates: nonSpatialActiveEffectOccurrence,
+  nextAttackRollAgainstSelf: nonSpatialActiveEffectOccurrence,
+  nextAttackRollBySelf: nonSpatialActiveEffectOccurrence,
+  opportunityAttackDenied: nonSpatialActiveEffectOccurrence,
+  paladinSacredWeapon: nonSpatialActiveEffectOccurrence,
+  possession: nonSpatialActiveEffectOccurrence,
+  sanctuaryWard: nonSpatialActiveEffectOccurrence,
+  savingThrowRollMode: nonSpatialActiveEffectOccurrence,
+  seeInvisibleAndEthereal: nonSpatialActiveEffectOccurrence,
+  selfAttackRollAndAbilityCheckRollMode: nonSpatialActiveEffectOccurrence,
+  selfSpeedZero: nonSpatialActiveEffectOccurrence,
+  selfTransformation: nonSpatialActiveEffectOccurrence,
+  shiningSmiteIllumination: nonSpatialActiveEffectOccurrence,
+  sleepPendingRepeatSave: nonSpatialActiveEffectOccurrence,
+  sleepUnconscious: nonSpatialActiveEffectOccurrence,
+  slowActivePenalties: nonSpatialActiveEffectOccurrence,
+  sourceDamageRollPenalty: nonSpatialActiveEffectOccurrence,
+  specialSpeedGrant: nonSpatialActiveEffectOccurrence,
+  speedDelta: nonSpatialActiveEffectOccurrence,
+  speedHalved: nonSpatialActiveEffectOccurrence,
+  speedRatio: nonSpatialActiveEffectOccurrence,
+  spellArmorClassBonus: nonSpatialActiveEffectOccurrence,
+  spellArmorClassFloor: nonSpatialActiveEffectOccurrence,
+  spellBaseArmorClass: nonSpatialActiveEffectOccurrence,
+  spellConcentrationDuration: nonSpatialActiveEffectOccurrence,
+  spellCondition: nonSpatialActiveEffectOccurrence,
+  spellConditionCountedEndTurnSave: nonSpatialActiveEffectOccurrence,
+  spellConditionEndTurnSave: nonSpatialActiveEffectOccurrence,
+  spellConditionRepeatSave: nonSpatialActiveEffectOccurrence,
+  spellCreatedHeldObject: nonSpatialActiveEffectOccurrence,
+  spellCreatureSizeChange: nonSpatialActiveEffectOccurrence,
+  spellDamageReduction: nonSpatialActiveEffectOccurrence,
+  spellDashBonusAction: nonSpatialActiveEffectOccurrence,
+  spellEndTargetState: nonSpatialActiveEffectOccurrence,
+  spellGrantedActionResource: nonSpatialActiveEffectOccurrence,
+  spellLevitatedCreature: nonSpatialActiveEffectOccurrence,
+  spellMagicWeaponEnhancement: nonSpatialActiveEffectOccurrence,
+  spellMarkedDamageRider: nonSpatialActiveEffectOccurrence,
+  spellShapeShiftedForm: nonSpatialActiveEffectOccurrence,
+  spellSpeedZero: nonSpatialActiveEffectOccurrence,
+  spellTurnEndDamage: nonSpatialActiveEffectOccurrence,
+  spellTurnStartDamageAndSave: nonSpatialActiveEffectOccurrence,
+  spellWeaponAttackOverride: nonSpatialActiveEffectOccurrence,
+  spellWeaponDamageRider: nonSpatialActiveEffectOccurrence,
+  spiritualWeapon: nonSpatialActiveEffectOccurrence,
+  targetActionEndedSpellCondition: nonSpatialActiveEffectOccurrence,
+  thaumaturgyBoomingVoice: nonSpatialActiveEffectOccurrence,
+  turnStartTemporaryHitPoints: nonSpatialActiveEffectOccurrence,
+  unitFeatureCondition: nonSpatialActiveEffectOccurrence,
+  unitFeatureConditionEndTurnSave: nonSpatialActiveEffectOccurrence,
+  unitFeatureSpeedDelta: nonSpatialActiveEffectOccurrence,
+  wardingBond: nonSpatialActiveEffectOccurrence,
+} satisfies {
+  readonly [Kind in BattleActiveEffect["kind"]]: ((
+    effect: Extract<BattleActiveEffect, { readonly kind: Kind }>,
+  ) => BattleActiveEffectOccurrenceSpatialProjection) & {
+    readonly spatialClass: BattleActiveEffectOccurrenceSpatialClass;
+  };
+};
+
+/** Structural class used when validating an encoded snapshot without effect payloads. */
+export function battleActiveEffectOccurrenceSpatialClass(
+  kind: BattleActiveEffect["kind"],
+): BattleActiveEffectOccurrenceSpatialClass {
+  return activeEffectOccurrenceSpatialProjectionHandlers[kind].spatialClass;
+}
+
+export function battleActiveEffectOccurrenceSpatialProjection(
+  effect: BattleActiveEffect,
+): BattleActiveEffectOccurrenceSpatialProjection {
+  return Match.value(effect).pipe(
+    Match.discriminatorsExhaustive("kind")(
+      activeEffectOccurrenceSpatialProjectionHandlers,
+    ),
   );
 }
 
@@ -355,12 +413,15 @@ export function combatantSnapshot(
     maxHp: effectiveHitPointMaximum(combatant),
     tempHp: combatant.tempHp,
     nextEffectOrdinal: combatant.nextEffectOrdinal,
-    activeEffectOccurrences: combatant.activeEffects.map((effect) => ({
-      kind: "activeEffect" as const,
-      effectRef: effect.effectRef,
-      activeEffectKind: effect.kind,
-      location: activeEffectOccurrenceLocation(effect),
-    })),
+    activeEffectOccurrences: combatant.activeEffects.map((effect) => {
+      const spatial = battleActiveEffectOccurrenceSpatialProjection(effect);
+      return {
+        kind: "activeEffect" as const,
+        effectRef: effect.effectRef,
+        activeEffectKind: effect.kind,
+        location: spatial.location,
+      };
+    }),
     armorClass: currentArmorClass(activeEffectArmorClass(state, combatant)),
     size: combatantEffectiveSize(combatant),
     zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),
