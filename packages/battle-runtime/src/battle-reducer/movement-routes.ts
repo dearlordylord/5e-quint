@@ -217,7 +217,7 @@ function compelledFleeCompelledMovementDiscoveryRoute(
   if (
     input.subject.tag !== "actionSpell" ||
     spellInvocationForRouteSubject(input.state, input.subject)?.procedure !==
-      "command" ||
+      "compelledNextTurnBehavior" ||
     fill?.kind !== "compelledBehaviorOptionChoice" ||
     fill.value !== "flee" ||
     result.tag !== "needsHoles"
@@ -243,7 +243,7 @@ function compelledFleeCompelledMovementRoute(
 ): BattleReducerRouteEvents | undefined {
   if (
     input.subject.tag !== "runtimeCommand" ||
-    input.subject.command !== "compelledFlee" ||
+    input.subject.command !== "executeCompelledFlee" ||
     input.fills.at(-1)?.kind !== "movement"
   ) {
     return undefined;

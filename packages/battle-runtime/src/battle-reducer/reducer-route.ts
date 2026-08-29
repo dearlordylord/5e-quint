@@ -29,8 +29,8 @@ import {
   zeroHitPointStabilizationRouteForResolution,
 } from "./combatant-lifecycle-routes.ts";
 import {
-  commandRouteForDiscoveredAct,
-  commandRouteForResolution,
+  compelledBehaviorRouteForDiscoveredAct,
+  compelledBehaviorRouteForResolution,
 } from "./command-routes.ts";
 import {
   companionRouteForDiscoveredAct,
@@ -211,7 +211,9 @@ export function battleReducerRouteEventsForDiscoveredAct(
     terminalRouteCandidate(() =>
       metamagicSpellDurationProjectionRouteForDiscoveredAct(state, act),
     ),
-    terminalRouteCandidate(() => commandRouteForDiscoveredAct(state, act)),
+    terminalRouteCandidate(() =>
+      compelledBehaviorRouteForDiscoveredAct(state, act),
+    ),
     terminalRouteCandidate(() => movementRouteForDiscoveredAct(state, act)),
     terminalRouteCandidate(() =>
       metamagicCastingOptionRouteForDiscoveredAct(state, act),
@@ -387,7 +389,7 @@ export function battleReducerRouteForResolution(
       withWildShapeTerminal(concentrationRouteForResolution(input, result)),
     ),
     terminalRouteCandidate(() => {
-      const commandRoute = commandRouteForResolution(input, result);
+      const commandRoute = compelledBehaviorRouteForResolution(input, result);
       const movementRoute = movementRouteForResolution(input, result);
       if (movementRoute !== undefined) {
         return withWildShapeTerminal(

@@ -31,7 +31,7 @@ import {
 export function battleAttackHostParticipantId(
   participant: BattleAttackHostSubject,
 ): CombatantId {
-  return participant.tag === "pactOfTheChainFamiliarAttack"
+  return participant.tag === "companionAttack"
     ? participant.familiarId
     : participant.actorId;
 }

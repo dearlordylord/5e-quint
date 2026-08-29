@@ -45,8 +45,8 @@ import {
   resolutionFromStateResult,
 } from "../result-helpers.ts";
 import {
-  LEVITATE_ALTITUDE_CONTROL_FEET,
-  LEVITATE_INITIAL_RISE_FEET,
+  CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET,
+  CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET,
   controlledVerticalSuspensionInitialRiseHole,
 } from "../levitate-creature.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
@@ -175,11 +175,12 @@ function controlledVerticalSuspensionSpellProjection(
     dc: phase.dc,
     targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
     rangeFeet: movementFeet(60),
-    maxInitialRiseFeet: LEVITATE_INITIAL_RISE_FEET,
+    maxInitialRiseFeet: CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET,
     activeEffect: {
       kind: "controlledVerticalSuspension",
       sourceCombatantId: actorId,
-      maxAltitudeChangeFeet: LEVITATE_ALTITUDE_CONTROL_FEET,
+      maxAltitudeChangeFeet:
+        CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET,
       rangeFeet: movementFeet(60),
       expiresAt: {
         kind: "concentration",
