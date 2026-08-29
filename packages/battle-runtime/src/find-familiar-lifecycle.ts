@@ -791,12 +791,39 @@ function companionAdmissionPreconditionIssue(
 export function admitCompanionToBattle(
   input: CompanionBattleAdmissionInput,
 ): Either.Either<BattleState, BattleStateInitIssue> {
+  return Either.map(
+    admitCompanionToBattleWithPresentation(input),
+    (admitted) => admitted.state,
+  );
+}
+
+export type CompanionBattleAdmissionWithPresentation =
+  | {
+      readonly tag: "embodiedOutsideBattle";
+      readonly state: BattleState;
+      readonly companionId: CombatantId;
+      readonly presentation: BattleStatBlockPresentationSource;
+    }
+  | {
+      readonly tag: "stored";
+      readonly state: BattleState;
+    };
+
+export function admitCompanionToBattleWithPresentation(
+  input: CompanionBattleAdmissionInput,
+): Either.Either<
+  CompanionBattleAdmissionWithPresentation,
+  BattleStateInitIssue
+> {
   const preconditionIssue = companionAdmissionPreconditionIssue(input);
   if (preconditionIssue !== undefined) return Either.left(preconditionIssue);
   if (!("companionId" in input)) {
-    return admitAbsentCompanionToBattle({
-      ...input,
-    });
+    return Either.map(
+      admitAbsentCompanionToBattle({
+        ...input,
+      }),
+      (state) => ({ tag: "stored" as const, state }),
+    );
   }
   /* v8 ignore start -- @preserve -- Type-level invariant: the companionId branch of CompanionBattleAdmissionInput requires an embodied manifestation. */
   if (input.manifestation.tag !== "embodiedOutsideBattle") {
@@ -889,68 +916,16 @@ export function admitCompanionToBattle(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return withInitialInitiativeOrder(
+  const state = withInitialInitiativeOrder(
     nextState.state,
     input.ownerId,
     input.companionId,
     input.initialCombatantOrder,
   );
-}
-
-
-export type CompanionBattleAdmissionWithPresentation =
-  | {
-      readonly tag: "embodiedOutsideBattle";
-      readonly state: BattleState;
-      readonly companionId: CombatantId;
-      readonly presentation: BattleStatBlockPresentationSource;
-    }
-  | {
-      readonly tag: "stored";
-      readonly state: BattleState;
-    };
-
-export function admitCompanionToBattleWithPresentation(
-  input: CompanionBattleAdmissionInput,
-): Either.Either<
-  CompanionBattleAdmissionWithPresentation,
-  BattleStateInitIssue
-> {
-  const admitted = admitCompanionToBattle(input);
-  if (Either.isLeft(admitted)) return Either.left(admitted.left);
-  if (!("companionId" in input)) {
-    return Either.right({ tag: "stored", state: admitted.right });
-  }
-  const resolvedForm = resolveStoredFindFamiliarForm({
-    catalog: input.catalog,
-    formEligibility: input.formEligibility,
-    storedForm: input.manifestation.storedForm,
-    creatureTypeOverride: input.manifestation.creatureTypeOverride,
-  });
-  if (resolvedForm.tag === "issue") {
-    return Either.left(
-      companionStateInitIssue(resolvedForm.facts, resolvedForm.message),
-    );
-  }
-  const projected = projectFamiliarStatBlock(resolvedForm.form);
-  if (Either.isLeft(projected)) {
-    return Either.left(
-      companionStateInitIssue(
-        {
-          kind: "companionCombatantAdmissionInvalid",
-          ownerId: input.ownerId,
-          companionCombatantId: input.companionId,
-        },
-        battleStatBlockProjectionFailureMessage(
-          projected.left,
-          "Find Familiar form projection failed",
-        ),
-      ),
-    );
-  }
+  if (Either.isLeft(state)) return Either.left(state.left);
   return Either.right({
     tag: "embodiedOutsideBattle",
-    state: admitted.right,
+    state: state.right,
     companionId: input.companionId,
     presentation: projected.right.presentation,
   });

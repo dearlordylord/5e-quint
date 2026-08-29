@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+import type * as Option from "effect/Option";
 import type {
   AbilityCheckRollModeSpellEffect,
   BattleLightEmission,

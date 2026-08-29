@@ -88,6 +88,10 @@ export function battleStateInitIssueLeaves(
       );
     }),
     Match.when({ tag: "battleStateInitIssue" }, battleStateInitLeafList),
+    Match.when(
+      { tag: "statBlockResourceGraphIssue" },
+      battleStateInitLeafList,
+    ),
     Match.when({ tag: "weaponLoadoutMismatch" }, battleStateInitLeafList),
     Match.exhaustive,
   );

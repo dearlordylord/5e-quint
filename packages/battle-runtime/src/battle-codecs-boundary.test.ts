@@ -1163,12 +1163,20 @@ describe("battle codec act ownership boundaries", () => {
     ) {
       throw new Error("Expected the encoded readied-attack choice.");
     }
+    const statBlockDamageSelection =
+      attackResponse.selection.statBlockDamageSelection;
+    if (statBlockDamageSelection === undefined) {
+      throw new Error(
+        "Expected the stored readied attack to retain Stat Block damage selection.",
+      );
+    }
     const statBlockRetaliationChoice: EncodedInterruptChoice = {
       kind: "retaliationAttack",
       reactorId: goblinId,
       subject: {
         ...encodedReadiedAttack.subject,
         command: "retaliationAttack",
+        statBlockDamageSelection,
       },
       initialHoles: [],
     };
@@ -1287,6 +1295,7 @@ describe("battle codec act ownership boundaries", () => {
           ...encodedReadiedAttack.subject,
           command: "opportunityAttack",
           distanceFeet: 5,
+          statBlockDamageSelection,
         },
         initialHoles: [],
       },
@@ -1409,6 +1418,7 @@ describe("battle codec act ownership boundaries", () => {
               command: "opportunityAttack",
               reactorId: combatantId("codec-missing-opportunity-reactor"),
               distanceFeet: 5,
+              statBlockDamageSelection,
             },
             initialHoles: [],
           },
@@ -1428,6 +1438,7 @@ describe("battle codec act ownership boundaries", () => {
               command: "opportunityAttack",
               procedureRef: fighterAttackProcedureRef,
               distanceFeet: 5,
+              statBlockDamageSelection,
             },
             initialHoles: [],
           },

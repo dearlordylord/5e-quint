@@ -7685,6 +7685,12 @@ function battleSnapshotInvariantsHold(
   return (
     battleSnapshotLiveCombatantIdsAreUnique(snapshot, liveCombatantIds) &&
     new Set(executionScopeRefs).size === executionScopeRefs.length &&
+    snapshot.combatants.every((combatant) =>
+      battleSnapshotExecutionScopesBelongToBattle(
+        snapshot.battleId,
+        combatant,
+      ),
+    ) &&
     battleSnapshotActionResourcesAreValid(snapshot) &&
     snapshot.readiedResponses.spells.every((readied) =>
       serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),

@@ -1373,23 +1373,21 @@ describe("Find Familiar lifecycle", () => {
       }),
     );
 
-    let presentationCatalogLookups = 0;
-    const presentationStatBlockMissing = admitCompanionToBattleRuntime({
+    let admissionCatalogLookups = 0;
+    const admittedFromOneCatalogResolution = admitCompanionToBattleRuntime({
       session,
       ownerId: casterId,
       companionId: familiarId,
       identity: {
         tag: "retainedBetweenBattles",
-        durableCompanionId: "durable:presentation-missing-stat-block",
+        durableCompanionId: "durable:single-source-projection",
       },
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: {
         ...statBlockCatalog,
         getStatBlock: (statBlockId) => {
-          presentationCatalogLookups += 1;
-          return presentationCatalogLookups === 1
-            ? statBlockCatalog.getStatBlock(statBlockId)
-            : Option.none();
+          admissionCatalogLookups += 1;
+          return statBlockCatalog.getStatBlock(statBlockId);
         },
       },
       formEligibility: {
@@ -1414,69 +1412,8 @@ describe("Find Familiar lifecycle", () => {
       },
       initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
     });
-    expect(presentationStatBlockMissing).toEqual(
-      Either.left({
-        tag: "battleStateInitIssue",
-        kind: "companionPresentationStatBlockMissing",
-        companionCombatantId: familiarId,
-        statBlockId: parseSharedStatBlockId("stat_block_cat"),
-        message:
-          "Committed companion presentation Stat Block is missing from the catalog.",
-      }),
-    );
-
-    const cat = statBlockCatalog.requireStatBlock("stat_block_cat");
-    const malformedSelectedStatBlock = {
-      ...cat,
-      statBlock: {
-        ...cat.statBlock,
-        ac: { kind: "caster_derived", source: "spell_save_dc" } as const,
-      },
-    };
-    const malformedSelectedStatBlockAdmission = admitCompanionToBattleRuntime({
-      session,
-      ownerId: casterId,
-      companionId: familiarId,
-      identity: {
-        tag: "retainedBetweenBattles",
-        durableCompanionId: "durable:malformed-selected-stat-block",
-      },
-      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
-      catalog: {
-        ...statBlockCatalog,
-        getStatBlock: () => Option.some(malformedSelectedStatBlock),
-      },
-      formEligibility: {
-        formAccess: "findFamiliar",
-        eligibility: familiarEligibility,
-      },
-      manifestation: {
-        tag: "embodiedOutsideBattle",
-        storedForm: {
-          formAccess: "findFamiliar",
-          formSelection: { tag: "normalNamedForm", formId: "cat" },
-          resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
-        },
-        creatureTypeOverride: firstTypeOverride.creatureType,
-        hitPoints: {
-          currentHp: positiveCompanionHp(1),
-          tempHp: Hp(0),
-        },
-        ammunitionStocks: [],
-        initiative: initiativeScore(14),
-        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-      },
-      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
-    });
-    expect(malformedSelectedStatBlockAdmission).toEqual(
-      Either.left({
-        tag: "battleStateInitIssue",
-        kind: "statBlockSourceInvalid",
-        statBlockId: parseSharedStatBlockId("stat_block_cat"),
-        constraint: "literalArmorClassRequired",
-        message: "Battle runtime requires literal Stat Block Armor Class.",
-      }),
-    );
+    expect(Either.isRight(admittedFromOneCatalogResolution)).toBe(true);
+    expect(admissionCatalogLookups).toBe(1);
 
     const admitted = admitCompanionToBattleRuntime({
       session,

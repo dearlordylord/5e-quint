@@ -61,6 +61,7 @@ import { admittedSpellActs } from "./spells-profiles.ts";
 import {
   battleStateInitIssueLeaves,
   battleStateInitIssue,
+  battleStateInitIssueMessage,
   battleStateInitIssues,
 } from "./domain-helpers.ts";
 
@@ -112,6 +113,13 @@ function battleInitializationLeafIssueFromStateIssue(
   fallbackFacts: BattleInitializationIssueFacts,
   ownerPath?: readonly (string | number)[],
 ): BattleInitializationLeafIssue {
+  if (issue.tag === "statBlockResourceGraphIssue") {
+    return battleInitializationIssue(
+      fallbackFacts,
+      battleStateInitIssueMessage(issue),
+      ownerPath,
+    );
+  }
   const resolvedOwnerPath = issue.ownerPath ?? ownerPath;
   if (issue.tag === "weaponLoadoutMismatch") {
     return resolvedOwnerPath === undefined
@@ -697,7 +705,11 @@ function recordValidInitialBattleCombatant(input: {
 }): void {
   const { accumulator, combatant, admission, ownerPath } = input;
   accumulator.combatants.set(combatant.combatantId, admission.creature);
-  if ("runtimeContext" in admission) {
+  if (
+    "runtimeContext" in admission &&
+    combatant.creatureInit.kind === "character" &&
+    "displayName" in combatant
+  ) {
     accumulator.characterContexts.set(combatant.combatantId, {
       ...admission.runtimeContext,
       displayName: combatant.displayName,
@@ -1388,7 +1400,11 @@ export function addBattleRuntimeCombatant(input: {
     }),
     (admission) => {
       const characters = new Map(input.session.context.characters);
-      if (admission.characterContext !== undefined) {
+      if (
+        admission.characterContext !== undefined &&
+        input.combatant.creatureInit.kind === "character" &&
+        "displayName" in input.combatant
+      ) {
         characters.set(input.combatant.combatantId, {
           ...admission.characterContext,
           displayName: input.combatant.displayName,

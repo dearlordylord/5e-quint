@@ -51,6 +51,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import {
   battleUnitRefWithSupportProfiles,
   breakBattleConcentration,
+  discoverBattleActCandidates,
   Either,
   elapsedTimeTicks,
   endTurn,
@@ -252,7 +253,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     );
     expect(foreignOwner?.origin.kind).toBe("character");
     if (foreignOwner?.origin.kind !== "character") return;
-    const foreignEffectOrdinal = Number(foreignOwner.nextActiveEffectOrdinal);
+    const foreignEffectOrdinal = 999;
     const foreignEffectRef = battleActiveEffectExecutionRef(
       JSON.stringify({
         kind: "activeEffectOccurrence",
@@ -266,7 +267,6 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
         combatant.combatantId === spellCasterId
           ? {
               ...combatant,
-              nextActiveEffectOrdinal: foreignEffectOrdinal + 1,
               activeEffectRefs: [
                 ...combatant.activeEffectRefs,
                 foreignEffectRef,
@@ -305,7 +305,7 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
         ),
       ),
     ).toBe(true);
-    const multiattack = targetTurn.snapshot.acts.find(
+    const multiattack = discoverBattleActCandidates(targetTurn.state).find(
       (candidate) =>
         candidate.subject.tag === "action" &&
         candidate.subject.actorId === spellTargetId &&
