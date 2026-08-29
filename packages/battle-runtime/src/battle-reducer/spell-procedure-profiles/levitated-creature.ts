@@ -5,7 +5,6 @@ import { fillsBelongToDeclaredHoles } from "../fill-hole-protocol.ts";
 import { selectSingleSpellTarget } from "../single-spell-target.ts";
 import {
   ATTACK_TARGET_HOLE_ID,
-  LEVITATE_INITIAL_RISE_HOLE_ID,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
 } from "../battle-runtime-protocol.ts";
 import { spellSavingThrowOutcomeHoleId } from "../spells-damage-fills.ts";
@@ -46,6 +45,7 @@ import {
 } from "../result-helpers.ts";
 import {
   CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CONTROL_FEET,
+  CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_ID,
   CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_FEET,
   controlledVerticalSuspensionInitialRiseHole,
 } from "../controlled-vertical-suspension.ts";
@@ -213,7 +213,7 @@ function resolveControlledVerticalSuspension(
       ATTACK_TARGET_HOLE_ID,
       SPELL_CAST_REACTION_FACTS_HOLE_ID,
       spellSavingThrowOutcomeHoleId(input.invocation),
-      LEVITATE_INITIAL_RISE_HOLE_ID,
+      CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_ID,
     ])
   ) {
     return invalidResult(

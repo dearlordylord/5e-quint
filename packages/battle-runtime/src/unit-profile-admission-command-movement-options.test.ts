@@ -291,7 +291,8 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     expect(approached).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Command Approach is no longer pending for this actor.",
+      message:
+        "compelled approach behavior is no longer pending for this actor.",
     });
     expect(
       approached.snapshot.combatants
@@ -843,7 +844,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     expect(rejectedReplay).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Command Flee is no longer pending for this actor.",
+      message: "compelled flee behavior is no longer pending for this actor.",
       snapshot: snapshotBattle(afterDecline.state),
     });
     const replayed = resolveBattleSubject({
@@ -858,7 +859,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     expect(replayed).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Command Flee is no longer pending for this actor.",
+      message: "compelled flee behavior is no longer pending for this actor.",
     });
 
     const choice = reactionChoiceWithSubject(
@@ -921,7 +922,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     expect(replayedAfterAcceptedMiss).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Command Flee is no longer pending for this actor.",
+      message: "compelled flee behavior is no longer pending for this actor.",
     });
   });
 });

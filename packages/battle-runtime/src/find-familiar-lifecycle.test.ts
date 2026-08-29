@@ -1029,7 +1029,7 @@ function spellCastInterruptionReactionTriggerFactsFill(
           session,
           enemyId,
           spellSlotInvocationRef(
-            "spellCastInterruptionReaction",
+            "counterspell",
             3,
             "spellCastInterruptionReaction",
           ),
@@ -4906,7 +4906,7 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(missing).toEqual(
       Result.fail({
-        tag: "spawnedCompanionLifecycleReappearanceAdmissionIssue",
+        tag: "companionReappearanceAdmissionIssue",
         message:
           "Retained familiar form Stat Block is missing: stat_block_cat.",
       }),
@@ -4934,7 +4934,7 @@ describe("Find Familiar lifecycle", () => {
     expect(Result.isFailure(malformed)).toBe(true);
     if (Result.isSuccess(malformed)) return;
     expect(malformed.failure).toEqual({
-      tag: "spawnedCompanionLifecycleReappearanceAdmissionIssue",
+      tag: "companionReappearanceAdmissionIssue",
       message: "Battle runtime requires literal Stat Block Armor Class.",
     });
   });

@@ -127,7 +127,8 @@ describe("persistent area save/damage public boundaries", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Cloudkill Saving Throw outcome must not include area facts.",
+      message:
+        "translating persistent area Saving Throw outcome must not include area facts.",
     });
   });
 
@@ -164,7 +165,7 @@ describe("persistent area save/damage public boundaries", () => {
         tag: "invalid",
         reason: "invalidFill",
         message:
-          "Cloudkill Saving Throw outcome must match the triggering target.",
+          "translating persistent area Saving Throw outcome must match the triggering target.",
       });
     },
   );

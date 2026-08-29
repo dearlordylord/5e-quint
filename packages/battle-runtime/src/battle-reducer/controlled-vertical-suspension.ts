@@ -30,7 +30,7 @@ const CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CHANGE_HOLE_ID = holeId(
 );
 const CONTROLLED_VERTICAL_SUSPENSION_ALTITUDE_CHANGE_HOLE_INSTANCE =
   holeInstanceKey("battle:controlled-vertical-suspension:altitude-change");
-const CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_ID = holeId(
+export const CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_ID = holeId(
   "battle:controlled-vertical-suspension:initial-rise",
 );
 const CONTROLLED_VERTICAL_SUSPENSION_INITIAL_RISE_HOLE_INSTANCE =

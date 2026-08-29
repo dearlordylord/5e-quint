@@ -358,7 +358,12 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           dancingLightsUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
-          "movableLightManifestation",
+          "movableLightManifestation" &&
+        candidate.initialHoles.some(
+          (hole) =>
+            hole.kind === "movableLightPlacement" &&
+            hole.form === "combinedMediumForm",
+        ),
     );
     expect(combinedAct).toBeDefined();
     if (combinedAct === undefined) {
@@ -392,7 +397,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Dancing Lights placement must be within the spell range.",
+      message: "Movable-light placement must be within spell range.",
     });
     const resolved = resolveBattleSubject({
       state: session.state,
@@ -463,7 +468,12 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           dancingLightsUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
-          "movableLightManifestation",
+          "movableLightManifestation" &&
+        candidate.initialHoles.some(
+          (hole) =>
+            hole.kind === "movableLightPlacement" &&
+            hole.form === "combinedMediumForm",
+        ),
     );
     if (recastAct === undefined) {
       throw new Error("Expected a fresh Dancing Lights combined-form act.");
@@ -853,7 +863,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       ).toMatchObject({
         tag: "invalid",
         reason: "invalidFill",
-        message: "Dancing Lights separate form requires one to four lights.",
+        message: "Movable-light separate form requires one to four lights.",
       });
     }
     expect(
@@ -878,7 +888,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Dancing Lights placement must be within the spell range.",
+      message: "Movable-light placement must be within spell range.",
     });
     const cast = resolveBattleSubject({
       state: session.state,
@@ -1053,7 +1063,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     expect(badReposition).toMatchObject({
       tag: "invalid",
       message:
-        "Dancing Lights separate lights must stay within 20 feet of another light.",
+        "Separate movable lights must remain within their spacing limit.",
     });
   });
 
@@ -1087,7 +1097,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Dancing Lights placement does not match the selected form.",
+      message: "Movable-light placement does not match the selected form.",
     });
 
     const cast = resolveBattleSubject({
@@ -1196,7 +1206,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Dancing Lights movement requires reposition placement.",
+      message: "Movable-light movement requires reposition placement.",
     });
     const inactiveLightsState = breakBattleConcentration(
       cast.state,
@@ -1212,7 +1222,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Dancing Lights movement requires active lights from this spell.",
+        "Movable-light reposition requires an active manifestation from this spell.",
     });
     expect(
       resolveBattleSubject({
@@ -1224,7 +1234,7 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Dancing Lights movement requires active lights from this spell.",
+        "Movable-light reposition requires an active manifestation from this spell.",
     });
   });
 });

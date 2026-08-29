@@ -527,7 +527,8 @@ describe("spell target-selection public boundaries", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Spiritual Weapon cast requires a cast force-position fill.",
+      message:
+        "spatial melee spell-attack proxy cast requires a cast force-position fill.",
     });
 
     const castTarget = requireHole(cast.initialHoles, "targetChoice");
@@ -619,7 +620,8 @@ describe("spell target-selection public boundaries", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Spiritual Weapon repeat attack requires a reposition fill.",
+      message:
+        "spatial melee spell-attack proxy repeat attack requires a reposition fill.",
     });
   });
 });

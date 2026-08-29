@@ -38,6 +38,7 @@ import {
   MONK_FOCUS_PROCEDURE_QUERY,
   characterSpellProcedure,
   characterSpellProcedureExecution,
+  characterRetainedSpellProcedureExecution,
   spellInvocationMatchesExecution,
   type BattleSpellProcedureExecution,
 } from "./character-execution-admission.ts";
@@ -1174,15 +1175,23 @@ function spellPresentationSourceSpell(
   sourceProcedureRef: BattleProcedureExecutionRef,
   sourceMatches: (source: AuthoredSelectedSpellInvocation) => boolean,
 ): AuthoredSelectedSpellInvocation["spell"] | undefined {
-  const source = spellPresentationSourceForCharacter(
-    actor,
-    context,
+  const execution = characterRetainedSpellProcedureExecution(
+    actor.origin.execution,
     sourceProcedureRef,
   );
-  if (source === undefined || !sourceMatches(source.invocation)) {
+  if (execution === undefined) return undefined;
+  const matches = context.characters
+    .get(actor.combatantId)
+    ?.spellPresentationSources.filter(
+      (source) =>
+        source.procedureRef === sourceProcedureRef &&
+        spellInvocationMatchesExecution(source.invocation, execution) &&
+        sourceMatches(source.invocation),
+    );
+  if (matches?.length !== 1) {
     return undefined;
   }
-  return source.invocation.spell;
+  return matches[0]?.invocation.spell;
 }
 
 function unitForProcedureRef(

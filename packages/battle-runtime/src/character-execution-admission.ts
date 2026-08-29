@@ -22,6 +22,7 @@ export {
   characterProcedureBindingSnapshots,
   characterSpellProcedure,
   characterSpellProcedureExecution,
+  characterRetainedSpellProcedureExecution,
   characterUnitProcedure,
   characterUnitProcedureBindings,
   unitSupportProfileKind,
@@ -1857,7 +1858,11 @@ export function spellProcedureExecution(
         targeting: value.targeting,
       }),
       movableLightManifestation: (value) => {
-        const { spell: _spell, ...execution } = value;
+        const { spell: _spell, ...executionWithRetainedIdentity } = value;
+        const { sourceProcedureRef: _sourceProcedureRef, ...execution } =
+          executionWithRetainedIdentity as typeof executionWithRetainedIdentity & {
+            readonly sourceProcedureRef?: BattleProcedureExecutionRef;
+          };
         return { ...execution, spellRuleFacts };
       },
       directCondition: (value) => ({
@@ -1919,7 +1924,11 @@ export function spellProcedureExecution(
         targeting: value.targeting,
       }),
       persistentAreaSaveDamage: (value) => {
-        const { spell: _spell, ...execution } = value;
+        const { spell: _spell, ...executionWithRetainedIdentity } = value;
+        const { sourceProcedureRef: _sourceProcedureRef, ...execution } =
+          executionWithRetainedIdentity as typeof executionWithRetainedIdentity & {
+            readonly sourceProcedureRef?: BattleProcedureExecutionRef;
+          };
         return { ...execution, spellRuleFacts };
       },
       persistentAreaTrait: (value) => ({
@@ -2362,7 +2371,11 @@ export function spellProcedureExecution(
         targeting: value.targeting,
       }),
       stagedSaveCondition: (value) => {
-        const { spell: _spell, ...execution } = value;
+        const { spell: _spell, ...executionWithRetainedIdentity } = value;
+        const { sourceProcedureRef: _sourceProcedureRef, ...execution } =
+          executionWithRetainedIdentity as typeof executionWithRetainedIdentity & {
+            readonly sourceProcedureRef?: BattleProcedureExecutionRef;
+          };
         return { ...execution, spellRuleFacts };
       },
       spellAttackDamage: (value) =>
@@ -2485,7 +2498,11 @@ export function spellProcedureExecution(
       spatialMeleeSpellAttackProxy: (value) =>
         Match.value(value).pipe(
           Match.when({ operation: "createAndAttack" }, (created) => {
-            const { spell: _spell, ...execution } = created;
+            const { spell: _spell, ...executionWithRetainedIdentity } = created;
+            const { sourceProcedureRef: _sourceProcedureRef, ...execution } =
+              executionWithRetainedIdentity as typeof executionWithRetainedIdentity & {
+                readonly sourceProcedureRef?: BattleProcedureExecutionRef;
+              };
             return { ...execution, spellRuleFacts };
           }),
           Match.when({ operation: "repositionAndAttack" }, (repeat) => ({

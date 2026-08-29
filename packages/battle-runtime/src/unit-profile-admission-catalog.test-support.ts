@@ -186,8 +186,7 @@ export const continualFlameUnitId = "continual_flame";
 
 export const contagionUnitId = "contagion";
 
-export const spellCastInterruptionReactionUnitId =
-  "spellCastInterruptionReaction";
+export const spellCastInterruptionReactionUnitId = "counterspell";
 
 export const dispelMagicUnitId = "dispel_magic";
 export const dispelEvilAndGoodUnitId = "dispel_evil_and_good";
@@ -258,7 +257,7 @@ export const seeInvisibilityDurationTicks = elapsedTimeTicks(600);
 
 export const lesserRestorationUnitId = "lesser_restoration";
 
-export const thunderwaveUnitId = "selfOriginCubePush";
+export const thunderwaveUnitId = "thunderwave";
 
 export const dissonantWhispersUnitId = "dissonant_whispers";
 
@@ -306,7 +305,7 @@ export const charmPersonUnitId = "charm_person";
 
 export const chillTouchUnitId = "chill_touch";
 
-export const commandUnitId = "compelledNextTurnBehavior";
+export const commandUnitId = "command";
 
 export const commandLegendaryActorId = combatantId(
   "unit-profile-command-legendary",

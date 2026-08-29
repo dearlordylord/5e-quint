@@ -201,7 +201,6 @@ describe("Antimagic Field action interdiction", () => {
         nonOriginCombatantIds: [spellCasterId],
       }),
     );
-
     expect(
       maybeSpellAct({ session: stale, spellId: flameBladeUnitId }),
     ).toBeUndefined();
@@ -218,7 +217,7 @@ describe("Antimagic Field action interdiction", () => {
     });
   });
 
-  test("does not interdict non-spell Bonus Action spell-effect discovery or stale resolution", () => {
+  test("does not classify a suppressed non-spell Bonus Action effect as a Magic Action", () => {
     const base = spatialMeleeSpellAttackProxyRepeatBattle();
     const repeat = bonusSpellAct({
       session: base,
@@ -232,13 +231,12 @@ describe("Antimagic Field action interdiction", () => {
         nonOriginCombatantIds: [spellCasterId],
       }),
     );
-
     expect(
       maybeBonusSpellAct({
         session: stale,
         spellId: spiritualWeaponUnitId,
       }),
-    ).toBeDefined();
+    ).toBeUndefined();
     expect(
       resolveBattleSubject({
         state: stale.state,
@@ -527,7 +525,7 @@ function levitateCasterControlBattle(): BattleRuntimeSession {
     ],
   });
   if (cast.tag !== "resolved") {
-    throw new Error("Expected Levitate to resolve.");
+    throw new Error("Expected controlled vertical suspension to resolve.");
   }
   const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
   if (targetTurn.tag !== "resolved") {

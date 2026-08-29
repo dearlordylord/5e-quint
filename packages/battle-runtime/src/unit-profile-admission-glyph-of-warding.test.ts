@@ -3439,12 +3439,17 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(casterTurn.tag).toBe("resolved");
     if (casterTurn.tag !== "resolved") return;
     const repeatAct = discoverBattleActCandidates(casterTurn.state).find(
-      (candidate) =>
-        candidate.subject.tag === "bonusActionSpell" &&
-        characterSpellProcedureForSubject(
+      (candidate) => {
+        if (candidate.subject.tag !== "bonusActionSpell") return false;
+        const procedure = characterSpellProcedureForSubject(
           casterTurn.state,
           candidate.subject.procedureRef,
-        )?.procedure === "spatialMeleeSpellAttackProxy",
+        );
+        return (
+          procedure?.procedure === "spatialMeleeSpellAttackProxy" &&
+          procedure.operation === "repositionAndAttack"
+        );
+      },
     );
     expect(repeatAct).toBeDefined();
     if (repeatAct === undefined) return;
@@ -4713,7 +4718,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       }),
     ).toMatchObject({
       tag: "invalidWitness",
-      reason: "saveGatedConditionDamageRepeatSaveMismatch",
+      reason: "saveGatedConditionWithRepeatDamageRepeatSaveMismatch",
     });
   });
 

@@ -20,8 +20,8 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
-import type { ActivationPhase } from "@dnd/surface/surface/types";
 import {
+  type BattleSpellAdmissionSource,
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
@@ -29,7 +29,6 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
-import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
 import { resolveGreaseGroundHazardSpellAct as resolvePersistentAreaSaveConditionSpellAct } from "../spells-resolve-save-gates.ts";
 import type {
   SpellAdmissionContext,
@@ -52,8 +51,12 @@ type PersistentAreaSaveConditionSpellInvocation = Extract<
   { readonly procedure: "persistentAreaSaveCondition" }
 >;
 
+type PersistentAreaSaveConditionMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "ongoing_effect" }
+>;
 type PersistentAreaSaveConditionPhase = Extract<
-  ActivationPhase,
+  NonNullable<PersistentAreaSaveConditionMechanics["initialPhase"]>,
   { readonly kind: "save_gate" }
 > & {
   readonly ability: "dex";
@@ -125,10 +128,19 @@ function persistentAreaSaveConditionSpell(
   readonly durationTicks: ElapsedTimeTicks;
   readonly rangeFeet: MovementFeet;
 } | null {
-  if (spell.mechanics.family !== "activation") {
+  if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }
-  const phase = spell.mechanics.phases[0];
+  const phase = spell.mechanics.initialPhase;
+  const passiveOperation = spell.mechanics.operations.find(
+    (operation) => operation.trigger.kind === "passive",
+  );
+  const enterOperation = spell.mechanics.operations.find(
+    (operation) => operation.trigger.kind === "on_creature_enters_area",
+  );
+  const endTurnOperation = spell.mechanics.operations.find(
+    (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
+  );
   const durationTicks =
     spell.mechanics.duration.kind === "timed"
       ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.value)
@@ -141,8 +153,11 @@ function persistentAreaSaveConditionSpell(
     spell.mechanics.duration.kind !== "timed" ||
     spell.mechanics.duration.value.unit !== "minute" ||
     spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.phases.length !== 1 ||
+    spell.mechanics.operations.length !== 3 ||
     !isPersistentAreaSaveConditionPhase(phase) ||
+    passiveOperation?.effect.kind !== "area_is_difficult_terrain" ||
+    !isPersistentAreaSaveConditionEffect(enterOperation?.effect) ||
+    !isPersistentAreaSaveConditionEffect(endTurnOperation?.effect) ||
     durationTicks === null ||
     Result.isFailure(durationTicks)
   ) {
@@ -161,20 +176,34 @@ function persistentAreaSaveConditionSpell(
 }
 
 function isPersistentAreaSaveConditionPhase(
-  phase: ActivationPhase | undefined,
+  phase: PersistentAreaSaveConditionMechanics["initialPhase"],
 ): phase is PersistentAreaSaveConditionPhase {
-  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
   return (
-    phase?.kind === "save_gate" &&
-    !hasSaveGateRepeatSaves(phase) &&
-    phase.ability === "dex" &&
-    phase.dc.kind === "caster_spell_save_dc" &&
-    phase.onSuccess.kind === "none" &&
+    isPersistentAreaSaveConditionEffect(phase) &&
     phase.attachment.kind === "hole" &&
     phase.attachment.value.kind === "area" &&
     phase.attachment.value.origin.kind === "point_within_range" &&
-    phase.attachment.value.shape.kind === "cube" &&
-    phase.attachment.value.shape.sideFeet === 10 &&
+    phase.attachment.value.shape.kind === "ground_square" &&
+    phase.attachment.value.shape.sideFeet === 10
+  );
+}
+
+function isPersistentAreaSaveConditionEffect(
+  effect:
+    | PersistentAreaSaveConditionMechanics["initialPhase"]
+    | PersistentAreaSaveConditionMechanics["operations"][number]["effect"]
+    | undefined,
+): effect is Extract<
+  NonNullable<typeof effect>,
+  { readonly kind: "save_gate" }
+> {
+  const failedEffect = effect?.kind === "save_gate" ? effect.onFail : undefined;
+  return (
+    effect?.kind === "save_gate" &&
+    (!("repeatSaves" in effect) || effect.repeatSaves === undefined) &&
+    effect.ability === "dex" &&
+    effect.dc.kind === "caster_spell_save_dc" &&
+    effect.onSuccess.kind === "none" &&
     failedEffect?.kind === "apply_condition" &&
     failedEffect.condition === "prone"
   );

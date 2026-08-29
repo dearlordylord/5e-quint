@@ -398,6 +398,19 @@ export function characterSpellProcedureExecution(
     : undefined;
 }
 
+export function characterRetainedSpellProcedureExecution(
+  execution: CharacterExecutionState,
+  procedureRef: BattleProcedureExecutionRef,
+): SpellProcedureExecution | undefined {
+  const binding = execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === procedureRef,
+  );
+  return binding?.procedure.kind === "spellInvocation" ||
+    binding?.procedure.kind === "unavailableSpellInvocation"
+    ? binding.procedure.execution
+    : undefined;
+}
+
 function executableSpellProcedureFromLiveEffects(
   execution: CharacterExecutionState,
   stored: BattleStoredSpellProcedureExecution,
@@ -413,7 +426,7 @@ function executableSpellProcedureFromLiveEffects(
     stored.action === "transfer"
   ) {
     if (liveActor === undefined) return undefined;
-    const source = characterSpellProcedureExecution(
+    const source = characterRetainedSpellProcedureExecution(
       execution,
       stored.activeEffectSourceProcedureRef,
     );
@@ -450,7 +463,7 @@ function executableSpellProcedureFromLiveEffects(
   }
   if (stored.procedure === "objectContactDamageRepeat") {
     if (liveActor === undefined) return undefined;
-    const source = characterSpellProcedureExecution(
+    const source = characterRetainedSpellProcedureExecution(
       execution,
       stored.activeEffectSourceProcedureRef,
     );
@@ -486,7 +499,7 @@ function executableSpellProcedureFromLiveEffects(
     stored.operation === "repositionAndAttack"
   ) {
     if (liveActor === undefined) return undefined;
-    const source = characterSpellProcedureExecution(
+    const source = characterRetainedSpellProcedureExecution(
       execution,
       stored.activeEffectSourceProcedureRef,
     );
