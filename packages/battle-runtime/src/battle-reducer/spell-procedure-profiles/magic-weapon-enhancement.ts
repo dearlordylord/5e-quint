@@ -13,10 +13,10 @@ import type { Attachment, EffectAtom } from "@dnd/surface/surface/types";
 import { Result } from "effect";
 
 import {
-  MAGIC_WEAPON_ENHANCEMENT_BONUSES,
+  WEAPON_ATTACK_DAMAGE_ENHANCEMENT_BONUSES,
   type BattleActDiscoveryCandidate,
   type BattleActiveEffectExpiration,
-  type BattleWeaponAttackDamageEnhancementTargetItemFact,
+  type BattleWeaponEnhancementTargetItemFact,
   type BattleResolutionResult,
   type BattleState,
   type WeaponAttackDamageEnhancementBonus,
@@ -193,7 +193,9 @@ function weaponAttackDamageEnhancementBonusFromNumber(
 function isWeaponAttackDamageEnhancementBonus(
   value: number,
 ): value is WeaponAttackDamageEnhancementBonus {
-  return MAGIC_WEAPON_ENHANCEMENT_BONUSES.some((bonus) => bonus === value);
+  return WEAPON_ATTACK_DAMAGE_ENHANCEMENT_BONUSES.some(
+    (bonus) => bonus === value,
+  );
 }
 
 function discoverWeaponAttackDamageEnhancementCastAct(
@@ -320,7 +322,7 @@ function resolveWeaponAttackDamageEnhancement(
 
 function battleWeaponAttackDamageEnhancementTargetItemIsHeldWeapon(
   state: BattleState,
-  targetItem: BattleWeaponAttackDamageEnhancementTargetItemFact,
+  targetItem: BattleWeaponEnhancementTargetItemFact,
 ): boolean {
   const holder = state.combatants.get(targetItem.holderCombatantId);
   if (!isCharacterBattleCreatureState(holder)) {

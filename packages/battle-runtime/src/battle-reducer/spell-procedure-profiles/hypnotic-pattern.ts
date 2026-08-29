@@ -498,14 +498,14 @@ function applySaveGatedAreaControlControlEffects(
     }
     const replacing = target.activeEffects.filter(
       (effect) =>
-        effect.kind === "saveGatedAreaControlControl" &&
+        effect.kind === "saveGatedAreaControl" &&
         effect.sourceProcedureRef === invocation.sourceProcedureRef &&
         effect.sourceCombatantId === actorId,
     );
     const allocation = allocateBattleEffectOccurrenceForCreature({
       owner: target,
       effect: {
-        kind: "saveGatedAreaControlControl" as const,
+        kind: "saveGatedAreaControl" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
         conditionHadNonSpellCharmedSource:

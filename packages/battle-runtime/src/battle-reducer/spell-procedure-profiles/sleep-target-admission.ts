@@ -65,6 +65,29 @@ type StagedSaveConditionPhase = Extract<
       };
     };
   };
+  readonly autoSuccessIfTarget: {
+    readonly kind: "any";
+    readonly predicates: readonly [
+      { readonly kind: "does_not_sleep" },
+      {
+        readonly kind: "has_condition_immunity";
+        readonly condition: "exhaustion";
+      },
+    ];
+  };
+  readonly onFail: {
+    readonly kind: "composite";
+    readonly effects: readonly [
+      { readonly kind: "apply_condition"; readonly condition: "incapacitated" },
+      {
+        readonly kind: "target_effect_escape_action";
+        readonly actor: "another_creature";
+        readonly cost: "action";
+        readonly method: "shake_awake";
+        readonly outcome: "end_current_effect";
+      },
+    ];
+  };
 };
 
 type StagedSaveConditionResolveInput =
@@ -104,6 +127,8 @@ export function supportedPreparedStagedSaveConditionProfile(
           dc: sleep.phase.dc,
           targeting: sleep.targeting,
           rangeFeet: sleep.rangeFeet,
+          automaticSuccessPredicates: sleep.automaticSuccessPredicates,
+          escapeAction: sleep.escapeAction,
         },
       ];
     },
@@ -119,6 +144,16 @@ function stagedSaveConditionSpell(
     { readonly kind: "pointOriginSphere" }
   >;
   readonly rangeFeet: MovementFeet;
+  readonly automaticSuccessPredicates: readonly [
+    { readonly kind: "doesNotSleep" },
+    { readonly kind: "conditionImmunity"; readonly condition: "exhaustion" },
+  ];
+  readonly escapeAction: {
+    readonly kind: "endCurrentEffect";
+    readonly actor: "anotherCreature";
+    readonly cost: "action";
+    readonly method: "shakeAwake";
+  };
 } | null {
   if (spell.mechanics.family !== "activation") {
     return null;
@@ -151,6 +186,16 @@ function stagedSaveConditionSpell(
       radiusFeet: movementFeet(phase.attachment.value.shape.radiusFeet),
     },
     rangeFeet: movementFeet(spell.mechanics.range.feet),
+    automaticSuccessPredicates: [
+      { kind: "doesNotSleep" },
+      { kind: "conditionImmunity", condition: "exhaustion" },
+    ],
+    escapeAction: {
+      kind: "endCurrentEffect",
+      actor: "anotherCreature",
+      cost: "action",
+      method: "shakeAwake",
+    },
   };
 }
 
@@ -172,8 +217,21 @@ function isStagedSaveConditionPhase(
     phase.attachment.value.shape.kind === "sphere" &&
     phase.attachment.value.shape.radiusFeet ===
       SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET &&
-    phase.onFail.kind === "apply_condition" &&
-    phase.onFail.condition === "incapacitated" &&
+    phase.autoSuccessIfTarget.kind === "any" &&
+    phase.autoSuccessIfTarget.predicates.length === 2 &&
+    phase.autoSuccessIfTarget.predicates[0]?.kind === "does_not_sleep" &&
+    phase.autoSuccessIfTarget.predicates[1]?.kind ===
+      "has_condition_immunity" &&
+    phase.autoSuccessIfTarget.predicates[1].condition === "exhaustion" &&
+    phase.onFail.kind === "composite" &&
+    phase.onFail.effects.length === 2 &&
+    phase.onFail.effects[0]?.kind === "apply_condition" &&
+    phase.onFail.effects[0].condition === "incapacitated" &&
+    phase.onFail.effects[1]?.kind === "target_effect_escape_action" &&
+    phase.onFail.effects[1].actor === "another_creature" &&
+    phase.onFail.effects[1].cost === "action" &&
+    phase.onFail.effects[1].method === "shake_awake" &&
+    phase.onFail.effects[1].outcome === "end_current_effect" &&
     repeatSave !== undefined &&
     repeatSave.cadence === "end_of_target_turn" &&
     repeatSave.rollMode === undefined &&
@@ -240,6 +298,19 @@ const StagedSaveConditionInvocationSchema = spellProcedureExecutionSchema(
       radiusFeet: MovementFeet,
     }),
     rangeFeet: MovementFeet,
+    automaticSuccessPredicates: Schema.Tuple([
+      Schema.Struct({ kind: Schema.Literal("doesNotSleep") }),
+      Schema.Struct({
+        kind: Schema.Literal("conditionImmunity"),
+        condition: Schema.Literal("exhaustion"),
+      }),
+    ]),
+    escapeAction: Schema.Struct({
+      kind: Schema.Literal("endCurrentEffect"),
+      actor: Schema.Literal("anotherCreature"),
+      cost: Schema.Literal("action"),
+      method: Schema.Literal("shakeAwake"),
+    }),
   }),
 );
 export const stagedSaveConditionProfile = {

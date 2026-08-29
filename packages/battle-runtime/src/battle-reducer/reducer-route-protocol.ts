@@ -4,7 +4,7 @@ export type BattleReducerRouteSubjectFamily =
   | "activeFormLifecycle"
   | "battleAction"
   | "concentrationTeardown"
-  | "commandEffect"
+  | "compelledBehaviorEffect"
   | "charmSourceDamageBreak"
   | "creatureTypeTargetAdmission"
   | "deathSavingThrow"

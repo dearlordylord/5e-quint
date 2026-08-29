@@ -481,14 +481,14 @@ function validateSlowAreaWitness(
     return "Slow requires a point-origin Cube area witness.";
   }
   const area = savingThrowOutcomes.area;
-  if (area.kind !== "slowArea") {
-    return "Slow requires explicit Cube membership and caster-choice witnesses.";
+  if (area.kind !== "saveGatedTurnConstraintBundleArea") {
+    return "The turn-constraint procedure requires explicit Cube membership and caster-choice witnesses.";
   }
   if (area.cubeSideFeet !== SLOW_ACTIVE_PENALTIES_CUBE_SIDE_FEET) {
-    return "Slow requires a 40-foot Cube witness.";
+    return "The turn-constraint procedure requires a 40-foot Cube witness.";
   }
   if (area.affectedTargetIds.length > maxTargets) {
-    return "Slow Cube affected targets must not exceed six creatures.";
+    return "The turn-constraint Cube must not exceed six affected creatures.";
   }
   const outcomeTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
@@ -498,23 +498,23 @@ function validateSlowAreaWitness(
     affectedTargetIds.size !== outcomeTargetIds.length ||
     outcomeTargetIds.some((targetId) => !affectedTargetIds.has(targetId))
   ) {
-    return "Slow Cube affected targets must match its Saving Throw outcomes.";
+    return "The turn-constraint Cube targets must match its Saving Throw outcomes.";
   }
   const witnessTargetIds = new Set<CombatantId>();
   for (const witness of area.affectedCreatureWitnesses) {
     if (witnessTargetIds.has(witness.targetId)) {
-      return "Slow Cube witnesses must not duplicate a target.";
+      return "Turn-constraint Cube witnesses must not duplicate a target.";
     }
     witnessTargetIds.add(witness.targetId);
     if (witness.inCube !== true || witness.chosenByCaster !== true) {
-      return "Slow affected-creature witnesses must prove Cube membership and caster choice.";
+      return "Affected-creature witnesses must prove Cube membership and source choice.";
     }
   }
   if (
     witnessTargetIds.size !== outcomeTargetIds.length ||
     outcomeTargetIds.some((targetId) => !witnessTargetIds.has(targetId))
   ) {
-    return "Slow requires a Cube and caster-choice witness for every affected target.";
+    return "The turn-constraint procedure requires a Cube and source-choice witness for every affected target.";
   }
   return null;
 }

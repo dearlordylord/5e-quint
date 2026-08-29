@@ -23,7 +23,7 @@ import {
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
   MIRROR_IMAGE_DUPLICATE_ROLL_HOLE_KEY_PREFIX,
   MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
-  type DuplicateHitInterceptionCount,
+  type MirrorImageDuplicateCount as DuplicateHitInterceptionCount,
 } from "./domain-constants.ts";
 
 type DuplicateHitInterception = Extract<
