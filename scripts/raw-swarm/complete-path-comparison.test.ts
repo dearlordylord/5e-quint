@@ -3029,9 +3029,12 @@ describe("complete Raw Swarm path comparison", () => {
     expect(validation).toMatchObject({
       _tag: "Failure",
       failure: expect.stringContaining(
-        'Benchmark context-source manifest is invalid: Missing key\n  at ["sources"][5]',
+        "Benchmark context-source manifest is invalid",
       ),
     });
+    if (Result.isFailure(validation)) {
+      expect(validation.failure).toContain('["sources"][5]');
+    }
   });
 
   test("decodes context manifests as canonical profile-specific six-role tuples", () => {

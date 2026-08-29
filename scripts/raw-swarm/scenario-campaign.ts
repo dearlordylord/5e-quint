@@ -1,5 +1,12 @@
 import { createHash, randomUUID } from "node:crypto";
-import { JsonSchema, Match, Result, Schema, Tuple } from "effect";
+import {
+  Array as EffectArray,
+  JsonSchema,
+  Match,
+  Result,
+  Schema,
+  Tuple,
+} from "effect";
 
 import type { ArtifactSha256 } from "./artifact-authority-schema.ts";
 
@@ -213,22 +220,15 @@ export const ScenarioSdkCapabilityAdmissionSchema = Schema.Union([
 ]);
 
 const ScenarioContentSdkCapabilityAdmissionSchema = Schema.Union([
-  Schema.Struct({
-    ...AvailableOnlyScenarioContentAdmissionSchema.fields,
-    ...SupportedOnlyScenarioSdkCapabilityAdmissionSchema.fields,
-  }),
-  Schema.Struct({
-    ...AvailableOnlyScenarioContentAdmissionSchema.fields,
-    ...ProbeUnsupportedCapabilityScenarioSdkCapabilityAdmissionSchema.fields,
-  }),
-  Schema.Struct({
-    ...ProbeUnavailableContentScenarioContentAdmissionSchema.fields,
-    ...SupportedOnlyScenarioSdkCapabilityAdmissionSchema.fields,
-  }),
-  Schema.Struct({
-    ...ProbeUnavailableContentScenarioContentAdmissionSchema.fields,
-    ...ProbeUnsupportedCapabilityScenarioSdkCapabilityAdmissionSchema.fields,
-  }),
+  ...EffectArray.cartesianWith(
+    ScenarioContentAdmissionSchema.members,
+    ScenarioSdkCapabilityAdmissionSchema.members,
+    (contentAdmission, sdkCapabilityAdmission) =>
+      Schema.Struct({
+        ...contentAdmission.fields,
+        ...sdkCapabilityAdmission.fields,
+      }),
+  ),
 ]);
 
 const SafeScenarioPolicyReviewSchema = Schema.Struct({

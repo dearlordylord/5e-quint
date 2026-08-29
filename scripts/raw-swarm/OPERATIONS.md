@@ -199,6 +199,14 @@ author prompt names only the operations and declaration imports needed for its
 role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
+The Effect 4 public declaration graph is a reviewed deterministic measurement:
+512 declaration files and 9,997,813 bytes. The file gate admits exactly those
+512 files, so any added file requires review. The byte gate is the smallest
+round binary-megabyte bound above the measurement, 10 MiB, leaving 487,947
+bytes of explicit margin. Deterministic verification asserts the measured
+graph, exact-at-cap acceptance, and cap-plus-one rejection for both limits;
+raising either bound requires a new measured graph and review.
+
 The current tracer post-play review keeps this bounded context inline and is
 commandless; its review-invocation manifest intentionally does not admit a
 legacy context-read exception. The fixed benchmark's historical

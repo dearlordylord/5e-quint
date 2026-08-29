@@ -1299,10 +1299,7 @@ function runLaneHygiene() {
 
   const qualityBody = scripts["quality:body"];
   assert.match(qualityBody, /pnpm check:raw-swarm-lane-hygiene/);
-  assert.doesNotMatch(
-    qualityBody,
-    /pnpm (?:run )?check:raw-swarm-deterministic(?:\s|$)/,
-  );
+  assert.doesNotMatch(qualityBody, /check:raw-swarm-deterministic/);
   assert.doesNotMatch(
     qualityBody,
     /raw-swarm:model|check:raw-swarm-sdk-player/,
