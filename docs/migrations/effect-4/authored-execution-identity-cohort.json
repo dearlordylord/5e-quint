@@ -1,0 +1,632 @@
+{
+  "schemaVersion": 1,
+  "auditRevision": "bb03daff98938b993661e7b9ad19481f0572cd5f",
+  "surfaceSpellRecordCount": 267,
+  "spellProcedureKeyCount": 80,
+  "normalizedPrefixProcedureKeyCount": 35,
+  "normalizedPrefixProcedureRecordCount": 32,
+  "tokenizedProcedureLexicalIntersectionCount": 40,
+  "authoredDerivedProcedureIdentityCount": 33,
+  "genericProcedureLexicalCollisionCount": 7,
+  "activeEffectLexicalIntersectionCount": 35,
+  "authoredDerivedActiveEffectIdentityCount": 30,
+  "runtimeCommandLexicalIntersectionCount": 20,
+  "authoredDerivedRuntimeCommandIdentityCount": 18,
+  "exactDisplayNameLiteralCounts": {
+    "executionDiagnostics": 377,
+    "presentationLiterals": 21,
+    "admissionLiterals": 57
+  },
+  "broaderProductionStringScan": {
+    "authoredRecordNameCount": 58,
+    "distinctLiteralValueCount": 616,
+    "occurrenceCount": 2511,
+    "note": "This conservative scan includes generic rules-word collisions. The AST gate specified in the companion audit narrows enforcement to execution discriminants, registry keys, protocol identities, and authored-title messages."
+  },
+  "procedureCohort": [
+    {
+      "record": "antimagic_field",
+      "current": ["antimagicFieldOngoingSpellSuppression"],
+      "family": "magicSuppressionEmanation"
+    },
+    {
+      "record": "blur",
+      "current": ["blurAttackRollDefense"],
+      "family": "perceptionGatedAttackRollDefense"
+    },
+    {
+      "record": "cloudkill",
+      "current": ["cloudkillAreaHazard"],
+      "family": "persistentAreaSaveDamage"
+    },
+    {
+      "record": "command",
+      "current": ["command"],
+      "family": "compelledNextTurnBehavior"
+    },
+    {
+      "record": "counterspell",
+      "current": ["counterspell"],
+      "family": "spellCastInterruptionReaction"
+    },
+    {
+      "record": "dancing_lights",
+      "current": [
+        "dancingLightsCombinedCast",
+        "dancingLightsReposition",
+        "dancingLightsSeparateCast"
+      ],
+      "family": "movableLightManifestation"
+    },
+    {
+      "record": "dragons_breath",
+      "current": ["dragonsBreathInitial"],
+      "family": "grantedAreaSaveDamageAction"
+    },
+    {
+      "record": "expeditious_retreat",
+      "current": ["expeditiousRetreatDash"],
+      "family": "grantedAlternateActionCost"
+    },
+    {
+      "record": "feather_fall",
+      "current": ["featherFallMitigation"],
+      "family": "fallingCreatureMitigationReaction"
+    },
+    {
+      "record": "flaming_sphere",
+      "current": ["flamingSphere"],
+      "family": "persistentAreaSaveDamage"
+    },
+    {
+      "record": "fog_cloud",
+      "current": ["fogCloudObscurement"],
+      "family": "persistentAreaTrait"
+    },
+    {
+      "record": "grease",
+      "current": ["greaseGroundHazard"],
+      "family": "persistentAreaSaveCondition"
+    },
+    {
+      "record": "gust_of_wind",
+      "current": ["gustOfWindLine"],
+      "family": "directionalPersistentArea"
+    },
+    {
+      "record": "haste",
+      "current": ["hastePositive"],
+      "family": "compositeTargetBuffWithAftermath"
+    },
+    {
+      "record": "hideous_laughter",
+      "current": ["hideousLaughter"],
+      "family": "saveGatedConditionWithRepeat"
+    },
+    {
+      "record": "hypnotic_pattern",
+      "current": ["hypnoticPattern"],
+      "family": "saveGatedAreaControl"
+    },
+    {
+      "record": "insect_plague",
+      "current": ["insectPlagueAreaHazard"],
+      "family": "persistentAreaSaveDamage"
+    },
+    {
+      "record": "jump",
+      "current": ["jumpMovementReplacement"],
+      "family": "fixedCostMovementReplacement"
+    },
+    {
+      "record": "levitate",
+      "current": ["levitatedCreature"],
+      "family": "controlledVerticalSuspension"
+    },
+    {
+      "record": "magic_weapon",
+      "current": ["magicWeaponEnhancement"],
+      "family": "weaponAttackDamageEnhancement"
+    },
+    {
+      "record": "mirror_image",
+      "current": ["mirrorImageHitInterception"],
+      "family": "duplicateHitInterception"
+    },
+    {
+      "record": "moonbeam",
+      "current": ["moonbeam"],
+      "family": "persistentAreaSaveDamage"
+    },
+    {
+      "record": "sanctuary",
+      "current": ["sanctuaryTargetingInterdiction"],
+      "family": "targetingSaveInterdiction"
+    },
+    {
+      "record": "shield",
+      "current": ["shieldReaction"],
+      "family": "triggeredArmorDefense"
+    },
+    {
+      "record": "sleep",
+      "current": ["sleepTargetAdmission"],
+      "family": "stagedSaveCondition"
+    },
+    {
+      "record": "sleet_storm",
+      "current": ["sleetStormAreaHazard"],
+      "family": "persistentAreaSaveComposite"
+    },
+    {
+      "record": "slow",
+      "current": ["slowActivePenalties"],
+      "family": "saveGatedTurnConstraintBundle"
+    },
+    {
+      "record": "spike_growth",
+      "current": ["spikeGrowthMovementHazard"],
+      "family": "areaMovementDistanceDamage"
+    },
+    {
+      "record": "spiritual_weapon",
+      "current": ["spiritualWeaponAttackProxy", "spiritualWeaponRepeatAttack"],
+      "family": "spatialMeleeSpellAttackProxy"
+    },
+    {
+      "record": "thaumaturgy",
+      "current": ["thaumaturgyBoomingVoice"],
+      "family": "temporaryAbilityCheckRollMode"
+    },
+    {
+      "record": "warding_bond",
+      "current": ["wardingBond"],
+      "family": "linkedDefenseResistanceDamageShare"
+    },
+    {
+      "record": "web",
+      "current": ["webRestraintHazard"],
+      "family": "persistentAreaSaveConditionEscape"
+    }
+  ],
+  "authoredDerivedProtocolIdentities": {
+    "antimagic_field": [
+      "antimagicFieldAffectedOngoingSpellEffect",
+      "antimagicFieldAura",
+      "antimagicFieldAuraMembership",
+      "antimagicFieldOngoingSpellSuppression",
+      "antimagicFieldSelfEmanation",
+      "antimagicFieldTransit"
+    ],
+    "blur": ["blurAttackRollDefense"],
+    "cloudkill": [
+      "cloudkillAreaHazard",
+      "cloudkillAreaHazardSave",
+      "cloudkillMovement",
+      "cloudkillMovementSaveDamageSequence",
+      "cloudkillSphereArea",
+      "disperseCloudkill"
+    ],
+    "command": [
+      "command",
+      "commandApproach",
+      "commandApproachShortestDirectRouteTowardCaster",
+      "commandDrop",
+      "commandEffect",
+      "commandFlee",
+      "commandFleeFastestAvailableRouteAwayFromCaster",
+      "commandGrovel",
+      "commandHalt",
+      "commandOptionChoice",
+      "commandPending"
+    ],
+    "counterspell": [
+      "counterspell",
+      "counterspellTriggerCasterVisibleWithinRange"
+    ],
+    "dancing_lights": [
+      "dancingLights",
+      "dancingLightsCombinedCast",
+      "dancingLightsPlacement",
+      "dancingLightsReposition",
+      "dancingLightsSeparateCast"
+    ],
+    "dragons_breath": [
+      "dragonsBreath",
+      "dragonsBreathExhale",
+      "dragonsBreathInitial"
+    ],
+    "expeditious_retreat": ["expeditiousRetreatDash"],
+    "feather_fall": [
+      "featherFallMitigation",
+      "featherFallTargetFallingWithinRange",
+      "featherFallTriggerSelfOrVisibleCreatureWithinRange"
+    ],
+    "flaming_sphere": ["flamingSphere", "flamingSphereArea"],
+    "fog_cloud": ["disperseFogCloud", "fogCloudArea", "fogCloudObscurement"],
+    "grease": [
+      "greaseGroundArea",
+      "greaseGroundHazard",
+      "greaseGroundHazardSave"
+    ],
+    "gust_of_wind": [
+      "gustOfWindLine",
+      "gustOfWindLineArea",
+      "gustOfWindLineDirectionChange",
+      "gustOfWindLineDirectionChoice",
+      "gustOfWindLineMovement",
+      "gustOfWindLineSave"
+    ],
+    "haste": ["hastePositive"],
+    "hideous_laughter": [
+      "hideousLaughter",
+      "hideousLaughterDamageRepeatSaveMismatch",
+      "hideousLaughterDamageRepeatSaves",
+      "hideousLaughterRepeatSave"
+    ],
+    "hypnotic_pattern": [
+      "hypnoticPattern",
+      "hypnoticPatternArea",
+      "hypnoticPatternControl",
+      "hypnoticPatternShakeAwakeActorWithin5Feet",
+      "shakeAwakeFromHypnoticPattern"
+    ],
+    "insect_plague": [
+      "insectPlague",
+      "insectPlagueAreaHazard",
+      "insectPlagueAreaHazardSave",
+      "insectPlagueHazard",
+      "insectPlagueSphereArea"
+    ],
+    "magic_weapon": [
+      "magicWeaponEnhancement",
+      "magicWeaponTargetItem",
+      "spellMagicWeaponEnhancement"
+    ],
+    "mirror_image": [
+      "attackAttackerUnaffectedByMirrorImageWithSense",
+      "mirrorImageDuplicates",
+      "mirrorImageHitInterception"
+    ],
+    "moonbeam": ["moonbeam", "moonbeamCylinderArea", "moonbeamCylinderExit"],
+    "sanctuary": [
+      "sanctuary-interdiction",
+      "sanctuaryInterdictionOutcome",
+      "sanctuaryTargetingInterdiction",
+      "sanctuaryWard"
+    ],
+    "shield": ["shieldReaction"],
+    "sleep": [
+      "shakeAwakeFromSleep",
+      "sleepPendingRepeatSave",
+      "sleepShakeAwakeActorWithin5Feet",
+      "sleepTargetAdmission",
+      "sleepUnconscious"
+    ],
+    "sleet_storm": [
+      "sleetStormAreaHazard",
+      "sleetStormAreaHazardSave",
+      "sleetStormCylinderArea",
+      "sleetStormHazard"
+    ],
+    "slow": [
+      "slowActivePenalties",
+      "slowArea",
+      "slowSomaticSpellFailureOutcome"
+    ],
+    "spike_growth": [
+      "spikeGrowthArea",
+      "spikeGrowthHazard",
+      "spikeGrowthMovementHazard"
+    ],
+    "spiritual_weapon": [
+      "spiritualWeapon",
+      "spiritualWeaponAttackProxy",
+      "spiritualWeaponForcePosition",
+      "spiritualWeaponRepeatAttack",
+      "spiritualWeaponTargetWithinForceReach"
+    ],
+    "thaumaturgy": [
+      "thaumaturgyActiveOneMinuteEffectCount",
+      "thaumaturgyBoomingVoice"
+    ],
+    "warding_bond": [
+      "wardingBond",
+      "wardingBondCreaturesDistance",
+      "wardingBondPairedWornPlatinumRings",
+      "wardingBondSeparation"
+    ],
+    "web": [
+      "webAreaHazard",
+      "webAreaRemoved",
+      "webCubeArea",
+      "webRestrainedNoLongerInArea",
+      "webRestraintHazard",
+      "webRestraintSave"
+    ],
+    "faerie_fire": [
+      "faerieFireArea",
+      "faerieFireObjectOutline",
+      "faerieFireOutline"
+    ],
+    "find_familiar": [
+      "findFamiliar",
+      "findFamiliarConnection",
+      "findFamiliarReappearanceAdmissionIssue",
+      "findFamiliarSharedSenses",
+      "findFamiliarTouchSpell",
+      "findFamiliarTouchSpellTarget",
+      "findFamiliarWithin100FeetOfOwner",
+      "pactOfTheChainFindFamiliar"
+    ],
+    "shining_smite": ["shiningSmiteIllumination"]
+  },
+  "genericLexicalCollisions": [
+    "chosenDamageResistance",
+    "damageResistance",
+    "heldLight",
+    "heldLightHurl",
+    "objectLight",
+    "jumpMovementReplacement",
+    "levitatedCreature",
+    "spellLevitatedCreature",
+    "magicalDarknessPointOrigin",
+    "runtimeCommand",
+    "shield",
+    "doesNotSleep",
+    "weaponMasterySlow"
+  ],
+  "additionalExecutionIdentityCohort": [
+    {
+      "record": "find_familiar",
+      "family": "spawnedCompanionLifecycle",
+      "identityClasses": ["activeEffect", "subject", "hole", "message"]
+    },
+    {
+      "record": "darkness",
+      "family": "persistentAreaTrait",
+      "identityClasses": ["fill", "message"]
+    },
+    {
+      "record": "darkvision",
+      "family": "observerSenseGrant",
+      "identityClasses": ["effectMode"]
+    },
+    {
+      "record": "faerie_fire",
+      "family": "saveGatedTargetProjection",
+      "identityClasses": ["activeEffect", "hole"]
+    },
+    {
+      "record": "shining_smite",
+      "family": "afterHitDamageAndIllumination",
+      "identityClasses": ["activeEffect"]
+    },
+    {
+      "record": "sorcerous_burst",
+      "family": "chosenDamageSpellAttack",
+      "identityClasses": ["hole"]
+    },
+    {
+      "record": "thunderwave",
+      "family": "areaSaveDamageForcedMovement",
+      "identityClasses": ["message"]
+    },
+    {
+      "record": "shatter",
+      "family": "areaSaveDamage",
+      "identityClasses": ["message"]
+    },
+    {
+      "record": "fireball",
+      "family": "areaSaveDamage",
+      "identityClasses": ["message"]
+    },
+    {
+      "record": "ice_knife",
+      "family": "attackThenAreaSaveDamage",
+      "identityClasses": ["message"]
+    },
+    {
+      "record": "chromatic_orb",
+      "family": "chainedSpellAttackDamage",
+      "identityClasses": ["message"]
+    },
+    {
+      "record": "protection_from_evil_and_good",
+      "family": "creatureTypeProtection",
+      "identityClasses": ["message"]
+    },
+    {
+      "record": "dissonant_whispers",
+      "family": "saveDamageForcedReactionMovement",
+      "identityClasses": ["message"]
+    },
+    {
+      "record": "hellish_rebuke",
+      "family": "afterDamageSaveReaction",
+      "identityClasses": ["message"]
+    },
+    {
+      "record": "magic_missile",
+      "family": "directMultiTargetDamage",
+      "identityClasses": ["effectPredicate", "message"]
+    },
+    {
+      "record": "dispel_magic",
+      "family": "ongoingSpellEnd",
+      "identityClasses": ["message"]
+    },
+    {
+      "record": "see_invisibility",
+      "family": "observerSightGrant",
+      "identityClasses": ["message"]
+    },
+    {
+      "record": "water_breathing",
+      "family": "respirationCapabilityGrant",
+      "identityClasses": ["effectMode"]
+    },
+    {
+      "record": "calm_emotions",
+      "family": "saveGatedConditionImmunity",
+      "identityClasses": ["message"]
+    },
+    {
+      "record": "entangle",
+      "family": "areaSaveConditionEscape",
+      "identityClasses": ["message"]
+    },
+    {
+      "record": "light",
+      "family": "illumination",
+      "identityClasses": ["lexicalCollision"]
+    },
+    {
+      "record": "fly",
+      "family": "flight",
+      "identityClasses": ["lexicalCollision"]
+    },
+    {
+      "record": "heal",
+      "family": "hitPointRestoration",
+      "identityClasses": ["lexicalCollision"]
+    },
+    {
+      "record": "harm",
+      "family": "harmfulObjectPredicate",
+      "identityClasses": ["lexicalCollision"]
+    },
+    {
+      "record": "knock",
+      "family": "knockOut",
+      "identityClasses": ["lexicalCollision"]
+    },
+    {
+      "record": "resistance",
+      "family": "damageResistance",
+      "identityClasses": ["lexicalCollision"]
+    }
+  ],
+  "requiredSurfaceCorrections": [
+    {
+      "record": "cloudkill",
+      "facts": [
+        "on_caster_turn_start -> move_area(10, away_from_caster)",
+        "on_area_moves_into_creature_space -> save_gate",
+        "one nonempty once_per_turn limitGroup shared by initialPhase and recurring save operations"
+      ]
+    },
+    {
+      "record": "insect_plague",
+      "facts": [
+        "one nonempty once_per_turn limitGroup shared by initialPhase and recurring save operations"
+      ]
+    },
+    {
+      "record": "grease",
+      "facts": [
+        "durable difficult-terrain operation",
+        "creature-entry save operation",
+        "creature-end-turn save operation",
+        "ground-footprint shape instead of a cube approximation"
+      ]
+    },
+    {
+      "record": "find_familiar",
+      "facts": [
+        "typed touch-spell proxy",
+        "exact 30-foot recall placement",
+        "recast form-change lifecycle"
+      ]
+    },
+    {
+      "record": "sleep",
+      "facts": [
+        "non-sleeper or Exhaustion-immunity predicate",
+        "nearby-creature shake-awake action"
+      ]
+    },
+    {
+      "record": "thaumaturgy",
+      "facts": ["typed selected mode", "three-active-one-minute-effect limit"]
+    }
+  ],
+  "implementationLanes": {
+    "integrator": {
+      "owns": [
+        "packages/battle-runtime/src/active-effect/**",
+        "packages/battle-runtime/src/procedure-execution/spell-procedure-execution.ts",
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-subjects.ts",
+        "packages/battle-runtime/src/battle-protocol-kinds.ts",
+        "packages/battle-runtime/src/battle-trace-contract.ts",
+        "packages/battle-runtime/src/battle-act-composition.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/registry.ts",
+        "packages/battle-runtime/src/battle-reducer/{dispatcher,battle-discovery,spells-discovery,spells-resolve,spells-resolve-fill-set,spells-targeting,spell-execution-facts,creature-state-execution}.ts",
+        "packages/battle-runtime/src/character-execution-admission.ts",
+        "scripts/check-authored-id-dispatch-boundary.cjs",
+        "plans/rules-kernel-coverage/**",
+        "plans/unit-profile-coverage/**"
+      ]
+    },
+    "spatial": {
+      "families": [
+        "persistentAreaSaveDamage",
+        "persistentAreaTrait",
+        "persistentAreaSaveCondition",
+        "persistentAreaSaveComposite",
+        "persistentAreaSaveConditionEscape",
+        "directionalPersistentArea",
+        "areaMovementDistanceDamage",
+        "magicSuppressionEmanation"
+      ],
+      "owns": [
+        "the corresponding Surface records and admission profiles",
+        "packages/battle-runtime/src/battle-reducer/{persistent-area-save-damage,persistent-spatial-spell-discovery,persistent-spatial-spell-procedures,area-wind-strength,spatial-effect-routes,antimagic-field-*}.ts",
+        "the corresponding focused tests, MBT tests, and QNT modules"
+      ]
+    },
+    "controlLifecycle": {
+      "families": [
+        "perceptionGatedAttackRollDefense",
+        "compelledNextTurnBehavior",
+        "grantedAlternateActionCost",
+        "fallingCreatureMitigationReaction",
+        "compositeTargetBuffWithAftermath",
+        "saveGatedConditionWithRepeat",
+        "saveGatedAreaControl",
+        "fixedCostMovementReplacement",
+        "controlledVerticalSuspension",
+        "targetingSaveInterdiction",
+        "stagedSaveCondition",
+        "saveGatedTurnConstraintBundle",
+        "linkedDefenseResistanceDamageShare"
+      ],
+      "owns": [
+        "the corresponding admission profiles",
+        "packages/battle-runtime/src/battle-reducer/{command-*,sanctuary-targeting-interdiction,warding-bond,slow-active-penalties-facts}.ts",
+        "the corresponding focused tests, MBT tests, and QNT modules"
+      ]
+    },
+    "attackReactionEmitter": {
+      "families": [
+        "spellCastInterruptionReaction",
+        "movableLightManifestation",
+        "grantedAreaSaveDamageAction",
+        "weaponAttackDamageEnhancement",
+        "duplicateHitInterception",
+        "triggeredArmorDefense",
+        "spatialMeleeSpellAttackProxy",
+        "temporaryAbilityCheckRollMode",
+        "spawnedCompanionLifecycle"
+      ],
+      "owns": [
+        "the corresponding admission profiles",
+        "packages/battle-runtime/src/battle-reducer/{counterspell-*,dancing-lights-*,dragons-breath,spiritual-weapon-*,thaumaturgy-*,find-familiar-*}.ts",
+        "the corresponding focused tests, MBT tests, and QNT modules"
+      ]
+    }
+  }
+}
