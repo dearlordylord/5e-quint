@@ -67,7 +67,7 @@ export function battleSubjectBeginsBonusAction(
     byTag("monkFocusOption", () => true),
     byTag("monkFocusFlurryOfBlowsStrike", () => false),
     byTag("unitFeatureHeldWeaponActivation", () => false),
-    byTag("pactOfTheChainFamiliarAttack", () => false),
+    byTag("companionAttack", () => false),
     byTag("actionSpell", () => false),
     byTag("bonusAction", () => true),
     byTag("bonusActionDashSpell", () => true),
@@ -75,8 +75,8 @@ export function battleSubjectBeginsBonusAction(
     byTag("bonusActionStandardAction", () => true),
     byTag("companionLifecycle", () => false),
     byTag("druidWildShape", () => true),
-    byTag("findFamiliarSharedSenses", () => true),
-    byTag("findFamiliarTouchSpell", () => false),
+    byTag("spawnedCompanionSharedSenses", () => true),
+    byTag("spawnedCompanionTouchSpellProxy", () => false),
     byTag("runtimeCommand", () => false),
     byTag("unitFeature", (unitFeatureSubject) => {
       const actor = state.combatants.get(unitFeatureSubject.actorId);
@@ -138,7 +138,7 @@ function actionEligibilityFacts(
       () => ({ tag: "heldWeaponActivation" }) as const,
     ),
     byTag(
-      "pactOfTheChainFamiliarAttack",
+      "companionAttack",
       () => ({ tag: "standardAction", action: "attack" }) as const,
     ),
     byTag("actionSpell", () => ({ tag: "magicAction" }) as const),
@@ -149,10 +149,13 @@ function actionEligibilityFacts(
     byTag("companionLifecycle", () => ({ tag: "notApplicable" }) as const),
     byTag("druidWildShape", () => ({ tag: "wildShapeBonusAction" }) as const),
     byTag(
-      "findFamiliarSharedSenses",
+      "spawnedCompanionSharedSenses",
       () => ({ tag: "notApplicable" }) as const,
     ),
-    byTag("findFamiliarTouchSpell", () => ({ tag: "notApplicable" }) as const),
+    byTag(
+      "spawnedCompanionTouchSpellProxy",
+      () => ({ tag: "notApplicable" }) as const,
+    ),
     byTag("runtimeCommand", () => ({ tag: "notApplicable" }) as const),
     byTag("unitFeature", () => ({ tag: "unitFeatureActor" }) as const),
     Match.exhaustive,
