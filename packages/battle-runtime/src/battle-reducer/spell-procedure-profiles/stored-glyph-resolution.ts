@@ -106,7 +106,7 @@ export function executeStoredGlyphSpellProcedure(
             invocation.procedure,
           ).resolve({ ...releaseInput, invocation }),
         ),
-        byProcedure("levitatedCreature", (invocation) =>
+        byProcedure("controlledVerticalSuspension", (invocation) =>
           spellProcedureExecutionFor(
             executionRegistry,
             invocation.procedure,
