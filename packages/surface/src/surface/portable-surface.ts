@@ -5,8 +5,10 @@ import {
   PublishedSrdStatBlockRecordSchema,
   PublishedSrdSurfaceSchema,
   PublishedSrdUnitRecordSchema,
+  SrdUnitRecordSchema,
   type PublishedSrdSurface,
 } from "./schema.ts";
+import type { SrdUnitRecord } from "./types.ts";
 import {
   readSurfaceSchemaRole,
   type SurfaceSchemaFieldRole,
@@ -75,18 +77,18 @@ type PublishedStatBlock = Schema.Schema.Type<
   typeof PublishedSrdStatBlockRecordSchema
 >;
 
-type AuthoredDependency = {
+type SurfaceAuthoredLinkRole = Extract<
+  SurfaceSchemaFieldRole,
+  { readonly category: "dependency" | "reference" }
+>;
+
+export type SurfaceAuthoredLink = SurfaceAuthoredLinkRole & {
   readonly path: string;
-  readonly targetKind: "unit" | "statBlock";
   readonly targetId: string;
-  readonly relation: Extract<
-    SurfaceSchemaFieldRole,
-    { readonly category: "dependency" }
-  >["relation"];
 };
 
-type AuthoredDependencyCollection = {
-  readonly dependencies: readonly AuthoredDependency[];
+export type SurfaceAuthoredLinkCollection = {
+  readonly links: readonly SurfaceAuthoredLink[];
   readonly issues: readonly PortableSrdSurfaceIssue[];
 };
 
@@ -651,69 +653,74 @@ function matchingUnionBranches(
   return matches.length > 0 ? matches : ast.types;
 }
 
-type DependencyWalkItem = {
+type AuthoredLinkWalkItem = {
   readonly ast: SchemaAST.AST;
   readonly value: unknown;
   readonly path: string;
   readonly inheritedRole: SurfaceSchemaFieldRole | undefined;
 };
 
-type DependencyWalkContext = {
-  readonly current: DependencyWalkItem;
+type AuthoredLinkWalkContext = {
+  readonly current: AuthoredLinkWalkItem;
   readonly role: SurfaceSchemaFieldRole | undefined;
-  readonly pending: DependencyWalkItem[];
-  readonly dependencies: AuthoredDependency[];
+  readonly pending: AuthoredLinkWalkItem[];
+  readonly links: SurfaceAuthoredLink[];
   readonly issues: PortableSrdSurfaceIssue[];
 };
 
-type DependencyNodeHandler = (context: DependencyWalkContext) => void;
+type AuthoredLinkNodeHandler = (context: AuthoredLinkWalkContext) => void;
 
-function dependencyKey(
+function authoredLinkKey(
+  category: SurfaceAuthoredLink["category"],
   path: string,
   targetKind: "unit" | "statBlock",
   targetId: string,
   relation: string,
 ): string {
-  return `${path}\u0000${targetKind}\u0000${targetId}\u0000${relation}`;
+  return `${category}\u0000${path}\u0000${targetKind}\u0000${targetId}\u0000${relation}`;
 }
 
-function handleStringDependency(context: DependencyWalkContext): void {
-  const { current, role, dependencies } = context;
-  if (typeof current.value !== "string" || role?.category !== "dependency") {
+function handleStringAuthoredLink(context: AuthoredLinkWalkContext): void {
+  const { current, role, links } = context;
+  if (
+    typeof current.value !== "string" ||
+    (role?.category !== "dependency" && role?.category !== "reference")
+  ) {
     return;
   }
-  const key = dependencyKey(
+  const key = authoredLinkKey(
+    role.category,
     current.path,
     role.targetKind,
     current.value,
     role.relation,
   );
   if (
-    dependencies.some(
-      (dependency) =>
-        dependencyKey(
-          dependency.path,
-          dependency.targetKind,
-          dependency.targetId,
-          dependency.relation,
+    links.some(
+      (link) =>
+        authoredLinkKey(
+          link.category,
+          link.path,
+          link.targetKind,
+          link.targetId,
+          link.relation,
         ) === key,
     )
   ) {
     return;
   }
-  dependencies.push({
+  links.push({
+    ...role,
     path: current.path,
-    targetKind: role.targetKind,
     targetId: current.value,
-    relation: role.relation,
   });
 }
 
 function handleNoop(): void {
-  // Primitive schema nodes do not contain authored dependencies.
+  // Primitive schema nodes do not contain authored links.
 }
 
-function handleWrappedNode(context: DependencyWalkContext): void {
+function handleWrappedNode(context: AuthoredLinkWalkContext): void {
   const child = astChild(context.current.ast);
   if (child === undefined) return;
   context.pending.push({
@@ -723,7 +730,7 @@ function handleWrappedNode(context: DependencyWalkContext): void {
   });
 }
 
-function handleSuspendNode(context: DependencyWalkContext): void {
+function handleSuspendNode(context: AuthoredLinkWalkContext): void {
   if (context.current.ast._tag !== "Suspend") return;
   context.pending.push({
     ...context.current,
@@ -732,7 +739,7 @@ function handleSuspendNode(context: DependencyWalkContext): void {
   });
 }
 
-function handleUnionNode(context: DependencyWalkContext): void {
+function handleUnionNode(context: AuthoredLinkWalkContext): void {
   if (context.current.ast._tag !== "Union") return;
   for (const branch of matchingUnionBranches(
     context.current.ast,
@@ -746,7 +753,7 @@ function handleUnionNode(context: DependencyWalkContext): void {
   }
 }
 
-function handleTupleNode(context: DependencyWalkContext): void {
+function handleTupleNode(context: AuthoredLinkWalkContext): void {
   if (
     context.current.ast._tag !== "TupleType" ||
     !Array.isArray(context.current.value)
@@ -768,7 +775,7 @@ function handleTupleNode(context: DependencyWalkContext): void {
   }
 }
 
-function handleTypeLiteralNode(context: DependencyWalkContext): void {
+function handleTypeLiteralNode(context: AuthoredLinkWalkContext): void {
   if (
     context.current.ast._tag !== "TypeLiteral" ||
     !isRecord(context.current.value)
@@ -787,17 +794,17 @@ function handleTypeLiteralNode(context: DependencyWalkContext): void {
   }
 }
 
-function handleUnsupportedNode(context: DependencyWalkContext): void {
+function handleUnsupportedNode(context: AuthoredLinkWalkContext): void {
   context.issues.push(
     unsupportedSchemaNodeIssue(context.current.path, context.current.ast._tag),
   );
 }
 
-const DEPENDENCY_NODE_HANDLERS: Partial<
-  Record<SchemaAST.AST["_tag"], DependencyNodeHandler>
+const AUTHORED_LINK_NODE_HANDLERS: Partial<
+  Record<SchemaAST.AST["_tag"], AuthoredLinkNodeHandler>
 > = {
-  Literal: handleStringDependency,
-  StringKeyword: handleStringDependency,
+  Literal: handleStringAuthoredLink,
+  StringKeyword: handleStringAuthoredLink,
   BooleanKeyword: handleNoop,
   NumberKeyword: handleNoop,
   NeverKeyword: handleNoop,
@@ -811,8 +818,8 @@ const DEPENDENCY_NODE_HANDLERS: Partial<
   Declaration: handleUnsupportedNode,
 };
 
-function handleDependencyNode(context: DependencyWalkContext): void {
-  const handler = DEPENDENCY_NODE_HANDLERS[context.current.ast._tag];
+function handleAuthoredLinkNode(context: AuthoredLinkWalkContext): void {
+  const handler = AUTHORED_LINK_NODE_HANDLERS[context.current.ast._tag];
   if (handler === undefined) {
     handleUnsupportedNode(context);
     return;
@@ -820,14 +827,14 @@ function handleDependencyNode(context: DependencyWalkContext): void {
   handler(context);
 }
 
-function collectAuthoredDependencies(
+function collectAuthoredLinks(
   schema: Schema.Schema.AnyNoContext,
   value: unknown,
   rootPath: string,
-): AuthoredDependencyCollection {
-  const dependencies: AuthoredDependency[] = [];
+): SurfaceAuthoredLinkCollection {
+  const links: SurfaceAuthoredLink[] = [];
   const issues: PortableSrdSurfaceIssue[] = [];
-  const pending: DependencyWalkItem[] = [
+  const pending: AuthoredLinkWalkItem[] = [
     { ast: schema.ast, value, path: rootPath, inheritedRole: undefined },
   ];
   const seenObjects = new WeakMap<SchemaAST.AST, WeakSet<object>>();
@@ -843,10 +850,21 @@ function collectAuthoredDependencies(
       seen.add(current.value);
       seenObjects.set(current.ast, seen);
     }
-    handleDependencyNode({ current, role, pending, dependencies, issues });
+    handleAuthoredLinkNode({ current, role, pending, links, issues });
   }
 
-  return { dependencies, issues };
+  return { links, issues };
+}
+
+/**
+ * Project the schema-declared authored links of one canonical Unit record.
+ * Static mechanics admission consumes this same schema-owned relation rather
+ * than maintaining a second list of reference- or dependency-bearing fields.
+ */
+export function srdUnitAuthoredLinks(
+  unit: SrdUnitRecord,
+): SurfaceAuthoredLinkCollection {
+  return collectAuthoredLinks(SrdUnitRecordSchema, unit, "$.unit");
 }
 
 function dependencyIssues(members: DecodedMembers): PortableSrdSurfaceIssue[] {
@@ -865,13 +883,14 @@ function dependencyIssues(members: DecodedMembers): PortableSrdSurfaceIssue[] {
     ] as const,
   ]) {
     entries.forEach(({ record, index }) => {
-      const collected = collectAuthoredDependencies(
+      const collected = collectAuthoredLinks(
         schema,
         record,
         `$.${member}[${index}]`,
       );
       issues.push(...collected.issues);
-      for (const dependency of collected.dependencies) {
+      for (const dependency of collected.links) {
+        if (dependency.category !== "dependency") continue;
         const targetIds =
           dependency.targetKind === "unit" ? unitIds : statBlockIds;
         if (targetIds.has(dependency.targetId)) continue;
@@ -927,7 +946,7 @@ export function derivePortableSrdDependencyFieldRoles(
     ] as const,
   ]) {
     entries.forEach(({ record, index }) => {
-      const collected = collectAuthoredDependencies(
+      const collected = collectAuthoredLinks(
         schema,
         record,
         `$.${member}[${index}]`,
@@ -937,7 +956,8 @@ export function derivePortableSrdDependencyFieldRoles(
           collected.issues[0]?.message ?? "Unsupported schema AST",
         );
       }
-      for (const dependency of collected.dependencies) {
+      for (const dependency of collected.links) {
+        if (dependency.category !== "dependency") continue;
         const role = {
           sourceKind: member === "units" ? "unit" : "statBlock",
           path: dependencyRelativePath(
