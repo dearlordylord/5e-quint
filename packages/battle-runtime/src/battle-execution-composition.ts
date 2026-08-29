@@ -34,7 +34,7 @@ import {
   resolveFindFamiliarTouchSpellSubject,
   shareFindFamiliarSenses as shareFindFamiliarSensesStateOnly,
 } from "./battle-reducer/find-familiar-procedures.ts";
-import { findFamiliarConnectionHole } from "./find-familiar-companion-subjects.ts";
+import { spawnedCompanionConnectionHole } from "./find-familiar-companion-subjects.ts";
 import {
   ReplayContinuationExecution,
   resolveReplayContinuationFromState as resolveReplayContinuationFromStateWithRegistry,
@@ -157,15 +157,16 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
     return {
       tag: "invalid",
       reason: "unsupportedActOption",
-      message: "Find Familiar touch delivery requires an immediate spell cast.",
+      message:
+        "Spawned companion touch delivery requires an immediate spell cast.",
       snapshot: snapshotBattleFromState(input.state),
     };
   }
   const subject: Extract<
     BattleSubject,
-    { readonly tag: "findFamiliarTouchSpell" }
+    { readonly tag: "spawnedCompanionTouchSpellProxy" }
   > = {
-    tag: "findFamiliarTouchSpell",
+    tag: "spawnedCompanionTouchSpellProxy",
     actorId: input.subject.actorId,
     procedureRef: input.subject.procedureRef,
     companionId: input.fact.familiarId,
@@ -173,7 +174,7 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
     mode: input.subject.mode,
     ...optionalProperty("metamagic", input.subject.metamagic),
   };
-  const connectionHole = findFamiliarConnectionHole({
+  const connectionHole = spawnedCompanionConnectionHole({
     ownerId: input.fact.ownerId,
     companionId: input.fact.familiarId,
   });
@@ -185,7 +186,7 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
         subject,
         fills: [
           {
-            kind: "findFamiliarConnection",
+            kind: "spawnedCompanionConnection",
             holeId: connectionHole.holeId,
             value: { withinRange: true },
           },
