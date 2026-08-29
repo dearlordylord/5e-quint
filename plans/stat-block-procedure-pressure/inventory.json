@@ -8197,7 +8197,7 @@
       "disposition": {
         "kind": "missingOwner",
         "surfaceShape": { "kind": "procedure", "procedureKind": "attack_roll" },
-        "failedFacts": ["unsupportedAttackEffect"]
+        "failedFacts": ["unsupportedAttackEffect", "unsupportedAttackMechanics"]
       },
       "witness": {
         "recordOrdinal": 49,
@@ -22932,7 +22932,7 @@
       "disposition": {
         "kind": "missingOwner",
         "surfaceShape": { "kind": "procedure", "procedureKind": "attack_roll" },
-        "failedFacts": ["unsupportedAttackEffect"]
+        "failedFacts": ["unsupportedAttackEffect", "unsupportedAttackMechanics"]
       },
       "witness": {
         "recordOrdinal": 143,
@@ -25161,7 +25161,7 @@
       "disposition": {
         "kind": "missingOwner",
         "surfaceShape": { "kind": "procedure", "procedureKind": "attack_roll" },
-        "failedFacts": ["unsupportedAttackEffect"]
+        "failedFacts": ["unsupportedAttackEffect", "unsupportedAttackMechanics"]
       },
       "witness": {
         "recordOrdinal": 150,
@@ -39160,7 +39160,7 @@
       "disposition": {
         "kind": "missingOwner",
         "surfaceShape": { "kind": "procedure", "procedureKind": "attack_roll" },
-        "failedFacts": ["unsupportedAttackEffect"]
+        "failedFacts": ["unsupportedAttackEffect", "unsupportedAttackMechanics"]
       },
       "witness": {
         "recordOrdinal": 208,
@@ -70979,13 +70979,13 @@
       ]
     },
     {
-      "structuralKey": "{\"disposition\":{\"failedFacts\":[\"unsupportedAttackEffect\"],\"kind\":\"missingOwner\",\"surfaceShape\":{\"kind\":\"procedure\",\"procedureKind\":\"attack_roll\"}},\"kind\":\"procedure\",\"structuralShape\":\"{\\\"kind\\\":\\\"executable\\\",\\\"procedure\\\":{\\\"attackAbility\\\":\\\"dex\\\",\\\"attackBonus\\\":{\\\"kind\\\":\\\"literal\\\",\\\"value\\\":\\\"number\\\"},\\\"attackType\\\":\\\"melee\\\",\\\"kind\\\":\\\"attack_roll\\\",\\\"onHit\\\":[{\\\"amount\\\":{\\\"expr\\\":{\\\"dice\\\":\\\"number\\\",\\\"dieSize\\\":\\\"number\\\",\\\"flat\\\":\\\"number\\\"},\\\"kind\\\":\\\"fixed\\\",\\\"static\\\":\\\"number\\\"},\\\"damageType\\\":\\\"piercing\\\",\\\"kind\\\":\\\"damage\\\"},{\\\"condition\\\":\\\"poisoned\\\",\\\"expiresAt\\\":{\\\"kind\\\":\\\"source_next_turn_end\\\"},\\\"kind\\\":\\\"apply_condition\\\"}],\\\"reachFeet\\\":\\\"number\\\"},\\\"procedureOrdinal\\\":\\\"number\\\",\\\"resourceRefs\\\":{\\\"kind\\\":\\\"none\\\"}}\"}",
+      "structuralKey": "{\"disposition\":{\"failedFacts\":[\"unsupportedAttackEffect\",\"unsupportedAttackMechanics\"],\"kind\":\"missingOwner\",\"surfaceShape\":{\"kind\":\"procedure\",\"procedureKind\":\"attack_roll\"}},\"kind\":\"procedure\",\"structuralShape\":\"{\\\"kind\\\":\\\"executable\\\",\\\"procedure\\\":{\\\"attackAbility\\\":\\\"dex\\\",\\\"attackBonus\\\":{\\\"kind\\\":\\\"literal\\\",\\\"value\\\":\\\"number\\\"},\\\"attackType\\\":\\\"melee\\\",\\\"kind\\\":\\\"attack_roll\\\",\\\"onHit\\\":[{\\\"amount\\\":{\\\"expr\\\":{\\\"dice\\\":\\\"number\\\",\\\"dieSize\\\":\\\"number\\\",\\\"flat\\\":\\\"number\\\"},\\\"kind\\\":\\\"fixed\\\",\\\"static\\\":\\\"number\\\"},\\\"damageType\\\":\\\"piercing\\\",\\\"kind\\\":\\\"damage\\\"},{\\\"condition\\\":\\\"poisoned\\\",\\\"expiresAt\\\":{\\\"kind\\\":\\\"source_next_turn_end\\\"},\\\"kind\\\":\\\"apply_condition\\\"}],\\\"reachFeet\\\":\\\"number\\\"},\\\"procedureOrdinal\\\":\\\"number\\\",\\\"resourceRefs\\\":{\\\"kind\\\":\\\"none\\\"}}\"}",
       "kind": "procedure",
       "structuralShape": "{\"kind\":\"executable\",\"procedure\":{\"attackAbility\":\"dex\",\"attackBonus\":{\"kind\":\"literal\",\"value\":\"number\"},\"attackType\":\"melee\",\"kind\":\"attack_roll\",\"onHit\":[{\"amount\":{\"expr\":{\"dice\":\"number\",\"dieSize\":\"number\",\"flat\":\"number\"},\"kind\":\"fixed\",\"static\":\"number\"},\"damageType\":\"piercing\",\"kind\":\"damage\"},{\"condition\":\"poisoned\",\"expiresAt\":{\"kind\":\"source_next_turn_end\"},\"kind\":\"apply_condition\"}],\"reachFeet\":\"number\"},\"procedureOrdinal\":\"number\",\"resourceRefs\":{\"kind\":\"none\"}}",
       "disposition": {
         "kind": "missingOwner",
         "surfaceShape": { "kind": "procedure", "procedureKind": "attack_roll" },
-        "failedFacts": ["unsupportedAttackEffect"]
+        "failedFacts": ["unsupportedAttackEffect", "unsupportedAttackMechanics"]
       },
       "occurrenceCount": 1,
       "statBlockCount": 1,
@@ -71012,13 +71012,13 @@
       ]
     },
     {
-      "structuralKey": "{\"disposition\":{\"failedFacts\":[\"unsupportedAttackEffect\"],\"kind\":\"missingOwner\",\"surfaceShape\":{\"kind\":\"procedure\",\"procedureKind\":\"attack_roll\"}},\"kind\":\"procedure\",\"structuralShape\":\"{\\\"kind\\\":\\\"executable\\\",\\\"procedure\\\":{\\\"attackAbility\\\":\\\"str\\\",\\\"attackBonus\\\":{\\\"kind\\\":\\\"literal\\\",\\\"value\\\":\\\"number\\\"},\\\"attackType\\\":\\\"melee\\\",\\\"kind\\\":\\\"attack_roll\\\",\\\"onHit\\\":[{\\\"amount\\\":{\\\"expr\\\":{\\\"dice\\\":\\\"number\\\",\\\"dieSize\\\":\\\"number\\\",\\\"flat\\\":\\\"number\\\"},\\\"kind\\\":\\\"fixed\\\",\\\"static\\\":\\\"number\\\"},\\\"damageType\\\":\\\"piercing\\\",\\\"kind\\\":\\\"damage\\\"},{\\\"condition\\\":\\\"poisoned\\\",\\\"expiresAt\\\":{\\\"kind\\\":\\\"target_next_turn_end\\\"},\\\"kind\\\":\\\"apply_condition\\\"}],\\\"reachFeet\\\":\\\"number\\\"},\\\"procedureOrdinal\\\":\\\"number\\\",\\\"resourceRefs\\\":{\\\"kind\\\":\\\"none\\\"}}\"}",
+      "structuralKey": "{\"disposition\":{\"failedFacts\":[\"unsupportedAttackEffect\",\"unsupportedAttackMechanics\"],\"kind\":\"missingOwner\",\"surfaceShape\":{\"kind\":\"procedure\",\"procedureKind\":\"attack_roll\"}},\"kind\":\"procedure\",\"structuralShape\":\"{\\\"kind\\\":\\\"executable\\\",\\\"procedure\\\":{\\\"attackAbility\\\":\\\"str\\\",\\\"attackBonus\\\":{\\\"kind\\\":\\\"literal\\\",\\\"value\\\":\\\"number\\\"},\\\"attackType\\\":\\\"melee\\\",\\\"kind\\\":\\\"attack_roll\\\",\\\"onHit\\\":[{\\\"amount\\\":{\\\"expr\\\":{\\\"dice\\\":\\\"number\\\",\\\"dieSize\\\":\\\"number\\\",\\\"flat\\\":\\\"number\\\"},\\\"kind\\\":\\\"fixed\\\",\\\"static\\\":\\\"number\\\"},\\\"damageType\\\":\\\"piercing\\\",\\\"kind\\\":\\\"damage\\\"},{\\\"condition\\\":\\\"poisoned\\\",\\\"expiresAt\\\":{\\\"kind\\\":\\\"target_next_turn_end\\\"},\\\"kind\\\":\\\"apply_condition\\\"}],\\\"reachFeet\\\":\\\"number\\\"},\\\"procedureOrdinal\\\":\\\"number\\\",\\\"resourceRefs\\\":{\\\"kind\\\":\\\"none\\\"}}\"}",
       "kind": "procedure",
       "structuralShape": "{\"kind\":\"executable\",\"procedure\":{\"attackAbility\":\"str\",\"attackBonus\":{\"kind\":\"literal\",\"value\":\"number\"},\"attackType\":\"melee\",\"kind\":\"attack_roll\",\"onHit\":[{\"amount\":{\"expr\":{\"dice\":\"number\",\"dieSize\":\"number\",\"flat\":\"number\"},\"kind\":\"fixed\",\"static\":\"number\"},\"damageType\":\"piercing\",\"kind\":\"damage\"},{\"condition\":\"poisoned\",\"expiresAt\":{\"kind\":\"target_next_turn_end\"},\"kind\":\"apply_condition\"}],\"reachFeet\":\"number\"},\"procedureOrdinal\":\"number\",\"resourceRefs\":{\"kind\":\"none\"}}",
       "disposition": {
         "kind": "missingOwner",
         "surfaceShape": { "kind": "procedure", "procedureKind": "attack_roll" },
-        "failedFacts": ["unsupportedAttackEffect"]
+        "failedFacts": ["unsupportedAttackEffect", "unsupportedAttackMechanics"]
       },
       "occurrenceCount": 1,
       "statBlockCount": 1,
@@ -71045,13 +71045,13 @@
       ]
     },
     {
-      "structuralKey": "{\"disposition\":{\"failedFacts\":[\"unsupportedAttackEffect\"],\"kind\":\"missingOwner\",\"surfaceShape\":{\"kind\":\"procedure\",\"procedureKind\":\"attack_roll\"}},\"kind\":\"procedure\",\"structuralShape\":\"{\\\"kind\\\":\\\"executable\\\",\\\"procedure\\\":{\\\"attackAbility\\\":\\\"str\\\",\\\"attackBonus\\\":{\\\"kind\\\":\\\"literal\\\",\\\"value\\\":\\\"number\\\"},\\\"attackType\\\":\\\"ranged\\\",\\\"kind\\\":\\\"attack_roll\\\",\\\"onHit\\\":[{\\\"amount\\\":{\\\"expr\\\":{\\\"dice\\\":\\\"number\\\",\\\"dieSize\\\":\\\"number\\\",\\\"flat\\\":\\\"number\\\"},\\\"kind\\\":\\\"fixed\\\",\\\"static\\\":\\\"number\\\"},\\\"damageType\\\":\\\"bludgeoning\\\",\\\"kind\\\":\\\"damage\\\"},{\\\"condition\\\":\\\"poisoned\\\",\\\"expiresAt\\\":{\\\"kind\\\":\\\"target_next_turn_end\\\"},\\\"kind\\\":\\\"apply_condition\\\"}],\\\"rangeFeet\\\":{\\\"long\\\":\\\"number\\\",\\\"normal\\\":\\\"number\\\"}},\\\"procedureOrdinal\\\":\\\"number\\\",\\\"resourceRefs\\\":{\\\"kind\\\":\\\"none\\\"}}\"}",
+      "structuralKey": "{\"disposition\":{\"failedFacts\":[\"unsupportedAttackEffect\",\"unsupportedAttackMechanics\"],\"kind\":\"missingOwner\",\"surfaceShape\":{\"kind\":\"procedure\",\"procedureKind\":\"attack_roll\"}},\"kind\":\"procedure\",\"structuralShape\":\"{\\\"kind\\\":\\\"executable\\\",\\\"procedure\\\":{\\\"attackAbility\\\":\\\"str\\\",\\\"attackBonus\\\":{\\\"kind\\\":\\\"literal\\\",\\\"value\\\":\\\"number\\\"},\\\"attackType\\\":\\\"ranged\\\",\\\"kind\\\":\\\"attack_roll\\\",\\\"onHit\\\":[{\\\"amount\\\":{\\\"expr\\\":{\\\"dice\\\":\\\"number\\\",\\\"dieSize\\\":\\\"number\\\",\\\"flat\\\":\\\"number\\\"},\\\"kind\\\":\\\"fixed\\\",\\\"static\\\":\\\"number\\\"},\\\"damageType\\\":\\\"bludgeoning\\\",\\\"kind\\\":\\\"damage\\\"},{\\\"condition\\\":\\\"poisoned\\\",\\\"expiresAt\\\":{\\\"kind\\\":\\\"target_next_turn_end\\\"},\\\"kind\\\":\\\"apply_condition\\\"}],\\\"rangeFeet\\\":{\\\"long\\\":\\\"number\\\",\\\"normal\\\":\\\"number\\\"}},\\\"procedureOrdinal\\\":\\\"number\\\",\\\"resourceRefs\\\":{\\\"kind\\\":\\\"none\\\"}}\"}",
       "kind": "procedure",
       "structuralShape": "{\"kind\":\"executable\",\"procedure\":{\"attackAbility\":\"str\",\"attackBonus\":{\"kind\":\"literal\",\"value\":\"number\"},\"attackType\":\"ranged\",\"kind\":\"attack_roll\",\"onHit\":[{\"amount\":{\"expr\":{\"dice\":\"number\",\"dieSize\":\"number\",\"flat\":\"number\"},\"kind\":\"fixed\",\"static\":\"number\"},\"damageType\":\"bludgeoning\",\"kind\":\"damage\"},{\"condition\":\"poisoned\",\"expiresAt\":{\"kind\":\"target_next_turn_end\"},\"kind\":\"apply_condition\"}],\"rangeFeet\":{\"long\":\"number\",\"normal\":\"number\"}},\"procedureOrdinal\":\"number\",\"resourceRefs\":{\"kind\":\"none\"}}",
       "disposition": {
         "kind": "missingOwner",
         "surfaceShape": { "kind": "procedure", "procedureKind": "attack_roll" },
-        "failedFacts": ["unsupportedAttackEffect"]
+        "failedFacts": ["unsupportedAttackEffect", "unsupportedAttackMechanics"]
       },
       "occurrenceCount": 1,
       "statBlockCount": 1,
@@ -71078,13 +71078,13 @@
       ]
     },
     {
-      "structuralKey": "{\"disposition\":{\"failedFacts\":[\"unsupportedAttackEffect\"],\"kind\":\"missingOwner\",\"surfaceShape\":{\"kind\":\"procedure\",\"procedureKind\":\"attack_roll\"}},\"kind\":\"procedure\",\"structuralShape\":\"{\\\"kind\\\":\\\"executable\\\",\\\"procedure\\\":{\\\"attackAbility\\\":\\\"str\\\",\\\"attackBonus\\\":{\\\"kind\\\":\\\"literal\\\",\\\"value\\\":\\\"number\\\"},\\\"attackType\\\":\\\"ranged\\\",\\\"kind\\\":\\\"attack_roll\\\",\\\"onHit\\\":[{\\\"amount\\\":{\\\"expr\\\":{\\\"dice\\\":\\\"number\\\",\\\"dieSize\\\":\\\"number\\\",\\\"flat\\\":\\\"number\\\"},\\\"kind\\\":\\\"fixed\\\",\\\"static\\\":\\\"number\\\"},\\\"damageType\\\":\\\"thunder\\\",\\\"kind\\\":\\\"damage\\\"},{\\\"condition\\\":\\\"incapacitated\\\",\\\"expiresAt\\\":{\\\"kind\\\":\\\"target_next_turn_end\\\"},\\\"kind\\\":\\\"apply_condition\\\"}],\\\"rangeFeet\\\":{\\\"long\\\":\\\"number\\\",\\\"normal\\\":\\\"number\\\"}},\\\"procedureOrdinal\\\":\\\"number\\\",\\\"resourceRefs\\\":{\\\"kind\\\":\\\"none\\\"}}\"}",
+      "structuralKey": "{\"disposition\":{\"failedFacts\":[\"unsupportedAttackEffect\",\"unsupportedAttackMechanics\"],\"kind\":\"missingOwner\",\"surfaceShape\":{\"kind\":\"procedure\",\"procedureKind\":\"attack_roll\"}},\"kind\":\"procedure\",\"structuralShape\":\"{\\\"kind\\\":\\\"executable\\\",\\\"procedure\\\":{\\\"attackAbility\\\":\\\"str\\\",\\\"attackBonus\\\":{\\\"kind\\\":\\\"literal\\\",\\\"value\\\":\\\"number\\\"},\\\"attackType\\\":\\\"ranged\\\",\\\"kind\\\":\\\"attack_roll\\\",\\\"onHit\\\":[{\\\"amount\\\":{\\\"expr\\\":{\\\"dice\\\":\\\"number\\\",\\\"dieSize\\\":\\\"number\\\",\\\"flat\\\":\\\"number\\\"},\\\"kind\\\":\\\"fixed\\\",\\\"static\\\":\\\"number\\\"},\\\"damageType\\\":\\\"thunder\\\",\\\"kind\\\":\\\"damage\\\"},{\\\"condition\\\":\\\"incapacitated\\\",\\\"expiresAt\\\":{\\\"kind\\\":\\\"target_next_turn_end\\\"},\\\"kind\\\":\\\"apply_condition\\\"}],\\\"rangeFeet\\\":{\\\"long\\\":\\\"number\\\",\\\"normal\\\":\\\"number\\\"}},\\\"procedureOrdinal\\\":\\\"number\\\",\\\"resourceRefs\\\":{\\\"kind\\\":\\\"none\\\"}}\"}",
       "kind": "procedure",
       "structuralShape": "{\"kind\":\"executable\",\"procedure\":{\"attackAbility\":\"str\",\"attackBonus\":{\"kind\":\"literal\",\"value\":\"number\"},\"attackType\":\"ranged\",\"kind\":\"attack_roll\",\"onHit\":[{\"amount\":{\"expr\":{\"dice\":\"number\",\"dieSize\":\"number\",\"flat\":\"number\"},\"kind\":\"fixed\",\"static\":\"number\"},\"damageType\":\"thunder\",\"kind\":\"damage\"},{\"condition\":\"incapacitated\",\"expiresAt\":{\"kind\":\"target_next_turn_end\"},\"kind\":\"apply_condition\"}],\"rangeFeet\":{\"long\":\"number\",\"normal\":\"number\"}},\"procedureOrdinal\":\"number\",\"resourceRefs\":{\"kind\":\"none\"}}",
       "disposition": {
         "kind": "missingOwner",
         "surfaceShape": { "kind": "procedure", "procedureKind": "attack_roll" },
-        "failedFacts": ["unsupportedAttackEffect"]
+        "failedFacts": ["unsupportedAttackEffect", "unsupportedAttackMechanics"]
       },
       "occurrenceCount": 1,
       "statBlockCount": 1,
@@ -80455,10 +80455,10 @@
     },
     {
       "rank": 7,
-      "structuralKey": "{\"failedFacts\":[\"unsupportedAttackEffect\"],\"occurrenceKind\":\"procedure\",\"surfaceShape\":{\"kind\":\"procedure\",\"procedureKind\":\"attack_roll\"}}",
+      "structuralKey": "{\"failedFacts\":[\"unsupportedAttackEffect\",\"unsupportedAttackMechanics\"],\"occurrenceKind\":\"procedure\",\"surfaceShape\":{\"kind\":\"procedure\",\"procedureKind\":\"attack_roll\"}}",
       "occurrenceKind": "procedure",
       "surfaceShape": { "kind": "procedure", "procedureKind": "attack_roll" },
-      "failedFacts": ["unsupportedAttackEffect"],
+      "failedFacts": ["unsupportedAttackEffect", "unsupportedAttackMechanics"],
       "occurrenceCount": 4,
       "statBlockCount": 4,
       "pressureScore": 8,
