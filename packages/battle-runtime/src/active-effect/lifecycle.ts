@@ -13,11 +13,11 @@ import type { Condition, HandUse } from "@dnd/shared/types";
 import type { BattleActiveEffect } from "./types.ts";
 import type { BattleCreatureState } from "../battle-state-execution.ts";
 
-const HIDEOUS_LAUGHTER_CONDITIONS = [
+const SAVE_GATED_CONDITION_WITH_REPEAT_CONDITIONS = [
   "prone",
   "incapacitated",
 ] as const satisfies ReadonlyArray<Condition>;
-const HYPNOTIC_PATTERN_CONDITIONS = [
+const SAVE_GATED_AREA_CONTROL_CONDITIONS = [
   "charmed",
   "incapacitated",
 ] as const satisfies ReadonlyArray<Condition>;
@@ -39,16 +39,22 @@ export type ConditionApplyingActiveEffect =
       BattleActiveEffect,
       { readonly kind: "spellConditionCountedEndTurnSave" }
     >
-  | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
-  | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
-  | Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>
-  | Extract<BattleActiveEffect, { readonly kind: "hypnoticPatternControl" }>;
+  | Extract<
+      BattleActiveEffect,
+      { readonly kind: "stagedSaveConditionPendingRepeat" }
+    >
+  | Extract<BattleActiveEffect, { readonly kind: "stagedSaveConditionApplied" }>
+  | Extract<
+      BattleActiveEffect,
+      { readonly kind: "saveGatedConditionWithRepeat" }
+    >
+  | Extract<BattleActiveEffect, { readonly kind: "saveGatedAreaControl" }>;
 
 export type SingleConditionApplyingActiveEffect = Exclude<
   ConditionApplyingActiveEffect,
   Extract<
     BattleActiveEffect,
-    { readonly kind: "hideousLaughter" | "hypnoticPatternControl" }
+    { readonly kind: "saveGatedConditionWithRepeat" | "saveGatedAreaControl" }
   >
 >;
 
@@ -63,10 +69,10 @@ export function isConditionApplyingActiveEffect(
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave" ||
     effect.kind === "spellConditionCountedEndTurnSave" ||
-    effect.kind === "sleepPendingRepeatSave" ||
-    effect.kind === "sleepUnconscious" ||
-    effect.kind === "hideousLaughter" ||
-    effect.kind === "hypnoticPatternControl"
+    effect.kind === "stagedSaveConditionPendingRepeat" ||
+    effect.kind === "stagedSaveConditionApplied" ||
+    effect.kind === "saveGatedConditionWithRepeat" ||
+    effect.kind === "saveGatedAreaControl"
   );
 }
 
@@ -83,7 +89,7 @@ export function activeEffectCondition(
     effect.kind === "spellConditionCountedEndTurnSave"
   )
     return effect.condition;
-  return effect.kind === "sleepPendingRepeatSave"
+  return effect.kind === "stagedSaveConditionPendingRepeat"
     ? "incapacitated"
     : "unconscious";
 }
@@ -91,11 +97,11 @@ export function activeEffectCondition(
 export function activeEffectConditions(
   effect: ConditionApplyingActiveEffect,
 ): readonly Condition[] {
-  if (effect.kind === "hideousLaughter") {
-    return HIDEOUS_LAUGHTER_CONDITIONS;
+  if (effect.kind === "saveGatedConditionWithRepeat") {
+    return SAVE_GATED_CONDITION_WITH_REPEAT_CONDITIONS;
   }
-  if (effect.kind === "hypnoticPatternControl") {
-    return HYPNOTIC_PATTERN_CONDITIONS;
+  if (effect.kind === "saveGatedAreaControl") {
+    return SAVE_GATED_AREA_CONTROL_CONDITIONS;
   }
   return [activeEffectCondition(effect)];
 }

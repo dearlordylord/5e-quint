@@ -175,52 +175,52 @@ export const SpellMarkedDamageRiderSchema =
     }),
   );
 
-export type ThaumaturgyBoomingVoiceTemplate = {
+export type TemporaryAbilityCheckRollModeTemplate = {
   readonly effectRef?: never;
   readonly sourceCombatantId: CombatantId;
-  readonly kind: "thaumaturgyBoomingVoice";
+  readonly kind: "temporaryAbilityCheckRollMode";
   readonly expiresAt: DurationBattleActiveEffectExpiration;
 };
 
-export const ThaumaturgyBoomingVoiceTemplateSchema =
-  exactSchema<ThaumaturgyBoomingVoiceTemplate>()(
+export const TemporaryAbilityCheckRollModeTemplateSchema =
+  exactSchema<TemporaryAbilityCheckRollModeTemplate>()(
     Schema.Struct({
       sourceCombatantId: CombatantId,
-      kind: Schema.Literal("thaumaturgyBoomingVoice"),
+      kind: Schema.Literal("temporaryAbilityCheckRollMode"),
       expiresAt: DurationBattleActiveEffectExpirationSchema,
       ...BattleEffectOccurrenceTemplateSchemaFields,
     }),
   );
 
-export type BlurredActiveEffectTemplate = {
+export type PerceptionGatedAttackRollDefenseTemplate = {
   readonly effectRef?: never;
   readonly sourceCombatantId: CombatantId;
-  readonly kind: "blurred";
+  readonly kind: "perceptionGatedAttackRollDefense";
   readonly expiresAt: ConcentrationBattleActiveEffectExpiration;
 };
 
-export const BlurredActiveEffectTemplateSchema =
-  exactSchema<BlurredActiveEffectTemplate>()(
+export const PerceptionGatedAttackRollDefenseTemplateSchema =
+  exactSchema<PerceptionGatedAttackRollDefenseTemplate>()(
     Schema.Struct({
       sourceCombatantId: CombatantId,
-      kind: Schema.Literal("blurred"),
+      kind: Schema.Literal("perceptionGatedAttackRollDefense"),
       expiresAt: ConcentrationBattleActiveEffectExpirationSchema,
       ...BattleEffectOccurrenceTemplateSchemaFields,
     }),
   );
 
-export type WardingBondActiveEffectTemplate = {
+export type LinkedDefenseResistanceDamageShareTemplate = {
   readonly effectRef?: never;
   readonly sourceCombatantId: CombatantId;
-  readonly kind: "wardingBond";
+  readonly kind: "linkedDefenseResistanceDamageShare";
   readonly expiresAt: DurationBattleActiveEffectExpiration;
 };
 
-export const WardingBondActiveEffectTemplateSchema =
-  exactSchema<WardingBondActiveEffectTemplate>()(
+export const LinkedDefenseResistanceDamageShareTemplateSchema =
+  exactSchema<LinkedDefenseResistanceDamageShareTemplate>()(
     Schema.Struct({
       sourceCombatantId: CombatantId,
-      kind: Schema.Literal("wardingBond"),
+      kind: Schema.Literal("linkedDefenseResistanceDamageShare"),
       expiresAt: DurationBattleActiveEffectExpirationSchema,
       ...BattleEffectOccurrenceTemplateSchemaFields,
     }),
