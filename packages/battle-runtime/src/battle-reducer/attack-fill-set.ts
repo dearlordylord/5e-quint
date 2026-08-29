@@ -112,7 +112,7 @@ export function selectedAttackFillSet(
     huntersPreyHordeBreakerDamageDisposition,
     huntersPreyHordeBreakerDamageDispositionFilled,
     damageRoll,
-    mirrorImageDuplicateRoll,
+    duplicateHitInterceptionRoll,
     spellDamageReductionRoll,
     sourceDamageRollPenaltyRolls,
     attackDamageReductionRedirectTarget,
@@ -215,7 +215,7 @@ export function selectedAttackFillSet(
     damageDisposition,
     damageDispositionFilled,
     damageRoll,
-    mirrorImageDuplicateRoll,
+    duplicateHitInterceptionRoll,
     spellDamageReductionRoll,
     sourceDamageRollPenaltyRolls,
     attackDamageReductionRedirectTarget,
@@ -327,7 +327,7 @@ function createSelectedAttackFillContext(): SelectedAttackFillContext {
     huntersPreyHordeBreakerDamageDisposition: { kind: "ordinaryDamage" },
     huntersPreyHordeBreakerDamageDispositionFilled: false,
     damageRoll: undefined,
-    mirrorImageDuplicateRoll: undefined,
+    duplicateHitInterceptionRoll: undefined,
     spellDamageReductionRoll: undefined,
     sourceDamageRollPenaltyRolls: [],
     attackDamageReductionRedirectTarget: undefined,
@@ -1095,11 +1095,11 @@ function processRolledDiceFill(
 ): SelectedAttackFillProcessingResult {
   if (isMirrorImageDuplicateRollFill(fill)) {
     return rememberSelectedAttackFill(
-      context.mirrorImageDuplicateRoll,
+      context.duplicateHitInterceptionRoll,
       fill,
       "Mirror Image duplicate roll was filled twice.",
       (value) => {
-        context.mirrorImageDuplicateRoll = value;
+        context.duplicateHitInterceptionRoll = value;
       },
     );
   }

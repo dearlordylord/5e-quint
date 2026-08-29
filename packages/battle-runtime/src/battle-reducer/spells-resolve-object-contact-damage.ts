@@ -642,7 +642,7 @@ function resolveObjectContactDamage(input: {
       input.fillSet.damageRoll !== undefined ||
       input.fillSet.concentrationSavingThrows.length > 0 ||
       input.fillSet.damageDispositions.length > 0 ||
-      input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+      input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
       input.fillSet.objectContactSavingThrowOutcome !== undefined ||
       input.fillSet.objectDropResolution !== undefined ||
       input.fillSet.sourceDamageRollPenaltyRolls.length > 0
@@ -843,7 +843,7 @@ function resolveObjectContactDamage(input: {
         target,
         damageAmount: damage,
         fills: fillsMatchingHoleIds(
-          input.fillSet.hideousLaughterDamageRepeatSaves,
+          input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
           holes,
         ),
       });
@@ -877,7 +877,7 @@ function resolveObjectContactDamage(input: {
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.hideousLaughterDamageRepeatSaves.some(
+    input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.some(
       (fill) => !hideousLaughterSaveHoleIds.has(fill.holeId),
     )
   ) {
@@ -1088,7 +1088,7 @@ function resolveObjectContactDamage(input: {
         damageAmount,
       });
     const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-      input.fillSet.hideousLaughterDamageRepeatSaves,
+      input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       hideousLaughterLifecycleHoles,
     );
     return applyPreparedSlotSpellDamage(state, targetId, damageAmount, {
@@ -1102,7 +1102,8 @@ function resolveObjectContactDamage(input: {
       linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
       damageDisposition: damageDispositionByTargetId.get(targetId),
-      hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        hideousLaughterLifecycleFills,
       damageSourceId: input.actorId,
       spatialFacts: input.fillSet.targetSpatialFacts,
       ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
@@ -1498,8 +1499,8 @@ function objectContactDamageUnrelatedFillsMessage(
     fillSet.skillChoice !== undefined ||
     fillSet.targetAbilityChoices !== undefined ||
     fillSet.abilityChoice !== undefined ||
-    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
+    fillSet.temporaryAbilityCheckRollModeActiveEffectCount !== undefined ||
+    fillSet.compelledBehaviorOptionChoice !== undefined ||
     fillSet.selfTransformationModeChoice !== undefined ||
     fillSet.conditionChoice !== undefined ||
     fillSet.areaChoice !== undefined ||
@@ -1508,7 +1509,7 @@ function objectContactDamageUnrelatedFillsMessage(
     fillSet.damageTypeChoice !== undefined ||
     (!options.allowSpellCastReactionFacts &&
       fillSet.reactionSpellTargetFacts.length > 0) ||
-    fillSet.mirrorImageDuplicateRoll !== undefined ||
+    fillSet.duplicateHitInterceptionRoll !== undefined ||
     fillSet.movement !== undefined ||
     fillSet.spellDamageReductionRolls.length > 0 ||
     fillSet.attackBurstDamageRoll !== undefined ||

@@ -809,7 +809,7 @@ function ongoingSpellEndUnrelatedFill(
       (part) =>
         part.target !== undefined ||
         part.attackRoll !== undefined ||
-        part.mirrorImageDuplicateRoll !== undefined ||
+        part.duplicateHitInterceptionRoll !== undefined ||
         part.damageRoll !== undefined,
     ) ||
     fillSet.attackRoll !== undefined ||
@@ -829,7 +829,7 @@ function ongoingSpellEndUnrelatedFill(
     fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
     fillSet.damageDispositions.length > 0 ||
     fillSet.damageRoll !== undefined ||
-    fillSet.mirrorImageDuplicateRoll !== undefined ||
+    fillSet.duplicateHitInterceptionRoll !== undefined ||
     fillSet.movement !== undefined ||
     fillSet.spellDamageReductionRolls.length > 0 ||
     fillSet.attackBurstDamageRoll !== undefined ||

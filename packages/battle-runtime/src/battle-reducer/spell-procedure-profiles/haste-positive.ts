@@ -395,7 +395,7 @@ function hasNonCompositeTargetBuffWithAftermathFill(
     fillSet.damageTypeChoice !== undefined ||
     fillSet.savingThrowOutcomes !== undefined ||
     fillSet.movement !== undefined ||
-    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
+    fillSet.temporaryAbilityCheckRollModeActiveEffectCount !== undefined ||
     fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
     fillSet.damageDispositions.length > 0 ||
     fillSet.concentrationSavingThrows.length > 0 ||

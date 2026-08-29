@@ -549,7 +549,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   );
 
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!hit && input.fillSet.mirrorImageDuplicateRoll !== undefined) {
+  if (!hit && input.fillSet.duplicateHitInterceptionRoll !== undefined) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
@@ -569,7 +569,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
           target,
           targetSpatialFacts: input.fillSet.targetSpatialFacts,
           triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
-          fill: input.fillSet.mirrorImageDuplicateRoll,
+          fill: input.fillSet.duplicateHitInterceptionRoll,
         })
       : { tag: "notAvailable" as const };
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -807,7 +807,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       target,
       damageAmount: attackDamageAmount,
       fills: fillsMatchingHoleIds(
-        input.fillSet.hideousLaughterDamageRepeatSaves,
+        input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
         attackHideousLaughterSaveHoles,
       ),
       damageEventKey: attackDamageEventKey,
@@ -840,7 +840,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
     attackConcentrationLifecycleHoles,
   );
   const attackHideousLaughterLifecycleFills = fillsMatchingHoleIds(
-    input.fillSet.hideousLaughterDamageRepeatSaves,
+    input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
     attackHideousLaughterSaveHoles,
   );
 
@@ -861,7 +861,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
               target.combatantId,
             ),
             spellMarkedDamageRiders,
-            hideousLaughterDamageRepeatSaves:
+            saveGatedConditionWithRepeatDamageRepeatSaves:
               attackHideousLaughterLifecycleFills,
             hideousLaughterDamageRepeatSaveEventKey: attackDamageEventKey,
             sourceDamageRollPenaltyRoll:
@@ -1206,7 +1206,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       target: damagedTarget,
       damageAmount,
       fills: fillsMatchingHoleIds(
-        input.fillSet.hideousLaughterDamageRepeatSaves,
+        input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
         holes,
       ),
       damageEventKey: burstDamageEventKey,
@@ -1243,7 +1243,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.hideousLaughterDamageRepeatSaves.some(
+    input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.some(
       (fill) => !hideousLaughterSaveHoleIds.has(fill.holeId),
     )
   ) {
@@ -1361,7 +1361,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
               ),
             damageDisposition: attackDamageDisposition,
             spellMarkedDamageRiders,
-            hideousLaughterDamageRepeatSaves:
+            saveGatedConditionWithRepeatDamageRepeatSaves:
               attackHideousLaughterLifecycleFills,
             hideousLaughterDamageRepeatSaveEventKey: attackDamageEventKey,
             sourceDamageRollPenaltyRoll:
@@ -1414,7 +1414,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
             iceKnifeDamageDispositionHoleKey("burst", targetId).holeId,
           );
           const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-            input.fillSet.hideousLaughterDamageRepeatSaves,
+            input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
             damageLifecycleHideousLaughterDamageRepeatSaveHoles({
               state: damagedByAttack,
               target: damagedTarget,
@@ -1431,7 +1431,8 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
               input.fillSet.damageDispositions,
               targetId,
             ),
-            hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+            saveGatedConditionWithRepeatDamageRepeatSaves:
+              hideousLaughterLifecycleFills,
             hideousLaughterDamageRepeatSaveEventKey: burstDamageEventKey,
             damageSourceId: input.actorId,
             spatialFacts: input.fillSet.targetSpatialFacts,

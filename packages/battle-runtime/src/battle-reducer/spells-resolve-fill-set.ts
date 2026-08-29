@@ -16,7 +16,7 @@ import type { Ability, Skill } from "@dnd/surface/surface/types";
 import {
   type BattleAttackRollResult,
   type BattleAttackRollRelationshipFact,
-  type BattleCommandOption,
+  type BattleCompelledBehaviorOption,
   type BattleFill,
   type BattleHoleId,
   type BattleSpellAreaIdentityChoice,
@@ -26,14 +26,13 @@ import {
   type BattleSpellTargetListSpatialFact,
   type BattleSpellTargetListRelationshipFact,
   type BattleSpellCastReactionFact,
-  type BattleMagicWeaponTargetItemFact,
+  type BattleWeaponEnhancementTargetItemFact,
   type BattleSavingThrowRelationshipFact,
   type BattleSpatialMeleeSpellAttackProxyPosition,
   type BattleObjectContactTargetSpatialFact,
   type BattleOngoingSpellTargetWithinRangeFact,
   type BattleTargetSpatialFact,
   type BattleState,
-  type SpellTargeting,
 } from "../battle-state-execution.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
@@ -61,12 +60,12 @@ import {
   isSpellDamageReductionRollFill,
 } from "./damage-helpers.ts";
 import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
-import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
+import { isSaveGatedConditionWithRepeatDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 
 import { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 import {
-  isMirrorImageDuplicateRollFill,
-  mirrorImageDuplicateRollHoleId,
+  isDuplicateHitInterceptionDuplicateRollFill,
+  duplicateHitInterceptionRollHoleId,
 } from "./mirror-image-hit-interception.ts";
 import {
   spellBurstDamageHole,
@@ -75,7 +74,7 @@ import {
   spellAttackSequencePartDamageHoleId,
   spellAttackSequencePartObjectTargetHoleId,
   spellAttackSequencePartTargetHoleId,
-  commandOptionChoiceHoleId,
+  compelledBehaviorOptionChoiceHoleId,
   spellDamageHole,
   spellDamageTypeChoiceHole,
   spellConditionChoices,
@@ -96,7 +95,7 @@ import {
 } from "./spells-holes-fills.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import {
-  magicWeaponTargetItemHoleId,
+  weaponAttackDamageEnhancementTargetItemHoleId,
   spellMovableLightPlacementHoleId,
   spatialMeleeSpellAttackProxyPositionHole,
   spatialMeleeSpellAttackProxyPositionInvalidReason,
@@ -148,7 +147,7 @@ export type SpellAttackSequencePartFillSet = {
   readonly remarkableAthleteCriticalHitMovement:
     | Extract<BattleFill, { readonly kind: "movement" }>
     | undefined;
-  readonly mirrorImageDuplicateRoll:
+  readonly duplicateHitInterceptionRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
   readonly damageRoll:
@@ -194,10 +193,10 @@ export type SpellFillSet =
       readonly objectDropResolution:
         | Extract<BattleFill, { readonly kind: "objectDropResolution" }>
         | undefined;
-      readonly magicWeaponTargetItem:
+      readonly weaponAttackDamageEnhancementTargetItem:
         | {
             readonly holeId: BattleHoleId;
-            readonly value: BattleMagicWeaponTargetItemFact;
+            readonly value: BattleWeaponEnhancementTargetItemFact;
           }
         | undefined;
       readonly ongoingSpellTarget:
@@ -248,13 +247,15 @@ export type SpellFillSet =
       readonly targetAbilityChoices:
         | Extract<BattleFill, { readonly kind: "targetAbilityChoices" }>
         | undefined;
-      readonly thaumaturgyActiveOneMinuteEffectCount:
+      readonly temporaryAbilityCheckRollModeActiveEffectCount:
         | Extract<
             BattleFill,
-            { readonly kind: "thaumaturgyActiveOneMinuteEffectCount" }
+            { readonly kind: "temporaryAbilityCheckRollModeActiveEffectCount" }
           >
         | undefined;
-      readonly commandOptionChoice: BattleCommandOption | undefined;
+      readonly compelledBehaviorOptionChoice:
+        | BattleCompelledBehaviorOption
+        | undefined;
       readonly selfTransformationModeChoice:
         | SelfTransformationModeKind
         | undefined;
@@ -279,7 +280,7 @@ export type SpellFillSet =
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
       >[];
-      readonly hideousLaughterDamageRepeatSaves: readonly Extract<
+      readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
         BattleFill,
         { readonly kind: "savingThrowOutcome" }
       >[];
@@ -290,7 +291,7 @@ export type SpellFillSet =
       readonly damageRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
         | undefined;
-      readonly mirrorImageDuplicateRoll:
+      readonly duplicateHitInterceptionRoll:
         | Extract<BattleFill, { readonly kind: "rolledDice" }>
         | undefined;
       readonly movement:
@@ -352,10 +353,10 @@ export function spellFillSet(
   let objectDropResolution:
     | Extract<BattleFill, { readonly kind: "objectDropResolution" }>
     | undefined;
-  let magicWeaponTargetItem:
+  let weaponAttackDamageEnhancementTargetItem:
     | {
         readonly holeId: BattleHoleId;
-        readonly value: BattleMagicWeaponTargetItemFact;
+        readonly value: BattleWeaponEnhancementTargetItemFact;
       }
     | undefined;
   let ongoingSpellTarget:
@@ -397,7 +398,7 @@ export function spellFillSet(
           attackRoll: undefined,
           remarkableAthleteCriticalHitMovementDecision: undefined,
           remarkableAthleteCriticalHitMovement: undefined,
-          mirrorImageDuplicateRoll: undefined,
+          duplicateHitInterceptionRoll: undefined,
           damageRoll: undefined,
         }))
       : [];
@@ -415,13 +416,13 @@ export function spellFillSet(
   let targetAbilityChoices:
     | Extract<BattleFill, { readonly kind: "targetAbilityChoices" }>
     | undefined;
-  let thaumaturgyActiveOneMinuteEffectCount:
+  let temporaryAbilityCheckRollModeActiveEffectCount:
     | Extract<
         BattleFill,
-        { readonly kind: "thaumaturgyActiveOneMinuteEffectCount" }
+        { readonly kind: "temporaryAbilityCheckRollModeActiveEffectCount" }
       >
     | undefined;
-  let commandOptionChoice: BattleCommandOption | undefined;
+  let compelledBehaviorOptionChoice: BattleCompelledBehaviorOption | undefined;
   let selfTransformationModeChoice: SelfTransformationModeKind | undefined;
   let conditionChoice: Condition | undefined;
   let controlledVerticalSuspensionInitialRiseFeet: MovementFeet | undefined;
@@ -442,7 +443,7 @@ export function spellFillSet(
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[] = [];
-  const hideousLaughterDamageRepeatSaves: Extract<
+  const saveGatedConditionWithRepeatDamageRepeatSaves: Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [];
@@ -453,7 +454,7 @@ export function spellFillSet(
   let damageRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
-  let mirrorImageDuplicateRoll:
+  let duplicateHitInterceptionRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
   let movement: Extract<BattleFill, { readonly kind: "movement" }> | undefined;
@@ -485,11 +486,11 @@ export function spellFillSet(
       };
     }
     /* v8 ignore stop -- @preserve */
-    if (fill.kind === "slowSomaticSpellFailureOutcome") {
+    if (fill.kind === "turnConstraintSomaticSpellFailureOutcome") {
       continue;
     }
 
-    if (fill.kind === "sanctuaryInterdictionOutcome") {
+    if (fill.kind === "targetingSaveInterdictionOutcome") {
       continue;
     }
 
@@ -932,9 +933,9 @@ export function spellFillSet(
       continue;
     }
 
-    if (fill.kind === "magicWeaponTargetItem") {
+    if (fill.kind === "weaponAttackDamageEnhancementTargetItem") {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (invocation.procedure !== "magicWeaponEnhancement") {
+      if (invocation.procedure !== "weaponAttackDamageEnhancement") {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
@@ -943,7 +944,10 @@ export function spellFillSet(
       }
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (fill.holeId !== magicWeaponTargetItemHoleId(invocation)) {
+      if (
+        fill.holeId !==
+        weaponAttackDamageEnhancementTargetItemHoleId(invocation)
+      ) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
@@ -953,7 +957,7 @@ export function spellFillSet(
       }
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (magicWeaponTargetItem !== undefined) {
+      if (weaponAttackDamageEnhancementTargetItem !== undefined) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
@@ -961,7 +965,7 @@ export function spellFillSet(
         };
       }
       /* v8 ignore stop -- @preserve */
-      magicWeaponTargetItem = {
+      weaponAttackDamageEnhancementTargetItem = {
         holeId: fill.holeId,
         value: fill.value,
       };
@@ -973,13 +977,10 @@ export function spellFillSet(
       if (
         invocation.procedure !== "persistentAreaTrait" &&
         invocation.procedure !== "magicalDarknessPointOrigin" &&
-        invocation.procedure !== "antimagicFieldOngoingSpellSuppression" &&
+        invocation.procedure !== "magicSuppressionEmanation" &&
         invocation.procedure !== "persistentAreaSaveDamage" &&
         invocation.procedure !== "areaMovementDistanceDamage" &&
-        invocation.procedure !== "persistentAreaSaveDamage" &&
         invocation.procedure !== "persistentAreaSaveComposite" &&
-        invocation.procedure !== "persistentAreaSaveDamage" &&
-        invocation.procedure !== "persistentAreaSaveDamage" &&
         invocation.procedure !== "persistentAreaSaveConditionEscape"
       ) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
@@ -1126,11 +1127,11 @@ export function spellFillSet(
           !isTargetListSpellInvocation(invocation)) ||
         (invocation.procedure === "abilityD20TestRollModeSaveGate" &&
           !isTargetListSpellInvocation(invocation)) ||
-        (invocation.procedure === "hideousLaughter" &&
+        (invocation.procedure === "saveGatedConditionWithRepeat" &&
           !isTargetListSpellInvocation(invocation)) ||
-        (invocation.procedure === "command" &&
+        (invocation.procedure === "compelledNextTurnBehavior" &&
           !isTargetListSpellInvocation(invocation)) ||
-        (invocation.procedure === "sanctuaryTargetingInterdiction" &&
+        (invocation.procedure === "targetingSaveInterdiction" &&
           !isTargetListSpellInvocation(invocation)) ||
         (invocation.procedure === "directCondition" &&
           !isTargetListSpellInvocation(invocation))
@@ -1249,10 +1250,10 @@ export function spellFillSet(
         ...fill,
         value: effectiveD20TestNaturalOneRerollSavingThrowOutcomes(fill.value),
       };
-      if (isHideousLaughterDamageRepeatSaveFill(fill)) {
+      if (isSaveGatedConditionWithRepeatDamageRepeatSaveFill(fill)) {
         /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (
-          hideousLaughterDamageRepeatSaves.some(
+          saveGatedConditionWithRepeatDamageRepeatSaves.some(
             (candidate) => candidate.holeId === fill.holeId,
           )
         ) {
@@ -1263,7 +1264,9 @@ export function spellFillSet(
           };
         }
         /* v8 ignore stop -- @preserve */
-        hideousLaughterDamageRepeatSaves.push(effectiveSavingThrowOutcomeFill);
+        saveGatedConditionWithRepeatDamageRepeatSaves.push(
+          effectiveSavingThrowOutcomeFill,
+        );
         continue;
       }
       if (
@@ -1385,9 +1388,9 @@ export function spellFillSet(
       continue;
     }
 
-    if (fill.kind === "commandOptionChoice") {
+    if (fill.kind === "compelledBehaviorOptionChoice") {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (invocation.procedure !== "command") {
+      if (invocation.procedure !== "compelledNextTurnBehavior") {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
@@ -1396,7 +1399,7 @@ export function spellFillSet(
       }
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (fill.holeId !== commandOptionChoiceHoleId(invocation)) {
+      if (fill.holeId !== compelledBehaviorOptionChoiceHoleId(invocation)) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
@@ -1406,7 +1409,7 @@ export function spellFillSet(
       }
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (commandOptionChoice !== undefined) {
+      if (compelledBehaviorOptionChoice !== undefined) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
@@ -1414,7 +1417,7 @@ export function spellFillSet(
         };
       }
       /* v8 ignore stop -- @preserve */
-      commandOptionChoice = fill.value;
+      compelledBehaviorOptionChoice = fill.value;
       continue;
     }
 
@@ -1755,9 +1758,9 @@ export function spellFillSet(
       continue;
     }
 
-    if (fill.kind === "thaumaturgyActiveOneMinuteEffectCount") {
+    if (fill.kind === "temporaryAbilityCheckRollModeActiveEffectCount") {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (invocation.procedure !== "thaumaturgyBoomingVoice") {
+      if (invocation.procedure !== "temporaryAbilityCheckRollMode") {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
@@ -1777,7 +1780,7 @@ export function spellFillSet(
       }
       /* v8 ignore stop -- @preserve */
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (thaumaturgyActiveOneMinuteEffectCount !== undefined) {
+      if (temporaryAbilityCheckRollModeActiveEffectCount !== undefined) {
         /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
@@ -1785,7 +1788,7 @@ export function spellFillSet(
         };
       }
       /* v8 ignore stop -- @preserve */
-      thaumaturgyActiveOneMinuteEffectCount = fill;
+      temporaryAbilityCheckRollModeActiveEffectCount = fill;
       continue;
     }
 
@@ -1794,7 +1797,7 @@ export function spellFillSet(
       if (
         invocation.procedure !== "damageReduction" &&
         invocation.procedure !== "chosenDamageResistance" &&
-        invocation.procedure !== "dragonsBreathInitial" &&
+        invocation.procedure !== "grantedAreaSaveDamageAction" &&
         !(
           invocation.procedure === "spellAttackDamage" &&
           invocation.damage.kind === "sorcerousBurstDamageTypeChoice"
@@ -1891,7 +1894,7 @@ export function spellFillSet(
     }
 
     if (fill.kind === "rolledDice") {
-      if (isMirrorImageDuplicateRollFill(fill)) {
+      if (isDuplicateHitInterceptionDuplicateRollFill(fill)) {
         /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (
           !MIRROR_IMAGE_DUPLICATE_ROLL_PROCEDURE_SET.has(invocation.procedure)
@@ -1930,7 +1933,9 @@ export function spellFillSet(
           }
           /* v8 ignore stop -- @preserve */
           /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-          if (attackSequencePartFill.mirrorImageDuplicateRoll !== undefined) {
+          if (
+            attackSequencePartFill.duplicateHitInterceptionRoll !== undefined
+          ) {
             /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
@@ -1941,12 +1946,12 @@ export function spellFillSet(
           /* v8 ignore stop -- @preserve */
           attackSequencePartFills[partIndex] = {
             ...attackSequencePartFill,
-            mirrorImageDuplicateRoll: fill,
+            duplicateHitInterceptionRoll: fill,
           };
           continue;
         }
         /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-        if (mirrorImageDuplicateRoll !== undefined) {
+        if (duplicateHitInterceptionRoll !== undefined) {
           /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
@@ -1954,7 +1959,7 @@ export function spellFillSet(
           };
         }
         /* v8 ignore stop -- @preserve */
-        mirrorImageDuplicateRoll = fill;
+        duplicateHitInterceptionRoll = fill;
         continue;
       }
       if (invocation.procedure === "spellAttackSequence") {
@@ -2215,7 +2220,7 @@ export function spellFillSet(
     objectContactTargets,
     objectContactSavingThrowOutcome,
     objectDropResolution,
-    magicWeaponTargetItem,
+    weaponAttackDamageEnhancementTargetItem,
     ongoingSpellTarget,
     ongoingSpellAbilityChecks,
     targetSpatialFacts,
@@ -2234,8 +2239,8 @@ export function spellFillSet(
     skillChoice,
     abilityChoice,
     targetAbilityChoices,
-    thaumaturgyActiveOneMinuteEffectCount,
-    commandOptionChoice,
+    temporaryAbilityCheckRollModeActiveEffectCount,
+    compelledBehaviorOptionChoice,
     selfTransformationModeChoice,
     conditionChoice,
     controlledVerticalSuspensionInitialRiseFeet,
@@ -2245,10 +2250,10 @@ export function spellFillSet(
     movableLightPlacement,
     damageTypeChoice,
     concentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves,
+    saveGatedConditionWithRepeatDamageRepeatSaves,
     damageDispositions,
     damageRoll,
-    mirrorImageDuplicateRoll,
+    duplicateHitInterceptionRoll,
     movement,
     spellDamageReductionRolls,
     sourceDamageRollPenaltyRolls,
@@ -2270,7 +2275,7 @@ function spellAttackSequencePartIndexForMirrorImageRoll(
     partIndex += 1
   ) {
     if (
-      mirrorImageDuplicateRollHoleId(
+      duplicateHitInterceptionRollHoleId(
         spellAttackSequencePartAttackRollHoleId(invocation, partIndex),
       ) === holeId
     ) {
@@ -2348,7 +2353,7 @@ export function parseSpellCastReactionFactsFill(
 function isSpellCastReactionFact(
   fact: BattleTargetSpatialFact,
 ): fact is SpellCastReactionFact {
-  return fact.kind === "counterspellTriggerCasterVisibleWithinRange";
+  return fact.kind === "spellCastInterruptionTriggerCasterVisibleWithinRange";
 }
 
 function attackSightFactValidation(
@@ -2360,7 +2365,7 @@ function attackSightFactValidation(
 
 export function spellFillSetSavingThrowTargeting(
   invocation: RuntimeSpellProcedure,
-): SpellTargeting {
+) {
   return invocation.procedure === "attackBurstSaveDamage"
     ? invocation.burst.targeting
     : invocation.procedure === "saveGatedDamage" ||
@@ -2369,17 +2374,17 @@ export function spellFillSetSavingThrowTargeting(
         invocation.procedure === "afterHitSaveGatedCondition" ||
         invocation.procedure === "saveGatedAttackRollAdvantage" ||
         invocation.procedure === "abilityD20TestRollModeSaveGate" ||
-        invocation.procedure === "counterspell" ||
-        invocation.procedure === "sleepTargetAdmission" ||
-        invocation.procedure === "hideousLaughter" ||
-        invocation.procedure === "hypnoticPattern" ||
-        invocation.procedure === "command" ||
+        invocation.procedure === "spellCastInterruptionReaction" ||
+        invocation.procedure === "stagedSaveCondition" ||
+        invocation.procedure === "saveGatedConditionWithRepeat" ||
+        invocation.procedure === "saveGatedAreaControl" ||
+        invocation.procedure === "compelledNextTurnBehavior" ||
         invocation.procedure === "creatureSizeIncrease" ||
         invocation.procedure === "creatureSizeDecrease" ||
         invocation.procedure === "controlledVerticalSuspension" ||
         invocation.procedure === "persistentAreaSaveCondition" ||
         invocation.procedure === "directionalPersistentArea" ||
-        invocation.procedure === "slowActivePenalties"
+        invocation.procedure === "saveGatedTurnConstraintBundle"
       ? invocation.targeting
       : { kind: "singleCombatant" };
 }

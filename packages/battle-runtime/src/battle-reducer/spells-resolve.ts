@@ -1566,7 +1566,7 @@ function spellAttackPostMirrorImageFillsArePresent(
     fillSet.damageDispositions.length > 0 ||
     fillSet.spellDamageReductionRolls.length > 0 ||
     fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
     fillSet.attackBurstDamageRoll !== undefined ||
     fillSet.remarkableAthleteCriticalHitMovementDecision !== undefined ||
     fillSet.remarkableAthleteCriticalHitMovement !== undefined
@@ -2668,7 +2668,7 @@ function resolveSpellActInternal(
     const attackRolledStateBeforeHitContinuations =
       attackRolledStateWithSpatialMeleeSpellAttackProxyCast.state;
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!hit && fillSet.mirrorImageDuplicateRoll !== undefined) {
+    if (!hit && fillSet.duplicateHitInterceptionRoll !== undefined) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
@@ -2698,7 +2698,7 @@ function resolveSpellActInternal(
           ) ?? target,
         targetSpatialFacts: fillSet.targetSpatialFacts,
         triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
-        fill: fillSet.mirrorImageDuplicateRoll,
+        fill: fillSet.duplicateHitInterceptionRoll,
       });
       if (mirrorImageCheck.tag === "needsHoles") {
         return needsHolesResult(
@@ -3155,7 +3155,7 @@ function resolveSpellActInternal(
       state: spellDamageBaseState,
       target: spellReduction.target,
       damageAmount: spellDamageAmount,
-      fills: fillSet.hideousLaughterDamageRepeatSaves,
+      fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
     });
   if (hideousLaughterSaveCheck.tag === "needsHoles") {
     return needsHolesResult(spellDamageBaseState, input.subject, [
@@ -3221,8 +3221,8 @@ function resolveSpellActInternal(
       spellMarkedDamageRiders,
       sourceDamageRollPenaltyRoll,
       spellDamageReductionRoll: spellReductionRoll,
-      hideousLaughterDamageRepeatSaves:
-        fillSet.hideousLaughterDamageRepeatSaves,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       damageSourceId: subject.actorId,
       saveDamageResult: spellDamageResult,
       spatialFacts: fillSet.targetSpatialFacts,

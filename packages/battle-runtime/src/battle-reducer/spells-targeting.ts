@@ -16,7 +16,7 @@ import {
   type BattleObjectContactTargetsHole,
   type BattleExecutableSpellInvocation,
   type BattleHoleId,
-  type BattleCommandOptionChoiceHole,
+  type BattleCompelledBehaviorOptionChoiceHole,
   type BattleMovableLightPlacementHole,
   type BattleSelfTransformationModeChoiceHole,
   type BattleSpellTargetAllocation,
@@ -28,7 +28,7 @@ import {
   type BattleSpellTargetListSpatialFact,
   type BattleState,
   type BattleTeleportDestinationHole,
-  type BattleMagicWeaponTargetItemHole,
+  type BattleWeaponEnhancementTargetItemHole,
   type BattleObjectTargetChoiceHole,
   type BattleCreatureState,
   type BattleTargetChoiceHole,
@@ -107,9 +107,9 @@ type SingleObjectSpellInvocation =
 
 type MechanicalTargetListSpellInvocation =
   import("../battle-state-execution.ts").TargetListSpellInvocationOf<RuntimeSpellProcedure>;
-type MagicWeaponEnhancementSpellExecution = Extract<
+type WeaponAttackDamageEnhancementSpellExecution = Extract<
   RuntimeSpellProcedure,
-  { readonly procedure: "magicWeaponEnhancement" }
+  { readonly procedure: "weaponAttackDamageEnhancement" }
 >;
 
 type SpellTargetLegalityOptions = {
@@ -169,7 +169,7 @@ export function spellTargetHole(
     procedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
     ...(invocation.procedure === "spatialMeleeSpellAttackProxy" ||
-    invocation.procedure === "featherFallMitigation"
+    invocation.procedure === "fallingCreatureMitigationReaction"
       ? {}
       : ordinarySpellTargetSpatialFactRequest(actorId, invocation)),
     ...(spellTargetRequiresAttackRollRelationshipFact(invocation) &&
@@ -394,12 +394,12 @@ export function spellObjectTargetHoleId(
   return holeId(`battle:spell:object-target:${invocation.procedure}`);
 }
 
-export function magicWeaponTargetItemHole(
-  invocation: BattleExecutableSpellInvocation<MagicWeaponEnhancementSpellExecution>,
-): BattleMagicWeaponTargetItemHole {
-  const holeKey = `battle:spell:magic-weapon-target-item:${invocation.procedure}`;
+export function weaponAttackDamageEnhancementTargetItemHole(
+  invocation: BattleExecutableSpellInvocation<WeaponAttackDamageEnhancementSpellExecution>,
+): BattleWeaponEnhancementTargetItemHole {
+  const holeKey = `battle:spell:weapon-attack-damage-enhancement-target-item:${invocation.procedure}`;
   return {
-    kind: "magicWeaponTargetItem",
+    kind: "weaponAttackDamageEnhancementTargetItem",
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `Spell target item`,
@@ -408,11 +408,11 @@ export function magicWeaponTargetItemHole(
   };
 }
 
-export function magicWeaponTargetItemHoleId(
-  invocation: MagicWeaponEnhancementSpellExecution,
+export function weaponAttackDamageEnhancementTargetItemHoleId(
+  invocation: WeaponAttackDamageEnhancementSpellExecution,
 ): BattleHoleId {
   return holeId(
-    `battle:spell:magic-weapon-target-item:${invocation.procedure}`,
+    `battle:spell:weapon-attack-damage-enhancement-target-item:${invocation.procedure}`,
   );
 }
 
@@ -624,6 +624,7 @@ function ordinarySpellTargetSpatialFactRequest(
   actorId: CombatantId,
   invocation: BattleExecutableSpellInvocation,
 ): Pick<BattleSpellTargetListHole, "spellTargetSpatialFactRequest"> {
+  if (invocation.procedure === "spawnedCompanionLifecycle") return {};
   const rangeFeet =
     "rangeFeet" in invocation
       ? invocation.rangeFeet
@@ -665,15 +666,18 @@ function targetListHoleMaxTargets(
     : choiceCount;
 }
 
-export function commandOptionChoiceHole(
+export function compelledBehaviorOptionChoiceHole(
   invocation: BattleExecutableSpellInvocation<
-    Extract<RuntimeSpellProcedure, { readonly procedure: "command" }>
+    Extract<
+      RuntimeSpellProcedure,
+      { readonly procedure: "compelledNextTurnBehavior" }
+    >
   >,
-): BattleCommandOptionChoiceHole {
-  const holeKey = `battle:spell:command-option:${invocation.procedure}`;
+): BattleCompelledBehaviorOptionChoiceHole {
+  const holeKey = `battle:spell:compelled-behavior-option:${invocation.procedure}`;
   return {
-    kind: "commandOptionChoice",
-    holeId: commandOptionChoiceHoleId(invocation),
+    kind: "compelledBehaviorOptionChoice",
+    holeId: compelledBehaviorOptionChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `Spell command option`,
     sourceProcedureRef: invocation.sourceProcedureRef,
@@ -681,10 +685,15 @@ export function commandOptionChoiceHole(
   };
 }
 
-export function commandOptionChoiceHoleId(
-  invocation: Extract<RuntimeSpellProcedure, { readonly procedure: "command" }>,
+export function compelledBehaviorOptionChoiceHoleId(
+  invocation: Extract<
+    RuntimeSpellProcedure,
+    { readonly procedure: "compelledNextTurnBehavior" }
+  >,
 ): BattleHoleId {
-  return holeId(`battle:spell:command-option:${invocation.procedure}`);
+  return holeId(
+    `battle:spell:compelled-behavior-option:${invocation.procedure}`,
+  );
 }
 
 export function selfTransformationModeChoiceHole(
@@ -874,9 +883,9 @@ export function spellTargetSpatialFactMatches(
       fact.reachFeet === invocation.forceReachFeet
     );
   }
-  if (invocation.procedure === "featherFallMitigation") {
+  if (invocation.procedure === "fallingCreatureMitigationReaction") {
     return (
-      fact.kind === "featherFallTargetFallingWithinRange" &&
+      fact.kind === "fallingCreatureTargetWithinRange" &&
       fact.casterId === actorId &&
       fact.targetId === targetId &&
       fact.sourceProcedureRef === sourceProcedureRef &&
@@ -1059,7 +1068,10 @@ export function spellTargetHasNonSpatialPrerequisites(
   ) {
     return false;
   }
-  if (invocation.procedure === "wardingBond" && targetId === actorId) {
+  if (
+    invocation.procedure === "linkedDefenseResistanceDamageShare" &&
+    targetId === actorId
+  ) {
     return false;
   }
   if (invocation.procedure === "makeStable") {
@@ -1327,8 +1339,8 @@ export function spellInvocationRequiresKnownWillingTarget(
     invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure ===
       "conditionImmunityAndTurnStartTemporaryHitPoints" ||
-    invocation.procedure === "wardingBond" ||
-    invocation.procedure === "dragonsBreathInitial" ||
+    invocation.procedure === "linkedDefenseResistanceDamageShare" ||
+    invocation.procedure === "grantedAreaSaveDamageAction" ||
     invocationHasWillingTargetList(invocation)
   );
 }

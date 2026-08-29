@@ -155,7 +155,7 @@ export function resolveSpellAttackSequenceAct(input: {
     input.fillSet.savingThrowOutcomes !== undefined ||
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.mirrorImageDuplicateRoll !== undefined ||
+    input.fillSet.duplicateHitInterceptionRoll !== undefined ||
     input.fillSet.damageRoll !== undefined
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -589,7 +589,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     },
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: Mirror Image emits a duplicate roll only after this sequence attack has hit. */
-  if (!hit && input.partFill.mirrorImageDuplicateRoll !== undefined) {
+  if (!hit && input.partFill.duplicateHitInterceptionRoll !== undefined) {
     const partName = spellAttackSequencePartName();
     return invalidResult(
       input.input.state,
@@ -618,7 +618,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         input.invocation,
         input.partIndex,
       ),
-      fill: input.partFill.mirrorImageDuplicateRoll,
+      fill: input.partFill.duplicateHitInterceptionRoll,
     });
     if (mirrorImageCheck.tag === "needsHoles") {
       return needsHolesResult(attackRolledState, input.input.subject, [
@@ -930,7 +930,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   const relevantHideousLaughterDamageRepeatSaves =
     hideousLaughterDamageRepeatSaveFillsForTarget(
       spellReduction.target,
-      input.fillSet.hideousLaughterDamageRepeatSaves,
+      input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       damageEventKey,
     );
   const hideousLaughterSaveCheck = hideousLaughterDamageRepeatSaveFillCheck({
@@ -1016,7 +1016,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       spellDamageReductionRoll: spellReductionRoll,
       spellDamageReductionRollHoleForReduction: spellReductionRollHoleForPart,
       sourceDamageRollPenaltyRoll,
-      hideousLaughterDamageRepeatSaves:
+      saveGatedConditionWithRepeatDamageRepeatSaves:
         relevantHideousLaughterDamageRepeatSaves,
       hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
       damageSourceId: input.actorId,
@@ -1361,7 +1361,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
 function spellObjectPartHasMirrorImageDuplicateRoll(
   partFill: SpellAttackSequencePartFillSet,
 ): boolean {
-  return partFill.mirrorImageDuplicateRoll !== undefined;
+  return partFill.duplicateHitInterceptionRoll !== undefined;
 }
 
 function spellObjectPartSightFactMissing(

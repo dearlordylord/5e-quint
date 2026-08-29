@@ -611,11 +611,11 @@ function movableLightFillSetHasUnrelatedFills(
     fillSet.skillChoice !== undefined ||
     fillSet.targetAbilityChoices !== undefined ||
     fillSet.abilityChoice !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
+    fillSet.compelledBehaviorOptionChoice !== undefined ||
     fillSet.areaChoice !== undefined ||
     fillSet.damageTypeChoice !== undefined ||
     fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
     fillSet.damageDispositions.length > 0 ||
     fillSet.damageRoll !== undefined ||
     fillSet.movement !== undefined ||
@@ -1724,7 +1724,7 @@ type TargetedSpellHideousLaughterPreparation =
   | { readonly tag: "result"; readonly result: BattleResolutionResult }
   | {
       readonly tag: "ready";
-      readonly hideousLaughterLifecycleFills: TargetedSpellReleaseFillSet["hideousLaughterDamageRepeatSaves"];
+      readonly hideousLaughterLifecycleFills: TargetedSpellReleaseFillSet["saveGatedConditionWithRepeatDamageRepeatSaves"];
     };
 
 type TargetedSpellDamageDispositionPreparation =
@@ -1751,7 +1751,7 @@ type TargetedSpellDamageResolvedLifecycleInput =
     >;
     readonly concentrationLifecycleFills: TargetedSpellReleaseFillSet["concentrationSavingThrows"];
     readonly damageDisposition: ReturnType<typeof damageDispositionForTarget>;
-    readonly hideousLaughterLifecycleFills: TargetedSpellReleaseFillSet["hideousLaughterDamageRepeatSaves"];
+    readonly hideousLaughterLifecycleFills: TargetedSpellReleaseFillSet["saveGatedConditionWithRepeatDamageRepeatSaves"];
     readonly relationshipDecisions: TargetedSpellRelationshipDecisions;
     readonly invocation: TargetedSpellReleaseInvocation;
   };
@@ -1823,7 +1823,7 @@ function resolveTargetedSpellHideousLaughterLifecycle(
       state: input.releaseDamageBaseState,
       target: input.target,
       damageAmount: input.spellDamageAmount,
-      fills: input.fillSet.hideousLaughterDamageRepeatSaves,
+      fills: input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
     });
   if (hideousLaughterSaveCheck.tag === "needsHoles") {
     return {
@@ -1849,7 +1849,7 @@ function resolveTargetedSpellHideousLaughterLifecycle(
   return {
     tag: "ready",
     hideousLaughterLifecycleFills: fillsMatchingHoleIds(
-      input.fillSet.hideousLaughterDamageRepeatSaves,
+      input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       hideousLaughterSaveCheck.holes,
     ),
   };

@@ -536,7 +536,7 @@ export function resolvePreparedSlotSpellAct(input: {
         target,
         damageAmount,
         fills: fillsMatchingHoleIds(
-          input.fillSet.hideousLaughterDamageRepeatSaves,
+          input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
           holes,
         ),
       });
@@ -569,7 +569,7 @@ export function resolvePreparedSlotSpellAct(input: {
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.hideousLaughterDamageRepeatSaves.some(
+    input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.some(
       (fill) => !hideousLaughterSaveHoleIds.has(fill.holeId),
     )
   ) {
@@ -661,7 +661,7 @@ export function resolvePreparedSlotSpellAct(input: {
           damageAmount,
         });
       const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-        input.fillSet.hideousLaughterDamageRepeatSaves,
+        input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
         hideousLaughterLifecycleHoles,
       );
       return applyPreparedSlotSpellDamage(
@@ -683,7 +683,8 @@ export function resolvePreparedSlotSpellAct(input: {
             input.fillSet.damageDispositions,
             allocation.targetId,
           ),
-          hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+          saveGatedConditionWithRepeatDamageRepeatSaves:
+            hideousLaughterLifecycleFills,
           damageSourceId: input.actorId,
           spatialFacts: input.fillSet.targetSpatialFacts,
           ...optionalProperty(

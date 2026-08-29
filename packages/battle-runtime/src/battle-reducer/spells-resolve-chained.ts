@@ -162,7 +162,7 @@ export type ChainedSpellFillSet =
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
       >[];
-      readonly hideousLaughterDamageRepeatSaves: readonly Extract<
+      readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
         BattleFill,
         { readonly kind: "savingThrowOutcome" }
       >[];
@@ -626,7 +626,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         concentrationFills: fillSet.concentrationSavingThrows,
         hideousLaughterDamageRepeatSaveHoleIds,
         hideousLaughterDamageRepeatSaveFills:
-          fillSet.hideousLaughterDamageRepeatSaves,
+          fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
         damageDispositionHoles,
         damageDispositionFills: fillSet.damageDispositions,
       });
@@ -811,7 +811,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         damageEventKey,
       });
     const hideousLaughterLifecycleFills = matchingHoleIdFills(
-      fillSet.hideousLaughterDamageRepeatSaves,
+      fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       hideousLaughterLifecycleHoles,
     );
     const hideousLaughterSaveCheck =
@@ -889,7 +889,8 @@ export function resolveChainedSpellAttackDamageAct(input: {
         damageDisposition,
         linkedDefenseResistanceDamageShareConcentrationSavingThrows:
           concentrationLifecycleFills,
-        hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+        saveGatedConditionWithRepeatDamageRepeatSaves:
+          hideousLaughterLifecycleFills,
         hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
         damageSourceId: input.actorId,
         spatialFacts: step.target.spatialFacts,
@@ -929,7 +930,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         concentrationFills: fillSet.concentrationSavingThrows,
         hideousLaughterDamageRepeatSaveHoleIds,
         hideousLaughterDamageRepeatSaveFills:
-          fillSet.hideousLaughterDamageRepeatSaves,
+          fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
         damageDispositionHoles,
         damageDispositionFills: fillSet.damageDispositions,
       });
@@ -1043,7 +1044,7 @@ export function chainedSpellFillSet(
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[] = [];
-  const hideousLaughterDamageRepeatSaves: Extract<
+  const saveGatedConditionWithRepeatDamageRepeatSaves: Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [];
@@ -1276,7 +1277,7 @@ export function chainedSpellFillSet(
     ) {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
-        hideousLaughterDamageRepeatSaves.some(
+        saveGatedConditionWithRepeatDamageRepeatSaves.some(
           (candidate) => candidate.holeId === fill.holeId,
         )
       ) {
@@ -1286,7 +1287,7 @@ export function chainedSpellFillSet(
         };
       }
       /* v8 ignore stop -- @preserve */
-      hideousLaughterDamageRepeatSaves.push(fill);
+      saveGatedConditionWithRepeatDamageRepeatSaves.push(fill);
       continue;
     }
     if (fill.kind === "attackDamageDisposition") {
@@ -1339,7 +1340,7 @@ export function chainedSpellFillSet(
     damageType,
     steps,
     concentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves,
+    saveGatedConditionWithRepeatDamageRepeatSaves,
     damageDispositions,
     sourceDamageRollPenaltyRolls,
     reactionSpellTargetFacts,
@@ -1554,7 +1555,7 @@ type ChainedSpellDamageContext = {
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[];
-  readonly hideousLaughterDamageRepeatSaves: readonly Extract<
+  readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
@@ -1583,7 +1584,8 @@ export function applyChainedSpellDamage(
     concentrationSavingThrow: context.concentrationSavingThrow,
     linkedDefenseResistanceDamageShareConcentrationSavingThrows:
       context.linkedDefenseResistanceDamageShareConcentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves: context.hideousLaughterDamageRepeatSaves,
+    saveGatedConditionWithRepeatDamageRepeatSaves:
+      context.saveGatedConditionWithRepeatDamageRepeatSaves,
     hideousLaughterDamageRepeatSaveEventKey:
       context.hideousLaughterDamageRepeatSaveEventKey,
   });

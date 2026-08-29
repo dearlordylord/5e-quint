@@ -269,7 +269,7 @@ export function resolvePersistentAreaTraitSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -349,7 +349,7 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -484,7 +484,7 @@ export function resolveRamMovablePersistentAreaSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -564,7 +564,7 @@ export function resolveAreaMovementDistanceDamageSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -650,7 +650,7 @@ export function resolveMovablePersistentAreaSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -730,7 +730,7 @@ export function resolvePersistentAreaSaveConditionEscapeSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -809,7 +809,7 @@ export function resolvePersistentAreaSaveCompositeSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -884,7 +884,7 @@ export function resolveStationaryPersistentAreaAreaHazardSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -959,7 +959,7 @@ export function resolveTranslatingPersistentAreaAreaHazardSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -1032,7 +1032,7 @@ export function resolveDirectionalPersistentAreaSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||

@@ -2299,7 +2299,7 @@ export function resolveSelectedAttackProcedure<
     criticalThreshold,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!hit && fillSet.mirrorImageDuplicateRoll !== undefined) {
+  if (!hit && fillSet.duplicateHitInterceptionRoll !== undefined) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
@@ -2325,7 +2325,7 @@ export function resolveSelectedAttackProcedure<
       target: requireCurrentAttackTarget(attackRolledState, target),
       targetSpatialFacts: fillSet.targetSpatialFacts,
       triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
-      fill: fillSet.mirrorImageDuplicateRoll,
+      fill: fillSet.duplicateHitInterceptionRoll,
     });
     if (mirrorImageCheck.tag === "needsHoles") {
       return needsHolesResult(attackRolledState, input.subject, [
