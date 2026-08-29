@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "62961f94f8b8389534fd42eb6c7809a6a0161f02",
+    "registryCommit": "a744a097b389161fc09b282e5df0f6bbf91d351a",
     "generator": {
       "path": "scripts/gh381-registry-path-manifest.cjs",
       "sha256": "d48ee1ce403362f49f7f03c55f0be276dd5337740cea5f3512367c167d3ad9d5"
@@ -12,11 +12,11 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "80aecae1829a4952267faa97605998b0ae2103f16e902cdb199f7819ae828732"
+        "sha256": "9d16847ebe680c190de387f1bfdc16d86481e7d3a743819666982df132d15313"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
-        "sha256": "57afb27331e9739b4941011c6fc2a0d08beda1336fd2682cf09787b2c5ca1f40"
+        "sha256": "c41049e94d81b6d5aadbdbc75035f19c46839247455e91da0730997f1cd6de18"
       }
     ]
   },
@@ -332,11 +332,11 @@
   },
   "sourceOrPurePaths": [
     "packages/battle-runtime/battle-runtime-acid-arrow.qnt",
-    "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt",
     "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
     "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
     "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt",
     "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.qnt",
+    "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt",
     "packages/battle-runtime/battle-runtime-concentration.qnt",
     "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
     "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
@@ -371,6 +371,7 @@
     "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
     "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
     "packages/battle-runtime/battle-runtime-light.qnt",
+    "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
     "packages/battle-runtime/battle-runtime-marked-riders.qnt",
     "packages/battle-runtime/battle-runtime-marked-spells.qnt",
     "packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt",
@@ -408,16 +409,17 @@
     "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
     "packages/battle-runtime/battle-runtime-save-condition-target-list.qnt",
     "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+    "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
     "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
     "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt",
     "packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt",
     "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
     "packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt",
     "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+    "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
     "packages/battle-runtime/battle-runtime-see-invisibility.qnt",
     "packages/battle-runtime/battle-runtime-self-transformation.qnt",
     "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-    "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
     "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt",
     "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
     "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
@@ -532,10 +534,10 @@
     "packages/battle-runtime/src/find-familiar-pact-chain.ts",
     "packages/battle-runtime/src/find-familiar-state.ts",
     "packages/battle-runtime/src/find-familiar-telepathy.ts",
+    "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt",
     "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
     "packages/shared-algebras/proofs/rule-core/spell-damage-rider-projection-core.qnt",
     "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
-    "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
     "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt",
     "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
     "packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt",
@@ -545,12 +547,18 @@
   "parityOrFixturePaths": [
     "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
     "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+    "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt",
     "packages/battle-runtime/battle-runtime-armor-class.qnt",
     "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+    "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath-tests.qnt",
     "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt",
     "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
     "packages/battle-runtime/battle-runtime-interrupt-bridge.qnt",
+    "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt",
     "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+    "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+    "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle-tests.qnt",
+    "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
     "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt",
     "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
     "packages/battle-runtime/battle-runtime-spell-rider-bridge.qnt",
@@ -685,21 +693,21 @@
   "qntOwnerAccounting": {
     "unit": "Unique qntOwners resolved through qnt-owner-roles.jsonl; semantic-core is the only QNT authority class.",
     "counts": {
-      "semanticCore": 113,
+      "semanticCore": 115,
       "bridge": 4,
       "mbtFixture": 3,
-      "proofOnly": 7,
+      "proofOnly": 13,
       "selectedIdentityTrace": 0,
       "unregistered": 0,
-      "totalResolvedOwnerPaths": 127
+      "totalResolvedOwnerPaths": 135
     },
     "semanticCorePaths": [
       "packages/battle-runtime/battle-runtime-acid-arrow.qnt",
-      "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt",
       "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
       "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
       "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt",
       "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.qnt",
+      "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt",
       "packages/battle-runtime/battle-runtime-concentration.qnt",
       "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
       "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
@@ -734,6 +742,7 @@
       "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
       "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
       "packages/battle-runtime/battle-runtime-light.qnt",
+      "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
       "packages/battle-runtime/battle-runtime-marked-riders.qnt",
       "packages/battle-runtime/battle-runtime-marked-spells.qnt",
       "packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt",
@@ -771,16 +780,17 @@
       "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
       "packages/battle-runtime/battle-runtime-save-condition-target-list.qnt",
       "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+      "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
       "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
       "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt",
       "packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt",
       "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
       "packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt",
       "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+      "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
       "packages/battle-runtime/battle-runtime-see-invisibility.qnt",
       "packages/battle-runtime/battle-runtime-self-transformation.qnt",
       "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-      "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
       "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt",
       "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
       "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
@@ -800,10 +810,10 @@
       "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt",
       "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
       "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt",
+      "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt",
       "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
       "packages/shared-algebras/proofs/rule-core/spell-damage-rider-projection-core.qnt",
       "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
-      "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
       "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt",
       "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
       "packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt"
@@ -822,10 +832,16 @@
       ],
       "proofOnly": [
         "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
+        "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt",
         "packages/battle-runtime/battle-runtime-armor-class.qnt",
         "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath-tests.qnt",
         "packages/battle-runtime/battle-runtime-glyph-durable-occurrence.qnt",
+        "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt",
         "packages/battle-runtime/battle-runtime-prone-movement.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle-tests.qnt",
+        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
         "packages/battle-runtime/battle-runtime-warding-bond.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt"
       ],
@@ -877,8 +893,8 @@
   ],
   "pathCounts": {
     "obligationCount": 58,
-    "sourceOrPure": 210,
-    "parityOrFixture": 90,
+    "sourceOrPure": 212,
+    "parityOrFixture": 96,
     "qntFixtureSpec": 46,
     "deferredLaterIssue": 2
   },
