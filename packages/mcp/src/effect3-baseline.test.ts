@@ -13,9 +13,8 @@ import { describe, expect, test } from "vitest";
 import {
   EFFECT3_BASELINE_PATH,
   canonicalBaselineJson,
-  captureEffect3Baseline,
-  renderEffect3Baseline,
 } from "../../../scripts/effect3-baseline.ts";
+import { verifyEffect4OracleDelta } from "../../../scripts/effect4-oracle-delta.ts";
 
 function recordField(value: unknown, key: string): unknown {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -71,17 +70,13 @@ describe("Effect 3 migration baseline", () => {
     );
   });
 
-  test("the checked certificate is byte-for-byte reproducible", async () => {
+  test("the immutable baseline and reviewed finite delta are reproducible", async () => {
     const certificatePath = fileURLToPath(
       new URL(`../../../${EFFECT3_BASELINE_PATH}`, import.meta.url),
     );
     const expected = readFileSync(certificatePath, "utf8");
-    const actual = renderEffect3Baseline(await captureEffect3Baseline());
-    if (actual !== expected) {
-      throw new Error(
-        `Effect 4 candidate baseline differs from the immutable Effect 3 certificate (${actual.length} candidate bytes; ${expected.length} certificate bytes).`,
-      );
-    }
+    const verification = await verifyEffect4OracleDelta();
+    expect(verification.tag).toBe("verified");
 
     const baseline: unknown = JSON.parse(expected);
     const mcp = record(recordField(baseline, "mcp"));
@@ -203,13 +198,8 @@ describe("Effect 3 migration baseline", () => {
     mkdirSync(generatedRoot, { recursive: true });
     try {
       writeFileSync(dirtyArtifact, '{"generated":true}\n', "utf8");
-      const expected = readFileSync(certificatePath, "utf8");
-      const actual = renderEffect3Baseline(await captureEffect3Baseline());
-      if (actual !== expected) {
-        throw new Error(
-          `Dirty-output check found an Effect 4 candidate baseline delta (${actual.length} candidate bytes; ${expected.length} certificate bytes).`,
-        );
-      }
+      const verification = await verifyEffect4OracleDelta();
+      expect(verification.tag).toBe("verified");
     } finally {
       rmSync(dirtyArtifact, { force: true });
       if (!generatedRootExisted) rmSync(generatedRoot, { recursive: true });

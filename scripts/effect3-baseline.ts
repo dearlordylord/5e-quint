@@ -43,8 +43,12 @@ import { buildAdvertisedToolDefinitions } from "../packages/mcp/src/protocol-ser
 import { createDndMcpHttpServer } from "../packages/mcp/src/public-http-server.ts";
 import { openSqlitePlaySessionRepository } from "../packages/mcp/src/recoverable-play-session.ts";
 import { playSessionToolDefinitions } from "../packages/mcp/src/play-session-tool-contract.ts";
-import { decodeStoredPlaySessionRecord } from "../packages/mcp/src/play-session-repository.ts";
+import {
+  decodeStoredPlaySessionRecord,
+  RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
+} from "../packages/mcp/src/play-session-repository.ts";
 import { decodePlaySessionId } from "../packages/mcp/src/play-session.ts";
+import { DICE_RANDOM_SOURCE } from "../packages/mcp/src/dice-sampling-service.ts";
 import type { ProtocolToolDefinition } from "../packages/mcp/src/tool-definition-contract.ts";
 import {
   createMcpApplicationServices,
@@ -395,7 +399,7 @@ function capturePersistedSessionFixtures(): Readonly<Record<string, unknown>> {
   const playSessionId = requirePlaySessionId(
     "play-session:00000000-0000-4000-8000-000000000003",
   );
-  const seed = "a".repeat(64);
+  const seed = "a".repeat(32);
   const digest = "b".repeat(64);
   const operations = JSON.stringify([
     {
@@ -404,8 +408,11 @@ function capturePersistedSessionFixtures(): Readonly<Record<string, unknown>> {
     },
   ]);
   const baseRow = {
-    format_version: 2,
-    random_seed: seed,
+    format_version: RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
+    dice_seed: seed,
+    dice_group_semantic_profile: DICE_RANDOM_SOURCE.diceGroupSemanticProfile,
+    prng_sequence_profile: DICE_RANDOM_SOURCE.prngSequenceProfile,
+    state_schema_version: DICE_RANDOM_SOURCE.stateSchemaVersion,
     revision: 1,
     operations_json: operations,
     last_activity_at_ms: 1_700_000_000_000,
@@ -832,35 +839,39 @@ async function captureHttpWithoutOAuthMcp(): Promise<McpClientCapture> {
   }
 }
 
-async function captureShippedHttpAnonymousMcp(): Promise<McpClientCapture> {
+export type ShippedHttpMcpEntrypoint = {
+  readonly cwd: string;
+  readonly entrypoint: string;
+  readonly release: string;
+};
+
+export async function captureShippedHttpMcpEntrypoint(
+  input: ShippedHttpMcpEntrypoint,
+): Promise<McpClientCapture> {
   const directory = mkdtempSync(join(tmpdir(), "dnd-effect3-baseline-http-"));
   const port = await reserveHttpPort();
   const endpointOrigin = `http://127.0.0.1:${port}`;
   const configuredPublicOrigin = `https://127.0.0.1:${port}`;
-  const child = spawn(
-    process.execPath,
-    ["--import", "tsx", "packages/mcp/src/public-index.ts"],
-    {
-      cwd: REPOSITORY_ROOT,
-      env: {
-        ...process.env,
-        DND_MCP_HOST: "127.0.0.1",
-        PORT: String(port),
-        DND_MCP_ENVIRONMENT: "development",
-        DND_MCP_RELEASE: "effect4-candidate",
-        DND_MCP_PUBLISHER_NAME: "Effect 4 candidate",
-        DND_MCP_PUBLIC_ORIGIN: configuredPublicOrigin,
-        DND_PLAY_SESSION_DATABASE_PATH: join(directory, "sessions.sqlite"),
-        DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH: join(
-          directory,
-          "authorization.sqlite",
-        ),
-        DND_SAVED_SESSION_AUTHORIZATION_SECRET:
-          "effect4-candidate-secret-at-least-32-characters",
-      },
-      stdio: ["ignore", "ignore", "pipe"],
+  const child = spawn(process.execPath, ["--import", "tsx", input.entrypoint], {
+    cwd: input.cwd,
+    env: {
+      ...process.env,
+      DND_MCP_HOST: "127.0.0.1",
+      PORT: String(port),
+      DND_MCP_ENVIRONMENT: "development",
+      DND_MCP_RELEASE: input.release,
+      DND_MCP_PUBLISHER_NAME: "Effect 4 certification",
+      DND_MCP_PUBLIC_ORIGIN: configuredPublicOrigin,
+      DND_PLAY_SESSION_DATABASE_PATH: join(directory, "sessions.sqlite"),
+      DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH: join(
+        directory,
+        "authorization.sqlite",
+      ),
+      DND_SAVED_SESSION_AUTHORIZATION_SECRET:
+        "effect4-candidate-secret-at-least-32-characters",
     },
-  );
+    stdio: ["ignore", "ignore", "pipe"],
+  });
   let childStderr = "";
   child.stderr?.setEncoding("utf8");
   child.stderr?.on("data", (chunk: string) => {
@@ -919,6 +930,14 @@ async function captureShippedHttpAnonymousMcp(): Promise<McpClientCapture> {
       );
     }
   }
+}
+
+async function captureShippedHttpAnonymousMcp(): Promise<McpClientCapture> {
+  return captureShippedHttpMcpEntrypoint({
+    cwd: REPOSITORY_ROOT,
+    entrypoint: "packages/mcp/src/public-index.ts",
+    release: "effect4-candidate",
+  });
 }
 
 let mcpEntrypointCapture: Promise<McpEntrypointCapture> | undefined;
@@ -1136,7 +1155,7 @@ export async function captureEffect3Baseline(): Promise<
       content: surfaceContent,
     },
     persistence: {
-      formatVersion: 2,
+      formatVersion: RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
       fixtures: persistedSessionFixtures,
     },
     reducers: reducerFixtures,

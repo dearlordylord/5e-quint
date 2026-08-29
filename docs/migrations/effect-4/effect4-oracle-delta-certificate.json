@@ -1,0 +1,110 @@
+{
+  "formatVersion": 1,
+  "issue": {
+    "number": 386,
+    "kind": "effect-4-finite-oracle-delta",
+    "statement": "Certify every observable difference between the immutable Effect 3 behavioral oracle and the final Effect 4 candidate capture."
+  },
+  "baseline": {
+    "path": "docs/migrations/effect-4/effect3-behavioral-oracle.json",
+    "artifact": {
+      "byteLength": 12997527,
+      "sha256": "dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b"
+    }
+  },
+  "candidate": {
+    "byteLength": 51968201,
+    "sha256": "b3b885fc935fccf1fe19288ab5fc6d2e3ff784c58b7a27079477267acecb36fe"
+  },
+  "delta": {
+    "algorithm": "recursive-json-pointer-leaf-v1",
+    "identity": "Each identity is canonical JSON containing its operation, JSON Pointer path, and SHA-256 digest or explicit missing tag for both sides. Added or removed subtrees are one identity at their owning path; changed arrays and objects recurse by index and key.",
+    "totalCount": 7338,
+    "identitySha256": "ad92fcb2856bbe91d416aff0c4314ec3fd971e6a8667044be08ce043724427f8",
+    "classifications": [
+      {
+        "id": "baseline-metadata",
+        "deltaCount": 0,
+        "deltaIdentitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "operations": { "added": 0, "removed": 0, "changed": 0 }
+      },
+      {
+        "id": "mcp-registration-contract",
+        "deltaCount": 2259,
+        "deltaIdentitySha256": "861b1d8ae012c8eea1abe07cebaad2033be14bbf0fe93b261db36d0216240433",
+        "operations": { "added": 692, "removed": 1504, "changed": 63 }
+      },
+      {
+        "id": "mcp-protocol-entrypoints",
+        "deltaCount": 2728,
+        "deltaIdentitySha256": "316f6884affae69207ca6fb04a43164469e96d527ab638cc5eb8eb466f9917ac",
+        "operations": { "added": 992, "removed": 1584, "changed": 152 }
+      },
+      {
+        "id": "mcp-authenticated-projection",
+        "deltaCount": 2072,
+        "deltaIdentitySha256": "8c183aafa011b8bfcef19d41f2541fe64b8fc2d8cc4328b018bcaa38f7e1ce80",
+        "operations": { "added": 762, "removed": 1192, "changed": 118 }
+      },
+      {
+        "id": "surface-publication-authority",
+        "deltaCount": 3,
+        "deltaIdentitySha256": "43e3d25d2203d0ed185eae96c5d5cb20fe69e632482ca6f66597b6649180ae0d",
+        "operations": { "added": 0, "removed": 0, "changed": 3 }
+      },
+      {
+        "id": "surface-content-authority",
+        "deltaCount": 0,
+        "deltaIdentitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "operations": { "added": 0, "removed": 0, "changed": 0 }
+      },
+      {
+        "id": "persisted-session-codecs",
+        "deltaCount": 22,
+        "deltaIdentitySha256": "4a33bbcb0b0dd47fac927af616c2c899c9bf723ad9add22076de4f69e244b02a",
+        "operations": { "added": 6, "removed": 12, "changed": 4 }
+      },
+      {
+        "id": "reducer-ability-score-assignment",
+        "deltaCount": 0,
+        "deltaIdentitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "operations": { "added": 0, "removed": 0, "changed": 0 }
+      },
+      {
+        "id": "reducer-character-creation",
+        "deltaCount": 0,
+        "deltaIdentitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "operations": { "added": 0, "removed": 0, "changed": 0 }
+      },
+      {
+        "id": "reducer-character-sheet-current-hp",
+        "deltaCount": 0,
+        "deltaIdentitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "operations": { "added": 0, "removed": 0, "changed": 0 }
+      },
+      {
+        "id": "reducer-character-sheet-hit-points",
+        "deltaCount": 0,
+        "deltaIdentitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "operations": { "added": 0, "removed": 0, "changed": 0 }
+      },
+      {
+        "id": "reducer-condition-lifecycle",
+        "deltaCount": 0,
+        "deltaIdentitySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "operations": { "added": 0, "removed": 0, "changed": 0 }
+      },
+      {
+        "id": "raw-swarm-artifact-authority",
+        "deltaCount": 254,
+        "deltaIdentitySha256": "aecba65a7590afe0dde79aaed2c63d6e83c379b4bb17072bb7b11c00d6135c3f",
+        "operations": { "added": 43, "removed": 0, "changed": 211 }
+      }
+    ]
+  },
+  "review": {
+    "invariant": "The verifier rejects an unreadable or changed immutable baseline, changed candidate bytes, unclassified identities, identities matching more than one class, duplicate identities, and stale class counts or hashes.",
+    "scope": "This certificate authenticates the finite observed capture delta. Stable reducer and Surface content classes are included with zero-count evidence so future movement fails closed.",
+    "limitations": "Classification and hashes do not by themselves prove semantic equivalence. MCP schema/protocol, persisted codec, Surface publication, and Raw Swarm artifact changes require the accompanying focused parity and lifecycle evidence."
+  }
+}
