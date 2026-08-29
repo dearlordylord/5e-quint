@@ -23,9 +23,10 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 
 import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Result, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
@@ -38,6 +39,7 @@ import {
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveStationaryPersistentAreaAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
+import { invalidResult } from "../result-helpers.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -55,8 +57,18 @@ type StationaryPersistentAreaAreaHazardSpellInvocation = Extract<
     readonly lifecycle: { readonly kind: "stationary" };
   }
 >;
-type StationaryPersistentAreaAreaHazardResolveInput =
-  SpellProcedureProfileResolveInput<StationaryPersistentAreaAreaHazardSpellInvocation>;
+type StationaryPersistentAreaAreaHazardResolveInput = Omit<
+  SpellProcedureProfileResolveInput<StationaryPersistentAreaAreaHazardSpellInvocation>,
+  "invocation"
+> & {
+  readonly invocation: Extract<
+    BattleExecutableSpellInvocation,
+    {
+      readonly procedure: "persistentAreaSaveDamage";
+      readonly lifecycle: { readonly kind: "stationary" };
+    }
+  >;
+};
 type StationaryPersistentAreaMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
@@ -256,7 +268,7 @@ function stationaryPersistentAreaSaveGateDamageAmount(
   return null;
 }
 
-function resolveStationaryPersistentAreaAreaHazard(
+function resolveNarrowedStationaryPersistentAreaAreaHazard(
   input: StationaryPersistentAreaAreaHazardResolveInput,
 ): BattleResolutionResult {
   return resolveStationaryPersistentAreaAreaHazardSpellAct({
@@ -265,6 +277,26 @@ function resolveStationaryPersistentAreaAreaHazard(
     invocation: input.invocation,
     fillSet: input.fillSet,
   });
+}
+
+function resolveStationaryPersistentAreaAreaHazard(
+  input: SpellProcedureProfileResolveInput<StationaryPersistentAreaAreaHazardSpellInvocation>,
+): BattleResolutionResult {
+  return Match.value(input.invocation).pipe(
+    Match.when({ lifecycle: { kind: "stationary" } }, (invocation) =>
+      resolveNarrowedStationaryPersistentAreaAreaHazard({
+        ...input,
+        invocation,
+      }),
+    ),
+    Match.orElse(() =>
+      invalidResult(
+        input.input.state,
+        "unsupportedSubject",
+        "Stored procedure does not match the stationary persistent-area profile.",
+      ),
+    ),
+  );
 }
 
 const StationaryPersistentAreaAreaHazardInvocationSchema =

@@ -26,9 +26,10 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 
 import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Result, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
@@ -41,6 +42,7 @@ import {
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveTranslatingPersistentAreaAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
+import { invalidResult } from "../result-helpers.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -58,8 +60,18 @@ type TranslatingPersistentAreaAreaHazardSpellInvocation = Extract<
     readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
   }
 >;
-type TranslatingPersistentAreaAreaHazardResolveInput =
-  SpellProcedureProfileResolveInput<TranslatingPersistentAreaAreaHazardSpellInvocation>;
+type TranslatingPersistentAreaAreaHazardResolveInput = Omit<
+  SpellProcedureProfileResolveInput<TranslatingPersistentAreaAreaHazardSpellInvocation>,
+  "invocation"
+> & {
+  readonly invocation: Extract<
+    BattleExecutableSpellInvocation,
+    {
+      readonly procedure: "persistentAreaSaveDamage";
+      readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+    }
+  >;
+};
 type TranslatingPersistentAreaMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
@@ -268,7 +280,7 @@ function translatingPersistentAreaSaveGateDamageAmount(
   return null;
 }
 
-function resolveTranslatingPersistentAreaAreaHazard(
+function resolveNarrowedTranslatingPersistentAreaAreaHazard(
   input: TranslatingPersistentAreaAreaHazardResolveInput,
 ): BattleResolutionResult {
   return resolveTranslatingPersistentAreaAreaHazardSpellAct({
@@ -277,6 +289,26 @@ function resolveTranslatingPersistentAreaAreaHazard(
     invocation: input.invocation,
     fillSet: input.fillSet,
   });
+}
+
+function resolveTranslatingPersistentAreaAreaHazard(
+  input: SpellProcedureProfileResolveInput<TranslatingPersistentAreaAreaHazardSpellInvocation>,
+): BattleResolutionResult {
+  return Match.value(input.invocation).pipe(
+    Match.when({ lifecycle: { kind: "sourceTurnTranslation" } }, (invocation) =>
+      resolveNarrowedTranslatingPersistentAreaAreaHazard({
+        ...input,
+        invocation,
+      }),
+    ),
+    Match.orElse(() =>
+      invalidResult(
+        input.input.state,
+        "unsupportedSubject",
+        "Stored procedure does not match the translating persistent-area profile.",
+      ),
+    ),
+  );
 }
 
 const TranslatingPersistentAreaAreaHazardInvocationSchema =

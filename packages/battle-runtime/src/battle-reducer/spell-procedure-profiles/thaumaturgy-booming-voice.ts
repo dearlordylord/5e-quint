@@ -36,6 +36,10 @@ import {
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { TemporaryAbilityCheckRollModeTemplateSchema } from "../../active-effect/codecs.ts";
+import {
+  TemporaryAbilityCheckRollModeConcurrentDurationModeLimitSchema,
+  TemporaryAbilityCheckRollModeSelectedModeSchema,
+} from "../../procedure-execution/spell-procedure-execution.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -239,6 +243,9 @@ const TemporaryAbilityCheckRollModeInvocationSchema =
       actionCost: Schema.Literal("magicAction"),
       activeEffect: TemporaryAbilityCheckRollModeTemplateSchema,
       rangeFeet: MovementFeet,
+      selectedMode: TemporaryAbilityCheckRollModeSelectedModeSchema,
+      concurrentDurationModeLimit:
+        TemporaryAbilityCheckRollModeConcurrentDurationModeLimitSchema,
     }),
   );
 export const temporaryAbilityCheckRollModeProfile: SpellProcedureDeclaration<

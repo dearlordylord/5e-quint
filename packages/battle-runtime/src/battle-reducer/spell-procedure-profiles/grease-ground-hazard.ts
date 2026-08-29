@@ -26,7 +26,6 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
-  type SpellTargeting,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
@@ -119,10 +118,10 @@ function persistentAreaSaveConditionSpell(
   spell: PersistentAreaSaveConditionSpellInvocation["spell"],
 ): {
   readonly phase: PersistentAreaSaveConditionPhase;
-  readonly targeting: Extract<
-    SpellTargeting,
-    { readonly kind: "pointOriginGroundSquare" }
-  >;
+  readonly targeting: {
+    readonly kind: "pointOriginGroundSquare";
+    readonly sideFeet: MovementFeet;
+  };
   readonly durationTicks: ElapsedTimeTicks;
   readonly rangeFeet: MovementFeet;
 } | null {

@@ -2134,6 +2134,10 @@ const BattleHolePayloadUnionSchema = Schema.Union([
         sideFeet: MovementFeet,
       }),
       Schema.Struct({
+        kind: Schema.Literal("pointOriginGroundSquare"),
+        sideFeet: MovementFeet,
+      }),
+      Schema.Struct({
         kind: Schema.Literal("selfOriginEmanation"),
         radiusFeet: MovementFeet,
       }),

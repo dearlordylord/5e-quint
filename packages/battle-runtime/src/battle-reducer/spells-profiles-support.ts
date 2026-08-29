@@ -49,6 +49,7 @@ import {
   BATTLE_D20_ROLL_MODIFIER_KINDS,
   THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
   THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+  THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
 } from "./domain-constants.ts";
 import {
   sameStringSet,
@@ -104,7 +105,7 @@ export function temporaryAbilityCheckRollModeProjection(
   spell: BattleSpellAdmissionSource,
 ): Pick<
   TemporaryAbilityCheckRollModeSpellInvocation,
-  "activeEffect" | "rangeFeet"
+  "activeEffect" | "rangeFeet" | "selectedMode" | "concurrentDurationModeLimit"
 > | null {
   const castingTime = topLevelSpellCastingTime(spell.mechanics);
   if (
@@ -158,6 +159,16 @@ export function temporaryAbilityCheckRollModeProjection(
       },
     },
     rangeFeet: movementFeet(spell.mechanics.range.feet),
+    selectedMode: {
+      kind: "abilityCheckRollMode",
+      ability: "cha",
+      skill: "intimidation",
+      rollMode: "advantage",
+      effectDuration: "spellDuration",
+    },
+    concurrentDurationModeLimit: {
+      maximumActive: THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
+    },
   };
 }
 

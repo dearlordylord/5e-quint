@@ -81,6 +81,10 @@ export type SpellTargeting =
       readonly sideFeet: MovementFeet;
     }
   | { readonly kind: "pointOriginCube"; readonly sideFeet: MovementFeet }
+  | {
+      readonly kind: "pointOriginGroundSquare";
+      readonly sideFeet: MovementFeet;
+    }
   | { readonly kind: "selfOriginCube"; readonly sideFeet: MovementFeet }
   | { readonly kind: "selfOriginCone"; readonly lengthFeet: MovementFeet }
   | {

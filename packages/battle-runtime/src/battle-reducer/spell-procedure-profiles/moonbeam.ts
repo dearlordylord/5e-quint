@@ -27,15 +27,17 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Result, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
+  type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveMovablePersistentAreaSpellAct } from "../spells-resolve-area-effects.ts";
+import { invalidResult } from "../result-helpers.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -63,8 +65,21 @@ type MovablePersistentAreaSpellInvocation = Extract<
     };
   }
 >;
-type MovablePersistentAreaResolveInput =
-  SpellProcedureProfileResolveInput<MovablePersistentAreaSpellInvocation>;
+type MovablePersistentAreaResolveInput = Omit<
+  SpellProcedureProfileResolveInput<MovablePersistentAreaSpellInvocation>,
+  "invocation"
+> & {
+  readonly invocation: Extract<
+    BattleExecutableSpellInvocation,
+    {
+      readonly procedure: "persistentAreaSaveDamage";
+      readonly lifecycle: {
+        readonly kind: "casterActionReposition";
+        readonly actionCost: "magicAction";
+      };
+    }
+  >;
+};
 
 type OngoingOperationEffect = Extract<
   BattleSpellAdmissionSource["mechanics"],
@@ -299,7 +314,7 @@ function movablePersistentAreaDamageEffect(
   return effect;
 }
 
-function resolveMovablePersistentArea(
+function resolveNarrowedMovablePersistentArea(
   input: MovablePersistentAreaResolveInput,
 ): BattleResolutionResult {
   return resolveMovablePersistentAreaSpellAct({
@@ -308,6 +323,30 @@ function resolveMovablePersistentArea(
     invocation: input.invocation,
     fillSet: input.fillSet,
   });
+}
+
+function resolveMovablePersistentArea(
+  input: SpellProcedureProfileResolveInput<MovablePersistentAreaSpellInvocation>,
+): BattleResolutionResult {
+  return Match.value(input.invocation).pipe(
+    Match.when(
+      {
+        lifecycle: {
+          kind: "casterActionReposition",
+          collisionDisposition: "ignoreObstacles",
+        },
+      },
+      (invocation) =>
+        resolveNarrowedMovablePersistentArea({ ...input, invocation }),
+    ),
+    Match.orElse(() =>
+      invalidResult(
+        input.input.state,
+        "unsupportedSubject",
+        "Stored procedure does not match the directed-reposition persistent-area profile.",
+      ),
+    ),
+  );
 }
 
 const MovablePersistentAreaInvocationSchema = spellProcedureExecutionSchema(

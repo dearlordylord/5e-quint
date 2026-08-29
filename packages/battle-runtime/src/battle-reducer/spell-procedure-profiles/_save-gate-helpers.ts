@@ -1491,6 +1491,9 @@ export function areaSaveGateSpellRangeFeet(
       fixedPointRangeFeet(range),
     ),
     Match.when({ kind: "pointOriginCube" }, () => fixedPointRangeFeet(range)),
+    Match.when({ kind: "pointOriginGroundSquare" }, () =>
+      fixedPointRangeFeet(range),
+    ),
     Match.when({ kind: "selfOriginCube" }, () =>
       range.kind === "self" ? movementFeet(0) : null,
     ),

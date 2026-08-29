@@ -236,8 +236,6 @@ function discoverRegisteredSpellProcedureCastAct(
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       movableLightManifestation: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      spawnedCompanionLifecycle: (value) =>
-        executionFor(value.procedure).discoverCastAct(state, actorId, value),
     }),
   );
 }
