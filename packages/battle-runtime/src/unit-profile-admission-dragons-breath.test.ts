@@ -220,10 +220,14 @@ describe("Dragon's Breath initial cast admission", () => {
   });
 
   test("grants the target an exhale and applies a low-level action-ended invisibility interaction", () => {
+    const renamedPresentationSpell = {
+      ...grantedAreaSaveDamageActionSpell(),
+      name: "Synthetic Breath Gift",
+    };
     const session = spellBattle({
       casterClassLevels: [{ className: "wizard", level: classLevel(3) }],
       casterD20Statistics: testCharacterD20Statistics({ int: 16 }),
-      preparedSpells: [grantedAreaSaveDamageActionSpell()],
+      preparedSpells: [renamedPresentationSpell],
       spellSlots: [
         { spellLevel: 1, count: 4 },
         { spellLevel: 2, count: 2 },
@@ -247,7 +251,7 @@ describe("Dragon's Breath initial cast admission", () => {
         act.subject.tag === "runtimeCommand" &&
         act.subject.command === "grantedAreaSaveDamageAction",
     );
-    expect(exhaleAct?.label).toBe("Exhale Dragon's Breath");
+    expect(exhaleAct?.label).toBe("Exhale Synthetic Breath Gift");
     if (
       exhaleAct?.subject.tag !== "runtimeCommand" ||
       exhaleAct.subject.command !== "grantedAreaSaveDamageAction"

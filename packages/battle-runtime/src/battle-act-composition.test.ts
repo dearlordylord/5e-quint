@@ -482,7 +482,7 @@ describe("battle act composition presentations", () => {
     const jump = {
       tag: "runtimeCommand",
       actorId: goblinId,
-      command: "jumpMovementReplacement",
+      command: "fixedCostMovementReplacement",
       effectRef: missingEffectRef,
     } as const satisfies BattleSubject;
     expect(battleSubjectPresentation(session, jump)).toEqual({
