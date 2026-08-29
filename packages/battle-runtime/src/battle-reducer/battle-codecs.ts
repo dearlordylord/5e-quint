@@ -5550,32 +5550,116 @@ const StatBlockUnarmedStrikeProcedureSchema = Schema.Struct({
   ),
 });
 
-const StatBlockProcedureSchema = Schema.Union(
-  StatBlockAttackProcedureSchema,
-  StatBlockUnarmedStrikeProcedureSchema,
+const StatBlockSpellcastingInvocationOutcomeSchema = Schema.Struct({
+  kind: Schema.Literal("unrestricted", "restricted"),
+});
+
+const StatBlockSpellcastingSpellSaveDcSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+  Schema.brand("PositiveInteger"),
+);
+
+const StatBlockSpellcastingAttackBonusSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.brand("Integer"),
+);
+
+const StatBlockSpellcastingGroupSchema = Schema.Union(
   Schema.Struct({
-    kind: Schema.Literal("multiattack"),
-    section: Schema.Literal("actions"),
-    procedureOrdinal: StatBlockProcedureOrdinalSchema,
-    dispatchProcedureRefs: Schema.NonEmptyArray(
-      BattleStatBlockProcedureExecutionRef,
+    kind: Schema.Literal("at_will"),
+    resourcePoolRefs: Schema.Tuple(),
+    invocations: Schema.NonEmptyArray(
+      StatBlockSpellcastingInvocationOutcomeSchema,
     ),
   }),
   Schema.Struct({
-    kind: Schema.Literal("bonusActionOption"),
-    section: Schema.Literal("bonusActions"),
-    procedureOrdinal: StatBlockProcedureOrdinalSchema,
-    standardActions: Schema.NonEmptyArray(
-      Schema.Literal(...SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS),
+    kind: Schema.Literal("limited"),
+    resourcePoolRefs: Schema.NonEmptyArray(BattleResourcePoolExecutionRef),
+    invocations: Schema.NonEmptyArray(
+      StatBlockSpellcastingInvocationOutcomeSchema,
     ),
   }),
 );
 
-const StatBlockProcedureBindingSnapshotSchema = Schema.Struct({
-  procedureRef: BattleStatBlockProcedureExecutionRef,
-  procedure: StatBlockProcedureSchema,
-  resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+const StatBlockSpellcastingProcedureSchema = Schema.Struct({
+  kind: Schema.Literal("spellcasting"),
+  section: Schema.Literal("actions", "bonusActions"),
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  ability: AbilitySchema,
+  spellSaveDc: Schema.optionalWith(StatBlockSpellcastingSpellSaveDcSchema, {
+    exact: true,
+  }),
+  spellAttackBonus: Schema.optionalWith(
+    StatBlockSpellcastingAttackBonusSchema,
+    {
+      exact: true,
+    },
+  ),
+  components: Schema.optionalWith(
+    Schema.Struct({
+      v: Schema.Boolean,
+      s: Schema.Boolean,
+      m: Schema.Literal("required", "notRequired"),
+    }),
+    { exact: true },
+  ),
+  groups: Schema.NonEmptyArray(StatBlockSpellcastingGroupSchema),
 });
+
+const StatBlockMultiattackProcedureSchema = Schema.Struct({
+  kind: Schema.Literal("multiattack"),
+  section: Schema.Literal("actions"),
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  dispatchProcedureRefs: Schema.NonEmptyArray(
+    BattleStatBlockProcedureExecutionRef,
+  ),
+});
+
+const StatBlockBonusActionOptionProcedureSchema = Schema.Struct({
+  kind: Schema.Literal("bonusActionOption"),
+  section: Schema.Literal("bonusActions"),
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  standardActions: Schema.NonEmptyArray(
+    Schema.Literal(...SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS),
+  ),
+});
+
+const StatBlockProcedureSchema = Schema.Union(
+  StatBlockAttackProcedureSchema,
+  StatBlockUnarmedStrikeProcedureSchema,
+  StatBlockMultiattackProcedureSchema,
+  StatBlockBonusActionOptionProcedureSchema,
+  StatBlockSpellcastingProcedureSchema,
+);
+
+const StatBlockProcedureBindingSnapshotSchema = Schema.Union(
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    procedure: StatBlockAttackProcedureSchema,
+    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+  }),
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    procedure: StatBlockUnarmedStrikeProcedureSchema,
+    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+  }),
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    procedure: StatBlockMultiattackProcedureSchema,
+    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+  }),
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    procedure: StatBlockBonusActionOptionProcedureSchema,
+    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+  }),
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    procedure: StatBlockSpellcastingProcedureSchema,
+    resourcePoolRefs: Schema.Tuple(),
+  }),
+);
 
 const StatBlockExecutionSnapshotShapeSchema = Schema.Struct({
   scopeRef: BattleStatBlockExecutionScopeRef,
@@ -5596,6 +5680,10 @@ type EncodedStatBlockExecutionSnapshot = Schema.Schema.Type<
 >;
 type EncodedStatBlockProcedureBinding = Schema.Schema.Type<
   typeof StatBlockProcedureBindingSnapshotSchema
+>;
+type EncodedStatBlockAttackProcedureBinding = Extract<
+  EncodedStatBlockProcedureBinding,
+  { readonly procedure: { readonly kind: "attack" } }
 >;
 type EncodedStatBlockResourcePool = Schema.Schema.Type<
   typeof StatBlockResourcePoolStateSchema
@@ -5643,7 +5731,7 @@ function statBlockExecutionSnapshotGraphIsValid(
     number
   >();
   for (const binding of snapshot.procedureBindings) {
-    for (const resourcePoolRef of binding.resourcePoolRefs) {
+    for (const resourcePoolRef of statBlockProcedureResourcePoolRefs(binding)) {
       bindingCountByPoolRef.set(
         resourcePoolRef,
         (bindingCountByPoolRef.get(resourcePoolRef) ?? 0) + 1,
@@ -5721,14 +5809,14 @@ function statBlockProcedureBindingGraphIsValid(input: {
   readonly actionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>;
   readonly limitedUseActionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>;
 }): boolean {
-  const pools = input.binding.resourcePoolRefs.flatMap((ref) => {
+  const resourcePoolRefs = statBlockProcedureResourcePoolRefs(input.binding);
+  const pools = resourcePoolRefs.flatMap((ref) => {
     const pool = input.resourcePoolsByRef.get(ref);
     return pool === undefined ? [] : [pool];
   });
   return (
-    new Set(input.binding.resourcePoolRefs).size ===
-      input.binding.resourcePoolRefs.length &&
-    pools.length === input.binding.resourcePoolRefs.length &&
+    statBlockProcedureResourceRefsAreUnique(input.binding) &&
+    pools.length === resourcePoolRefs.length &&
     statBlockProcedurePoolShapeIsValid(input.binding, pools) &&
     legendaryProcedurePoolOwnershipIsValid(
       input.binding,
@@ -5764,23 +5852,71 @@ function statBlockProcedurePoolShapeIsValid(
   ) {
     return legendaryPoolCount === 0;
   }
+  if (binding.procedure.kind === "spellcasting") {
+    return (
+      binding.resourcePoolRefs.length === 0 &&
+      legendaryPoolCount === 0 &&
+      binding.procedure.groups.every((group) =>
+        group.kind === "at_will"
+          ? group.resourcePoolRefs.length === 0
+          : group.resourcePoolRefs.length > 0,
+      )
+    );
+  }
   return legendaryPoolCount <= 1 && limitedUsePoolCount <= 1;
+}
+
+function statBlockProcedureResourcePoolRefs(
+  binding: EncodedStatBlockProcedureBinding,
+): readonly BattleResourcePoolExecutionRef[] {
+  return binding.procedure.kind === "spellcasting"
+    ? [
+        ...binding.resourcePoolRefs,
+        ...binding.procedure.groups.flatMap(
+          ({ resourcePoolRefs }) => resourcePoolRefs,
+        ),
+      ]
+    : binding.resourcePoolRefs;
+}
+
+function statBlockProcedureResourceRefsAreUnique(
+  binding: EncodedStatBlockProcedureBinding,
+): boolean {
+  if (binding.procedure.kind !== "spellcasting") {
+    return (
+      new Set(binding.resourcePoolRefs).size === binding.resourcePoolRefs.length
+    );
+  }
+  return (
+    new Set(binding.resourcePoolRefs).size ===
+      binding.resourcePoolRefs.length &&
+    binding.procedure.groups.every(
+      (group) =>
+        new Set(group.resourcePoolRefs).size === group.resourcePoolRefs.length,
+    )
+  );
 }
 
 function legendaryProcedurePoolOwnershipIsValid(
   binding: EncodedStatBlockProcedureBinding,
   legendaryPool: EncodedStatBlockResourcePool | undefined,
 ): boolean {
-  if (
-    binding.procedure.kind !== "attack" ||
-    binding.procedure.section !== "legendaryActions"
-  ) {
+  if (!isEncodedStatBlockAttackProcedureBinding(binding)) {
+    return true;
+  }
+  if (binding.procedure.section !== "legendaryActions") {
     return true;
   }
   return (
     legendaryPool !== undefined &&
     binding.resourcePoolRefs.includes(legendaryPool.resourcePoolRef)
   );
+}
+
+function isEncodedStatBlockAttackProcedureBinding(
+  binding: EncodedStatBlockProcedureBinding,
+): binding is EncodedStatBlockAttackProcedureBinding {
+  return binding.procedure.kind === "attack";
 }
 
 function multiattackBindingDispatchIsValid(
@@ -5827,7 +5963,9 @@ function runtimeProcedureOrdinalKey(
       ? procedure.section
       : procedure.kind === "bonusActionOption"
         ? "bonusActions"
-        : "actions";
+        : procedure.kind === "spellcasting"
+          ? procedure.section
+          : "actions";
   return `${section}:${procedure.procedureOrdinal}`;
 }
 
@@ -7563,6 +7701,7 @@ function serializedStatBlockProcedureKind(
   | "unarmedStrike"
   | "multiattack"
   | "bonusActionOption"
+  | "spellcasting"
   | undefined {
   const combatant = combatants.find(
     (candidate) => candidate.combatantId === combatantId,

@@ -206,6 +206,7 @@ function projectionShape(
     Match.when("attack", () => "attack" as const),
     Match.when("multiattack", () => "multiattack" as const),
     Match.when("bonusActionOption", () => "actionOption" as const),
+    Match.when("spellcasting", () => "spellcasting" as const),
     Match.exhaustive,
   );
 }
@@ -301,6 +302,13 @@ function statBlockProcedurePresentationForBinding(
         labels,
       ),
     ),
+    Match.when({ kind: "spellcasting" }, (procedure) =>
+      joinedExecutableStatBlockProcedurePresentation(
+        binding.procedureRef,
+        procedure,
+        labels,
+      ),
+    ),
     Match.exhaustive,
   );
 }
@@ -332,6 +340,7 @@ function joinedExecutableStatBlockProcedurePresentation(
       { kind: "bonusActionOption" },
       () => "bonusActionOption" as const,
     ),
+    Match.when({ kind: "spellcasting" }, () => "spellcasting" as const),
     Match.exhaustive,
   );
   if (entry.kind !== expectedKind) {
@@ -359,6 +368,13 @@ function joinedExecutableStatBlockProcedurePresentation(
       Either.right({
         procedureRef,
         kind: "bonusActionOption" as const,
+        label: entry.name,
+      }),
+    ),
+    Match.when({ kind: "spellcasting" }, () =>
+      Either.right({
+        procedureRef,
+        kind: "spellcasting" as const,
         label: entry.name,
       }),
     ),

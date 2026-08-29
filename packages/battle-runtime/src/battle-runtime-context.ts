@@ -77,6 +77,11 @@ export type BattleStatBlockProcedurePresentation =
       readonly procedureRef: BattleStatBlockProcedureExecutionRef;
       readonly kind: "multiattack" | "bonusActionOption";
       readonly label: string;
+    }
+  | {
+      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
+      readonly kind: "spellcasting";
+      readonly label: string;
     };
 
 type BattleStatBlockProcedurePresentationBase = {
@@ -95,6 +100,9 @@ export type BattleStatBlockAuthoredProcedurePresentation =
     })
   | (BattleStatBlockProcedurePresentationBase & {
       readonly kind: "bonusActionOption";
+    })
+  | (BattleStatBlockProcedurePresentationBase & {
+      readonly kind: "spellcasting";
     })
   | (BattleStatBlockProcedurePresentationBase & {
       readonly kind: "textOnly";

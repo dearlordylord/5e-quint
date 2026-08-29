@@ -202,7 +202,10 @@ describe("Stat Block combatant admission capability", () => {
       StatBlockProcedureResourceOrdinalSchema,
     )(4);
     const [firstProcedure, ...remainingProcedures] = source.procedures;
-    if (firstProcedure === undefined) {
+    if (
+      firstProcedure === undefined ||
+      firstProcedure.kind === "spellcasting"
+    ) {
       throw new Error("Expected the first resource-backed procedure.");
     }
 

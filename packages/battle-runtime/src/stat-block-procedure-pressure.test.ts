@@ -98,10 +98,10 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     );
 
     expect(report.dispositionCounts).toEqual({
-      executable: 1084,
+      executable: 1142,
       textOnly: 912,
       tableOwned: 54,
-      missingOwner: 552,
+      missingOwner: 494,
       malformed: 0,
     });
     expect(report.records.every(({ source }) => source.kind === "linked")).toBe(
