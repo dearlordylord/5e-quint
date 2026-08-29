@@ -517,9 +517,9 @@ function spellInvocationSupportsSaveMetamagic(
     invocation.procedure === "saveGatedConditionImmunity" ||
     invocation.procedure === "saveGatedAttackRollAdvantage" ||
     invocation.procedure === "saveGatedConditionWithRepeat" ||
-    invocation.procedure === "command" ||
-    invocation.procedure === "greaseGroundHazard" ||
-    invocation.procedure === "gustOfWindLine"
+    invocation.procedure === "compelledNextTurnBehavior" ||
+    invocation.procedure === "persistentAreaSaveCondition" ||
+    invocation.procedure === "directionalPersistentArea"
   );
 }
 
@@ -592,6 +592,7 @@ export function distantSpellRangeProjectionIssue(input: {
 export function distantSpellRangeModifierFact(
   invocation: RuntimeSpellProcedure,
 ): DistantSpellRangeModifierFact | null {
+  if (!distantSpellProcedureSupportsRangeProjection(invocation)) return null;
   const range = invocation.spellRuleFacts.range;
   if (range.kind === "touch") {
     return {
@@ -621,7 +622,10 @@ export function distantSpellRangeModifierForApplications(
 
 function distantSpellProcedureSupportsRangeProjection(
   invocation: RuntimeSpellProcedure,
-): boolean {
+): invocation is Extract<
+  RuntimeSpellProcedure,
+  { readonly procedure: "objectLight" }
+> {
   return invocation.procedure === "objectLight";
 }
 
@@ -657,6 +661,9 @@ export function extendedSpellDurationProjectionIssue(input: {
 export function extendedSpellDurationModifierFact(
   invocation: RuntimeSpellProcedure,
 ): ExtendedSpellDurationModifierFact | null {
+  if (!extendedSpellProcedureSupportsDurationProjection(invocation)) {
+    return null;
+  }
   const duration = invocation.spellRuleFacts.duration;
   const baseDuration =
     duration.kind === "timed"
@@ -725,6 +732,7 @@ export function subtleSpellComponentProjectionIssue(input: {
 export function subtleSpellComponentProjectionFact(
   invocation: RuntimeSpellProcedure,
 ): SubtleSpellComponentProjectionFact | null {
+  if (!("spellRuleFacts" in invocation)) return null;
   const components = invocation.spellRuleFacts.components;
   const suppressedComponents: SubtleSpellSuppressedComponentFact[] = [
     ...(components.verbal ? ([{ kind: "verbal" }] as const) : []),
@@ -767,7 +775,12 @@ function readonlyNonEmptyArray<T>(
 
 function extendedSpellProcedureSupportsDurationProjection(
   invocation: RuntimeSpellProcedure,
-): boolean {
+): invocation is Extract<
+  RuntimeSpellProcedure,
+  {
+    readonly procedure: "creatureSizeIncrease" | "creatureSizeDecrease";
+  }
+> {
   return (
     invocation.procedure === "creatureSizeIncrease" ||
     invocation.procedure === "creatureSizeDecrease"
@@ -929,6 +942,7 @@ function twinnedSpellEffectiveTargetCount(
   invocation: RuntimeSpellProcedure,
 ): number | null {
   if (
+    !("resource" in invocation) ||
     invocation.resource.tag !== "spellSlot" ||
     Number(invocation.resource.slotLevel) >= 9 ||
     !("targeting" in invocation) ||
