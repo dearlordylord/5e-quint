@@ -299,6 +299,7 @@ function findingsProjection(
   const initialSession = {
     battle: {
       state: {
+        battleId: "battle:complete-path",
         initiative: { round: 1, stillToAct: [{ creature: "actor" }] },
         subjectResolutionPhase: { kind: "subjectSelection" },
         combatants: {
@@ -396,7 +397,7 @@ function findingsProjection(
               "Synthetic first-call failure recovered on continuation two.",
           },
         },
-        returnedCalls[1],
+        { ...returnedCalls[1], continuation: 1 },
       ]
     : returnedCalls;
   const initialProjection = playerInitialTurnProjection({
@@ -3027,7 +3028,9 @@ describe("complete Raw Swarm path comparison", () => {
     });
     expect(validation).toMatchObject({
       _tag: "Failure",
-      failure: expect.stringContaining("postPlayReview"),
+      failure: expect.stringContaining(
+        'Benchmark context-source manifest is invalid: Missing key\n  at ["sources"][5]',
+      ),
     });
   });
 
