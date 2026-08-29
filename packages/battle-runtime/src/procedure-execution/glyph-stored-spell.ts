@@ -4,7 +4,6 @@ import type { SpellRuleExecutionFacts } from "./spell-rule-facts.ts";
 import type {
   PreparedSpellAccess,
   SpellSlotInvocationResource,
-  SpellTargeting,
 } from "./spell-invocation-vocabulary.ts";
 
 const GLYPH_STORED_IMMEDIATE_OR_OCCURRENCE_PROCEDURES = [
@@ -107,12 +106,17 @@ type GlyphStoredProcedureWithoutConcentration<Execution> = Execution & {
     >;
   };
 };
+type SpellProcedureTargeting = SpellProcedureExecution extends infer Execution
+  ? Execution extends { readonly targeting: infer Targeting }
+    ? Targeting
+    : never
+  : never;
 type GlyphStoredSingleCreatureTargeting =
   | Extract<
-      SpellTargeting,
+      SpellProcedureTargeting,
       { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
     >
-  | (Extract<SpellTargeting, { readonly kind: "targetList" }> & {
+  | (Extract<SpellProcedureTargeting, { readonly kind: "targetList" }> & {
       readonly minTargets: 1;
       readonly maxTargets: 1;
     });
@@ -122,16 +126,17 @@ const GLYPH_STORED_AREA_TARGETING_KINDS = [
   "pointOriginCylinder",
   "pointOriginCubeExcludingCaster",
   "pointOriginCube",
+  "pointOriginGroundSquare",
   "selfOriginCube",
   "selfOriginCone",
   "selfOriginLine",
   "selfOriginEmanation",
   "primaryTargetOriginEmanation",
-] as const satisfies ReadonlyArray<SpellTargeting["kind"]>;
+] as const satisfies ReadonlyArray<SpellProcedureTargeting["kind"]>;
 type GlyphStoredAreaTargetingKind =
   (typeof GLYPH_STORED_AREA_TARGETING_KINDS)[number];
 type GlyphStoredAreaTargeting = Extract<
-  SpellTargeting,
+  SpellProcedureTargeting,
   { readonly kind: GlyphStoredAreaTargetingKind }
 >;
 type GlyphStoredProcedureWithTargeting<Execution, Targeting> = Execution & {
@@ -142,6 +147,18 @@ type GlyphStoredConcentrationSingleCreatureProcedure<
 > = GlyphStoredProcedureWithTargeting<
   GlyphStoredProcedureWithConcentration<GlyphStoredProcedureFor<Procedure>>,
   GlyphStoredSingleCreatureTargeting
+>;
+type GlyphStoredConcentrationAreaProcedure<
+  Procedure extends GlyphStoredSpellProcedureExecution["procedure"],
+> = GlyphStoredProcedureWithTargeting<
+  GlyphStoredProcedureWithConcentration<GlyphStoredProcedureFor<Procedure>>,
+  GlyphStoredAreaTargeting
+>;
+type GlyphStoredNonConcentrationAreaProcedure<
+  Procedure extends GlyphStoredSpellProcedureExecution["procedure"],
+> = GlyphStoredProcedureWithTargeting<
+  GlyphStoredProcedureWithoutConcentration<GlyphStoredProcedureFor<Procedure>>,
+  GlyphStoredAreaTargeting
 >;
 type GlyphStoredNonConcentrationSingleCreatureSaveDamageProcedure =
   GlyphStoredProcedureWithTargeting<
@@ -171,23 +188,17 @@ export type GlyphStoredSpellRelease =
   | {
       readonly kind: "spellGlyph";
       readonly executionKind: "areaOngoing";
-      readonly storedProcedure: GlyphStoredProcedureWithConcentration<
-        GlyphStoredProcedureFor<GlyphStoredAreaOngoingProcedure>
-      >;
+      readonly storedProcedure: GlyphStoredConcentrationAreaProcedure<GlyphStoredAreaOngoingProcedure>;
     }
   | {
       readonly kind: "spellGlyph";
       readonly executionKind: "areaControl";
-      readonly storedProcedure: GlyphStoredProcedureWithConcentration<
-        GlyphStoredProcedureFor<GlyphStoredAreaControlProcedure>
-      >;
+      readonly storedProcedure: GlyphStoredConcentrationAreaProcedure<GlyphStoredAreaControlProcedure>;
     }
   | {
       readonly kind: "spellGlyph";
       readonly executionKind: "persistentAreaSaveCondition";
-      readonly storedProcedure: GlyphStoredProcedureWithoutConcentration<
-        GlyphStoredProcedureFor<"persistentAreaSaveCondition">
-      >;
+      readonly storedProcedure: GlyphStoredNonConcentrationAreaProcedure<"persistentAreaSaveCondition">;
     }
   | {
       readonly kind: "spellGlyph";
@@ -325,7 +336,10 @@ export function glyphStoredSpellRelease(
       GLYPH_STORED_AREA_ONGOING_PROCEDURES,
     )
   ) {
-    if (!glyphStoredProcedureRequiresConcentration(storedProcedure))
+    if (
+      !glyphStoredProcedureRequiresConcentration(storedProcedure) ||
+      !glyphStoredProcedureTargetsArea(storedProcedure)
+    )
       return null;
     return {
       kind: "spellGlyph",
@@ -338,7 +352,10 @@ export function glyphStoredSpellRelease(
       GLYPH_STORED_AREA_CONTROL_PROCEDURES,
     )
   ) {
-    if (!glyphStoredProcedureRequiresConcentration(storedProcedure))
+    if (
+      !glyphStoredProcedureRequiresConcentration(storedProcedure) ||
+      !glyphStoredProcedureTargetsArea(storedProcedure)
+    )
       return null;
     return {
       kind: "spellGlyph",
@@ -346,7 +363,10 @@ export function glyphStoredSpellRelease(
       storedProcedure,
     };
   } else if (storedProcedure.procedure === "persistentAreaSaveCondition") {
-    if (!glyphStoredProcedureDoesNotRequireConcentration(storedProcedure))
+    if (
+      !glyphStoredProcedureDoesNotRequireConcentration(storedProcedure) ||
+      !glyphStoredProcedureTargetsArea(storedProcedure)
+    )
       return null;
     return {
       kind: "spellGlyph",

@@ -3669,15 +3669,11 @@ type BattleFillEncoded =
               | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
-            readonly kind: "pointOriginCylinderArea";
+            readonly kind: "unanchoredPointOriginCylinderArea";
             readonly areaId: string;
           }
         | {
-            readonly kind: "pointOriginSphereArea";
-            readonly areaId: string;
-          }
-        | {
-            readonly kind: "pointOriginSphereArea";
+            readonly kind: "unanchoredPointOriginSphereArea";
             readonly areaId: string;
           }
         | {
@@ -3688,14 +3684,14 @@ type BattleFillEncoded =
               | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
-            readonly kind: "pointOriginSphereArea";
+            readonly kind: "anchoredPointOriginSphereArea";
             readonly areaId: string;
             readonly originAnchor:
               | { readonly kind: "tableSelectedPoint" }
               | { readonly kind: "combatant"; readonly combatantId: string };
           }
         | {
-            readonly kind: "pointOriginCylinderArea";
+            readonly kind: "anchoredPointOriginCylinderArea";
             readonly areaId: string;
             readonly originAnchor:
               | { readonly kind: "tableSelectedPoint" }
@@ -4831,15 +4827,11 @@ export const BattleFillSchema: Schema.Codec<
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
-          kind: Schema.Literal("pointOriginCylinderArea"),
+          kind: Schema.Literal("unanchoredPointOriginCylinderArea"),
           areaId: BattleAreaId,
         }),
         Schema.Struct({
-          kind: Schema.Literal("pointOriginSphereArea"),
-          areaId: BattleAreaId,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("pointOriginSphereArea"),
+          kind: Schema.Literal("unanchoredPointOriginSphereArea"),
           areaId: BattleAreaId,
         }),
         Schema.Struct({
@@ -4848,12 +4840,12 @@ export const BattleFillSchema: Schema.Codec<
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
-          kind: Schema.Literal("pointOriginSphereArea"),
+          kind: Schema.Literal("anchoredPointOriginSphereArea"),
           areaId: BattleAreaId,
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),
         Schema.Struct({
-          kind: Schema.Literal("pointOriginCylinderArea"),
+          kind: Schema.Literal("anchoredPointOriginCylinderArea"),
           areaId: BattleAreaId,
           originAnchor: BattleSpellAreaOriginAnchorSchema,
         }),

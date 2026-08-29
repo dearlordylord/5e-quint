@@ -2287,7 +2287,11 @@ export type BattlePointOriginCubeAreaChoice = Extract<
 >;
 export type BattlePointOriginCylinderAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
-  { readonly kind: "pointOriginCylinderArea" }
+  {
+    readonly kind:
+      | "anchoredPointOriginCylinderArea"
+      | "unanchoredPointOriginCylinderArea";
+  }
 >;
 export type BattlePointOriginSphereDiameterAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
@@ -2295,9 +2299,13 @@ export type BattlePointOriginSphereDiameterAreaChoice = Extract<
 >;
 export type BattlePointOriginSphereAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
-  { readonly kind: "pointOriginSphereArea" }
+  {
+    readonly kind:
+      | "anchoredPointOriginSphereArea"
+      | "unanchoredPointOriginSphereArea";
+  }
 >;
-export type BattleDirectionalLineAreaChoice = Extract<
+export type BattleDirectionalPersistentAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
   { readonly kind: "directionalPersistentAreaArea" }
 >;
@@ -2325,15 +2333,11 @@ export type BattleSpellAreaIdentityChoice =
       readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
-      readonly kind: "pointOriginCylinderArea";
+      readonly kind: "unanchoredPointOriginCylinderArea";
       readonly areaId: BattleAreaId;
     }
   | {
-      readonly kind: "pointOriginSphereArea";
-      readonly areaId: BattleAreaId;
-    }
-  | {
-      readonly kind: "pointOriginSphereArea";
+      readonly kind: "unanchoredPointOriginSphereArea";
       readonly areaId: BattleAreaId;
     }
   | {
@@ -2342,12 +2346,12 @@ export type BattleSpellAreaIdentityChoice =
       readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
-      readonly kind: "pointOriginSphereArea";
+      readonly kind: "anchoredPointOriginSphereArea";
       readonly areaId: BattleAreaId;
       readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
   | {
-      readonly kind: "pointOriginCylinderArea";
+      readonly kind: "anchoredPointOriginCylinderArea";
       readonly areaId: BattleAreaId;
       readonly originAnchor: BattleSpellAreaOriginAnchor;
     }
