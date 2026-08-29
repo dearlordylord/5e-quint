@@ -343,9 +343,8 @@ function settledCharacterSessionForBattleRemoval(input: {
     });
   }
   const settled = settleCharacterSheetFromBattle({
-    combatant: input.combatant,
-    state: input.activeBattle.state,
-    context: input.activeBattle.context,
+    battleSession: input.activeBattle,
+    combatantId: input.combatant.combatantId,
     sheet: session.sheet,
     unitLibrary: input.unitLibrary,
     statBlockCatalog: input.statBlockCatalog,

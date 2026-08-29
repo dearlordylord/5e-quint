@@ -21,6 +21,7 @@ import {
   type BattleState,
   type BattleSubject,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   characterEquipmentItemId,
@@ -498,11 +499,13 @@ function createSheetDerivedBattleActsDriver(input: {
         const character = requireCharacterCombatant(state);
         const settled = expectRight(
           settleCharacterSheetFromBattle({
-            state,
-            context: currentSession.battle.context,
+            battleSession: battleRuntimeSessionForTest({
+              state,
+              context: currentSession.battle.context,
+            }),
+            combatantId: character.combatantId,
             sheet: currentSession.sheet,
             unitLibrary,
-            combatant: character,
           }),
         );
         settledSheet = settled;
