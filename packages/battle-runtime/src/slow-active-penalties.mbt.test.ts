@@ -797,10 +797,10 @@ function requireSlowEndTurnSaveHole(holes: readonly BattleHole[]): Extract<
   BattleHole,
   { readonly kind: "savingThrowOutcome" }
 > & {
-  readonly saveGatedTurnConstraintBundleEndTurnSave: unknown;
+  readonly turnConstraintEndTurnSave: unknown;
 } {
   const hole = requireHole(holes, "savingThrowOutcome");
-  if (!("saveGatedTurnConstraintBundleEndTurnSave" in hole)) {
+  if (!("turnConstraintEndTurnSave" in hole)) {
     throw new Error("Expected Slow end-turn Saving Throw outcome hole.");
   }
   return hole;
@@ -835,7 +835,7 @@ function slowSomaticSpellFailureFill(
 function slowHole(hole: BattleHole): SlowHole {
   if (
     hole.kind === "savingThrowOutcome" &&
-    "saveGatedTurnConstraintBundleEndTurnSave" in hole
+    "turnConstraintEndTurnSave" in hole
   ) {
     return "EndTurnSave";
   }
