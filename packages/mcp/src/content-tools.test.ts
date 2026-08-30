@@ -187,6 +187,10 @@ describe("MCP installed SRD catalog tools", () => {
       root.statBlockCatalog,
       statBlockId("stat_block_goblin_warrior"),
     );
+    const restriction = {
+      authoredExpression: "restricted to the synthetic invoker",
+      deltas: [{ kind: "target_limit", target: "self" }],
+    } as const;
     const summary = statBlockSummary(
       decodeStatBlockRecordSync({
         ...base,
@@ -215,7 +219,7 @@ describe("MCP installed SRD catalog tools", () => {
                         spellId: "magic_missile",
                         count: 2,
                         castAtLevel: 3,
-                        restriction: "Only when the target is visible.",
+                        restriction,
                       },
                       { spellId: "shield" },
                     ],
@@ -254,7 +258,7 @@ describe("MCP installed SRD catalog tools", () => {
                   spellId: "magic_missile",
                   count: 2,
                   castAtLevel: 3,
-                  restriction: "Only when the target is visible.",
+                  restriction,
                 },
                 { spellId: "shield" },
               ],
@@ -284,7 +288,7 @@ describe("MCP installed SRD catalog tools", () => {
       spellId: "magic_missile",
       count: 2,
       castAtLevel: 3,
-      restriction: "Only when the target is visible.",
+      restriction,
     });
     expect(minimalSpell).toEqual({ spellId: "shield" });
     expect(minimalSpell).not.toHaveProperty("count");
