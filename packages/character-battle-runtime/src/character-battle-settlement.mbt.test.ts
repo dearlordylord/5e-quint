@@ -5,9 +5,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleExecutionScopeOrdinal,
   battleId,
-  battleStatBlockExecutionScopeRef,
   characterBattleResourceIsPointPool,
   characterId,
   combatantId,
@@ -37,9 +35,9 @@ import {
   characterSheetSpellSlots,
   characterSheetTempHp,
   convertFontOfMagicSorceryPointsToSpellSlot,
-  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  rebuildCharacterSheet as rebuildCharacterSheetCore,
   type CharacterSheet,
-  type CharacterSheetInput,
+  type CharacterSheetRebuildInput,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
@@ -575,6 +573,10 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
     sheet,
   });
   const combatant = battle.combatant;
+  const formAdmission = combatant.origin.druidWildShapeAvailableForms?.[0];
+  if (formAdmission === undefined) {
+    throw new Error("Expected an admitted Druid Wild Shape form.");
+  }
   const activeWildShapeCombatant: CharacterBattleCombatant = {
     ...combatant,
     activeEffects: [
@@ -585,11 +587,7 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
           "settlement-active-wild-shape",
         ),
         sourceCombatantId: combatant.combatantId,
-        formScopeRef: battleStatBlockExecutionScopeRef(
-          battleId("battle:settlement-active-wild-shape"),
-          combatant.combatantId,
-          battleExecutionScopeOrdinal(1),
-        ),
+        formScopeRef: formAdmission.execution.scopeRef,
         formLimbs: { kind: "cannotHandleObjects" },
         equipmentDisposition: [],
         expiresAt: {
@@ -1002,7 +1000,7 @@ function sheetFixture(
     readonly tempHp?: number;
   } & Partial<
     Pick<
-      CharacterSheetInput,
+      CharacterSheetRebuildInput,
       | "conditions"
       | "druidWildShapeKnownFormStatBlockIds"
       | "hitPointMaximumReduction"
@@ -1017,13 +1015,14 @@ function sheetFixture(
   >,
 ): CharacterSheet {
   return requireRight(
-    createFreshCharacterSheetCore({
+    rebuildCharacterSheetCore({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
       currentHp: Hp(input.currentHp),
       tempHp: Hp(input.tempHp ?? 0),
       hitPointMaximumReduction: Hp(input.hitPointMaximumReduction ?? 0),
       conditions: input.conditions ?? [],
+      companion: { tag: "none" },
       unitLibrary,
       ...(input.zeroHpLifecycle === undefined
         ? {}
