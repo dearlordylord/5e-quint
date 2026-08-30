@@ -19,7 +19,6 @@ const REPEATED_NAMES = [
   "Storm Giant",
   "Succubus",
 ] as const;
-const AGREEMENT_NAMES = ["Stone Golem", "Storm Giant", "Succubus"] as const;
 
 const pToS = projectRawStatBlockSourceOccurrences({
   sourcePath: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
@@ -66,10 +65,10 @@ describe("P–S repeated source occurrences", () => {
     );
   });
 
-  test("proves three repeated records agree and isolates Stone Giant's save conflict", () => {
+  test("proves every repeated record agrees across both source anchors", () => {
     const pToSByName = projectionByName(pToS.projection);
     const tToZByName = projectionByName(tToZ.projection);
-    for (const name of AGREEMENT_NAMES) {
+    for (const name of REPEATED_NAMES) {
       expect(withoutSourceSection(requireProjection(pToSByName, name))).toEqual(
         withoutSourceSection(requireProjection(tToZByName, name)),
       );
@@ -81,22 +80,9 @@ describe("P–S repeated source occurrences", () => {
       projection.generalFacts.savingThrowModifiers.find(
         ({ name }) => name === "dex",
       )?.modifier;
-    const withoutDexSave = (projection: typeof pToSStoneGiant) => ({
-      ...withoutSourceSection(projection),
-      generalFacts: {
-        ...projection.generalFacts,
-        savingThrowModifiers:
-          projection.generalFacts.savingThrowModifiers.filter(
-            ({ name }) => name !== "dex",
-          ),
-      },
-    });
 
-    expect(dexSave(pToSStoneGiant)).toBe(2);
+    expect(dexSave(pToSStoneGiant)).toBe(5);
     expect(dexSave(tToZStoneGiant)).toBe(5);
-    expect(withoutDexSave(pToSStoneGiant)).toEqual(
-      withoutDexSave(tToZStoneGiant),
-    );
   });
 
   test("rejects malformed ability matrix rows at the RAW projection boundary", () => {

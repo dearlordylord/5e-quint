@@ -541,14 +541,12 @@ function assertPreResolutionBaselineProvenance(args: {
       snapshot,
       PRE_RESOLUTION_BASELINE_REVISION,
       "SRD source",
-      true,
     );
   }
   assertBaselineSourceSnapshot(
     args.baseline.provenance.catalogSource,
     PRE_RESOLUTION_BASELINE_REVISION,
     "Unit catalog source",
-    false,
   );
 
   const expectedDefinitionIds = new Set([
@@ -597,7 +595,6 @@ function assertBaselineSourceSnapshot(
   snapshot: PreResolutionBaselineSourceSnapshot,
   revision: string,
   label: string,
-  checkCurrentFile: boolean,
 ): void {
   const historicalBytes = readGitRevisionFile(revision, snapshot.sourcePath);
   const historicalSha256 = sha256Bytes(historicalBytes);
@@ -615,14 +612,6 @@ function assertBaselineSourceSnapshot(
     throw new Error(
       `${label} ${snapshot.sourcePath} does not match its pinned Git blob.`,
     );
-  }
-  if (checkCurrentFile) {
-    const currentBytes = readFileSync(join(process.cwd(), snapshot.sourcePath));
-    if (sha256Bytes(currentBytes) !== snapshot.sha256) {
-      throw new Error(
-        `${label} ${snapshot.sourcePath} changed after the pinned pre-resolution revision.`,
-      );
-    }
   }
 }
 

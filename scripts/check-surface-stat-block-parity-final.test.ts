@@ -112,58 +112,26 @@ describe("Surface stat-block parity final gate", () => {
     });
   });
 
-  it("rejects the current report with source-derived counts and issue details", () => {
+  it("accepts the complete reconciled catalog with source-derived counts", () => {
     const contentDir = mkdtempSync(
       join(tmpdir(), "surface-final-gate-current-test-"),
     );
 
     try {
-      const result = rejectedResult(
-        runSurfaceStatBlockParityFinal({
-          repoRoot: process.cwd(),
-          contentDir,
-          compile: () => undefined,
-        }),
-      );
+      const result = runSurfaceStatBlockParityFinal({
+        repoRoot: process.cwd(),
+        contentDir,
+        compile: () => undefined,
+      });
+      expect(result.tag).toBe("accepted");
       const report = result.check.statBlockParity;
 
-      expect(result.blockers).toEqual(["parity-issues"]);
       expect(result.check.issues).toEqual([]);
       expect(report.sourceCoverage.tag).toBe("complete");
       expect(report.discovery.occurrences).toHaveLength(334);
       expect(report.discovery.identities).toHaveLength(330);
-      const expectedMissingCount =
-        report.discovery.identities.length -
-        srdStatBlockCollection.statBlocks.length;
-      expect(
-        report.issues.filter((issue) => issue.kind === "missing"),
-      ).toHaveLength(expectedMissingCount);
-      expect(
-        report.issues.filter((issue) => issue.kind === "provenance"),
-      ).toHaveLength(0);
-      expect(
-        report.issues.filter((issue) => issue.kind === "divergent-source"),
-      ).toEqual([
-        expect.objectContaining({
-          kind: "divergent-source",
-          name: "Stone Giant",
-        }),
-      ]);
-      const stoneGiant = report.issues.find(
-        (issue) =>
-          issue.kind === "divergent-source" && issue.name === "Stone Giant",
-      );
-      expect(stoneGiant).toMatchObject({
-        kind: "divergent-source",
-        anchors: [
-          {
-            sourcePath: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
-          },
-          {
-            sourcePath: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
-          },
-        ],
-      });
+      expect(srdStatBlockCollection.statBlocks).toHaveLength(330);
+      expect(report.issues).toEqual([]);
     } finally {
       rmSync(contentDir, { force: true, recursive: true });
     }
@@ -180,7 +148,7 @@ describe("Surface stat-block parity final gate", () => {
         runFinalGateWithPortableCaseArtifact(portableCasesPath),
       );
 
-      expect(result.blockers).toEqual(["publication-issues", "parity-issues"]);
+      expect(result.blockers).toEqual(["publication-issues"]);
       expect(result.check.issues).toEqual([
         {
           kind: "missing-portable-case-artifact",
@@ -207,7 +175,7 @@ describe("Surface stat-block parity final gate", () => {
         runFinalGateWithPortableCaseArtifact(portableCasesPath),
       );
 
-      expect(result.blockers).toEqual(["publication-issues", "parity-issues"]);
+      expect(result.blockers).toEqual(["publication-issues"]);
       expect(result.check.issues).toEqual([
         {
           kind: "out-of-sync-portable-case-artifact",

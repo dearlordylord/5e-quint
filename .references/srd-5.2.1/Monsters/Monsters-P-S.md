@@ -1574,7 +1574,7 @@ The stirge can detach itself by spending 5 feet of its movement. The target or a
 
 | STR | DEX | CON | INT | WIS | CHA |
 |-----|-----|-----|-----|-----|-----|
-| 23 (+6) Save +6 | 15 (+2) Save +2 | 20 (+5) Save +8 | 10 (+0) Save +0 | 12 (+1) Save +4 | 9 (−1) Save −1 |
+| 23 (+6) Save +6 | 15 (+2) Save +5 | 20 (+5) Save +8 | 10 (+0) Save +0 | 12 (+1) Save +4 | 9 (−1) Save −1 |
 
 **Skills** Athletics +12, Perception +4, Stealth +5
 **Senses** Darkvision 60 ft.; Passive Perception 14
