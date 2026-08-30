@@ -211,7 +211,7 @@ function admitCantripObjectLight(
       ];
 }
 
-function isContinualFlameObjectSpell(
+function isPermanentDispellableObjectIlluminationSpell(
   spell: BattleSpellAdmissionSource,
 ): spell is BattleSpellAdmissionSource & {
   readonly mechanics: Extract<
@@ -259,7 +259,7 @@ function admitPreparedObjectLight(
   spell: BattleSpellAdmissionSource,
   castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly ObjectLightInvocation[] {
-  if (!isContinualFlameObjectSpell(spell)) {
+  if (!isPermanentDispellableObjectIlluminationSpell(spell)) {
     return [];
   }
   const lightPhase = spell.mechanics.phases.find(

@@ -59,12 +59,12 @@ type PersistentAreaTraitProfileShape = {
   readonly radius: LinearPerLevel<number>;
 };
 
-const FOG_CLOUD_LEVEL = 1;
-const FOG_CLOUD_RANGE_FEET = 120;
-const FOG_CLOUD_DURATION_HOURS = 1;
-const FOG_CLOUD_OPERATION_COUNT = 1;
-const FOG_CLOUD_BASE_RADIUS_FEET = 20;
-const FOG_CLOUD_RADIUS_FEET_PER_SLOT_LEVEL = 20;
+const SCALING_OBSCUREMENT_AREA_STARTING_LEVEL = 1;
+const SCALING_OBSCUREMENT_AREA_RANGE_FEET = 120;
+const SCALING_OBSCUREMENT_AREA_DURATION_HOURS = 1;
+const SCALING_OBSCUREMENT_AREA_OPERATION_COUNT = 1;
+const SCALING_OBSCUREMENT_AREA_BASE_RADIUS_FEET = 20;
+const SCALING_OBSCUREMENT_AREA_RADIUS_FEET_PER_SLOT_LEVEL = 20;
 
 function admitPersistentAreaTrait(
   spell: BattleSpellAdmissionSource,
@@ -95,7 +95,7 @@ function admitPersistentAreaTrait(
             radiusFeet: movementFeet(radiusFeet),
           },
           durationTicks: persistentAreaTrait.durationTicks,
-          rangeFeet: movementFeet(FOG_CLOUD_RANGE_FEET),
+          rangeFeet: movementFeet(SCALING_OBSCUREMENT_AREA_RANGE_FEET),
         },
       ];
     },
@@ -128,16 +128,18 @@ function persistentAreaTraitSpell(
   const obscurementOperation = spell.mechanics.operations[0];
 
   if (
-    spell.mechanics.level !== FOG_CLOUD_LEVEL ||
+    spell.mechanics.level !== SCALING_OBSCUREMENT_AREA_STARTING_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== FOG_CLOUD_RANGE_FEET ||
+    spell.mechanics.range.feet !== SCALING_OBSCUREMENT_AREA_RANGE_FEET ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "hour" ||
-    spell.mechanics.duration.upTo.amount !== FOG_CLOUD_DURATION_HOURS ||
+    spell.mechanics.duration.upTo.amount !==
+      SCALING_OBSCUREMENT_AREA_DURATION_HOURS ||
     earlyEnd.length !== 1 ||
     earlyEnd[0]?.kind !== "area_dispersed_by_strong_wind" ||
-    spell.mechanics.operations.length !== FOG_CLOUD_OPERATION_COUNT ||
+    spell.mechanics.operations.length !==
+      SCALING_OBSCUREMENT_AREA_OPERATION_COUNT ||
     obscurementOperation?.trigger.kind !== "passive" ||
     obscurementOperation.effect.kind !== "area_is_heavily_obscured" ||
     fogArea?.origin.kind !== "point_within_range" ||
@@ -145,9 +147,9 @@ function persistentAreaTraitSpell(
     typeof radius !== "object" ||
     radius.kind !== "linear_per_level" ||
     radius.axis !== "slot" ||
-    radius.startingAtLevel !== FOG_CLOUD_LEVEL ||
-    radius.base !== FOG_CLOUD_BASE_RADIUS_FEET ||
-    radius.perLevel !== FOG_CLOUD_RADIUS_FEET_PER_SLOT_LEVEL ||
+    radius.startingAtLevel !== SCALING_OBSCUREMENT_AREA_STARTING_LEVEL ||
+    radius.base !== SCALING_OBSCUREMENT_AREA_BASE_RADIUS_FEET ||
+    radius.perLevel !== SCALING_OBSCUREMENT_AREA_RADIUS_FEET_PER_SLOT_LEVEL ||
     durationTicks === null ||
     Result.isFailure(durationTicks)
   ) {

@@ -86,6 +86,7 @@ import {
   type BattleMovableLight,
   type BattleIllumination,
   type BattleLightEmitter,
+  type BattleIlluminationEmissionFacts,
   type BattleLightEmitterMechanicalFacts,
   type BattleLightEmitterAttachment,
   type BattleLightEmitterProjection,
@@ -145,13 +146,13 @@ import {
   persistentAreaTraitRadiusFeet,
 } from "./persistent-spell-area-binding.ts";
 import { spellProcedureBoundToActiveEffect } from "./spell-active-effect-binding.ts";
+import { spellProcedureBoundToOccurrenceSource } from "./spell-active-effect-binding.ts";
 import {
   endOfNextTurnExpiration,
   END_OF_NEXT_TURN_DURING_TURN,
 } from "./spell-end-target-state.ts";
 
 export const FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
-export const FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
 
 export type SelectFailedSaveConditionEffectResult =
   | {
@@ -209,9 +210,7 @@ function selectedConditionEffect(
       };
 }
 export const MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
-export const SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET = movementFeet(5);
 export const PERCEPTION_LIGHTLY_OBSCURED_ROLL_MODE = "disadvantage" as const;
-const SHINING_SMITE_DIM_ADDITIONAL_RADIUS_FEET = movementFeet(0);
 const CASTER_AREA_SPELL_ACTIVE_EFFECT_KINDS = [
   "persistentAreaSaveCondition",
   "persistentAreaTrait",
@@ -433,19 +432,17 @@ export function battleLightEmitters(
       combatant.activeEffects.flatMap(
         (effect): readonly BattleLightEmitter[] =>
           effect.kind === "saveGatedTargetProjection"
-            ? [
-                faerieFireCombatantDimLightEmitter(
+            ? boundCombatantIlluminationLightEmitter(
+                state,
+                combatant.combatantId,
+                effect,
+              )
+            : effect.kind === "afterHitDamageAndIllumination"
+              ? boundCombatantIlluminationLightEmitter(
+                  state,
                   combatant.combatantId,
                   effect,
-                ),
-              ]
-            : effect.kind === "afterHitDamageAndIllumination"
-              ? [
-                  shiningSmiteCombatantBrightLightEmitter(
-                    combatant.combatantId,
-                    effect,
-                  ),
-                ]
+                )
               : effect.kind === "heldLight"
                 ? [
                     {
@@ -529,7 +526,9 @@ export function battleLightEmitters(
   return [
     ...storedEmitters.map(projectStoredLightEmitter),
     ...outlineLightEmitters,
-    ...state.objectOutlines.map(faerieFireObjectDimLightEmitter),
+    ...state.objectOutlines.flatMap((outline) =>
+      boundObjectIlluminationLightEmitter(state, outline),
+    ),
   ];
 }
 
@@ -972,47 +971,45 @@ function obscurementFromIllumination(
   );
 }
 
-function faerieFireCombatantDimLightEmitter(
-  combatantId: CombatantId,
-  effect: Extract<
-    BattleActiveEffect,
-    { readonly kind: "saveGatedTargetProjection" }
-  >,
-): BattleLightEmitter {
-  return {
-    kind: "spellLightEmitter",
-    sourceProcedureRef: effect.sourceProcedureRef,
-    sourceCombatantId: effect.sourceCombatantId,
-    attachment: { kind: "combatant", combatantId },
-    emission: {
-      kind: "dim",
-      radiusFeet: FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET,
-    },
-    opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
-    expiresAt: effect.expiresAt,
-  };
-}
+type BoundIlluminationActiveEffect = Extract<
+  BattleActiveEffect,
+  {
+    readonly kind:
+      | "saveGatedTargetProjection"
+      | "afterHitDamageAndIllumination";
+  }
+>;
 
-function shiningSmiteCombatantBrightLightEmitter(
+function boundCombatantIlluminationLightEmitter(
+  state: BattleState,
   combatantId: CombatantId,
-  effect: Extract<
-    BattleActiveEffect,
-    { readonly kind: "afterHitDamageAndIllumination" }
-  >,
-): BattleLightEmitter {
-  return {
-    kind: "spellLightEmitter",
-    sourceProcedureRef: effect.sourceProcedureRef,
-    sourceCombatantId: effect.sourceCombatantId,
-    attachment: { kind: "combatant", combatantId },
-    emission: {
-      kind: "brightAndDim",
-      brightRadiusFeet: SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET,
-      dimAdditionalFeet: SHINING_SMITE_DIM_ADDITIONAL_RADIUS_FEET,
-    },
-    opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
-    expiresAt: effect.expiresAt,
-  };
+  effect: BoundIlluminationActiveEffect,
+): readonly BattleLightEmitter[] {
+  const procedure = spellProcedureBoundToOccurrenceSource(state, effect);
+  const illumination = Match.value(effect).pipe(
+    Match.when({ kind: "saveGatedTargetProjection" }, () =>
+      procedure?.procedure === "saveGatedAttackRollAdvantage"
+        ? procedure.illumination
+        : null,
+    ),
+    Match.when({ kind: "afterHitDamageAndIllumination" }, () =>
+      procedure?.procedure === "afterHitDamageAndIllumination"
+        ? procedure.illumination
+        : null,
+    ),
+    Match.exhaustive,
+  );
+  return illumination === null
+    ? []
+    : [
+        projectBoundIlluminationLightEmitter({
+          sourceProcedureRef: effect.sourceProcedureRef,
+          sourceCombatantId: effect.sourceCombatantId,
+          attachment: { kind: "combatant", combatantId },
+          illumination,
+          expiresAt: effect.expiresAt,
+        }),
+      ];
 }
 
 function paladinSacredWeaponLightEmitters(
@@ -1054,20 +1051,60 @@ function paladinSacredWeaponLightEmitters(
       ];
 }
 
-function faerieFireObjectDimLightEmitter(
+function boundObjectIlluminationLightEmitter(
+  state: BattleState,
   outline: BattleObjectOutline,
-): BattleLightEmitter {
+): readonly BattleLightEmitter[] {
+  const procedure = spellProcedureBoundToOccurrenceSource(state, outline);
+  return procedure?.procedure !== "saveGatedAttackRollAdvantage"
+    ? []
+    : [
+        projectBoundIlluminationLightEmitter({
+          sourceProcedureRef: outline.sourceProcedureRef,
+          sourceCombatantId: outline.sourceCombatantId,
+          attachment: { kind: "object", objectId: outline.objectId },
+          illumination: procedure.illumination,
+          expiresAt: outline.expiresAt,
+        }),
+      ];
+}
+
+function projectBoundIlluminationLightEmitter(input: {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly sourceCombatantId: CombatantId;
+  readonly attachment: SpellLightEmitterTargetAttachment;
+  readonly illumination: BattleIlluminationEmissionFacts;
+  readonly expiresAt: BattleActiveEffectExpiration;
+}): BattleLightEmitter {
   return {
     kind: "spellLightEmitter",
-    sourceProcedureRef: outline.sourceProcedureRef,
-    sourceCombatantId: outline.sourceCombatantId,
-    attachment: { kind: "object", objectId: outline.objectId },
-    emission: {
-      kind: "dim",
-      radiusFeet: FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET,
-    },
-    opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
-    expiresAt: outline.expiresAt,
+    sourceProcedureRef: input.sourceProcedureRef,
+    sourceCombatantId: input.sourceCombatantId,
+    attachment: input.attachment,
+    emission: Match.value(input.illumination.emission).pipe(
+      Match.when({ kind: "dim" }, (emission) => ({
+        kind: emission.kind,
+        radiusFeet: emission.radiusFeet,
+      })),
+      Match.when({ kind: "brightAndDim" }, (emission) => ({
+        kind: emission.kind,
+        brightRadiusFeet: emission.brightRadiusFeet,
+        dimAdditionalFeet: emission.dimAdditionalFeet,
+      })),
+      Match.exhaustive,
+    ),
+    opaqueCoverInteraction: Match.value(
+      input.illumination.opaqueCoverInteraction,
+    ).pipe(
+      Match.when({ kind: "blocksEmission" }, (interaction) => ({
+        kind: interaction.kind,
+      })),
+      Match.when({ kind: "doesNotBlockEmission" }, (interaction) => ({
+        kind: interaction.kind,
+      })),
+      Match.exhaustive,
+    ),
+    expiresAt: input.expiresAt,
   };
 }
 
@@ -3052,7 +3089,7 @@ export function applyFailedSaveAttackRollAdvantageEffects(
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
-    /* v8 ignore start -- @preserve -- Defensive internal guard: Faerie Fire failed-save target ids are validated against the current combatant map before outlines are applied. */
+    /* v8 ignore start -- @preserve -- Defensive internal guard: outline-effect failed-save target ids are validated against the current combatant map before effects are applied. */
     if (target === undefined) {
       continue;
     }

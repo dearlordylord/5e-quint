@@ -33,6 +33,7 @@ import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET,
   type DamageSpellSource,
+  type DimIlluminationEmissionFacts,
   type SaveGateFailureEffect,
   type SpellActivationPhase,
   type SpellFailedSaveAttackRollEffect,
@@ -62,6 +63,7 @@ import {
   singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
 } from "../spells-execution-facts.ts";
+import { illuminationEmissionFactsFromSurface } from "./illumination-emission-facts.ts";
 
 export type SaveGateConditionSpell = {
   readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
@@ -81,6 +83,7 @@ export type SaveGateAttackRollAdvantageSpell = {
     { readonly kind: "pointOriginCube" }
   >;
   readonly effect: SpellFailedSaveAttackRollEffect;
+  readonly illumination: DimIlluminationEmissionFacts;
   readonly rangeFeet: MovementFeet;
 };
 
@@ -135,8 +138,8 @@ const FIREBALL_BASE_DAMAGE_DICE = 8;
 const FIREBALL_DAMAGE_DIE_SIZE = 6;
 const FIREBALL_SLOT_DAMAGE_DICE_INCREMENT = 1;
 const LEVEL5_SELF_CONE_SAVE_GATE_LENGTH_FEET = 60;
-const LIGHTNING_BOLT_LINE_LENGTH_FEET = 100;
-const LIGHTNING_BOLT_LINE_WIDTH_FEET = 5;
+const SIMPLE_LINE_DAMAGE_PROFILE_LENGTH_FEET = 100;
+const SIMPLE_LINE_DAMAGE_PROFILE_WIDTH_FEET = 5;
 const SHATTER_BASE_SPELL_LEVEL = 2;
 const SHATTER_RANGE_FEET = 60;
 const SHATTER_AREA_RADIUS_FEET = 10;
@@ -271,7 +274,7 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
   }
 
   return castOptions.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    /* v8 ignore start -- @preserve -- Domain invariant: this profile admits only level-1 Faerie Fire, and SpellSlotLevel cannot represent a slot below level 1. */
+    /* v8 ignore start -- @preserve -- Domain invariant: this profile admits only level-1 spells, and SpellSlotLevel cannot represent a slot below level 1. */
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
@@ -286,6 +289,7 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
         dc: attackRollAdvantageSpell.phase.dc,
         targeting: attackRollAdvantageSpell.targeting,
         effect: attackRollAdvantageSpell.effect,
+        illumination: attackRollAdvantageSpell.illumination,
         rangeFeet: attackRollAdvantageSpell.rangeFeet,
       },
     ];
@@ -654,8 +658,7 @@ export function areaSaveGatedAttackRollAdvantageSpell(
   }
   const phase = spell.mechanics.phases[0];
   const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
-  const attackAdvantageEffect =
-    visibilityGrantingAreaFailedSaveAttackAdvantageEffect(failedEffect);
+  const failedSaveFacts = visibilityGrantingAreaFailedSaveFacts(failedEffect);
   if (
     spell.mechanics.level !== 1 ||
     !spellHasActionCastingTime(spell) ||
@@ -676,7 +679,7 @@ export function areaSaveGatedAttackRollAdvantageSpell(
     phase.attachment.value.shape.kind !== "cube" ||
     phase.attachment.value.shape.sideFeet !==
       SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET ||
-    attackAdvantageEffect === null
+    failedSaveFacts === null
   ) {
     return null;
   }
@@ -692,14 +695,17 @@ export function areaSaveGatedAttackRollAdvantageSpell(
       sourceCombatantId: actorId,
       expiresAt: { kind: "concentration", combatantId: actorId },
     },
+    illumination: failedSaveFacts.illumination,
     rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
 }
 
-function visibilityGrantingAreaFailedSaveAttackAdvantageEffect(
+function visibilityGrantingAreaFailedSaveFacts(
   effect: SaveGateFailedEffect | undefined,
-): ModifyRollAdvantageEffect | null {
-  if (effect?.kind !== "composite" || effect.effects.length !== 2) {
+): {
+  readonly illumination: SaveGateAttackRollAdvantageSpell["illumination"];
+} | null {
+  if (effect?.kind !== "composite" || effect.effects.length !== 3) {
     return null;
   }
   const attackAdvantageEffects = effect.effects.filter(
@@ -713,8 +719,30 @@ function visibilityGrantingAreaFailedSaveAttackAdvantageEffect(
       candidate.kind === "suppress_condition_benefit" &&
       candidate.condition === "invisible",
   );
-  return attackAdvantageEffects.length === 1 && suppressesInvisible
-    ? attackAdvantageEffects[0]
+  const illuminationEffects = effect.effects.filter(
+    (candidate) => candidate.kind === "emit_light",
+  );
+  const illumination =
+    illuminationEffects.length === 1 &&
+    illuminationEffects[0]?.kind === "emit_light"
+      ? illuminationEmissionFactsFromSurface({
+          effect: illuminationEffects[0],
+          opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
+        })
+      : null;
+  return attackAdvantageEffects.length === 1 &&
+    attackAdvantageEffects[0] !== undefined &&
+    suppressesInvisible &&
+    illumination?.emission.kind === "dim" &&
+    illumination !== null
+    ? {
+        illumination: {
+          emission: illumination.emission,
+          opaqueCoverInteraction: {
+            kind: illumination.opaqueCoverInteraction.kind,
+          },
+        },
+      }
     : null;
 }
 
@@ -1384,8 +1412,8 @@ export function saveGateTargeting(
     value.kind === "area" &&
     value.origin.kind === "self" &&
     value.shape.kind === "line" &&
-    value.shape.lengthFeet === LIGHTNING_BOLT_LINE_LENGTH_FEET &&
-    value.shape.widthFeet === LIGHTNING_BOLT_LINE_WIDTH_FEET
+    value.shape.lengthFeet === SIMPLE_LINE_DAMAGE_PROFILE_LENGTH_FEET &&
+    value.shape.widthFeet === SIMPLE_LINE_DAMAGE_PROFILE_WIDTH_FEET
   ) {
     return {
       kind: "selfOriginLine",

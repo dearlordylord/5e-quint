@@ -41,6 +41,32 @@ export type BattleLightEmission =
       readonly dimAdditionalFeet: MovementFeet;
     };
 
+export type BattleLightEmitterOpaqueCoverInteraction =
+  | { readonly kind: "blocksEmission" }
+  | { readonly kind: "doesNotBlockEmission" };
+
+export type BattleIlluminationEmissionFacts = {
+  readonly emission: BattleLightEmission;
+  readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
+};
+
+export type DimIlluminationEmissionFacts = Omit<
+  BattleIlluminationEmissionFacts,
+  "emission"
+> & {
+  readonly emission: Extract<BattleLightEmission, { readonly kind: "dim" }>;
+};
+
+export type BrightAndDimIlluminationEmissionFacts = Omit<
+  BattleIlluminationEmissionFacts,
+  "emission"
+> & {
+  readonly emission: Extract<
+    BattleLightEmission,
+    { readonly kind: "brightAndDim" }
+  >;
+};
+
 export type SpellComponent = "V" | "S" | "M";
 
 export type BattleImmediateAreaAudibleBoom = {
