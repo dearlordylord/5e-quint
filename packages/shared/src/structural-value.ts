@@ -3,14 +3,14 @@
  * canonical set ordering use the same comparator throughout the workspace.
  */
 export function compareCodePoints(left: string, right: string): number {
-  const leftPoints = [...left].map((value) => value.codePointAt(0) ?? 0);
-  const rightPoints = [...right].map((value) => value.codePointAt(0) ?? 0);
+  const leftPoints = [...left].map((value) => Number(value.codePointAt(0)));
+  const rightPoints = [...right].map((value) => Number(value.codePointAt(0)));
   for (
     let index = 0;
     index < Math.min(leftPoints.length, rightPoints.length);
     index += 1
   ) {
-    const difference = (leftPoints[index] ?? 0) - (rightPoints[index] ?? 0);
+    const difference = leftPoints[index] - rightPoints[index];
     if (difference !== 0) return difference;
   }
   return leftPoints.length - rightPoints.length;
@@ -25,7 +25,6 @@ type CanonicalStructuralFrame =
       readonly value: unknown;
       readonly depth: number;
     }
-  | { readonly tag: "token"; readonly value: string }
   | { readonly tag: "close"; readonly value: object; readonly token: string }
   | {
       readonly tag: "arrayMember";
@@ -46,11 +45,6 @@ type CanonicalStructuralState = {
   readonly frames: CanonicalStructuralFrame[];
 };
 
-type CanonicalStructuralScalar = {
-  readonly tag: "scalar";
-  readonly token: string;
-};
-
 /**
  * Produce a deterministic key for JSON-like structural equality. Object keys
  * are sorted, arrays retain order and multiplicity, and scalar type tags
@@ -65,8 +59,8 @@ export function canonicalStructuralKey(value: unknown): string {
   };
 
   while (state.frames.length > 0) {
-    const frame = state.frames.pop();
-    if (frame === undefined) continue;
+    const frame = state.frames[state.frames.length - 1];
+    state.frames.length -= 1;
     processCanonicalStructuralFrame(frame, state);
   }
   return state.output.join("");
@@ -76,10 +70,6 @@ function processCanonicalStructuralFrame(
   frame: CanonicalStructuralFrame,
   state: CanonicalStructuralState,
 ): void {
-  if (frame.tag === "token") {
-    state.output.push(frame.value);
-    return;
-  }
   if (frame.tag === "close") {
     state.active.delete(frame.value);
     state.output.push(frame.token);
@@ -148,64 +138,38 @@ function processCanonicalStructuralValue(
   frame: Extract<CanonicalStructuralFrame, { readonly tag: "visit" }>,
   state: CanonicalStructuralState,
 ): void {
-  const scalar = canonicalStructuralScalar(frame.value);
-  if (scalar !== undefined) {
-    state.output.push(scalar.token);
-    return;
+  switch (typeof frame.value) {
+    case "undefined":
+      state.output.push("undefined;");
+      return;
+    case "boolean":
+      state.output.push(canonicalBooleanToken(frame.value));
+      return;
+    case "string":
+      state.output.push(`string:${encodeString(frame.value)};`);
+      return;
+    case "number":
+      state.output.push(`number:${canonicalNumber(frame.value)};`);
+      return;
+    case "bigint":
+      state.output.push(`bigint:${encodeString(String(frame.value))};`);
+      return;
+    case "symbol":
+      state.output.push(
+        `symbol:${encodeString(symbolDescription(frame.value))};`,
+      );
+      return;
+    case "function":
+      state.output.push("function;");
+      return;
+    case "object":
+      if (frame.value === null) {
+        state.output.push("null;");
+        return;
+      }
+      processCanonicalObjectValue(frame.value, frame.depth, state);
+      return;
   }
-  if (!isNonNullStructuralObject(frame.value)) {
-    state.output.push("function;");
-    return;
-  }
-  processCanonicalObjectValue(frame.value, frame.depth, state);
-}
-
-function canonicalStructuralScalar(
-  value: unknown,
-): CanonicalStructuralScalar | undefined {
-  return value === null
-    ? { tag: "scalar", token: "null;" }
-    : canonicalNonNullStructuralScalar(value);
-}
-
-function canonicalNonNullStructuralScalar(
-  value: unknown,
-): CanonicalStructuralScalar | undefined {
-  if (value === null) return { tag: "scalar", token: "null;" };
-  return canonicalPrimitiveStructuralScalar(value);
-}
-
-function canonicalPrimitiveStructuralScalar(
-  value: unknown,
-): CanonicalStructuralScalar | undefined {
-  if (typeof value === "undefined") {
-    return { tag: "scalar", token: "undefined;" };
-  }
-  if (typeof value === "boolean") {
-    return { tag: "scalar", token: canonicalBooleanToken(value) };
-  }
-  if (typeof value === "string") {
-    return { tag: "scalar", token: `string:${encodeString(value)};` };
-  }
-  if (typeof value === "number") {
-    return { tag: "scalar", token: `number:${canonicalNumber(value)};` };
-  }
-  if (typeof value === "bigint") {
-    return {
-      tag: "scalar",
-      token: `bigint:${encodeString(String(value))};`,
-    };
-  }
-  if (typeof value === "symbol") {
-    return {
-      tag: "scalar",
-      token: `symbol:${encodeString(symbolDescription(value))};`,
-    };
-  }
-  if (typeof value === "function") {
-    return { tag: "scalar", token: "function;" };
-  }
-  return undefined;
 }
 
 function canonicalBooleanToken(value: boolean): string {
@@ -214,10 +178,6 @@ function canonicalBooleanToken(value: boolean): string {
 
 function symbolDescription(value: symbol): string {
   return value.description ?? "";
-}
-
-function isNonNullStructuralObject(value: unknown): value is object {
-  return typeof value === "object" && value !== null;
 }
 
 function processCanonicalObjectValue(
@@ -305,10 +265,6 @@ function processCanonicalRecordValue(
   state.frames.push({ tag: "close", value: current, token: "};" });
   for (let index = keys.length - 1; index >= 0; index -= 1) {
     const key = keys[index];
-    if (key === undefined) {
-      state.output.push("object:hostile;");
-      continue;
-    }
     state.frames.push({
       tag: "objectMember",
       value: current,

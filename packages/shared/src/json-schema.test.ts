@@ -45,4 +45,32 @@ describe("JSON Schema id projection", () => {
       },
     );
   });
+
+  it("follows schema-valued array, map, and value keywords only", () => {
+    const schema = {
+      allOf: [{ $id: "urn:array-member", type: "string" }, "boolean-schema"],
+      properties: "not-a-schema-map",
+      items: { $id: "urn:item", type: "number" },
+      additionalProperties: false,
+      anyOf: "not-an-array",
+      examples: [{ $id: "example-data" }],
+    };
+
+    expect(stripNestedJsonSchemaIds(schema)).toEqual({
+      allOf: [{ type: "string" }, "boolean-schema"],
+      properties: "not-a-schema-map",
+      items: { type: "number" },
+      additionalProperties: false,
+      anyOf: "not-an-array",
+      examples: [{ $id: "example-data" }],
+    });
+  });
+
+  it("preserves primitive and array roots while stripping nested ids", () => {
+    expect(
+      stripNestedJsonSchemaIds([{ $id: "urn:first" }, null, "data"]),
+    ).toEqual([{}, null, "data"]);
+    expect(stripNestedJsonSchemaIds(null)).toBeNull();
+    expect(stripNestedJsonSchemaIds("schema-data")).toBe("schema-data");
+  });
 });
