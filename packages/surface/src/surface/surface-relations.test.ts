@@ -1,16 +1,17 @@
 import { createRequire } from "node:module";
 
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 
 import { decodeSrdSurfaceEither } from "./schema.ts";
+import { surfaceSchemaRole } from "./schema-base.ts";
 import {
   closeSrdSurface,
   collectSurfaceAuthoredRelations,
   srdSurface,
 } from "./surface-catalog.ts";
-import { decodeSurfaceAuthoredRelation } from "./surface-relations.ts";
+import { collectSurfaceRecordAuthoredRelations } from "./surface-relations-internal.ts";
 
 const require = createRequire(import.meta.url);
 const corpusAudit: {
@@ -75,83 +76,94 @@ const mutableUnit = (
 };
 
 describe("canonical Surface authored relations", () => {
-  it("decodes every Stat Block source relation family", () => {
+  it("derives every Stat Block source relation family from schema roles", () => {
     const source = srdSurface.statBlocks.find(
       (record) => record.id === "stat_block_skeleton",
     );
     if (source === undefined) {
       throw new Error("Missing the skeleton Stat Block relation source");
     }
-    const relations = [
-      {
-        role: {
-          category: "reference",
-          relation: "unit-reference",
-          targetKind: "unit",
-        },
-        targetRecordId: "synthetic_unit_target",
+    const schema = Schema.Struct({
+      unitReference: surfaceSchemaRole(Schema.String, {
+        category: "reference",
+        relation: "unit-reference",
+        targetKind: "unit",
+      }),
+      unitDependency: surfaceSchemaRole(Schema.String, {
+        category: "dependency",
+        relation: "spell-reference",
+        targetKind: "unit",
+      }),
+      statBlockReference: surfaceSchemaRole(Schema.String, {
+        category: "reference",
+        relation: "recommended-stat-block-reference",
+        targetKind: "statBlock",
+      }),
+      statBlockDependency: surfaceSchemaRole(Schema.String, {
+        category: "dependency",
+        relation: "monster-reference",
+        targetKind: "statBlock",
+      }),
+    });
+    const decoded = collectSurfaceRecordAuthoredRelations({
+      source: { sourceKind: "statBlock", value: source },
+      schema,
+      value: {
+        unitReference: "synthetic_unit_target",
+        unitDependency: "synthetic_unit_dependency",
+        statBlockReference: "synthetic_stat_block_target",
+        statBlockDependency: "synthetic_stat_block_dependency",
       },
-      {
-        role: {
-          category: "dependency",
-          relation: "spell-reference",
-          targetKind: "unit",
-        },
-        targetRecordId: "synthetic_unit_dependency",
+    });
+    const rejected = collectSurfaceRecordAuthoredRelations({
+      source: { sourceKind: "statBlock", value: source },
+      schema,
+      value: {
+        unitReference: "",
+        unitDependency: " ",
+        statBlockReference: "",
+        statBlockDependency: " ",
       },
-      {
-        role: {
-          category: "reference",
-          relation: "recommended-stat-block-reference",
-          targetKind: "statBlock",
-        },
-        targetRecordId: "synthetic_stat_block_target",
-      },
-      {
-        role: {
-          category: "dependency",
-          relation: "monster-reference",
-          targetKind: "statBlock",
-        },
-        targetRecordId: "synthetic_stat_block_dependency",
-      },
-    ] as const;
+    });
 
-    for (const relation of relations) {
-      const decoded = decodeSurfaceAuthoredRelation({
-        record: { sourceKind: "statBlock", value: source },
-        role: relation.role,
-        fieldPath: "syntheticRelation",
-        issuePath: "value.syntheticRelation",
-        targetRecordId: relation.targetRecordId,
-      });
-      const rejected = decodeSurfaceAuthoredRelation({
-        record: { sourceKind: "statBlock", value: source },
-        role: relation.role,
-        fieldPath: "syntheticRelation",
-        issuePath: "value.syntheticRelation",
-        targetRecordId: " ",
-      });
-
-      expect(Either.isRight(decoded)).toBe(true);
-      if (Either.isRight(decoded)) {
-        expect(decoded.right).toMatchObject({
+    expect(decoded.issues).toEqual([]);
+    expect(decoded.relations).toHaveLength(4);
+    expect(decoded.relations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
           sourceKind: "statBlock",
-          sourceRecordId: source.id,
-          relationKind: relation.role.category,
-          relation: relation.role.relation,
-          targetKind: relation.role.targetKind,
-          targetRecordId: relation.targetRecordId,
-        });
-      }
-      expect(Either.isLeft(rejected)).toBe(true);
-      if (Either.isLeft(rejected)) {
-        expect(rejected.left).toMatchObject({
-          code: "invalidRecord",
-          path: "value.syntheticRelation",
-        });
-      }
-    }
+          targetKind: "unit",
+          relationKind: "reference",
+          targetRecordId: "synthetic_unit_target",
+        }),
+        expect.objectContaining({
+          sourceKind: "statBlock",
+          targetKind: "unit",
+          relationKind: "dependency",
+          targetRecordId: "synthetic_unit_dependency",
+        }),
+        expect.objectContaining({
+          sourceKind: "statBlock",
+          targetKind: "statBlock",
+          relationKind: "reference",
+          targetRecordId: "synthetic_stat_block_target",
+        }),
+        expect.objectContaining({
+          sourceKind: "statBlock",
+          targetKind: "statBlock",
+          relationKind: "dependency",
+          targetRecordId: "synthetic_stat_block_dependency",
+        }),
+      ]),
+    );
+    expect(rejected.relations).toEqual([]);
+    expect(rejected.issues).toHaveLength(4);
+    expect(rejected.issues.map((issue) => issue.code)).toEqual([
+      "invalidRecord",
+      "invalidRecord",
+      "invalidRecord",
+      "invalidRecord",
+    ]);
   });
 
   it("collects relation metadata from decoded records without source scans", () => {

@@ -5,7 +5,7 @@ import { Schema } from "effect";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
-import { walkSurfaceSchemaValue } from "./surface-relations.ts";
+import { walkSurfaceSchemaValue } from "./surface-relations-internal.ts";
 
 const require = createRequire(import.meta.url);
 const traversal = require("../../../../scripts/srd521-surface-authored-corpus-audit.cjs");
