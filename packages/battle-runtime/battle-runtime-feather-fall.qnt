@@ -49,7 +49,7 @@ module battleRuntimeFeatherFall {
 
   pure def resolveFeatherFallSpell(
     state: BattleState,
-    triggerWitness: FallingCreatureMitigationTriggerWitness,
+    triggerWitness: FallingCreatureMitigationTriggerWitness[Actor],
     targets: Set[Actor],
     fallingTargets: Set[Actor],
     targetCount: int,

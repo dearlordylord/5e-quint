@@ -2,31 +2,29 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE
 
 module battleRuntimeFallingCreatureMitigationReaction {
-  import battleRuntimeModel.* from "./battle-runtime-model"
-
   pure val fallingCreatureMitigationDurationTicks = 10
   pure val fallingCreatureMitigationDescentRateCapFeetPerRound = 60
   pure val fallingCreatureMitigationMaximumTargets = 5
   pure val fallingCreatureMitigationTriggerRangeFeet = 60
 
-  type FallingCreatureMitigationTriggerWitness =
-    | ReactorFalls({ reactor: Actor })
+  type FallingCreatureMitigationTriggerWitness[a] =
+    | ReactorFalls({ reactor: a })
     | VisibleCreatureWithinRangeFalls({
-        reactor: Actor,
-        fallingCreature: Actor,
+        reactor: a,
+        fallingCreature: a,
         distanceFeet: int,
       })
 
   pure def fallingCreatureMitigationTriggerReactor(
-    witness: FallingCreatureMitigationTriggerWitness,
-  ): Actor =
+    witness: FallingCreatureMitigationTriggerWitness[a],
+  ): a =
     match witness {
       | ReactorFalls(data) => data.reactor
       | VisibleCreatureWithinRangeFalls(data) => data.reactor
     }
 
   pure def fallingCreatureMitigationTriggerAdmitted(
-    witness: FallingCreatureMitigationTriggerWitness,
+    witness: FallingCreatureMitigationTriggerWitness[a],
   ): bool =
     match witness {
       | ReactorFalls(_) => true
@@ -36,7 +34,7 @@ module battleRuntimeFallingCreatureMitigationReaction {
     }
 
   pure def fallingCreatureMitigationReactionAdmitted(
-    triggerWitness: FallingCreatureMitigationTriggerWitness,
+    triggerWitness: FallingCreatureMitigationTriggerWitness[a],
     reactorCanReact: bool,
     reactorCanExpendSpellSlot: bool,
     selectedTargetCount: int,
