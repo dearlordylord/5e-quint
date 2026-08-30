@@ -29,55 +29,52 @@ module battleRuntimeAreaTriggerTiming {
     | CreatureEndsTurnNearArea
 
   type AreaEffectTriggerProfile =
-    | GreaseGroundHazardEveryTriggerProfile
-    | FlamingSphereHazardEveryTriggerProfile
-    | FirstEntryAndStartTurnProfile({
-        entryResolvedThisTurn: bool,
-        startTurnResolvedThisTurn: bool,
+    | EveryQualifiedAreaTriggerProfile({
+        qualifiedTimings: Set[AreaEffectTriggerTiming],
       })
-    | OnceAcrossQualifiedAreaTriggersProfile({ anyResolvedThisTurn: bool })
+    | FirstPerTimingPerTurnAreaTriggerProfile({
+        qualifiedTimings: Set[AreaEffectTriggerTiming],
+        resolvedTimings: Set[AreaEffectTriggerTiming],
+      })
+    | OnceAcrossQualifiedAreaTriggersProfile({
+        qualifiedTimings: Set[AreaEffectTriggerTiming],
+        anyResolvedThisTurn: bool,
+      })
 
-  pure def webRestraintFirstEntryAndStartTurnProfile(
-    entryResolvedThisTurn: bool,
-    startTurnResolvedThisTurn: bool,
+  pure def everyQualifiedAreaTriggerProfile(
+    qualifiedTimings: Set[AreaEffectTriggerTiming],
   ): AreaEffectTriggerProfile =
-    FirstEntryAndStartTurnProfile({
-      entryResolvedThisTurn: entryResolvedThisTurn,
-      startTurnResolvedThisTurn: startTurnResolvedThisTurn,
-    })
+    EveryQualifiedAreaTriggerProfile({ qualifiedTimings: qualifiedTimings })
 
-  pure def sleetStormFirstEntryAndStartTurnProfile(
-    entryResolvedThisTurn: bool,
-    startTurnResolvedThisTurn: bool,
+  pure def firstPerTimingPerTurnAreaTriggerProfile(
+    qualifiedTimings: Set[AreaEffectTriggerTiming],
+    resolvedTimings: Set[AreaEffectTriggerTiming],
   ): AreaEffectTriggerProfile =
-    FirstEntryAndStartTurnProfile({
-      entryResolvedThisTurn: entryResolvedThisTurn,
-      startTurnResolvedThisTurn: startTurnResolvedThisTurn,
+    FirstPerTimingPerTurnAreaTriggerProfile({
+      qualifiedTimings: qualifiedTimings,
+      resolvedTimings: resolvedTimings,
     })
 
   pure def onceAcrossQualifiedAreaTriggersProfile(
+    qualifiedTimings: Set[AreaEffectTriggerTiming],
     anyResolvedThisTurn: bool,
   ): AreaEffectTriggerProfile =
-    OnceAcrossQualifiedAreaTriggersProfile({ anyResolvedThisTurn: anyResolvedThisTurn })
+    OnceAcrossQualifiedAreaTriggersProfile({
+      qualifiedTimings: qualifiedTimings,
+      anyResolvedThisTurn: anyResolvedThisTurn,
+    })
 
   pure def areaEffectTriggerProfileIncludesTiming(
     profile: AreaEffectTriggerProfile,
     timing: AreaEffectTriggerTiming,
   ): bool =
     match profile {
-      | GreaseGroundHazardEveryTriggerProfile =>
-          timing == AreaAppearsInSpace or
-          timing == CreatureEntersArea or
-          timing == CreatureEndsTurnInArea
-      | FlamingSphereHazardEveryTriggerProfile =>
-          timing == AreaMovesIntoSpace or timing == CreatureEndsTurnNearArea
-      | FirstEntryAndStartTurnProfile(_) =>
-          timing == CreatureEntersArea or timing == CreatureStartsTurnInArea
-      | OnceAcrossQualifiedAreaTriggersProfile(_) =>
-          timing == AreaAppearsInSpace or
-          timing == AreaMovesIntoSpace or
-          timing == CreatureEntersArea or
-          timing == CreatureEndsTurnInArea
+      | EveryQualifiedAreaTriggerProfile(data) =>
+          data.qualifiedTimings.contains(timing)
+      | FirstPerTimingPerTurnAreaTriggerProfile(data) =>
+          data.qualifiedTimings.contains(timing)
+      | OnceAcrossQualifiedAreaTriggersProfile(data) =>
+          data.qualifiedTimings.contains(timing)
     }
 
   pure def areaEffectTriggerAlreadyResolved(
@@ -85,15 +82,9 @@ module battleRuntimeAreaTriggerTiming {
     timing: AreaEffectTriggerTiming,
   ): bool =
     match profile {
-      | GreaseGroundHazardEveryTriggerProfile => false
-      | FlamingSphereHazardEveryTriggerProfile => false
-      | FirstEntryAndStartTurnProfile(data) =>
-          if (timing == CreatureEntersArea)
-            data.entryResolvedThisTurn
-          else if (timing == CreatureStartsTurnInArea)
-            data.startTurnResolvedThisTurn
-          else
-            false
+      | EveryQualifiedAreaTriggerProfile(_) => false
+      | FirstPerTimingPerTurnAreaTriggerProfile(data) =>
+          data.resolvedTimings.contains(timing)
       | OnceAcrossQualifiedAreaTriggersProfile(data) => data.anyResolvedThisTurn
     }
 

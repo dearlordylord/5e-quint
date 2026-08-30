@@ -20,6 +20,7 @@
 
 module battleRuntimeInsectPlagueAreaHazard {
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import spellSlotExpenditure.* from "../shared-algebras/proofs/rule-core/spell-slot-expenditure"
 
@@ -28,6 +29,7 @@ module battleRuntimeInsectPlagueAreaHazard {
   pure val insectPlagueDamageDieSize: int = 10
   pure val insectPlagueRadiusFeet: int = 20
   pure val insectPlagueDurationTicks: int = 100
+  pure val insectPlagueLifecycle: PersistentAreaLifecycle = StationaryPersistentArea
 
   type InsectPlagueSaveTrigger =
     | InsectPlagueAppearanceOccurrence
@@ -56,10 +58,18 @@ module battleRuntimeInsectPlagueAreaHazard {
   }
 
   pure def insectPlagueDamageDice(slotLevel: int): int =
-    insectPlagueBaseDamageDice + slotLevel - insectPlagueMinimumSlotLevel
+    persistentAreaScaledDamageDice(
+      slotLevel,
+      insectPlagueMinimumSlotLevel,
+      insectPlagueBaseDamageDice,
+    )
 
   pure def insectPlagueDamageRollAccepted(rolledDamage: int, damageDice: int): bool =
-    rolledDamage >= damageDice and rolledDamage <= damageDice * insectPlagueDamageDieSize
+    persistentAreaDamageRollAccepted(
+      rolledDamage,
+      damageDice,
+      insectPlagueDamageDieSize,
+    )
 
   pure def insectPlagueSaveTriggerTiming(
     trigger: InsectPlagueSaveTrigger,
@@ -143,14 +153,24 @@ module battleRuntimeInsectPlagueAreaHazard {
             not(areaEffectTriggerCanResolve(
               true,
               true,
-              onceAcrossQualifiedAreaTriggersProfile(area.savedThisTurn),
+              onceAcrossQualifiedAreaTriggersProfile(
+                Set(
+                  AreaAppearsInSpace,
+                  CreatureEntersArea,
+                  CreatureEndsTurnInArea,
+                ),
+                area.savedThisTurn,
+              ),
               insectPlagueSaveTriggerTiming(trigger),
             )) or
             not(insectPlagueDamageRollAccepted(rolledDamage, area.damageDice))
           )
             state
           else {
-            val damage = if (savingThrowSucceeded) rolledDamage / 2 else rolledDamage
+            val damage = persistentAreaDamageAfterSave(
+              rolledDamage,
+              savingThrowSucceeded,
+            )
             val damageResult = applyResolvedDamageToPositiveHitPoints(state.targetVitals, damage)
             {
               ...state,

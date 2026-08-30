@@ -141,7 +141,8 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly featherFallLandingFallingPronePrevented: boolean;
   readonly featherFallLandedTargetMitigationCleared: boolean;
   readonly featherFallOtherTargetStillMitigated: boolean;
-  readonly persistentAreaTraitAreaIdentityRetained: boolean;
+  readonly persistentAreaTraitActiveEffectAreaId: string;
+  readonly persistentAreaTraitProjectedZoneAreaId: string;
   readonly fogCloudHeavilyObscuredZoneCount: number;
   readonly fogCloudRadiusFeet: number;
   readonly fogCloudDurationTicks: number;
@@ -351,7 +352,8 @@ type FeatherFallProjection = {
   readonly otherTargetStillMitigated: boolean;
 };
 type FogCloudProjection = {
-  readonly areaIdentityRetained: boolean;
+  readonly activeEffectAreaId: string;
+  readonly projectedZoneAreaId: string;
   readonly heavilyObscuredZoneCount: number;
   readonly radiusFeet: number;
   readonly durationTicks: number;
@@ -487,6 +489,7 @@ const faerieFireObjectArmorClass = armorClass(13);
 const starryWispObjectTargetRangeFeet = movementFeet(60);
 const darkvisionWitnessRangeFeet = movementFeet(60);
 const persistentAreaTraitAreaId = battleAreaId("level1-fog-cloud-area");
+const persistentAreaTraitAbsentAreaId = "absent";
 const fogCloudLevelOneRadiusFeet = movementFeet(20);
 const fogCloudOneHourDurationTicks = requireElapsedHours(1);
 const greaseAreaId = battleAreaId("level1-grease-ground-area");
@@ -627,7 +630,8 @@ const selectedUnitIdentityReplays = [
         name: "table-supplied-area-obscurement-duration-and-strong-wind-cleanup",
         actions: ["doFogCloudAreaIdentityObscurementStrongWindCleanup"],
         expected: expectedProjection({
-          persistentAreaTraitAreaIdentityRetained: true,
+          persistentAreaTraitActiveEffectAreaId: persistentAreaTraitAreaId,
+          persistentAreaTraitProjectedZoneAreaId: persistentAreaTraitAreaId,
           fogCloudHeavilyObscuredZoneCount: 1,
           fogCloudRadiusFeet: Number(fogCloudLevelOneRadiusFeet),
           fogCloudDurationTicks: Number(fogCloudOneHourDurationTicks),
@@ -891,7 +895,8 @@ defineSelectedIdentityReplayAndQntReplay({
     featherFallLandingFallingPronePrevented: "bool",
     featherFallLandedTargetMitigationCleared: "bool",
     featherFallOtherTargetStillMitigated: "bool",
-    persistentAreaTraitAreaIdentityRetained: "bool",
+    persistentAreaTraitActiveEffectAreaId: "str",
+    persistentAreaTraitProjectedZoneAreaId: "str",
     fogCloudHeavilyObscuredZoneCount: "int",
     fogCloudRadiusFeet: "int",
     fogCloudDurationTicks: "int",
@@ -2902,7 +2907,8 @@ function expectedProjection(
     featherFallLandingFallingPronePrevented: false,
     featherFallLandedTargetMitigationCleared: false,
     featherFallOtherTargetStillMitigated: false,
-    persistentAreaTraitAreaIdentityRetained: false,
+    persistentAreaTraitActiveEffectAreaId: persistentAreaTraitAbsentAreaId,
+    persistentAreaTraitProjectedZoneAreaId: persistentAreaTraitAbsentAreaId,
     fogCloudHeavilyObscuredZoneCount: 0,
     fogCloudRadiusFeet: 0,
     fogCloudDurationTicks: 0,
@@ -2986,7 +2992,8 @@ function emptyFeatherFallProjection(): FeatherFallProjection {
 
 function emptyFogCloudProjection(): FogCloudProjection {
   return {
-    areaIdentityRetained: false,
+    activeEffectAreaId: persistentAreaTraitAbsentAreaId,
+    projectedZoneAreaId: persistentAreaTraitAbsentAreaId,
     heavilyObscuredZoneCount: 0,
     radiusFeet: 0,
     durationTicks: 0,
@@ -4500,9 +4507,9 @@ function projectFogCloudReplay(
     activeEffectRadius === fogCloudLevelOneRadiusFeet &&
     activeZoneArea?.radiusFeet === fogCloudLevelOneRadiusFeet;
   return {
-    areaIdentityRetained:
-      activeEffect?.areaId === persistentAreaTraitAreaId &&
-      activeZoneArea?.areaId === persistentAreaTraitAreaId,
+    activeEffectAreaId: activeEffect?.areaId ?? persistentAreaTraitAbsentAreaId,
+    projectedZoneAreaId:
+      activeZoneArea?.areaId ?? persistentAreaTraitAbsentAreaId,
     heavilyObscuredZoneCount: fogCloudHeavilyObscuredZoneCount(activeState),
     radiusFeet: radiusMatches ? Number(fogCloudLevelOneRadiusFeet) : 0,
     durationTicks: fogCloudMatchingDurationTicks(activeEffect, activeZone),
@@ -4890,8 +4897,10 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
       featherFallProjection.landedTargetMitigationCleared,
     featherFallOtherTargetStillMitigated:
       featherFallProjection.otherTargetStillMitigated,
-    persistentAreaTraitAreaIdentityRetained:
-      fogCloudProjection.areaIdentityRetained,
+    persistentAreaTraitActiveEffectAreaId:
+      fogCloudProjection.activeEffectAreaId,
+    persistentAreaTraitProjectedZoneAreaId:
+      fogCloudProjection.projectedZoneAreaId,
     fogCloudHeavilyObscuredZoneCount:
       fogCloudProjection.heavilyObscuredZoneCount,
     fogCloudRadiusFeet: fogCloudProjection.radiusFeet,

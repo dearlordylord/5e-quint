@@ -3,6 +3,7 @@
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 module battleRuntimeObscuringAreaEffects {
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
@@ -10,6 +11,7 @@ module battleRuntimeObscuringAreaEffects {
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
   pure val fogCloudDurationTicks = 600
+  pure val fogCloudLifecycle: PersistentAreaLifecycle = StationaryPersistentArea
   pure val fogCloudAreaId = 2
   pure val fogCloudBaseRadiusFeet = 20
   pure val fogCloudRadiusFeetPerSlotAboveFirst = 20
@@ -18,7 +20,12 @@ module battleRuntimeObscuringAreaEffects {
   pure val darknessRadiusFeet = 15
 
   pure def fogCloudRadiusFeet(slotLevel: int): int =
-    fogCloudBaseRadiusFeet + ((slotLevel - 1) * fogCloudRadiusFeetPerSlotAboveFirst)
+    persistentAreaSlotScaledDistanceFeet(
+      slotLevel,
+      1,
+      fogCloudBaseRadiusFeet,
+      fogCloudRadiusFeetPerSlotAboveFirst,
+    )
 
   pure def activeEffectsWithoutFogCloudObscurement(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {
