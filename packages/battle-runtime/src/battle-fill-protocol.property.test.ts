@@ -1356,10 +1356,7 @@ describe("battle fill protocol boundary owners", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const commandAct = findAct(
-      commandSession,
-      magicSubject("compelledNextTurnBehavior"),
-    );
+    const commandAct = findAct(commandSession, magicSubject("command"));
     const commandInvocation = characterSpellProcedureFromAct(
       commandSession.state,
       commandAct,

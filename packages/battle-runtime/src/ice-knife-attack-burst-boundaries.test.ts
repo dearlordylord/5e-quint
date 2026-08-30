@@ -329,7 +329,7 @@ describe("Ice Knife attack-burst boundaries", () => {
       }),
       "rolledDice",
     );
-    expect(mirrorHole).toHaveProperty("mirrorImageDuplicateRoll");
+    expect(mirrorHole).toHaveProperty("duplicateHitInterceptionRoll");
     const redirected = resolveBattleSubject({
       state,
       subject,

@@ -1121,7 +1121,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       awaitingMirrorImage.tag === "needsHoles" ? awaitingMirrorImage.holes : [],
       "rolledDice",
     );
-    if (!("mirrorImageDuplicateRoll" in mirrorImageHole)) {
+    if (!("duplicateHitInterceptionRoll" in mirrorImageHole)) {
       throw new Error("Expected Mirror Image duplicate roll hole.");
     }
     const resolved = requireResolved(
@@ -1506,7 +1506,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       {
         effectKind: DISTANT_METAMAGIC_EFFECT_KIND,
         message:
-          "Distant Spell is supported only for spell target procedures that consume a cast-local range fact.",
+          "Distant Spell is supported only for spell procedures with a Touch range or a distance range of at least 5 feet.",
       },
       {
         effectKind: EXTENDED_METAMAGIC_EFFECT_KIND,
@@ -4567,7 +4567,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Save-affecting Metamagic is not supported for Sleep target admission because Sleep uses a two-stage admission and repeat-save lifecycle.",
+        "Save-affecting Metamagic is not supported for hit-point-budget condition target admission because hit-point-budget condition uses a two-stage admission and repeat-save lifecycle.",
     });
   });
 
@@ -4646,7 +4646,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Save-affecting Metamagic is not supported for Sleep target admission because Sleep uses a two-stage admission and repeat-save lifecycle.",
+        "Save-affecting Metamagic is not supported for hit-point-budget condition target admission because hit-point-budget condition uses a two-stage admission and repeat-save lifecycle.",
     });
   });
 });
@@ -6173,8 +6173,7 @@ function carefulCommandAct(session: BattleRuntimeSession): ActionSpellAct {
   const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        "compelledNextTurnBehavior" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === "command" &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,

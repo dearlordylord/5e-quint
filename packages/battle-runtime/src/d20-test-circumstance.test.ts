@@ -378,7 +378,10 @@ describe("Table-authored per-test D20 circumstances", () => {
       { objectContactSave: { targetIds: [firstTargetId] } },
     ],
     ["spellTurnStartSave", { spellTurnStartSave: { targetId: firstTargetId } }],
-    ["sleepRepeatSave", { sleepRepeatSave: { targetId: firstTargetId } }],
+    [
+      "stagedConditionRepeatSave",
+      { stagedConditionRepeatSave: { targetId: firstTargetId } },
+    ],
     [
       "saveGatedConditionRepeatSave",
       { saveGatedConditionRepeatSave: { targetId: firstTargetId } },
@@ -391,7 +394,10 @@ describe("Table-authored per-test D20 circumstances", () => {
       "persistentAreaSaveCondition",
       { persistentAreaSaveCondition: { targetId: firstTargetId } },
     ],
-    ["webRestraint", { webRestraint: { targetId: firstTargetId } }],
+    [
+      "persistentAreaSaveConditionEscape",
+      { persistentAreaSaveConditionEscape: { targetId: firstTargetId } },
+    ],
     [
       "persistentAreaSaveComposite",
       { persistentAreaSaveComposite: { targetId: firstTargetId } },
@@ -417,8 +423,8 @@ describe("Table-authored per-test D20 circumstances", () => {
       { unitFeatureConditionEndTurnSave: { targetId: firstTargetId } },
     ],
     [
-      "saveGatedTurnConstraintBundleEndTurnSave",
-      { saveGatedTurnConstraintBundleEndTurnSave: { targetId: firstTargetId } },
+      "turnConstraintEndTurnSave",
+      { turnConstraintEndTurnSave: { targetId: firstTargetId } },
     ],
     [
       "abilityD20TestRollModeEndTurnSave",
