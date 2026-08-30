@@ -32,7 +32,11 @@ const relationAnswer = {
   traversal: "open" as const,
 };
 
-function nonMovementDecision(kind: string): unknown {
+function nonMovementDecision(kind: string): Readonly<{
+  readonly decisionId: string;
+  readonly question: unknown;
+  readonly answer: unknown;
+}> {
   const questionByKind: Readonly<Record<string, unknown>> = {
     relation: {
       kind,
@@ -145,12 +149,11 @@ describe("table-authored spatial decision normalization", () => {
       relationAnswer,
       { kind: "physicalReachability", distanceFeet: 5 },
     ]) {
-      const decision = nonMovementDecision("areaControlShakeAwakeTarget") as {
-        readonly decisionId: string;
-        readonly question: unknown;
-      };
+      const { decisionId, question } = nonMovementDecision(
+        "areaControlShakeAwakeTarget",
+      );
       expect(
-        tableAuthoredSpatialDecision({ ...decision, answer }),
+        tableAuthoredSpatialDecision({ decisionId, question, answer }),
       ).toMatchObject({
         _tag: "Failure",
         failure: {
