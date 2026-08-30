@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "1e9db6b77eebb08cbe713668e6b6df0cfabd7cd6",
+    "registryCommit": "6ed221f47a7f6c1538afc7b1beddbba4b9808165",
     "generator": {
       "path": "scripts/gh381-registry-path-manifest.cjs",
       "sha256": "d48ee1ce403362f49f7f03c55f0be276dd5337740cea5f3512367c167d3ad9d5"
@@ -12,11 +12,11 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "c0cccdb13a9276001d4c9c6da806a2854885c2b20b3386cc38a79baa0002db5a"
+        "sha256": "b0250e7d878d9e2b59a1c66d0c7b374da1b346183d14c35c29380780926cc966"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
-        "sha256": "4eaac2d21579475ed523f84979a5c3b52d6dbd774ee4ae5fdef2c96cce8103f8"
+        "sha256": "f84e3cc0c1a769b70af3102025b03a7daf8252c7b22fc884bd07287960b37697"
       }
     ]
   },
@@ -425,7 +425,6 @@
     "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt",
     "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
     "packages/battle-runtime/battle-runtime-timed-effects.qnt",
-    "packages/battle-runtime/battle-runtime-triggered-armor-defense.qnt",
     "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
     "packages/battle-runtime/battle-runtime-turn-advancement.qnt",
     "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
@@ -533,6 +532,7 @@
     "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt",
     "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt",
     "packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt",
+    "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
     "packages/shared-algebras/src/action-economy-algebra.ts",
     "packages/shared-algebras/src/speed-algebra.ts"
   ],
@@ -811,7 +811,6 @@
       "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt",
       "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
       "packages/battle-runtime/battle-runtime-timed-effects.qnt",
-      "packages/battle-runtime/battle-runtime-triggered-armor-defense.qnt",
       "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
       "packages/battle-runtime/battle-runtime-turn-advancement.qnt",
       "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
@@ -824,7 +823,8 @@
       "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
       "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt",
       "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt",
-      "packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt"
+      "packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt",
+      "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt"
     ],
     "nonAuthorityPaths": {
       "bridge": [
