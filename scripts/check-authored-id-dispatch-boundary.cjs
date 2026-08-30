@@ -1081,6 +1081,8 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "command",
     "commandLabel",
     "commandRoute",
+    "commandSpell",
+    "CommandInvocationSchema",
     "runtimeCommandSubject",
     "serializedRuntimeCommandOwnsBoundProcedure",
     "serializedRuntimeCommandReferencePolicy",
@@ -1095,17 +1097,36 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
   ),
   ...[
     "RAGE_RESISTANCE_DAMAGE_TYPES",
+    "CHOSEN_ENERGY_RESISTANCE_DAMAGE_TYPES",
+    "ChosenDamageResistanceResolveInput",
+    "LinkedDefenseResistanceDamageShareInvocationSchema",
     "afterLinkedDefenseResistanceDamageShareDamageShare",
     "afterResistance",
+    "admitChosenDamageResistance",
+    "admitLinkedDefenseResistanceDamageShare",
     "applyLinkedDefenseResistanceDamageShareDamageShare",
     "chosenDamageResistance",
+    "chosenDamageResistanceSpellProjection",
     "damageResistance",
+    "discoverChosenDamageResistanceCastAct",
+    "discoverLinkedDefenseResistanceDamageShareCastAct",
     "linkedDefenseResistanceDamageShare",
     "linkedDefenseResistanceDamageShareCaster",
     "linkedDefenseResistanceDamageShareCasters",
     "linkedDefenseResistanceDamageShareConcentrationSavingThrows",
+    "linkedDefenseResistanceDamageShareArmorClassOperationIsSupported",
+    "linkedDefenseResistanceDamageShareDamageShareOperationIsSupported",
+    "linkedDefenseResistanceDamageShareEarlyEndsAreSupported",
+    "linkedDefenseResistanceDamageShareMaterialComponentIsSupported",
+    "linkedDefenseResistanceDamageShareOperationHasAttachedBondWithinRangePredicate",
+    "linkedDefenseResistanceDamageShareOperationsAreSupported",
+    "linkedDefenseResistanceDamageShareResistanceOperationIsSupported",
+    "linkedDefenseResistanceDamageShareSavingThrowOperationIsSupported",
     "linkedDefenseResistanceDamageShareSeparationAct",
     "linkedDefenseResistanceDamageShareSeparationActs",
+    "linkedDefenseResistanceDamageShareSpellProjection",
+    "resolveChosenDamageResistance",
+    "resolveLinkedDefenseResistanceDamageShare",
     "suppressLinkedDefenseResistanceDamageShareDamageShare",
     "targetHasRuntimeDamageResistance",
   ].flatMap((identifier) =>
@@ -1204,9 +1225,9 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "da271cca0b9f5a60509b275445530b95db4a75991f2f6ab70d6ef01409fc13cc",
-  siteCount: 1183,
-  violationCount: 1314,
+  sha256: "634c5d911155833e5377321f5b6685360b1b38a03704f79f781ba7675a654461",
+  siteCount: 1204,
+  violationCount: 1335,
 };
 
 function escapeForRegExp(text) {
