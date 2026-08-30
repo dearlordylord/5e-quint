@@ -3,6 +3,7 @@
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 module battleRuntimeCommandNextTurn {
+  import battleRuntimeCompelledNextTurnBehavior.* from "./battle-runtime-compelled-next-turn-behavior"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
@@ -10,7 +11,7 @@ module battleRuntimeCommandNextTurn {
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
   pure def commandMaxTargets(slotLevel: int): int =
-    slotLevel
+    compelledBehaviorMaximumTargets(slotLevel)
 
   pure def commandPendingEffectFor(state: BattleState, targetActor: Actor, option: CommandOption): ActiveEffect =
     CommandPending({
@@ -115,30 +116,38 @@ module battleRuntimeCommandNextTurn {
     | CommandFleeMovementEndsTurn
 
   pure def commandGrovelFollowOutcome(hasPendingCommand: bool): CommandGrovelFollowOutcome =
-    if (hasPendingCommand) CommandGrovelAppliesProneEndsTurn else CommandGrovelIgnored
+    match compelledGrovelOutcome(hasPendingCommand) {
+      | CompelledGrovelIgnored => CommandGrovelIgnored
+      | CompelledGrovelAppliesProneEndsTurn => CommandGrovelAppliesProneEndsTurn
+    }
 
   pure def commandDropFollowOutcome(hasPendingCommand: bool, heldObjectCount: int): CommandDropFollowOutcome =
-    if (hasPendingCommand and heldObjectCount >= 0)
-      CommandDropObjectsAndEndsTurn({ droppedObjectCount: heldObjectCount })
-    else
-      CommandDropIgnored
+    match compelledDropOutcome(hasPendingCommand, heldObjectCount) {
+      | CompelledDropObjectsAndEndsTurn(data) => CommandDropObjectsAndEndsTurn(data)
+      | CompelledDropIgnored => CommandDropIgnored
+    }
 
   pure def commandHaltFollowOutcome(hasPendingCommand: bool): CommandHaltFollowOutcome =
-    if (hasPendingCommand) CommandHaltSuppressesActionBonusAndMovement else CommandHaltIgnored
+    match compelledHaltOutcome(hasPendingCommand) {
+      | CompelledHaltIgnored => CommandHaltIgnored
+      | CompelledHaltSuppressesActionBonusAndMovement => CommandHaltSuppressesActionBonusAndMovement
+    }
 
   pure def commandApproachFollowOutcome(
     hasMovementAvailable: bool,
     movementCanBeSpent: bool,
     movedWithinFiveFeetOfCaster: bool,
   ): CommandApproachFollowOutcome =
-    if (not(hasMovementAvailable))
-      CommandApproachNoMovement
-    else if (not(movementCanBeSpent))
-      CommandApproachMovementRejected
-    else if (movedWithinFiveFeetOfCaster)
-      CommandApproachMovementEndsTurn
-    else
-      CommandApproachMovementContinues
+    match compelledApproachOutcome(
+      hasMovementAvailable,
+      movementCanBeSpent,
+      movedWithinFiveFeetOfCaster,
+    ) {
+      | CompelledApproachNoMovement => CommandApproachNoMovement
+      | CompelledApproachMovementRejected => CommandApproachMovementRejected
+      | CompelledApproachMovementContinues => CommandApproachMovementContinues
+      | CompelledApproachMovementEndsTurn => CommandApproachMovementEndsTurn
+    }
 
   pure def commandFleeFollowOutcome(
     hasMovementAvailable: bool,
@@ -147,12 +156,16 @@ module battleRuntimeCommandNextTurn {
     movementCanBeSpent: bool,
     provokesOpportunityAttack: bool,
   ): CommandFleeFollowOutcome =
-    if (not(hasMovementAvailable))
-      CommandFleeNoMovementEndsTurn
-    else if (movementCost != movementRemaining or not(movementCanBeSpent))
-      CommandFleeMovementRejected
-    else if (provokesOpportunityAttack)
-      CommandFleeOpportunityAttackContinuation
-    else
-      CommandFleeMovementEndsTurn
+    match compelledFleeOutcome(
+      hasMovementAvailable,
+      movementCost,
+      movementRemaining,
+      movementCanBeSpent,
+      provokesOpportunityAttack,
+    ) {
+      | CompelledFleeNoMovementEndsTurn => CommandFleeNoMovementEndsTurn
+      | CompelledFleeMovementRejected => CommandFleeMovementRejected
+      | CompelledFleeReactionContinuation => CommandFleeOpportunityAttackContinuation
+      | CompelledFleeMovementEndsTurn => CommandFleeMovementEndsTurn
+    }
 }

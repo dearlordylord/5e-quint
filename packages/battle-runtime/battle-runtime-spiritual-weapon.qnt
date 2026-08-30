@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-ongoing-spell-ending
 
 module battleRuntimeSpiritualWeapon {
+  import battleRuntimeSpatialMeleeSpellAttackProxy.* from "./battle-runtime-spatial-melee-spell-attack-proxy"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
@@ -20,10 +21,10 @@ module battleRuntimeSpiritualWeapon {
   // 60-foot force placement, Concentration up to 1 minute, immediate and later
   // melee Spell Attacks within 5 feet of the force, 20-foot later-turn force
   // movement, Force damage, and +1d8 damage per slot level above 2.
-  pure val spiritualWeaponDurationTicks = 10
-  pure val spiritualWeaponRangeFeet = 60
-  pure val spiritualWeaponForceReachFeet = 5
-  pure val spiritualWeaponRepeatMoveMaxFeet = 20
+  pure val spiritualWeaponDurationTicks = spatialMeleeSpellAttackProxyDurationTicks
+  pure val spiritualWeaponRangeFeet = spatialMeleeSpellAttackProxyCastRangeFeet
+  pure val spiritualWeaponForceReachFeet = spatialMeleeSpellAttackProxyReachFeet
+  pure val spiritualWeaponRepeatMoveMaxFeet = spatialMeleeSpellAttackProxyRepeatMoveMaxFeet
 
   type SpiritualWeaponForcePositionMode =
     | SpiritualWeaponCastPosition
@@ -45,7 +46,7 @@ module battleRuntimeSpiritualWeapon {
   }
 
   pure def spiritualWeaponDamageDice(slotLevel: int): int =
-    if (slotLevel < 2) 0 else 1 + (slotLevel - 2)
+    spatialMeleeSpellAttackProxyDamageDice(slotLevel, 2)
 
   pure def spiritualWeaponEffectId(source: Actor): int =
     match source {
@@ -71,13 +72,19 @@ module battleRuntimeSpiritualWeapon {
   ): bool =
     match fill {
       | SpiritualWeaponCastForcePosition(data) =>
-          hole.mode == SpiritualWeaponCastPosition and
-            data.distanceFromCasterFeet >= 0 and
-            data.distanceFromCasterFeet <= hole.maxDistanceFeet
+          spatialMeleeSpellAttackProxyPositionValid(
+            true,
+            hole.mode == SpiritualWeaponCastPosition,
+            data.distanceFromCasterFeet,
+            hole.maxDistanceFeet,
+          )
       | SpiritualWeaponRepositionForcePosition(data) =>
-          hole.mode == SpiritualWeaponRepositionPosition and
-            data.moveDistanceFeet >= 0 and
-            data.moveDistanceFeet <= hole.maxDistanceFeet
+          spatialMeleeSpellAttackProxyPositionValid(
+            false,
+            hole.mode == SpiritualWeaponCastPosition,
+            data.moveDistanceFeet,
+            hole.maxDistanceFeet,
+          )
     }
 
   pure def spiritualWeaponTargetReachFactMatches(
@@ -85,9 +92,12 @@ module battleRuntimeSpiritualWeapon {
     target: Actor,
     forcePositionId: int,
   ): bool =
-    fact.target == target and
-      fact.forcePositionId == forcePositionId and
-      fact.reachFeet == spiritualWeaponForceReachFeet
+    spatialMeleeSpellAttackProxyTargetInReach(
+      fact.target == target,
+      fact.forcePositionId == forcePositionId,
+      fact.reachFeet,
+      spiritualWeaponForceReachFeet,
+    )
 
   pure def spiritualWeaponEffect(
     source: Actor,
@@ -269,19 +279,20 @@ module battleRuntimeSpiritualWeapon {
     fill: SpiritualWeaponForcePositionFill,
     targetReachFact: SpiritualWeaponTargetReachFact,
   ): bool =
-    currentActor(state) == Fighter and
-      state.bonusActionAvailable and
-      not(state.fighter.unconscious) and
-      not(state.fighter.incapacitated) and
-      not(fighterHasRage(state)) and
-      spiritualWeaponCanExpendSpellSlotThisTurn(state, Fighter) and
-      slotLevel >= 2 and
-      spiritualWeaponForcePositionFillValid(fill, spiritualWeaponCastForcePositionHole) and
+    spatialMeleeSpellAttackProxyCastAdmitted(
+      currentActor(state) == Fighter,
+      state.bonusActionAvailable,
+      not(state.fighter.unconscious) and not(state.fighter.incapacitated),
+      not(fighterHasRage(state)) and spiritualWeaponCanExpendSpellSlotThisTurn(state, Fighter),
+      slotLevel,
+      2,
+      spiritualWeaponForcePositionFillValid(fill, spiritualWeaponCastForcePositionHole),
       spiritualWeaponTargetReachFactMatches(
         targetReachFact,
         Goblin,
         spiritualWeaponForcePositionId(fill),
-      )
+      ),
+    )
 
   pure def resolveFighterSpiritualWeaponAttackProxy(
     state: BattleState,
@@ -335,15 +346,17 @@ module battleRuntimeSpiritualWeapon {
     fill: SpiritualWeaponForcePositionFill,
     targetReachFact: SpiritualWeaponTargetReachFact,
   ): bool =
-    currentActor(state) == Fighter and
-      state.bonusActionAvailable and
-      activeEffectsContainLaterTurnSpiritualWeapon(state.fighter.activeEffects, Fighter, state) and
-      spiritualWeaponForcePositionFillValid(fill, spiritualWeaponRepeatForcePositionHole) and
+    spatialMeleeSpellAttackProxyRepeatAdmitted(
+      currentActor(state) == Fighter,
+      state.bonusActionAvailable,
+      activeEffectsContainLaterTurnSpiritualWeapon(state.fighter.activeEffects, Fighter, state),
+      spiritualWeaponForcePositionFillValid(fill, spiritualWeaponRepeatForcePositionHole),
       spiritualWeaponTargetReachFactMatches(
         targetReachFact,
         Goblin,
         spiritualWeaponForcePositionId(fill),
-      )
+      ),
+    )
 
   pure def resolveFighterSpiritualWeaponRepeatAttack(
     state: BattleState,

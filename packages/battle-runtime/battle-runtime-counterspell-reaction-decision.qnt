@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.reaction-counterspell
 
 module battleRuntimeCounterspellReactionDecision {
+  import battleRuntimeSpellCastInterruptionReaction.* from "./battle-runtime-spell-cast-interruption-reaction"
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
@@ -54,11 +55,11 @@ module battleRuntimeCounterspellReactionDecision {
     state: BattleState,
     counterspell: PendingCounterspellReaction,
   ): BattleState =
-    if (
-      counterspell.triggeringSpellUsesSlot and
-        (not(pendingCounterspellTakesEffect(counterspell)) or
-          not(pendingCounterspellEndsTriggeringSpell(counterspell)))
-    )
+    if (triggeringSpellSlotCommitsAfterInterruption(
+      counterspell.triggeringSpellUsesSlot,
+      pendingCounterspellTakesEffect(counterspell),
+      pendingCounterspellEndsTriggeringSpell(counterspell),
+    ))
       commitActorSpellSlotUse(state, counterspell.triggeringCaster)
     else
       state
@@ -67,7 +68,7 @@ module battleRuntimeCounterspellReactionDecision {
     state: BattleState,
     counterspell: PendingCounterspellReaction,
   ): BattleState =
-    if (counterspell.triggeringSpellUsesSlot)
+    if (triggeringSpellSlotCommitsAfterDecline(counterspell.triggeringSpellUsesSlot))
       commitActorSpellSlotUse(state, counterspell.triggeringCaster)
     else
       state
@@ -125,7 +126,11 @@ module battleRuntimeCounterspellReactionDecision {
     context: CounterspellReactionContext,
   ): CounterspellReactionResolution = {
     val reactor = counterspellReactionReactor(context.counterspell)
-    if (battleRuntimeReactionDecisionWasTaken(battleRuntimeTakeReactionDecision(
+    if (spellCastInterruptionReactionAdmitted(
+      true,
+      reactorCanReact(state, reactor),
+      canActorExpendSpellSlotThisTurn(state, reactor),
+    ) and battleRuntimeReactionDecisionWasTaken(battleRuntimeTakeReactionDecision(
       battleRuntimeReactionTrigger(SpellCast),
       BattleRuntimeCounterspellReactionProcedure,
       true,

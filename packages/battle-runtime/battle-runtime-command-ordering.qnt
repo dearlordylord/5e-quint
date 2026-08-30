@@ -13,6 +13,7 @@
 // before option before Saving Throw as its fill-request protocol; route and
 // held-object inventory details remain table-owned facts.
 module battleRuntimeCommandOrdering {
+  import battleRuntimeCompelledNextTurnBehavior.* from "./battle-runtime-compelled-next-turn-behavior"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
 
@@ -47,22 +48,83 @@ module battleRuntimeCommandOrdering {
     | CommandFillRejected(CommandFillOrderingError)
     | CommandFillNotOrderingError(CommandFrontierStage)
 
-  pure def commandHoleFrontier(stage: CommandFrontierStage): Set[BattleHoleFamilyKind] =
+  pure def compelledStageForCommandStage(stage: CommandFrontierStage): CompelledBehaviorFrontierStage =
     match stage {
-      | CommandActSelectionStage => Set()
-      | CommandTargetListAndOptionChoiceStage =>
-          Set(SpellTargetListHoleKind, CommandOptionChoiceHoleKind)
-      | CommandTargetListStage => Set(SpellTargetListHoleKind)
-      | CommandOptionChoiceStage => Set(CommandOptionChoiceHoleKind)
-      | CommandSavingThrowOutcomeStage => Set(SavingThrowOutcomeHoleKind)
-      | CommandDropHeldObjectFactsStage => Set()
-      | CommandApproachMovementStage => Set(MovementHoleKind)
-      | CommandFleeMovementStage => Set(MovementHoleKind)
-      | CommandResolvedStage => Set()
+      | CommandActSelectionStage => CompelledActSelectionStage
+      | CommandTargetListAndOptionChoiceStage => CompelledTargetListAndBehaviorChoiceStage
+      | CommandTargetListStage => CompelledTargetListStage
+      | CommandOptionChoiceStage => CompelledBehaviorChoiceStage
+      | CommandSavingThrowOutcomeStage => CompelledSavingThrowOutcomeStage
+      | CommandDropHeldObjectFactsStage => CompelledHeldObjectFactsStage
+      | CommandApproachMovementStage => CompelledApproachMovementStage
+      | CommandFleeMovementStage => CompelledFleeMovementStage
+      | CommandResolvedStage => CompelledResolvedStage
     }
 
+  pure def commandStageForCompelledStage(stage: CompelledBehaviorFrontierStage): CommandFrontierStage =
+    match stage {
+      | CompelledActSelectionStage => CommandActSelectionStage
+      | CompelledTargetListAndBehaviorChoiceStage => CommandTargetListAndOptionChoiceStage
+      | CompelledTargetListStage => CommandTargetListStage
+      | CompelledBehaviorChoiceStage => CommandOptionChoiceStage
+      | CompelledSavingThrowOutcomeStage => CommandSavingThrowOutcomeStage
+      | CompelledHeldObjectFactsStage => CommandDropHeldObjectFactsStage
+      | CompelledApproachMovementStage => CommandApproachMovementStage
+      | CompelledFleeMovementStage => CommandFleeMovementStage
+      | CompelledResolvedStage => CommandResolvedStage
+    }
+
+  pure def compelledOptionForCommandOption(option: CommandNextTurnOption): CompelledBehaviorOption =
+    match option {
+      | CommandGrovelOption => CompelledGrovelOption
+      | CommandDropOption => CompelledDropOption
+      | CommandHaltOption => CompelledHaltOption
+      | CommandApproachOption => CompelledApproachOption
+      | CommandFleeOption => CompelledFleeOption
+    }
+
+  pure def compelledFillKindForBattleFillKind(fillKind: BattleFillKind): CompelledBehaviorFillKind =
+    if (fillKind == SpellTargetListFillKind)
+      CompelledTargetListFill
+    else if (fillKind == CommandOptionChoiceFillKind)
+      CompelledBehaviorChoiceFill
+    else if (fillKind == SavingThrowOutcomeFillKind)
+      CompelledSavingThrowOutcomeFill
+    else if (fillKind == MovementFillKind)
+      CompelledMovementFill
+    else
+      CompelledOtherFill
+
+  pure def commandErrorForCompelledError(error: CompelledBehaviorOrderingError): CommandFillOrderingError =
+    match error {
+      | CompelledTargetListRequired => CommandTargetListRequired
+      | CompelledBehaviorChoiceRequired => CommandOptionChoiceRequired
+      | CompelledSavingThrowRequired => CommandSavingThrowRequired
+      | CompelledHeldObjectFactsRequired => CommandHeldObjectFactsRequired
+      | CompelledMovementRequired => CommandMovementRequired
+    }
+
+  pure def commandResultForCompelledResult(result: CompelledBehaviorFillOrderResult): CommandFillOrderResult =
+    match result {
+      | CompelledFillAccepted(stage) => CommandFillAccepted(commandStageForCompelledStage(stage))
+      | CompelledFillRequestedEarlier(request) => CommandFillRequestedEarlier({
+          error: commandErrorForCompelledError(request.error),
+          stage: commandStageForCompelledStage(request.stage),
+        })
+      | CompelledFillRejected(error) => CommandFillRejected(commandErrorForCompelledError(error))
+      | CompelledFillNotOrderingError(stage) => CommandFillNotOrderingError(commandStageForCompelledStage(stage))
+    }
+
+  pure def commandHoleFrontier(stage: CommandFrontierStage): Set[BattleHoleFamilyKind] =
+    compelledBehaviorHoleFrontier(compelledStageForCommandStage(stage)).map(hole => match hole {
+      | CompelledTargetListHole => SpellTargetListHoleKind
+      | CompelledBehaviorChoiceHole => CommandOptionChoiceHoleKind
+      | CompelledSavingThrowOutcomeHole => SavingThrowOutcomeHoleKind
+      | CompelledMovementHole => MovementHoleKind
+    })
+
   pure def commandHoleFrontierIncludesTableFacts(stage: CommandFrontierStage): bool =
-    stage == CommandDropHeldObjectFactsStage
+    compelledBehaviorHoleFrontierIncludesTableFacts(compelledStageForCommandStage(stage))
 
   pure def commandAfterSavingThrowStage(
     option: CommandNextTurnOption,
@@ -70,33 +132,19 @@ module battleRuntimeCommandOrdering {
     movementAvailable: bool,
     heldObjectFactsRequired: bool,
   ): CommandFrontierStage =
-    if (not(failedSavingThrow))
-      CommandResolvedStage
-    else {
-      match option {
-        | CommandGrovelOption => CommandResolvedStage
-        | CommandDropOption =>
-            if (heldObjectFactsRequired) CommandDropHeldObjectFactsStage else CommandResolvedStage
-        | CommandHaltOption => CommandResolvedStage
-        | CommandApproachOption =>
-            if (movementAvailable) CommandApproachMovementStage else CommandResolvedStage
-        | CommandFleeOption =>
-            if (movementAvailable) CommandFleeMovementStage else CommandResolvedStage
-      }
-    }
+    commandStageForCompelledStage(compelledBehaviorAfterSavingThrowStage(
+      compelledOptionForCommandOption(option),
+      failedSavingThrow,
+      movementAvailable,
+      heldObjectFactsRequired,
+    ))
 
   pure def commandAfterMovementStage(
     option: CommandNextTurnOption,
     movedWithinFiveFeetOfCaster: bool,
     openedOpportunityAttack: bool,
   ): CommandFrontierStage =
-    match option {
-      | CommandApproachOption =>
-          CommandResolvedStage
-      | CommandFleeOption =>
-          CommandResolvedStage
-      | _ => CommandResolvedStage
-    }
+    commandStageForCompelledStage(compelledBehaviorAfterMovementStage)
 
   pure def commandFillOrderResult(
     stage: CommandFrontierStage,
@@ -108,66 +156,12 @@ module battleRuntimeCommandOrdering {
     movedWithinFiveFeetOfCaster: bool,
     openedOpportunityAttack: bool,
   ): CommandFillOrderResult =
-    match stage {
-      | CommandActSelectionStage =>
-          CommandFillNotOrderingError(CommandActSelectionStage)
-      | CommandTargetListAndOptionChoiceStage =>
-          if (fillKind == SpellTargetListFillKind)
-            CommandFillAccepted(CommandOptionChoiceStage)
-          else if (fillKind == CommandOptionChoiceFillKind)
-            CommandFillRequestedEarlier({
-              error: CommandTargetListRequired,
-              stage: CommandTargetListStage,
-            })
-          else if (fillKind == SavingThrowOutcomeFillKind)
-            CommandFillRequestedEarlier({
-              error: CommandTargetListRequired,
-              stage: CommandTargetListStage,
-            })
-          else
-            CommandFillNotOrderingError(CommandTargetListAndOptionChoiceStage)
-      | CommandTargetListStage =>
-          if (fillKind == SpellTargetListFillKind)
-            CommandFillAccepted(CommandOptionChoiceStage)
-          else
-            CommandFillNotOrderingError(CommandTargetListStage)
-      | CommandOptionChoiceStage =>
-          if (fillKind == CommandOptionChoiceFillKind)
-            CommandFillAccepted(CommandSavingThrowOutcomeStage)
-          else if (fillKind == SavingThrowOutcomeFillKind)
-            CommandFillRequestedEarlier({
-              error: CommandOptionChoiceRequired,
-              stage: CommandOptionChoiceStage,
-            })
-          else
-            CommandFillNotOrderingError(CommandOptionChoiceStage)
-      | CommandSavingThrowOutcomeStage =>
-          if (fillKind == SavingThrowOutcomeFillKind)
-            CommandFillAccepted(
-              commandAfterSavingThrowStage(option, failedSavingThrow, movementAvailable, heldObjectFactsRequired)
-            )
-          else if (fillKind == MovementFillKind)
-            CommandFillRequestedEarlier({
-              error: CommandSavingThrowRequired,
-              stage: CommandSavingThrowOutcomeStage,
-            })
-          else
-            CommandFillNotOrderingError(CommandSavingThrowOutcomeStage)
-      | CommandDropHeldObjectFactsStage =>
-          CommandFillNotOrderingError(CommandDropHeldObjectFactsStage)
-      | CommandApproachMovementStage =>
-          if (fillKind == MovementFillKind)
-            CommandFillAccepted(commandAfterMovementStage(option, movedWithinFiveFeetOfCaster, openedOpportunityAttack))
-          else
-            CommandFillNotOrderingError(CommandApproachMovementStage)
-      | CommandFleeMovementStage =>
-          if (fillKind == MovementFillKind and movementAvailable)
-            CommandFillAccepted(commandAfterMovementStage(option, false, openedOpportunityAttack))
-          else if (fillKind == MovementFillKind)
-            CommandFillRejected(CommandMovementRequired)
-          else
-            CommandFillNotOrderingError(CommandFleeMovementStage)
-      | CommandResolvedStage =>
-          CommandFillNotOrderingError(CommandResolvedStage)
-    }
+    commandResultForCompelledResult(compelledBehaviorFillOrderResult(
+      compelledStageForCommandStage(stage),
+      compelledFillKindForBattleFillKind(fillKind),
+      compelledOptionForCommandOption(option),
+      failedSavingThrow,
+      movementAvailable,
+      heldObjectFactsRequired,
+    ))
 }

@@ -23,7 +23,7 @@
 //   - other active effects and concentration/repeat-save side effects
 
 module battleRuntimeWardingBondDamageSharing {
-  import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
+  import battleRuntimeLinkedDefenseDamageShare.* from "./battle-runtime-linked-defense-damage-share"
 
   type WardingBondDamageSharingState = {
     sourceHitPoints: int,
@@ -46,58 +46,68 @@ module battleRuntimeWardingBondDamageSharing {
     wardHitPoints: int,
     bondPresent: bool,
   ): WardingBondDamageSharingState = {
-    sourceHitPoints: nonnegative(sourceHitPoints),
-    wardHitPoints: nonnegative(wardHitPoints),
-    bondPresent: bondPresent and sourceHitPoints > 0,
-    sourceTookSharedDamage: false,
+    val initial = linkedDefenseDamageShareInitialState(
+      sourceHitPoints,
+      wardHitPoints,
+      bondPresent,
+    )
+    {
+      sourceHitPoints: initial.sourceHitPoints,
+      wardHitPoints: initial.targetHitPoints,
+      bondPresent: initial.linkPresent,
+      sourceTookSharedDamage: initial.sourceTookSharedDamage,
+    }
   }
 
   pure def wardingBondDamageAfterResistance(incomingDamage: int): int =
-    nonnegative(incomingDamage) / 2
+    linkedDefenseDamageAfterResistance(incomingDamage)
 
   pure def applyDamageToHitPoints(hitPoints: int, damage: int): int =
-    nonnegative(hitPoints - nonnegative(damage))
+    hitPointsAfterLinkedDamage(hitPoints, damage)
 
   pure def wardingBondStateAfterCleanup(
     state: WardingBondDamageSharingState,
     fills: WardingBondCleanupFills,
-  ): WardingBondDamageSharingState =
-    if (
-      state.bondPresent and (
-        state.sourceHitPoints == 0 or
-        fills.separatedBeyondSixtyFeet or
-        fills.recastOnConnectedCreature
-      )
-    ) { ...state, bondPresent: false } else state
+  ): WardingBondDamageSharingState = {
+    val cleaned = linkedDefenseStateAfterCleanup(
+      {
+        sourceHitPoints: state.sourceHitPoints,
+        targetHitPoints: state.wardHitPoints,
+        linkPresent: state.bondPresent,
+        sourceTookSharedDamage: state.sourceTookSharedDamage,
+      },
+      {
+        sourceAndTargetSeparated: fills.separatedBeyondSixtyFeet,
+        linkReplaced: fills.recastOnConnectedCreature,
+      },
+    )
+    {
+      sourceHitPoints: cleaned.sourceHitPoints,
+      wardHitPoints: cleaned.targetHitPoints,
+      bondPresent: cleaned.linkPresent,
+      sourceTookSharedDamage: cleaned.sourceTookSharedDamage,
+    }
+  }
 
   pure def resolveWardingBondSharedDamage(
     state: WardingBondDamageSharingState,
     fill: WardingBondDamageSharingFill,
   ): WardingBondDamageSharingState = {
-    val targetDamage =
-      if (state.bondPresent)
-        wardingBondDamageAfterResistance(fill.incomingDamage)
-      else
-        nonnegative(fill.incomingDamage)
-    val sourceSharesDamage =
-      state.bondPresent and state.sourceHitPoints > 0 and targetDamage > 0
-    val damaged = {
-      ...state,
-      sourceHitPoints:
-        if (sourceSharesDamage)
-          applyDamageToHitPoints(state.sourceHitPoints, targetDamage)
-        else
-          state.sourceHitPoints,
-      wardHitPoints: applyDamageToHitPoints(state.wardHitPoints, targetDamage),
-      sourceTookSharedDamage: sourceSharesDamage,
-    }
-    wardingBondStateAfterCleanup(
-      damaged,
+    val resolved = resolveLinkedDefenseSharedDamage(
       {
-        separatedBeyondSixtyFeet: false,
-        recastOnConnectedCreature: false,
+        sourceHitPoints: state.sourceHitPoints,
+        targetHitPoints: state.wardHitPoints,
+        linkPresent: state.bondPresent,
+        sourceTookSharedDamage: state.sourceTookSharedDamage,
       },
+      { incomingDamage: fill.incomingDamage },
     )
+    {
+      sourceHitPoints: resolved.sourceHitPoints,
+      wardHitPoints: resolved.targetHitPoints,
+      bondPresent: resolved.linkPresent,
+      sourceTookSharedDamage: resolved.sourceTookSharedDamage,
+    }
   }
 
   pure def resolveWardingBondCleanup(

@@ -468,7 +468,7 @@ module spellProcedureProfilesExamples {
       assert(turnStartTemporaryHitPoints(2, 5) == 5),
       assert(turnStartTemporaryHitPoints(7, 5) == 7),
       assert(not(oncePerTurnSpellEffectUsedAtTurnStart)),
-      assert(oneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn),
+      assert(oneRoundTriggeredDefenseExpiresAtStartOfNextTurn),
       assert(timedSpellEffectDurationAfterRoundTick(2) == 1),
       assert(timedSpellEffectDurationAfterRoundTick(1) == 0),
       assert(timedSpellEffectRemainsActive(1)),
