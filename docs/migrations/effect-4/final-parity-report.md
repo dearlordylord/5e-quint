@@ -1,168 +1,143 @@
 # Effect 4 final parity report
 
-This report closes the migration-specific certification interval for GitHub
-issue #386. The certification branch includes the integrated Effect 4 migration
-through `0d2c04d06`. The controlled-red inventory,
-finite behavioral delta, public workspace gates, and shipped process entrypoints
-were all checked from this branch. This report does not claim that every
-product capability is complete; it certifies that remaining limitations are not
-Effect 3 migration exceptions.
+This is the current certification narrative for GitHub issue #386. It records
+the integrated source fixed point through `b8ef76bec` and the refreshed
+certificate fixed point `0cd6b8133`. It is not yet a final closure claim: the
+proof and MBT lanes, clean-consumer smoke, broad workspace gates, final review
+Round 2, and live GitHub closure remain pending below.
 
-## Selected cohort
+## Selected cohort and controlled-red state
 
 The repository selects Effect `4.0.0-rc.112` for `effect`,
-`@effect/platform-node`, and `@effect/vitest`. The installed workspace graph and
-the independently deployed MCP contain only the cohort-matched
-`@effect/platform-node-shared` package in addition to those owning selections.
-`@firfi/quint-connect` is `2.0.2-effect4.2`, pnpm is
-`10.29.3`, the checked TypeScript compiler is `5.9.3`, and the intentionally
-separate native TypeScript toolchain package is `7.0.2`.
-
-`pnpm check:effect4-cohort:self-test` and `pnpm check:effect4-cohort` pass. The
-verifier audits workspace manifests, every lockfile section, installed package
-manifests, peer relationships, and the published Quint Connect cohort. The
-clean-consumer deployment independently walks every deployed package manifest
-and proves the shipped MCP contains exactly Effect, platform-node, and
-platform-node-shared at `4.0.0-rc.112`.
-
-## Controlled-red closure
-
-The final [controlled-red inventory](./controlled-red-inventory.json) covers 13
-typecheck owners and records zero raw and zero deduplicated diagnostics. Its
-SHA-256 is
+`@effect/platform-node`, and `@effect/vitest`. The checked-in final
+[controlled-red inventory](./controlled-red-inventory.json) covers 13
+typecheck owners with zero recorded diagnostics and has SHA-256
 `347dde4c3f6ed0a2c0f674fd0c2dce8edfacbc3135ebc7f7b0ee7c29c008c036`.
-The migration-only inventory generator and its package scripts have been
-removed. Any future diagnostic is therefore an ordinary blocking failure, not
-an admitted migration exception.
+The migration-only inventory generator is retired; a new diagnostic is an
+ordinary blocking failure, not an admitted migration exception.
 
-The final cleanup scan found no Effect 3 package, root `effect/Either` import,
-removed Schema compatibility API, compatibility facade, or migration-time
-diagnostic suppression. Four `@ts-expect-error` directives remain only in the
-compile-contract test for execution-schema decoded/encoded/context types, each
-with the exact intentionally rejected type documented. Existing uses of
-“legacy” name historical data or rejection fixtures rather than Effect 3 API
-paths.
+The focused Effect cohort self-test, cohort check, certification typecheck,
+and oracle-delta self-test have passed on the integrated line. The current
+broad `pnpm typecheck` result is deliberately not inferred from the stored
+zero-diagnostic inventory; it remains a pending final gate.
 
-## Immutable oracle and finite delta
+## Immutable oracle and finite reviewed delta
 
 The immutable [Effect 3 behavioral oracle](./effect3-behavioral-oracle.json)
-remains byte-identical: 12,997,527 bytes with SHA-256
+remains 12,997,527 bytes with SHA-256
 `dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
-No public mutation command remains. The final Effect 4 capture is 51,968,201
-bytes with SHA-256
-`01a26e0a2d69312c7428d9e7895549d2d495255d63522b9e737b7120f221efe3`.
+The integrated Effect 4 candidate is 52,152,897 bytes with SHA-256
+`927e9388977ac9781b6c7ace99760fdd43a2bf48fa49bb95381584fecc30c78f`.
 
-The reviewed [finite delta certificate](./effect4-oracle-delta-certificate.json)
-classifies and lists 7,338 recursive JSON-pointer leaf identities, including
-the owning classification, operation, path, and SHA-256 digest or explicit
-missing tag for both sides. Its overall identity
-SHA-256 is
-`81c05252117f189564e73592ea0e794d9793ead182bee5b7c6bcbbc3615e3438`,
-and the certificate artifact SHA-256 is
-`cf8111311f8eef9c3a1b4841c7e186ae38325cce4a7b8c963ddcf12c49bed0d9`.
+The v2 [finite delta certificate](./effect4-oracle-delta-certificate.json)
+reviews exactly 7,246 recursive identities. Its overall identity SHA-256 is
+`a4e65823e86ec520354bdc2f212f1d0cf7af780fb5a610197e0d15ae1a559bd7`;
+the committed certificate is 4,656,476 bytes with SHA-256
+`2ca55425776b8b574ff88e57e5ceddcbcd349b652c2873c28619745332a645f6`.
 
-| Classification                | Identities | Added | Removed | Changed |
+| Reviewed reason               | Identities | Added | Removed | Changed |
 | ----------------------------- | ---------: | ----: | ------: | ------: |
-| MCP registration contract     |      2,259 |   692 |   1,504 |      63 |
-| MCP protocol entrypoints      |      2,728 |   992 |   1,584 |     152 |
-| MCP authenticated projection  |      2,072 |   762 |   1,192 |     118 |
-| Surface publication authority |          3 |     0 |       0 |       3 |
+| MCP registration contract     |      2,260 |   691 |   1,504 |      65 |
+| MCP protocol entrypoints      |      2,738 |   998 |   1,584 |     156 |
+| MCP authenticated projection  |      2,081 |   769 |   1,192 |     120 |
 | Persisted session codecs      |         22 |     6 |      12 |       4 |
-| Raw Swarm artifact authority  |        254 |    43 |       0 |     211 |
+| Raw Swarm runtime artifacts   |         57 |    43 |       0 |      14 |
+| Surface publication authority |          4 |     0 |       0 |       4 |
+| Surface authored authority    |         84 |     0 |       0 |      84 |
 
-Baseline metadata, Surface content, and all five reducer behavior classes have
-zero identities. The verifier rejects baseline or candidate byte drift,
-non-regular baseline paths, duplicate identities, unclassified identities,
-identities admitted by multiple classes, stale exact identity records, and
-stale class counts or hashes. Its five negative and stable-class self-tests
-pass. The certificate classifies a finite observed
-delta; the focused protocol, persistence, Surface, Raw Swarm, and process tests
-remain the semantic evidence.
+All 7,246 identities have exactly one typed reason. Relative to the preceding
+certificate, 6,885 identities are byte-for-byte unchanged, 217 changed at an
+existing site, 144 sites were added, and 128 sites were removed. The resulting
+361 added and 345 removed exact identities are entirely explained by the
+integrated MCP registered, authenticated, stdio, and HTTP schema projections.
+Surface and Raw Swarm identities were already represented by their existing
+reviewed reasons rather than being hidden in MCP churn.
 
-## Shipped process evidence
+Collection authorities are stable relative to the preceding certificate. The
+baseline-to-candidate Raw Swarm authority remains the one changed collection,
+from 76 to 119 artifacts. Array-authority counts are stable; the
+`positional-value-sequence-v1` site set retains 101,977 sites and has current
+SHA-256 `0c7bca197ab4752257da59eeef34a1532e647947497009925cd7ebbbdf56e0b7`.
+The strict decoder accepts the v2 artifact, all 15 oracle self-tests pass, and
+two independent current captures verified the same 7,246 identities.
 
-`pnpm smoke:effect4-clean-consumer` passes from an isolated temporary consumer:
+## Registry, coverage, and formal-model scope
 
-- MCP is produced with `pnpm --filter @dnd/mcp deploy --prod --legacy`, its
-  recursive deployed dependency manifests pass the shipped-cohort check, and
-  the deployed HTTP entrypoint answers real requests.
-- The MCP lifecycle probe sends `SIGINT` and `SIGTERM` after receiving only the
-  first chunk of a large `tools/list` response, then proves the complete body,
-  parseable JSON, equal captures across both signals, clean exit, empty standard
-  error, response drain, and cleanup without sleeps.
-- The application production bundle and its exact dependency-free static
-  server artifact are copied to an isolated directory. The smoke reads the root
-  document, starts the JavaScript entry response, then sends each of `SIGINT`
-  and `SIGTERM` after receiving only the first response chunk. Both runs prove
-  byte-for-byte response drain and clean exit with empty standard error.
-- The same consolidated smoke runs Raw Swarm's exact public consumer and
-  battle-slice lifecycle owners: seven tests covering the reviewed declaration
-  distribution and both signals during an in-flight newline-framed response.
+The deterministically generated
+[#381 registry-path manifest](./gh381-registry-path-manifest.json) selects 58
+obligations and has artifact SHA-256
+`998be34b672077873b47937ae532d781d144e5dfdec6329af38eae16c096e01b`.
+Its resolved QNT accounting is 84 semantic cores, 4 bridges, 3 MBT fixtures,
+61 proof-only owners, and zero unregistered owners. The focused public coverage
+checks account for 147 Rules Kernel obligations and 400 Units / 258 profiles.
 
-The root Dockerfile now builds the workspace app with frozen pnpm dependencies,
-ships the same static server artifact on Node 22.19, runs as the non-root `node`
-user, and defines a health check. No Docker, Podman, or Buildah executable is
-available in the certification environment, so an OCI image build is not
-claimed; the exact files and command copied by that image are the artifacts
-exercised by the clean-consumer smoke.
+The integrated change is not a QNT-neutral migration. Against the certification
+integration fixed point `301229532`, 101 `.qnt` files changed, with 4,523
+insertions and 848 deletions. Those changes add or rename generic rule cores,
+runtime bridges, fixtures, and ownership annotations. They are substantial
+formal-model scope and therefore require the pending proof and MBT execution;
+this report does not treat parser/typecheck or registry accounting as proof.
 
-## Public verification
+Two review-raised rule dispositions are explicit:
 
-The following public commands were run directly under their owning repository
-locks:
-
-- `pnpm typecheck`: passed, 13 of 13 owners.
-- `pnpm test`: passed, 10 of 10 workspace tasks. Notable uncached owners were
-  battle-runtime (261 files, 2,887 passed and 132 documented proof-lane skips),
-  MCP (57 files, 416 passed), and app (18 files, 88 passed).
-- `pnpm build`: passed; the app transformed 1,543 modules and emitted the
-  production bundle. The existing large-chunk advisory remains non-fatal.
-- `pnpm quality:milestone`: pending final reviewer convergence.
-
-Focused checks also pass for the 13-owner cohort, zero-diagnostic inventory,
-finite oracle and negative tests, MCP publication package, Battle timing and
-typed issue projections, clean consumers, and Raw Swarm deterministic public
-lane.
+- Temporary Hit Points are not automatically maximized when a creature that
+  already has a pool receives a new pool. The integrated runtime exposes one
+  `temporaryHitPointChoice` frontier with the domain choices `keepExisting`
+  and `replaceWithGranted`, binds it to the exact start-turn occurrence, and
+  has a direct keep/replace regression. The QNT protocol kind is registered,
+  but no final proof result is claimed here.
+- Assumption A51 supplies Hypnotic Pattern's otherwise unspecified physical
+  shake reachability as an exact caller-owned actor/target witness, without
+  inventing a distance. Runtime decoding rejects the retired adjacency fact.
+  The QNT owner now models action availability, an eligible other actor, the
+  physical-reachability witness, and affected-creature self-shake rejection;
+  its focused tests cover reachable, unreachable, unavailable, ineligible,
+  damage-ended, and self-shake cases. Execution of that QNT evidence remains
+  part of the pending proof/MBT lanes.
 
 ## Review convergence
 
-Certification requires two complete rounds covering RAW traceability, PHB+
-safety, ubiquitous-language and domain ownership, QNT/runtime parity,
-architecture and connascence, and the separate Standards and Spec review axes.
-Findings and their dispositions are recorded here after each fixed-point pass.
+The Standards axis has converged at `b8ef76bec`. The final correction moved
+persistent-area usage-limit admission to one shared typed owner, removing the
+last duplicated algorithm identified by review. The reviewed tree otherwise
+converged on authored-identity/PHB+ safety, invalid-state ownership, Effect 4
+boundaries, architecture, and connascence.
 
-Round 1 accepted and corrected all 10 findings. The Spec axis required the
-7,338 exact identity records, installed and shipped cohort inspection,
-consolidated clean-consumer lifecycle coverage, current controlled-red closure
-documentation, and unchanged ordinary Battle replay checkpoints. The Standards
-axis required the current ledger status, accurate baseline reproduction text,
-a typed oracle classification map plus exhaustive `effect/Match`, package-owned
-application server documentation, and one shared Unicode code-point comparator.
-Focused checks passed after each correction; no finding was waived.
+Spec certification is still partial. The refreshed Oracle, #381 manifest,
+coverage authorities, Temporary Hit Point disposition, A51 reachability model,
+and substantial QNT scope are now represented accurately. The remaining Spec
+blockers are evidence and closure work, not waived requirements.
 
-Round 2 is run from the committed correction fixed point. Its final disposition
-and the public milestone result are recorded before this report is finalized.
+The proof-lane closure checks passed. The subsequent `pnpm proof:qnt` attempt
+did not establish a proof pass: five QNT owners reported failures before the
+command was manually cancelled with exit 130:
 
-Direct local SRD 5.2.1 inspection confirmed that Searing Smite deals start-turn
-damage and then requires its Constitution save; Flaming Sphere and Moonbeam
-resolve damage at their triggering turn event; and a Death Saving Throw belongs
-to the later zero-HP actor's start of turn. The Battle reducer delegated End
-Turn from an already-damaged child state, which exposed that staged damage in
-an ordinary open Death Save procedure. The replay parent now retains the
-unchanged incoming checkpoint and recomputes from root, committing exactly once
-after the frontier closes as the owning Battle protocol requires. No authored
-identity dispatch, PHB+ content, Quint state, or assumption changed.
+- `metamagic-options-and-quickened-restoration`;
+- `restoration`;
+- `scalar-buff`;
+- `spatial-movement-spell`; and
+- `spellcasting-and-utility-facts`.
 
-## Remaining non-migration limitations
+Exit 130 is recorded only as a cancelled attempt. Neither the successful
+closure checks nor partial progress in that command is proof evidence for the
+integrated tree.
 
-- A finite hash-authenticated oracle certificate is not a proof of semantic
-  equivalence; semantic claims depend on the named focused and public tests.
-- The application production bundle retains its pre-existing large-chunk
-  advisory.
-- The certification environment cannot build an OCI image, as recorded above.
-- Slow QNT proof and MBT lanes remain governed by their existing opt-in/public
-  commands; no QNT model changed in #386, and the public test suite reports its
-  documented proof-lane skips rather than presenting them as executed proofs.
+## Pending final evidence
 
-None of these limitations requires an Effect 3 package, API, facade,
-suppression, controlled-red allowance, or mutable baseline.
+The following entries stay pending until their exact results and fixed point
+are recorded:
+
+- a complete passing QNT proof lane, including resolution of the five failed
+  owners listed above, and the required Battle MBT lanes;
+- `pnpm smoke:effect4-clean-consumer`;
+- broad `pnpm typecheck`, `pnpm test`, and production build;
+- `pnpm quality:milestone`;
+- final code-review Round 2, including the Spec-axis disposition after the
+  commands above;
+- live GitHub status and closure of #381 and #386, followed by the SR-00
+  Cleanroom ledger disposition.
+
+No previous test-file, test-count, transformed-module, build, or proof result
+is reused as evidence for this integrated fixed point. Issues #381 and #386 and
+SR-00 remain pending until every entry above is replaced by its observed result
+and the live issue chain agrees.

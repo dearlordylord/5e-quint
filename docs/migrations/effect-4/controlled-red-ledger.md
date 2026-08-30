@@ -5,10 +5,11 @@ Issue: [#371](https://github.com/dearlordylord/5e-quint/issues/371)
 Cutover starting point: `fba977c5ed3abf554631ce43c006b5a0ad4c5557`
 Environment: Node `v24.18.0`, pnpm `10.29.3`, Linux
 
-Status: closed by the final issue #386 certification. The current owner sweep
-records all 13 package owners green with zero raw and zero deduplicated
-diagnostics. Historical controlled-red snapshots below remain evidence of the
-migration sequence; none is a current waiver or exception.
+Status: final issue #386 certification pending. The last recorded owner sweep
+contains zero raw and zero deduplicated diagnostics, but the current public
+gates and issue receipt remain required before closure. Historical
+controlled-red snapshots below remain evidence of the migration sequence;
+none is a current waiver or exception.
 
 ## Scope and ownership
 
@@ -1188,35 +1189,43 @@ repository emitter subsequently completed in 46 seconds, and all evidence
 above comes from the pinned repository commands. `pnpm quality:milestone` was
 not run for this issue snapshot.
 
-## Issue #386 final certification and controlled-red closure
+## Issue #386 current certification and controlled-red closure
 
-Issue #386 removes the migration exception rather than extending it. The final
-inventory covers all 13 package owners and records zero raw and zero
-deduplicated diagnostics. The retired inventory generator and mutation package
-scripts are absent; `pnpm typecheck` is the current executable owner and any
-future diagnostic is an ordinary blocking failure.
+The current integrated source fixed point is `b8ef76bec`; refreshed generated
+certification artifacts are committed at `0cd6b8133`. The final controlled-red
+inventory still covers all 13 package owners with zero recorded diagnostics,
+and its SHA-256 remains
+`347dde4c3f6ed0a2c0f674fd0c2dce8edfacbc3135ebc7f7b0ee7c29c008c036`.
+The retired inventory generator and mutation scripts remain absent. This
+stored inventory does not substitute for the pending broad `pnpm typecheck` at
+the integrated fixed point; any observed diagnostic is an ordinary blocker.
 
-The repository and installed dependency graph select Effect
-`4.0.0-rc.112`, `@effect/platform-node@4.0.0-rc.112`,
-`@effect/platform-node-shared@4.0.0-rc.112`, and
-`@effect/vitest@4.0.0-rc.112`, with no Effect 3 or unsupported Effect package.
-The clean-consumer deployment independently verifies the production MCP
-package graph, while the application and script lifecycle evidence exercises
-their exact shipped entrypoints.
-
-The Effect 3 behavioral oracle remains immutable at 12,997,527 bytes and
-SHA-256
+The immutable Effect 3 oracle remains 12,997,527 bytes with SHA-256
 `dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
-The finite Effect 4 certificate records every one of the 7,338 changed JSON
-Pointer identities with its classification, operation, path, and both side
-digests or missing tags. Its verifier rejects changed baseline or candidate
-bytes, unreadable artifacts, duplicate, unclassified, multiply classified, or
-stale exact identities, and stale aggregate counts or hashes.
+The current v2 Effect 4 certificate records exactly 7,246 reviewed identities,
+has identity SHA-256
+`a4e65823e86ec520354bdc2f212f1d0cf7af780fb5a610197e0d15ae1a559bd7`,
+is 4,656,476 bytes with artifact SHA-256
+`2ca55425776b8b574ff88e57e5ceddcbcd349b652c2873c28619745332a645f6`,
+and passes all 15 self-tests plus two deterministic current verifications. The
+#381 generated manifest selects 58 obligations and has SHA-256
+`998be34b672077873b47937ae532d781d144e5dfdec6329af38eae16c096e01b`;
+focused coverage accounting is 147 Rules Kernel obligations and 400 Units / 258
+profiles.
 
-Direct public `pnpm build`, `pnpm typecheck`, and `pnpm test` passed. The exact
-commands, process-drain proof, semantic delta disposition, reviewer findings,
-and non-migration limitations are owned by
-[`final-parity-report.md`](./final-parity-report.md). This ledger retains the
-earlier issue snapshots only as historical evidence; no controlled-red owner,
-compatibility facade, diagnostic suppression, mutable baseline path, or
-migration-time waiver remains.
+The proof-lane closure checks passed, but `pnpm proof:qnt` did not pass. The
+attempt reported failures for
+`metamagic-options-and-quickened-restoration`, `restoration`, `scalar-buff`,
+`spatial-movement-spell`, and `spellcasting-and-utility-facts`, then was
+manually cancelled with exit 130. No partial proof result is accepted as
+closure evidence.
+
+This final-current paragraph does not rewrite the historical issue snapshots
+above. It also does not claim a QNT proof pass or the required Battle MBTs,
+clean-consumer smoke, broad typecheck/test/build/quality gates, live GitHub
+closure, or final review Round 2. The current evidence, 101-file QNT scope,
+Temporary Hit Point keep/replace disposition, A51 Hypnotic Pattern reachability
+model, Standards convergence, and remaining Spec blockers are owned by
+[`final-parity-report.md`](./final-parity-report.md). Issues #381 and #386 and
+the SR-00 Cleanroom ledger disposition remain pending until those named entries
+are replaced by exact observations.
