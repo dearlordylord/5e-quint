@@ -91,23 +91,42 @@ const FAMILIAR_FORMS = ["none", "cat", "rat"] as const;
 type FamiliarForm = (typeof FAMILIAR_FORMS)[number];
 const CREATURE_TYPE_OVERRIDES = ["none", "fey"] as const;
 type CreatureTypeOverride = (typeof CREATURE_TYPE_OVERRIDES)[number];
-type LastResult =
-  | "init"
-  | "createdCat"
-  | "replacedRat"
-  | "sharedSenses"
-  | "touchDelivered"
-  | "pactAttack";
-const FIND_FAMILIAR_COMPANION_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
-  Record<string, LastResult>
-> = {
+const SPAWNED_COMPANION_LIFECYCLE_EVENT_TAGS = [
+  "init",
+  "createdCat",
+  "replacedRat",
+  "sharedSenses",
+  "touchDelivered",
+  "pactAttack",
+] as const;
+type SpawnedCompanionLifecycleEventTag =
+  (typeof SPAWNED_COMPANION_LIFECYCLE_EVENT_TAGS)[number];
+type SpawnedCompanionLifecycleEvent = {
+  readonly [Tag in SpawnedCompanionLifecycleEventTag]: { readonly tag: Tag };
+}[SpawnedCompanionLifecycleEventTag];
+const FIND_FAMILIAR_COMPANION_LIFECYCLE_QNT_EVENT_TAGS = [
+  "Init",
+  "CreatedCat",
+  "ReplacedRat",
+  "SharedSenses",
+  "TouchDelivered",
+  "PactAttack",
+] as const;
+type FindFamiliarCompanionLifecycleQntEventTag =
+  (typeof FIND_FAMILIAR_COMPANION_LIFECYCLE_QNT_EVENT_TAGS)[number];
+const FIND_FAMILIAR_COMPANION_LIFECYCLE_EVENT_BY_TAG = {
   Init: "init",
   CreatedCat: "createdCat",
   ReplacedRat: "replacedRat",
   SharedSenses: "sharedSenses",
   TouchDelivered: "touchDelivered",
   PactAttack: "pactAttack",
-};
+} as const satisfies Readonly<
+  Record<
+    FindFamiliarCompanionLifecycleQntEventTag,
+    SpawnedCompanionLifecycleEventTag
+  >
+>;
 
 type SpawnedCompanionProjection = {
   readonly familiarStatus: FamiliarStatus;
@@ -120,16 +139,14 @@ type SpawnedCompanionProjection = {
   readonly bonusActionAvailable: boolean;
   readonly ownerAttackAvailable: boolean;
   readonly familiarReactionAvailable: boolean;
-  readonly touchDeliveryReactionSpent: boolean;
-  readonly pactReactionAttackResolved: boolean;
   readonly spellSlotCommitted: boolean;
   readonly targetHp: number;
-  readonly lastResult: LastResult;
+  readonly event: SpawnedCompanionLifecycleEvent;
 };
 
 type SpawnedCompanionRuntimeState = {
   readonly battle: BattleRuntimeSession;
-  readonly lastResult: LastResult;
+  readonly event: SpawnedCompanionLifecycleEvent;
 };
 
 const casterId = combatantId("find-familiar-mbt-caster");
@@ -262,7 +279,7 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
         creatureTypeOverride: "fey",
         companionCount: 1,
         telepathyAvailable: true,
-        lastResult: "createdCat",
+        event: { tag: "createdCat" },
       },
     );
     expect(
@@ -274,7 +291,7 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
       creatureTypeOverride: "fey",
       companionCount: 1,
       telepathyAvailable: true,
-      lastResult: "replacedRat",
+      event: { tag: "replacedRat" },
     });
   });
 
@@ -287,16 +304,15 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
       sharedSensesActive: true,
       bonusActionAvailable: false,
       familiarReactionAvailable: true,
-      lastResult: "sharedSenses",
+      event: { tag: "sharedSenses" },
     });
     expect(
       spawnedCompanionLifecycleCompanionProjection(delivered),
     ).toMatchObject({
       familiarReactionAvailable: false,
-      touchDeliveryReactionSpent: true,
       spellSlotCommitted: true,
       targetHp: initialTargetHp,
-      lastResult: "touchDelivered",
+      event: { tag: "touchDelivered" },
     });
   });
 
@@ -310,9 +326,23 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
     ).toMatchObject({
       ownerAttackAvailable: false,
       familiarReactionAvailable: false,
-      pactReactionAttackResolved: true,
       targetHp: initialTargetHp - 1,
-      lastResult: "pactAttack",
+      event: { tag: "pactAttack" },
+    });
+  });
+
+  it("preserves a spent familiar Reaction when the familiar adopts a new form", () => {
+    const attacked = resolvePactFamiliarAttack(
+      createCatFamiliar(initialRuntimeState()),
+    );
+    const replaced = replaceWithRatFamiliar(attacked);
+
+    expect(
+      spawnedCompanionLifecycleCompanionProjection(replaced),
+    ).toMatchObject({
+      familiarForm: "rat",
+      familiarReactionAvailable: false,
+      event: { tag: "replacedRat" },
     });
   });
 
@@ -570,7 +600,7 @@ function initialRuntimeState(): SpawnedCompanionRuntimeState {
   if (Result.isFailure(result)) {
     throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return { battle: result.success, lastResult: "init" };
+  return { battle: result.success, event: { tag: "init" } };
 }
 
 function createCatFamiliar(
@@ -588,7 +618,10 @@ function replaceWithRatFamiliar(
 function castNormalFamiliar(
   state: SpawnedCompanionRuntimeState,
   formId: Extract<FamiliarForm, "cat" | "rat">,
-  lastResult: Extract<LastResult, "createdCat" | "replacedRat">,
+  event: Extract<
+    SpawnedCompanionLifecycleEventTag,
+    "createdCat" | "replacedRat"
+  >,
 ): SpawnedCompanionRuntimeState {
   const result = castNormalFamiliarResult(state, formId);
   return {
@@ -596,7 +629,7 @@ function castNormalFamiliar(
       ...state.battle,
       state: requireResolved(result),
     }),
-    lastResult,
+    event: { tag: event },
   };
 }
 
@@ -631,7 +664,7 @@ function shareSenses(
       ...state.battle,
       state: requireResolved(result),
     }),
-    lastResult: "sharedSenses",
+    event: { tag: "sharedSenses" },
   };
 }
 
@@ -672,7 +705,7 @@ function deliverTouchSpell(
       ...state.battle,
       state: requireResolved(result),
     }),
-    lastResult: "touchDelivered",
+    event: { tag: "touchDelivered" },
   };
 }
 
@@ -689,7 +722,7 @@ function resolvePactFamiliarAttack(
       ...state.battle,
       state: requireResolved(result),
     }),
-    lastResult: "pactAttack",
+    event: { tag: "pactAttack" },
   };
 }
 
@@ -740,13 +773,9 @@ function spawnedCompanionLifecycleCompanionProjection(
     ownerAttackAvailable:
       state.battle.state.currentTurnResources.actionResources.length > 0,
     familiarReactionAvailable,
-    touchDeliveryReactionSpent:
-      spellSlotCommitted && !familiarReactionAvailable,
-    pactReactionAttackResolved:
-      targetHp === initialTargetHp - 1 && !spellSlotCommitted,
     spellSlotCommitted,
     targetHp,
-    lastResult: state.lastResult,
+    event: state.event,
   } satisfies SpawnedCompanionProjection;
   expect(projection.companionCount).toBe(
     projection.familiarStatus === "present" ? 1 : 0,
@@ -1075,12 +1104,10 @@ function normalizeSpawnedCompanionQuintState(
       "Expected Find Familiar companion witness holes to be empty.",
     );
   }
-  const scenarioResult = spawnedCompanionLifecycleCompanionLastResult(
-    state["qScenarioOutcome"],
-  );
+  const event = spawnedCompanionLifecycleEvent(state["qEvent"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Find Familiar companion lifecycle",
-    scenarioOutcome: scenarioResult,
+    scenarioOutcome: event.tag,
     protocol,
   });
   return {
@@ -1103,17 +1130,9 @@ function normalizeSpawnedCompanionQuintState(
       state,
       "qFamiliarReactionAvailable",
     ),
-    touchDeliveryReactionSpent: booleanField(
-      state,
-      "qTouchDeliveryReactionSpent",
-    ),
-    pactReactionAttackResolved: booleanField(
-      state,
-      "qPactReactionAttackResolved",
-    ),
     spellSlotCommitted: booleanField(state, "qSpellSlotCommitted"),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
-    lastResult: scenarioResult,
+    event,
   };
 }
 
@@ -1132,27 +1151,27 @@ function spawnedCompanionLifecycleCompanionUnexpectedHole(raw: unknown): never {
   );
 }
 
-function spawnedCompanionLifecycleCompanionLastResult(
+function spawnedCompanionLifecycleEvent(
   raw: unknown,
-): LastResult {
-  const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const value = FIND_FAMILIAR_COMPANION_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
-  if (value !== undefined) {
-    return value;
-  }
-  throw new Error(`Unknown Find Familiar companion result: ${tag}.`);
+): SpawnedCompanionLifecycleEvent {
+  const tag = literalField(
+    quintVariantTag(raw, "qEvent"),
+    FIND_FAMILIAR_COMPANION_LIFECYCLE_QNT_EVENT_TAGS,
+  );
+  const value = FIND_FAMILIAR_COMPANION_LIFECYCLE_EVENT_BY_TAG[tag];
+  return { tag: value };
 }
 
 function compareSpawnedCompanionStates(
-  runtime: SpawnedCompanionProjection,
-  quint: SpawnedCompanionProjection,
+  spec: SpawnedCompanionProjection,
+  implementation: SpawnedCompanionProjection,
 ): boolean {
   try {
-    expect(runtime).toEqual(quint);
+    expect(implementation).toEqual(spec);
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(
-        `${error.message}\n${JSON.stringify({ runtime, quint }, null, 2)}`,
+        `${error.message}\n${JSON.stringify({ spec, implementation }, null, 2)}`,
       );
     }
     throw error;
