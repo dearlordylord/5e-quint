@@ -5,7 +5,6 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   AvailableBattleAct,
   BattleCreatureSnapshot,
-  BattleActPresentation,
   BattleInterruptDecisionFrontier,
   BattleInterruptProcedureChoice,
   BattleInterruptChoicePresentationIssue,
@@ -40,21 +39,21 @@ import {
 
 export type BattlePresentedInterruptChoice =
   | {
-      readonly choice: Extract<
-        BattleInterruptProcedureChoice,
-        { readonly kind: "reactionRollOrDamageReduction" }
+      readonly choice: Schema.Schema.Type<
+        typeof BattleInterruptProcedureModifierChoiceSchema
       >;
     }
   | {
-      readonly choice: Exclude<
-        BattleInterruptProcedureChoice,
-        { readonly kind: "reactionRollOrDamageReduction" }
+      readonly choice: Schema.Schema.Type<
+        typeof BattleInterruptProcedureChoiceWithSubjectSchema
       >;
-      readonly presentation: BattleActPresentation;
+      readonly presentation: Schema.Schema.Type<
+        typeof BattleActPresentationSchema
+      >;
     };
 
 export type BattlePresentedCheckpointFrontierEnvelope = {
-  readonly checkpoint: BattlePresentedSnapshot;
+  readonly checkpoint: Schema.Schema.Type<typeof BattlePresentedSnapshotSchema>;
   readonly frontier:
     | {
         readonly kind: "acts";
@@ -76,14 +75,6 @@ type EncodedBattleAvailableAct = Schema.Schema.Encoded<
   >;
 };
 
-type DecodedBattleAvailableAct = Schema.Schema.Type<
-  typeof BattleActDiscoveryCandidateSchema
-> & {
-  readonly label: Schema.Schema.Type<typeof Schema.NonEmptyTrimmedString>;
-  readonly summary: Schema.Schema.Type<typeof Schema.NonEmptyTrimmedString>;
-  readonly presentation: Schema.Schema.Type<typeof BattleActPresentationSchema>;
-};
-
 type EncodedBattlePresentedInterruptChoice =
   | {
       readonly choice: Schema.Schema.Encoded<
@@ -99,44 +90,11 @@ type EncodedBattlePresentedInterruptChoice =
       >;
     };
 
-type DecodedBattlePresentedInterruptChoice =
-  | {
-      readonly choice: Schema.Schema.Type<
-        typeof BattleInterruptProcedureModifierChoiceSchema
-      >;
-    }
-  | {
-      readonly choice: Schema.Schema.Type<
-        typeof BattleInterruptProcedureChoiceWithSubjectSchema
-      >;
-      readonly presentation: Schema.Schema.Type<
-        typeof BattleActPresentationSchema
-      >;
-    };
-
 type EncodedBattlePresentedInterruptDecisionFrontier = Omit<
   Schema.Schema.Encoded<typeof BattleInterruptDecisionFrontierSchema>,
   "choices"
 > & {
   readonly choices: ReadonlyNonEmptyArray<EncodedBattlePresentedInterruptChoice>;
-};
-
-type DecodedBattlePresentedInterruptDecisionFrontier = Omit<
-  Schema.Schema.Type<typeof BattleInterruptDecisionFrontierSchema>,
-  "choices"
-> & {
-  readonly choices: ReadonlyNonEmptyArray<DecodedBattlePresentedInterruptChoice>;
-};
-
-type DecodedBattlePresentedCheckpointFrontierEnvelope = {
-  readonly checkpoint: Schema.Schema.Type<typeof BattlePresentedSnapshotSchema>;
-  readonly frontier:
-    | {
-        readonly kind: "acts";
-        readonly acts: readonly DecodedBattleAvailableAct[];
-      }
-    | Schema.Schema.Type<typeof BattleCheckpointFrontierHolesSchema>
-    | DecodedBattlePresentedInterruptDecisionFrontier;
 };
 
 type EncodedBattlePresentedCheckpointFrontierEnvelope = {
@@ -168,7 +126,7 @@ const BattlePresentedInterruptChoiceSchema = Schema.Union(
 );
 
 export const BattlePresentedCheckpointFrontierEnvelopeSchema: Schema.Schema<
-  DecodedBattlePresentedCheckpointFrontierEnvelope,
+  BattlePresentedCheckpointFrontierEnvelope,
   EncodedBattlePresentedCheckpointFrontierEnvelope,
   never
 > = Schema.Struct({

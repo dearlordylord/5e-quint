@@ -27,6 +27,7 @@ import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion
 import {
   AmmunitionKindSchema,
   STANDARD_ACTION_KINDS,
+  StatBlockId,
   type StandardActionKind,
 } from "@dnd/shared/game-facts";
 import {
@@ -6373,7 +6374,7 @@ export const BattleActPresentationSchema = Schema.Union(
     procedureRef: BattleProcedureExecutionRef,
     formExecutionRef: BattleStatBlockExecutionScopeRef,
     unitId: Schema.String,
-    formStatBlockId: Schema.String,
+    formStatBlockId: StatBlockId,
   }),
 );
 
