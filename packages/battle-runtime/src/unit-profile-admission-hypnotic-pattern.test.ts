@@ -1,6 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3SPELL-08-HYPNOTIC-PATTERN-CONTROL-RUNTIME hypnotic_pattern
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-hypnotic-pattern-control
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
@@ -41,6 +42,7 @@ import type {
   BattleRuntimeSession,
   BattleState,
   BattleSpellSavingThrowOutcomeHole,
+  BattleTargetSpatialFact,
   CombatantId,
 } from "./unit-profile-admission.test-support.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-state.ts";
@@ -593,7 +595,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
   });
 
-  test("another creature can spend an action to shake an adjacent target awake", () => {
+  test("another physically reachable creature can spend an action to shake a target awake", () => {
     const cast = castFailedHypnoticPattern(
       spellBattle({
         preparedSpells: [saveGatedAreaControlSpellRecord()],
@@ -640,6 +642,44 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       throw new Error("Expected Hypnotic Pattern shake-awake target replay.");
     }
     expect(requireHole(replayed.holes, "targetChoice")).toEqual(targetHole);
+
+    const expectInvalidPhysicalReachability = (
+      spatialFacts: readonly BattleTargetSpatialFact[],
+    ): void => {
+      expect(
+        resolveBattleSubject({
+          state: targetTurnEnded.state,
+          subject: act.subject,
+          fills: [
+            {
+              ...saveGatedAreaControlShakeAwakeTargetFill(targetHole),
+              spatialFacts,
+            },
+          ],
+        }),
+      ).toMatchObject({
+        tag: "invalid",
+        reason: "invalidFill",
+        message:
+          "Save-gated area-control condition shake-awake requires table-supplied physical reachability for the exact actor and target.",
+      });
+    };
+
+    expectInvalidPhysicalReachability([]);
+    expectInvalidPhysicalReachability([
+      {
+        kind: "areaControlShakeAwakePhysicalReachability",
+        actorId: spellTargetId,
+        targetId: spellTargetId,
+      },
+    ]);
+    expectInvalidPhysicalReachability([
+      {
+        kind: "areaControlShakeAwakePhysicalReachability",
+        actorId: spellCasterId,
+        targetId: spellCasterId,
+      },
+    ]);
 
     const shaken = resolveBattleSubject({
       state: targetTurnEnded.state,
@@ -913,7 +953,7 @@ function saveGatedAreaControlShakeAwakeTargetFill(
     value: spellTargetId,
     spatialFacts: [
       {
-        kind: "areaControlShakeAwakeActorWithin5Feet",
+        kind: "areaControlShakeAwakePhysicalReachability",
         actorId: spellCasterId,
         targetId: spellTargetId,
       },

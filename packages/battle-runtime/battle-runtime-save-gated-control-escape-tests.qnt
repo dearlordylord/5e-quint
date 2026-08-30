@@ -5,13 +5,46 @@
 module battleRuntimeSaveGatedControlEscapeTests {
   import battleRuntimeSaveGatedControlEscape.* from "./battle-runtime-save-gated-control-escape"
 
-  run test_save_gated_control_ends_on_damage_or_witnessed_other_creature_action = {
+  run test_save_gated_control_ends_on_damage_or_witnessed_physical_shake_action = {
+    val witnessedPhysicalShake = PhysicalShakeAction({
+      actionAvailable: true,
+      actorIsAffectedCreature: false,
+      actorCanAct: true,
+      actorCanPhysicallyShakeAffectedCreature: true,
+    })
+    val unreachablePhysicalShake = PhysicalShakeAction({
+      actionAvailable: true,
+      actorIsAffectedCreature: false,
+      actorCanAct: true,
+      actorCanPhysicallyShakeAffectedCreature: false,
+    })
+    val affectedCreatureSelfShake = PhysicalShakeAction({
+      actionAvailable: true,
+      actorIsAffectedCreature: true,
+      actorCanAct: true,
+      actorCanPhysicallyShakeAffectedCreature: true,
+    })
+    val unavailableAction = PhysicalShakeAction({
+      actionAvailable: false,
+      actorIsAffectedCreature: false,
+      actorCanAct: true,
+      actorCanPhysicallyShakeAffectedCreature: true,
+    })
+    val ineligibleActor = PhysicalShakeAction({
+      actionAvailable: true,
+      actorIsAffectedCreature: false,
+      actorCanAct: false,
+      actorCanPhysicallyShakeAffectedCreature: true,
+    })
     all {
       assert(controlProjectionIsActive(true, true, 0)),
-      assert(not(controlEffectRemainsAfter(TargetDamaged, false))),
-      assert(not(controlEffectRemainsAfter(OtherCreatureAction, true))),
-      assert(controlEffectRemainsAfter(OtherCreatureAction, false)),
-      assert(controlEffectRemainsAfter(NoEscapeEvent, false)),
+      assert(not(controlEffectRemainsAfter(TargetDamaged))),
+      assert(not(controlEffectRemainsAfter(witnessedPhysicalShake))),
+      assert(controlEffectRemainsAfter(unreachablePhysicalShake)),
+      assert(controlEffectRemainsAfter(affectedCreatureSelfShake)),
+      assert(controlEffectRemainsAfter(unavailableAction)),
+      assert(controlEffectRemainsAfter(ineligibleActor)),
+      assert(controlEffectRemainsAfter(NoEscapeEvent)),
     }
   }
 }

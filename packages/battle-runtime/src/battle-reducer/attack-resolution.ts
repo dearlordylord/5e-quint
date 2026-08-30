@@ -5,6 +5,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.light-extra-attack-damage-ability-modifier
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
@@ -885,7 +886,7 @@ export function resolveShakeAwakeFromSaveGatedAreaControl(
       input.state,
       input.subject.actorId,
     ).includes(targetId) ||
-    !hasSaveGatedAreaControlShakeAwakeSpatialFact(
+    !hasSaveGatedAreaControlShakeAwakePhysicalReachability(
       targetFill.spatialFacts ?? [],
       input.subject.actorId,
       targetId,
@@ -895,7 +896,7 @@ export function resolveShakeAwakeFromSaveGatedAreaControl(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Save-gated area-control condition shake-awake target must be within 5 feet of the actor by table-supplied fact.",
+      "Save-gated area-control condition shake-awake requires table-supplied physical reachability for the exact actor and target.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1778,14 +1779,14 @@ function hasHitPointBudgetConditionShakeAwakeSpatialFact(
   );
 }
 
-function hasSaveGatedAreaControlShakeAwakeSpatialFact(
+function hasSaveGatedAreaControlShakeAwakePhysicalReachability(
   facts: readonly BattleTargetSpatialFact[],
   actorId: CombatantId,
   targetId: CombatantId,
 ): boolean {
   return facts.some(
     (fact) =>
-      fact.kind === "areaControlShakeAwakeActorWithin5Feet" &&
+      fact.kind === "areaControlShakeAwakePhysicalReachability" &&
       fact.actorId === actorId &&
       fact.targetId === targetId,
   );

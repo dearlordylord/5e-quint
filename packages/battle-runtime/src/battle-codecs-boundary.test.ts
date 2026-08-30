@@ -1423,6 +1423,44 @@ describe("battle object damage codec boundaries", () => {
   });
 });
 
+describe("battle shake-awake physical reachability codec", () => {
+  test("round-trips the exact actor-target witness and rejects the retired adjacency fact", () => {
+    const fill = {
+      kind: "targetChoice" as const,
+      holeId: holeId("codec-area-control-shake-awake-target"),
+      value: goblinId,
+      spatialFacts: [
+        {
+          kind: "areaControlShakeAwakePhysicalReachability" as const,
+          actorId: fighterId,
+          targetId: goblinId,
+        },
+      ],
+    };
+
+    const decoded = Schema.decodeUnknownSync(BattleFillSchema)(fill);
+    expect(
+      Schema.decodeUnknownSync(BattleFillSchema)(
+        Schema.encodeSync(BattleFillSchema)(decoded),
+      ),
+    ).toEqual(fill);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
+          ...fill,
+          spatialFacts: [
+            {
+              kind: "areaControlShakeAwakeActorWithin5Feet",
+              actorId: fighterId,
+              targetId: goblinId,
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+  });
+});
+
 describe("battle codec execution-reference boundaries", () => {
   test("the exhaustive active-effect projection owns each snapshot location", () => {
     const projectionsByEffectRef = new Map(

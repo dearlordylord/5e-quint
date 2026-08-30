@@ -207,3 +207,18 @@ attack and says that the extra damage has the same type as the weapon or
 Unarmed Strike used. The SRD does not select one type when a Stat Block attack
 deals multiple damage types. The explicit Table Decision preserves the SRD's
 same-type constraint without inferring an authored-order tie-breaker.
+
+## A51: Hypnotic Pattern physical shake reachability is a Table Decision
+
+**Assumption:** Ending Hypnotic Pattern by shaking an affected creature requires
+an exact caller-supplied witness that the acting creature can physically shake
+that affected creature at the time of the Action. The witness does not impose a
+numeric distance and is bound to that actor-target pair.
+
+**Rules basis / gap:** `.references/srd-5.2.1/Spells/Descriptions-E-L.md`,
+"Hypnotic Pattern" says that the effect ends for an affected creature if
+someone else uses an Action to shake the creature out of its stupor. Unlike
+`.references/srd-5.2.1/Spells/Descriptions-S-Z.md`, "Sleep," which explicitly
+requires someone within 5 feet, Hypnotic Pattern specifies no distance or
+general reachability procedure. Whether the acting creature can perform the
+physical shake is therefore supplied by the Table without authoring a distance.

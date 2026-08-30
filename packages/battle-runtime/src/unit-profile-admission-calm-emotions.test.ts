@@ -2,6 +2,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-CALM-EMOTIONS calm_emotions
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-save-gated-condition-immunity
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
