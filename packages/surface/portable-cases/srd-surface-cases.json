@@ -68852,7 +68852,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": "medium"
@@ -69533,7 +69536,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The hobgoblin has Advantage on an attack roll against a creature if at least one of the hobgoblin's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The hobgoblin has Advantage on an attack roll against a creature if at least one of the hobgoblin's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": "medium"
@@ -71594,7 +71600,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 },
                 {
                   "name": "Sunlight Sensitivity",
@@ -87922,7 +87931,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": {
@@ -88094,7 +88106,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": {
@@ -89859,7 +89874,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": {
@@ -91383,7 +91401,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The werewolf has Advantage on an attack roll against a creature if at least one of the werewolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The werewolf has Advantage on an attack roll against a creature if at least one of the werewolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": {
@@ -93070,7 +93091,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": "large"
@@ -146650,7 +146674,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": "medium"
@@ -147331,7 +147358,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The hobgoblin has Advantage on an attack roll against a creature if at least one of the hobgoblin's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The hobgoblin has Advantage on an attack roll against a creature if at least one of the hobgoblin's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": "medium"
@@ -149392,7 +149422,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 },
                 {
                   "name": "Sunlight Sensitivity",
@@ -165720,7 +165753,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": {
@@ -165892,7 +165928,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": {
@@ -167657,7 +167696,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": {
@@ -169181,7 +169223,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The werewolf has Advantage on an attack roll against a creature if at least one of the werewolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The werewolf has Advantage on an attack roll against a creature if at least one of the werewolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": {
@@ -170868,7 +170913,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": "large"
@@ -208840,7 +208888,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": "medium"
@@ -209521,7 +209572,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The hobgoblin has Advantage on an attack roll against a creature if at least one of the hobgoblin's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The hobgoblin has Advantage on an attack roll against a creature if at least one of the hobgoblin's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": "medium"
@@ -211582,7 +211636,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 },
                 {
                   "name": "Sunlight Sensitivity",
@@ -227722,7 +227779,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": {
@@ -227894,7 +227954,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": {
@@ -229659,7 +229722,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": {
@@ -231183,7 +231249,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The werewolf has Advantage on an attack roll against a creature if at least one of the werewolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The werewolf has Advantage on an attack roll against a creature if at least one of the werewolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": {
@@ -232870,7 +232939,10 @@
               "traits": [
                 {
                   "name": "Pack Tactics",
-                  "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+                  "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+                  "effect": {
+                    "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+                  }
                 }
               ],
               "size": "large"

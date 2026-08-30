@@ -8,9 +8,9 @@ Every one of the **2602** #350 structural rows is assigned exactly once. The che
 
 | State        | Rows |
 | ------------ | ---: |
-| executable   | 1142 |
+| executable   | 1150 |
 | missingOwner |  494 |
-| textOnly     |  912 |
+| textOnly     |  904 |
 | tableOwned   |   54 |
 | malformed    |    0 |
 
@@ -21,7 +21,7 @@ Every one of the **2602** #350 structural rows is assigned exactly once. The che
 | stat-block.action-lifecycle                    | executable    | covered         |  329 |         329 | stat-block.action-lifecycle              | BATTLE.STAT_BLOCK.ACTION_LIFECYCLE              |         — |
 | stat-block.bonus-action-lifecycle              | executable    | covered         |   78 |          72 | stat-block.bonus-action-lifecycle        | BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE        |         — |
 | stat-block.legendary-action-lifecycle          | executable    | covered         |    6 |           3 | stat-block.legendary-action-lifecycle    | BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE    |         — |
-| stat-block.attack-procedure                    | executable    | covered         |  252 |         213 | stat-block.attack-procedure              | BATTLE.STAT_BLOCK.ATTACK_PROCEDURE              |         — |
+| stat-block.attack-procedure                    | executable    | covered         |  260 |         216 | stat-block.attack-procedure              | BATTLE.STAT_BLOCK.ATTACK_PROCEDURE              |         — |
 | stat-block.multiattack                         | executable    | covered         |   89 |          44 | stat-block.multiattack                   | BATTLE.STAT_BLOCK.MULTIATTACK                   |         — |
 | stat-block.spellcasting.procedure              | executable    | covered         |   58 |          51 | stat-block.spellcasting.procedure        | BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE        |         — |
 | stat-block.resource-lifecycle                  | executable    | covered         |  330 |         122 | stat-block.resource-lifecycle            | BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE            |         — |
@@ -34,7 +34,7 @@ Every one of the **2602** #350 structural rows is assigned exactly once. The che
 | stat-block.attack-additional-effect            | missingOwner  | not-applicable  |    4 |           4 | stat-block.attack-additional-effect      | BATTLE.STAT_BLOCK.ATTACK_ADDITIONAL_EFFECT      |      #425 |
 | stat-block.standard-action-option              | missingOwner  | not-applicable  |    2 |           2 | stat-block.standard-action-option        | BATTLE.STAT_BLOCK.STANDARD_ACTION_OPTION        |      #426 |
 | stat-block.text-only.procedure                 | textOnly      | not-applicable  |  585 |         240 | —                                        | —                                               |         — |
-| stat-block.text-only.trait                     | textOnly      | not-applicable  |  327 |         196 | —                                        | —                                               |         — |
+| stat-block.text-only.trait                     | textOnly      | not-applicable  |  319 |         189 | —                                        | —                                               |         — |
 | stat-block.table-owned.legendary-lair-presence | tableOwned    | not-applicable  |   27 |          27 | —                                        | —                                               |         — |
 | stat-block.table-owned.legendary-lair-section  | tableOwned    | not-applicable  |   27 |          27 | —                                        | —                                               |         — |
 | stat-block.malformed                           | malformed     | not-applicable  |    0 |           0 | —                                        | —                                               |         — |
