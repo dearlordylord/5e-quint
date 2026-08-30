@@ -408,7 +408,8 @@ flowchart TD
   caller-supplied safest-route Movement fill, and uses table-supplied movement
   threats to open Opportunity Attack windows. `feather_fall` is a
   falling-trigger Reaction spell from caller-supplied falling and range facts;
-  its active effect projects a descent-rate cap, and `resolveFeatherFallLanding`
+  its active effect projects a descent-rate cap, and
+  `resolveFallingCreatureMitigationLanding`
   consumes caller-supplied landing facts to remove only the landed target's
   mitigation and return fall-damage plus Falling-Prone prevention outcomes
   without deriving fall distance or geometry. `chromatic_orb` is a separate chained spell attack profile with one

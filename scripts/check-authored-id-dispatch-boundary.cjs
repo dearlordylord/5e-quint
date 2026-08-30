@@ -7,6 +7,7 @@ const { createHash } = require("node:crypto");
 const ts = require("typescript");
 const {
   battleRuntimeExecutionImportClosure,
+  battleRuntimePublicExportOwnerFiles,
 } = require("./check-battle-runtime-import-ownership.cjs");
 
 const REPO_ROOT = path.resolve(__dirname, "..");
@@ -2696,28 +2697,6 @@ function exportedVariableAuthoredValue(node, spellLexicon) {
   return hasAuthoredValue;
 }
 
-function sourceContainsMultiwordAuthoredRuntimeText(source, spellLexicon) {
-  let found = false;
-  const visit = (node) => {
-    if (found) return;
-    const text = runtimeTextExpression(node);
-    if (
-      text !== undefined &&
-      !isNestedRuntimeTextExpression(node) &&
-      runtimeTextExpressionHasExecutionRole(node) &&
-      spellLexiconMatches(text, spellLexicon).some((spell) =>
-        spell.phraseWords.some((phrase) => phrase.length > 1),
-      )
-    ) {
-      found = true;
-      return;
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
-  return found;
-}
-
 function coupledExecutionIdentifier(node) {
   if (
     (ts.isVariableDeclaration(node) ||
@@ -2994,8 +2973,6 @@ function executionIdentityViolationsForFile(
     true,
     relativePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   );
-  const sourceHasAuthoredRuntimeText =
-    sourceContainsMultiwordAuthoredRuntimeText(source, spellLexicon);
   const violations = [];
   const addMatches = (node, role, identifier) => {
     for (const spell of spellLexiconMatches(identifier, spellLexicon)) {
@@ -3044,7 +3021,7 @@ function executionIdentityViolationsForFile(
       addMatches(node.name, "declaration-identifier", node.name.text);
     }
     const coupledIdentifier = coupledExecutionIdentifier(node);
-    if (sourceHasAuthoredRuntimeText && coupledIdentifier !== undefined) {
+    if (coupledIdentifier !== undefined) {
       addMatches(
         coupledIdentifier,
         "declaration-identifier",
@@ -3211,6 +3188,7 @@ function runExecutionIdentityCohortSelfTest() {
     { kind: "spell", id: "magic_missile", name: "Magic Missile" },
     { kind: "spell", id: "mirror_image", name: "Mirror Image" },
     { kind: "spell", id: "find_familiar", name: "Find Familiar" },
+    { kind: "spell", id: "feather_fall", name: "Feather Fall" },
     { kind: "spell", id: "sanctuary", name: "Sanctuary" },
     { kind: "spell", id: "light", name: "Light" },
     { kind: "unit", id: "cloudkill_unit", name: "Cloudkill Unit" },
@@ -3338,6 +3316,28 @@ function runExecutionIdentityCohortSelfTest() {
     ).length,
     0,
     "cohort scanner inspected a module outside the execution import closure",
+  );
+  for (const [sourceText, identifier] of [
+    ["function featherFallLanding() { return true }", "featherFallLanding"],
+    [
+      'import { resolveLanding as featherFallLanding } from "./landing.ts";',
+      "featherFallLanding",
+    ],
+  ]) {
+    assert.ok(
+      executionIdentityViolationsForFile(fixturePath, sourceText, lexicon).some(
+        (violation) =>
+          violation.role === "declaration-identifier" &&
+          violation.identifier === identifier,
+      ),
+      `cohort scanner missed authored declaration/import identifier ${identifier} without a same-file authored string`,
+    );
+  }
+  assert.ok(
+    battleRuntimePublicExportOwnerFiles().includes(
+      "packages/battle-runtime/src/battle-reducer/environmental-fall-procedures.ts",
+    ),
+    "cohort scanner public-owner discovery missed a re-export outside the former execution roots",
   );
   const collisionSource =
     "export type HeldLightSpellProcedureExecution = { readonly value: true }";
@@ -4899,7 +4899,10 @@ function main() {
   );
 
   const sourceFilesSet = new Set(sourceFiles);
-  const executionImportClosure = new Set(battleRuntimeExecutionImportClosure());
+  const executionImportClosure = new Set([
+    ...battleRuntimeExecutionImportClosure(),
+    ...battleRuntimePublicExportOwnerFiles(),
+  ]);
   const missingExecutionSources = [...executionImportClosure].filter(
     (relativePath) =>
       executionIdentityBoundaryReason(relativePath) === null &&

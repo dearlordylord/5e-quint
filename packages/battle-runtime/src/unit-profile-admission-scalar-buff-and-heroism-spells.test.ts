@@ -71,17 +71,17 @@ import {
   movementFeet,
   resolveBattleInterrupt,
   resolveBattleSubject,
-  resolveFeatherFallLanding,
+  resolveFallingCreatureMitigationLanding,
   resolveFlySpeedGrantEndFallCleanup,
   snapshotBattle,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
 import type {
   BattleFill,
+  BattleFallingCreatureMitigationTriggerWithinRangeFact,
   BattleFlySpeedGrantEndFallCleanupFrame,
   BattleHole,
   BattleState,
-  BattleTargetSpatialFact,
   CombatantId,
   EndedFlySpeedGrant,
 } from "./unit-profile-admission.test-support.ts";
@@ -1239,7 +1239,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     if (mitigated.tag !== "resolved") {
       throw new Error("Expected Feather Fall to resolve.");
     }
-    const landing = resolveFeatherFallLanding({
+    const landing = resolveFallingCreatureMitigationLanding({
       state: mitigated.state,
       targetId: spellCasterId,
     });
@@ -2272,7 +2272,7 @@ function requirePendingFlySpeedGrantCleanup(
 function featherFallTriggerFacts(
   fallingCreatureId: CombatantId,
   sourceProcedureRef: BattleProcedureExecutionRef,
-): readonly BattleTargetSpatialFact[] {
+): readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[] {
   return [
     {
       kind: "fallingCreatureMitigationTriggerWithinRange",

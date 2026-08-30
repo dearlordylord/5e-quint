@@ -150,7 +150,7 @@ import {
   END_OF_NEXT_TURN_DURING_TURN,
 } from "./spell-end-target-state.ts";
 
-export const FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
+export const FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND = 60;
 export const FAERIE_FIRE_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
 
 export type SelectFailedSaveConditionEffectResult =
@@ -300,11 +300,11 @@ export function saveGatedAttackRollAdvantageInvocationIsVisibilityGrantingArea(
 
 export function activeFallingCreatureMitigationDescentRateCapFeetPerRound(
   combatant: BattleCreatureState,
-): typeof FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND | null {
+): typeof FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND | null {
   return combatant.activeEffects.some(
     (effect) => effect.kind === "fallingCreatureMitigationReaction",
   )
-    ? FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND
+    ? FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND
     : null;
 }
 

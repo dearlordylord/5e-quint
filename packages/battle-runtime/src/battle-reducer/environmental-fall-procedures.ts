@@ -2,6 +2,7 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type {
   BattleCreatureState,
+  BattleFallingCreatureMitigationTriggerWithinRangeFact,
   BattleFallingCreatureMitigationLandingResult,
   BattleFallDamageLandingResult,
   BattleInterruptFrame,
@@ -9,7 +10,6 @@ import type {
   BattleResolutionResult,
   BattleSnapshot,
   BattleState,
-  BattleTargetSpatialFact,
   EndedFlySpeedGrant,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
@@ -26,7 +26,7 @@ import { fallingCreatureMitigationLandingCleanupForCombatant } from "./spells-ho
 export function openCreatureFallsInterruptWindow(input: {
   readonly state: BattleState;
   readonly fallingCreatureId: CombatantId;
-  readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+  readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[];
 }): BattleResolutionResult {
   const reactionWindow = maybeOpenInterruptWindow(
     input.state,
@@ -66,7 +66,7 @@ export type FlySpeedGrantEndFallWitness =
     }
   | {
       readonly kind: "cannotStopFall";
-      readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+      readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[];
     };
 
 export type FlySpeedGrantEndFallWitnessResult =
@@ -203,7 +203,7 @@ function grantedFlightEndFallCleanupFrame(
   return null;
 }
 
-export function resolveFeatherFallLanding(input: {
+export function resolveFallingCreatureMitigationLanding(input: {
   readonly state: BattleState;
   readonly targetId: CombatantId;
 }): BattleFallingCreatureMitigationLandingResult {
@@ -218,10 +218,10 @@ export function resolveFeatherFallLanding(input: {
         "Falling-creature mitigation landing target is not in this battle.",
     };
   }
-  return resolveFeatherFallLandingForTarget(input.state, target);
+  return resolveFallingCreatureMitigationLandingForTarget(input.state, target);
 }
 
-function resolveFeatherFallLandingForTarget(
+function resolveFallingCreatureMitigationLandingForTarget(
   state: BattleState,
   target: BattleCreatureState,
 ): Exclude<
@@ -274,27 +274,30 @@ export function resolveFallDamageLanding(input: {
       message: "Fall damage landing target is not in this battle.",
     };
   }
-  const featherFall = resolveFeatherFallLandingForTarget(input.state, target);
+  const mitigationLanding = resolveFallingCreatureMitigationLandingForTarget(
+    input.state,
+    target,
+  );
   const mitigationFrameIndex = fallDamageLandingMitigationFrameIndex(
-    featherFall.state,
+    mitigationLanding.state,
     input.targetId,
   );
   const mitigationFrame =
     mitigationFrameIndex === null
       ? null
-      : featherFall.state.interruptStack[mitigationFrameIndex];
+      : mitigationLanding.state.interruptStack[mitigationFrameIndex];
   const slowFallReductionAmount =
     mitigationFrame?.kind === "fallDamageLandingMitigation"
       ? Number(mitigationFrame.reductionAmount)
       : 0;
-  const effectiveFallDamageNumber = featherFall.fallDamagePrevented
+  const effectiveFallDamageNumber = mitigationLanding.fallDamagePrevented
     ? 0
     : Math.max(0, Number(input.fallDamage.amount) - slowFallReductionAmount);
   const withoutMitigationFrame =
     mitigationFrameIndex === null
-      ? featherFall.state
+      ? mitigationLanding.state
       : battleStateWithoutInterruptStackFrame(
-          featherFall.state,
+          mitigationLanding.state,
           mitigationFrameIndex,
         );
   const landedTarget = withoutMitigationFrame.combatants.get(input.targetId);
@@ -319,7 +322,7 @@ export function resolveFallDamageLanding(input: {
     fallDamagePrevented: effectiveFallDamage === 0,
     fallingPronePrevented: effectiveFallDamage === 0,
     slowFallReductionAmount: toDamageAmount(slowFallReductionAmount),
-    fallingCreatureMitigated: featherFall.tag === "mitigated",
+    fallingCreatureMitigated: mitigationLanding.tag === "mitigated",
   };
 }
 
