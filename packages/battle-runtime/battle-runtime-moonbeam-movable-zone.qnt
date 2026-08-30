@@ -71,6 +71,12 @@ module battleRuntimeMoonbeamMovableZone {
     moveFeet: int,
   }
 
+  pure val moonbeamLifecycle: PersistentAreaLifecycle =
+    CasterActionRepositionPersistentArea({
+      actionCost: PersistentAreaMagicAction,
+      maxDistanceFeet: moonbeamRepositionMaxMoveFeet,
+    })
+
   pure def moonbeamDamageRollAccepted(rolledDamage: int, damageDice: int): bool =
     persistentAreaDamageRollAccepted(
       rolledDamage,

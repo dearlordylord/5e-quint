@@ -125,6 +125,11 @@ module battleRuntimeCloudkillAreaHazard {
   pure val cloudkillDurationTicks: int = 100
   pure val cloudkillRadiusFeet: int = 20
   pure val cloudkillMovementFeet: int = 10
+  pure val cloudkillLifecycle: PersistentAreaLifecycle =
+    SourceTurnTranslationPersistentArea({
+      distanceFeet: cloudkillMovementFeet,
+      direction: PersistentAreaAwayFromSource,
+    })
 
   pure val initialCloudkillSemanticState: CloudkillSemanticState = {
     actionAvailable: true,

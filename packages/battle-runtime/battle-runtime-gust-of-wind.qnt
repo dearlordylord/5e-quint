@@ -37,6 +37,8 @@ module battleRuntimeGustOfWind {
   pure def gustOfWindLinePushFeet(): int = 15
 
   pure val noHeightenedSpellTarget = NoHeightenedSpellTarget
+  pure val gustOfWindLifecycle: PersistentAreaLifecycle =
+    CasterBonusActionDirectionReplacementPersistentArea
 
   pure def gustOfWindLineMovementCost(totalDistanceFeet: int, closerDistanceFeet: int): int =
     directionalPersistentAreaMovementCost(totalDistanceFeet, closerDistanceFeet)

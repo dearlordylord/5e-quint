@@ -30,10 +30,6 @@ module battleRuntimePersistentAreaCore {
     | PersistentAreaMagicAction
     | PersistentAreaBonusAction
 
-  type PersistentAreaCollisionDisposition =
-    | PersistentAreaStopsAndAffectsAdjacent
-    | PersistentAreaIgnoresObstacles
-
   type PersistentAreaTranslationDirection =
     | PersistentAreaAwayFromSource
 
@@ -46,8 +42,8 @@ module battleRuntimePersistentAreaCore {
     | CasterActionRepositionPersistentArea({
         actionCost: PersistentAreaActionCost,
         maxDistanceFeet: int,
-        collisionDisposition: PersistentAreaCollisionDisposition,
       })
+    | CasterBonusActionDirectionReplacementPersistentArea
 
   pure def persistentAreaIdentity(areaId: a): PersistentAreaIdentity[a] = {
     activeEffectAreaId: areaId,

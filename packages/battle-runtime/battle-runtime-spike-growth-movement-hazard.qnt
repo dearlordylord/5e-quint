@@ -15,6 +15,7 @@ module battleRuntimeSpikeGrowthMovementHazard {
   import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
 
   pure val spikeGrowthDurationTicks = 100
+  pure val spikeGrowthLifecycle: PersistentAreaLifecycle = StationaryPersistentArea
   pure val spikeGrowthAreaId = 7
   pure val spikeGrowthDamageIntervalFeet = 5
 

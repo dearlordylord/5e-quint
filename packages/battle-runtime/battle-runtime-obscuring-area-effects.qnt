@@ -11,6 +11,7 @@ module battleRuntimeObscuringAreaEffects {
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
   pure val fogCloudDurationTicks = 600
+  pure val fogCloudLifecycle: PersistentAreaLifecycle = StationaryPersistentArea
   pure val fogCloudAreaId = 2
   pure val fogCloudBaseRadiusFeet = 20
   pure val fogCloudRadiusFeetPerSlotAboveFirst = 20

@@ -16,6 +16,7 @@ module battleRuntimeGreaseGroundHazard {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   pure val greaseDurationTicks = 10
+  pure val greaseLifecycle: PersistentAreaLifecycle = StationaryPersistentArea
   pure val greaseAreaId = 1
   pure val noHeightenedSpellTarget = NoHeightenedSpellTarget
 

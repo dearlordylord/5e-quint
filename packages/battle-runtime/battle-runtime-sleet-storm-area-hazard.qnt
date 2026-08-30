@@ -13,6 +13,7 @@ module battleRuntimeSleetStormAreaHazard {
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
   pure val sleetStormDurationTicks = 10
+  pure val sleetStormLifecycle: PersistentAreaLifecycle = StationaryPersistentArea
   pure val sleetStormAreaId = 8
   pure val sleetStormRadiusFeet = 20
   pure val sleetStormHeightFeet = 40

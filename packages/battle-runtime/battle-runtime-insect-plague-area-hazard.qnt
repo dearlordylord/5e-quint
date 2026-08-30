@@ -29,6 +29,7 @@ module battleRuntimeInsectPlagueAreaHazard {
   pure val insectPlagueDamageDieSize: int = 10
   pure val insectPlagueRadiusFeet: int = 20
   pure val insectPlagueDurationTicks: int = 100
+  pure val insectPlagueLifecycle: PersistentAreaLifecycle = StationaryPersistentArea
 
   type InsectPlagueSaveTrigger =
     | InsectPlagueAppearanceOccurrence

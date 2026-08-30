@@ -13,6 +13,7 @@ module battleRuntimeWebRestraintAreaHazard {
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
   pure val webDurationTicks = 600
+  pure val webLifecycle: PersistentAreaLifecycle = StationaryPersistentArea
   pure val webAreaId = 4
   pure val webSideFeet = 20
 

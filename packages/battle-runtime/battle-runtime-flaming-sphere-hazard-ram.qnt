@@ -58,6 +58,12 @@ module battleRuntimeFlamingSphereHazardRam {
     moveFeet: int,
   }
 
+  pure val flamingSphereLifecycle: PersistentAreaLifecycle =
+    CasterActionRepositionPersistentArea({
+      actionCost: PersistentAreaBonusAction,
+      maxDistanceFeet: flamingSphereRamMaxMoveFeet,
+    })
+
   pure def flamingSphereMoveDistanceAccepted(moveFeet: int, maxMoveFeet: int): bool =
     persistentAreaMoveDistanceAccepted(moveFeet, maxMoveFeet)
 
