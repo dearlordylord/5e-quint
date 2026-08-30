@@ -37,14 +37,14 @@ import {
   completeShortRest,
   convertFontOfMagicSpellSlotToSorceryPoints,
   convertFontOfMagicSorceryPointsToSpellSlot,
-  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  rebuildCharacterSheet as rebuildCharacterSheetCore,
   finishLongRest,
   finishShortRest,
   startLongRest,
   startShortRest,
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
-  type CharacterSheetInput,
+  type CharacterSheetRebuildInput,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
@@ -886,7 +886,7 @@ function sheetFixture(
     readonly tempHp?: number;
   } & Partial<
     Pick<
-      CharacterSheetInput,
+      CharacterSheetRebuildInput,
       | "conditions"
       | "spellSlotExpenditures"
       | "resourceExpenditures"
@@ -896,13 +896,14 @@ function sheetFixture(
   >,
 ): CharacterSheet {
   return requireRight(
-    createFreshCharacterSheetCore({
+    rebuildCharacterSheetCore({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
       currentHp: Hp(input.currentHp),
       tempHp: Hp(input.tempHp ?? 0),
       hitPointMaximumReduction: Hp(0),
       conditions: input.conditions ?? [],
+      companion: { tag: "none" },
       unitLibrary,
       ...(input.spellSlotExpenditures === undefined
         ? {}
