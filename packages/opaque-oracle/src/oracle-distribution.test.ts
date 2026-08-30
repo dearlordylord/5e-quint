@@ -88,6 +88,7 @@ type OracleStreamProcess = {
   readonly activeWaiters: Set<OracleStreamFrameWaiter>;
   readonly queuedLines: string[];
   readonly frameBytes: number[];
+  nextFramePhase: OracleStreamFramePhase;
   exited: boolean;
   closed: boolean;
   closeResult: OracleStreamClose | undefined;
@@ -112,6 +113,16 @@ type OracleStreamFrameWaiter = {
   readonly fail: (cause: Error) => void;
 };
 
+type OracleStreamFramePhase = "coldStart" | "persistent";
+
+type OracleStreamFrameOptions = {
+  readonly scenario: string;
+  readonly timeoutMs?: number;
+};
+
+// Shared-host contention has delayed cold package import to 87.47s. This
+// margin remains below the distribution tests' 300s outer lifecycle policy.
+const ORACLE_SHARED_HOST_COLD_START_DEADLINE_MS = 120_000;
 const ORACLE_STREAM_FRAME_TIMEOUT_MS = 10_000;
 const ORACLE_STREAM_CLOSE_TIMEOUT_MS = 10_000;
 
@@ -241,6 +252,7 @@ function launchOracleStream(
     activeWaiters: new Set(),
     queuedLines: [],
     frameBytes: [],
+    nextFramePhase: "coldStart",
     exited: false,
     closed: false,
     closeResult: undefined,
@@ -324,7 +336,7 @@ function launchOracleStream(
 function evaluateOracleStreamFrame(
   process: OracleStreamProcess,
   body: Uint8Array,
-  options: { readonly timeoutMs?: number } = {},
+  options: OracleStreamFrameOptions,
 ): Promise<OracleStreamFrameObservation> {
   return new Promise<OracleStreamFrameObservation>((resolve, reject) => {
     if (process.protocolFailure !== undefined) {
@@ -335,7 +347,14 @@ function evaluateOracleStreamFrame(
     let response: OracleBatchResponse | undefined;
     let rawLine: string | undefined;
     let writesRemaining = 2;
-    const timeoutMs = options.timeoutMs ?? ORACLE_STREAM_FRAME_TIMEOUT_MS;
+    const phase = process.nextFramePhase;
+    process.nextFramePhase = "persistent";
+    const phaseTimeoutMs = Match.value(phase).pipe(
+      Match.when("coldStart", () => ORACLE_SHARED_HOST_COLD_START_DEADLINE_MS),
+      Match.when("persistent", () => ORACLE_STREAM_FRAME_TIMEOUT_MS),
+      Match.exhaustive,
+    );
+    const timeoutMs = options.timeoutMs ?? phaseTimeoutMs;
     const waiter: OracleStreamFrameWaiter = {
       accept: (line) => {
         try {
@@ -390,7 +409,21 @@ function evaluateOracleStreamFrame(
     const timer = setTimeout(() => {
       fail(
         new Error(
-          `Oracle stream frame timed out after ${timeoutMs}ms without one response.`,
+          [
+            "Oracle stream response timed out",
+            `phase=${phase}`,
+            `scenario=${JSON.stringify(options.scenario)}`,
+            `deadlineMs=${timeoutMs}`,
+            `pid=${String(process.child.pid)}`,
+            `exitCode=${String(process.child.exitCode)}`,
+            `signalCode=${String(process.child.signalCode)}`,
+            `stdoutCompleteLines=${process.rawLines.length}`,
+            `stdoutQueuedLines=${process.queuedLines.length}`,
+            `stdoutPartialFrameBytes=${process.frameBytes.length}`,
+            `pendingFrames=${process.pendingWaiters.length}`,
+            `activeFrames=${process.activeWaiters.size}`,
+            `stderr=${JSON.stringify(process.stderr())}`,
+          ].join(", "),
         ),
       );
     }, timeoutMs);
@@ -504,7 +537,9 @@ async function evaluateOracleNamedStreamFrames<Name extends string>(
   for (const name of names) {
     observations.set(
       name,
-      await evaluateOracleStreamFrame(process, bodies[name]),
+      await evaluateOracleStreamFrame(process, bodies[name], {
+        scenario: name,
+      }),
     );
   }
   await waitForOracleStreamClose(process);
@@ -602,6 +637,7 @@ async function launchOracleServe(
   executable: string,
   cwd: string,
   preload: string,
+  scenario: string,
   port = "0",
 ): Promise<OracleServeProcess> {
   const child: ChildProcessByStdio<null, Readable, Readable> = spawn(
@@ -644,8 +680,22 @@ async function launchOracleServe(
         });
       }
       const timeout = setTimeout(() => {
-        fail(new Error("Oracle serve readiness timed out."));
-      }, 10_000);
+        fail(
+          new Error(
+            [
+              "Oracle serve readiness timed out",
+              "phase=coldStart",
+              `scenario=${JSON.stringify(scenario)}`,
+              `deadlineMs=${ORACLE_SHARED_HOST_COLD_START_DEADLINE_MS}`,
+              `pid=${String(child.pid)}`,
+              `exitCode=${String(child.exitCode)}`,
+              `signalCode=${String(child.signalCode)}`,
+              `stdout=${JSON.stringify(stdoutChunks.join(""))}`,
+              `stderr=${JSON.stringify(stderrChunks.join(""))}`,
+            ].join(", "),
+          ),
+        );
+      }, ORACLE_SHARED_HOST_COLD_START_DEADLINE_MS);
       lines.once("line", (line) => {
         try {
           const decoded = decodeJson(OracleHttpReadinessSchema, line);
@@ -1208,6 +1258,7 @@ describe("Opaque Oracle source-free distribution", () => {
         executable,
         cleanWorkingDirectory,
         preload,
+        "packaged HTTP service",
       );
       running = runningProcess;
       const post = (
@@ -1338,6 +1389,7 @@ describe("Opaque Oracle source-free distribution", () => {
         executable,
         cleanWorkingDirectory,
         preload,
+        "packaged HTTP service restart",
       );
       running = secondRunningProcess;
       expect(secondRunningProcess.readiness.port).toBeGreaterThan(0);
@@ -1352,6 +1404,7 @@ describe("Opaque Oracle source-free distribution", () => {
         defectBuild.executablePath,
         cleanWorkingDirectory,
         preload,
+        "packaged defect HTTP service",
       );
       running = defectProcess;
       const defectResponse = await requestOracle(defectProcess.readiness.port, {
@@ -1559,6 +1612,7 @@ describe("Opaque Oracle source-free distribution", () => {
           const observation = await evaluateOracleStreamFrame(
             streamProcess,
             scenario.body,
+            { scenario: scenario.name },
           );
           cliByScenario.set(scenario, observation.response);
           cliObservations.push(observation);
@@ -1596,6 +1650,7 @@ describe("Opaque Oracle source-free distribution", () => {
         ordinaryBuild.executablePath,
         cleanWorkingDirectory,
         preload,
+        "persistent parity HTTP service",
       );
       running = runningProcess;
       expect(runningProcess.readiness.host).toBe("127.0.0.1");
@@ -1769,6 +1824,7 @@ describe("Opaque Oracle source-free distribution", () => {
         defectBuild.executablePath,
         cleanWorkingDirectory,
         preload,
+        "parity defect HTTP service",
       );
       running = defectProcess;
       expect(defectProcess.readiness.host).toBe("127.0.0.1");
@@ -1878,6 +1934,7 @@ describe("Opaque Oracle source-free distribution", () => {
       try {
         await expect(
           evaluateOracleStreamFrame(extraLinesProcess, Buffer.from("{}"), {
+            scenario: "extra response lines",
             timeoutMs: 1_000,
           }),
         ).rejects.toThrow(
@@ -1909,7 +1966,7 @@ describe("Opaque Oracle source-free distribution", () => {
         const observation = await evaluateOracleStreamFrame(
           trailingLineProcess,
           Buffer.from("{}"),
-          { timeoutMs: 1_000 },
+          { scenario: "inherited trailing response line", timeoutMs: 1_000 },
         );
         expect(observation.rawLine).toBe(response);
         expect(trailingLineProcess.exited).toBe(true);
@@ -1932,6 +1989,7 @@ describe("Opaque Oracle source-free distribution", () => {
       try {
         await expect(
           evaluateOracleStreamFrame(missingResponseProcess, Buffer.from("{}"), {
+            scenario: "process closes without response",
             timeoutMs: 1_000,
           }),
         ).rejects.toThrow(
@@ -1952,10 +2010,11 @@ describe("Opaque Oracle source-free distribution", () => {
       try {
         await expect(
           evaluateOracleStreamFrame(silentProcess, Buffer.from("{}"), {
+            scenario: "silent process",
             timeoutMs: 25,
           }),
         ).rejects.toThrow(
-          "Oracle stream frame timed out after 25ms without one response.",
+          /Oracle stream response timed out, phase=coldStart, scenario="silent process", deadlineMs=25, pid=\d+, exitCode=null, signalCode=null, stdoutCompleteLines=0, stdoutQueuedLines=0, stdoutPartialFrameBytes=0, pendingFrames=1, activeFrames=1, stderr=""/u,
         );
         expect(silentProcess.pendingWaiters).toHaveLength(0);
         expect(silentProcess.activeWaiters.size).toBe(0);
