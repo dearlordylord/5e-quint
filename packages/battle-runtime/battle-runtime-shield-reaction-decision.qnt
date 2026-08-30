@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.reaction-shield
 
 module battleRuntimeShieldReactionDecision {
+  import battleRuntimeTriggeredArmorDefense.* from "./battle-runtime-triggered-armor-defense"
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
@@ -19,8 +20,12 @@ module battleRuntimeShieldReactionDecision {
   pure def shieldReactionFrameIsFreshGoblinTarget(
     frame: PendingReactionFrame,
   ): bool =
-    pendingReactionFrameIsCanonical(frame) and
-      reactionFrameReactor(frame) == Goblin
+    triggeredArmorDefenseReactionAdmitted(
+      pendingReactionFrameIsCanonical(frame),
+      reactionFrameReactor(frame) == Goblin,
+      true,
+      true,
+    )
 
   pure def declineShieldReactionDecision(
     state: BattleState,
