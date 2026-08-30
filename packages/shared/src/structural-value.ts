@@ -1,3 +1,5 @@
+import { Match } from "effect";
+
 /**
  * Compare strings by Unicode code point. JSON object member ordering and
  * canonical set ordering use the same comparator throughout the workspace.
@@ -157,17 +159,18 @@ function processCanonicalStructuralValue(
   frame: Extract<CanonicalStructuralFrame, { readonly tag: "visit" }>,
   state: CanonicalStructuralState,
 ): void {
-  switch (frame.value.kind) {
-    case "null":
+  return Match.value(frame.value).pipe(
+    Match.when({ kind: "null" }, () => {
       state.output.push("null;");
-      return;
-    case "object":
-      processCanonicalObjectValue(frame.value.value, frame.depth, state);
-      return;
-    case "primitive":
-      state.output.push(canonicalPrimitiveStructuralToken(frame.value.value));
-      return;
-  }
+    }),
+    Match.when({ kind: "object" }, ({ value }) => {
+      processCanonicalObjectValue(value, frame.depth, state);
+    }),
+    Match.when({ kind: "primitive" }, ({ value }) => {
+      state.output.push(canonicalPrimitiveStructuralToken(value));
+    }),
+    Match.exhaustive,
+  );
 }
 
 function canonicalStructuralValue(value: unknown): CanonicalStructuralValue {
