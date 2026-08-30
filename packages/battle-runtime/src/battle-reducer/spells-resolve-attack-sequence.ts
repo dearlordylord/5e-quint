@@ -1096,7 +1096,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     }
   | Exclude<BattleResolutionResult, { readonly tag: "resolved" }> {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (spellObjectPartHasMirrorImageDuplicateRoll(input.partFill)) {
+  if (spellObjectPartHasDuplicateHitInterceptionRoll(input.partFill)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
@@ -1363,7 +1363,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
   };
 }
 
-function spellObjectPartHasMirrorImageDuplicateRoll(
+function spellObjectPartHasDuplicateHitInterceptionRoll(
   partFill: SpellAttackSequencePartFillSet,
 ): boolean {
   return partFill.duplicateHitInterceptionRoll !== undefined;
