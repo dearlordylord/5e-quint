@@ -8,7 +8,7 @@
   },
   "candidate": {
     "byteLength": 52152897,
-    "sha256": "927e9388977ac9781b6c7ace99760fdd43a2bf48fa49bb95381584fecc30c78f"
+    "sha256": "06caf573f4a04809c8f8e4ec75e7ca8166aa70b3e050ffca5e76dcabe36dc2bb"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -83459,7 +83459,7 @@
       {
         "delta": {
           "baselineSha256": "bcd89ed5eccba5ce9d7a5bd7355353c118bf2bb232c719cc2c5ee2d05a2779a7",
-          "candidateSha256": "969c5f92a3aa563b2eee167a4ec4495d16d04b0428822fc06b7d5354125cd93b",
+          "candidateSha256": "6148a8b976ba335143236933cf4aad96737652d964259f73b3efd2976ef07f22",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -103536,7 +103536,7 @@
       {
         "delta": {
           "baselineSha256": "e93601b57bc68014c93a57684be5526b020671d15fb6ded610884c4aa7e2f9b7",
-          "candidateSha256": "1a8853b254c332d1e4cfd56ff8198585f2c64a2d807fd595df1a1583cde93692",
+          "candidateSha256": "423d235a25ddc6cb6773bfbcb28d4488cd453a894fac7396c6016953ddf408bb",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -168618,91 +168618,63 @@
         "reasonId": "mcp-registration-contract-migration"
       }
     ],
-    "identitySha256": "a4e65823e86ec520354bdc2f212f1d0cf7af780fb5a610197e0d15ae1a559bd7",
+    "identitySha256": "f580748a45802d4f0d04f621a5fad558abe85021294654e3b2d41e4390ccdc8d",
     "reviewedReasons": [
       {
-        "changedCollectionAuthorityIds": [],
+        "id": "mcp-registration-contract-migration",
         "deltaCount": 2260,
         "deltaIdentitySha256": "7a71dee6e6ff3e590bfd62c50d06a2d75254924b1aaa6e38f84ae765a68f7820",
-        "id": "mcp-registration-contract-migration",
-        "operations": {
-          "added": 691,
-          "changed": 65,
-          "removed": 1504
-        },
-        "siteSha256": "b66ae06754167b1e217074ef98eae79931bdb8e6226ecab1f9dea87a68c99a29"
+        "siteSha256": "b66ae06754167b1e217074ef98eae79931bdb8e6226ecab1f9dea87a68c99a29",
+        "operations": { "added": 691, "removed": 1504, "changed": 65 },
+        "changedCollectionAuthorityIds": []
       },
       {
-        "changedCollectionAuthorityIds": [],
+        "id": "mcp-protocol-contract-migration",
         "deltaCount": 2738,
         "deltaIdentitySha256": "fcecc0c78309e9da310943795a0159c208de0542dbe82ed8da7d48859216e638",
-        "id": "mcp-protocol-contract-migration",
-        "operations": {
-          "added": 998,
-          "changed": 156,
-          "removed": 1584
-        },
-        "siteSha256": "7b86536454de023563ce74eba0c141399e8073b701ecb6a61ddd429c97137def"
+        "siteSha256": "7b86536454de023563ce74eba0c141399e8073b701ecb6a61ddd429c97137def",
+        "operations": { "added": 998, "removed": 1584, "changed": 156 },
+        "changedCollectionAuthorityIds": []
       },
       {
-        "changedCollectionAuthorityIds": [],
+        "id": "mcp-authenticated-contract-migration",
         "deltaCount": 2081,
         "deltaIdentitySha256": "d2aa4a91b9d329c896557cd50b3c9af1503618299e8a298497a769534d9a6e92",
-        "id": "mcp-authenticated-contract-migration",
-        "operations": {
-          "added": 769,
-          "changed": 120,
-          "removed": 1192
-        },
-        "siteSha256": "9944213d9777e4b7f28752fdb644152986770e515f1b6b81d9e52b8e37017deb"
+        "siteSha256": "9944213d9777e4b7f28752fdb644152986770e515f1b6b81d9e52b8e37017deb",
+        "operations": { "added": 769, "removed": 1192, "changed": 120 },
+        "changedCollectionAuthorityIds": []
       },
       {
-        "changedCollectionAuthorityIds": [],
+        "id": "persisted-session-effect-schema-migration",
         "deltaCount": 22,
         "deltaIdentitySha256": "6399fe411bf216f2fe1c0b47508207e33df6c55bdfa325c5bcabc5aba070147e",
-        "id": "persisted-session-effect-schema-migration",
-        "operations": {
-          "added": 6,
-          "changed": 4,
-          "removed": 12
-        },
-        "siteSha256": "0aa3cc8bb60ed27ea4e5e0bdf8b44accc094e935c174934070247482a0b27da5"
+        "siteSha256": "0aa3cc8bb60ed27ea4e5e0bdf8b44accc094e935c174934070247482a0b27da5",
+        "operations": { "added": 6, "removed": 12, "changed": 4 },
+        "changedCollectionAuthorityIds": []
       },
       {
-        "changedCollectionAuthorityIds": ["raw-swarm-artifacts"],
-        "deltaCount": 57,
-        "deltaIdentitySha256": "6c7461445ddfdfc87824b94e11520c4bc83fadf3e3d49c98b461ed3c6d8fefda",
         "id": "raw-swarm-effect-runtime-artifacts",
-        "operations": {
-          "added": 43,
-          "changed": 14,
-          "removed": 0
-        },
-        "siteSha256": "a4649e76c5d73719ca67f347104b601b81e9583c033af88e33fe9d0867a2b158"
+        "deltaCount": 57,
+        "deltaIdentitySha256": "5839f85da31a5f9d6eeda4f1eb725755d7fcb82404dd7075ef808b1f7770cf36",
+        "siteSha256": "a4649e76c5d73719ca67f347104b601b81e9583c033af88e33fe9d0867a2b158",
+        "operations": { "added": 43, "removed": 0, "changed": 14 },
+        "changedCollectionAuthorityIds": ["raw-swarm-artifacts"]
       },
       {
-        "changedCollectionAuthorityIds": [],
+        "id": "surface-publication-contract-convergence",
         "deltaCount": 4,
         "deltaIdentitySha256": "21c6f15465e2d67c9574b3d3dd0742c3941903be511b4b0468e59878c747d149",
-        "id": "surface-publication-contract-convergence",
-        "operations": {
-          "added": 0,
-          "changed": 4,
-          "removed": 0
-        },
-        "siteSha256": "e91697ac1ffd254ef06de3a1ac9c90d0aaa36ae30bc2c1bbdaf48e4a30f89270"
+        "siteSha256": "e91697ac1ffd254ef06de3a1ac9c90d0aaa36ae30bc2c1bbdaf48e4a30f89270",
+        "operations": { "added": 0, "removed": 0, "changed": 4 },
+        "changedCollectionAuthorityIds": []
       },
       {
-        "changedCollectionAuthorityIds": [],
+        "id": "surface-authored-contract-convergence",
         "deltaCount": 84,
         "deltaIdentitySha256": "3493a5316212b8f2f2203f783c583121217faa076870dbe504b40aab591da9cf",
-        "id": "surface-authored-contract-convergence",
-        "operations": {
-          "added": 0,
-          "changed": 84,
-          "removed": 0
-        },
-        "siteSha256": "fc9c6eeeba1aa9f94518ff8d2b9cc6aabb4153b39fec38535872db62c577e51b"
+        "siteSha256": "fc9c6eeeba1aa9f94518ff8d2b9cc6aabb4153b39fec38535872db62c577e51b",
+        "operations": { "added": 0, "removed": 0, "changed": 84 },
+        "changedCollectionAuthorityIds": []
       }
     ],
     "totalCount": 7246

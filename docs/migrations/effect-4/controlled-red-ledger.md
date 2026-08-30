@@ -936,8 +936,8 @@ driver closure (8/8), MBT script inventory (all 147 Battle tests accounted),
 QNT inventory (775/775), and the Battle Runtime package typecheck also passed.
 
 Public MBTs passed sequentially under their required lock: Insect Plague 4/4,
-Cloudkill 6/6, Protection selected identity 7/7, and Protection turn boundary
-8/8. Direct semantic verification passed 16 QNT typechecks and 21 Quint tests
+Cloudkill 6/6, Condition Saving Throw selected identity 7/7, and Turn Boundary
+Effect Lifecycle 8/8. Direct semantic verification passed 16 QNT typechecks and 21 Quint tests
 across the selected modules (3 + 8 + 7 + 2 + 1). Four sampled runs completed
 100 samples each: Cloudkill at maxSteps 2 with seed
 `0x66e0437b79ede492`, Insect Plague at maxSteps 8 with seed
@@ -1191,8 +1191,9 @@ not run for this issue snapshot.
 
 ## Issue #386 current certification and controlled-red closure
 
-The current integrated source fixed point is `b8ef76bec`; refreshed generated
-certification artifacts are committed at `0cd6b8133`. The final controlled-red
+The current integrated source fixed point is `15ba8ebe2`; refreshed generated
+certification artifacts are committed at `0cd6b8133`, and the reviewed Raw
+Swarm declaration measure is committed at `abc67795b`. The final controlled-red
 inventory still covers all 13 package owners with zero recorded diagnostics,
 and its SHA-256 remains
 `347dde4c3f6ed0a2c0f674fd0c2dce8edfacbc3135ebc7f7b0ee7c29c008c036`.
@@ -1202,28 +1203,75 @@ the integrated fixed point; any observed diagnostic is an ordinary blocker.
 
 The immutable Effect 3 oracle remains 12,997,527 bytes with SHA-256
 `dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
-The current v2 Effect 4 certificate records exactly 7,246 reviewed identities,
-has identity SHA-256
-`a4e65823e86ec520354bdc2f212f1d0cf7af780fb5a610197e0d15ae1a559bd7`,
-is 4,656,476 bytes with artifact SHA-256
-`2ca55425776b8b574ff88e57e5ceddcbcd349b652c2873c28619745332a645f6`,
-and passes all 15 self-tests plus two deterministic current verifications. The
+The current Effect 4 candidate remains 52,152,897 bytes and has SHA-256
+`06caf573f4a04809c8f8e4ec75e7ca8166aa70b3e050ffca5e76dcabe36dc2bb`.
+The staged v2 certificate records exactly 7,246 reviewed identities, has
+identity SHA-256
+`f580748a45802d4f0d04f621a5fad558abe85021294654e3b2d41e4390ccdc8d`,
+and is 4,656,210 bytes with artifact SHA-256
+`63eade8b0bd7bfa304d7bff83bfade023d70cc9cd1f9435d271b9bc208eed502`.
+Exactly two `scripts/raw-swarm/OPERATIONS.md` identities were replaced under
+the existing Raw Swarm reason; all per-reason counts remain unchanged. The
+strict decoder passed, two self-test invocations passed all 15 tests, and one
+full current verification passed for all 7,246 identities. A second independent
+`pnpm check:effect4-oracle-delta` ran under the broad lock and completed at
+2026-08-30T20:49Z with exit 0 and
+`Effect 4 finite oracle delta verified (7246 reviewed identities).` The
 #381 generated manifest selects 58 obligations and has SHA-256
 `998be34b672077873b47937ae532d781d144e5dfdec6329af38eae16c096e01b`;
 focused coverage accounting is 147 Rules Kernel obligations and 400 Units / 258
 profiles.
 
-The proof-lane closure checks passed, but `pnpm proof:qnt` did not pass. The
-attempt reported failures for
+The proof-lane closure checks passed, but the first `pnpm proof:qnt` attempt did
+not pass. The attempt reported failures for
 `metamagic-options-and-quickened-restoration`, `restoration`, `scalar-buff`,
 `spatial-movement-spell`, and `spellcasting-and-utility-facts`, then was
 manually cancelled with exit 130. No partial proof result is accepted as
 closure evidence.
 
+Commit `15ba8ebe2` repairs the shared Feather Fall trigger-witness type and the
+Jump landing-fact match exposed by those failures. Under one focused MBT lock,
+all five roots then typechecked and their 29 discovered tests passed with exit 0. QNT inventory remained 806/806, proof closure remained within 60 files and
+12,500 lines, and MBT driver closure passed. The #381 manifest retained 58
+obligations; Rules Kernel coverage retained 147 obligations; Unit Profile
+coverage retained 400 Units / 258 profiles. Independent RAW, domain,
+architecture, connascence, and Quint review reported no findings.
+
+A later public `pnpm proof:qnt` run passed its inventory and closure gates and
+advanced beyond the repaired `metamagic-options-and-quickened-restoration`
+owner. Its terminal exit was not observed because the attached command session
+was lost. The operator directed that this full lane not be rerun. This records
+an accepted execution risk and does not describe the full proof lane as
+verified.
+
+The four required SR-00 Battle MBT public scripts have final observed results:
+
+| Public command                                                                            |             Final result |
+| ----------------------------------------------------------------------------------------- | -----------------------: |
+| `pnpm --filter @dnd/battle-runtime run test:mbt:condition-saving-throw-selected-identity` | 2/2 tests passed; exit 0 |
+| `pnpm --filter @dnd/battle-runtime run test:mbt:turn-boundary-effect-lifecycle`           | 8/8 tests passed; exit 0 |
+| `pnpm --filter @dnd/battle-runtime run test:mbt:insect-plague-area-hazard`                | 4/4 tests passed; exit 0 |
+| `pnpm --filter @dnd/battle-runtime run test:mbt:cloudkill-area-hazard`                    | 6/6 tests passed; exit 0 |
+
+The condition-saving result follows the production Sleep lifecycle-route repair
+and the ordered-frontier fixture repair. One unseeded transient `invalid`
+failure did not reproduce during its diagnostic rerun, so no speculative
+semantic or QNT change was made. The turn-boundary result uses an admitted Sleep
+cast with Wizard at initiative 20 casting on Fighter at 15, Fighter current
+after Wizard's turn ends, and Goblin at 10 next for the boundary cohort; the
+assertion names the canonical
+`stagedConditionRepeatSave` field. These observed MBT passes do not change the
+full `pnpm proof:qnt` record above: its terminal result remains unobserved, the
+operator declined a rerun, and it is not recorded as passed.
+
+The complete clean-consumer smoke passed after the reviewed cap correction,
+including deployed MCP, container, Raw Swarm consumer, and SIGINT/SIGTERM
+lifecycle cases. Its exact public declaration graph is 523 files and 3,965,396
+bytes under the unchanged 10 MiB cap, leaving 6,520,364 bytes of margin.
+
 This final-current paragraph does not rewrite the historical issue snapshots
-above. It also does not claim a QNT proof pass or the required Battle MBTs,
-clean-consumer smoke, broad typecheck/test/build/quality gates, live GitHub
-closure, or final review Round 2. The current evidence, 101-file QNT scope,
+above. It also does not claim a complete QNT proof pass, broad
+typecheck/test/build/quality gates, live GitHub closure, or final review Round 2. The current evidence, 101-file QNT scope,
 Temporary Hit Point keep/replace disposition, A51 Hypnotic Pattern reachability
 model, Standards convergence, and remaining Spec blockers are owned by
 [`final-parity-report.md`](./final-parity-report.md). Issues #381 and #386 and

@@ -522,7 +522,27 @@ export function hitPointBudgetConditionRepeatSaveRouteForResolution(
   if (endConcentrationRoute !== undefined) {
     return endConcentrationRoute;
   }
-  return undefined;
+
+  const casterTurnRoute = hitPointBudgetConditionRepeatSaveCasterTurnRoute(
+    input,
+    result,
+  );
+  if (casterTurnRoute !== undefined) {
+    return casterTurnRoute;
+  }
+
+  if (
+    !isStagedSaveConditionSubject(input.state, input.subject) ||
+    result.tag !== "resolved" ||
+    !fillsIncludeSavingThrowOutcome(input.fills)
+  ) {
+    return undefined;
+  }
+  return hitPointBudgetConditionRepeatSaveResolvedRoutes({
+    before: input.state,
+    after: result.state,
+    sourceCombatantId: input.subject.actorId,
+  });
 }
 
 export function repeatSaveConditionEffectRouteForResolution(
@@ -556,6 +576,10 @@ export function repeatSaveConditionEffectRouteForResolution(
   }
   const includesStagedConditionRepeatSave =
     fillsIncludeStagedConditionRepeatSave(input);
+  const activeEffectsChanged = includesStagedConditionRepeatSave
+    ? hitPointBudgetConditionRepeatSaveEffectCount(input.state) !==
+      hitPointBudgetConditionRepeatSaveEffectCount(result.state)
+    : combatantsActiveEffectsChanged(input.state, result.state);
   return nonEmptyRouteEvents([
     ...(includesStagedConditionRepeatSave ||
     combatantsConditionsChanged(input.state, result.state)
@@ -568,7 +592,7 @@ export function repeatSaveConditionEffectRouteForResolution(
           ),
         ]
       : []),
-    ...(combatantsActiveEffectsChanged(input.state, result.state)
+    ...(activeEffectsChanged
       ? [
           resolveBattleSubjectWithoutFillRoute(
             "repeatSaveConditionEffect" as const,
@@ -587,6 +611,10 @@ export function repeatSaveConditionEffectRouteForResolution(
         ]
       : []),
   ]);
+}
+
+function fillsIncludeSavingThrowOutcome(fills: readonly BattleFill[]): boolean {
+  return fills.some((fill) => fill.kind === "savingThrowOutcome");
 }
 
 function fillsIncludeRepeatSaveConditionEffect(
@@ -669,6 +697,69 @@ function hitPointBudgetConditionRepeatSaveConcentrationBreakRoute(
       input.state,
       result.state,
     ),
+  ]);
+}
+
+function hitPointBudgetConditionRepeatSaveCasterTurnRoute(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (
+    !isEndTurnSubject(input.subject) ||
+    input.fills.length !== 0 ||
+    result.tag !== "resolved" ||
+    !combatantOwnsPendingHitPointBudgetConditionRepeatSaveEffect(
+      input.state,
+      input.subject.actorId,
+    )
+  ) {
+    return undefined;
+  }
+  return [
+    hitPointBudgetConditionRepeatSaveResolveWithoutFill(
+      [],
+      "battleTurnBoundary",
+    ),
+  ];
+}
+
+function hitPointBudgetConditionRepeatSaveResolvedRoutes(input: {
+  readonly before: BattleState;
+  readonly after: BattleState;
+  readonly sourceCombatantId: CombatantId;
+}): BattleReducerRouteEvents | undefined {
+  return nonEmptyRouteEvents([
+    ...(combatantsConditionsChanged(input.before, input.after)
+      ? [
+          resolveBattleSubjectRoute(
+            "repeatSaveConditionEffect" as const,
+            "savingThrowOutcome" as const,
+            [],
+            "battleConditionLifecycle" as const,
+          ),
+        ]
+      : []),
+    ...(hitPointBudgetConditionRepeatSaveEffectCount(input.before) !==
+    hitPointBudgetConditionRepeatSaveEffectCount(input.after)
+      ? [
+          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
+            [],
+            "battleActiveEffect",
+          ),
+        ]
+      : []),
+    ...(combatantConcentrationChanged(
+      input.before,
+      input.after,
+      input.sourceCombatantId,
+    )
+      ? [
+          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
+            [],
+            "battleConcentration",
+          ),
+        ]
+      : []),
   ]);
 }
 
@@ -913,6 +1004,34 @@ function stagedSaveConditionRouteHoles(
     );
   }
   return battleReducerRouteHoles(savingThrowHoles);
+}
+
+function combatantOwnsPendingHitPointBudgetConditionRepeatSaveEffect(
+  state: BattleState,
+  combatantId: CombatantId,
+): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) =>
+        effect.kind === "stagedSaveConditionPendingRepeat" &&
+        effect.expiresAt.combatantId === combatantId,
+    ),
+  );
+}
+
+function hitPointBudgetConditionRepeatSaveEffectCount(
+  state: BattleState,
+): number {
+  return [...state.combatants.values()].reduce(
+    (count, combatant) =>
+      count +
+      combatant.activeEffects.filter(
+        (effect) =>
+          effect.kind === "stagedSaveConditionPendingRepeat" ||
+          effect.kind === "stagedSaveConditionApplied",
+      ).length,
+    0,
+  );
 }
 
 function combatantOwnsHitPointBudgetConditionRepeatSaveEffect(

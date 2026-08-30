@@ -49,10 +49,17 @@ import {
   characterSeed,
   damageRollFillWithGroups,
   fighterId,
+  findAct,
   findHole,
   goblinId,
+  magicSubject,
+  resolveBattleSubject,
   savingThrowOutcomeFill,
+  spellRecord,
+  startBattleSessionRight,
   startBattleRight,
+  wizardId,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
   battleReducerStartRouteEvent,
@@ -388,7 +395,8 @@ describe("turn-boundary effect lifecycle MBT", () => {
     expect(
       awaitingBoundary.holes.some(
         (hole) =>
-          hole.kind === "savingThrowOutcome" && "sleepRepeatSave" in hole,
+          hole.kind === "savingThrowOutcome" &&
+          "stagedConditionRepeatSave" in hole,
       ),
     ).toBe(true);
     expect(
@@ -924,24 +932,39 @@ function battleWithTurnBoundaryEffectsAndConditionSave(): BattleState {
 }
 
 function battleWithTurnBoundaryEffectsAndSleepRepeatSave(): BattleState {
-  const battle = battleWithTurnBoundaryEffects();
-  const allocated = battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
-    state: battle,
-    sourceCombatantId: goblinId,
-    ownerId: fighterId,
-    effect: stagedSaveConditionPendingRepeatEffect(),
+  const session = startBattleSessionRight({
+    battleId: battleId("battle-turn-boundary-sleep-repeat-save-frontier"),
+    combatants: [
+      characterSeed({ combatantId: fighterId, initiative: 15 }),
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Sleep caster",
+        initiative: 20,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          cantrips: [],
+          preparedSpells: [spellRecord("sleep")],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        }),
+      }),
+      characterSeed({ combatantId: goblinId, initiative: 10 }),
+    ],
   });
-  const goblin = requireCombatant(allocated.state, goblinId);
-  return {
-    ...allocated.state,
-    combatants: new Map(allocated.state.combatants).set(goblinId, {
-      ...goblin,
-      concentration: {
-        sourceProcedureRef: allocated.sourceProcedureRef,
-        effectKind: "spellEffect",
-      },
-    }),
-  };
+  const act = findAct(session, magicSubject("sleep"));
+  const initialSave = findHole(act.initialHoles, "savingThrowOutcome");
+  const cast = resolveBattleSubject({
+    state: session.state,
+    subject: act.subject,
+    fills: [
+      savingThrowOutcomeFill(initialSave, [
+        { targetId: fighterId, succeeded: false },
+      ]),
+    ],
+  });
+  assertResolved(cast, "Sleep mixed-boundary setup cast");
+  const fighterTurn = endTurn({ state: cast.state, actorId: wizardId });
+  assertResolved(fighterTurn, "Sleep mixed-boundary caster turn");
+  return battleWithTurnBoundaryEffects({ baseBattle: fighterTurn.state });
 }
 
 function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
@@ -970,18 +993,6 @@ function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
         effectKind: "spellEffect",
       },
     }),
-  };
-}
-
-function stagedSaveConditionPendingRepeatEffect(): Extract<
-  LowLevelEffectOccurrenceTemplate,
-  { readonly kind: "stagedSaveConditionPendingRepeat" }
-> {
-  return {
-    kind: "stagedSaveConditionPendingRepeat",
-    conditionHadNonSpellSource: false,
-    repeatAt: { kind: "endOfTurn", combatantId: fighterId, round: Round(1) },
-    expiresAt: { kind: "concentration", combatantId: goblinId },
   };
 }
 
