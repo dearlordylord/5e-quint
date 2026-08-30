@@ -258,7 +258,9 @@ describe("Surface authored string role traversal", () => {
         ...record,
         value: { ...record.value, unexpectedString: "not part of the schema" },
       }),
-    ).toThrow();
+    ).toThrow(
+      /Surface record failed schema decoding at .*: Expected no excess property[\s\S]*\["unexpectedString"\]/,
+    );
     expect(() =>
       traversal.decodeSurfaceRecord({
         ...record,
