@@ -176,6 +176,12 @@ The character-creation tool boundary exposes these user-facing tools:
   character choices still come from `discover_creation_holes`.
 - `list_stat_blocks` lists selectable SRD Stat Block ids, display names,
   attacks, defenses, damage modifiers, and provenance for `select_stat_block`.
+  The installed-catalog reachability operation verifies that all 330 canonical
+  identities survive this generic list projection, resolve through the same
+  catalog selection boundary, and produce `statBlockSummary` directly from the
+  selected record. It accumulates typed catalog and presentation issues without
+  storing admission status, runtime capability, receipts, allowlists, or
+  completion state.
 - `inspect_catalog_unit` returns the canonical installed SRD Unit record as
   typed `unitRecordJson` for a Unit id returned by `list_catalog_units`. The
   three catalog calls are
