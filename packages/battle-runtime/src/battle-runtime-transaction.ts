@@ -39,6 +39,7 @@ import {
   type InterruptCheckpointIdentity,
 } from "./battle-reducer/interrupt-checkpoint-identity.ts";
 import { interruptedProcedureSubject } from "./battle-reducer/interrupt-execution.ts";
+import { handledInterruptOccurrenceForCheckpoint } from "./battle-reducer/interrupt-lifecycle.ts";
 import {
   isBattleReadyTriggerReportSubject,
   sameBattleSubject,
@@ -146,7 +147,7 @@ type BattlePendingTransactionCompletion =
       readonly parent: BattlePendingTransactionData;
     };
 
-type BattlePendingTransactionCreation = Result.Result<
+type BattlePendingTransactionBuildResult = Result.Result<
   {
     readonly transaction: BattlePendingTransaction;
     readonly data: BattlePendingTransactionData;
@@ -482,7 +483,7 @@ function createBattlePendingTransaction(input: {
   readonly fills: readonly BattleFill[];
   readonly holes: ReadonlyNonEmptyArray<BattleHole>;
   readonly completion: BattlePendingTransactionCompletion;
-}): BattlePendingTransactionCreation {
+}): BattlePendingTransactionBuildResult {
   const checkpointOwnership = checkpointOwnershipFor({
     session: input.currentSession,
     holes: input.holes,
@@ -890,7 +891,7 @@ function transactionForNeedsHoles(
   resolution: NeedsHolesResolution,
   holes: ReadonlyNonEmptyArray<BattleHole>,
   subject: BattleSubject,
-): BattlePendingTransactionCreation {
+): BattlePendingTransactionBuildResult {
   return Match.value(input.operation).pipe(
     Match.when({ kind: "ordinarySubject" }, ({ subject, fills }) => {
       const pending = input.pendingData;
@@ -995,26 +996,14 @@ function initialCompletionCursor(input: {
   readonly transaction: BattlePendingTransaction | null;
   readonly pendingData: BattlePendingTransactionData | null;
   readonly operation: BattleRuntimeTransactionOperation;
-  readonly resolution: ResolvedResolution;
-}):
-  | {
-      readonly tag: "cursor";
-      readonly cursor: BattlePendingTransactionData | null;
-    }
-  | {
-      readonly tag: "result";
-      readonly result: BattleRuntimeTransactionResult;
-    } {
-  if (input.transaction === null) return { tag: "cursor", cursor: null };
+}): BattlePendingTransactionData | null {
+  if (input.transaction === null) return null;
   return Option.match(Option.fromNullishOr(input.pendingData), {
-    onNone: () => ({ tag: "cursor" as const, cursor: null }),
-    onSome: (transactionData) => ({
-      tag: "cursor" as const,
-      cursor:
-        input.operation.kind === "interruptDecision"
-          ? transactionData
-          : transactionData.completion.parent,
-    }),
+    onNone: () => null,
+    onSome: (transactionData) =>
+      input.operation.kind === "interruptDecision"
+        ? transactionData
+        : transactionData.completion.parent,
   });
 }
 
@@ -1214,14 +1203,11 @@ function settleResolvedTransaction(input: {
   readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): BattleRuntimeTransactionResult {
   let resolution = input.resolution;
-  const initial = initialCompletionCursor({
-    resolution,
+  let completionCursor = initialCompletionCursor({
     transaction: input.transaction,
     pendingData: input.pendingData,
     operation: input.operation,
   });
-  if (initial.tag === "result") return initial.result;
-  let completionCursor = initial.cursor;
 
   if (!runtimeOwnsUnresolvedContinuation(resolution.session)) {
     completionCursor = null;
@@ -1447,15 +1433,22 @@ function resumePendingLayer(input: {
   const currentCheckpoint = currentInterruptCheckpoint(
     input.resolution.session.state,
   );
-  const resumed = resolveBattleRuntimeSubjectForReplay({
-    session: input.resolution.session,
-    subject: data.subject,
-    fills: data.fills,
-    ...(currentCheckpoint === null
-      ? {}
-      : { handledInterruptTrigger: currentCheckpoint.trigger }),
-    ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
-  });
+  const resumed =
+    currentCheckpoint === null
+      ? resolveBattleRuntimeSubject({
+          session: input.resolution.session,
+          subject: data.subject,
+          fills: data.fills,
+          ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
+        })
+      : resolveBattleRuntimeSubjectForReplay({
+          session: input.resolution.session,
+          subject: data.subject,
+          fills: data.fills,
+          handledInterruptOccurrence:
+            handledInterruptOccurrenceForCheckpoint(currentCheckpoint),
+          ...optionalProperty("statBlockCatalog", input.statBlockCatalog),
+        });
   return Match.value(resumed).pipe(
     Match.when({ tag: "invalid" }, (invalid) => ({
       tag: "result" as const,

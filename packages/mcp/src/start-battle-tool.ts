@@ -8,19 +8,10 @@ import {
   type BattleRosterEntry,
   type BattleRosterIssue,
 } from "@dnd/character-battle-runtime";
-import { Result, Match, Option } from "effect";
+import { Result, Match } from "effect";
 
-import {
-  characterBuildDisplayName,
-  characterBuildDisplayNameIssueMessage,
-} from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
-import { type AvailableCharacterSession } from "./session-store.ts";
-import {
-  type BattleCombatantToolInput,
-  type CharacterSessionCombatantToolInput,
-  type StartBattleToolInput,
-} from "./start-battle-tool-input.ts";
+import { type StartBattleToolInput } from "./start-battle-tool-input.ts";
 import type { ToolError } from "./schema-codec.ts";
 import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts";
 import {
@@ -33,13 +24,13 @@ import {
   activeBattleStartError,
   commitActiveBattleStart,
 } from "./start-battle-lifecycle.ts";
-import { errorContent } from "./tool-content.ts";
+import {
+  rosterEntryForToolCombatant,
+  type CharacterDisplayRosterIssue,
+  type StartableCharacterSessionCombatant,
+} from "./start-battle-roster-entry.ts";
 
-export type StartableCharacterSessionCombatant = {
-  readonly index: number;
-  readonly character: CharacterSessionCombatantToolInput;
-  readonly session: AvailableCharacterSession;
-};
+export type { StartableCharacterSessionCombatant } from "./start-battle-roster-entry.ts";
 
 export type StartableBattleCombatants = {
   readonly composition: BattleRosterComposition;
@@ -175,24 +166,24 @@ function startableBattleCombatants(input: {
   readonly initialCombatants: StartBattleToolInput["initialCombatants"];
   readonly companionAdmissions: StartBattleToolInput["companionAdmissions"];
 }): Result.Result<StartableBattleCombatants, ToolError> {
-  const characterSessionsByIndex = new Map<
-    number,
-    StartableCharacterSessionCombatant
-  >();
+  const projectedCharacterSessions: StartableCharacterSessionCombatant[] = [];
   const [firstCombatant, ...restCombatants] = input.initialCombatants;
   const firstEntry = rosterEntryForToolCombatant({
     root: input.root,
     combatant: firstCombatant,
     index: 0,
   });
-  if (Result.isFailure(firstEntry)) return Result.fail(firstEntry.failure);
-  if (firstEntry.success.session !== undefined) {
-    characterSessionsByIndex.set(0, {
+  if (
+    Result.isSuccess(firstEntry) &&
+    firstEntry.success.tag === "availableCharacter"
+  ) {
+    projectedCharacterSessions.push({
       ...firstEntry.success.session,
       index: 0,
     });
   }
   const restEntries: BattleRosterEntry[] = [];
+  const restProjectionIssues: CharacterDisplayRosterIssue[] = [];
   for (const [offset, combatant] of restCombatants.entries()) {
     const index = offset + 1;
     const entry = rosterEntryForToolCombatant({
@@ -200,22 +191,34 @@ function startableBattleCombatants(input: {
       combatant,
       index,
     });
-    if (Result.isFailure(entry)) return Result.fail(entry.failure);
-    if (entry.success.session !== undefined) {
-      characterSessionsByIndex.set(index, {
+    if (Result.isFailure(entry)) {
+      restProjectionIssues.push(entry.failure);
+      continue;
+    }
+    if (entry.success.tag === "availableCharacter") {
+      projectedCharacterSessions.push({
         ...entry.success.session,
         index,
       });
     }
     restEntries.push(entry.success.rosterEntry);
   }
+  if (Result.isFailure(firstEntry)) {
+    return Result.fail(
+      battleStartIssuesContent([firstEntry.failure, ...restProjectionIssues]),
+    );
+  }
+  if (restProjectionIssues.length > 0) {
+    return Result.fail(battleStartIssuesContent(restProjectionIssues));
+  }
   const entries: BattleRosterEntries = [
     firstEntry.success.rosterEntry,
     ...restEntries,
   ];
   const composition = composeBattleRoster(entries);
+  const admissions = battleRosterAdmissions(composition);
   const ownerPaths = new Map<CombatantId, readonly (string | number)[]>();
-  for (const admission of battleRosterAdmissions(composition)) {
+  for (const admission of admissions) {
     ownerPaths.set(admission.combatant.combatantId, [
       "initialCombatants",
       admission.index,
@@ -223,12 +226,12 @@ function startableBattleCombatants(input: {
   }
   return Result.succeed({
     composition,
-    characterSessions: battleRosterAdmissions(composition).flatMap(
-      (admission) => {
-        if (admission.kind !== "characterSheet") return [];
-        const session = characterSessionsByIndex.get(admission.index);
-        return session === undefined ? [] : [session];
-      },
+    characterSessions: projectedCharacterSessions.filter((session) =>
+      admissions.some(
+        (admission) =>
+          admission.kind === "characterSheet" &&
+          admission.index === session.index,
+      ),
     ),
     ownerPaths,
     initialCombatantOrder: initialCombatantOrderForStartInput({
@@ -265,143 +268,6 @@ function battleCompanionIssues(
     Match.when({ tag: "admitted" }, () => []),
     Match.when({ tag: "rejected" }, ({ issues }) => issues),
     Match.when({ tag: "dependentUnavailable" }, ({ issues }) => issues),
-    Match.exhaustive,
-  );
-}
-
-export function projectBattleCombatant(input: {
-  readonly root: McpPlaySessionRoot;
-  readonly combatant: BattleCombatantToolInput;
-  readonly ownerPath?: readonly (string | number)[];
-}): Result.Result<BattleRosterAdmission, ToolError> {
-  const rosterEntry = rosterEntryForToolCombatant({
-    root: input.root,
-    combatant: input.combatant,
-    index: 0,
-  });
-  if (Result.isFailure(rosterEntry)) return Result.fail(rosterEntry.failure);
-  const composition = composeBattleRoster([rosterEntry.success.rosterEntry]);
-  if (composition.tag === "rejected") {
-    return Result.fail(
-      battleStartIssuesContent(
-        composition.issues.flatMap((issue) =>
-          battleRosterIssuePayload(
-            issue,
-            () => input.ownerPath ?? ["initialCombatants", 0],
-          ),
-        ),
-      ),
-    );
-  }
-  return Result.succeed(composition.admissions[0]);
-}
-
-function rosterEntryForToolCombatant(input: {
-  readonly root: McpPlaySessionRoot;
-  readonly combatant: BattleCombatantToolInput;
-  readonly index: number;
-}): Result.Result<
-  {
-    readonly rosterEntry: BattleRosterEntry;
-    readonly session?: StartableCharacterSessionCombatant;
-  },
-  ToolError
-> {
-  return Match.value(input.combatant).pipe(
-    Match.when({ kind: "characterSession" }, (character) => {
-      const session = input.root.sessionStore.characters.get(
-        character.characterId,
-      );
-      if (session === undefined) {
-        return Result.succeed({
-          rosterEntry: {
-            kind: "characterSheet" as const,
-            source: {
-              kind: "missing" as const,
-              characterId: character.characterId,
-              combatantId: character.combatantId,
-            },
-          },
-        });
-      }
-      if (session.tag === "inBattle") {
-        return Result.succeed({
-          rosterEntry: {
-            kind: "characterSheet" as const,
-            source: {
-              kind: "inBattle" as const,
-              characterId: character.characterId,
-              combatantId: character.combatantId,
-              battleId: session.battleId,
-            },
-          },
-        });
-      }
-      const displayName = characterBuildDisplayName(
-        input.root.unitLibrary,
-        session.build,
-      );
-      if (Result.isFailure(displayName)) {
-        return Result.fail(
-          errorContent("Character session cannot be displayed.", {
-            code: "INVALID_CHARACTER_DISPLAY_CATALOG",
-            ownerPath: ["initialCombatants", input.index],
-            message: characterBuildDisplayNameIssueMessage(displayName.failure),
-            issues: displayName.failure,
-          }),
-        );
-      }
-      return Result.succeed({
-        rosterEntry: {
-          kind: "characterSheet" as const,
-          source: {
-            kind: "available" as const,
-            input: {
-              combatantId: character.combatantId,
-              displayName: displayName.success,
-              sheet: session,
-              initiative: character.initiative,
-              ammunitionStocks: character.ammunitionStocks,
-              unitLibrary: input.root.unitLibrary,
-              statBlockCatalog: input.root.statBlockCatalog,
-            },
-          },
-        },
-        session: { index: input.index, character, session },
-      });
-    }),
-    Match.when({ kind: "statBlock" }, (statBlockCombatant) => {
-      const statBlock = input.root.statBlockCatalog.getStatBlock(
-        statBlockCombatant.statBlockId,
-      );
-      return Result.succeed({
-        rosterEntry: {
-          kind: "statBlock" as const,
-          source: Option.isNone(statBlock)
-            ? {
-                kind: "missing" as const,
-                statBlockId: statBlockCombatant.statBlockId,
-                combatantId: statBlockCombatant.combatantId,
-              }
-            : {
-                kind: "available" as const,
-                input: {
-                  combatantId: statBlockCombatant.combatantId,
-                  statBlock: statBlock.value,
-                  initiative: statBlockCombatant.initiative,
-                  ammunitionStocks: statBlockCombatant.ammunitionStocks,
-                  conditions: [],
-                  ...(statBlockCombatant.currentHp === undefined
-                    ? {}
-                    : { currentHp: statBlockCombatant.currentHp }),
-                  ...(statBlockCombatant.tempHp === undefined
-                    ? {}
-                    : { tempHp: statBlockCombatant.tempHp }),
-                },
-              },
-        },
-      });
-    }),
     Match.exhaustive,
   );
 }

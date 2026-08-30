@@ -52,42 +52,60 @@ type RefinementCode = Exclude<
   | "duplicateMember"
 >;
 
+type SchemaDecodeDefect = {
+  readonly tag: "schemaDecodeDefect";
+};
+
+function decodeUnknownResultTotal<A>(
+  schema: Schema.ConstraintDecoder<A, never>,
+  input: unknown,
+): Result.Result<Result.Result<A, Schema.SchemaError>, SchemaDecodeDefect> {
+  try {
+    return Result.succeed(
+      Schema.decodeUnknownResult(schema, {
+        errors: "all",
+        onExcessProperty: "error",
+        reportInput: true,
+      })(input),
+    );
+  } catch {
+    return Result.fail({ tag: "schemaDecodeDefect" });
+  }
+}
+
 export function decodeWithSchema<A>(
   schema: Schema.ConstraintDecoder<A, never>,
   input: unknown,
   options: DecodeOptions = {},
 ): Result.Result<A, OracleDecodeIssues> {
-  let decoded: Result.Result<A, Schema.SchemaError>;
-  try {
-    decoded = Schema.decodeUnknownResult(schema, {
-      errors: "all",
-      onExcessProperty: "error",
-      reportInput: true,
-    })(input);
-  } catch {
-    try {
-      const structural = Schema.decodeUnknownResult(Schema.toEncoded(schema), {
-        errors: "all",
-        onExcessProperty: "error",
-        reportInput: true,
-      })(input);
-      if (Result.isFailure(structural)) {
+  const decoded = decodeUnknownResultTotal(schema, input);
+  if (Result.isFailure(decoded)) {
+    const structural = decodeUnknownResultTotal(
+      Schema.toEncoded(schema),
+      input,
+    );
+    if (Result.isSuccess(structural)) {
+      if (Result.isFailure(structural.success)) {
         const issues: OracleDecodeIssue[] = [];
-        collectParseIssues(structural.failure.issue, "", issues, options);
+        collectParseIssues(
+          structural.success.failure.issue,
+          "",
+          issues,
+          options,
+        );
         return Result.fail(
           toOracleDecodeIssues(sortIssues(uniqueIssues(issues))),
         );
       }
-    } catch {
-      // The root fallback below is the stable boundary for schema defects.
     }
     return Result.fail([{ path: "", code: "wrongType" }]);
   }
-  if (Result.isSuccess(decoded)) return Result.succeed(decoded.success);
+  if (Result.isSuccess(decoded.success))
+    return Result.succeed(decoded.success.success);
 
   const issues: OracleDecodeIssue[] = [];
   try {
-    collectParseIssues(decoded.failure.issue, "", issues, options);
+    collectParseIssues(decoded.success.failure.issue, "", issues, options);
   } catch {
     return Result.fail([{ path: "", code: "wrongType" }]);
   }

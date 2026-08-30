@@ -2,7 +2,7 @@ import { Effect, Result, Schema } from "effect";
 
 import {
   characterListRows,
-  type CharacterSessionProjectionIssue,
+  type CharacterListProjectionIssues,
 } from "./character-session-rows.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import { battlePresentationEnvelopeForSession } from "./battle-tool-payloads.ts";
@@ -124,7 +124,7 @@ export function adminProjection(
 ): Result.Result<
   AdminSessionProjection,
   | string
-  | CharacterSessionProjectionIssue
+  | CharacterListProjectionIssues
   | import("@dnd/battle-runtime").BattlePresentationIssues
 > {
   const characters = characterListRows(root);

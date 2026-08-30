@@ -686,14 +686,16 @@ function closeInterruptCheckpoint(input: {
   const continuedState = stateForContinuingInterruptCheckpoint(
     recordHandledInterruptOccurrenceForActiveInterrupt(
       closedState,
-      handledInterruptOccurrenceFor(input.frame),
+      handledInterruptOccurrenceForCheckpoint(input.frame),
     ),
     input.frame,
   );
   const resumed = input.execution.resumeContinuation({
     state: continuedState,
     continuation: input.frame.continuation,
-    handledInterruptOccurrence: handledInterruptOccurrenceFor(input.frame),
+    handledInterruptOccurrence: handledInterruptOccurrenceForCheckpoint(
+      input.frame,
+    ),
   });
   return completeResolvedActiveInterruptIfPending(
     resumed,
@@ -1147,7 +1149,7 @@ function sameInterruptProcedureChoice(
   );
 }
 
-function handledInterruptOccurrenceFor(
+export function handledInterruptOccurrenceForCheckpoint(
   frame: BattleInterruptCheckpoint,
 ): BattleHandledInterruptOccurrence {
   return Match.value(frame).pipe(

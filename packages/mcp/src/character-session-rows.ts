@@ -32,10 +32,13 @@ export function characterListRows(
   root: McpPlaySessionRoot,
 ): Result.Result<
   readonly CharacterSessionRow[],
-  CharacterSessionProjectionIssue
+  CharacterListProjectionIssues
 > {
   const rows: CharacterSessionRow[] = [];
-  for (const [characterId, session] of root.sessionStore.characters.entries()) {
+  const issues: CharacterListProjectionIssue[] = [];
+  for (const [index, [characterId, session]] of [
+    ...root.sessionStore.characters.entries(),
+  ].entries()) {
     if (session.tag === "inBattle") {
       rows.push({
         characterId,
@@ -49,12 +52,30 @@ export function characterListRows(
     }
     const detail = availableCharacterSessionDetail(root, session);
     if (Result.isFailure(detail)) {
-      return Result.fail(detail.failure);
+      issues.push({
+        ownerPath: ["characters", index],
+        characterId,
+        issue: detail.failure,
+      });
+      continue;
     }
     rows.push(availableCharacterListRow(detail.success));
   }
-  return Result.succeed(rows);
+  return issues.length > 0
+    ? Result.fail([issues[0], ...issues.slice(1)])
+    : Result.succeed(rows);
 }
+
+export type CharacterListProjectionIssue = {
+  readonly ownerPath: readonly ["characters", number];
+  readonly characterId: CharacterId;
+  readonly issue: CharacterSessionProjectionIssue;
+};
+
+export type CharacterListProjectionIssues = readonly [
+  CharacterListProjectionIssue,
+  ...CharacterListProjectionIssue[],
+];
 
 export type CharacterSessionProjectionIssue =
   | {

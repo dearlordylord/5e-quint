@@ -2,7 +2,7 @@
 
 This report closes the migration-specific certification interval for GitHub
 issue #386. The certification branch includes the integrated Effect 4 migration
-through `0d2c04d06`. The controlled-red inventory,
+and the subsequent master-reconciliation checkpoint. The controlled-red inventory,
 finite behavioral delta, public workspace gates, and shipped process entrypoints
 were all checked from this branch. This report does not claim that every
 product capability is complete; it certifies that remaining limitations are not
@@ -48,30 +48,31 @@ paths.
 The immutable [Effect 3 behavioral oracle](./effect3-behavioral-oracle.json)
 remains byte-identical: 12,997,527 bytes with SHA-256
 `dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
-No public mutation command remains. The final Effect 4 capture is 51,968,201
+No public mutation command remains. The final Effect 4 capture is 52,137,007
 bytes with SHA-256
-`01a26e0a2d69312c7428d9e7895549d2d495255d63522b9e737b7120f221efe3`.
+`c6e23cea8c4187d4902b51558123837cdf2961f5f6e0ac09df0a52a497cd26d8`.
 
 The reviewed [finite delta certificate](./effect4-oracle-delta-certificate.json)
-classifies and lists 7,338 recursive JSON-pointer leaf identities, including
+classifies and lists 7,261 recursive JSON-pointer leaf identities, including
 the owning classification, operation, path, and SHA-256 digest or explicit
 missing tag for both sides. Its overall identity
 SHA-256 is
-`81c05252117f189564e73592ea0e794d9793ead182bee5b7c6bcbbc3615e3438`,
+`01e4875c9e339c4f46e84329d0a7fad5db58efdf68c30a674d61beb559d09cfa`,
 and the certificate artifact SHA-256 is
-`cf8111311f8eef9c3a1b4841c7e186ae38325cce4a7b8c963ddcf12c49bed0d9`.
+`733a17024ebdcdd193f336dd1e6802653eaa1dfd492d34b7a81ae39cc530fa6f`.
 
 | Classification                | Identities | Added | Removed | Changed |
 | ----------------------------- | ---------: | ----: | ------: | ------: |
-| MCP registration contract     |      2,259 |   692 |   1,504 |      63 |
-| MCP protocol entrypoints      |      2,728 |   992 |   1,584 |     152 |
-| MCP authenticated projection  |      2,072 |   762 |   1,192 |     118 |
-| Surface publication authority |          3 |     0 |       0 |       3 |
+| MCP registration contract     |      2,275 |   706 |   1,489 |      80 |
+| MCP protocol entrypoints      |      2,738 |   998 |   1,584 |     156 |
+| MCP authenticated projection  |      2,081 |   769 |   1,192 |     120 |
+| Surface publication authority |          4 |     0 |       0 |       4 |
+| Surface authored authority    |         84 |     0 |       0 |      84 |
 | Persisted session codecs      |         22 |     6 |      12 |       4 |
-| Raw Swarm artifact authority  |        254 |    43 |       0 |     211 |
+| Raw Swarm artifact authority  |         57 |    43 |       0 |      14 |
 
-Baseline metadata, Surface content, and all five reducer behavior classes have
-zero identities. The verifier rejects baseline or candidate byte drift,
+Baseline metadata and all five reducer behavior classes have zero identities.
+The verifier rejects baseline or candidate byte drift,
 non-regular baseline paths, duplicate identities, unclassified identities,
 identities admitted by multiple classes, stale exact identity records, and
 stale class counts or hashes. Its five negative and stable-class self-tests
@@ -106,10 +107,43 @@ available in the certification environment, so an OCI image build is not
 claimed; the exact files and command copied by that image are the artifacts
 exercised by the clean-consumer smoke.
 
+### Master-reconciliation declaration certificate
+
+The fixed Surface and Battle Runtime consumer graph now contains exactly 523
+declaration files and 3,962,445 bytes. The 10 MiB byte cap is unchanged and
+leaves 6,523,315 bytes of margin; the file cap is the exact reviewed count, not
+a permissive growth allowance. Relative to the package-runtime certificate at
+`c8f2e4f2e` (511 files and 4,075,316 bytes), the reconciliation adds exactly
+these 12 reachable declarations and removes none:
+
+- `packages/battle-runtime/src/battle-mechanical-attack-options.d.ts`
+- `packages/battle-runtime/src/battle-reducer/interrupt-checkpoint-identity.d.ts`
+- `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/once-per-turn-limit-group-admission.d.ts`
+- `packages/battle-runtime/src/battle-runtime-transaction.d.ts`
+- `packages/character-creation-runtime/src/character-display.d.ts`
+- `packages/character-creation-runtime/src/workflow-horizon.d.ts`
+- `packages/shared/src/semantic-refinement.d.ts`
+- `packages/shared/src/structural-value.d.ts`
+- `packages/surface/src/surface/stat-block-catalog-core.d.ts`
+- `packages/surface/src/surface/stat-block-catalog-data.d.ts`
+- `packages/surface/src/surface/unit-catalog-core.d.ts`
+- `packages/surface/src/surface/unit-catalog-data.d.ts`
+
+The first four are reachable through the public Battle frontier, replay,
+procedure-profile, and transaction owners. The next four are deliberate
+Character Creation exports or their shared schema/value dependencies. The last
+four are the core/data owners behind the master split Surface facades. The
+focused package-runtime and consumer-distribution suites pass 12/12, including
+the real relocated supervisor initialization, transcript, replay, exact
+Surface-plus-Battle Effect owner substitution, and adversarial
+underdeclaration rejection. A source-map parser error accompanied the initial
+fail-closed 523-versus-511 run; it did not recur on the complete passing retry
+and is not counted as successful evidence from the failed run.
+
 ## Public verification
 
 The following public commands were run directly under their owning repository
-locks:
+locks at the prior certification fixed point:
 
 - `pnpm typecheck`: passed, 13 of 13 owners.
 - `pnpm test`: passed, 10 of 10 workspace tasks. Notable uncached owners were
@@ -119,10 +153,11 @@ locks:
   production bundle. The existing large-chunk advisory remains non-fatal.
 - `pnpm quality:milestone`: pending final reviewer convergence.
 
-Focused checks also pass for the 13-owner cohort, zero-diagnostic inventory,
-finite oracle and negative tests, MCP publication package, Battle timing and
-typed issue projections, clean consumers, and Raw Swarm deterministic public
-lane.
+The master-reconciliation checkpoint was not subjected to these broad commands
+while implementation and review lanes were active. Its focused Effect cohort,
+certification typecheck, finite-oracle verification, authored-identity audit,
+Opaque Oracle checks, and exact Raw Swarm consumer-distribution lifecycle tests
+pass.
 
 ## Review convergence
 
@@ -132,7 +167,7 @@ architecture and connascence, and the separate Standards and Spec review axes.
 Findings and their dispositions are recorded here after each fixed-point pass.
 
 Round 1 accepted and corrected all 10 findings. The Spec axis required the
-7,338 exact identity records, installed and shipped cohort inspection,
+finite exact identity records, installed and shipped cohort inspection,
 consolidated clean-consumer lifecycle coverage, current controlled-red closure
 documentation, and unchanged ordinary Battle replay checkpoints. The Standards
 axis required the current ledger status, accurate baseline reproduction text,

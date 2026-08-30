@@ -2,7 +2,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 import { optionalProperty } from "./optional-property.ts";
 import { Match, Result } from "effect";
-import type { BattleInterruptTrigger } from "./battle-interrupt-triggers.ts";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
 import { battleReducerRouteForResolution } from "./battle-reducer/reducer-route.ts";
 import {
@@ -37,6 +36,7 @@ import type {
   BattleFill,
   BattleFallingCreatureMitigationTriggerFact,
   BattleHole,
+  BattleHandledInterruptOccurrence,
   BattleInterruptDecisionFrontier,
   BattleInterruptRouteOptions,
   BattleResolutionInput,
@@ -392,27 +392,27 @@ function rolledD20TestRequests(
 export function resolveBattleRuntimeSubject(
   input: BattleRuntimeResolutionInput,
 ): BattleRuntimeResolutionResult {
-  return resolveBattleRuntimeSubjectWithHandledInterruptTrigger(input);
+  return resolveBattleRuntimeSubjectWithInterruptRoute(input);
 }
 
 /**
  * Replay a transaction layer after an interrupt decision. The reducer needs
- * the trigger that was just handled in order to advance the checkpoint rather
- * than reject the replay as a new subject selection.
+ * the exact occurrence that was handled in order to advance the checkpoint
+ * rather than reject the replay as a new subject selection.
  */
 export function resolveBattleRuntimeSubjectForReplay(input: {
   readonly session: BattleRuntimeSession;
   readonly subject: BattleSubject;
   readonly fills: BattleResolutionInput["fills"];
-  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
   readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): BattleRuntimeResolutionResult {
-  return resolveBattleRuntimeSubjectWithHandledInterruptTrigger(input);
+  return resolveBattleRuntimeSubjectWithInterruptRoute(input);
 }
 
-function resolveBattleRuntimeSubjectWithHandledInterruptTrigger(
+function resolveBattleRuntimeSubjectWithInterruptRoute(
   input: BattleRuntimeResolutionInput & {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
+    readonly handledInterruptOccurrence?: BattleHandledInterruptOccurrence;
   },
 ): BattleRuntimeResolutionResult {
   if (
@@ -452,13 +452,13 @@ function resolveBattleRuntimeSubjectWithHandledInterruptTrigger(
   }
   return battleRuntimeResolutionFromMechanical(
     input.session,
-    resolveBattleSubjectWithHandledInterruptTrigger(
+    resolveBattleSubjectWithInterruptRoute(
       {
         state: input.session.state,
         subject: input.subject,
         fills: input.fills,
       },
-      input.handledInterruptTrigger,
+      input.handledInterruptOccurrence,
     ),
     "ordinary",
     input,
@@ -869,12 +869,12 @@ export function openCreatureFallsRuntimeInterruptWindow(input: {
 export function resolveBattleSubject(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
-  return resolveBattleSubjectWithHandledInterruptTrigger(input);
+  return resolveBattleSubjectWithInterruptRoute(input);
 }
 
-function resolveBattleSubjectWithHandledInterruptTrigger(
+function resolveBattleSubjectWithInterruptRoute(
   input: BattleResolutionInput,
-  handledInterruptTrigger?: BattleInterruptTrigger,
+  handledInterruptOccurrence?: BattleHandledInterruptOccurrence,
 ): BattleResolutionResult {
   const phase = input.state.subjectResolutionPhase;
   const reportsReadyTrigger = isBattleReadyTriggerReportSubject(input.subject);
@@ -904,7 +904,10 @@ function resolveBattleSubjectWithHandledInterruptTrigger(
     interruptRouteOptionsForSubjectResolution({
       phase,
       reportsReadyTrigger,
-      ...optionalProperty("handledInterruptTrigger", handledInterruptTrigger),
+      ...optionalProperty(
+        "handledInterruptOccurrence",
+        handledInterruptOccurrence,
+      ),
     }),
   );
   const result = reportsReadyTrigger
@@ -920,13 +923,18 @@ function resolveBattleSubjectWithHandledInterruptTrigger(
 function interruptRouteOptionsForSubjectResolution(input: {
   readonly phase: BattleResolutionInput["state"]["subjectResolutionPhase"];
   readonly reportsReadyTrigger: boolean;
-  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly handledInterruptOccurrence?: BattleHandledInterruptOccurrence;
 }): BattleInterruptRouteOptions {
+  if (input.handledInterruptOccurrence !== undefined) {
+    return {
+      replayingInterruptedProcedure: true,
+      handledInterruptOccurrence: input.handledInterruptOccurrence,
+    };
+  }
   const effectiveHandledInterruptTrigger =
-    input.handledInterruptTrigger ??
-    (input.phase.kind === "subjectContinuation" && !input.reportsReadyTrigger
+    input.phase.kind === "subjectContinuation" && !input.reportsReadyTrigger
       ? input.phase.handledInterruptTrigger
-      : undefined);
+      : undefined;
   return effectiveHandledInterruptTrigger === undefined
     ? {}
     : {

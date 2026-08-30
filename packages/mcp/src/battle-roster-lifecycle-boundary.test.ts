@@ -5,7 +5,7 @@ import {
   characterId as makeCharacterId,
 } from "@dnd/battle-runtime";
 import { Hp } from "@dnd/shared/types";
-import { Result } from "effect";
+import { Option, Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -16,6 +16,7 @@ import { availableCharacterSession } from "./session-store.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import { battleMechanicsEnvelopeForSession } from "./battle-tool-payloads.ts";
 import { battleSubjectIsAvailableWithoutPendingFills } from "./battle-tool-frontier.ts";
+import { BATTLE_LIFECYCLE_RECOVERY } from "./battle-roster-lifecycle.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
   fighterId,
@@ -375,6 +376,69 @@ describe("MCP Battle roster lifecycle boundaries", () => {
         },
       },
     });
+  });
+
+  test("reports active-roster Character display failures without committing", () => {
+    const { root } = startCharacterBattle();
+    const characterId = makeCharacterId("character:roster-display-failure");
+    const available = availableCharacterSession({
+      characterId,
+      build: armorClassBuild({
+        startingClass: "class_fighter",
+        armor: "armor_chain_mail",
+        shield: true,
+        weapon: "weapon_longsword",
+      }),
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      companion: { tag: "none" },
+      unitLibrary: root.unitLibrary,
+    });
+    if (Result.isFailure(available)) {
+      throw new Error(available.failure.message);
+    }
+    root.sessionStore.characters.set(available.success);
+    const before = rootAndCharacterRegistrySnapshot(root);
+    const invalidCatalogRoot = {
+      ...root,
+      unitLibrary: {
+        getUnit: () => Option.none(),
+        listUnits: () => [],
+        requireUnit: root.unitLibrary.requireUnit,
+      },
+    };
+
+    expect(
+      readToolPayload(
+        handleToolCall(invalidCatalogRoot, "battle_lifecycle", {
+          operation: {
+            kind: "addCombatant",
+            combatant: {
+              kind: "characterSession",
+              characterId,
+              combatantId: "roster-display-failure",
+              initiative: 6,
+              ammunitionStocks: [],
+            },
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "INVALID_CHARACTER_DISPLAY_CATALOG",
+        ownerPath: ["operation", "combatant"],
+        characterId,
+        issues: expect.arrayContaining([
+          expect.objectContaining({
+            tag: "characterBuildDisplayUnitMissing",
+          }),
+        ]),
+        recovery: BATTLE_LIFECYCLE_RECOVERY,
+      },
+    });
+    expect(rootAndCharacterRegistrySnapshot(root)).toEqual(before);
   });
 
   test("keeps the battle unchanged when Character Session commit fails", () => {

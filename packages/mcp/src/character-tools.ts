@@ -224,8 +224,12 @@ export function handleCharacterToolCall(
       if (Result.isFailure(rows)) {
         return errorContent("Character list projection failed.", {
           code: "CHARACTER_LIST_INVALID",
-          message: characterSessionProjectionIssueMessage(rows.failure),
-          issue: rows.failure,
+          issues: rows.failure.map(({ ownerPath, characterId, issue }) => ({
+            ownerPath,
+            characterId,
+            message: characterSessionProjectionIssueMessage(issue),
+            issue,
+          })),
         });
       }
       return schemaJsonContent(ListCharactersOutputSchema, {

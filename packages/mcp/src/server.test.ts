@@ -1019,7 +1019,9 @@ describe("MCP server route", () => {
   test("reports character-list projection failures from the supplied catalog boundary", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:list-invalid-catalog";
+    const secondDraftId = "draft:list-invalid-catalog-second";
     createFinalizedFighterSheet(root, draftId);
+    createFinalizedFighterSheet(root, secondDraftId);
     const emptyCatalog = buildUnitCatalog({
       collections: [defineSrdUnitCollection({ units: [] })],
     });
@@ -1037,10 +1039,24 @@ describe("MCP server route", () => {
     ).toMatchObject({
       details: {
         code: "CHARACTER_LIST_INVALID",
-        issue: {
-          tag: "hitPointMaximumUnavailable",
-          issue: { tag: "characterSheetIssue" },
-        },
+        issues: [
+          {
+            ownerPath: ["characters", 0],
+            characterId: testCharacterId(draftId),
+            issue: {
+              tag: "hitPointMaximumUnavailable",
+              issue: { tag: "characterSheetIssue" },
+            },
+          },
+          {
+            ownerPath: ["characters", 1],
+            characterId: testCharacterId(secondDraftId),
+            issue: {
+              tag: "hitPointMaximumUnavailable",
+              issue: { tag: "characterSheetIssue" },
+            },
+          },
+        ],
       },
     });
     expect(
@@ -1126,27 +1142,45 @@ describe("MCP server route", () => {
               combatantId: "fighter",
               initiative: 10,
             },
+            {
+              kind: "characterSession",
+              ammunitionStocks: [],
+              characterId: testCharacterId(secondDraftId),
+              combatantId: "second-fighter",
+              initiative: 9,
+            },
           ],
         }),
       ),
     ).toMatchObject({
       details: {
-        code: "INVALID_CHARACTER_DISPLAY_CATALOG",
-        ownerPath: ["initialCombatants", 0],
-        issues: expect.arrayContaining([
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
           expect.objectContaining({
-            tag: "characterBuildDisplayUnitMissing",
-            role: "species",
+            code: "INVALID_CHARACTER_DISPLAY_CATALOG",
+            ownerPath: ["initialCombatants", 0],
+            characterId: testCharacterId(draftId),
+            issues: expect.arrayContaining([
+              expect.objectContaining({
+                tag: "characterBuildDisplayUnitMissing",
+                role: "species",
+              }),
+              expect.objectContaining({
+                tag: "characterBuildDisplayUnitMissing",
+                role: "background",
+              }),
+              expect.objectContaining({
+                tag: "characterBuildDisplayUnitMissing",
+                role: "class",
+              }),
+            ]),
           }),
           expect.objectContaining({
-            tag: "characterBuildDisplayUnitMissing",
-            role: "background",
+            code: "INVALID_CHARACTER_DISPLAY_CATALOG",
+            ownerPath: ["initialCombatants", 1],
+            characterId: testCharacterId(secondDraftId),
           }),
-          expect.objectContaining({
-            tag: "characterBuildDisplayUnitMissing",
-            role: "class",
-          }),
-        ]),
+        ],
       },
     });
   });
@@ -1209,8 +1243,14 @@ describe("MCP server route", () => {
     ).toMatchObject({
       details: {
         code: "CHARACTER_LIST_INVALID",
-        message:
-          "Class feature use-count resource requires an installed rest-reset class feature.",
+        issues: [
+          expect.objectContaining({
+            ownerPath: ["characters", 0],
+            characterId: testCharacterId(draftId),
+            message:
+              "Class feature use-count resource requires an installed rest-reset class feature.",
+          }),
+        ],
       },
     });
   });

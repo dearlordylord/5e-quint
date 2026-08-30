@@ -1137,12 +1137,16 @@ each of `SIGINT` and `SIGTERM` while that response is in flight. Both cases
 then prove complete newline-framed JSON, byte-for-byte output ownership, exit
 code 130, empty standard error, and cleanup; no timing sleep is used.
 
-The public declaration graph has a reviewed deterministic measure of 512 files
-and 9,998,283 bytes. The file limit is exactly 512. The byte limit is 10 MiB,
-the smallest round binary-megabyte bound above the graph, with a 487,477-byte
-margin. Tests prove acceptance exactly at both caps and fail-closed rejection
-at each cap plus one, and the real public distribution must equal the reviewed
-measure. Raw Swarm lane hygiene again enforces that `quality:body` does not
+After master reconciliation, the public declaration graph has a reviewed
+deterministic measure of 523 files and 3,962,445 bytes. The file limit is
+exactly 523. The byte limit remains 10 MiB, with a 6,523,315-byte margin. Tests
+prove acceptance exactly at both caps and fail-closed rejection at each cap
+plus one, and the real public distribution must equal the reviewed measure.
+The reviewed 12-path growth from the 511-file package-runtime certificate is
+listed with its owning reachability in
+[`final-parity-report.md`](./final-parity-report.md#master-reconciliation-declaration-certificate);
+there were no removed declarations and no accidental public leak. Raw Swarm
+lane hygiene again enforces that `quality:body` does not
 invoke the deterministic `:body` command; the public deterministic owner
 continues to acquire its documented lock itself.
 
@@ -1207,11 +1211,21 @@ their exact shipped entrypoints.
 The Effect 3 behavioral oracle remains immutable at 12,997,527 bytes and
 SHA-256
 `dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
-The finite Effect 4 certificate records every one of the 7,338 changed JSON
+The reconciled finite Effect 4 certificate records every one of the 7,261 changed JSON
 Pointer identities with its classification, operation, path, and both side
 digests or missing tags. Its verifier rejects changed baseline or candidate
 bytes, unreadable artifacts, duplicate, unclassified, multiply classified, or
 stale exact identities, and stale aggregate counts or hashes.
+
+The candidate is 52,137,007 bytes with SHA-256
+`c6e23cea8c4187d4902b51558123837cdf2961f5f6e0ac09df0a52a497cd26d8`;
+the identity-set SHA-256 is
+`01e4875c9e339c4f46e84329d0a7fad5db58efdf68c30a674d61beb559d09cfa`,
+and the certificate artifact SHA-256 is
+`733a17024ebdcdd193f336dd1e6802653eaa1dfd492d34b7a81ae39cc530fa6f`.
+The authored-identity boundary also passes after removing the stale generic
+`runtimeCommandSubject` exemption: 4,735 literals, 795 checked source files,
+552 exercised exact exemptions, and 1,214 reviewed sites / 1,325 occurrences.
 
 Direct public `pnpm build`, `pnpm typecheck`, and `pnpm test` passed. The exact
 commands, process-drain proof, semantic delta disposition, reviewer findings,
