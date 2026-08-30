@@ -78,6 +78,39 @@ export const BattleAudibleBoomSchema = Schema.Struct({
   audibleRadiusFeet: MovementFeet,
 });
 
+export const DimIlluminationEmissionSchema = Schema.Struct({
+  kind: Schema.Literal("dim"),
+  radiusFeet: MovementFeet,
+});
+
+export const IlluminationEmissionSchema = Schema.Union([
+  DimIlluminationEmissionSchema,
+  Schema.Struct({
+    kind: Schema.Literal("brightAndDim"),
+    brightRadiusFeet: MovementFeet,
+    dimAdditionalFeet: MovementFeet,
+  }),
+]);
+
+export const EmitterOpaqueCoverInteractionSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("blocksEmission") }),
+  Schema.Struct({ kind: Schema.Literal("doesNotBlockEmission") }),
+]);
+
+export const DimIlluminationEmissionFactsSchema = Schema.Struct({
+  emission: DimIlluminationEmissionSchema,
+  opaqueCoverInteraction: EmitterOpaqueCoverInteractionSchema,
+});
+
+export const BrightAndDimIlluminationEmissionFactsSchema = Schema.Struct({
+  emission: Schema.Struct({
+    kind: Schema.Literal("brightAndDim"),
+    brightRadiusFeet: MovementFeet,
+    dimAdditionalFeet: MovementFeet,
+  }),
+  opaqueCoverInteraction: EmitterOpaqueCoverInteractionSchema,
+});
+
 export const SpellPostSaveAreaEffectSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("areaObjectIgnition"),

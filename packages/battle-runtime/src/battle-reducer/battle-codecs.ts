@@ -151,6 +151,9 @@ import {
   AttackBonus,
   BATTLE_SURFACE_SKILLS,
   BattleAudibleBoomSchema,
+  DimIlluminationEmissionSchema,
+  IlluminationEmissionSchema,
+  EmitterOpaqueCoverInteractionSchema,
   DamageAmount,
   DamageDieSizeSchema,
   DamageTypeSchema,
@@ -6456,11 +6459,6 @@ export const BattleInterruptProcedureChoiceSchema = Schema.Union([
   BattleInterruptProcedureModifierChoiceSchema,
 ]);
 
-const BattleDimLightEmissionSchema = Schema.Struct({
-  kind: Schema.Literal("dim"),
-  radiusFeet: MovementFeet,
-});
-
 const BattleLightEmitterEndOfTurnExpirationSchema = Schema.Struct({
   kind: Schema.Literal("endOfTurn"),
   combatantId: CombatantId,
@@ -6472,18 +6470,8 @@ const BattleSpellLightEmitterMechanicalFields = {
   sourceProcedureRef: BattleProcedureExecutionRef,
   sourceCombatantId: CombatantId,
   attachment: BattleLightEmitterAttachmentSchema,
-  emission: Schema.Union([
-    BattleDimLightEmissionSchema,
-    Schema.Struct({
-      kind: Schema.Literal("brightAndDim"),
-      brightRadiusFeet: MovementFeet,
-      dimAdditionalFeet: MovementFeet,
-    }),
-  ]),
-  opaqueCoverInteraction: Schema.Union([
-    Schema.Struct({ kind: Schema.Literal("blocksEmission") }),
-    Schema.Struct({ kind: Schema.Literal("doesNotBlockEmission") }),
-  ]),
+  emission: IlluminationEmissionSchema,
+  opaqueCoverInteraction: EmitterOpaqueCoverInteractionSchema,
   expiresAt: BattleActiveEffectExpirationSchema,
 };
 
@@ -6529,7 +6517,7 @@ const BattleProjectedObjectInvisibleRevealLightEmitterSchema = Schema.Struct({
   sourceProcedureRef: BattleProcedureExecutionRef,
   sourceCombatantId: CombatantId,
   objectId: BattleObjectId,
-  emission: BattleDimLightEmissionSchema,
+  emission: DimIlluminationEmissionSchema,
   expiresAt: BattleLightEmitterEndOfTurnExpirationSchema,
 });
 
@@ -6539,7 +6527,7 @@ const BattleStoredObjectInvisibleRevealLightEmitterSchema = Schema.Struct({
   sourceProcedureRef: BattleProcedureExecutionRef,
   sourceCombatantId: CombatantId,
   objectId: BattleObjectId,
-  emission: BattleDimLightEmissionSchema,
+  emission: DimIlluminationEmissionSchema,
   expiresAt: BattleLightEmitterEndOfTurnExpirationSchema,
 });
 
@@ -6556,18 +6544,8 @@ const BattleLightEmitterSchema = Schema.Union([
     sourceProcedureRef: BattleProcedureExecutionRef,
     sourceCombatantId: CombatantId,
     attachment: BattleLightEmitterAttachmentSchema,
-    emission: Schema.Union([
-      BattleDimLightEmissionSchema,
-      Schema.Struct({
-        kind: Schema.Literal("brightAndDim"),
-        brightRadiusFeet: MovementFeet,
-        dimAdditionalFeet: MovementFeet,
-      }),
-    ]),
-    opaqueCoverInteraction: Schema.Union([
-      Schema.Struct({ kind: Schema.Literal("blocksEmission") }),
-      Schema.Struct({ kind: Schema.Literal("doesNotBlockEmission") }),
-    ]),
+    emission: IlluminationEmissionSchema,
+    opaqueCoverInteraction: EmitterOpaqueCoverInteractionSchema,
     expiresAt: BattleActiveEffectExpirationSchema,
   }),
   BattleProjectedObjectInvisibleRevealLightEmitterSchema,

@@ -39,6 +39,8 @@ import type {
 import type { BattleActiveEffectSource } from "../active-effect/source.ts";
 import type {
   AbilityCheckRollModeSpellEffect,
+  BrightAndDimIlluminationEmissionFacts,
+  DimIlluminationEmissionFacts,
   CantripSpellAttackSequenceTargeting,
   ConditionImmunityActiveEffectTemplate,
   CreatureTypeProtectionSpellTargeting,
@@ -158,6 +160,7 @@ export type AfterHitDamageAndIlluminationSpellProcedureExecution =
       readonly expr: DiceExpr;
       readonly damageType: DamageType;
     };
+    readonly illumination: BrightAndDimIlluminationEmissionFacts;
     readonly procedure: "afterHitDamageAndIllumination";
     readonly resource: LeveledSpellInvocationResource;
   };
@@ -1032,6 +1035,7 @@ export type SaveGatedAttackRollAdvantageSpellProcedureExecution =
     readonly access: PreparedSpellAccess;
     readonly dc: DcSource;
     readonly effect: SpellActiveEffectTemplate<"saveGatedTargetProjection">;
+    readonly illumination: DimIlluminationEmissionFacts;
     readonly procedure: "saveGatedAttackRollAdvantage";
     readonly rangeFeet: MovementFeet;
     readonly resource: LeveledSpellInvocationResource;
