@@ -212,16 +212,6 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
           actorId: spellCasterId,
           round: 1,
         },
-        line: {
-          lengthFeet: movementFeet(60),
-          widthFeet: movementFeet(10),
-        },
-        save: { ability: "str", dc: { kind: "caster_spell_save_dc" } },
-        pushDistanceFeet: movementFeet(15),
-        movementCost: {
-          multiplier: 2,
-          appliesTo: "towardSource",
-        },
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
@@ -258,7 +248,8 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: "Gust of Wind push facts must cover every failed-save target.",
+      message:
+        "directional persistent area push facts must cover every failed-save target.",
     });
   });
 
@@ -465,7 +456,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Gust of Wind Line movement fact does not match an active Gust of Wind Line.",
+        "directional persistent area Line movement fact does not match an active directional persistent area Line.",
     });
     expect(
       resolveBattleSubject({
@@ -513,7 +504,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Gust of Wind Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.",
+        "directional persistent area Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.",
     });
   });
 
@@ -914,7 +905,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Gust of Wind Line save is no longer available.",
+      message: "directional persistent area Line save is no longer available.",
     });
   });
 });

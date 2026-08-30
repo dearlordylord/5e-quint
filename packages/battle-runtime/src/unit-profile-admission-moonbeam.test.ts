@@ -241,9 +241,7 @@ describe("L12G deterministic Moonbeam admission", () => {
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: moonbeamAreaId,
-        save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
-        damage: { expr: { dice: 2, dieSize: 10 }, damageType: "radiant" },
-        repositionMaxMoveFeet: movementFeet(60),
+        lifecycle: { kind: "casterActionReposition" },
         savedThisTurn: [],
         shapeShiftSuppressed: [],
         expiresAt: {

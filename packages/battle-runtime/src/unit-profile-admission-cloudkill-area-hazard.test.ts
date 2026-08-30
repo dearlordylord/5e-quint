@@ -223,9 +223,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
           sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           areaId: cloudkillAreaId,
-          radiusFeet: movementFeet(20),
-          save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
-          damage: { expr: { dice: 5, dieSize: 8 }, damageType: "poison" },
+          lifecycle: { kind: "sourceTurnTranslation" },
           savedThisTurn: [],
           expiresAt: {
             kind: "concentration",
@@ -358,7 +356,8 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     expect(duplicate).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Cloudkill save was already resolved for this target this turn.",
+      message:
+        "translating persistent area save was already resolved for this target this turn.",
     });
     expect(cloudkillSavedThisTurn(appeared.state)).toEqual([spellTargetId]);
 
@@ -406,7 +405,8 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Cloudkill appearance save is outside its cast occurrence.",
+      message:
+        "translating persistent area appearance save is outside its cast occurrence.",
     });
     expect(cloudkillSavedThisTurn(targetTurn.state)).toEqual([]);
   });
@@ -428,7 +428,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Cloudkill save is no longer available.",
+      message: "Persistent-area save damage is no longer available.",
     });
   });
 
@@ -452,7 +452,8 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Cloudkill save target is no longer available.",
+      message:
+        "translating persistent area save target is no longer available.",
     });
     expect(cloudkillSavedThisTurn(stateWithoutTarget)).toEqual([]);
   });

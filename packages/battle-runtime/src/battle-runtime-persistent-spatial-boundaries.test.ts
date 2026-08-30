@@ -100,7 +100,7 @@ describe("persistent spatial spell boundary procedures", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Gust of Wind Line Saving Throw outcome requires Line area facts.",
+        "directional persistent area Line Saving Throw outcome requires Line area facts.",
     });
 
     expect(
@@ -118,7 +118,7 @@ describe("persistent spatial spell boundary procedures", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Gust of Wind Line Saving Throw outcome must match the active Line area.",
+        "directional persistent area Line Saving Throw outcome must match the active Line area.",
     });
 
     expect(
@@ -134,7 +134,7 @@ describe("persistent spatial spell boundary procedures", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Gust of Wind Line Saving Throw outcome must match the ending-turn target.",
+        "directional persistent area Line Saving Throw outcome must match the ending-turn target.",
     });
   });
 
@@ -251,7 +251,8 @@ describe("persistent spatial spell boundary procedures", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Gust of Wind Line direction change is no longer available.",
+      message:
+        "directional persistent area Line direction change is no longer available.",
     });
 
     expect(
@@ -263,7 +264,8 @@ describe("persistent spatial spell boundary procedures", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Gust of Wind Line direction change is no longer available.",
+      message:
+        "directional persistent area Line direction change is no longer available.",
     });
   });
 
@@ -802,7 +804,8 @@ describe("persistent spatial spell boundary procedures", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Moonbeam shape-shift suppression is no longer active.",
+      message:
+        "MovablePersistentArea shape-shift suppression is no longer active.",
     });
   });
 

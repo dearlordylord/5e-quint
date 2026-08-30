@@ -165,7 +165,8 @@ describe("Cloudkill strong-wind dispersal", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Cloudkill dispersal requires strong wind in its area.",
+      message:
+        "TranslatingPersistentArea dispersal requires strong wind in its area.",
       snapshot: {
         obscurementZones: [
           expect.objectContaining({
@@ -235,7 +236,8 @@ describe("Cloudkill strong-wind dispersal", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Cloudkill area is no longer active for this dispersal subject.",
+      message:
+        "TranslatingPersistentArea area is no longer active for this dispersal subject.",
       snapshot: {
         obscurementZones: [expect.anything()],
       },

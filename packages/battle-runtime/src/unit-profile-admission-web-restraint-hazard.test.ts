@@ -215,8 +215,6 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: spellCasterId,
           areaId: webAreaId,
-          sideFeet: movementFeet(20),
-          save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
           entrySavedThisTurn: [],
           startTurnSavedThisTurn: [],
           expiresAt: {
@@ -458,7 +456,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Web Restraint save was already resolved for this target this turn.",
+        "PersistentAreaSaveConditionEscape Restraint save was already resolved for this target this turn.",
     });
   });
 
@@ -655,7 +653,8 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Web Restraint save is no longer available.",
+      message:
+        "PersistentAreaSaveConditionEscape Restraint save is no longer available.",
     });
   });
   test("a Web cleanup subject becomes stale after Concentration ends", () => {
@@ -675,7 +674,8 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Web Restraint cleanup is no longer available.",
+      message:
+        "PersistentAreaSaveConditionEscape Restraint cleanup is no longer available.",
     });
   });
 
@@ -775,7 +775,8 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Web Restraint cleanup is no longer available.",
+      message:
+        "PersistentAreaSaveConditionEscape Restraint cleanup is no longer available.",
     });
 
     const areaRemovalSession = failedWebEntrySession();
@@ -805,7 +806,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Web area is no longer active.",
+      message: "PersistentAreaSaveConditionEscape area is no longer active.",
     });
   });
 
