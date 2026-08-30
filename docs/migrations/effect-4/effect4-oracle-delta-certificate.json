@@ -8,7 +8,7 @@
   },
   "candidate": {
     "byteLength": 52017737,
-    "sha256": "86e0e417f159603a138a5cf4519a46b78e00e8861d9d1e596ddf3451d13daf3f"
+    "sha256": "302f5c3ad4899704ed043bf1011578b3e21085ad9c027424b45fc95342cf5f9c"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -43,13 +43,13 @@
       {
         "baseline": {
           "count": 27,
-          "membershipSha256": "80b4eb5b3e4bbfa8faaf7ebbd5a4b43b5d3c30a8308d9d67292cde4bb28600ef",
-          "memberOrderSha256": "6d8ee53aa6c1ab404f4e4d3c7676cbfb90616a9e708a8dcb41ab1858e5850993"
+          "memberOrderSha256": "6d8ee53aa6c1ab404f4e4d3c7676cbfb90616a9e708a8dcb41ab1858e5850993",
+          "membershipSha256": "80b4eb5b3e4bbfa8faaf7ebbd5a4b43b5d3c30a8308d9d67292cde4bb28600ef"
         },
         "candidate": {
           "count": 27,
-          "membershipSha256": "80b4eb5b3e4bbfa8faaf7ebbd5a4b43b5d3c30a8308d9d67292cde4bb28600ef",
-          "memberOrderSha256": "6d8ee53aa6c1ab404f4e4d3c7676cbfb90616a9e708a8dcb41ab1858e5850993"
+          "memberOrderSha256": "6d8ee53aa6c1ab404f4e4d3c7676cbfb90616a9e708a8dcb41ab1858e5850993",
+          "membershipSha256": "80b4eb5b3e4bbfa8faaf7ebbd5a4b43b5d3c30a8308d9d67292cde4bb28600ef"
         },
         "id": "mcp-registered-tools",
         "reasonId": "mcp-registration-contract-migration"
@@ -57,13 +57,13 @@
       {
         "baseline": {
           "count": 27,
-          "membershipSha256": "80b4eb5b3e4bbfa8faaf7ebbd5a4b43b5d3c30a8308d9d67292cde4bb28600ef",
-          "memberOrderSha256": "6d8ee53aa6c1ab404f4e4d3c7676cbfb90616a9e708a8dcb41ab1858e5850993"
+          "memberOrderSha256": "6d8ee53aa6c1ab404f4e4d3c7676cbfb90616a9e708a8dcb41ab1858e5850993",
+          "membershipSha256": "80b4eb5b3e4bbfa8faaf7ebbd5a4b43b5d3c30a8308d9d67292cde4bb28600ef"
         },
         "candidate": {
           "count": 27,
-          "membershipSha256": "80b4eb5b3e4bbfa8faaf7ebbd5a4b43b5d3c30a8308d9d67292cde4bb28600ef",
-          "memberOrderSha256": "6d8ee53aa6c1ab404f4e4d3c7676cbfb90616a9e708a8dcb41ab1858e5850993"
+          "memberOrderSha256": "6d8ee53aa6c1ab404f4e4d3c7676cbfb90616a9e708a8dcb41ab1858e5850993",
+          "membershipSha256": "80b4eb5b3e4bbfa8faaf7ebbd5a4b43b5d3c30a8308d9d67292cde4bb28600ef"
         },
         "id": "mcp-authenticated-advertised-tools",
         "reasonId": "mcp-authenticated-contract-migration"
@@ -71,13 +71,13 @@
       {
         "baseline": {
           "count": 24,
-          "membershipSha256": "847090f89d7dff2dafca5f24b9129cd0bc3de405c0c95d8b6b318f9fe2675c22",
-          "memberOrderSha256": "21159a4011dd24613c20ee4fd9aced027d08f02803565c5ccb9f0b637de3ab63"
+          "memberOrderSha256": "21159a4011dd24613c20ee4fd9aced027d08f02803565c5ccb9f0b637de3ab63",
+          "membershipSha256": "847090f89d7dff2dafca5f24b9129cd0bc3de405c0c95d8b6b318f9fe2675c22"
         },
         "candidate": {
           "count": 24,
-          "membershipSha256": "847090f89d7dff2dafca5f24b9129cd0bc3de405c0c95d8b6b318f9fe2675c22",
-          "memberOrderSha256": "21159a4011dd24613c20ee4fd9aced027d08f02803565c5ccb9f0b637de3ab63"
+          "memberOrderSha256": "21159a4011dd24613c20ee4fd9aced027d08f02803565c5ccb9f0b637de3ab63",
+          "membershipSha256": "847090f89d7dff2dafca5f24b9129cd0bc3de405c0c95d8b6b318f9fe2675c22"
         },
         "id": "mcp-default-stdio-tools",
         "reasonId": "mcp-protocol-contract-migration"
@@ -85,13 +85,13 @@
       {
         "baseline": {
           "count": 24,
-          "membershipSha256": "847090f89d7dff2dafca5f24b9129cd0bc3de405c0c95d8b6b318f9fe2675c22",
-          "memberOrderSha256": "21159a4011dd24613c20ee4fd9aced027d08f02803565c5ccb9f0b637de3ab63"
+          "memberOrderSha256": "21159a4011dd24613c20ee4fd9aced027d08f02803565c5ccb9f0b637de3ab63",
+          "membershipSha256": "847090f89d7dff2dafca5f24b9129cd0bc3de405c0c95d8b6b318f9fe2675c22"
         },
         "candidate": {
           "count": 24,
-          "membershipSha256": "847090f89d7dff2dafca5f24b9129cd0bc3de405c0c95d8b6b318f9fe2675c22",
-          "memberOrderSha256": "21159a4011dd24613c20ee4fd9aced027d08f02803565c5ccb9f0b637de3ab63"
+          "memberOrderSha256": "21159a4011dd24613c20ee4fd9aced027d08f02803565c5ccb9f0b637de3ab63",
+          "membershipSha256": "847090f89d7dff2dafca5f24b9129cd0bc3de405c0c95d8b6b318f9fe2675c22"
         },
         "id": "mcp-http-without-oauth-tools",
         "reasonId": "mcp-protocol-contract-migration"
@@ -99,13 +99,13 @@
       {
         "baseline": {
           "count": 2,
-          "membershipSha256": "37e6bf90ef9136c3dc83a88cf81fce1784928f9284d495a94b509084e4711a21",
-          "memberOrderSha256": "37e6bf90ef9136c3dc83a88cf81fce1784928f9284d495a94b509084e4711a21"
+          "memberOrderSha256": "37e6bf90ef9136c3dc83a88cf81fce1784928f9284d495a94b509084e4711a21",
+          "membershipSha256": "37e6bf90ef9136c3dc83a88cf81fce1784928f9284d495a94b509084e4711a21"
         },
         "candidate": {
           "count": 2,
-          "membershipSha256": "37e6bf90ef9136c3dc83a88cf81fce1784928f9284d495a94b509084e4711a21",
-          "memberOrderSha256": "37e6bf90ef9136c3dc83a88cf81fce1784928f9284d495a94b509084e4711a21"
+          "memberOrderSha256": "37e6bf90ef9136c3dc83a88cf81fce1784928f9284d495a94b509084e4711a21",
+          "membershipSha256": "37e6bf90ef9136c3dc83a88cf81fce1784928f9284d495a94b509084e4711a21"
         },
         "id": "surface-publication-artifacts",
         "reasonId": "surface-publication-contract-convergence"
@@ -113,13 +113,13 @@
       {
         "baseline": {
           "count": 1215,
-          "membershipSha256": "d7cc97fe1da61b5280ccf8e530969ccd5c337939ba1f2ee4a18aae8a3d72d65b",
-          "memberOrderSha256": "d7cc97fe1da61b5280ccf8e530969ccd5c337939ba1f2ee4a18aae8a3d72d65b"
+          "memberOrderSha256": "d7cc97fe1da61b5280ccf8e530969ccd5c337939ba1f2ee4a18aae8a3d72d65b",
+          "membershipSha256": "d7cc97fe1da61b5280ccf8e530969ccd5c337939ba1f2ee4a18aae8a3d72d65b"
         },
         "candidate": {
           "count": 1215,
-          "membershipSha256": "d7cc97fe1da61b5280ccf8e530969ccd5c337939ba1f2ee4a18aae8a3d72d65b",
-          "memberOrderSha256": "d7cc97fe1da61b5280ccf8e530969ccd5c337939ba1f2ee4a18aae8a3d72d65b"
+          "memberOrderSha256": "d7cc97fe1da61b5280ccf8e530969ccd5c337939ba1f2ee4a18aae8a3d72d65b",
+          "membershipSha256": "d7cc97fe1da61b5280ccf8e530969ccd5c337939ba1f2ee4a18aae8a3d72d65b"
         },
         "id": "surface-content-artifacts",
         "reasonId": "surface-authored-contract-convergence"
@@ -127,13 +127,13 @@
       {
         "baseline": {
           "count": 76,
-          "membershipSha256": "540f85499ef8d6169656aee04815e41b39df05020c6a47bca6a6ff0835d5e6dd",
-          "memberOrderSha256": "540f85499ef8d6169656aee04815e41b39df05020c6a47bca6a6ff0835d5e6dd"
+          "memberOrderSha256": "540f85499ef8d6169656aee04815e41b39df05020c6a47bca6a6ff0835d5e6dd",
+          "membershipSha256": "540f85499ef8d6169656aee04815e41b39df05020c6a47bca6a6ff0835d5e6dd"
         },
         "candidate": {
           "count": 119,
-          "membershipSha256": "bc18082af66d5df04e47b110a6752a7b8244a5c542b32fea3ce45f51f2253fc3",
-          "memberOrderSha256": "bc18082af66d5df04e47b110a6752a7b8244a5c542b32fea3ce45f51f2253fc3"
+          "memberOrderSha256": "bc18082af66d5df04e47b110a6752a7b8244a5c542b32fea3ce45f51f2253fc3",
+          "membershipSha256": "bc18082af66d5df04e47b110a6752a7b8244a5c542b32fea3ce45f51f2253fc3"
         },
         "id": "raw-swarm-artifacts",
         "reasonId": "raw-swarm-effect-runtime-artifacts"
@@ -7639,6 +7639,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "1bec21730513b197c582a1b99237f7e95e3b7b86dfd1bf72b45cafe224edd5ce",
+          "candidateSha256": "1277b7a3c28e8249f4894839a0f80fe1c47d0d26c5a1d4ca4ad434a0bbcd654c",
+          "operation": "changed",
+          "segments": [
+            "rawSwarm",
+            "artifacts",
+            "@path=scripts/raw-swarm/sdk-player/declarations.tsconfig.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "raw-swarm-effect-runtime-artifacts"
       },
       {
         "delta": {
@@ -83445,7 +83459,7 @@
       {
         "delta": {
           "baselineSha256": "bcd89ed5eccba5ce9d7a5bd7355353c118bf2bb232c719cc2c5ee2d05a2779a7",
-          "candidateSha256": "9232d2eaab2e6fa428bd3b23b014782d6ebb61b457115d7f533d954939f4bc74",
+          "candidateSha256": "969c5f92a3aa563b2eee167a4ec4495d16d04b0428822fc06b7d5354125cd93b",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -102233,6 +102247,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "d4db4d00a31b9af91b691830cee1c338eff1f620667d8560697d080e672523fc",
+          "candidateSha256": "dea5e2bb22def1934ba0b62bbe9e5db11e723cd9a08d9a99a62c780a723d440f",
+          "operation": "changed",
+          "segments": [
+            "rawSwarm",
+            "artifacts",
+            "@path=scripts/raw-swarm/sdk-player/declarations.tsconfig.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "raw-swarm-effect-runtime-artifacts"
+      },
+      {
+        "delta": {
           "baselineSha256": "d7ec8d086b9d53c485d9b460790b07d31e1a19a592b1e662f6f89ed4c7400d7d",
           "candidateSha256": "3357e0639228d57339b0b4a8530915bdcf5cf3d8c46ed418ff28c97c28f653ca",
           "operation": "changed",
@@ -103508,7 +103536,7 @@
       {
         "delta": {
           "baselineSha256": "e93601b57bc68014c93a57684be5526b020671d15fb6ded610884c4aa7e2f9b7",
-          "candidateSha256": "6be98ec3b13c46dfbaf651b2638c35bc314b285bb2263edb4463ab558824257a",
+          "candidateSha256": "1a8853b254c332d1e4cfd56ff8198585f2c64a2d807fd595df1a1583cde93692",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -168330,7 +168358,7 @@
         "reasonId": "mcp-registration-contract-migration"
       }
     ],
-    "identitySha256": "9284d5fe12cf5e5dab339f482ac62fa6ff753326029ec564b7e628b7c0abc822",
+    "identitySha256": "3ad00ed374beb93179de5b6c052b8bc5338711f8892dfdb632bea182af4912a1",
     "reviewedReasons": [
       {
         "changedCollectionAuthorityIds": [],
@@ -168382,15 +168410,15 @@
       },
       {
         "changedCollectionAuthorityIds": ["raw-swarm-artifacts"],
-        "deltaCount": 55,
-        "deltaIdentitySha256": "53bc3f0ac63bfde694c18450d5eff59fc26a4f04d969302147e8b81cafece2cc",
+        "deltaCount": 57,
+        "deltaIdentitySha256": "6c7461445ddfdfc87824b94e11520c4bc83fadf3e3d49c98b461ed3c6d8fefda",
         "id": "raw-swarm-effect-runtime-artifacts",
         "operations": {
           "added": 43,
-          "changed": 12,
+          "changed": 14,
           "removed": 0
         },
-        "siteSha256": "803e1f8a59d68e07fa1ec287f15be3c824c8ce7285ab8b6bacf59b75d5acbcc3"
+        "siteSha256": "a4649e76c5d73719ca67f347104b601b81e9583c033af88e33fe9d0867a2b158"
       },
       {
         "changedCollectionAuthorityIds": [],
@@ -168417,7 +168445,7 @@
         "siteSha256": "fc9c6eeeba1aa9f94518ff8d2b9cc6aabb4153b39fec38535872db62c577e51b"
       }
     ],
-    "totalCount": 7228
+    "totalCount": 7230
   },
   "formatVersion": 2
 }
