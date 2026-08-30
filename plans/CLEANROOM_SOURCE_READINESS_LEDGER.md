@@ -13,11 +13,18 @@ This section is the sole mutable handoff for a new session.
 
 - Ledger state observed: 2026-08-30
 - Current frontier: `SR-00`
-- Active work: #368–#386 in the user's separate Effect 4 worktree session
-- Active owner: user
+- Active work: integrate and certify #368–#386 from the read-only
+  `work/effect4-certification-gh386` candidate
+- Active owner: Codex orchestrator
 - Last completed checkpoint: none under this ledger
 - Last accepted milestone SHA: none
 - Coordination base before `SR-00`: `51beff526`
+- `SR-00` integration base: `301229532`
+- Active landing unit: `integration/cleanroom-sr-00` at
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-00`
+- Next action: merge the candidate into the integration branch, synchronize the
+  ledger-only lease commit from `master`, resolve convergence findings, and run
+  #386's final review and public gates
 - Next action after `SR-00`: start `SR-01` from the exact #386 landing SHA
 - Parallel work allowed now: none that modifies behavior or files owned by
   #368–#386
@@ -128,9 +135,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice | Owner | Worktree/branch           | Base SHA        | Write lease                                      | State  |
-| --------------- | ------------ | ----- | ------------------------- | --------------- | ------------------------------------------------ | ------ |
-| `SR-00`         | #368–#386    | user  | separate Effect 4 session | user-owned base | all behavior/files explicitly owned by #368–#386 | Active |
+| Checkpoint/unit | Ticket/slice | Owner              | Worktree/branch                                                                             | Base SHA    | Write lease                                                                                 | State  |
+| --------------- | ------------ | ------------------ | ------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------- | ------ |
+| `SR-00`         | #368–#386    | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-00`; `integration/cleanroom-sr-00` | `301229532` | integration and certification of the read-only `work/effect4-certification-gh386` candidate | Active |
 
 ## Landing discipline
 
