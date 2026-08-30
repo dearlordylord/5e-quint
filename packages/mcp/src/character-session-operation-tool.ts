@@ -74,7 +74,6 @@ export function applyCharacterSessionOperation(
   return Match.value(input.operation).pipe(
     Match.when({ kind: "retainOneAtATimeCompanion" }, (operation) =>
       applyRetainOneAtATimeCompanionOperation(root, {
-        characterId: input.characterId,
         session,
         operation,
       }),

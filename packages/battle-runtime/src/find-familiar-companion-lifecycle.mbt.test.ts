@@ -91,19 +91,6 @@ const FAMILIAR_FORMS = ["none", "cat", "rat"] as const;
 type FamiliarForm = (typeof FAMILIAR_FORMS)[number];
 const CREATURE_TYPE_OVERRIDES = ["none", "fey"] as const;
 type CreatureTypeOverride = (typeof CREATURE_TYPE_OVERRIDES)[number];
-const SPAWNED_COMPANION_LIFECYCLE_EVENT_TAGS = [
-  "init",
-  "createdCat",
-  "replacedRat",
-  "sharedSenses",
-  "touchDelivered",
-  "pactAttack",
-] as const;
-type SpawnedCompanionLifecycleEventTag =
-  (typeof SPAWNED_COMPANION_LIFECYCLE_EVENT_TAGS)[number];
-type SpawnedCompanionLifecycleEvent = {
-  readonly [Tag in SpawnedCompanionLifecycleEventTag]: { readonly tag: Tag };
-}[SpawnedCompanionLifecycleEventTag];
 const FIND_FAMILIAR_COMPANION_LIFECYCLE_QNT_EVENT_TAGS = [
   "Init",
   "CreatedCat",
@@ -122,11 +109,13 @@ const FIND_FAMILIAR_COMPANION_LIFECYCLE_EVENT_BY_TAG = {
   TouchDelivered: "touchDelivered",
   PactAttack: "pactAttack",
 } as const satisfies Readonly<
-  Record<
-    FindFamiliarCompanionLifecycleQntEventTag,
-    SpawnedCompanionLifecycleEventTag
-  >
+  Record<FindFamiliarCompanionLifecycleQntEventTag, string>
 >;
+type SpawnedCompanionLifecycleEventTag =
+  (typeof FIND_FAMILIAR_COMPANION_LIFECYCLE_EVENT_BY_TAG)[FindFamiliarCompanionLifecycleQntEventTag];
+type SpawnedCompanionLifecycleEvent = {
+  readonly tag: SpawnedCompanionLifecycleEventTag;
+};
 
 type SpawnedCompanionProjection = {
   readonly familiarStatus: FamiliarStatus;
@@ -1158,10 +1147,7 @@ function spawnedCompanionLifecycleEvent(
     quintVariantTag(raw, "qEvent"),
     FIND_FAMILIAR_COMPANION_LIFECYCLE_QNT_EVENT_TAGS,
   );
-  const value = literalField(
-    FIND_FAMILIAR_COMPANION_LIFECYCLE_EVENT_BY_TAG[tag],
-    SPAWNED_COMPANION_LIFECYCLE_EVENT_TAGS,
-  );
+  const value = FIND_FAMILIAR_COMPANION_LIFECYCLE_EVENT_BY_TAG[tag];
   return { tag: value };
 }
 

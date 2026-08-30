@@ -3,7 +3,6 @@ import {
   characterSheetCompanion,
   createRetainedFamiliarLikeCompanion,
   type CharacterSheetCompanionFormSelection,
-  type CharacterSheetId,
   type CharacterSheetRetainedCompanionCreationSource,
   type CharacterSheetRetainedCompanionId,
 } from "@dnd/character-sheet-runtime";
@@ -22,7 +21,6 @@ import { errorContent } from "./tool-content.ts";
 export function applyRetainOneAtATimeCompanionOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: Extract<
       ApplyCharacterSessionOperationToolInput["operation"],
@@ -30,26 +28,27 @@ export function applyRetainOneAtATimeCompanionOperation(
     >;
   },
 ) {
+  const characterSessionId = input.session.characterId;
   const selectedForm = retainedCompanionFormSelectionFromTool(
     input.operation.selectedForm,
   );
   if (Result.isFailure(selectedForm)) {
     return errorContent("Character session operation failed.", {
       code: "CHARACTER_SESSION_OPERATION_INVALID",
-      characterId: input.characterId,
+      characterId: characterSessionId,
       message: selectedForm.failure,
     });
   }
   const companionId = input.operation.companionId;
   if (
     retainedCompanionIdUsedByAnotherCharacter(root, {
-      characterId: characterId(input.characterId),
+      characterId: characterId(characterSessionId),
       companionId,
     })
   ) {
     return errorContent("Character session operation failed.", {
       code: "CHARACTER_SESSION_OPERATION_INVALID",
-      characterId: input.characterId,
+      characterId: characterSessionId,
       message:
         "Retained companion id is already used by another character session.",
     });
@@ -71,7 +70,7 @@ export function applyRetainOneAtATimeCompanionOperation(
   if (Result.isFailure(updated)) {
     return errorContent("Character session operation failed.", {
       code: "CHARACTER_SESSION_OPERATION_INVALID",
-      characterId: input.characterId,
+      characterId: characterSessionId,
       message: updated.failure.message,
     });
   }
