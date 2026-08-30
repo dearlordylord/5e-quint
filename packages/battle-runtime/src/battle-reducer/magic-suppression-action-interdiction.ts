@@ -25,6 +25,7 @@ import {
   spellInvocationIsSpellcasting,
   spellInvocationSpendsMagicAction,
 } from "./spell-turn-resources.ts";
+import { boundPersistentAreaSaveDamageEffect } from "./persistent-area-save-damage-binding.ts";
 
 type MagicSuppressionInterdictionKind = "spellcasting" | "magicAction";
 type MagicSuppressionSubjectInterdiction = {
@@ -200,23 +201,30 @@ function runtimeCommandSubjectSpendsMagicAction(
   }
   return (
     subject.command === "movableZoneReposition" &&
-    activeMovableRadiantCylinderEffectForRepositionSubject(state, subject)
+    activeMagicActionPersistentAreaEffectForRepositionSubject(state, subject)
   );
 }
 
-function activeMovableRadiantCylinderEffectForRepositionSubject(
+function activeMagicActionPersistentAreaEffectForRepositionSubject(
   state: BattleState,
   subject: RuntimeCommandSubject,
 ): boolean {
-  return (
-    subject.command === "movableZoneReposition" &&
-    [...state.combatants.values()].some((combatant) =>
-      combatant.activeEffects.some(
-        (effect) =>
-          effect.kind === "persistentAreaSaveDamage" &&
-          effect.areaId === subject.areaId,
-      ),
-    )
+  if (subject.command !== "movableZoneReposition") return false;
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some((effect) => {
+      if (
+        effect.kind !== "persistentAreaSaveDamage" ||
+        effect.effectRef !== subject.effectRef ||
+        effect.areaId !== subject.areaId
+      ) {
+        return false;
+      }
+      const bound = boundPersistentAreaSaveDamageEffect(combatant, effect);
+      return (
+        bound?.facts.lifecycle.kind === "casterActionReposition" &&
+        bound.facts.lifecycle.actionCost === "magicAction"
+      );
+    }),
   );
 }
 
