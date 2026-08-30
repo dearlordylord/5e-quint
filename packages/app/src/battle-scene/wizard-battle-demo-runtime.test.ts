@@ -147,11 +147,11 @@ describe("wizard battle demo runtime guards", () => {
     const counterspellChoice = envelope.frontier.choices.find(
       (choice) => choice.kind === "nestedProcedure" && choice.subject.command === "castTriggeredReactionSpell"
     )
-    if (
-      counterspellChoice === undefined ||
-      counterspellChoice.kind !== "nestedProcedure" ||
-      counterspellChoice.subject.command !== "castTriggeredReactionSpell"
-    ) {
+    if (counterspellChoice === undefined || counterspellChoice.kind !== "nestedProcedure") {
+      throw new Error("Expected a Counterspell choice in the demo frontier.")
+    }
+    const counterspellSubject = counterspellChoice.subject
+    if (counterspellSubject.command !== "castTriggeredReactionSpell") {
       throw new Error("Expected a Counterspell choice in the demo frontier.")
     }
     const duplicateResult = {
@@ -168,7 +168,7 @@ describe("wizard battle demo runtime guards", () => {
 
     expect(() =>
       requireCounterspellChoice(duplicateResult, {
-        reactorId: counterspellChoice.subject.reactorId,
+        reactorId: counterspellSubject.reactorId,
         slotLevel: 3
       })
     ).toThrow("Expected exactly one Counterspell Reaction choice; got 2.")
