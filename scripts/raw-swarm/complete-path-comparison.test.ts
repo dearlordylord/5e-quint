@@ -288,7 +288,7 @@ function findingsProjection(
   findings: readonly ReturnType<typeof finding>[],
   replayEvents: readonly ReturnType<typeof retainInvocation>[] = [],
   executionGitSha: typeof gitSha = gitSha,
-  firstCallThrows = false,
+  includesRecoveredThrowAfterAcceptedCall = false,
 ): CompletePathMeasurement["findings"] {
   const scenario = writeAuthority(root, "SCENARIO.md", scenarioBytes);
   const scenarioReview = writeAuthority(
@@ -379,7 +379,7 @@ function findingsProjection(
     resultSha256: sha256Canonical([]),
   });
   const returnedCalls = [returnedCall(1, 1), returnedCall(2, 2)] as const;
-  const calls = firstCallThrows
+  const calls = includesRecoveredThrowAfterAcceptedCall
     ? [
         returnedCall(1, 1),
         {
@@ -398,7 +398,7 @@ function findingsProjection(
           error: {
             name: "Error",
             message:
-              "Synthetic first-call failure recovered on continuation two.",
+              "Synthetic call failure after acceptance recovered on continuation two.",
           },
         },
         returnedCall(3, 2),
@@ -842,7 +842,7 @@ function retainBenchmarkAuxiliaryInvocation(
 function measurement(
   overrides: Partial<CurrentCompletePathMeasurement> = {},
   executionGitSha: typeof gitSha = gitSha,
-  firstCallThrows = false,
+  includesRecoveredThrowAfterAcceptedCall = false,
 ): CurrentCompletePathMeasurement {
   const root = rawSwarmTestOutputDirectory("complete-path-test-");
   temporaryDirectories.push(root);
@@ -915,11 +915,14 @@ function measurement(
     root,
     [
       finding("accepted-call-verdict", 1),
-      finding("successful-correction", firstCallThrows ? 3 : 2),
+      finding(
+        "successful-correction",
+        includesRecoveredThrowAfterAcceptedCall ? 3 : 2,
+      ),
     ],
     retainedInvocations,
     executionGitSha,
-    firstCallThrows,
+    includesRecoveredThrowAfterAcceptedCall,
   );
   const findingsAuthority = writeAuthority(
     root,
