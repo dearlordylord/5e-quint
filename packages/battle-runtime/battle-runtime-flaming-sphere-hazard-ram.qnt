@@ -26,6 +26,7 @@
 module battleRuntimeFlamingSphereHazardRam {
   import battleRuntimeFlamingSphereFacts.* from "./battle-runtime-flaming-sphere-facts"
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import spellSaveGate.* from "../shared-algebras/proofs/rule-core/spell-save-gate"
   import spellSlotExpenditure.* from "../shared-algebras/proofs/rule-core/spell-slot-expenditure"
@@ -58,10 +59,10 @@ module battleRuntimeFlamingSphereHazardRam {
   }
 
   pure def flamingSphereMoveDistanceAccepted(moveFeet: int, maxMoveFeet: int): bool =
-    moveFeet > 0 and moveFeet <= maxMoveFeet
+    persistentAreaMoveDistanceAccepted(moveFeet, maxMoveFeet)
 
   pure def flamingSphereDamageRollAccepted(rolledDamage: int, damageDice: int): bool =
-    rolledDamage >= damageDice and rolledDamage <= damageDice * 6
+    persistentAreaDamageRollAccepted(rolledDamage, damageDice, 6)
 
   pure def flamingSphereHazardRamTriggerTiming(entrypoint: FlamingSphereHazardRamEntrypoint): AreaEffectTriggerTiming =
     match entrypoint {
@@ -128,7 +129,10 @@ module battleRuntimeFlamingSphereHazardRam {
         if (not(areaEffectTriggerCanResolve(
           true,
           true,
-          FlamingSphereHazardEveryTriggerProfile,
+          everyQualifiedAreaTriggerProfile(Set(
+            AreaMovesIntoSpace,
+            CreatureEndsTurnNearArea,
+          )),
           flamingSphereHazardRamTriggerTiming(entrypoint),
         )))
           state

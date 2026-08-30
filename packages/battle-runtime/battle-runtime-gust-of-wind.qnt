@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-gust-of-wind-line
 module battleRuntimeGustOfWind {
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
@@ -38,7 +39,7 @@ module battleRuntimeGustOfWind {
   pure val noHeightenedSpellTarget = NoHeightenedSpellTarget
 
   pure def gustOfWindLineMovementCost(totalDistanceFeet: int, closerDistanceFeet: int): int =
-    totalDistanceFeet + closerDistanceFeet
+    directionalPersistentAreaMovementCost(totalDistanceFeet, closerDistanceFeet)
 
   pure def gustOfWindLineMovementFactValid(
     effect: GustOfWindLineEffect,

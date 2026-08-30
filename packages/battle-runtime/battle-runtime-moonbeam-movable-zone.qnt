@@ -31,6 +31,7 @@
 
 module battleRuntimeMoonbeamMovableZone {
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
   import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
   import battleRuntimeMoonbeamFacts.* from "./battle-runtime-moonbeam-facts"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
@@ -71,10 +72,14 @@ module battleRuntimeMoonbeamMovableZone {
   }
 
   pure def moonbeamDamageRollAccepted(rolledDamage: int, damageDice: int): bool =
-    rolledDamage >= damageDice and rolledDamage <= damageDice * moonbeamDamageDieSize
+    persistentAreaDamageRollAccepted(
+      rolledDamage,
+      damageDice,
+      moonbeamDamageDieSize,
+    )
 
   pure def moonbeamMoveDistanceAccepted(moveFeet: int, maxMoveFeet: int): bool =
-    moveFeet > 0 and moveFeet <= maxMoveFeet
+    persistentAreaMoveDistanceAccepted(moveFeet, maxMoveFeet)
 
   pure def moonbeamSaveTriggerTiming(trigger: MoonbeamSaveTrigger): AreaEffectTriggerTiming =
     match trigger {
@@ -173,7 +178,15 @@ module battleRuntimeMoonbeamMovableZone {
           not(areaEffectTriggerCanResolve(
             true,
             true,
-            onceAcrossQualifiedAreaTriggersProfile(zone.savedThisTurn),
+            onceAcrossQualifiedAreaTriggersProfile(
+              Set(
+                AreaAppearsInSpace,
+                AreaMovesIntoSpace,
+                CreatureEntersArea,
+                CreatureEndsTurnInArea,
+              ),
+              zone.savedThisTurn,
+            ),
             moonbeamSaveTriggerTiming(trigger),
           )) or
           not(moonbeamDamageRollAccepted(fills.rolledDamage, zone.damageDice))

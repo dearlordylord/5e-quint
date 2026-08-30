@@ -35,7 +35,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     qFeatherFallLandingFallingPronePrevented: bool,
     qFeatherFallLandedTargetMitigationCleared: bool,
     qFeatherFallOtherTargetStillMitigated: bool,
-    qPersistentAreaTraitAreaIdentityRetained: bool,
+    qPersistentAreaTraitActiveEffectAreaId: str,
+    qPersistentAreaTraitProjectedZoneAreaId: str,
     qFogCloudHeavilyObscuredZoneCount: int,
     qFogCloudRadiusFeet: int,
     qFogCloudDurationTicks: int,
@@ -130,7 +131,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   pure def qFeatherFallLandingFallingPronePrevented: bool = qState.qFeatherFallLandingFallingPronePrevented
   pure def qFeatherFallLandedTargetMitigationCleared: bool = qState.qFeatherFallLandedTargetMitigationCleared
   pure def qFeatherFallOtherTargetStillMitigated: bool = qState.qFeatherFallOtherTargetStillMitigated
-  pure def qPersistentAreaTraitAreaIdentityRetained: bool = qState.qPersistentAreaTraitAreaIdentityRetained
+  pure def qPersistentAreaTraitActiveEffectAreaId: str = qState.qPersistentAreaTraitActiveEffectAreaId
+  pure def qPersistentAreaTraitProjectedZoneAreaId: str = qState.qPersistentAreaTraitProjectedZoneAreaId
   pure def qFogCloudHeavilyObscuredZoneCount: int = qState.qFogCloudHeavilyObscuredZoneCount
   pure def qFogCloudRadiusFeet: int = qState.qFogCloudRadiusFeet
   pure def qFogCloudDurationTicks: int = qState.qFogCloudDurationTicks
@@ -204,7 +206,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
 
   val qFogCloudLevelOneRadiusFeet = 20
   val qFogCloudOneHourDurationTicks = 600
-  val qPersistentAreaTraitAreaId = "persistent-area-trait-area"
+  val qPersistentAreaTraitAbsentAreaId = "absent"
+  val qPersistentAreaTraitAreaId = "level1-fog-cloud-area"
   val qGreaseOneMinuteDurationTicks = 10
   val qGreaseDifficultTerrainTotalDistanceFeet = 10
   val qGreaseDifficultTerrainDistanceFeet = 5
@@ -215,14 +218,6 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
   val qProduceFlameTenMinuteDurationTicks = 100
   val qThunderwaveExpectedAffectedTargetOutcomeCount = 3
   val qThunderwaveExpectedDispositionCount = 1
-
-  pure def persistentAreaTraitAreaIdentityRetained(
-    activeEffectAreaId: str,
-    projectedZoneAreaId: str,
-    expectedAreaId: str,
-  ): bool =
-    activeEffectAreaId == expectedAreaId and projectedZoneAreaId == expectedAreaId
-
 
   action recordProjection(
     lightEmitterCount: int,
@@ -252,7 +247,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     featherFallLandingFallingPronePrevented: bool,
     featherFallLandedTargetMitigationCleared: bool,
     featherFallOtherTargetStillMitigated: bool,
-    persistentAreaTraitAreaIdentityRetained: bool,
+    persistentAreaTraitActiveEffectAreaId: str,
+    persistentAreaTraitProjectedZoneAreaId: str,
     fogCloudHeavilyObscuredZoneCount: int,
     fogCloudRadiusFeet: int,
     fogCloudDurationTicks: int,
@@ -344,7 +340,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       qFeatherFallLandingFallingPronePrevented: featherFallLandingFallingPronePrevented,
       qFeatherFallLandedTargetMitigationCleared: featherFallLandedTargetMitigationCleared,
       qFeatherFallOtherTargetStillMitigated: featherFallOtherTargetStillMitigated,
-      qPersistentAreaTraitAreaIdentityRetained: persistentAreaTraitAreaIdentityRetained,
+      qPersistentAreaTraitActiveEffectAreaId: persistentAreaTraitActiveEffectAreaId,
+      qPersistentAreaTraitProjectedZoneAreaId: persistentAreaTraitProjectedZoneAreaId,
       qFogCloudHeavilyObscuredZoneCount: fogCloudHeavilyObscuredZoneCount,
       qFogCloudRadiusFeet: fogCloudRadiusFeet,
       qFogCloudDurationTicks: fogCloudDurationTicks,
@@ -417,7 +414,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
-      false, 0, 0, 0, false, false, false, false, false,
+      qPersistentAreaTraitAbsentAreaId, qPersistentAreaTraitAbsentAreaId,
+      0, 0, 0, false, false, false, false, false,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
@@ -435,7 +433,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
-      false, 0, 0, 0, false, false, false, false, false,
+      qPersistentAreaTraitAbsentAreaId, qPersistentAreaTraitAbsentAreaId,
+      0, 0, 0, false, false, false, false, false,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
@@ -454,7 +453,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, "darkness", "darkness", false, false,
       1, 1, "advantage", "advantage", "advantage", true, true,
       false, false, false, false, 0, 0, false, false, false, false,
-      false, 0, 0, 0, false, false, false, false, false,
+      qPersistentAreaTraitAbsentAreaId, qPersistentAreaTraitAbsentAreaId,
+      0, 0, 0, false, false, false, false, false,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
@@ -473,7 +473,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       true, true, true, true, 2, 60, true, true, true, true,
-      false, 0, 0, 0, false, false, false, false, false,
+      qPersistentAreaTraitAbsentAreaId, qPersistentAreaTraitAbsentAreaId,
+      0, 0, 0, false, false, false, false, false,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
@@ -492,11 +493,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
-      persistentAreaTraitAreaIdentityRetained(
-        qPersistentAreaTraitAreaId,
-        qPersistentAreaTraitAreaId,
-        qPersistentAreaTraitAreaId,
-      ), 1, qFogCloudLevelOneRadiusFeet, qFogCloudOneHourDurationTicks,
+      qPersistentAreaTraitAreaId, qPersistentAreaTraitAreaId,
+      1, qFogCloudLevelOneRadiusFeet, qFogCloudOneHourDurationTicks,
       true, true, true, true, true,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
@@ -517,7 +515,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
       false, 0, 0, 0, false, false, false, false, false,
-      true, 1, qGreaseOneMinuteDurationTicks, 2, true, false, true,
+      qPersistentAreaTraitAbsentAreaId, qPersistentAreaTraitAbsentAreaId,
+      1, qGreaseOneMinuteDurationTicks, 2, true, false, true,
       0, 0, false, false, false, false, false, false, false, false, true,
       false, 0, false, false, false, false, false, false,
       false, 0, "darkness", false, false, false, false,
@@ -536,7 +535,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
       false, 0, 0, 0, false, false, false, false, false,
-      true, 1, qGreaseOneMinuteDurationTicks, 2, true, false, true,
+      qPersistentAreaTraitAbsentAreaId, qPersistentAreaTraitAbsentAreaId,
+      1, qGreaseOneMinuteDurationTicks, 2, true, false, true,
       qGreaseDifficultTerrainExpectedMovementCostFeet,
       qGreaseDifficultTerrainExpectedMovementCostFeet,
       true, true, true, true, true, true, true, true, true,
@@ -556,7 +556,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
-      false, 0, 0, 0, false, false, false, false, false,
+      qPersistentAreaTraitAbsentAreaId, qPersistentAreaTraitAbsentAreaId,
+      0, 0, 0, false, false, false, false, false,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
       true, qJumpMovementCostFeet, true, true, true, true, true, true,
@@ -575,7 +576,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       true, 3, qLightOneHourDurationTicks, "brightLight", "darkness", true, true,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
-      false, 0, 0, 0, false, false, false, false, false,
+      qPersistentAreaTraitAbsentAreaId, qPersistentAreaTraitAbsentAreaId,
+      0, 0, 0, false, false, false, false, false,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
@@ -594,7 +596,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
-      false, 0, 0, 0, false, false, false, false, false,
+      qPersistentAreaTraitAbsentAreaId, qPersistentAreaTraitAbsentAreaId,
+      0, 0, 0, false, false, false, false, false,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
@@ -614,7 +617,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
       false, 0, 0, "darkness", "darkness", false, false,
       0, 0, "normal", "normal", "normal", false, false,
       false, false, false, false, 0, 0, false, false, false, false,
-      false, 0, 0, 0, false, false, false, false, false,
+      qPersistentAreaTraitAbsentAreaId, qPersistentAreaTraitAbsentAreaId,
+      0, 0, 0, false, false, false, false, false,
       false, 0, 0, 0, false, false, false,
       0, 0, false, false, false, false, false, false, false, false, false,
       false, 0, false, false, false, false, false, false,
@@ -629,11 +633,8 @@ module battleRuntimeLevel1SpatialWitnessSelectedIdentityMbt {
     ),
   }
 
-  run test_persistent_area_trait_area_identity_requires_joint_match = all {
-    assert(persistentAreaTraitAreaIdentityRetained("area-a", "area-a", "area-a")),
-    assert(not(persistentAreaTraitAreaIdentityRetained("area-b", "area-a", "area-a"))),
-    assert(not(persistentAreaTraitAreaIdentityRetained("area-a", "area-b", "area-a"))),
-  }
+  val qPersistentAreaTraitAreaIdentityInvariant =
+    qPersistentAreaTraitActiveEffectAreaId == qPersistentAreaTraitProjectedZoneAreaId
 
   action step = any {
     doDancingLightsMovableDimLight,

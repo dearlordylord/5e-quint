@@ -4,6 +4,7 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 module battleRuntimeSleetStormAreaHazard {
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
@@ -124,7 +125,13 @@ module battleRuntimeSleetStormAreaHazard {
     if (not(areaEffectTriggerCanResolve(
       sleetStormAreaHazardActive(state, areaId),
       true,
-      sleetStormFirstEntryAndStartTurnProfile(saved, saved),
+      firstPerTimingPerTurnAreaTriggerProfile(
+        Set(CreatureEntersArea, CreatureStartsTurnInArea),
+        if (saved)
+          Set(CreatureEntersArea, CreatureStartsTurnInArea)
+        else
+          Set(),
+      ),
       sleetStormAreaHazardSaveTriggerTiming(triggerFact),
     )))
       state

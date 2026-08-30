@@ -3,6 +3,7 @@
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 module battleRuntimeSpikeGrowthMovementHazard {
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
@@ -63,7 +64,11 @@ module battleRuntimeSpikeGrowthMovementHazard {
     }
 
   pure def spikeGrowthMovementDamageAmount(rolledDamage: int, movementFeet: int): int =
-    rolledDamage * (movementFeet / spikeGrowthDamageIntervalFeet)
+    persistentAreaMovementDamageAmount(
+      rolledDamage,
+      movementFeet,
+      spikeGrowthDamageIntervalFeet,
+    )
 
   pure def combatantWithSpikeGrowthDamage(
     target: Combatant,

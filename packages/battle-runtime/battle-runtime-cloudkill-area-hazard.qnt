@@ -22,6 +22,7 @@
 //   Obscurement, Saving Throw, and Damage Type.
 module battleRuntimeCloudkillAreaHazard {
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
 
   type CloudkillTarget =
     | CloudkillCaster
@@ -140,7 +141,11 @@ module battleRuntimeCloudkillAreaHazard {
   }
 
   pure def cloudkillDamageDice(slotLevel: int): int =
-    cloudkillBaseDamageDice + (slotLevel - cloudkillMinimumSlotLevel)
+    persistentAreaScaledDamageDice(
+      slotLevel,
+      cloudkillMinimumSlotLevel,
+      cloudkillBaseDamageDice,
+    )
 
   pure def cloudkillD8PipValue(pip: CloudkillD8Pip): int =
     match pip {
@@ -189,7 +194,15 @@ module battleRuntimeCloudkillAreaHazard {
     areaEffectTriggerCanResolve(
       cloudkillIsActive(state),
       tableMembershipWitnessPresent,
-      onceAcrossQualifiedAreaTriggersProfile(cloudkillTargetSavedThisTurn(state, target)),
+      onceAcrossQualifiedAreaTriggersProfile(
+        Set(
+          AreaAppearsInSpace,
+          AreaMovesIntoSpace,
+          CreatureEntersArea,
+          CreatureEndsTurnInArea,
+        ),
+        cloudkillTargetSavedThisTurn(state, target),
+      ),
       cloudkillTriggerTiming(trigger),
     )
 
@@ -437,7 +450,7 @@ module battleRuntimeCloudkillAreaHazard {
     }
 
   pure def cloudkillDamageAfterSave(rolledDamage: int, savingThrowSucceeded: bool): int =
-    if (savingThrowSucceeded) rolledDamage / 2 else rolledDamage
+    persistentAreaDamageAfterSave(rolledDamage, savingThrowSucceeded)
 
   pure def cloudkillTargetWithDamage(
     state: CloudkillSemanticState,
