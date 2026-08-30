@@ -219,7 +219,7 @@ function assertNoSymlinkInRepositoryPath(path: string): void {
   }
 }
 
-function readRegularRepositoryFile(path: string): Uint8Array {
+export function readRegularRepositoryFile(path: string): Uint8Array {
   const canonicalPath = repositoryPathFor(path);
   assertNoSymlinkInRepositoryPath(canonicalPath);
   const descriptor = openSync(
