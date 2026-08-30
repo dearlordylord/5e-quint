@@ -61,6 +61,7 @@ import {
   damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import {
   battleDamageTargets,
   type BattleDamageTarget,
@@ -838,6 +839,11 @@ function resolveObjectContactDamage(input: {
           state: input.state,
           target,
           damageAmount: damage,
+          damageOccurrenceKey:
+            saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+              holeId: damageRoll.holeId,
+              targetId: target.combatantId,
+            }),
         });
       return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
         {
@@ -848,6 +854,11 @@ function resolveObjectContactDamage(input: {
             input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
             holes,
           ),
+          damageOccurrenceKey:
+            saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+              holeId: damageRoll.holeId,
+              targetId: target.combatantId,
+            }),
         },
       );
     },
@@ -1089,6 +1100,12 @@ function resolveObjectContactDamage(input: {
         state,
         target,
         damageAmount,
+        damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget(
+          {
+            holeId: damageRoll.holeId,
+            targetId,
+          },
+        ),
       });
     const stagedConditionLifecycleFills = fillsMatchingHoleIds(
       input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
@@ -1105,8 +1122,14 @@ function resolveObjectContactDamage(input: {
       linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
       damageDisposition: damageDispositionByTargetId.get(targetId),
-      saveGatedConditionWithRepeatDamageRepeatSaves:
-        stagedConditionLifecycleFills,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: stagedConditionLifecycleFills,
+        occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+          holeId: damageRoll.holeId,
+          targetId,
+        }),
+      },
       damageSourceId: input.actorId,
       spatialFacts: input.fillSet.targetSpatialFacts,
       ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),

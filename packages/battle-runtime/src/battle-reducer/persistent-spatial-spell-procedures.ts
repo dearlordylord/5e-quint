@@ -54,6 +54,8 @@ import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts"
 import {
   breakBattleConcentration,
   concentrationSavingThrowHole,
+  resolveSaveGatedConditionDamageRepeatSave,
+  type SaveGatedConditionDamageRepeatSaveContext,
 } from "./damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 import {
@@ -87,6 +89,7 @@ import {
   resolveStagedDelegatedEndTurnCommand,
 } from "./turn-boundary-lifecycle.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import {
   applyPreparedSlotSpellDamage,
   savingThrowFlatBonusProjections,
@@ -1557,6 +1560,10 @@ function applyRamMovablePersistentAreaDamage(input: {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
+  readonly damageRepeatSave: Extract<
+    SaveGatedConditionDamageRepeatSaveContext,
+    { readonly kind: "repeatSave" }
+  >;
 }): BattleState {
   return applyPreparedSlotSpellDamage(
     input.state,
@@ -1569,6 +1576,7 @@ function applyRamMovablePersistentAreaDamage(input: {
       saveSucceeded: input.saveSucceeded,
     }),
     {
+      saveGatedConditionDamageRepeatSave: input.damageRepeatSave,
       damageSourceId: input.effect.sourceCombatantId,
       concentrationSavingThrow: input.concentrationSavingThrow,
       spatialFacts: [],
@@ -1652,7 +1660,7 @@ function resolveRamMovablePersistentAreaSaveCommand(
     actorId: input.subject.actorId,
     command: "endTurn" as const,
   };
-  const endTurnFills = input.fills.filter(
+  const candidateEndTurnFills = input.fills.filter(
     (fill) =>
       fill.holeId !== saveHole.holeId &&
       fill.holeId !== damageHole.holeId &&
@@ -1750,6 +1758,37 @@ function resolveRamMovablePersistentAreaSaveCommand(
       hole: concentrationHole,
     });
   }
+  const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+    state: input.state,
+    target,
+    damageAmount: adjustedDamage,
+    fills: input.fills.filter(
+      (
+        fill,
+      ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+        fill.kind === "savingThrowOutcome",
+    ),
+    damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+      holeId: damageHole.holeId,
+      targetId: target.combatantId,
+    }),
+  });
+  if (damageRepeatSave.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", damageRepeatSave.message);
+  }
+  if (damageRepeatSave.tag === "needsHoles") {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      damageRepeatSave.missingHoles,
+    );
+  }
+  const damageRepeatSaveHoleIds = new Set(
+    damageRepeatSave.holes.map((hole) => hole.holeId),
+  );
+  const endTurnFills = candidateEndTurnFills.filter(
+    (fill) => !damageRepeatSaveHoleIds.has(fill.holeId),
+  );
   const damaged = applyRamMovablePersistentAreaDamage({
     state: input.state,
     target,
@@ -1757,6 +1796,7 @@ function resolveRamMovablePersistentAreaSaveCommand(
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
     concentrationSavingThrow: concentrationFill,
+    damageRepeatSave: damageRepeatSave.context,
   });
   return resolveStagedDelegatedEndTurnCommand(input, {
     state: damaged,
@@ -1937,7 +1977,7 @@ function resolveRamMovablePersistentAreaRamCommand(
     (
       fill,
     ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
-      fill.kind === "savingThrowOutcome",
+      fill.kind === "savingThrowOutcome" && fill.holeId === saveHole.holeId,
   );
   const damageFills = input.fills.filter(
     (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
@@ -1954,7 +1994,6 @@ function resolveRamMovablePersistentAreaRamCommand(
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !everyFillUsesHoleId(movementFills, movementHole.holeId) ||
-    !everyFillUsesHoleId(saveFills, saveHole.holeId) ||
     !everyFillUsesHoleId(damageFills, damageHole.holeId)
   ) {
     return invalidResult(
@@ -2084,6 +2123,55 @@ function resolveRamMovablePersistentAreaRamCommand(
   if (concentrationHole !== null && concentrationFill === undefined) {
     return needsHolesResult(input.state, input.subject, [concentrationHole]);
   }
+  const adjustedDamage = ramMovablePersistentAreaAdjustedDamage({
+    state: input.state,
+    target,
+    effect,
+    damageFill,
+    saveSucceeded: saveOutcome.succeeded,
+  });
+  const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+    state: input.state,
+    target,
+    damageAmount: adjustedDamage,
+    fills: input.fills.filter(
+      (
+        fill,
+      ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+        fill.kind === "savingThrowOutcome",
+    ),
+    damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+      holeId: damageHole.holeId,
+      targetId: target.combatantId,
+    }),
+  });
+  if (damageRepeatSave.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", damageRepeatSave.message);
+  }
+  if (damageRepeatSave.tag === "needsHoles") {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      damageRepeatSave.missingHoles,
+    );
+  }
+  const acceptedDamageRepeatSaveHoleIds = new Set(
+    damageRepeatSave.holes.map((hole) => hole.holeId),
+  );
+  if (
+    input.fills.some(
+      (fill) =>
+        fill.kind === "savingThrowOutcome" &&
+        fill.holeId !== saveHole.holeId &&
+        !acceptedDamageRepeatSaveHoleIds.has(fill.holeId),
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movable zone ram received a repeat save fill for an unrelated damage occurrence.",
+    );
+  }
   const damaged = applyRamMovablePersistentAreaDamage({
     state: input.state,
     target,
@@ -2091,6 +2179,7 @@ function resolveRamMovablePersistentAreaRamCommand(
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
     concentrationSavingThrow: concentrationFill,
+    damageRepeatSave: damageRepeatSave.context,
   });
   const spent = spendActivationResource(damaged.currentTurnResources, {
     kind: "bonusAction",
@@ -2243,6 +2332,10 @@ function applyMovablePersistentAreaDamage(input: {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
+  readonly damageRepeatSave: Extract<
+    SaveGatedConditionDamageRepeatSaveContext,
+    { readonly kind: "repeatSave" }
+  >;
 }): BattleState {
   return applyPreparedSlotSpellDamage(
     input.state,
@@ -2255,6 +2348,7 @@ function applyMovablePersistentAreaDamage(input: {
       saveSucceeded: input.saveSucceeded,
     }),
     {
+      saveGatedConditionDamageRepeatSave: input.damageRepeatSave,
       damageSourceId: input.effect.sourceCombatantId,
       concentrationSavingThrow: input.concentrationSavingThrow,
       spatialFacts: [],
@@ -2371,7 +2465,7 @@ function resolveMovablePersistentAreaSaveCommand(
   }
   /* v8 ignore stop -- @preserve */
   const concentrationHoleId = concentrationSavingThrowHole(target, 1)?.holeId;
-  const endTurnFills = isEndTurn
+  const candidateEndTurnFills = isEndTurn
     ? input.fills.filter(
         (fill) =>
           fill.holeId !== saveHole.holeId &&
@@ -2471,6 +2565,52 @@ function resolveMovablePersistentAreaSaveCommand(
       hole: concentrationHole,
     });
   }
+  const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+    state: input.state,
+    target,
+    damageAmount: adjustedDamage,
+    fills: input.fills.filter(
+      (
+        fill,
+      ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+        fill.kind === "savingThrowOutcome",
+    ),
+    damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+      holeId: damageHole.holeId,
+      targetId: target.combatantId,
+    }),
+  });
+  if (damageRepeatSave.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", damageRepeatSave.message);
+  }
+  if (damageRepeatSave.tag === "needsHoles") {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      damageRepeatSave.missingHoles,
+    );
+  }
+  const damageRepeatSaveHoleIds = new Set(
+    damageRepeatSave.holes.map((hole) => hole.holeId),
+  );
+  const endTurnFills = candidateEndTurnFills.filter(
+    (fill) => !damageRepeatSaveHoleIds.has(fill.holeId),
+  );
+  if (
+    !isEndTurn &&
+    input.fills.some(
+      (fill) =>
+        fill.kind === "savingThrowOutcome" &&
+        fill.holeId !== saveHole.holeId &&
+        !damageRepeatSaveHoleIds.has(fill.holeId),
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Movable zone save received a repeat save fill for an unrelated damage occurrence.",
+    );
+  }
   const afterDamage = applyMovablePersistentAreaDamage({
     state: input.state,
     target,
@@ -2478,6 +2618,7 @@ function resolveMovablePersistentAreaSaveCommand(
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
     concentrationSavingThrow: concentrationFill,
+    damageRepeatSave: damageRepeatSave.context,
   });
   const afterShapeShiftRider = applyMovablePersistentAreaShapeShiftRider({
     state: afterDamage,

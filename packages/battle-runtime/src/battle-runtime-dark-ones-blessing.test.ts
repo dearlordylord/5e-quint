@@ -379,6 +379,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       warlockLevel: 3,
     });
     const result = applyPreparedSlotSpellDamage(state, enemyId, 5, {
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       damageSourceId: allyId,
       spatialFacts: [darkOnesBlessingRangeFactForState(state, allyId, enemyId)],
       relationshipDecisions: [darkOnesBlessingEnemyDecision(enemyId)],
@@ -400,7 +401,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       concentrationSavingThrow: undefined,
       damageDisposition: { kind: "ordinaryDamage" },
       linkedDefenseResistanceDamageShareConcentrationSavingThrows: [],
-      saveGatedConditionWithRepeatDamageRepeatSaves: [],
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       damageSourceId: warlockId,
       spatialFacts: [],
       relationshipDecisions: [darkOnesBlessingEnemyDecision(enemyId)],
@@ -445,6 +446,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
     }
 
     const result = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state,
       target,
       damageAmount: 5,
@@ -523,6 +525,7 @@ function damageEnemyToZero(input: {
     ),
   );
   return applyBattleHitPointDamage({
+    saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
     state,
     target,
     damageAmount: 5,

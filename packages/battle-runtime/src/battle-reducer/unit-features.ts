@@ -62,6 +62,7 @@ import {
   applyBattleHitPointDamage,
   applyHpHealing,
   breakBattleConcentration,
+  resolveSaveGatedConditionDamageRepeatSave,
 } from "./damage-apply.ts";
 import { damageAmountByTypeAfterTargetAdjustments } from "./damage-helpers.ts";
 import {
@@ -93,6 +94,7 @@ import {
 } from "./ongoing-feature-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { scoreModifier } from "./domain-helpers.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import { combatantShapeShiftingSuppressed } from "./shape-shifting.ts";
 import {
   type ResolvedWildShapeEquipmentDisposition,
@@ -792,42 +794,95 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   );
   const damageRollTotal = rolledDiceTotal(fills.value.damageRoll.value);
   const savingThrows = fills.value.savingThrows;
-  const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
-    (state, targetId) => {
-      const target = state.combatants.get(targetId);
-      /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves every damage target exists, and spending the feature resource preserves combatant-map membership. */
-      if (target === undefined) {
-        return state;
-      }
-      /* v8 ignore stop -- @preserve */
-      const outcome = validation.outcomesByTargetId.get(targetId);
-      const damageBeforeTargetAdjustments =
-        outcome?.succeeded === true
-          ? Math.floor(damageRollTotal / 2)
-          : damageRollTotal;
-      const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+  const damageEntries: Array<{
+    readonly targetId: CombatantId;
+    readonly damageAmount: number;
+    readonly damageRepeatSave: Extract<
+      ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+      { readonly tag: "ok" }
+    >;
+  }> = [];
+  for (const targetId of validation.damageTargetIds) {
+    const target = input.state.combatants.get(targetId);
+    /* v8 ignore start -- @preserve -- Validation proves every damage target exists in the current battle. */
+    if (target === undefined) continue;
+    /* v8 ignore stop -- @preserve */
+    const outcome = validation.outcomesByTargetId.get(targetId);
+    const damageBeforeTargetAdjustments =
+      outcome?.succeeded === true
+        ? Math.floor(damageRollTotal / 2)
+        : damageRollTotal;
+    const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+      input.state,
+      target,
+      new Map([
+        [
+          unitFeature.damageHealing.damage.damageType,
+          damageBeforeTargetAdjustments,
+        ],
+      ]),
+    );
+    const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+      state: input.state,
+      target,
+      damageAmount,
+      fills: fills.value.damageRepeatSaves,
+      damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+        holeId: fills.value.damageRoll.holeId,
+        targetId,
+      }),
+    });
+    if (damageRepeatSave.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageRepeatSave.message,
+      );
+    }
+    if (damageRepeatSave.tag === "needsHoles") {
+      return needsHolesResult(
+        input.state,
+        input.subject,
+        damageRepeatSave.missingHoles,
+      );
+    }
+    damageEntries.push({ targetId, damageAmount, damageRepeatSave });
+  }
+  const acceptedDamageRepeatSaveHoleIds = new Set(
+    damageEntries.flatMap((entry) =>
+      entry.damageRepeatSave.holes.map((hole) => hole.holeId),
+    ),
+  );
+  if (
+    fills.value.damageRepeatSaves.some(
+      (fill) => !acceptedDamageRepeatSaveHoleIds.has(fill.holeId),
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Magic Action damage repeat save fill does not match a damaged target.",
+    );
+  }
+  const stateAfterDamage = damageEntries.reduce<BattleState>((state, entry) => {
+    const target = state.combatants.get(entry.targetId);
+    /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves every damage target exists, and spending the feature resource preserves combatant-map membership. */
+    if (target === undefined) {
+      return state;
+    }
+    /* v8 ignore stop -- @preserve */
+    return normalizeBattleGrapples(
+      applyBattleHitPointDamage({
+        saveGatedConditionDamageRepeatSave: entry.damageRepeatSave.context,
         state,
         target,
-        new Map([
-          [
-            unitFeature.damageHealing.damage.damageType,
-            damageBeforeTargetAdjustments,
-          ],
-        ]),
-      );
-      return normalizeBattleGrapples(
-        applyBattleHitPointDamage({
-          state,
-          target,
-          damageAmount,
-          deathFailuresAtZeroHp: 1,
-          damageSourceId: actor.combatantId,
-          spatialFacts: savingThrows.spatialFacts ?? [],
-        }),
-      );
-    },
-    stateAfterSpend,
-  );
+        damageAmount: entry.damageAmount,
+        deathFailuresAtZeroHp: 1,
+        damageSourceId: actor.combatantId,
+        spatialFacts: savingThrows.spatialFacts ?? [],
+      }),
+    );
+  }, stateAfterSpend);
   const healingTarget = stateAfterDamage.combatants.get(
     validation.healingTargetId,
   );
@@ -1851,6 +1906,7 @@ type AttackActionAreaSaveDamageReplacementFillSet = {
   readonly damageRoll:
     | AttackActionAreaSaveDamageReplacementRollFill
     | undefined;
+  readonly damageRepeatSaves: readonly AttackActionAreaSaveDamageReplacementSavingThrowFill[];
 };
 
 function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
@@ -1994,42 +2050,95 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
   }
   /* v8 ignore stop -- @preserve */
   const damageRollTotal = rolledDiceTotal(damageRoll.value);
-  const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
-    (state, targetId) => {
-      const target = state.combatants.get(targetId);
-      /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves every affected target exists, and spending the Attack action and feature resource preserves combatant-map membership. */
-      if (target === undefined) {
-        return state;
-      }
-      /* v8 ignore stop -- @preserve */
-      const outcome = validation.outcomesByTargetId.get(targetId);
-      const damageBeforeTargetAdjustments =
-        outcome?.succeeded === true
-          ? Math.floor(damageRollTotal / 2)
-          : damageRollTotal;
-      const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+  const damageEntries: Array<{
+    readonly targetId: CombatantId;
+    readonly damageAmount: number;
+    readonly damageRepeatSave: Extract<
+      ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+      { readonly tag: "ok" }
+    >;
+  }> = [];
+  for (const targetId of validation.damageTargetIds) {
+    const target = input.state.combatants.get(targetId);
+    /* v8 ignore start -- @preserve -- Validation proves every affected target exists in the current battle. */
+    if (target === undefined) continue;
+    /* v8 ignore stop -- @preserve */
+    const outcome = validation.outcomesByTargetId.get(targetId);
+    const damageBeforeTargetAdjustments =
+      outcome?.succeeded === true
+        ? Math.floor(damageRollTotal / 2)
+        : damageRollTotal;
+    const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+      input.state,
+      target,
+      new Map([
+        [
+          unitFeature.breath.damage.damageType.value,
+          damageBeforeTargetAdjustments,
+        ],
+      ]),
+    );
+    const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+      state: input.state,
+      target,
+      damageAmount,
+      fills: fills.value.damageRepeatSaves,
+      damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+        holeId: damageRoll.holeId,
+        targetId,
+      }),
+    });
+    if (damageRepeatSave.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageRepeatSave.message,
+      );
+    }
+    if (damageRepeatSave.tag === "needsHoles") {
+      return needsHolesResult(
+        input.state,
+        input.subject,
+        damageRepeatSave.missingHoles,
+      );
+    }
+    damageEntries.push({ targetId, damageAmount, damageRepeatSave });
+  }
+  const acceptedDamageRepeatSaveHoleIds = new Set(
+    damageEntries.flatMap((entry) =>
+      entry.damageRepeatSave.holes.map((hole) => hole.holeId),
+    ),
+  );
+  if (
+    fills.value.damageRepeatSaves.some(
+      (fill) => !acceptedDamageRepeatSaveHoleIds.has(fill.holeId),
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Area damage replacement repeat save fill does not match a damaged target.",
+    );
+  }
+  const stateAfterDamage = damageEntries.reduce<BattleState>((state, entry) => {
+    const target = state.combatants.get(entry.targetId);
+    /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves every affected target exists, and spending the Attack action and feature resource preserves combatant-map membership. */
+    if (target === undefined) {
+      return state;
+    }
+    /* v8 ignore stop -- @preserve */
+    return normalizeBattleGrapples(
+      applyBattleHitPointDamage({
+        saveGatedConditionDamageRepeatSave: entry.damageRepeatSave.context,
         state,
         target,
-        new Map([
-          [
-            unitFeature.breath.damage.damageType.value,
-            damageBeforeTargetAdjustments,
-          ],
-        ]),
-      );
-      return normalizeBattleGrapples(
-        applyBattleHitPointDamage({
-          state,
-          target,
-          damageAmount,
-          deathFailuresAtZeroHp: 1,
-          damageSourceId: actor.combatantId,
-          spatialFacts: fills.value.savingThrows?.spatialFacts ?? [],
-        }),
-      );
-    },
-    stateAfterSpend,
-  );
+        damageAmount: entry.damageAmount,
+        deathFailuresAtZeroHp: 1,
+        damageSourceId: actor.combatantId,
+        spatialFacts: fills.value.savingThrows?.spatialFacts ?? [],
+      }),
+    );
+  }, stateAfterSpend);
   return {
     tag: "resolved",
     state: stateAfterDamage,
@@ -2052,6 +2161,8 @@ function attackActionAreaSaveDamageReplacementFills(
     | AttackActionAreaSaveDamageReplacementSavingThrowFill
     | undefined;
   let damageRoll: AttackActionAreaSaveDamageReplacementRollFill | undefined;
+  const damageRepeatSaves: AttackActionAreaSaveDamageReplacementSavingThrowFill[] =
+    [];
   for (const fill of fills) {
     if (
       fill.kind === "savingThrowOutcome" &&
@@ -2098,6 +2209,10 @@ function attackActionAreaSaveDamageReplacementFills(
       damageRoll = fill;
       continue;
     }
+    if (fill.kind === "savingThrowOutcome") {
+      damageRepeatSaves.push(fill);
+      continue;
+    }
     /* v8 ignore start -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
@@ -2105,7 +2220,10 @@ function attackActionAreaSaveDamageReplacementFills(
     };
     /* v8 ignore stop -- @preserve */
   }
-  return { tag: "ok", value: { savingThrows, damageRoll } };
+  return {
+    tag: "ok",
+    value: { savingThrows, damageRoll, damageRepeatSaves },
+  };
 }
 
 function validateAttackActionAreaSaveDamageReplacementSavingThrows(input: {
@@ -2319,6 +2437,7 @@ type MagicActionAreaSaveDamageHealingFillSet = {
     | undefined;
   readonly damageRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
   readonly healingRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
+  readonly damageRepeatSaves: readonly MagicActionAreaSaveDamageHealingSavingThrowFill[];
 };
 
 type MagicActionSaveGatedConditionSavingThrowFill = Extract<
@@ -2589,6 +2708,8 @@ function magicActionAreaSaveDamageHealingFills(
   let healingTarget: MagicActionAreaSaveDamageHealingTargetFill | undefined;
   let damageRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
   let healingRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
+  const damageRepeatSaves: MagicActionAreaSaveDamageHealingSavingThrowFill[] =
+    [];
   for (const fill of fills) {
     if (
       fill.kind === "savingThrowOutcome" &&
@@ -2653,6 +2774,10 @@ function magicActionAreaSaveDamageHealingFills(
       damageRoll = fill;
       continue;
     }
+    if (fill.kind === "savingThrowOutcome") {
+      damageRepeatSaves.push(fill);
+      continue;
+    }
     if (
       fill.kind === "rolledDice" &&
       fill.holeId ===
@@ -2690,7 +2815,13 @@ function magicActionAreaSaveDamageHealingFills(
   }
   return {
     tag: "ok",
-    value: { savingThrows, healingTarget, damageRoll, healingRoll },
+    value: {
+      savingThrows,
+      healingTarget,
+      damageRoll,
+      healingRoll,
+      damageRepeatSaves,
+    },
   };
 }
 

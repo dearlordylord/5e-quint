@@ -21,12 +21,15 @@ import {
   bonusSpellAct,
   fixedCostMovementReplacementAct,
   jumpSpellTargetListFill,
+  savingThrowOutcomeFill,
   spellAct,
   spellHoleInvocation,
+  spellTargetListFill,
   spikeGrowthAreaFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  combatantId,
   DieRollResult,
   discoverBattleActCandidates,
   elapsedTimeTicks,
@@ -45,6 +48,7 @@ import {
 import {
   orcRelentlessEnduranceUnitId,
   jumpUnitId,
+  saveGatedConditionWithRepeatUnitId,
   spellCasterId,
   spellTargetId,
   spikeGrowthAreaId,
@@ -754,6 +758,214 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
         ]),
       },
     });
+  });
+
+  test("positive movement damage opens and resolves a damage-triggered condition repeat save", () => {
+    const repeatConditionCasterId = combatantId(
+      "synthetic-repeat-condition-caster",
+    );
+    const spikeGrowth = spellRecord(spikeGrowthUnitId);
+    const saveGatedConditionWithRepeat = spellRecord(
+      saveGatedConditionWithRepeatUnitId,
+    );
+    const session = spellBattle({
+      preparedSpells: [spikeGrowth],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      extraTargetIds: [repeatConditionCasterId],
+      extraTargetSpellcasting: wizardSpellcasting({
+        preparedSpells: [saveGatedConditionWithRepeat],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      }),
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const spikeGrowthAct = spellAct({
+      session,
+      spellId: spikeGrowthUnitId,
+      slotLevel: 2,
+    });
+    const spikeGrowthCast = resolveBattleSubject({
+      state: session.state,
+      subject: spikeGrowthAct.subject,
+      fills: [
+        spikeGrowthAreaFill(
+          requireHole(spikeGrowthAct.initialHoles, "spellAreaChoice"),
+        ),
+      ],
+    });
+    if (spikeGrowthCast.tag !== "resolved") {
+      throw new Error("Expected Spike Growth cast to resolve.");
+    }
+    const targetTurn = endTurn({
+      state: spikeGrowthCast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Spike Growth caster End Turn to resolve.");
+    }
+    const repeatConditionCasterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (repeatConditionCasterTurn.tag !== "resolved") {
+      throw new Error("Expected initial target End Turn to resolve.");
+    }
+    const repeatConditionAct = spellAct({
+      session: battleRuntimeSessionForTest({
+        state: repeatConditionCasterTurn.state,
+        context: session.context,
+      }),
+      spellId: saveGatedConditionWithRepeatUnitId,
+      slotLevel: 1,
+    });
+    const repeatConditionTargets = requireHole(
+      repeatConditionAct.initialHoles,
+      "spellTargetList",
+    );
+    const repeatConditionTargetFill = spellTargetListFill(
+      repeatConditionTargets,
+      repeatConditionCasterId,
+      saveGatedConditionWithRepeatUnitId,
+      [spellTargetId],
+    );
+    const initialSave = requireResultHole(
+      resolveBattleSubject({
+        state: repeatConditionCasterTurn.state,
+        subject: repeatConditionAct.subject,
+        fills: [repeatConditionTargetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const repeatConditionCast = resolveBattleSubject({
+      state: repeatConditionCasterTurn.state,
+      subject: repeatConditionAct.subject,
+      fills: [
+        repeatConditionTargetFill,
+        savingThrowOutcomeFill(initialSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (repeatConditionCast.tag !== "resolved") {
+      throw new Error("Expected repeat-save condition cast to resolve.");
+    }
+    expect(
+      requireCombatant(repeatConditionCast.state, spellTargetId).activeEffects,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "saveGatedConditionWithRepeat" }),
+      ]),
+    );
+    const spikeGrowthCasterTurn = endTurn({
+      state: repeatConditionCast.state,
+      actorId: repeatConditionCasterId,
+    });
+    if (spikeGrowthCasterTurn.tag !== "resolved") {
+      throw new Error("Expected repeat-condition caster End Turn to resolve.");
+    }
+    const movementTurn = endTurn({
+      state: spikeGrowthCasterTurn.state,
+      actorId: spellCasterId,
+    });
+    if (movementTurn.tag !== "resolved") {
+      throw new Error("Expected Spike Growth caster End Turn to resolve.");
+    }
+    const subject = {
+      tag: "runtimeCommand" as const,
+      actorId: spellTargetId,
+      command: "move" as const,
+    };
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state: movementTurn.state,
+        subject,
+        fills: [],
+      }),
+      "movement",
+    );
+    const hazard = requireSpikeGrowthHazard(movementTurn.state);
+    const movementThroughHazard = movementFill(movement, {
+      movementCostFeet: 15,
+      provokedOpportunityAttacks: [],
+      areaDifficultTerrain: areaMovementDistanceDamageAreaDifficultTerrain(
+        hazard,
+        {
+          totalDistanceFeet: 10,
+          difficultTerrainDistanceFeet: 5,
+          damageDistanceFeet: 5,
+        },
+      ),
+    });
+    const pendingDamage = resolveBattleSubject({
+      state: movementTurn.state,
+      subject,
+      fills: [movementThroughHazard],
+    });
+    const damage = requireResultHole(pendingDamage, "rolledDice");
+    const damageFill = damageRollFillWithGroups(damage, [[1, 1]]);
+    const pendingRepeatSave = resolveBattleSubject({
+      state: movementTurn.state,
+      subject,
+      fills: [movementThroughHazard, damageFill],
+    });
+    expect(pendingRepeatSave).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+    });
+    const repeatSave = requireResultHole(
+      pendingRepeatSave,
+      "savingThrowOutcome",
+    );
+    expect(repeatSave).toEqual(
+      expect.objectContaining({
+        saveGatedConditionRepeatSave: expect.objectContaining({
+          targetId: spellTargetId,
+          trigger: "damage",
+        }),
+        targetRollModes: [{ targetId: spellTargetId, rollMode: "advantage" }],
+      }),
+    );
+
+    const resolved = resolveBattleSubject({
+      state: movementTurn.state,
+      subject,
+      fills: [
+        movementThroughHazard,
+        damageFill,
+        savingThrowOutcomeFill(repeatSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: repeatConditionCasterId,
+            concentrating: false,
+          }),
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: Hp(18),
+            conditions: expect.not.arrayContaining(["prone", "incapacitated"]),
+            movement: expect.objectContaining({
+              spentFeet: movementFeet(15),
+            }),
+          }),
+        ]),
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected movement damage repeat save to resolve.");
+    }
+    expect(
+      requireCombatant(resolved.state, spellTargetId).activeEffects,
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "saveGatedConditionWithRepeat" }),
+      ]),
+    );
   });
 
   test("spike growth movement damage can trigger Relentless Endurance", () => {

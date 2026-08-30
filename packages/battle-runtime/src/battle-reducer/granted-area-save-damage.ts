@@ -18,6 +18,7 @@ import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowHoles,
   fillsMatchingHoleIds,
+  resolveSaveGatedConditionDamageRepeatSave,
 } from "./damage-apply.ts";
 import {
   applyAvailableSpellDamageReduction,
@@ -59,6 +60,7 @@ import {
 import { boundGrantedAreaSaveDamageActionEffect } from "./spell-modifier-binding.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./ongoing-feature-relationship.ts";
 import { grantedAreaSaveDamageActionHoleKey } from "./selected-effect-hole-key.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 type ExpectedGrantedAreaSaveDamageFill = {
   readonly kind: BattleFill["kind"];
   readonly holeId: BattleHoleId;
@@ -105,16 +107,6 @@ export function resolveGrantedAreaSaveDamageActionCommand(
     input.subject.actorId,
     effect,
   );
-  const saveFillsValidation = validateExpectedGrantedAreaSaveDamageFillKind(
-    input.fills,
-    "savingThrowOutcome",
-    [saveHole.holeId],
-  );
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (saveFillsValidation !== null) {
-    return invalidResult(input.state, "invalidFill", saveFillsValidation);
-  }
-  /* v8 ignore stop -- @preserve */
   const saveFill = savingThrowFillFor(input.fills, saveHole.holeId);
   if (saveFill === undefined) {
     const fillsValidation = validateExpectedGrantedAreaSaveDamageFills(
@@ -267,7 +259,49 @@ export function resolveGrantedAreaSaveDamageActionCommand(
             ],
     });
   }
-  const concentrationHoles = damageEntriesByTarget.flatMap((entry) => {
+  const resolvedDamageEntries: Array<
+    GrantedAreaSaveDamageActionDamageEntry & {
+      readonly damageRepeatSave: Extract<
+        ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+        { readonly tag: "ok" }
+      >;
+    }
+  > = [];
+  for (const entry of damageEntriesByTarget) {
+    const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+      state: input.state,
+      target: entry.targetForHoles,
+      damageAmount: entry.damageAmount,
+      fills: input.fills.filter(
+        (
+          fill,
+        ): fill is Extract<
+          BattleFill,
+          { readonly kind: "savingThrowOutcome" }
+        > => fill.kind === "savingThrowOutcome",
+      ),
+      damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+        holeId: damageHole.holeId,
+        targetId: entry.targetId,
+      }),
+    });
+    if (damageRepeatSave.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageRepeatSave.message,
+      );
+    }
+    if (damageRepeatSave.tag === "needsHoles") {
+      return needsHolesResult(
+        input.state,
+        input.subject,
+        damageRepeatSave.missingHoles,
+      );
+    }
+    resolvedDamageEntries.push({ ...entry, damageRepeatSave });
+  }
+  const concentrationHoles = resolvedDamageEntries.flatMap((entry) => {
     return entry.damageAmount <= 0
       ? []
       : damageLifecycleConcentrationSavingThrowHoles({
@@ -308,7 +342,7 @@ export function resolveGrantedAreaSaveDamageActionCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const damageDispositionHoles = damageEntriesByTarget.flatMap((entry) => {
+  const damageDispositionHoles = resolvedDamageEntries.flatMap((entry) => {
     const hole =
       entry.damageAmount <= 0
         ? null
@@ -351,8 +385,14 @@ export function resolveGrantedAreaSaveDamageActionCommand(
     [
       { kind: "savingThrowOutcome", holeId: saveHole.holeId },
       { kind: "rolledDice", holeId: damageHole.holeId },
-      ...damageEntriesByTarget.flatMap(
+      ...resolvedDamageEntries.flatMap(
         (entry) => entry.spellDamageReductionHoles,
+      ),
+      ...resolvedDamageEntries.flatMap((entry) =>
+        entry.damageRepeatSave.holes.map((hole) => ({
+          kind: "savingThrowOutcome" as const,
+          holeId: hole.holeId,
+        })),
       ),
       ...concentrationHoles.map((hole) => ({
         kind: "concentrationSavingThrow" as const,
@@ -375,7 +415,7 @@ export function resolveGrantedAreaSaveDamageActionCommand(
     savingThrowTargetIds,
     relationshipFacts,
   );
-  for (const entry of damageEntriesByTarget) {
+  for (const entry of resolvedDamageEntries) {
     // Damage application preserves combatant membership, and fill validation
     // proved this target was present before the sequential damage lifecycle.
     const currentTarget = damaged.combatants.get(entry.targetId)!;
@@ -417,6 +457,7 @@ export function resolveGrantedAreaSaveDamageActionCommand(
         damageAmount,
       });
     damaged = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: entry.damageRepeatSave.context,
       state: damaged,
       target: spellReduction.target,
       damageAmount,

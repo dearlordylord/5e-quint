@@ -138,6 +138,7 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
       throw new Error("Expected Healing Word target.");
     }
     const knockedOutState = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: session.state,
       target,
       damageAmount: Number(target.hp),

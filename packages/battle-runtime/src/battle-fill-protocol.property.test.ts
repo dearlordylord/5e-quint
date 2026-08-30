@@ -1746,11 +1746,15 @@ describe("battle fill protocol boundary owners", () => {
         runtimeInvocation,
         missingTargetDamage,
         false,
-        { spatialFacts: [] },
+        {
+          saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
+          spatialFacts: [],
+        },
       ),
     ).toBe(session.state);
     expect(
       applyPreparedSlotSpellDamage(session.state, missingTarget, 1, {
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
         spatialFacts: [],
       }),
     ).toBe(session.state);

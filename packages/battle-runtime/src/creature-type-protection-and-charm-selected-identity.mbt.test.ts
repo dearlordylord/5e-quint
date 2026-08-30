@@ -391,7 +391,11 @@ const creatureTypeProtectionAndCharmDiscoveries = {
         resolveAnimalFriendshipFailedSave(state),
         beastTargetId,
         1,
-        { damageSourceId: casterId, spatialFacts: [] },
+        {
+          saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
+          damageSourceId: casterId,
+          spatialFacts: [],
+        },
       ),
       animalFriendshipTargetAdmission(state),
       emptyProtectionFromEvilAndGoodEvidence(),

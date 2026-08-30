@@ -114,6 +114,7 @@ import {
   saveGatedConditionWithRepeatEffects,
   saveGatedConditionWithRepeatDamageRepeatSaveHoles,
   saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
+  type SaveGatedConditionDamageOccurrenceKey,
   validateSaveGatedConditionWithRepeatRepeatSavingThrowOutcome,
 } from "./staged-condition-repeat-save.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./targeting-save-interdiction.ts";
@@ -149,6 +150,30 @@ type SavingThrowOutcomeFill = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
 >;
+export type SaveGatedConditionDamageRepeatSaveContext =
+  | { readonly kind: "noRepeatSave" }
+  | {
+      readonly kind: "repeatSave";
+      readonly occurrenceKey: SaveGatedConditionDamageOccurrenceKey;
+      readonly fills: readonly SavingThrowOutcomeFill[];
+    };
+
+export type SaveGatedConditionDamageRepeatSaveResolution =
+  | {
+      readonly tag: "ok";
+      readonly holes: readonly SaveGatedConditionWithRepeatRepeatSaveHole[];
+      readonly context: Extract<
+        SaveGatedConditionDamageRepeatSaveContext,
+        { readonly kind: "repeatSave" }
+      >;
+    }
+  | {
+      readonly tag: "needsHoles";
+      readonly holes: readonly SaveGatedConditionWithRepeatRepeatSaveHole[];
+      readonly missingHoles: readonly SaveGatedConditionWithRepeatRepeatSaveHole[];
+    }
+  | { readonly tag: "invalid"; readonly message: string };
+
 type SaveGatedConditionWithRepeatRepeatSaveHole = ReturnType<
   typeof saveGatedConditionWithRepeatDamageRepeatSaveHoles
 >[number];
@@ -435,13 +460,7 @@ export function applyBattleHitPointDamage(input: {
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
   readonly linkedDefenseResistanceDamageShareConcentrationSavingThrows?: readonly ConcentrationSavingThrowFill[];
-  readonly saveGatedConditionWithRepeatDamageRepeatSaves?: readonly Extract<
-    BattleFill,
-    { readonly kind: "savingThrowOutcome" }
-  >[];
-  readonly saveGatedConditionWithRepeatDamageRepeatSaveEventKey?:
-    | string
-    | undefined;
+  readonly saveGatedConditionDamageRepeatSave: SaveGatedConditionDamageRepeatSaveContext;
   readonly spatialFacts?: readonly BattleTargetSpatialFact[];
   readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
   readonly suppressLinkedDefenseResistanceDamageShareDamageShare?: true;
@@ -509,12 +528,13 @@ export function applyBattleHitPointDamage(input: {
         )
       : afterHitPointBudgetConditionRemoval;
   const afterSaveGatedConditionWithRepeat =
-    input.damageAmount > 0
+    input.damageAmount > 0 &&
+    input.saveGatedConditionDamageRepeatSave.kind === "repeatSave"
       ? applySaveGatedConditionWithRepeatDamageRepeatSaves(
           afterSaveGatedAreaControl,
           targetId,
-          input.saveGatedConditionWithRepeatDamageRepeatSaves ?? [],
-          input.saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
+          input.saveGatedConditionDamageRepeatSave.fills,
+          input.saveGatedConditionDamageRepeatSave.occurrenceKey,
         )
       : afterSaveGatedAreaControl;
   const afterEnemyZeroHitPointTemporaryHitPoints =
@@ -546,10 +566,8 @@ export function applyBattleHitPointDamage(input: {
           concentrationSavingThrows:
             input.linkedDefenseResistanceDamageShareConcentrationSavingThrows ??
             [],
-          saveGatedConditionWithRepeatDamageRepeatSaves:
-            input.saveGatedConditionWithRepeatDamageRepeatSaves ?? [],
-          saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
-            input.saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
+          saveGatedConditionDamageRepeatSave:
+            input.saveGatedConditionDamageRepeatSave,
         })
       : afterFamiliar;
   return battleStateAfterLinkedDefenseResistanceDamageShareCasterZeroHitPoints(
@@ -697,7 +715,7 @@ export function damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillC
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
   readonly fills: readonly SavingThrowOutcomeFill[];
-  readonly damageEventKey?: string | undefined;
+  readonly damageOccurrenceKey: SaveGatedConditionDamageOccurrenceKey;
 }): ReturnType<typeof checkSaveGatedConditionWithRepeatDamageRepeatSaveFills> {
   const holes =
     damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles(input);
@@ -707,18 +725,56 @@ export function damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillC
   });
 }
 
+export function resolveSaveGatedConditionDamageRepeatSave(input: {
+  readonly state: BattleState;
+  readonly target: BattleCreatureState;
+  readonly damageAmount: number;
+  readonly fills: readonly SavingThrowOutcomeFill[];
+  readonly damageOccurrenceKey: SaveGatedConditionDamageOccurrenceKey;
+}): SaveGatedConditionDamageRepeatSaveResolution {
+  const holes =
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles(input);
+  const matchedFills = fillsMatchingHoleIds(input.fills, holes);
+  const check =
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
+      ...input,
+      fills: matchedFills,
+    });
+  return Match.value(check).pipe(
+    Match.when({ tag: "invalid" }, ({ message }) => ({
+      tag: "invalid" as const,
+      message,
+    })),
+    Match.when({ tag: "needsHoles" }, ({ holes: missingHoles }) => ({
+      tag: "needsHoles" as const,
+      holes,
+      missingHoles,
+    })),
+    Match.when({ tag: "ok" }, () => ({
+      tag: "ok" as const,
+      holes,
+      context: {
+        kind: "repeatSave" as const,
+        occurrenceKey: input.damageOccurrenceKey,
+        fills: matchedFills,
+      },
+    })),
+    Match.exhaustive,
+  );
+}
+
 export function damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
-  readonly damageEventKey?: string | undefined;
+  readonly damageOccurrenceKey: SaveGatedConditionDamageOccurrenceKey;
 }): readonly SaveGatedConditionWithRepeatRepeatSaveHole[] {
   return input.damageAmount > 0
     ? [
         ...saveGatedConditionWithRepeatDamageRepeatSaveHoles(
           input.state,
           input.target,
-          input.damageEventKey,
+          input.damageOccurrenceKey,
         ),
         ...linkedDefenseResistanceDamageShareSaveGatedConditionWithRepeatRepeatSaveHoles(
           input,
@@ -731,7 +787,7 @@ function linkedDefenseResistanceDamageShareSaveGatedConditionWithRepeatRepeatSav
   readonly state: BattleState;
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
-  readonly damageEventKey?: string | undefined;
+  readonly damageOccurrenceKey: SaveGatedConditionDamageOccurrenceKey;
 }): ReturnType<typeof saveGatedConditionWithRepeatDamageRepeatSaveHoles> {
   return linkedDefenseResistanceDamageShareCasters(
     input.state,
@@ -740,7 +796,7 @@ function linkedDefenseResistanceDamageShareSaveGatedConditionWithRepeatRepeatSav
     saveGatedConditionWithRepeatDamageRepeatSaveHoles(
       input.state,
       caster,
-      input.damageEventKey,
+      input.damageOccurrenceKey,
     ),
   );
 }
@@ -750,10 +806,7 @@ function applyLinkedDefenseResistanceDamageShareDamageShare(input: {
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
   readonly concentrationSavingThrows: readonly ConcentrationSavingThrowFill[];
-  readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly SavingThrowOutcomeFill[];
-  readonly saveGatedConditionWithRepeatDamageRepeatSaveEventKey?:
-    | string
-    | undefined;
+  readonly saveGatedConditionDamageRepeatSave: SaveGatedConditionDamageRepeatSaveContext;
 }): BattleState {
   return input.target.activeEffects
     .filter(isLinkedDefenseResistanceDamageShareEffect)
@@ -782,10 +835,8 @@ function applyLinkedDefenseResistanceDamageShareDamageShare(input: {
         damageAmount: input.damageAmount,
         deathFailuresAtZeroHp: 1,
         concentrationSavingThrow,
-        saveGatedConditionWithRepeatDamageRepeatSaves:
-          input.saveGatedConditionWithRepeatDamageRepeatSaves,
-        saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
-          input.saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
+        saveGatedConditionDamageRepeatSave:
+          input.saveGatedConditionDamageRepeatSave,
         suppressLinkedDefenseResistanceDamageShareDamageShare: true,
       });
     }, input.state);
@@ -908,7 +959,7 @@ function applySaveGatedConditionWithRepeatDamageRepeatSaves(
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-  damageEventKey: string | undefined,
+  damageOccurrenceKey: SaveGatedConditionDamageOccurrenceKey,
 ): BattleState {
   const target = state.combatants.get(targetId);
   if (target === undefined) {
@@ -921,8 +972,7 @@ function applySaveGatedConditionWithRepeatDamageRepeatSaves(
     const hole = saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
       targetId,
       effect,
-      "damage",
-      damageEventKey,
+      { trigger: "damage", occurrenceKey: damageOccurrenceKey },
     );
     const fill = fills.find((candidate) => candidate.holeId === hole.holeId);
     if (
@@ -961,10 +1011,7 @@ export function applyAttackDamageAmount(input: {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
-  readonly saveGatedConditionWithRepeatDamageRepeatSaves?: readonly Extract<
-    BattleFill,
-    { readonly kind: "savingThrowOutcome" }
-  >[];
+  readonly saveGatedConditionDamageRepeatSave: SaveGatedConditionDamageRepeatSaveContext;
   readonly linkedDefenseResistanceDamageShareConcentrationSavingThrows?: readonly ConcentrationSavingThrowFill[];
   readonly spatialFacts?: readonly BattleTargetSpatialFact[];
   readonly relationshipDecisions?:
@@ -985,8 +1032,8 @@ export function applyAttackDamageAmount(input: {
     concentrationSavingThrow: input.concentrationSavingThrow,
     linkedDefenseResistanceDamageShareConcentrationSavingThrows:
       input.linkedDefenseResistanceDamageShareConcentrationSavingThrows ?? [],
-    saveGatedConditionWithRepeatDamageRepeatSaves:
-      input.saveGatedConditionWithRepeatDamageRepeatSaves ?? [],
+    saveGatedConditionDamageRepeatSave:
+      input.saveGatedConditionDamageRepeatSave,
     spatialFacts: input.spatialFacts ?? [],
     ...optionalProperty("relationshipDecisions", input.relationshipDecisions),
   });

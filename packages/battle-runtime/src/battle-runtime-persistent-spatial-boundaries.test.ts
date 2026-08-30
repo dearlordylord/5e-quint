@@ -9,6 +9,7 @@ import {
   requireNeedsHoles,
   requireResolved,
   startBattleSessionRight,
+  wizardId,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -16,6 +17,7 @@ import {
   battleId,
   breakBattleConcentration,
   endTurn,
+  hasCondition,
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
 import {
@@ -30,14 +32,17 @@ import {
   greaseSavingThrowOutcomeFill,
   moonbeamAreaFill,
   moonbeamEndTurnSaveAct,
+  savingThrowOutcomeFill,
   singleTargetSavingThrowOutcomeFill,
   spellAct,
+  spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   flamingSphereUnitId,
   greaseUnitId,
   gustOfWindUnitId,
   moonbeamUnitId,
+  saveGatedConditionWithRepeatUnitId,
   spellCasterId,
   spellTargetId,
   statBlockCatalog,
@@ -526,6 +531,171 @@ describe("persistent spatial spell boundary procedures", () => {
         expect.objectContaining({ combatantId: spellTargetId, hp: 25 }),
       ]),
     );
+  });
+
+  test("Moonbeam positive damage resolves an admitted condition damage repeat save", () => {
+    const conditionSpell = spellRecord(saveGatedConditionWithRepeatUnitId);
+    const session = startBattleSessionRight({
+      battleId: battleId("persistent-spatial-condition-damage-repeat-save"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Synthetic condition caster",
+          initiative: 30,
+          classLevels: [{ className: "wizard", level: 1 }],
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [conditionSpell],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: spellCasterId,
+          displayName: "Synthetic movable-zone caster",
+          initiative: 20,
+          classLevels: [{ className: "druid", level: 3 }],
+          attack: null,
+          spellcasting: {
+            ...wizardSpellcasting({
+              preparedSpells: [spellRecord(moonbeamUnitId)],
+              spellSlots: [{ spellLevel: 2, count: 1 }],
+            }),
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "druid",
+              abilityModifier: 3,
+            },
+          },
+        }),
+        characterSeed({
+          combatantId: spellTargetId,
+          displayName: "Synthetic condition target",
+          initiative: 10,
+          classLevels: [{ className: "fighter", level: 1 }],
+          attack: null,
+          currentHp: 30,
+          maxHp: 30,
+        }),
+      ],
+    });
+    const conditionAct = spellAct({
+      session,
+      spellId: saveGatedConditionWithRepeatUnitId,
+      slotLevel: 1,
+    });
+    const conditionTarget = requireHole(
+      conditionAct.initialHoles,
+      "spellTargetList",
+    );
+    const conditionTargetFill = spellTargetListFill(
+      conditionTarget,
+      wizardId,
+      saveGatedConditionWithRepeatUnitId,
+      [spellTargetId],
+    );
+    const conditionSave = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: conditionAct.subject,
+        fills: [conditionTargetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const conditioned = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: conditionAct.subject,
+        fills: [
+          conditionTargetFill,
+          savingThrowOutcomeFill(conditionSave, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      }),
+    );
+    const zoneCasterTurn = requireResolved(
+      endTurn({ state: conditioned.state, actorId: wizardId }),
+    );
+    const zoneAct = spellAct({
+      session: battleRuntimeSessionForTest({
+        ...session,
+        state: zoneCasterTurn.state,
+      }),
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
+    const zone = requireResolved(
+      resolveBattleSubject({
+        state: zoneCasterTurn.state,
+        subject: zoneAct.subject,
+        fills: [
+          moonbeamAreaFill(
+            requireHole(zoneAct.initialHoles, "spellAreaChoice"),
+          ),
+        ],
+      }),
+    );
+    const targetTurn = requireResolved(
+      endTurn({ state: zone.state, actorId: spellCasterId }),
+    );
+    const damageAct = moonbeamEndTurnSaveAct(
+      battleRuntimeSessionForTest({ ...session, state: targetTurn.state }),
+    );
+    const zoneSaveFill = singleTargetSavingThrowOutcomeFill(
+      requireHole(damageAct.initialHoles, "savingThrowOutcome"),
+      spellTargetId,
+      false,
+    );
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: damageAct.subject,
+        fills: [zoneSaveFill],
+      }),
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(damage, [[2, 3]]);
+    const pendingRepeatSave = requireNeedsHoles(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: damageAct.subject,
+        fills: [zoneSaveFill, damageFill],
+      }),
+    );
+    const repeatSave = requireHole(
+      pendingRepeatSave.holes,
+      "savingThrowOutcome",
+    );
+    expect(repeatSave).toMatchObject({
+      saveGatedConditionRepeatSave: {
+        targetId: spellTargetId,
+        trigger: "damage",
+      },
+    });
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: pendingRepeatSave.state,
+        subject: damageAct.subject,
+        fills: [
+          zoneSaveFill,
+          damageFill,
+          savingThrowOutcomeFill(repeatSave, [
+            { targetId: spellTargetId, succeeded: true },
+          ]),
+        ],
+      }),
+    );
+    const target = resolved.state.combatants.get(spellTargetId);
+    expect(target?.hp).toBe(25);
+    expect(
+      target === undefined ? true : hasCondition(target.conditions, "prone"),
+    ).toBe(false);
+    expect(
+      target?.activeEffects.some(
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
+      ),
+    ).toBe(false);
   });
 
   test("Moonbeam repeats no damage in the same turn but still returns End Turn holes", () => {

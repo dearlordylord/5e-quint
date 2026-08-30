@@ -751,6 +751,10 @@ export type BattleAttackDamageInterruptionContinuationFacts = {
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[];
+  readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[];
   readonly damageDisposition: BattleAttackDamageDisposition;
   readonly attackDamageRiders: readonly AttackDamageRider[];
   readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
@@ -1309,6 +1313,7 @@ export type BattleInterruptFrame =
   | BattleFallDamageLandingMitigationFrame
   | BattleReplayContinuationFrame
   | BattleAttackDamageContinuationConcentrationFrame
+  | BattleAttackDamageContinuationRepeatSaveFrame
   | BattleAttackDamageContinuationCunningStrikeFrame;
 export type BattleInterruptCheckpointFrame = Extract<
   BattleInterruptFrame,
@@ -1377,6 +1382,11 @@ export type BattleReplayContinuationFrame = {
 };
 export type BattleAttackDamageContinuationConcentrationFrame = {
   readonly kind: "attackDamageContinuationConcentration";
+  readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
+  readonly handledInterruptTrigger: BattleInterruptTrigger;
+};
+export type BattleAttackDamageContinuationRepeatSaveFrame = {
+  readonly kind: "attackDamageContinuationRepeatSave";
   readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
   readonly handledInterruptTrigger: BattleInterruptTrigger;
 };

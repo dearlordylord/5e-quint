@@ -111,6 +111,7 @@ import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHole } from "./staged-condition-repeat-save.ts";
 function resolveOrdinaryAttackBurstSaveDamageSpellAct(input: {
   readonly input:
     | ActionSpellBattleResolutionInput
@@ -746,7 +747,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
           attackSourcePenalty.damageByType,
         )
       : 0;
-  const attackDamageEventKey = String(
+  const attackDamageEventKey = saveGatedConditionDamageOccurrenceKeyForHole(
     attackBurstDamageDispositionHoleKey("attack", target.combatantId).holeId,
   );
   const attackDamageDispositionHole =
@@ -801,7 +802,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
       state: postRemarkableAthleteMovementState,
       target,
       damageAmount: attackDamageAmount,
-      damageEventKey: attackDamageEventKey,
+      damageOccurrenceKey: attackDamageEventKey,
     });
   const attackStagedConditionSaveCheck =
     damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
@@ -812,7 +813,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
         attackStagedConditionSaveHoles,
       ),
-      damageEventKey: attackDamageEventKey,
+      damageOccurrenceKey: attackDamageEventKey,
     });
   if (attackStagedConditionSaveCheck.tag === "needsHoles") {
     return needsHolesResult(
@@ -863,10 +864,11 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
               target.combatantId,
             ),
             spellMarkedDamageRiders,
-            saveGatedConditionWithRepeatDamageRepeatSaves:
-              attackStagedConditionLifecycleFills,
-            saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
-              attackDamageEventKey,
+            saveGatedConditionDamageRepeatSave: {
+              kind: "repeatSave",
+              fills: attackStagedConditionLifecycleFills,
+              occurrenceKey: attackDamageEventKey,
+            },
             sourceDamageRollPenaltyRoll:
               sourceDamageRollPenaltyRollForDamageRoll(
                 input.fillSet.sourceDamageRollPenaltyRolls,
@@ -1190,7 +1192,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
   const burstStagedConditionSaveChecks = failedTargets.map((targetId) => {
     const damagedTarget = damagedByAttack.combatants.get(targetId);
     const damageAmount = burstDamageByTargetId.get(targetId) ?? 0;
-    const burstDamageEventKey = String(
+    const burstDamageEventKey = saveGatedConditionDamageOccurrenceKeyForHole(
       attackBurstDamageDispositionHoleKey("burst", targetId).holeId,
     );
     /* v8 ignore start -- @preserve -- Internal replay invariant: failedTargets was validated against the battle roster, and attack damage application preserves those combatants. */
@@ -1203,7 +1205,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
         state: damagedByAttack,
         target: damagedTarget,
         damageAmount,
-        damageEventKey: burstDamageEventKey,
+        damageOccurrenceKey: burstDamageEventKey,
       });
     return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
       {
@@ -1214,7 +1216,7 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
           input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
           holes,
         ),
-        damageEventKey: burstDamageEventKey,
+        damageOccurrenceKey: burstDamageEventKey,
       },
     );
   });
@@ -1367,10 +1369,11 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
               ),
             damageDisposition: attackDamageDisposition,
             spellMarkedDamageRiders,
-            saveGatedConditionWithRepeatDamageRepeatSaves:
-              attackStagedConditionLifecycleFills,
-            saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
-              attackDamageEventKey,
+            saveGatedConditionDamageRepeatSave: {
+              kind: "repeatSave",
+              fills: attackStagedConditionLifecycleFills,
+              occurrenceKey: attackDamageEventKey,
+            },
             sourceDamageRollPenaltyRoll:
               sourceDamageRollPenaltyRollForDamageRoll(
                 input.fillSet.sourceDamageRollPenaltyRolls,
@@ -1417,16 +1420,17 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
                 concentrationDamageByTargetId.get(targetId) ?? damageAmount,
             }),
           );
-          const burstDamageEventKey = String(
-            attackBurstDamageDispositionHoleKey("burst", targetId).holeId,
-          );
+          const burstDamageEventKey =
+            saveGatedConditionDamageOccurrenceKeyForHole(
+              attackBurstDamageDispositionHoleKey("burst", targetId).holeId,
+            );
           const stagedConditionLifecycleFills = fillsMatchingHoleIds(
             input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
             damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
               state: damagedByAttack,
               target: damagedTarget,
               damageAmount,
-              damageEventKey: burstDamageEventKey,
+              damageOccurrenceKey: burstDamageEventKey,
             }),
           );
           return applyPreparedSlotSpellDamage(state, targetId, damageAmount, {
@@ -1438,10 +1442,11 @@ function resolveAttackBurstSaveDamageSpellAct(input: {
               input.fillSet.damageDispositions,
               targetId,
             ),
-            saveGatedConditionWithRepeatDamageRepeatSaves:
-              stagedConditionLifecycleFills,
-            saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
-              burstDamageEventKey,
+            saveGatedConditionDamageRepeatSave: {
+              kind: "repeatSave",
+              fills: stagedConditionLifecycleFills,
+              occurrenceKey: burstDamageEventKey,
+            },
             damageSourceId: input.actorId,
             spatialFacts: input.fillSet.targetSpatialFacts,
             ...(burstRelationshipCheck.decisions === undefined

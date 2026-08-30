@@ -574,6 +574,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     });
 
     const dropped = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: marked,
       target: marked.combatants.get(goblinId)!,
       damageAmount: 99,
@@ -1153,6 +1154,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       }),
     ).state;
     const dropped = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: nextFighterTurn,
       target: nextFighterTurn.combatants.get(goblinId)!,
       damageAmount: 1,

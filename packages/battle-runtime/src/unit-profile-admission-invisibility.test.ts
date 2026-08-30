@@ -143,6 +143,7 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     });
 
     const damaged = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: cast.state,
       target: requireCombatant(cast.state, spellCasterId),
       damageAmount: 1,

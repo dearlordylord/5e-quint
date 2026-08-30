@@ -1720,6 +1720,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       throw new Error("Expected Aid target.");
     }
     const knockedOutState: BattleState = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: session.state,
       target,
       damageAmount: Number(target.hp),

@@ -1,5 +1,7 @@
 import {
   requireCharacterUnitProcedureRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+  battleStateWithAllocatedEffectForTest,
   startBattleRight,
   startBattleSessionRight,
   requireResolved,
@@ -31,6 +33,7 @@ import {
   unitLibrary,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   battleId,
+  combatantId,
   battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForTest,
   battleReactionRollOrDamageReductionSupportForUnit,
@@ -39,6 +42,8 @@ import {
   Hp,
   resolveBattleInterrupt,
   resolveBattleSubject,
+  spellSlotInvocationRef,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import { classLevel, damageAmount } from "@dnd/shared/types";
 import { Result } from "effect";
@@ -49,6 +54,11 @@ import {
   reactionModifierReductionRoll,
   reactionReductionResourceDieRollTotal,
 } from "./battle-reducer/reaction-modifiers.ts";
+import {
+  saveGatedConditionWithRepeatDurationTicks,
+  saveGatedConditionWithRepeatUnitId,
+} from "./unit-profile-admission-catalog.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 
 describe("battle runtime: Deflect Attacks", () => {
   test("reaction reduction helpers enforce flat and resource-die totals", () => {
@@ -395,6 +405,197 @@ describe("battle runtime: Deflect Attacks", () => {
           resource.resourcePoolRef === redirectResourcePoolRef(choice),
       )?.usesRemaining,
     ).toBe(2);
+  });
+
+  test("positive redirected damage requires and resolves a condition damage repeat save", () => {
+    const unit = unitLibrary.requireUnit("monk_deflect_attacks");
+    const laughterSourceId = combatantId("deflect-attacks-condition-source");
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-deflect-attacks-redirect-repeat-save"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        resistantSkeletonCreatureInit({ initiative: 15 }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Monk",
+          initiative: 10,
+          classLevels: [{ className: "monk", level: 3 }],
+          attack: null,
+          resources: [monkDeflectAttacksFocusResource()],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(unit, [
+              { className: "monk", level: classLevel(3) },
+            ]),
+          ],
+          characterUnitRefs: [
+            reactionModifierUnitRefWithProfile(
+              unit.id,
+              ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
+            ),
+          ],
+        }),
+        characterSeed({
+          combatantId: laughterSourceId,
+          displayName: "Condition Source",
+          initiative: 5,
+          classLevels: [{ className: "wizard", level: 1 }],
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord(saveGatedConditionWithRepeatUnitId)],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+      ],
+    });
+    const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
+      session,
+      laughterSourceId,
+      spellSlotInvocationRef(
+        saveGatedConditionWithRepeatUnitId,
+        1,
+        "saveGatedConditionWithRepeat",
+      ),
+    );
+    const laughterSource = session.state.combatants.get(laughterSourceId);
+    if (laughterSource === undefined) {
+      throw new Error("Expected admitted condition source.");
+    }
+    const state = battleStateWithAllocatedEffectForTest({
+      state: {
+        ...session.state,
+        combatants: new Map(session.state.combatants).set(laughterSourceId, {
+          ...laughterSource,
+          concentration: {
+            sourceProcedureRef,
+            effectKind: "spellEffect",
+          },
+        }),
+      },
+      ownerId: skeletonId,
+      effect: {
+        kind: "saveGatedConditionWithRepeat",
+        sourceProcedureRef,
+        sourceCombatantId: laughterSourceId,
+        conditionHadNonSpellProneSource: false,
+        conditionHadNonSpellIncapacitatedSource: false,
+        repeatSaveRollMode: null,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: laughterSourceId,
+          durationTicks: saveGatedConditionWithRepeatDurationTicks,
+        },
+      },
+    });
+    const setup = goblinScimitarHitReactionSetup(state);
+    if (setup.result.tag !== "needsHoles") {
+      throw new Error("Expected Deflect Attacks Reaction window.");
+    }
+    const choice = reactionModifierChoice(
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
+      unit.id,
+      "attackDamageReduction",
+    );
+    const afterReaction = resolveBattleInterrupt({
+      state: setup.result.state,
+      fill: interruptDecisionFill(
+        findHole(setup.result.holes, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: fighterId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            procedureRef: choice.modifier.procedureRef,
+            modifierKind: "attackDamageReduction",
+            fills: [reactionModifierReductionRollFill(choice, 10)],
+          },
+        },
+      ),
+    });
+    if (afterReaction.tag !== "needsHoles") {
+      throw new Error("Expected attack damage roll.");
+    }
+    const attackDamageHole = requireHole(afterReaction, "rolledDice");
+    const attackDamageFill = damageRollFill(attackDamageHole, 6);
+    const awaitingRedirect = resolveBattleSubject({
+      state: afterReaction.state,
+      subject: setup.subject,
+      fills: [...setup.prefixFills, attackDamageFill],
+    });
+    if (awaitingRedirect.tag !== "needsHoles") {
+      throw new Error("Expected Deflect Attacks redirect holes.");
+    }
+    const redirectTargetHole = findHole(awaitingRedirect.holes, "targetChoice");
+    const redirectSaveHole = findHole(
+      awaitingRedirect.holes,
+      "savingThrowOutcome",
+    );
+    const redirectDamageHole = findHole(awaitingRedirect.holes, "rolledDice");
+    const redirectTargetFill = targetFill(redirectTargetHole, skeletonId, [
+      {
+        kind: "meleeRedirectTargetWithin5Feet",
+        sourceId: fighterId,
+        targetId: skeletonId,
+      },
+    ]);
+    const redirectSaveFill = savingThrowOutcomeFill(redirectSaveHole, [
+      { targetId: skeletonId, succeeded: false },
+    ]);
+    const redirectDamageFill = damageRollFillWithGroups(redirectDamageHole, [
+      [5, 5],
+    ]);
+    const needsRepeatSave = resolveBattleSubject({
+      state: awaitingRedirect.state,
+      subject: setup.subject,
+      fills: [
+        ...setup.prefixFills,
+        attackDamageFill,
+        redirectTargetFill,
+        redirectSaveFill,
+        redirectDamageFill,
+      ],
+    });
+    if (needsRepeatSave.tag !== "needsHoles") {
+      throw new Error("Expected redirected-damage repeat-save hole.");
+    }
+    const repeatSaveHole = findHole(
+      needsRepeatSave.holes,
+      "savingThrowOutcome",
+    );
+    expect(repeatSaveHole).toMatchObject({
+      saveGatedConditionRepeatSave: {
+        targetId: skeletonId,
+        trigger: "damage",
+      },
+    });
+    expect(needsRepeatSave.state.combatants.get(skeletonId)?.hp).toBe(Hp(13));
+
+    const resolved = resolveBattleSubject({
+      state: awaitingRedirect.state,
+      subject: setup.subject,
+      fills: [
+        ...setup.prefixFills,
+        attackDamageFill,
+        redirectTargetFill,
+        redirectSaveFill,
+        redirectDamageFill,
+        savingThrowOutcomeFill(repeatSaveHole, [
+          { targetId: skeletonId, succeeded: true },
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        `Expected redirected damage repeat save to resolve: ${JSON.stringify(resolved)}`,
+      );
+    }
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(Hp(8));
+    expect(
+      resolved.state.combatants
+        .get(skeletonId)
+        ?.activeEffects.some(
+          (effect) => effect.kind === "saveGatedConditionWithRepeat",
+        ),
+    ).toBe(false);
   });
 
   test("Deflect Attacks rejects redirected damage dice outside the Martial Arts die", () => {

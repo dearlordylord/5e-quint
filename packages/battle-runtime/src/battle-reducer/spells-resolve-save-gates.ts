@@ -54,6 +54,7 @@ import {
   damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import { deduplicateBattleHolesById } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
@@ -1907,6 +1908,11 @@ export function resolveSaveGateDamageSpellAct(input: {
           state: stateAfterCastConcentrationBreak,
           target,
           damageAmount,
+          damageOccurrenceKey:
+            saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+              holeId: damageRoll.holeId,
+              targetId: target.combatantId,
+            }),
         });
       return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
         {
@@ -1917,6 +1923,11 @@ export function resolveSaveGateDamageSpellAct(input: {
             input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
             holes,
           ),
+          damageOccurrenceKey:
+            saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+              holeId: damageRoll.holeId,
+              targetId: target.combatantId,
+            }),
         },
       );
     },
@@ -2042,6 +2053,12 @@ export function resolveSaveGateDamageSpellAct(input: {
         state,
         target: currentTarget,
         damageAmount: resolvedDamage.damageAmount,
+        damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget(
+          {
+            holeId: damageRoll.holeId,
+            targetId,
+          },
+        ),
       });
     const saveGatedConditionWithRepeatLifecycleFills = fillsMatchingHoleIds(
       input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
@@ -2060,8 +2077,14 @@ export function resolveSaveGateDamageSpellAct(input: {
         concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
         linkedDefenseResistanceDamageShareConcentrationSavingThrows:
           concentrationLifecycleFills,
-        saveGatedConditionWithRepeatDamageRepeatSaves:
-          saveGatedConditionWithRepeatLifecycleFills,
+        saveGatedConditionDamageRepeatSave: {
+          kind: "repeatSave",
+          fills: saveGatedConditionWithRepeatLifecycleFills,
+          occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+            holeId: damageRoll.holeId,
+            targetId,
+          }),
+        },
         damageDisposition: damageDispositionByTargetId.get(targetId),
         damageSourceId: input.actorId,
         spatialFacts: input.fillSet.targetSpatialFacts,

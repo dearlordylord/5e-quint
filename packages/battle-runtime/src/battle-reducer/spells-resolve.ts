@@ -108,6 +108,7 @@ import {
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHole } from "./staged-condition-repeat-save.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
   activeMarkedDamageRiders,
@@ -3201,6 +3202,9 @@ function resolveSpellActInternal(
       target: spellReduction.target,
       damageAmount: spellDamageAmount,
       fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+        damageRoll.holeId,
+      ),
     });
   if (stagedConditionSaveCheck.tag === "needsHoles") {
     return needsHolesResult(spellDamageBaseState, input.subject, [
@@ -3266,8 +3270,13 @@ function resolveSpellActInternal(
       spellMarkedDamageRiders,
       sourceDamageRollPenaltyRoll,
       spellDamageReductionRoll: spellReductionRoll,
-      saveGatedConditionWithRepeatDamageRepeatSaves:
-        fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+        occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          damageRoll.holeId,
+        ),
+      },
       damageSourceId: subject.actorId,
       saveDamageResult: spellDamageResult,
       spatialFacts: fillSet.targetSpatialFacts,

@@ -190,6 +190,7 @@ describe("battle runtime: Fog Cloud", () => {
       throw new Error("Expected the Fog Cloud caster to be concentrating.");
     }
     const damaged = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: cast.session.state,
       target: priorCaster,
       damageAmount: Number(priorCaster.hp),

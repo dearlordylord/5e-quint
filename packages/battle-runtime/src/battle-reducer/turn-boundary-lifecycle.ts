@@ -144,7 +144,12 @@ import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
   grantedFlightEndFallCleanupFramesForExpiredEffects,
 } from "./granted-flight-end-fall-cleanup.ts";
-import { saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole } from "./staged-condition-repeat-save.ts";
+import {
+  saveGatedConditionDamageOccurrenceKeyForHole,
+  saveGatedConditionDamageOccurrenceKeyForStartTurn,
+  saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole,
+  type SaveGatedConditionDamageOccurrenceKey,
+} from "./staged-condition-repeat-save.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import {
   persistentAreaSourceTurnTranslationSavingThrowHoleId,
@@ -411,30 +416,104 @@ type StartTurnOccurrenceHandle =
       readonly movement: TranslatingPersistentAreaStartTurnMovement;
     };
 
+type StartTurnOccurrenceIdentity =
+  | { readonly kind: "deathSavingThrow" }
+  | { readonly kind: "statBlockRecharge" }
+  | {
+      readonly kind: "turnStartTemporaryHitPoints";
+      readonly effectRef: BattleEffectExecutionRef;
+    }
+  | {
+      readonly kind: "spellConditionTurnStartDamage";
+      readonly effectRef: BattleEffectExecutionRef;
+    }
+  | {
+      readonly kind: "spellTurnStartDamageAndSave";
+      readonly effectRef: BattleEffectExecutionRef;
+    }
+  | {
+      readonly kind: "persistentAreaSourceTurnTranslation";
+      readonly effectRef: BattleEffectExecutionRef;
+    };
+
+function startTurnOccurrenceLabel(
+  identity: StartTurnOccurrenceIdentity,
+): string {
+  return Match.value(identity).pipe(
+    Match.when(
+      { kind: "deathSavingThrow" },
+      () => "Resolve Death Saving Throw",
+    ),
+    Match.when(
+      { kind: "statBlockRecharge" },
+      () => "Resolve stat-block recharge",
+    ),
+    Match.when(
+      { kind: "turnStartTemporaryHitPoints" },
+      () => "Grant start-turn Temporary Hit Points",
+    ),
+    Match.when(
+      { kind: "spellConditionTurnStartDamage" },
+      () => "Resolve start-turn spell damage",
+    ),
+    Match.when(
+      { kind: "spellTurnStartDamageAndSave" },
+      () => "Resolve start-turn spell damage",
+    ),
+    Match.when(
+      { kind: "persistentAreaSourceTurnTranslation" },
+      () => "Move TranslatingPersistentArea",
+    ),
+    Match.exhaustive,
+  );
+}
+
 function startTurnOccurrenceOption(
-  kind: StartTurnOccurrenceOption["kind"],
-  identity: Readonly<Record<string, string>>,
-  label: string,
+  identity: StartTurnOccurrenceIdentity,
 ): StartTurnOccurrenceOption {
   return {
     occurrenceId: battleStartTurnOccurrenceId(
-      JSON.stringify({ kind, ...identity }),
+      startTurnOccurrenceIdentityKey(identity),
     ),
-    kind,
-    label,
+    kind: identity.kind,
+    label: startTurnOccurrenceLabel(identity),
   };
+}
+
+function startTurnOccurrenceIdentityKey(
+  identity: StartTurnOccurrenceIdentity,
+): string {
+  const framed = (value: string): string => `${value.length}:${value}`;
+  return Match.value(identity).pipe(
+    Match.when({ kind: "deathSavingThrow" }, () => framed("deathSavingThrow")),
+    Match.when({ kind: "statBlockRecharge" }, () =>
+      framed("statBlockRecharge"),
+    ),
+    Match.when({ kind: "turnStartTemporaryHitPoints" }, ({ effectRef }) =>
+      ["turnStartTemporaryHitPoints", effectRef].map(framed).join(""),
+    ),
+    Match.when({ kind: "spellConditionTurnStartDamage" }, ({ effectRef }) =>
+      ["spellConditionTurnStartDamage", effectRef].map(framed).join(""),
+    ),
+    Match.when({ kind: "spellTurnStartDamageAndSave" }, ({ effectRef }) =>
+      ["spellTurnStartDamageAndSave", effectRef].map(framed).join(""),
+    ),
+    Match.when(
+      { kind: "persistentAreaSourceTurnTranslation" },
+      ({ effectRef }) =>
+        ["persistentAreaSourceTurnTranslation", effectRef].map(framed).join(""),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function persistentAreaSourceTurnTranslationOccurrenceOption(
   effect: Pick<TranslatingPersistentAreaAreaHazardEffect, "effectRef">,
 ): StartTurnOccurrenceOption {
-  return startTurnOccurrenceOption(
-    "persistentAreaSourceTurnTranslation",
-    {
-      effectRef: effect.effectRef,
-    },
-    "Move TranslatingPersistentArea",
-  );
+  return startTurnOccurrenceOption({
+    kind: "persistentAreaSourceTurnTranslation",
+    effectRef: effect.effectRef,
+  });
 }
 
 function startTurnOccurrenceOptionForHandle(
@@ -442,25 +521,16 @@ function startTurnOccurrenceOptionForHandle(
 ): StartTurnOccurrenceOption {
   return Match.value(handle).pipe(
     Match.when({ kind: "deathSavingThrow" }, () =>
-      startTurnOccurrenceOption(
-        "deathSavingThrow",
-        {},
-        "Resolve Death Saving Throw",
-      ),
+      startTurnOccurrenceOption({ kind: "deathSavingThrow" }),
     ),
     Match.when({ kind: "statBlockRecharge" }, () =>
-      startTurnOccurrenceOption(
-        "statBlockRecharge",
-        {},
-        "Resolve stat-block recharge",
-      ),
+      startTurnOccurrenceOption({ kind: "statBlockRecharge" }),
     ),
     Match.when({ kind: "turnStartTemporaryHitPoints" }, ({ effect }) =>
-      startTurnOccurrenceOption(
-        "turnStartTemporaryHitPoints",
-        { effectRef: effect.effectRef },
-        "Grant start-turn Temporary Hit Points",
-      ),
+      startTurnOccurrenceOption({
+        kind: "turnStartTemporaryHitPoints",
+        effectRef: effect.effectRef,
+      }),
     ),
     Match.when({ kind: "spellConditionTurnStartDamage" }, ({ effect }) =>
       spellTurnStartDamageOccurrenceOption(effect),
@@ -967,6 +1037,7 @@ function resolveTranslatingPersistentAreaMovementSequenceResume(input: {
       ...resumed.damageHoleIds,
       ...resumed.concentrationHoleIds,
       ...resumed.dispositionHoleIds,
+      ...resumed.damageRepeatSaveHoleIds,
     ],
   );
 }
@@ -1534,10 +1605,14 @@ function spellTurnStartDamageOccurrenceOption(
 ): StartTurnOccurrenceOption {
   return startTurnOccurrenceOption(
     effect.kind === "spellCondition"
-      ? "spellConditionTurnStartDamage"
-      : "spellTurnStartDamageAndSave",
-    { effectRef: effect.effectRef },
-    "Resolve start-turn spell damage",
+      ? {
+          kind: "spellConditionTurnStartDamage",
+          effectRef: effect.effectRef,
+        }
+      : {
+          kind: "spellTurnStartDamageAndSave",
+          effectRef: effect.effectRef,
+        },
   );
 }
 
@@ -1765,7 +1840,7 @@ function applySpellTurnStartDamage(
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
-  saveGatedConditionWithRepeatDamageRepeatSaveEventKey?: string,
+  saveGatedConditionWithRepeatDamageRepeatSaveOccurrenceKey: SaveGatedConditionDamageOccurrenceKey,
 ): BattleState {
   return applyPreparedSlotSpellDamage(
     state,
@@ -1775,8 +1850,12 @@ function applySpellTurnStartDamage(
       concentrationSavingThrow,
       linkedDefenseResistanceDamageShareConcentrationSavingThrows,
       damageDisposition,
-      saveGatedConditionWithRepeatDamageRepeatSaves,
-      saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: saveGatedConditionWithRepeatDamageRepeatSaves,
+        occurrenceKey:
+          saveGatedConditionWithRepeatDamageRepeatSaveOccurrenceKey,
+      },
       damageSourceId: effect.sourceCombatantId,
       spatialFacts: [],
     },
@@ -2024,8 +2103,7 @@ export function conditionSpellEndTurnRepeatSaveHoleIds(
         saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
           actorId,
           effect,
-          "endTurn",
-          undefined,
+          { trigger: "endTurn" },
           endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
         ),
       ),
@@ -2572,7 +2650,7 @@ function applySaveGatedConditionWithRepeatRepeatSaveFills(
     const hole = saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
       actorId,
       effect,
-      "endTurn",
+      { trigger: "endTurn" },
     );
     const save = saveGatedConditionWithRepeatRepeatSavingThrowOutcomeFor(
       saves,
@@ -3084,6 +3162,10 @@ function applyStartTurnSpellDamageFills(
         state: nextState,
         target,
         damageAmount,
+        damageOccurrenceKey: startTurnDamageOccurrenceKey(
+          { actorId, round: state.initiative.round },
+          effect,
+        ),
       });
     const saveGatedConditionWithRepeatLifecycleFills = fillsMatchingHoleIds(
       saveGatedConditionWithRepeatDamageRepeatSaves,
@@ -3111,6 +3193,10 @@ function applyStartTurnSpellDamageFills(
         actorId,
       ),
       saveGatedConditionWithRepeatLifecycleFills,
+      startTurnDamageOccurrenceKey(
+        { actorId, round: state.initiative.round },
+        effect,
+      ),
     );
     if (effect.kind !== "spellTurnStartDamageAndSave") {
       return damaged;
@@ -3146,11 +3232,15 @@ function activeSpellTurnStartDamageEffect(
   );
 }
 
-function startTurnDamageEventKey(
+function startTurnDamageOccurrenceKey(
   sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
   effect: SpellTurnStartDamageEffect,
-): string {
-  return `battle:start-turn-damage-event:${sourceTurn.actorId}:${Number(sourceTurn.round)}:${spellTurnStartDamageOccurrenceOption(effect).occurrenceId}`;
+): SaveGatedConditionDamageOccurrenceKey {
+  return saveGatedConditionDamageOccurrenceKeyForStartTurn({
+    actorId: sourceTurn.actorId,
+    round: sourceTurn.round,
+    occurrenceId: spellTurnStartDamageOccurrenceOption(effect).occurrenceId,
+  });
 }
 
 function resolveSpellTurnStartDamageOccurrence(input: {
@@ -3425,12 +3515,12 @@ function resolveStartTurnDamageSaveGatedConditionWithRepeatFills(input: {
   readonly target: BattleCreatureState;
   readonly damageAmount: ReturnType<typeof spellTurnStartDamageAmount>;
 }): StartTurnDamageStage<{
-  readonly damageEventKey: string;
+  readonly damageOccurrenceKey: SaveGatedConditionDamageOccurrenceKey;
   readonly hideousHoles: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[];
   readonly exactHideousFills: readonly StartTurnDamageSavingThrowFill[];
   readonly savingThrowFills: readonly StartTurnDamageSavingThrowFill[];
 }> {
-  const damageEventKey = startTurnDamageEventKey(
+  const damageOccurrenceKey = startTurnDamageOccurrenceKey(
     input.input.sourceTurn,
     input.effect,
   );
@@ -3439,7 +3529,7 @@ function resolveStartTurnDamageSaveGatedConditionWithRepeatFills(input: {
       state: input.input.state,
       target: input.target,
       damageAmount: input.damageAmount,
-      damageEventKey,
+      damageOccurrenceKey: damageOccurrenceKey,
     });
   const savingThrowFills = input.input.fills.filter(
     (fill): fill is StartTurnDamageSavingThrowFill =>
@@ -3455,7 +3545,7 @@ function resolveStartTurnDamageSaveGatedConditionWithRepeatFills(input: {
       target: input.target,
       damageAmount: input.damageAmount,
       fills: exactHideousFills,
-      damageEventKey,
+      damageOccurrenceKey: damageOccurrenceKey,
     });
   return Match.value(check).pipe(
     Match.when({ tag: "invalid" }, ({ message }) => ({
@@ -3473,7 +3563,7 @@ function resolveStartTurnDamageSaveGatedConditionWithRepeatFills(input: {
     Match.when({ tag: "ok" }, () => ({
       tag: "resolved" as const,
       value: {
-        damageEventKey,
+        damageOccurrenceKey,
         hideousHoles,
         exactHideousFills,
         savingThrowFills,
@@ -3561,7 +3651,7 @@ function applyResolvedStartTurnDamageOccurrence(input: {
   readonly exactConcentrationFills: readonly StartTurnDamageConcentrationFill[];
   readonly dispositionHoles: readonly BattleAttackDamageDispositionHole[];
   readonly exactDispositionFills: readonly StartTurnDamageDispositionFill[];
-  readonly damageEventKey: string;
+  readonly damageOccurrenceKey: SaveGatedConditionDamageOccurrenceKey;
   readonly hideousHoles: readonly BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[];
   readonly exactHideousFills: readonly StartTurnDamageSavingThrowFill[];
 }): StartTurnOccurrenceStep {
@@ -3605,7 +3695,7 @@ function applyResolvedStartTurnDamageOccurrence(input: {
       input.input.sourceTurn.actorId,
     ),
     input.exactHideousFills,
-    input.damageEventKey,
+    input.damageOccurrenceKey,
   );
   const nextState = startTurnDamageStateAfterEndingSave(
     damaged,
@@ -3708,6 +3798,9 @@ function applyEndTurnSpellDamageFills(
         state: nextState,
         target,
         damageAmount,
+        damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          roll.holeId,
+        ),
       });
     const saveGatedConditionWithRepeatLifecycleFills =
       spellTurnEndDamageDownstreamFillsForRawHoles(
@@ -3745,8 +3838,13 @@ function applyEndTurnSpellDamageFills(
         rawDispositionFills,
         actorId,
       ),
-      saveGatedConditionWithRepeatDamageRepeatSaves:
-        saveGatedConditionWithRepeatLifecycleFills,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: saveGatedConditionWithRepeatLifecycleFills,
+        occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          roll.holeId,
+        ),
+      },
       damageSourceId: effect.sourceCombatantId,
       spatialFacts: [],
     });
@@ -3763,6 +3861,7 @@ type OrderedStartTurnOccurrenceSequenceResult =
       readonly movementDamageHoleIds: ReadonlySet<BattleHoleId>;
       readonly movementConcentrationHoleIds: ReadonlySet<BattleHoleId>;
       readonly movementDispositionHoleIds: ReadonlySet<BattleHoleId>;
+      readonly movementDamageRepeatSaveHoleIds: ReadonlySet<BattleHoleId>;
     }
   | { readonly tag: "result"; readonly result: BattleResolutionResult };
 
@@ -3832,6 +3931,7 @@ type OrderedStartTurnOccurrenceAccumulation = {
   movementDamageHoleIds: Set<BattleHoleId>;
   movementConcentrationHoleIds: Set<BattleHoleId>;
   movementDispositionHoleIds: Set<BattleHoleId>;
+  movementDamageRepeatSaveHoleIds: Set<BattleHoleId>;
 };
 
 function orderedStartTurnOccurrenceAccumulation(
@@ -3854,6 +3954,7 @@ function orderedStartTurnOccurrenceAccumulation(
     movementDamageHoleIds: new Set(),
     movementConcentrationHoleIds: new Set(),
     movementDispositionHoleIds: new Set(),
+    movementDamageRepeatSaveHoleIds: new Set(),
   };
 }
 
@@ -3911,6 +4012,7 @@ function ordinaryStartTurnOccurrenceAdvance(
     movementDamageHoleIds: new Set(),
     movementConcentrationHoleIds: new Set(),
     movementDispositionHoleIds: new Set(),
+    movementDamageRepeatSaveHoleIds: new Set(),
   };
 }
 
@@ -4347,6 +4449,7 @@ function persistentAreaSourceTurnTranslationOccurrenceAdvance(
   for (const id of resolution.damageHoleIds) acceptedHoleIds.add(id);
   for (const id of resolution.concentrationHoleIds) acceptedHoleIds.add(id);
   for (const id of resolution.dispositionHoleIds) acceptedHoleIds.add(id);
+  for (const id of resolution.damageRepeatSaveHoleIds) acceptedHoleIds.add(id);
   return {
     tag: "advanced",
     state: resolution.state,
@@ -4356,6 +4459,7 @@ function persistentAreaSourceTurnTranslationOccurrenceAdvance(
     movementDamageHoleIds: resolution.damageHoleIds,
     movementConcentrationHoleIds: resolution.concentrationHoleIds,
     movementDispositionHoleIds: resolution.dispositionHoleIds,
+    movementDamageRepeatSaveHoleIds: resolution.damageRepeatSaveHoleIds,
   };
 }
 
@@ -4376,6 +4480,9 @@ function mergeOrderedStartTurnOccurrenceStep(
   }
   for (const id of step.movementDispositionHoleIds) {
     target.movementDispositionHoleIds.add(id);
+  }
+  for (const id of step.movementDamageRepeatSaveHoleIds) {
+    target.movementDamageRepeatSaveHoleIds.add(id);
   }
 }
 
@@ -5028,8 +5135,7 @@ function resolveEndTurnCommandForParent(
       hole: saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
         actorId,
         effect,
-        "endTurn",
-        undefined,
+        { trigger: "endTurn" },
         endTurnSavingThrowFlatBonuses(
           input.state,
           actorId,
@@ -5497,6 +5603,9 @@ function resolveEndTurnCommandForParent(
           state: input.state,
           target: actor,
           damageAmount,
+          damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+            request.roll.holeId,
+          ),
         });
       const check =
         damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
@@ -5507,6 +5616,9 @@ function resolveEndTurnCommandForParent(
             request.effect,
             rawHoles,
             savingThrowOutcomeFills,
+          ),
+          damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+            request.roll.holeId,
           ),
         });
       return check.tag === "invalid"
@@ -5572,6 +5684,9 @@ function resolveEndTurnCommandForParent(
             state: input.state,
             target: nextActor,
             damageAmount,
+            damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+              request.roll.holeId,
+            ),
           });
         return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
           {
@@ -5579,6 +5694,9 @@ function resolveEndTurnCommandForParent(
             target: nextActor,
             damageAmount,
             fills: fillsMatchingHoleIds(savingThrowOutcomeFills, holes),
+            damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+              request.roll.holeId,
+            ),
           },
         );
       },
@@ -6048,6 +6166,8 @@ function resolveEndTurnCommandForParent(
     concentrationHoleIds:
       orderedOccurrenceResolution.movementConcentrationHoleIds,
     dispositionHoleIds: orderedOccurrenceResolution.movementDispositionHoleIds,
+    damageRepeatSaveHoleIds:
+      orderedOccurrenceResolution.movementDamageRepeatSaveHoleIds,
   };
   const acceptedEndTurnHoleIds = new Set<BattleHoleId>([
     ...savingThrowOutcomeHoleIds,

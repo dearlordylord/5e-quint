@@ -19,6 +19,8 @@ import grantedAreaSaveDamageActionInput from "../../surface/content/dragons_brea
 import {
   dragonsBreathUnitId,
   resistanceUnitId,
+  saveGatedConditionWithRepeatDurationTicks,
+  saveGatedConditionWithRepeatUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -40,6 +42,7 @@ import {
   knownWillingSpellTargetListFill,
   spellAct,
   spellTargetListFill,
+  savingThrowOutcomeFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   breakBattleConcentration,
@@ -1108,6 +1111,140 @@ function castDragonsBreath(
   expect(resolved).toMatchObject({ tag: "resolved" });
   return resolved.state;
 }
+
+describe("Dragon's Breath damage repeat saves", () => {
+  test("granted area damage discovers and applies a damage-triggered repeat save", () => {
+    const laughterSourceId = combatantId(
+      "synthetic-dragons-breath-laughter-source",
+    );
+    const session = spellBattle({
+      preparedSpells: [grantedAreaSaveDamageActionSpell()],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      extraTargetIds: [laughterSourceId],
+      extraTargetSpellcasting: wizardSpellcasting({
+        preparedSpells: [spellRecord(saveGatedConditionWithRepeatUnitId)],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      }),
+    });
+    const laughterProcedureRef = requireCharacterSpellProcedureRefForTest(
+      session,
+      laughterSourceId,
+      spellSlotInvocationRef(
+        saveGatedConditionWithRepeatUnitId,
+        1,
+        "saveGatedConditionWithRepeat",
+      ),
+    );
+    const cast = castDragonsBreath(session, "fire");
+    const endedCasterTurn = endTurn({ state: cast, actorId: spellCasterId });
+    if (endedCasterTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const targetWithRepeatSave = battleStateWithAllocatedEffectForTest({
+      state: {
+        ...endedCasterTurn.state,
+        combatants: new Map(endedCasterTurn.state.combatants).set(
+          laughterSourceId,
+          {
+            ...requireCombatant(endedCasterTurn.state, laughterSourceId),
+            concentration: {
+              sourceProcedureRef: laughterProcedureRef,
+              effectKind: "spellEffect",
+            },
+          },
+        ),
+      },
+      ownerId: spellCasterId,
+      effect: {
+        kind: "saveGatedConditionWithRepeat",
+        sourceProcedureRef: laughterProcedureRef,
+        sourceCombatantId: laughterSourceId,
+        conditionHadNonSpellProneSource: false,
+        conditionHadNonSpellIncapacitatedSource: false,
+        repeatSaveRollMode: null,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: laughterSourceId,
+          durationTicks: saveGatedConditionWithRepeatDurationTicks,
+        },
+      },
+    });
+    const exhaleAct = grantedAreaSaveDamageActionAct(targetWithRepeatSave);
+    const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
+    const saveFill = grantedAreaSaveDamageActionSavingThrowOutcomeFill(
+      saveHole,
+      {
+        originAnchorId: spellTargetId,
+        affectedTargetIds: [spellCasterId],
+        outcomes: [{ targetId: spellCasterId, succeeded: false }],
+      },
+    );
+    const needsDamage = resolveBattleSubject({
+      state: targetWithRepeatSave,
+      subject: exhaleAct.subject,
+      fills: [saveFill],
+    });
+    const damageHole = requireResultHole(needsDamage, "rolledDice");
+    const damageFill = damageRollFillWithGroups(damageHole, [[2, 2, 2]]);
+    const needsRepeatSave = resolveBattleSubject({
+      state: targetWithRepeatSave,
+      subject: exhaleAct.subject,
+      fills: [saveFill, damageFill],
+    });
+    const repeatSaveHole = requireResultHole(
+      needsRepeatSave,
+      "savingThrowOutcome",
+    );
+    expect(repeatSaveHole).toMatchObject({
+      saveGatedConditionRepeatSave: {
+        targetId: spellCasterId,
+        trigger: "damage",
+      },
+    });
+    const needsConcentration = resolveBattleSubject({
+      state: targetWithRepeatSave,
+      subject: exhaleAct.subject,
+      fills: [
+        saveFill,
+        damageFill,
+        savingThrowOutcomeFill(repeatSaveHole, [
+          { targetId: spellCasterId, succeeded: true },
+        ]),
+      ],
+    });
+    const concentrationHole = requireResultHole(
+      needsConcentration,
+      "concentrationSavingThrow",
+    );
+    const resolved = resolveBattleSubject({
+      state: targetWithRepeatSave,
+      subject: exhaleAct.subject,
+      fills: [
+        saveFill,
+        damageFill,
+        savingThrowOutcomeFill(repeatSaveHole, [
+          { targetId: spellCasterId, succeeded: true },
+        ]),
+        {
+          kind: "concentrationSavingThrow",
+          holeId: concentrationHole.holeId,
+          value: { succeeded: true },
+        },
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        `Expected granted area damage repeat save to resolve: ${JSON.stringify(resolved)}`,
+      );
+    }
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects.some(
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
+      ),
+    ).toBe(false);
+  });
+});
 
 function grantedAreaSaveDamageActionSpell(): SpellRecord {
   const unit = decodeUnitRecordSync(grantedAreaSaveDamageActionInput);

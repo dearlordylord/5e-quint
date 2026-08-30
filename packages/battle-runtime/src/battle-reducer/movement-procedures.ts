@@ -76,7 +76,10 @@ import {
   currentActorId,
   zeroHpLifecycleIsTerminal,
 } from "./creature-state-leaves.ts";
-import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import {
+  concentrationSavingThrowHole,
+  resolveSaveGatedConditionDamageRepeatSave,
+} from "./damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import { rolledDiceFillForHole } from "./fill-hole-protocol.ts";
@@ -108,6 +111,7 @@ import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applyPreparedSlotSpellDamage } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
 import { attackTargetIsLegal } from "./attack-spatial.ts";
 
@@ -1034,6 +1038,40 @@ export function resolveMovementEffectsAfterMovement(input: {
       request,
       damageFill,
     );
+    const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+      state: nextState,
+      target,
+      damageAmount,
+      fills: input.extraFills.filter(
+        (
+          fill,
+        ): fill is Extract<
+          BattleFill,
+          { readonly kind: "savingThrowOutcome" }
+        > => fill.kind === "savingThrowOutcome" && !consumedFills.has(fill),
+      ),
+      damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+        holeId: damageHole.holeId,
+        targetId: target.combatantId,
+      }),
+    });
+    if (damageRepeatSave.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageRepeatSave.message,
+      );
+    }
+    if (damageRepeatSave.tag === "needsHoles") {
+      return needsHolesResult(
+        input.state,
+        input.subject,
+        damageRepeatSave.missingHoles,
+      );
+    }
+    for (const fill of damageRepeatSave.context.fills) {
+      consumedFills.add(fill);
+    }
     const concentrationHole = concentrationSavingThrowHole(
       target,
       damageAmount,
@@ -1115,7 +1153,7 @@ export function resolveMovementEffectsAfterMovement(input: {
           input.movement.moverId,
         ),
         linkedDefenseResistanceDamageShareConcentrationSavingThrows: [],
-        saveGatedConditionWithRepeatDamageRepeatSaves: [],
+        saveGatedConditionDamageRepeatSave: damageRepeatSave.context,
         spatialFacts: [],
       },
     );

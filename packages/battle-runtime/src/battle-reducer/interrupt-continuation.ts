@@ -7,6 +7,7 @@ import type { CombatantId } from "../identity.ts";
 import type {
   BattleAfterDamageEvent,
   BattleAttackDamageContinuationConcentrationFrame,
+  BattleAttackDamageContinuationRepeatSaveFrame,
   BattleAttackDamageContinuationCunningStrikeFrame,
   BattleAttackDamageContinuationWithoutConcentration,
   BattleConcentrationSavingThrowHole,
@@ -35,11 +36,13 @@ import {
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowHoles,
+  resolveSaveGatedConditionDamageRepeatSave,
 } from "./damage-apply.ts";
 import { resolveCunningStrikeAfterAttackDamage } from "./cunning-strike.ts";
 import { d20TestNaturalOneRerollOutcomeIssue } from "./d20-test-natural-one-reroll.ts";
 import {
   attackDamageContinuationConcentrationFrame,
+  attackDamageContinuationRepeatSaveFrame,
   openAfterDamageSequenceInterruptWindow,
   openPrimaryAttackAfterDamageSequenceInterruptWindow,
 } from "./interrupt-execution.ts";
@@ -53,6 +56,7 @@ import {
   resolveReplayContinuationFromState,
 } from "./replay-continuation.ts";
 import { mergeObjectOutcomeResult } from "./object-outcome-accumulation.ts";
+import { saveGatedConditionDamageOccurrenceKeyForAttackResume } from "./staged-condition-repeat-save.ts";
 
 export function resumeInterruptedProcedure(
   state: BattleState,
@@ -188,6 +192,32 @@ export function resumeInterruptedProcedure(
     }
     const continuationConcentrationSavingThrows =
       attackDamageContinuationConcentrationFills(continuation);
+    const damageRepeatSave = attackDamageContinuationRepeatSaveResolution(
+      state,
+      continuation,
+      damageAmount,
+    );
+    if (damageRepeatSave.tag === "invalid") {
+      return invalidResult(state, "invalidFill", damageRepeatSave.message);
+    }
+    if (damageRepeatSave.tag === "needsHoles") {
+      const pendingState = {
+        ...state,
+        interruptStack: [
+          ...state.interruptStack,
+          attackDamageContinuationRepeatSaveFrame(
+            continuation,
+            handledInterruptTrigger,
+          ),
+        ],
+      };
+      return needsHolesResult(
+        pendingState,
+        continuation.participant,
+        damageRepeatSave.missingHoles,
+        DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY,
+      );
+    }
     const damagedState = applyAttackDamageAmount({
       state,
       attackerId: attackDamageInterruptionParticipantId(continuation),
@@ -196,6 +226,7 @@ export function resumeInterruptedProcedure(
       deathFailuresAtZeroHp: attackDamageDeathFailuresAtZeroHp(continuation),
       damageDisposition: continuation.continuation.damageDisposition,
       attackDamageRiders: continuation.continuation.attackDamageRiders,
+      saveGatedConditionDamageRepeatSave: damageRepeatSave.context,
       weaponDamageDiceRollChoice:
         continuation.continuation.weaponDamageDiceRollChoice,
       concentrationSavingThrow: attackDamageContinuationTargetConcentrationFill(
@@ -321,6 +352,18 @@ export class InterruptContinuationExecution {
     });
   }
 
+  resolveAttackDamageRepeatSave(
+    input: Omit<
+      Parameters<typeof resolveAttackDamageContinuationRepeatSave>[0],
+      "attackResolvers"
+    >,
+  ): BattleResolutionResult {
+    return resolveAttackDamageContinuationRepeatSave({
+      ...input,
+      attackResolvers: this.attackResolvers,
+    });
+  }
+
   resolveAttackDamageCunningStrike(
     input: Omit<
       Parameters<typeof resolveAttackDamageContinuationCunningStrike>[0],
@@ -340,6 +383,7 @@ type ActiveInterruptContinuationResolution =
       readonly frame: Exclude<
         BattleInterruptFrame,
         | { readonly kind: "attackDamageContinuationConcentration" }
+        | { readonly kind: "attackDamageContinuationRepeatSave" }
         | { readonly kind: "attackDamageContinuationCunningStrike" }
         | { readonly kind: "replayContinuation" }
       >;
@@ -372,6 +416,25 @@ export function resolveActiveInterruptContinuation(input: {
       }
       return activeContinuationResult(
         input.execution.resolveAttackDamageConcentration({
+          state: input.state,
+          frame,
+          subject: input.subject,
+          fills: input.fills,
+        }),
+      );
+    }),
+    byInterruptFrameKind("attackDamageContinuationRepeatSave", (frame) => {
+      if (!sameBattleSubject(input.subject, frame.continuation.participant)) {
+        return activeContinuationResult(
+          invalidResult(
+            input.state,
+            "staleSubject",
+            "Attack damage repeat save must be resolved before other battle subjects.",
+          ),
+        );
+      }
+      return activeContinuationResult(
+        input.execution.resolveAttackDamageRepeatSave({
           state: input.state,
           frame,
           subject: input.subject,
@@ -686,6 +749,37 @@ function attackDamageContinuationConcentrationFills(
   return continuation.continuation.concentrationSavingThrows;
 }
 
+function attackDamageContinuationRepeatSaveFills(
+  continuation: BattleAttackDamageContinuationWithoutConcentration,
+): readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[] {
+  return continuation.continuation
+    .saveGatedConditionWithRepeatDamageRepeatSaves;
+}
+
+function attackDamageContinuationRepeatSaveResolution(
+  state: BattleState,
+  continuation: BattleAttackDamageContinuationWithoutConcentration,
+  damageAmount: number,
+): ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave> {
+  const target = state.combatants.get(continuation.target.combatantId);
+  if (target === undefined) {
+    return {
+      tag: "invalid",
+      message: "Attack damage repeat save target is no longer available.",
+    };
+  }
+  return resolveSaveGatedConditionDamageRepeatSave({
+    state,
+    target,
+    damageAmount,
+    fills: attackDamageContinuationRepeatSaveFills(continuation),
+    damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForAttackResume({
+      sourceProcedureRef: continuation.participant.procedureRef,
+      targetId: target.combatantId,
+    }),
+  });
+}
+
 function resolveAttackDamageContinuationConcentration(input: {
   readonly state: BattleState;
   readonly frame: BattleAttackDamageContinuationConcentrationFrame;
@@ -773,6 +867,112 @@ function resolveAttackDamageContinuationConcentration(input: {
     input.frame.handledInterruptTrigger,
     input.attackResolvers,
   );
+}
+
+function resolveAttackDamageContinuationRepeatSave(input: {
+  readonly state: BattleState;
+  readonly frame: BattleAttackDamageContinuationRepeatSaveFrame;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+  readonly attackResolvers: BattleAttackRouteResolvers;
+}): BattleResolutionResult {
+  const damageAmount = attackDamageContinuationAmount(
+    input.state,
+    input.frame.continuation,
+  );
+  if (damageAmount === null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack damage repeat save target is no longer available.",
+    );
+  }
+  const pending = attackDamageContinuationRepeatSaveResolution(
+    input.state,
+    input.frame.continuation,
+    Number(damageAmount),
+  );
+  if (pending.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", pending.message);
+  }
+  if (pending.tag === "ok") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack damage repeat save is no longer pending.",
+    );
+  }
+  const nextFill = attackDamageContinuationRepeatSaveFill(
+    input.frame.continuation,
+    input.fills,
+  );
+  if (nextFill.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", nextFill.message);
+  }
+  if (nextFill.value === undefined) {
+    return needsHolesResult(input.state, input.subject, pending.missingHoles);
+  }
+  if (
+    !pending.missingHoles.some((hole) => hole.holeId === nextFill.value?.holeId)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack damage repeat save fill does not match the pending Saving Throw hole.",
+    );
+  }
+  const stateWithoutFrame = {
+    ...input.state,
+    interruptStack: input.state.interruptStack.slice(0, -1),
+  };
+  return resumeInterruptedProcedure(
+    stateWithoutFrame,
+    {
+      ...input.frame.continuation,
+      continuation: {
+        ...input.frame.continuation.continuation,
+        saveGatedConditionWithRepeatDamageRepeatSaves: [
+          ...attackDamageContinuationRepeatSaveFills(input.frame.continuation),
+          nextFill.value,
+        ],
+      },
+    },
+    input.frame.handledInterruptTrigger,
+    input.attackResolvers,
+  );
+}
+
+function attackDamageContinuationRepeatSaveFill(
+  continuation: BattleAttackDamageContinuationWithoutConcentration,
+  fills: readonly BattleFill[],
+):
+  | {
+      readonly tag: "ok";
+      readonly value:
+        | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
+        | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const prefix = attackDamageContinuationRepeatSaveFills(continuation);
+  const submitted = fills.filter(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome",
+  );
+  const accumulated = battleFillPrefixAccumulated(prefix, submitted);
+  const remaining = accumulated ? submitted.slice(prefix.length) : submitted;
+  if (remaining.length === 0) {
+    return { tag: "ok", value: undefined };
+  }
+  if (remaining.length !== 1) {
+    return {
+      tag: "invalid",
+      message:
+        "Attack damage repeat save continuation accepts one pending Saving Throw at a time.",
+    };
+  }
+  return { tag: "ok", value: remaining[0] };
 }
 
 function attackDamageContinuationConcentrationFill(

@@ -64,6 +64,7 @@ import {
   fillsMatchingHoleIds,
   damageLifecycleConcentrationSavingThrowHoles,
 } from "./damage-apply.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHole } from "./staged-condition-repeat-save.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
   activeMarkedDamageRiders,
@@ -1824,6 +1825,9 @@ function resolveTargetedSpellStagedConditionLifecycle(
       target: input.target,
       damageAmount: input.spellDamageAmount,
       fills: input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+        input.damageRoll.holeId,
+      ),
     });
   if (stagedConditionSaveCheck.tag === "needsHoles") {
     return {
@@ -2041,8 +2045,13 @@ function applyTargetedSpellDamageLifecycle(
       damageDisposition: input.damageDisposition,
       spellMarkedDamageRiders: input.spellMarkedDamageRiders,
       sourceDamageRollPenaltyRoll: input.sourceDamageRollPenaltyRoll,
-      saveGatedConditionWithRepeatDamageRepeatSaves:
-        input.stagedConditionLifecycleFills,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: input.stagedConditionLifecycleFills,
+        occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          input.damageRoll.holeId,
+        ),
+      },
       damageSourceId: input.input.subject.actorId,
       spatialFacts: input.fillSet.targetSpatialFacts,
       ...optionalProperty("relationshipDecisions", input.relationshipDecisions),

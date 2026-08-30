@@ -91,6 +91,7 @@ import {
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHole } from "./staged-condition-repeat-save.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 
 import {
@@ -2801,6 +2802,8 @@ export function resolveSelectedAttackProcedure<
         redirectTarget: fillSet.attackDamageReductionRedirectTarget,
         redirectSave: fillSet.attackDamageReductionRedirectSave,
         redirectDamage: fillSet.attackDamageReductionRedirectDamage,
+        saveGatedConditionWithRepeatDamageRepeatSaves:
+          fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
         damageRelationshipDecisions: fillSet.damageRelationshipDecisions,
       });
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -2815,6 +2818,13 @@ export function resolveSelectedAttackProcedure<
       ]);
     }
     const sapRedirectState = redirectState.state;
+    const redirectDamageRepeatSaveHoleIds = new Set(
+      redirectState.damageRepeatSaveHoleIds,
+    );
+    const primaryDamageRepeatSaveFills =
+      fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.filter(
+        (fill) => !redirectDamageRepeatSaveHoleIds.has(fill.holeId),
+      );
     const damageDispositionHole = attackDamageDispositionHole({
       attack,
       attackerId: attackerId,
@@ -2925,6 +2935,8 @@ export function resolveSelectedAttackProcedure<
             continuation: {
               kind: "primaryAttackDamage",
               concentrationSavingThrows: primaryConcentrationSavingThrows,
+              saveGatedConditionWithRepeatDamageRepeatSaves:
+                primaryDamageRepeatSaveFills,
               damageDisposition: primaryAttackDamageDisposition(fillSet),
               attackDamageRiders: [],
               attack,
@@ -2954,7 +2966,9 @@ export function resolveSelectedAttackProcedure<
         state: grapplerPunchAndGrab.state,
         target: spellReduction.target,
         damageAmount: reducedFixedDamageAmount,
-        fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+        fills: primaryDamageRepeatSaveFills,
+        damageOccurrenceKey:
+          saveGatedConditionDamageOccurrenceKeyForHole(ATTACK_ROLL_HOLE_ID),
       });
     if (saveGatedConditionWithRepeatSaveCheck.tag === "needsHoles") {
       return needsHolesResult(grapplerPunchAndGrab.state, input.subject, [
@@ -2980,8 +2994,12 @@ export function resolveSelectedAttackProcedure<
       damageDisposition: fillSet.damageDisposition,
       attackDamageRiders: [],
       concentrationSavingThrow: primaryConcentrationSavingThrow,
-      saveGatedConditionWithRepeatDamageRepeatSaves:
-        fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: primaryDamageRepeatSaveFills,
+        occurrenceKey:
+          saveGatedConditionDamageOccurrenceKeyForHole(ATTACK_ROLL_HOLE_ID),
+      },
       linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         primaryConcentrationSavingThrows,
       spatialFacts: fillSet.targetSpatialFacts,
@@ -3265,6 +3283,8 @@ export function resolveSelectedAttackProcedure<
         redirectTarget: fillSet.attackDamageReductionRedirectTarget,
         redirectSave: fillSet.attackDamageReductionRedirectSave,
         redirectDamage: fillSet.attackDamageReductionRedirectDamage,
+        saveGatedConditionWithRepeatDamageRepeatSaves:
+          fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
         damageRelationshipDecisions: fillSet.damageRelationshipDecisions,
       });
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -3279,6 +3299,13 @@ export function resolveSelectedAttackProcedure<
       ]);
     }
     const sapRedirectState = redirectState.state;
+    const redirectDamageRepeatSaveHoleIds = new Set(
+      redirectState.damageRepeatSaveHoleIds,
+    );
+    const primaryDamageRepeatSaveFills =
+      fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.filter(
+        (fill) => !redirectDamageRepeatSaveHoleIds.has(fill.holeId),
+      );
     const damageDispositionHole = attackDamageDispositionHole({
       attack,
       attackerId: attackerId,
@@ -3368,6 +3395,8 @@ export function resolveSelectedAttackProcedure<
           continuation: {
             kind: "primaryAttackDamage",
             concentrationSavingThrows: primaryConcentrationSavingThrows,
+            saveGatedConditionWithRepeatDamageRepeatSaves:
+              primaryDamageRepeatSaveFills,
             damageDisposition: primaryAttackDamageDisposition(fillSet),
             attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
             attack,
@@ -3441,6 +3470,8 @@ export function resolveSelectedAttackProcedure<
             continuation: {
               kind: "primaryAttackDamage",
               concentrationSavingThrows: primaryConcentrationSavingThrows,
+              saveGatedConditionWithRepeatDamageRepeatSaves:
+                primaryDamageRepeatSaveFills,
               damageDisposition: primaryAttackDamageDisposition(fillSet),
               attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
               attack,
@@ -3477,7 +3508,10 @@ export function resolveSelectedAttackProcedure<
         state: grapplerPunchAndGrab.state,
         target: spellReduction.target,
         damageAmount: reducedDamageAmount,
-        fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+        fills: primaryDamageRepeatSaveFills,
+        damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          fillSet.damageRoll.holeId,
+        ),
       });
     if (saveGatedConditionWithRepeatSaveCheck.tag === "needsHoles") {
       return needsHolesResult(grapplerPunchAndGrab.state, input.subject, [
@@ -3504,8 +3538,13 @@ export function resolveSelectedAttackProcedure<
       attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
       weaponDamageDiceRollChoice: selectedDamageDiceChoice ?? undefined,
       concentrationSavingThrow: primaryConcentrationSavingThrow,
-      saveGatedConditionWithRepeatDamageRepeatSaves:
-        fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: primaryDamageRepeatSaveFills,
+        occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          fillSet.damageRoll.holeId,
+        ),
+      },
       linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         primaryConcentrationSavingThrows,
       spatialFacts: fillSet.targetSpatialFacts,
@@ -4353,6 +4392,7 @@ type AdditionalWeaponAttackDamageInput = {
   readonly damageDispositionFilled: boolean;
   readonly damageDisposition: BattleAttackDamageDisposition;
   readonly concentrationSavingThrows: ParsedAttackFillSet["concentrationSavingThrows"];
+  readonly saveGatedConditionWithRepeatDamageRepeatSaves: ParsedAttackFillSet["saveGatedConditionWithRepeatDamageRepeatSaves"];
   readonly relationshipDecisions: ParsedAttackFillSet["damageRelationshipDecisions"];
   readonly attackDamageRiders: readonly AttackDamageRider[];
   readonly critical: boolean;
@@ -4434,6 +4474,8 @@ function resolveAdditionalWeaponAttackDamage(
     continuation: {
       kind: "damageOnly",
       concentrationSavingThrows: input.concentrationSavingThrows,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        input.saveGatedConditionWithRepeatDamageRepeatSaves,
       damageDisposition: input.damageDisposition,
       attackDamageRiders: input.attackDamageRiders,
       ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
@@ -4786,6 +4828,8 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
         input.fillSet.weaponMasteryCleaveDamageDispositionFilled,
       damageDisposition: input.fillSet.weaponMasteryCleaveDamageDisposition,
       concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       relationshipDecisions: input.fillSet.damageRelationshipDecisions,
       attackDamageRiders: [],
       critical: cleaveCritical,
@@ -5437,6 +5481,8 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         input.fillSet.huntersPreyHordeBreakerDamageDispositionFilled,
       damageDisposition: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
       concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       relationshipDecisions: input.fillSet.damageRelationshipDecisions,
       attackDamageRiders: hordeBreakerSelectedDamageRiders,
       critical,

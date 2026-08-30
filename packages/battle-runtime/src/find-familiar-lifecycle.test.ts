@@ -2929,6 +2929,7 @@ describe("Find Familiar lifecycle", () => {
     if (familiar === undefined) return;
 
     const damaged = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: cast.state,
       target: familiar,
       damageAmount: Number(familiar.hp),
@@ -3321,6 +3322,7 @@ describe("Find Familiar lifecycle", () => {
     expect(familiar).toBeDefined();
     if (familiar === undefined) return;
     const disappeared = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: delivered.state,
       target: familiar,
       damageAmount: Number(familiar.hp) + 1,
@@ -4520,6 +4522,7 @@ describe("Find Familiar lifecycle", () => {
       throw new Error("Expected Pact owner combatant.");
     }
     const unableToAct = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: cast.state,
       target: owner,
       damageAmount: Number(owner.hp),

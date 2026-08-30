@@ -124,18 +124,36 @@ export function characterStoredExecutionProcedureRef(
   )?.procedureRef;
 }
 
+type CharacterSnapshotProcedureBinding =
+  | Exclude<
+      CharacterProcedureBinding,
+      { readonly procedure: { readonly kind: "spellInvocation" } }
+    >
+  | {
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly procedure: {
+        readonly kind: "spellInvocation";
+        readonly execution: BattleStoredSpellProcedureExecution;
+      };
+    };
+
+function characterProcedureBindingIsSnapshotEligible(
+  binding: CharacterProcedureBinding,
+): binding is CharacterSnapshotProcedureBinding {
+  return (
+    binding.procedure.kind !== "spellInvocation" ||
+    binding.procedure.execution.procedure !== "spawnedCompanionLifecycle"
+  );
+}
+
 export function characterProcedureBindingSnapshots(
   execution: CharacterExecutionState,
   executionFactsFor: (
-    invocation: SpellProcedureExecution,
+    invocation: BattleStoredSpellProcedureExecution,
   ) => SpellExecutionFacts,
 ) {
   return execution.procedureBindings
-    .filter(
-      (binding) =>
-        binding.procedure.kind !== "spellInvocation" ||
-        binding.procedure.execution.procedure !== "spawnedCompanionLifecycle",
-    )
+    .filter(characterProcedureBindingIsSnapshotEligible)
     .map((binding) =>
       Match.value(binding.procedure).pipe(
         Match.when({ kind: "unitFeature" }, (procedure) => ({

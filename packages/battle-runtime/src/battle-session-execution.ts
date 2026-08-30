@@ -286,6 +286,10 @@ function battleCurrentContinuation(state: BattleRuntimeSession["state"]): {
       attackDamageContinuation,
     ),
     Match.when(
+      { kind: "attackDamageContinuationRepeatSave" },
+      attackDamageContinuation,
+    ),
+    Match.when(
       { kind: "attackDamageContinuationCunningStrike" },
       attackDamageContinuation,
     ),

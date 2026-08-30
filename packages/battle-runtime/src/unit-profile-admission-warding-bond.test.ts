@@ -244,6 +244,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     );
 
     const damaged = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state,
       target,
       damageAmount: 4,
@@ -311,6 +312,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     }
 
     const damaged = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state,
       target,
       damageAmount: 4,
@@ -350,6 +352,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       continuation: {
         kind: "damageOnly",
         concentrationSavingThrows: [],
+        saveGatedConditionWithRepeatDamageRepeatSaves: [],
         damageDisposition: { kind: "ordinaryDamage" },
         attackDamageRiders: [],
       },
@@ -1227,6 +1230,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       linkedDefenseResistanceDamageShareBattle(),
     );
     const casterZero = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: casterZeroState,
       target: requireCombatant(casterZeroState, spellCasterId),
       damageAmount: 12,

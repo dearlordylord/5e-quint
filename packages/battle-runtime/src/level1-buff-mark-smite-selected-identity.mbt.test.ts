@@ -2116,6 +2116,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         throw new Error("Expected Hunter's Mark target.");
       }
       state = applyBattleHitPointDamage({
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
         state,
         target: markedTarget,
         damageAmount: 1,
@@ -2207,6 +2208,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         throw new Error("Expected Hex cursed target.");
       }
       state = applyBattleHitPointDamage({
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
         state,
         target: cursedTarget,
         damageAmount: 1,

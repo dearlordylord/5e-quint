@@ -60,6 +60,7 @@ import type {
   BattleAttackHostSubject,
   BattleFill,
   BattleAttackDamageContinuationConcentrationFrame,
+  BattleAttackDamageContinuationRepeatSaveFrame,
   BattleAttackDamageContinuationWithoutConcentration,
   BattleAttackHitTriggerKind,
   BattleDroppedObjectOutcome,
@@ -340,6 +341,17 @@ export function attackDamageContinuationConcentrationFrame(
 ): BattleAttackDamageContinuationConcentrationFrame {
   return {
     kind: "attackDamageContinuationConcentration",
+    continuation,
+    handledInterruptTrigger,
+  };
+}
+
+export function attackDamageContinuationRepeatSaveFrame(
+  continuation: BattleAttackDamageContinuationWithoutConcentration,
+  handledInterruptTrigger: BattleInterruptTrigger,
+): BattleAttackDamageContinuationRepeatSaveFrame {
+  return {
+    kind: "attackDamageContinuationRepeatSave",
     continuation,
     handledInterruptTrigger,
   };
