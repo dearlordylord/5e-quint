@@ -5617,14 +5617,6 @@ const StatBlockBonusActionOptionProcedureSchema = Schema.Struct({
   ),
 });
 
-const StatBlockProcedureSchema = Schema.Union(
-  StatBlockAttackProcedureSchema,
-  StatBlockUnarmedStrikeProcedureSchema,
-  StatBlockMultiattackProcedureSchema,
-  StatBlockBonusActionOptionProcedureSchema,
-  StatBlockSpellcastingProcedureSchema,
-);
-
 const StatBlockProcedureBindingSnapshotSchema = Schema.Union(
   Schema.Struct({
     procedureRef: BattleStatBlockProcedureExecutionRef,
@@ -5947,7 +5939,7 @@ function legendaryProcedurePoolCardinalityIsValid(
 }
 
 function runtimeProcedureOrdinalKey(
-  procedure: Schema.Schema.Type<typeof StatBlockProcedureSchema>,
+  procedure: EncodedStatBlockProcedureBinding["procedure"],
 ): string {
   if (procedure.kind === "unarmedStrike") return "actions:unarmedStrike";
   const section =
@@ -7686,10 +7678,7 @@ function battleSnapshotInvariantsHold(
     battleSnapshotLiveCombatantIdsAreUnique(snapshot, liveCombatantIds) &&
     new Set(executionScopeRefs).size === executionScopeRefs.length &&
     snapshot.combatants.every((combatant) =>
-      battleSnapshotExecutionScopesBelongToBattle(
-        snapshot.battleId,
-        combatant,
-      ),
+      battleSnapshotExecutionScopesBelongToBattle(snapshot.battleId, combatant),
     ) &&
     battleSnapshotActionResourcesAreValid(snapshot) &&
     snapshot.readiedResponses.spells.every((readied) =>
