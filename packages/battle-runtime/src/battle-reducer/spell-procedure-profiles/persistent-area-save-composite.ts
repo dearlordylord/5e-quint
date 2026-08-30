@@ -40,6 +40,7 @@ import {
 } from "../codec-building-blocks.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { resolvePersistentAreaSaveCompositeSpellAct } from "../spells-resolve-area-effects.ts";
+import { hasSharedNonEmptyOncePerTurnLimitGroup } from "./once-per-turn-limit-group-admission.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -149,11 +150,6 @@ function persistentAreaSaveCompositeSpell(
       operation.trigger.kind === "passive" &&
       operation.effect.kind === "douse_exposed_flames",
   );
-  const sharedSaveLimitGroup = sharedOncePerTurnLimitGroup(
-    enterOperation,
-    startTurnOperation,
-  );
-
   if (
     mechanics.level !== PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL ||
     mechanics.castingTime.kind !== "action" ||
@@ -171,7 +167,10 @@ function persistentAreaSaveCompositeSpell(
     area.shape.heightFeet !== PERSISTENT_AREA_SAVE_COMPOSITE_HEIGHT_FEET ||
     !isPersistentAreaSaveCompositeSaveGate(enterOperation?.effect) ||
     !isPersistentAreaSaveCompositeSaveGate(startTurnOperation?.effect) ||
-    sharedSaveLimitGroup === null ||
+    !hasSharedNonEmptyOncePerTurnLimitGroup([
+      enterOperation?.usageLimit,
+      startTurnOperation?.usageLimit,
+    ]) ||
     difficultTerrainOperation === undefined ||
     heavilyObscuredOperation === undefined ||
     exposedFlamesOperation === undefined
@@ -185,24 +184,6 @@ function persistentAreaSaveCompositeSpell(
     radiusFeet: area.shape.radiusFeet,
     heightFeet: area.shape.heightFeet,
   };
-}
-
-function sharedOncePerTurnLimitGroup(
-  enterOperation: OngoingMechanics["operations"][number] | undefined,
-  startTurnOperation: OngoingMechanics["operations"][number] | undefined,
-): string | null {
-  const enterLimit = enterOperation?.usageLimit;
-  const startTurnLimit = startTurnOperation?.usageLimit;
-  if (
-    enterLimit?.kind !== "once_per_turn" ||
-    startTurnLimit?.kind !== "once_per_turn" ||
-    enterLimit.limitGroup === undefined ||
-    startTurnLimit.limitGroup === undefined ||
-    enterLimit.limitGroup !== startTurnLimit.limitGroup
-  ) {
-    return null;
-  }
-  return enterLimit.limitGroup;
 }
 
 function isPersistentAreaSaveCompositeSaveGate(
