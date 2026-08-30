@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "1ecd75535466a6362d8bf97ebe70a656e1e18e89",
+    "registryCommit": "293c1d79bf7dacb377311c0612efd857b4d32041",
     "generator": {
       "path": "scripts/gh381-registry-path-manifest.cjs",
       "sha256": "d48ee1ce403362f49f7f03c55f0be276dd5337740cea5f3512367c167d3ad9d5"
@@ -12,11 +12,11 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "13357616a18826783f036fd27b3bcb7a120f38be34b19f6a48a8b4b932b4097d"
+        "sha256": "7820a5498b586a8b77dd0a0df31b751515b086444e6a0fab333318b0b0b8af6b"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
-        "sha256": "3bca90e7e2bdcbb7bb12df40100a94d11481559d4e1d4885b199a5892cf1b629"
+        "sha256": "cc4da48b4a0334b180129a5c13459fa49a39cdef32d61ce14866d0f4266f3a05"
       }
     ]
   },
@@ -357,11 +357,11 @@
     "packages/battle-runtime/battle-runtime-light.qnt",
     "packages/battle-runtime/battle-runtime-linked-defense-damage-share.qnt",
     "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
+    "packages/battle-runtime/battle-runtime-magical-darkness-point-origin.qnt",
     "packages/battle-runtime/battle-runtime-marked-riders.qnt",
     "packages/battle-runtime/battle-runtime-marked-spells.qnt",
     "packages/battle-runtime/battle-runtime-movement.qnt",
     "packages/battle-runtime/battle-runtime-object-contact-damage.qnt",
-    "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt",
     "packages/battle-runtime/battle-runtime-observer-sight-grant.qnt",
     "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
     "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
@@ -744,11 +744,11 @@
       "packages/battle-runtime/battle-runtime-light.qnt",
       "packages/battle-runtime/battle-runtime-linked-defense-damage-share.qnt",
       "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
+      "packages/battle-runtime/battle-runtime-magical-darkness-point-origin.qnt",
       "packages/battle-runtime/battle-runtime-marked-riders.qnt",
       "packages/battle-runtime/battle-runtime-marked-spells.qnt",
       "packages/battle-runtime/battle-runtime-movement.qnt",
       "packages/battle-runtime/battle-runtime-object-contact-damage.qnt",
-      "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt",
       "packages/battle-runtime/battle-runtime-observer-sight-grant.qnt",
       "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
       "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
