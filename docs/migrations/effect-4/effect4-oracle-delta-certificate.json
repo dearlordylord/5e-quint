@@ -8,7 +8,7 @@
   },
   "candidate": {
     "byteLength": 52137007,
-    "sha256": "c6e23cea8c4187d4902b51558123837cdf2961f5f6e0ac09df0a52a497cd26d8"
+    "sha256": "bb25eae9123b6b85ce80cc49a81ec0ef4b54cad00cc223525a20b04d09953e6c"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -83474,7 +83474,7 @@
       {
         "delta": {
           "baselineSha256": "bcd89ed5eccba5ce9d7a5bd7355353c118bf2bb232c719cc2c5ee2d05a2779a7",
-          "candidateSha256": "051e4e9896ce93218a6efee137f111d37c08d150ff8923ff402d38300c518217",
+          "candidateSha256": "d98fc2bc8a0afcbca2457bde7b5b4d7accbeef2bb5e448a1f76c984b9d937e7a",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -103551,7 +103551,7 @@
       {
         "delta": {
           "baselineSha256": "e93601b57bc68014c93a57684be5526b020671d15fb6ded610884c4aa7e2f9b7",
-          "candidateSha256": "1a8853b254c332d1e4cfd56ff8198585f2c64a2d807fd595df1a1583cde93692",
+          "candidateSha256": "1fde68cf10cd2100a354978ab06091891c1f8f4840a4e95daf6fa3979d175aab",
           "operation": "changed",
           "segments": [
             "rawSwarm",
@@ -169097,7 +169097,7 @@
         "reasonId": "mcp-registration-contract-migration"
       }
     ],
-    "identitySha256": "01e4875c9e339c4f46e84329d0a7fad5db58efdf68c30a674d61beb559d09cfa",
+    "identitySha256": "1fa5ab3d2e37822d76958bdd2385172b71a3a4cbee2c9482c46edf41c6d06e3c",
     "reviewedReasons": [
       {
         "changedCollectionAuthorityIds": [],
@@ -169150,7 +169150,7 @@
       {
         "changedCollectionAuthorityIds": ["raw-swarm-artifacts"],
         "deltaCount": 57,
-        "deltaIdentitySha256": "ebab713447759506521ba3f7322341ec7afdac83b977a32b92848db672584728",
+        "deltaIdentitySha256": "581f9a5b2149ea730250a3f89f2205a4f55a7e6b3691688141f73293025e616b",
         "id": "raw-swarm-effect-runtime-artifacts",
         "operations": {
           "added": 43,

@@ -1217,12 +1217,12 @@ digests or missing tags. Its verifier rejects changed baseline or candidate
 bytes, unreadable artifacts, duplicate, unclassified, multiply classified, or
 stale exact identities, and stale aggregate counts or hashes.
 
-The candidate is 52,137,007 bytes with SHA-256
-`c6e23cea8c4187d4902b51558123837cdf2961f5f6e0ac09df0a52a497cd26d8`;
+At reconciliation tip `505263eb6`, the candidate is 52,137,007 bytes with SHA-256
+`bb25eae9123b6b85ce80cc49a81ec0ef4b54cad00cc223525a20b04d09953e6c`;
 the identity-set SHA-256 is
-`01e4875c9e339c4f46e84329d0a7fad5db58efdf68c30a674d61beb559d09cfa`,
+`1fa5ab3d2e37822d76958bdd2385172b71a3a4cbee2c9482c46edf41c6d06e3c`,
 and the certificate artifact SHA-256 is
-`733a17024ebdcdd193f336dd1e6802653eaa1dfd492d34b7a81ae39cc530fa6f`.
+`ff8304287d391f14f1634e06ffae8125007fb488913c4474da4f0f98190afbca`.
 The authored-identity boundary also passes after removing the stale generic
 `runtimeCommandSubject` exemption: 4,735 literals, 795 checked source files,
 552 exercised exact exemptions, and 1,214 reviewed sites / 1,325 occurrences.
