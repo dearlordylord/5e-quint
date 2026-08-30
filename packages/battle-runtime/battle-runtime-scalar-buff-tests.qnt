@@ -5,6 +5,7 @@ module battleRuntimeScalarBuffTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
+  import battleRuntimeFallingCreatureMitigationReaction.* from "./battle-runtime-falling-creature-mitigation-reaction"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
