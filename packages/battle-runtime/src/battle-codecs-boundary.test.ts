@@ -518,9 +518,7 @@ function codecFixture() {
         ownerId: wizardId,
         effect: {
           kind: "persistentAreaSaveDamage",
-          lifecycle: {
-            kind: "casterActionReposition",
-          },
+          lifecycle: "collisionReposition",
           sourceProcedureRef: source.procedureRef,
           sourceCombatantId: wizardId,
           areaId: battleAreaId("area:codec-flaming-sphere"),
@@ -551,7 +549,7 @@ function codecFixture() {
         ownerId: wizardId,
         effect: {
           kind: "persistentAreaSaveDamage",
-          lifecycle: { kind: "stationary" },
+          lifecycle: "stationary",
           sourceProcedureRef: insectPlagueSource.procedureRef,
           sourceCombatantId: wizardId,
           appearanceOccurrence: {
@@ -572,9 +570,7 @@ function codecFixture() {
         ownerId: wizardId,
         effect: {
           kind: "persistentAreaSaveDamage",
-          lifecycle: {
-            kind: "sourceTurnTranslation",
-          },
+          lifecycle: "sourceTurnTranslation",
           sourceProcedureRef: cloudkillSource.procedureRef,
           sourceCombatantId: wizardId,
           appearanceOccurrence: {

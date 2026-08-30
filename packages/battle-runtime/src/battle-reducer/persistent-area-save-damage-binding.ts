@@ -9,7 +9,9 @@ import type {
   SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution,
   StationaryPersistentAreaSaveDamageSpellProcedureExecution,
 } from "../procedure-execution/spell-procedure-execution.ts";
-import * as Match from "effect/Match";
+import { persistentAreaSaveDamageRepositionKind } from "./persistent-area-save-damage-lifecycle.ts";
+
+export { persistentAreaSaveDamageRepositionKind } from "./persistent-area-save-damage-lifecycle.ts";
 
 type PersistentAreaSaveDamageEffect = Extract<
   BattleActiveEffect,
@@ -17,19 +19,19 @@ type PersistentAreaSaveDamageEffect = Extract<
 >;
 type StationaryEffect = Extract<
   PersistentAreaSaveDamageEffect,
-  { readonly lifecycle: { readonly kind: "stationary" } }
+  { readonly lifecycle: "stationary" }
 >;
 type TranslatingEffect = Extract<
   PersistentAreaSaveDamageEffect,
-  { readonly lifecycle: { readonly kind: "sourceTurnTranslation" } }
+  { readonly lifecycle: "sourceTurnTranslation" }
 >;
 type CollisionEffect = Extract<
   PersistentAreaSaveDamageEffect,
-  { readonly savedThisTurn?: never }
+  { readonly lifecycle: "collisionReposition" }
 >;
 type DirectedEffect = Extract<
   PersistentAreaSaveDamageEffect,
-  { readonly shapeShiftSuppressed: readonly unknown[] }
+  { readonly lifecycle: "directedReposition" }
 >;
 
 export type BoundPersistentAreaSaveDamageEffect =
@@ -75,9 +77,6 @@ export function boundPersistentAreaSaveDamageEffect(
   if (isTranslatingEffect(effect) && isTranslatingFacts(facts)) {
     return { kind: "sourceTurnTranslation", effect, facts };
   }
-  if (effect.lifecycle.kind !== "casterActionReposition") {
-    return undefined;
-  }
   if (isCollisionFacts(facts) && isCollisionEffect(effect)) {
     return { kind: "collisionReposition", effect, facts };
   }
@@ -89,33 +88,25 @@ export function boundPersistentAreaSaveDamageEffect(
 function isStationaryEffect(
   effect: PersistentAreaSaveDamageEffect,
 ): effect is StationaryEffect {
-  return effect.lifecycle.kind === "stationary";
+  return effect.lifecycle === "stationary";
 }
 
 function isTranslatingEffect(
   effect: PersistentAreaSaveDamageEffect,
 ): effect is TranslatingEffect {
-  return effect.lifecycle.kind === "sourceTurnTranslation";
+  return effect.lifecycle === "sourceTurnTranslation";
 }
 
 function isCollisionEffect(
   effect: PersistentAreaSaveDamageEffect,
 ): effect is CollisionEffect {
-  return (
-    effect.lifecycle.kind === "casterActionReposition" &&
-    effect.savedThisTurn === undefined &&
-    effect.shapeShiftSuppressed === undefined
-  );
+  return effect.lifecycle === "collisionReposition";
 }
 
 function isDirectedEffect(
   effect: PersistentAreaSaveDamageEffect,
 ): effect is DirectedEffect {
-  return (
-    effect.lifecycle.kind === "casterActionReposition" &&
-    effect.savedThisTurn !== undefined &&
-    effect.shapeShiftSuppressed !== undefined
-  );
+  return effect.lifecycle === "directedReposition";
 }
 
 function isStationaryFacts(
@@ -159,16 +150,5 @@ function isDirectedFacts(
     facts.lifecycle.kind === "casterActionReposition" &&
     persistentAreaSaveDamageRepositionKind(facts.lifecycle) ===
       "directedReposition"
-  );
-}
-
-export function persistentAreaSaveDamageRepositionKind(lifecycle: {
-  readonly actionCost: "magicAction" | "bonusAction";
-  readonly collisionDisposition: "stopAndAffectAdjacent" | "ignoreObstacles";
-}): "collisionReposition" | "directedReposition" {
-  return Match.value(lifecycle.collisionDisposition).pipe(
-    Match.when("stopAndAffectAdjacent", () => "collisionReposition" as const),
-    Match.when("ignoreObstacles", () => "directedReposition" as const),
-    Match.exhaustive,
   );
 }

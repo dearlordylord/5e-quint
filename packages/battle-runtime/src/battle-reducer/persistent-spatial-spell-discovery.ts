@@ -39,13 +39,15 @@ export type PersistentAreaSaveConditionEffect =
 export type PersistentAreaSaveConditionEscapeEffect =
   BoundPersistentAreaSaveConditionEscapeEffect;
 
-export type RamMovablePersistentAreaEffect = Extract<
-  BattleActiveEffect,
-  {
-    readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: { readonly kind: "casterActionReposition" };
-    readonly savedThisTurn?: never;
-  }
+export type RamMovablePersistentAreaEffect = Omit<
+  Extract<
+    BattleActiveEffect,
+    {
+      readonly kind: "persistentAreaSaveDamage";
+      readonly lifecycle: "collisionReposition";
+    }
+  >,
+  "lifecycle"
 > & {
   readonly lifecycle: CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution["lifecycle"];
   readonly save: {
@@ -56,13 +58,15 @@ export type RamMovablePersistentAreaEffect = Extract<
   readonly damage: CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution["damage"];
 };
 
-export type MovablePersistentAreaEffect = Extract<
-  BattleActiveEffect,
-  {
-    readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: { readonly kind: "casterActionReposition" };
-    readonly shapeShiftSuppressed: readonly CombatantId[];
-  }
+export type MovablePersistentAreaEffect = Omit<
+  Extract<
+    BattleActiveEffect,
+    {
+      readonly kind: "persistentAreaSaveDamage";
+      readonly lifecycle: "directedReposition";
+    }
+  >,
+  "lifecycle"
 > & {
   readonly lifecycle: DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution["lifecycle"];
   readonly save: {

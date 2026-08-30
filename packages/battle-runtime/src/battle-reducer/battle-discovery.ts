@@ -183,7 +183,7 @@ type EnvironmentEndedPersistentAreaSaveDamageEffect = Extract<
   BattleActiveEffect,
   {
     readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+    readonly lifecycle: "sourceTurnTranslation";
   }
 >;
 export function discoverBattleActCandidatesWithExecutionRegistry(

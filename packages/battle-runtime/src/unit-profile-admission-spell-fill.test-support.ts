@@ -1745,10 +1745,11 @@ function activeInsectPlagueAreaHazardEffect(
         BattleActiveEffect,
         {
           readonly kind: "persistentAreaSaveDamage";
-          readonly lifecycle: { readonly kind: "stationary" };
+          readonly lifecycle: "stationary";
         }
       > =>
         effect.kind === "persistentAreaSaveDamage" &&
+        effect.lifecycle === "stationary" &&
         effect.sourceCombatantId === spellCasterId &&
         effect.areaId === insectPlagueAreaId,
     );
@@ -1781,10 +1782,11 @@ function activeCloudkillAreaHazardEffect(
         BattleActiveEffect,
         {
           readonly kind: "persistentAreaSaveDamage";
-          readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+          readonly lifecycle: "sourceTurnTranslation";
         }
       > =>
         effect.kind === "persistentAreaSaveDamage" &&
+        effect.lifecycle === "sourceTurnTranslation" &&
         effect.sourceCombatantId === spellCasterId &&
         effect.areaId === cloudkillAreaId,
     );
