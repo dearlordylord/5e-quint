@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import Ajv2020 from "ajv/dist/2020.js";
-import { Result, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import { PublishedSrdSurfaceSchema } from "./schema.ts";
 
@@ -12,8 +12,13 @@ export const SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH =
   "docs/migrations/effect-4/surface-publication-delta-certificate.json";
 
 const CERTIFICATE_SHA256 =
-  "47b4cbb6585f6a912e696352258044c68a534f52bf4565a315b77d9820ffd5c1";
-const CERTIFICATE_FORMAT_VERSION = 2;
+  "27eaacdc9ebbcfc02dd49d70bbc4873bd10b3a70f040ca8b5e471784b7c94c95";
+const CERTIFICATE_FORMAT_VERSION = 3;
+const EFFECT3_SURFACE_BASELINE_COMMIT =
+  "76d9abaf0ec9c8369d5f95f603c5cce88704d26e";
+const SURFACE_AGGREGATE_PATH = "packages/surface/publication/srd-surface.json";
+const SURFACE_SCHEMA_PATH =
+  "packages/surface/publication/srd-surface.schema.json";
 
 const AGGREGATE_RECORD_FAMILIES = ["units", "statBlocks"] as const;
 type AggregateRecordFamily = (typeof AGGREGATE_RECORD_FAMILIES)[number];
@@ -37,9 +42,6 @@ const SCHEMA_VALIDATION_OUTCOMES = ["accepted", "rejected"] as const;
 const HashSchema = Schema.String.pipe(
   Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
 );
-const CommitSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^[0-9a-f]{40}$/u)),
-);
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
 );
@@ -47,25 +49,44 @@ const ArtifactDigestSchema = Schema.Struct({
   byteLength: NonNegativeIntegerSchema,
   sha256: HashSchema,
 });
-const ReviewedAggregateRecordDeltaSchema = Schema.Struct({
+const ReviewedAggregateRecordDeltaFields = {
   family: Schema.Literals(AGGREGATE_RECORD_FAMILIES),
   id: Schema.String,
   semanticClass: Schema.Literals(REVIEWED_AGGREGATE_DELTA_CLASSES),
-  baselineCanonicalJsonSha256: HashSchema,
-  candidateCanonicalJsonSha256: HashSchema,
+};
+const ReviewedAggregateRecordDeltaSchema = Schema.Union([
+  Schema.Struct({
+    ...ReviewedAggregateRecordDeltaFields,
+    kind: Schema.Literal("changed"),
+    baselineCanonicalJsonSha256: HashSchema,
+    candidateCanonicalJsonSha256: HashSchema,
+  }),
+  Schema.Struct({
+    ...ReviewedAggregateRecordDeltaFields,
+    kind: Schema.Literal("added"),
+    candidateCanonicalJsonSha256: HashSchema,
+  }),
+  Schema.Struct({
+    ...ReviewedAggregateRecordDeltaFields,
+    kind: Schema.Literal("removed"),
+    baselineCanonicalJsonSha256: HashSchema,
+  }),
+]);
+const ReviewedAggregateOrderDeltaSchema = Schema.Struct({
+  kind: Schema.Literal("object-key-order-changed"),
+  family: Schema.Literals(AGGREGATE_RECORD_FAMILIES),
+  id: Schema.String,
+  path: Schema.String,
+  baselineKeyOrder: Schema.Array(Schema.String),
+  candidateKeyOrder: Schema.Array(Schema.String),
+  canonicalValueSha256: HashSchema,
 });
 const AggregateCertificateSchema = Schema.Struct({
-  path: Schema.String,
-  semanticClass: Schema.String,
-  cause: Schema.String,
-  issue: Schema.String,
   baseline: ArtifactDigestSchema,
   candidate: ArtifactDigestSchema,
   evidence: Schema.Struct({
     baselineCanonicalJsonSha256: HashSchema,
     candidateCanonicalJsonSha256: HashSchema,
-    keyOrderDifferenceCount: NonNegativeIntegerSchema,
-    valueDifferenceCount: NonNegativeIntegerSchema,
     recordCounts: Schema.Struct({
       units: NonNegativeIntegerSchema,
       statBlocks: NonNegativeIntegerSchema,
@@ -77,6 +98,7 @@ const AggregateCertificateSchema = Schema.Struct({
       all: HashSchema,
     }),
     reviewedRecordDeltas: Schema.Array(ReviewedAggregateRecordDeltaSchema),
+    reviewedOrderDeltas: Schema.Array(ReviewedAggregateOrderDeltaSchema),
   }),
 });
 const SchemaCrossValidationExpectationSchema = Schema.Struct({
@@ -85,10 +107,6 @@ const SchemaCrossValidationExpectationSchema = Schema.Struct({
   outcome: Schema.Literals(SCHEMA_VALIDATION_OUTCOMES),
 });
 const SchemaCertificateSchema = Schema.Struct({
-  path: Schema.String,
-  semanticClass: Schema.String,
-  cause: Schema.String,
-  issue: Schema.String,
   baseline: ArtifactDigestSchema,
   candidate: ArtifactDigestSchema,
   evidence: Schema.Struct({
@@ -111,26 +129,10 @@ const SchemaCertificateSchema = Schema.Struct({
 });
 const SurfacePublicationDeltaCertificateSchema = Schema.Struct({
   formatVersion: Schema.Literal(CERTIFICATE_FORMAT_VERSION),
-  issue: Schema.Struct({
-    number: NonNegativeIntegerSchema,
-    kind: Schema.String,
-    statement: Schema.String,
-  }),
-  baseline: Schema.Struct({
-    commit: CommitSchema,
-    readAuthority: Schema.String,
-    paths: Schema.Array(Schema.String),
-  }),
+  baselineCommit: Schema.Literal(EFFECT3_SURFACE_BASELINE_COMMIT),
   artifacts: Schema.Struct({
     aggregate: AggregateCertificateSchema,
     schema: SchemaCertificateSchema,
-  }),
-  verification: Schema.Struct({
-    hashAlgorithm: Schema.String,
-    canonicalJson: Schema.String,
-    orderedIdHash: Schema.String,
-    schemaReferences: Schema.String,
-    schemaCrossValidation: Schema.String,
   }),
 });
 
@@ -165,6 +167,10 @@ type PublicationDeltaVerificationIssueKind =
   | "aggregate-delta-evidence-mismatch"
   | "aggregate-delta-stale"
   | "aggregate-delta-unclassified"
+  | "aggregate-order-delta-certificate-mismatch"
+  | "aggregate-order-delta-evidence-mismatch"
+  | "aggregate-order-delta-stale"
+  | "aggregate-order-delta-unclassified"
   | "schema-invalid"
   | "schema-evidence-mismatch"
   | "schema-reference-mismatch"
@@ -220,8 +226,6 @@ type SchemaEvidence = SchemaReferenceEvidence & {
 
 type AggregateEvidence = {
   readonly canonicalJsonSha256: string;
-  readonly keyOrderDifferenceCount: number;
-  readonly valueDifferenceCount: number;
   readonly recordCounts: {
     readonly units: number;
     readonly statBlocks: number;
@@ -235,7 +239,40 @@ type AggregateEvidence = {
 };
 
 type AggregateRecord = {
+  readonly family: AggregateRecordFamily;
+  readonly id: string;
+  readonly value: JsonObject;
   readonly canonicalJsonSha256: string;
+};
+
+type ObservedRecordDelta =
+  | {
+      readonly kind: "changed";
+      readonly family: AggregateRecordFamily;
+      readonly id: string;
+      readonly baselineCanonicalJsonSha256: string;
+      readonly candidateCanonicalJsonSha256: string;
+    }
+  | {
+      readonly kind: "added";
+      readonly family: AggregateRecordFamily;
+      readonly id: string;
+      readonly candidateCanonicalJsonSha256: string;
+    }
+  | {
+      readonly kind: "removed";
+      readonly family: AggregateRecordFamily;
+      readonly id: string;
+      readonly baselineCanonicalJsonSha256: string;
+    };
+
+type ObservedOrderDelta = {
+  readonly family: AggregateRecordFamily;
+  readonly id: string;
+  readonly path: string;
+  readonly baselineKeyOrder: readonly string[];
+  readonly candidateKeyOrder: readonly string[];
+  readonly canonicalValueSha256: string;
 };
 
 type AggregateRecordProjection = {
@@ -243,11 +280,6 @@ type AggregateRecordProjection = {
   readonly recordCounts: AggregateEvidence["recordCounts"];
   readonly orderedIdSha256: AggregateEvidence["orderedIdSha256"];
 };
-
-type AggregateDifferenceEvidence = Pick<
-  AggregateEvidence,
-  "keyOrderDifferenceCount" | "valueDifferenceCount"
->;
 
 type SchemaDocument = JsonObject & {
   readonly $defs: JsonObject;
@@ -327,14 +359,6 @@ function readCertificate(certificatePath: string):
       message: errorMessage(error),
     };
   }
-  const observedSha256 = sha256(bytes);
-  if (observedSha256 !== CERTIFICATE_SHA256) {
-    return {
-      tag: "invalid",
-      kind: "certificate-digest-mismatch",
-      message: `certificate bytes have SHA-256 ${observedSha256}; expected the reviewed certificate digest ${CERTIFICATE_SHA256}.`,
-    };
-  }
   const parsed = parseJsonBytes(bytes);
   if (parsed.tag === "invalid") {
     return {
@@ -347,12 +371,20 @@ function readCertificate(certificatePath: string):
     SurfacePublicationDeltaCertificateSchema,
     { onExcessProperty: "error" },
   )(parsed.value);
-  return Result.isSuccess(decoded)
+  if (Result.isFailure(decoded)) {
+    return {
+      tag: "invalid",
+      kind: "certificate-invalid",
+      message: String(decoded.failure),
+    };
+  }
+  const observedSha256 = sha256(bytes);
+  return observedSha256 === CERTIFICATE_SHA256
     ? { tag: "ok", value: decoded.success }
     : {
         tag: "invalid",
-        kind: "certificate-invalid",
-        message: String(decoded.failure),
+        kind: "certificate-digest-mismatch",
+        message: `certificate bytes have SHA-256 ${observedSha256}; expected the reviewed certificate digest ${CERTIFICATE_SHA256}.`,
       };
 }
 
@@ -491,12 +523,9 @@ function schemaEvidence(schema: SchemaDocument): SchemaEvidence {
 function aggregateEvidence(
   rawValue: JsonValue,
   projection: AggregateRecordProjection,
-  differences: AggregateDifferenceEvidence,
 ): AggregateEvidence {
   return {
     canonicalJsonSha256: sha256(Buffer.from(canonicalJson(rawValue), "utf8")),
-    keyOrderDifferenceCount: differences.keyOrderDifferenceCount,
-    valueDifferenceCount: differences.valueDifferenceCount,
     recordCounts: projection.recordCounts,
     orderedIdSha256: projection.orderedIdSha256,
   };
@@ -541,6 +570,9 @@ function projectAggregateRecords(
       }
       ids.push(recordValue.id);
       records.set(key, {
+        family,
+        id: recordValue.id,
+        value: recordValue,
         canonicalJsonSha256: sha256(
           Buffer.from(canonicalJson(recordValue), "utf8"),
         ),
@@ -569,88 +601,6 @@ function projectAggregateRecords(
       },
     },
   };
-}
-
-function addAggregateDifferences(
-  left: AggregateDifferenceEvidence,
-  right: AggregateDifferenceEvidence,
-): AggregateDifferenceEvidence {
-  return {
-    keyOrderDifferenceCount:
-      left.keyOrderDifferenceCount + right.keyOrderDifferenceCount,
-    valueDifferenceCount:
-      left.valueDifferenceCount + right.valueDifferenceCount,
-  };
-}
-
-function aggregateArrayDifferences(
-  left: readonly JsonValue[],
-  right: readonly JsonValue[],
-): AggregateDifferenceEvidence {
-  let differences: AggregateDifferenceEvidence = {
-    keyOrderDifferenceCount: 0,
-    valueDifferenceCount: left.length === right.length ? 0 : 1,
-  };
-  const sharedLength = Math.min(left.length, right.length);
-  for (let index = 0; index < sharedLength; index += 1) {
-    differences = addAggregateDifferences(
-      differences,
-      aggregatePairDifferences(left[index]!, right[index]!),
-    );
-  }
-  return differences;
-}
-
-function aggregateObjectDifferences(
-  left: JsonObject,
-  right: JsonObject,
-): AggregateDifferenceEvidence {
-  const leftKeys = Object.keys(left);
-  const rightKeys = Object.keys(right);
-  if (
-    leftKeys.length !== rightKeys.length ||
-    leftKeys.some((key) => !Object.hasOwn(right, key))
-  ) {
-    return { keyOrderDifferenceCount: 0, valueDifferenceCount: 1 };
-  }
-  let differences: AggregateDifferenceEvidence = {
-    keyOrderDifferenceCount: leftKeys.some(
-      (key, index) => rightKeys[index] !== key,
-    )
-      ? 1
-      : 0,
-    valueDifferenceCount: 0,
-  };
-  for (const key of leftKeys) {
-    differences = addAggregateDifferences(
-      differences,
-      aggregatePairDifferences(left[key]!, right[key]!),
-    );
-  }
-  return differences;
-}
-
-function aggregatePairDifferences(
-  left: JsonValue,
-  right: JsonValue,
-): AggregateDifferenceEvidence {
-  if (Array.isArray(left) && Array.isArray(right)) {
-    return aggregateArrayDifferences(left, right);
-  }
-  if (isJsonObject(left) && isJsonObject(right)) {
-    return aggregateObjectDifferences(left, right);
-  }
-  return {
-    keyOrderDifferenceCount: 0,
-    valueDifferenceCount: left === right ? 0 : 1,
-  };
-}
-
-function aggregateDifferences(
-  baseline: JsonValue,
-  candidate: JsonValue,
-): AggregateDifferenceEvidence {
-  return aggregatePairDifferences(baseline, candidate);
 }
 
 function candidateAggregateDecode(
@@ -721,23 +671,6 @@ function compareAggregateCanonicalEvidence(
   }
 }
 
-function compareAggregateDifferenceEvidence(
-  issues: PublicationDeltaVerificationIssue[],
-  differences: AggregateDifferenceEvidence,
-  expected: SurfacePublicationDeltaCertificate["artifacts"]["aggregate"]["evidence"],
-): void {
-  if (
-    differences.keyOrderDifferenceCount !== expected.keyOrderDifferenceCount ||
-    differences.valueDifferenceCount !== expected.valueDifferenceCount
-  ) {
-    issues.push({
-      kind: "aggregate-evidence-mismatch",
-      message:
-        "Aggregate key-order/value difference counts do not match the reviewed certificate evidence.",
-    });
-  }
-}
-
 function compareReviewedRecordDeltas(
   issues: PublicationDeltaVerificationIssue[],
   baseline: AggregateRecordProjection,
@@ -757,41 +690,230 @@ function compareReviewedRecordDeltas(
     expectedByKey.set(key, delta);
   }
 
-  const observedKeys = new Set<string>();
-  for (const [key, baselineRecord] of baseline.records) {
+  const observedByKey = new Map<string, ObservedRecordDelta>();
+  const recordKeys = new Set([
+    ...baseline.records.keys(),
+    ...candidate.records.keys(),
+  ]);
+  for (const key of recordKeys) {
+    const baselineRecord = baseline.records.get(key);
     const candidateRecord = candidate.records.get(key);
-    if (
-      candidateRecord === undefined ||
-      baselineRecord.canonicalJsonSha256 === candidateRecord.canonicalJsonSha256
+    if (baselineRecord === undefined && candidateRecord !== undefined) {
+      observedByKey.set(key, {
+        kind: "added",
+        family: candidateRecord.family,
+        id: candidateRecord.id,
+        candidateCanonicalJsonSha256: candidateRecord.canonicalJsonSha256,
+      });
+    } else if (baselineRecord !== undefined && candidateRecord === undefined) {
+      observedByKey.set(key, {
+        kind: "removed",
+        family: baselineRecord.family,
+        id: baselineRecord.id,
+        baselineCanonicalJsonSha256: baselineRecord.canonicalJsonSha256,
+      });
+    } else if (
+      baselineRecord !== undefined &&
+      candidateRecord !== undefined &&
+      baselineRecord.canonicalJsonSha256 !== candidateRecord.canonicalJsonSha256
     ) {
-      continue;
+      observedByKey.set(key, {
+        kind: "changed",
+        family: baselineRecord.family,
+        id: baselineRecord.id,
+        baselineCanonicalJsonSha256: baselineRecord.canonicalJsonSha256,
+        candidateCanonicalJsonSha256: candidateRecord.canonicalJsonSha256,
+      });
     }
-    observedKeys.add(key);
+  }
+
+  for (const [key, observed] of observedByKey) {
     const reviewed = expectedByKey.get(key);
     if (reviewed === undefined) {
       issues.push({
         kind: "aggregate-delta-unclassified",
-        message: `Aggregate record ${key} changed without a reviewed semantic classification.`,
+        message: `Aggregate record ${key} has an unclassified ${observed.kind} delta.`,
       });
       continue;
     }
-    if (
-      reviewed.baselineCanonicalJsonSha256 !==
-        baselineRecord.canonicalJsonSha256 ||
-      reviewed.candidateCanonicalJsonSha256 !==
-        candidateRecord.canonicalJsonSha256
-    ) {
+    const exactEvidenceMatches = Match.value(reviewed).pipe(
+      Match.when(
+        { kind: "changed" },
+        (delta) =>
+          observed.kind === "changed" &&
+          delta.baselineCanonicalJsonSha256 ===
+            observed.baselineCanonicalJsonSha256 &&
+          delta.candidateCanonicalJsonSha256 ===
+            observed.candidateCanonicalJsonSha256,
+      ),
+      Match.when(
+        { kind: "added" },
+        (delta) =>
+          observed.kind === "added" &&
+          delta.candidateCanonicalJsonSha256 ===
+            observed.candidateCanonicalJsonSha256,
+      ),
+      Match.when(
+        { kind: "removed" },
+        (delta) =>
+          observed.kind === "removed" &&
+          delta.baselineCanonicalJsonSha256 ===
+            observed.baselineCanonicalJsonSha256,
+      ),
+      Match.exhaustive,
+    );
+    if (!exactEvidenceMatches) {
       issues.push({
         kind: "aggregate-delta-evidence-mismatch",
-        message: `Aggregate record ${key} does not match its exact reviewed before/after hashes.`,
+        message: `Aggregate record ${key} does not match its reviewed ${reviewed.kind} shape and exact hash evidence.`,
       });
     }
   }
   for (const [key] of expectedByKey) {
-    if (observedKeys.has(key)) continue;
+    if (observedByKey.has(key)) continue;
     issues.push({
       kind: "aggregate-delta-stale",
       message: `Reviewed aggregate delta ${key} is absent from the candidate artifact.`,
+    });
+  }
+}
+
+function jsonPointerChild(path: string, segment: string | number): string {
+  const encoded = String(segment).replaceAll("~", "~0").replaceAll("/", "~1");
+  return `${path}/${encoded}`;
+}
+
+function aggregateOrderDeltaKey(
+  family: AggregateRecordFamily,
+  id: string,
+  path: string,
+): string {
+  return JSON.stringify([family, id, path]);
+}
+
+function collectObjectOrderDeltas(
+  baseline: JsonValue,
+  candidate: JsonValue,
+  path: string,
+): readonly Omit<ObservedOrderDelta, "family" | "id">[] {
+  if (Array.isArray(baseline) && Array.isArray(candidate)) {
+    return baseline.flatMap((value, index) =>
+      index < candidate.length
+        ? collectObjectOrderDeltas(
+            value,
+            candidate[index]!,
+            jsonPointerChild(path, index),
+          )
+        : [],
+    );
+  }
+  if (!isJsonObject(baseline) || !isJsonObject(candidate)) return [];
+  const baselineKeys = Object.keys(baseline);
+  const candidateKeys = Object.keys(candidate);
+  if (
+    baselineKeys.length !== candidateKeys.length ||
+    baselineKeys.some((key) => !Object.hasOwn(candidate, key))
+  ) {
+    return [];
+  }
+  const nested = baselineKeys.flatMap((key) =>
+    collectObjectOrderDeltas(
+      baseline[key]!,
+      candidate[key]!,
+      jsonPointerChild(path, key),
+    ),
+  );
+  return baselineKeys.some((key, index) => candidateKeys[index] !== key)
+    ? [
+        {
+          path,
+          baselineKeyOrder: baselineKeys,
+          candidateKeyOrder: candidateKeys,
+          canonicalValueSha256: sha256(
+            Buffer.from(canonicalJson(baseline), "utf8"),
+          ),
+        },
+        ...nested,
+      ]
+    : nested;
+}
+
+function compareReviewedOrderDeltas(
+  issues: PublicationDeltaVerificationIssue[],
+  baseline: AggregateRecordProjection,
+  candidate: AggregateRecordProjection,
+  expected: SurfacePublicationDeltaCertificate["artifacts"]["aggregate"]["evidence"]["reviewedOrderDeltas"],
+): void {
+  const expectedByKey = new Map<string, (typeof expected)[number]>();
+  for (const delta of expected) {
+    const key = aggregateOrderDeltaKey(delta.family, delta.id, delta.path);
+    if (expectedByKey.has(key)) {
+      issues.push({
+        kind: "aggregate-order-delta-certificate-mismatch",
+        message: `Reviewed aggregate order delta ${key} is listed more than once.`,
+      });
+      continue;
+    }
+    expectedByKey.set(key, delta);
+  }
+
+  const observedByKey = new Map<string, ObservedOrderDelta>();
+  for (const [recordKey, baselineRecord] of baseline.records) {
+    const candidateRecord = candidate.records.get(recordKey);
+    if (
+      candidateRecord === undefined ||
+      baselineRecord.canonicalJsonSha256 !== candidateRecord.canonicalJsonSha256
+    ) {
+      continue;
+    }
+    for (const delta of collectObjectOrderDeltas(
+      baselineRecord.value,
+      candidateRecord.value,
+      "",
+    )) {
+      const observed = {
+        ...delta,
+        family: baselineRecord.family,
+        id: baselineRecord.id,
+      };
+      observedByKey.set(
+        aggregateOrderDeltaKey(
+          baselineRecord.family,
+          baselineRecord.id,
+          delta.path,
+        ),
+        observed,
+      );
+    }
+  }
+
+  for (const [key, observed] of observedByKey) {
+    const reviewed = expectedByKey.get(key);
+    if (reviewed === undefined) {
+      issues.push({
+        kind: "aggregate-order-delta-unclassified",
+        message: `Aggregate object ${key} has an unclassified key-order delta.`,
+      });
+      continue;
+    }
+    if (
+      JSON.stringify(reviewed.baselineKeyOrder) !==
+        JSON.stringify(observed.baselineKeyOrder) ||
+      JSON.stringify(reviewed.candidateKeyOrder) !==
+        JSON.stringify(observed.candidateKeyOrder) ||
+      reviewed.canonicalValueSha256 !== observed.canonicalValueSha256
+    ) {
+      issues.push({
+        kind: "aggregate-order-delta-evidence-mismatch",
+        message: `Aggregate object ${key} does not match its exact reviewed key orders and canonical value hash.`,
+      });
+    }
+  }
+  for (const [key] of expectedByKey) {
+    if (observedByKey.has(key)) continue;
+    issues.push({
+      kind: "aggregate-order-delta-stale",
+      message: `Reviewed aggregate order delta ${key} is absent from the candidate artifact.`,
     });
   }
 }
@@ -841,16 +963,13 @@ function compareAggregateSnapshots(
   ) {
     return;
   }
-  const differences = aggregateDifferences(baseline.value, candidate.value);
   const baselineEvidence = aggregateEvidence(
     baseline.value,
     baselineProjection.value,
-    differences,
   );
   const candidateEvidence = aggregateEvidence(
     candidate.value,
     candidateProjection.value,
-    differences,
   );
   compareAggregateRecordEvidence(
     issues,
@@ -870,12 +989,17 @@ function compareAggregateSnapshots(
     candidateEvidence,
     expected,
   );
-  compareAggregateDifferenceEvidence(issues, differences, expected);
   compareReviewedRecordDeltas(
     issues,
     baselineProjection.value,
     candidateProjection.value,
     expected.reviewedRecordDeltas,
+  );
+  compareReviewedOrderDeltas(
+    issues,
+    baselineProjection.value,
+    candidateProjection.value,
+    expected.reviewedOrderDeltas,
   );
 }
 
@@ -1175,20 +1299,20 @@ export function verifySurfacePublicationDelta(
   const expected = certificate.value;
   const baselineAggregateBytes = readBaselineArtifact(
     options.repoRoot,
-    expected.baseline.commit,
-    expected.artifacts.aggregate.path,
+    expected.baselineCommit,
+    SURFACE_AGGREGATE_PATH,
   );
   const candidateAggregateBytes = readBytes(
-    join(publicationDir, basename(expected.artifacts.aggregate.path)),
+    join(publicationDir, basename(SURFACE_AGGREGATE_PATH)),
     "candidate-unreadable",
   );
   const baselineSchemaBytes = readBaselineArtifact(
     options.repoRoot,
-    expected.baseline.commit,
-    expected.artifacts.schema.path,
+    expected.baselineCommit,
+    SURFACE_SCHEMA_PATH,
   );
   const candidateSchemaBytes = readBytes(
-    join(publicationDir, basename(expected.artifacts.schema.path)),
+    join(publicationDir, basename(SURFACE_SCHEMA_PATH)),
     "candidate-unreadable",
   );
   const issues: PublicationDeltaVerificationIssue[] = [];
@@ -1236,7 +1360,7 @@ export function verifySurfacePublicationDelta(
     candidateAggregate,
   );
   return issues.length === 0
-    ? { tag: "verified", baselineCommit: expected.baseline.commit }
+    ? { tag: "verified", baselineCommit: expected.baselineCommit }
     : { tag: "invalid", issues };
 }
 

@@ -1,24 +1,8 @@
 {
-  "formatVersion": 2,
-  "issue": {
-    "number": 373,
-    "kind": "effect-4-surface-publication-delta",
-    "statement": "Certify the Effect 4 Surface publication delta against the immutable Effect 3 baseline."
-  },
-  "baseline": {
-    "commit": "76d9abaf0ec9c8369d5f95f603c5cce88704d26e",
-    "readAuthority": "git-show-commit-path",
-    "paths": [
-      "packages/surface/publication/srd-surface.json",
-      "packages/surface/publication/srd-surface.schema.json"
-    ]
-  },
+  "formatVersion": 3,
+  "baselineCommit": "76d9abaf0ec9c8369d5f95f603c5cce88704d26e",
   "artifacts": {
     "aggregate": {
-      "path": "packages/surface/publication/srd-surface.json",
-      "semanticClass": "reviewed-authored-record-contract-changes",
-      "cause": "Effect 4 Surface review convergence added explicit persistent-rule facts, companion and modal lifecycles, identity-free execution vocabulary, and truthful illumination emission variants to authored records.",
-      "issue": "Every changed authored record is classified by domain purpose and authenticated by its exact baseline and candidate canonical JSON hashes; unclassified, stale, duplicate, and substituted record deltas are rejected.",
       "baseline": {
         "byteLength": 943445,
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
@@ -30,8 +14,6 @@
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
         "candidateCanonicalJsonSha256": "3b21fae3c1a73a9a6d6ed591aea1b9391dbfcff99e01f79129aeef7d939cc8f2",
-        "keyOrderDifferenceCount": 1,
-        "valueDifferenceCount": 27,
         "recordCounts": {
           "units": 399,
           "statBlocks": 21,
@@ -44,6 +26,7 @@
         },
         "reviewedRecordDeltas": [
           {
+            "kind": "changed",
             "family": "units",
             "id": "cloudkill",
             "semanticClass": "authored-persistent-rule-facts",
@@ -51,6 +34,7 @@
             "candidateCanonicalJsonSha256": "21dbf9006b7a19b2f09b1b6a2a7ebedc24ec69ef44d547429ad354257ca83999"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "command",
             "semanticClass": "authored-execution-vocabulary",
@@ -58,6 +42,7 @@
             "candidateCanonicalJsonSha256": "9b9a5ee0d77d785379696736b31c9f0134e1dd8c216be771a39d2fc84824f0eb"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "continual_flame",
             "semanticClass": "truthful-illumination-emission",
@@ -65,6 +50,7 @@
             "candidateCanonicalJsonSha256": "1dc5f0415900f721c1c336b4d66b0c9d25fff69a93f964e1645ba5c4dc555f69"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "dancing_lights",
             "semanticClass": "truthful-illumination-emission",
@@ -72,6 +58,7 @@
             "candidateCanonicalJsonSha256": "3cb2bada6bb7dba0bff3551a11de8f1ea80c9facb00ae07226bfa39281c976e4"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "daylight",
             "semanticClass": "truthful-illumination-emission",
@@ -79,6 +66,7 @@
             "candidateCanonicalJsonSha256": "b4b52b61fb51c9a00ba01e18088ee8eb3cfffd7ddfc9b08433f5c46d6bf04747"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "faerie_fire",
             "semanticClass": "truthful-illumination-emission",
@@ -86,6 +74,7 @@
             "candidateCanonicalJsonSha256": "637c1953d06353945b63614dbf537cdc775233561f59ad9bd06fdf5c7907e7af"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "flame_blade",
             "semanticClass": "truthful-illumination-emission",
@@ -93,6 +82,7 @@
             "candidateCanonicalJsonSha256": "eea356f64b88d77c89c206582cf259d98bf698f33cf5676d214b7d24a994c7c6"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "find_familiar",
             "semanticClass": "authored-companion-lifecycle",
@@ -100,6 +90,7 @@
             "candidateCanonicalJsonSha256": "48a5c637df869ce31202f648109f8ae38f91c0afe97995f3b1d224fa46b088b1"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "flaming_sphere",
             "semanticClass": "truthful-illumination-emission",
@@ -107,6 +98,7 @@
             "candidateCanonicalJsonSha256": "4b34f9cc34a2f408547923b73e7c28cfd6f9855b8f9c8ad8aeb4af0ad0a501b7"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "grease",
             "semanticClass": "authored-persistent-rule-facts",
@@ -114,6 +106,7 @@
             "candidateCanonicalJsonSha256": "916a244afb7f2a19b0f797cf2e12367a4cce165e0006c4bf2151a4946808f187"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "insect_plague",
             "semanticClass": "authored-persistent-rule-facts",
@@ -121,6 +114,7 @@
             "candidateCanonicalJsonSha256": "a53f002c20d911aed759a87d11be611c8522c65fe426aa1f4bc44df748baa419"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "light",
             "semanticClass": "truthful-illumination-emission",
@@ -128,6 +122,7 @@
             "candidateCanonicalJsonSha256": "ec8ee7be0274af6a3123e973bae8d2fdfd9c9557e3ce2fdeb535ae6466ca2954"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "magic_weapon",
             "semanticClass": "authored-execution-vocabulary",
@@ -135,6 +130,7 @@
             "candidateCanonicalJsonSha256": "3565086e6627a3d704e3c017243b640d5be4ba4012809b362ef176923f60c8d9"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "produce_flame",
             "semanticClass": "truthful-illumination-emission",
@@ -142,6 +138,7 @@
             "candidateCanonicalJsonSha256": "882420e20cade20b24aaab7cc4354eaeaa553904a9dd00c0aefa9e3c0a935cc0"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "shining_smite",
             "semanticClass": "truthful-illumination-emission",
@@ -149,6 +146,7 @@
             "candidateCanonicalJsonSha256": "bbc1a4e90be29f4256d2d957bafcfd835d16062fd55a40d9e90d0a1575f9d794"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "sleep",
             "semanticClass": "authored-persistent-rule-facts",
@@ -156,6 +154,7 @@
             "candidateCanonicalJsonSha256": "520e453fcdc7e1a425b5914127c4ac81087f5a1559e11d0c229b5a0c25f1cc9d"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "starry_wisp",
             "semanticClass": "truthful-illumination-emission",
@@ -163,20 +162,52 @@
             "candidateCanonicalJsonSha256": "225f25845496cea57f86ca73752e5b5bf74f701641b1b62c2b9b69604fa7c1db"
           },
           {
+            "kind": "changed",
             "family": "units",
             "id": "thaumaturgy",
             "semanticClass": "authored-modal-ongoing-effect",
             "baselineCanonicalJsonSha256": "70a7e293ed6dfc28799bddc01ca1a5e250199668355ab06d0fe384ffe7270428",
             "candidateCanonicalJsonSha256": "26babde59ea7a6a6e36fbd79e56b6f4dff065d19a4f634753d1b692bc8c71eb0"
           }
+        ],
+        "reviewedOrderDeltas": [
+          {
+            "kind": "object-key-order-changed",
+            "family": "units",
+            "id": "magic_mouth",
+            "path": "/mechanics",
+            "baselineKeyOrder": [
+              "family",
+              "anchor",
+              "events",
+              "filters",
+              "signals",
+              "level",
+              "school",
+              "range",
+              "components",
+              "duration",
+              "castingTime"
+            ],
+            "candidateKeyOrder": [
+              "level",
+              "school",
+              "range",
+              "components",
+              "duration",
+              "castingTime",
+              "family",
+              "anchor",
+              "events",
+              "filters",
+              "signals"
+            ],
+            "canonicalValueSha256": "52b547e5fce0d2877c7a2c15fb0bcbb9e709fe65a1a19e760100f44c115723ff"
+          }
         ]
       }
     },
     "schema": {
-      "path": "packages/surface/publication/srd-surface.schema.json",
-      "semanticClass": "reviewed-regenerated-v4-schema-graph",
-      "cause": "Effect 4 schema encoding and the classified authored-record contract changes regenerated the reviewed local definition graph with renamed and deduplicated definitions. Its byte hashes authenticate that reviewed graph; they do not establish schema-language equivalence.",
-      "issue": "The schema bytes and local definition/reference graph changed; local reference closure and the finite same-version-accepting, cross-version-rejecting AJV matrix must remain exactly as recorded.",
       "baseline": {
         "byteLength": 927510,
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
@@ -224,12 +255,5 @@
         ]
       }
     }
-  },
-  "verification": {
-    "hashAlgorithm": "SHA-256",
-    "canonicalJson": "JSON object keys are sorted recursively; array order is retained.",
-    "orderedIdHash": "SHA-256(JSON.stringify(ordered IDs)) for each aggregate family and their concatenation.",
-    "schemaReferences": "Every $ref is a local #/$defs reference whose definition exists.",
-    "schemaCrossValidation": "Finite AJV checks require each schema to accept its own aggregate snapshot and reject the other contract snapshot; this authenticates the reviewed contract transition but does not prove a broader schema-language relationship."
   }
 }
