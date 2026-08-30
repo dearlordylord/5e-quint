@@ -1222,12 +1222,18 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     ["declaration-identifier"],
     "slow names the distinct weapon-mastery support profile",
   ),
+  ...exactCollision(
+    "creation",
+    "creationBoundary",
+    ["declaration-identifier"],
+    "creation names the generic completed-inscription lifecycle boundary",
+  ),
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "634c5d911155833e5377321f5b6685360b1b38a03704f79f781ba7675a654461",
-  siteCount: 1204,
-  violationCount: 1335,
+  sha256: "46585beff3f09f77c710171858cc579983e56fc1bbd3cae4e4d73bb3949d5c78",
+  siteCount: 1205,
+  violationCount: 1336,
 };
 
 function escapeForRegExp(text) {

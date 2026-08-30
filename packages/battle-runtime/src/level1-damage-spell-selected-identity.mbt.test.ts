@@ -28,8 +28,8 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import {
-  CHROMATIC_ORB_DAMAGE_TYPES,
-  CHROMATIC_ORB_LEAP_RANGE_FEET,
+  CHAINED_DAMAGE_TYPE_ATTACK_DAMAGE_TYPES,
+  CHAINED_SPELL_ATTACK_LEAP_RANGE_FEET,
 } from "./battle-reducer/domain-constants.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -1264,9 +1264,9 @@ function assertSelectedSpellProcedureProfile(
       targeting: { kind: "singleCombatant" },
       attackKind: "ranged_spell_attack",
       damage: { expr: { dice: 3, dieSize: 8 } },
-      damageTypeChoices: [...CHROMATIC_ORB_DAMAGE_TYPES],
+      damageTypeChoices: [...CHAINED_DAMAGE_TYPE_ATTACK_DAMAGE_TYPES],
       rangeFeet: 90,
-      leapRangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
+      leapRangeFeet: CHAINED_SPELL_ATTACK_LEAP_RANGE_FEET,
     },
     ice_knife: {
       procedure: "attackBurstSaveDamage",
@@ -1425,7 +1425,7 @@ function spellLeapTargetFill(
         previousTargetId,
         targetId,
         sourceProcedureRef,
-        rangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
+        rangeFeet: CHAINED_SPELL_ATTACK_LEAP_RANGE_FEET,
       },
     ],
   };
@@ -1578,7 +1578,7 @@ function assertChromaticOrbDamageTypeChoiceProfile(
   hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
 ): void {
   if (
-    !sameStringSet(hole.choices, CHROMATIC_ORB_DAMAGE_TYPES) ||
+    !sameStringSet(hole.choices, CHAINED_DAMAGE_TYPE_ATTACK_DAMAGE_TYPES) ||
     "spell" in hole
   ) {
     throw new Error("Chromatic Orb damage type choice profile drifted.");

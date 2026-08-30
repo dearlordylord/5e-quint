@@ -1,7 +1,7 @@
 import { Option } from "effect";
 
 import {
-  FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES,
+  SPAWNED_COMPANION_CREATURE_TYPE_OVERRIDE_TYPES,
   type CreatureType,
   type SpawnedCompanionCreatureTypeOverride,
   StatBlockId,
@@ -10,11 +10,11 @@ import type { StatBlockCatalog } from "./stat-block-catalog.ts";
 import type { SpellRecord, StatBlockRecord } from "./types.ts";
 
 export {
-  FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES,
+  SPAWNED_COMPANION_CREATURE_TYPE_OVERRIDE_TYPES,
   type SpawnedCompanionCreatureTypeOverride,
 };
 const FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPE_SET = new Set<CreatureType>(
-  FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES,
+  SPAWNED_COMPANION_CREATURE_TYPE_OVERRIDE_TYPES,
 );
 
 type PactOfTheChainSpecialFormRefShape = {
@@ -327,7 +327,7 @@ function spawnedCompanionCreatureTypeOverrideChoicesForSpell(
     });
   }
   /* v8 ignore start -- @preserve -- the admitted mode menu must cover every canonical Find Familiar creature-type override */
-  return FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES.every((creatureType) =>
+  return SPAWNED_COMPANION_CREATURE_TYPE_OVERRIDE_TYPES.every((creatureType) =>
     creatureTypes.has(creatureType),
   )
     ? choices

@@ -74,7 +74,7 @@ import {
   spellAbilityChoiceHole,
   spellAbilityChoiceHoleId,
 } from "../spells-damage-fills.ts";
-import { HUNTERS_MARK_FINDING_SKILLS as MARKED_DAMAGE_RIDER_FINDING_SKILLS } from "../domain-constants.ts";
+import { MARKED_TARGET_FINDING_SKILLS as MARKED_DAMAGE_RIDER_FINDING_SKILLS } from "../domain-constants.ts";
 import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
 import {
   spendSpellAccessFreeCastResource,
