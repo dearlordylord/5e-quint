@@ -328,6 +328,9 @@ function createStarryWispObjectDriver() {
 type StarryWispObjectRouteState = {
   readonly route: readonly ReducerRouteEvent[];
 };
+type StarryWispPublicAct = ReturnType<typeof discoverBattleActs>[number] & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+};
 
 const starryWispObjectRouteStart = battleReducerStartRouteEvent();
 
@@ -552,7 +555,7 @@ function requirePublicRouteEvents(
 function publicObjectTargetBoundaryRoute(input: {
   readonly spatialFacts: "present" | "missing";
 }): {
-  readonly act: ReturnType<typeof discoverBattleActCandidates>[number];
+  readonly act: StarryWispPublicAct;
   readonly result: BattleResolutionResult;
   readonly fills: readonly BattleFill[];
 } {
@@ -560,12 +563,12 @@ function publicObjectTargetBoundaryRoute(input: {
   const state = session.state;
   const subject = starryWispSubject(state);
   const act = discoverBattleActs(session).find(
-    (candidate) =>
+    (candidate): candidate is StarryWispPublicAct =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&
       sameBattleSubject(candidate.subject, subject),
   );
-  if (act?.subject.tag !== "actionSpell") {
+  if (act === undefined) {
     throw new Error("Expected public Starry Wisp spell act.");
   }
   const objectTarget = requireStarryWispObjectHole(
@@ -948,7 +951,7 @@ function projectLightEmitter(
   return Match.value(emitter).pipe(
     Match.when({ kind: "spellLightEmitter" }, (spellEmitter) => ({
       kind: "spellLightEmitter" as const,
-      sourceProcedureRef: selectedStarryWispProcedure(
+      sourceProcedureRef: projectRetainedStarryWispProcedureRef(
         spellEmitter.sourceProcedureRef,
         selectedProcedureRef,
       ),
@@ -960,7 +963,7 @@ function projectLightEmitter(
     })),
     Match.when({ kind: "unitFeatureLightEmitter" }, (unitFeatureEmitter) => ({
       kind: "unitFeatureLightEmitter" as const,
-      sourceProcedureRef: selectedStarryWispProcedure(
+      sourceProcedureRef: projectRetainedStarryWispProcedureRef(
         unitFeatureEmitter.sourceProcedureRef,
         selectedProcedureRef,
       ),
@@ -974,7 +977,7 @@ function projectLightEmitter(
       { kind: "objectInvisibleRevealLightEmitter" },
       (objectRevealEmitter) => ({
         kind: "objectInvisibleRevealLightEmitter" as const,
-        sourceProcedureRef: selectedStarryWispProcedure(
+        sourceProcedureRef: projectRetainedStarryWispProcedureRef(
           objectRevealEmitter.sourceProcedureRef,
           selectedProcedureRef,
         ),
@@ -995,7 +998,7 @@ function projectLightEmitter(
   );
 }
 
-function selectedStarryWispProcedure(
+function projectRetainedStarryWispProcedureRef(
   sourceProcedureRef: BattleProcedureExecutionRef,
   selectedProcedureRef: BattleProcedureExecutionRef,
 ): "starry_wisp" {
