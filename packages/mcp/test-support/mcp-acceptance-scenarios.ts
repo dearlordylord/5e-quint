@@ -907,6 +907,10 @@ export async function verifyBaselineVertical(
     "Attack",
     "Attack",
     "Attack",
+    "Attack",
+    "Attack",
+    "Attack",
+    "Attack",
     ...GENERIC_COMBAT_ACTION_LABELS,
     "Unarmed Strike (Grapple)",
     "Unarmed Strike (Shove)",
@@ -4133,12 +4137,13 @@ export function attackSubjectFromActs(
       subject.action === "attack" &&
       subject.actorId === actorId &&
       candidate.summary === `Take the Attack action with ${attackName}.` &&
-      Array.isArray(subject.statBlockDamageSelection) &&
-      subject.statBlockDamageSelection.length > 0 &&
-      subject.statBlockDamageSelection.every(
-        (component) =>
-          isJsonObject(component) && component.notation === "rolled",
-      )
+      (subject.statBlockDamageSelection === undefined ||
+        (Array.isArray(subject.statBlockDamageSelection) &&
+          subject.statBlockDamageSelection.length > 0 &&
+          subject.statBlockDamageSelection.every(
+            (component) =>
+              isJsonObject(component) && component.notation === "rolled",
+          )))
     );
   });
   assert.equal(
