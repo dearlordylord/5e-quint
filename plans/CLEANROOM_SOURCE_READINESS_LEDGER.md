@@ -38,15 +38,25 @@ operational overlay recorded here, not a new domain dependency.
 
 For every implementation or gate milestone:
 
-1. Land the coherent implementation/gate result into `master`.
-2. Comment on the owning ticket with the exact landed SHA, focused verification,
-   reviewer convergence, and remaining blockers. Close only satisfied tickets.
-3. Immediately make a ledger-only follow-up commit that:
+1. Create or resume the active landing unit's short-lived integration branch and
+   worktree from the latest ledger-accepted `master`.
+2. Merge each reviewed implementation-lane result into that integration branch
+   as soon as it is coherent; do not wait for every sibling lane before
+   integrating completed work.
+3. Bring the latest `master` into the integration branch, run the checkpoint's
+   composite review and gates, and merge the accepted landing unit into
+   `master`.
+4. Comment on the owning ticket with the exact `master` landing SHA, focused and
+   composite verification, reviewer convergence, and remaining blockers. Close
+   only satisfied tickets.
+5. Immediately make a ledger-only follow-up commit that:
    - updates **Resume here**;
    - updates the checkpoint state below;
    - appends one receipt row;
    - records the next available checkpoint and active worktree leases.
-4. Do not begin newly unblocked work until the ledger follow-up is on `master`.
+6. Delete the completed landing unit's integration branch/worktree after the
+   ledger follow-up is on `master`.
+7. Do not begin newly unblocked work until that ledger follow-up lands.
 
 The follow-up commit is necessary because a Git commit cannot contain its own
 future SHA. The receipt records the preceding implementation or gate SHA, not
@@ -73,9 +83,11 @@ ticket's acceptance.
 ## Stable checkpoint map
 
 There are **20 coordination checkpoints**, `SR-00` through `SR-19`.
-Checkpoints containing several tickets still land each ticket or coherent slice
-separately; their checkpoint becomes `Complete` only after all named results
-are on one coherent `master` line.
+Checkpoints containing several tickets use master-merge landing units named
+`SR-<checkpoint><letter>`, such as `SR-04A`. Each landing unit owns one
+short-lived integration branch and one coherent master merge. The coordination
+checkpoint becomes `Complete` only after all of its landing units and named
+results are on one coherent `master` line.
 
 | ID      | State   | Outcome / tickets                                          | Start after                  | Complete after                     |
 | ------- | ------- | ---------------------------------------------------------- | ---------------------------- | ---------------------------------- |
@@ -102,12 +114,13 @@ are on one coherent `master` line.
 
 ## Milestone receipt ledger
 
-Append one row per completed coordination checkpoint. Ticket/slice landings
-inside a checkpoint are recorded in the checkpoint's active landing table until
-the checkpoint receipt consolidates them.
+Append one row per completed landing unit and one consolidating row per completed
+coordination checkpoint. Ticket/slice landings inside a checkpoint first append
+rows such as `SR-04A`; the final checkpoint row consolidates them after every
+required unit has landed.
 
-| Checkpoint | Base SHA | Accepted SHA | Result | Verification | Ticket evidence | Unlocked |
-| ---------- | -------- | ------------ | ------ | ------------ | --------------- | -------- |
+| Checkpoint/unit | Base SHA | Accepted SHA | Result | Verification | Ticket evidence | Unlocked |
+| --------------- | -------- | ------------ | ------ | ------------ | --------------- | -------- |
 
 ## Active landing table
 
@@ -115,30 +128,38 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint | Ticket/slice | Owner | Worktree/branch           | Base SHA        | Write lease                                      | State  |
-| ---------- | ------------ | ----- | ------------------------- | --------------- | ------------------------------------------------ | ------ |
-| `SR-00`    | #368–#386    | user  | separate Effect 4 session | user-owned base | all behavior/files explicitly owned by #368–#386 | Active |
+| Checkpoint/unit | Ticket/slice | Owner | Worktree/branch           | Base SHA        | Write lease                                      | State  |
+| --------------- | ------------ | ----- | ------------------------- | --------------- | ------------------------------------------------ | ------ |
+| `SR-00`         | #368–#386    | user  | separate Effect 4 session | user-owned base | all behavior/files explicitly owned by #368–#386 | Active |
 
 ## Landing discipline
 
-- Branch from the latest ledger-accepted green `master`, never from another
-  implementation worktree.
-- Use at most three implementation worktrees plus one landing/review worktree.
+- Create one short-lived integration branch/worktree for the active landing
+  unit from the latest ledger-accepted green `master`. Use a name such as
+  `integration/cleanroom-sr-04a`.
+- Branch implementation worktrees from that exact landing-unit base, never from
+  another implementation worktree.
+- Use at most three implementation worktrees plus the landing unit's one
+  integration/review worktree.
 - Give every lane one ticket or one independently useful slice and a declared
   package/file write lease.
-- Land a coherent slice before its branch crosses a second calendar day. If it
-  cannot, stop and redefine a smaller production-consumed slice from current
-  `master`.
-- Rebase onto the latest accepted `master` before final review and focused
-  verification.
+- Merge a coherent lane result into the integration branch as soon as its
+  focused review converges. The integration branch must merge into `master`
+  before its landing unit crosses a second calendar day. If it cannot, stop and
+  redefine smaller production-consumed landing units from current `master`.
+- Before composite review, merge the latest `master` into the integration
+  branch and re-run affected focused checks. Do not perform the final gate on a
+  stale base.
 - Run focused typecheck/tests and applicable focused QNT/MBT gates under the
   repository lock protocol. Only one worktree runs broad or MBT-heavy gates at
   a time.
 - Complete RAW traceability where rules change, ubiquitous-language/domain,
   architecture/connascence, and standards/specification reviewer loops. Fix
   reasonable findings and repeat until converged.
-- Land immediately after the receipt is green. Other lanes then rebase before
-  making completion claims.
+- Merge the landing unit into `master` immediately after the composite receipt
+  is green. Later landing units start from that new `master`; still-active lanes
+  for the same unit synchronize through its integration branch before making
+  completion claims.
 - Reserve `pnpm quality:milestone` for `SR-02`, `SR-05`, `SR-14`, `SR-17`, and
   `SR-19`, plus any earlier checkpoint whose cross-package risk justifies it.
 
@@ -159,6 +180,31 @@ current-base write-set audit proving disjoint ownership:
 develop in parallel only if its write set is proven disjoint; otherwise it
 starts from the accepted `SR-03` SHA. Publication regeneration and `SR-09`–
 `SR-11` finalization alternate through the landing coordinator.
+
+## Integration and review loop
+
+Every master-merge landing unit follows the same loop:
+
+```text
+accepted master SHA
+  -> landing-unit integration worktree
+       -> implementation worktrees with disjoint leases
+       -> focused tests and lane review
+       -> merge completed lanes into integration
+       -> synchronize latest master
+       -> regenerate shared projections once
+       -> composite RAW/domain/architecture/standards reviews
+       -> focused join gates and named milestone gate
+  -> merge landing unit into master
+  -> ticket evidence
+  -> ledger-only receipt commit on master
+  -> delete landing-unit branches/worktrees
+```
+
+The integration branch is coordination state, not an alternate product line.
+No subsequent checkpoint branches from it before it lands on `master`. If a
+coordination checkpoint contains more than one same-day master merge, allocate
+lettered landing units and a fresh integration branch for each one.
 
 ## Checkpoint execution notes
 
@@ -299,7 +345,7 @@ SR-00 -> SR-01 -> SR-02
 Use this exact compact shape in the ledger row and link fuller ticket evidence:
 
 ```text
-Checkpoint: SR-__
+Checkpoint/unit: SR-__
 Base: <master SHA>
 Accepted: <landed implementation/gate SHA>
 Result: <one concrete executable outcome>
