@@ -2,7 +2,10 @@
 import type { AttackPresentationJoinIssue } from "./attack-presentation-contract.ts";
 import type {
   AbilityCheckRollModeSpellEffect,
+  BrightAndDimIlluminationEmissionFacts,
+  DimIlluminationEmissionFacts,
   BattleLightEmission,
+  BattleLightEmitterOpaqueCoverInteraction,
   BattleImmediateAreaAudibleBoom,
   CantripSpellAttackSequenceTargeting,
   ConditionImmunityActiveEffectTemplate,
@@ -32,7 +35,11 @@ import type {
 } from "./procedure-execution/spell-execution-vocabulary.ts";
 export type {
   AbilityCheckRollModeSpellEffect,
+  BattleIlluminationEmissionFacts,
+  BrightAndDimIlluminationEmissionFacts,
+  DimIlluminationEmissionFacts,
   BattleLightEmission,
+  BattleLightEmitterOpaqueCoverInteraction,
   BattleImmediateAreaAudibleBoom,
   CantripSpellAttackSequenceTargeting,
   ConditionImmunityActiveEffectTemplate,
@@ -492,13 +499,6 @@ export type BattleLightEmitterAttachment =
       readonly lightId: BattleMovableLightId;
       readonly positionId: BattleTablePositionId;
       readonly form: BattleMovableLightForm;
-    };
-export type BattleLightEmitterOpaqueCoverInteraction =
-  | {
-      readonly kind: "blocksEmission";
-    }
-  | {
-      readonly kind: "doesNotBlockEmission";
     };
 type BattleSpellLightEmitterFacts = BattleActiveEffectSource & {
   readonly kind: "spellLightEmitter";
@@ -2908,6 +2908,7 @@ export type AfterHitDamageAndIlluminationSpellInvocation = {
     readonly expr: DiceExpr;
     readonly damageType: DamageType;
   };
+  readonly illumination: BrightAndDimIlluminationEmissionFacts;
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<
       BattleActiveEffect,
@@ -3386,6 +3387,7 @@ type SupportedSpellInvocationSource =
       readonly dc: DcSource;
       readonly targeting: SpellTargeting;
       readonly effect: SpellFailedSaveAttackRollEffect;
+      readonly illumination: DimIlluminationEmissionFacts;
       readonly rangeFeet: MovementFeet;
     }
   | {

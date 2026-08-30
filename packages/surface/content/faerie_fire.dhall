@@ -22,19 +22,23 @@
 --   does not derive map geometry, pathfinding, automatic line of sight, or
 --   color rendering. The caster's blue/green/violet choice has no mechanical
 --   consequence and is intentionally omitted from structured mechanics.
-
 let Effect =
       { kind : Text
       , mode : Optional Text
       , on : Optional (List Text)
       , condition : Optional Text
+      , brightRadiusFeet : Optional Natural
+      , dimAdditionalFeet : Optional Natural
       }
 
-let defaultEffect : Effect =
-      { kind = ""
+let defaultEffect
+    : Effect
+    = { kind = ""
       , mode = None Text
       , on = None (List Text)
       , condition = None Text
+      , brightRadiusFeet = None Natural
+      , dimAdditionalFeet = None Natural
       }
 
 let faerieFire =
@@ -42,51 +46,53 @@ let faerieFire =
       , id = "faerie_fire"
       , name = "Faerie Fire"
       , provenance =
-          { kind = "srd-5.2.1"
-          , section = "Spells/Descriptions-E-L#Faerie Fire"
-          }
-
+        { kind = "srd-5.2.1", section = "Spells/Descriptions-E-L#Faerie Fire" }
       , mechanics =
-          { family = "activation"
-          , level = 1
-          , school = "evocation"
-          , castingTime = { kind = "action" }
-          , range = { kind = "point", feet = 60 }
-          , components = { v = True, s = False, m = False }
-          , duration =
-              { kind = "concentration"
-              , upTo = { unit = "minute", amount = 1 }
-              }
-          , phases =
-              [ { kind = "save_gate"
-                , attachment =
-                    { kind = "hole"
-                    , holeId = "faerie_fire_point"
-                    , label = "spell origin point"
-                    , value =
-                        { kind = "area"
-                        , shape = { kind = "cube", sideFeet = 20 }
-                        , origin = { kind = "point_within_range" }
-                        }
-                    }
-                , ability = "dex"
-                , dc = { kind = "caster_spell_save_dc" }
-                , onFail =
-                    { kind = "composite"
-                    , effects =
-                        [ defaultEffect // { kind = "modify_roll_advantage"
-                          , mode = Some "advantage"
-                          , on = Some [ "attack_roll" ]
-                          }
-                        , defaultEffect // { kind = "suppress_condition_benefit"
-                          , condition = Some "invisible"
-                          }
-                        ]
-                    }
-                , onSuccess = { kind = "none" }
+        { family = "activation"
+        , level = 1
+        , school = "evocation"
+        , castingTime.kind = "action"
+        , range = { kind = "point", feet = 60 }
+        , components = { v = True, s = False, m = False }
+        , duration =
+          { kind = "concentration", upTo = { unit = "minute", amount = 1 } }
+        , phases =
+          [ { kind = "save_gate"
+            , attachment =
+              { kind = "hole"
+              , holeId = "faerie_fire_point"
+              , label = "spell origin point"
+              , value =
+                { kind = "area"
+                , shape = { kind = "cube", sideFeet = 20 }
+                , origin.kind = "point_within_range"
                 }
-              ]
-          }
+              }
+            , ability = "dex"
+            , dc.kind = "caster_spell_save_dc"
+            , onFail =
+              { kind = "composite"
+              , effects =
+                [     defaultEffect
+                  //  { kind = "modify_roll_advantage"
+                      , mode = Some "advantage"
+                      , on = Some [ "attack_roll" ]
+                      }
+                ,     defaultEffect
+                  //  { kind = "suppress_condition_benefit"
+                      , condition = Some "invisible"
+                      }
+                ,     defaultEffect
+                  //  { kind = "emit_light"
+                      , brightRadiusFeet = Some 0
+                      , dimAdditionalFeet = Some 10
+                      }
+                ]
+              }
+            , onSuccess.kind = "none"
+            }
+          ]
+        }
       }
 
 in  faerieFire

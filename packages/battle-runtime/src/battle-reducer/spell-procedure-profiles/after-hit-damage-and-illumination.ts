@@ -12,7 +12,8 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // illumination effect to the struck target.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-S-Z.md "Shining Smite":
+//   - .references/srd-5.2.1/Spells/Descriptions-S-Z.md, after-hit
+//     illumination spell:
 //     Bonus Action immediately after a Melee weapon or Unarmed Strike hit;
 //     Self; Concentration up to 1 minute; extra Radiant damage from the
 //     attack; target sheds Bright Light, attack rolls against it have
@@ -26,8 +27,8 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // What stays in shared infrastructure:
 //   - The attack-hit interrupt checkpoint and eligibility orchestration stay in
 //     dispatcher.ts until the after-hit rider family migrates together.
-//   - The Shining Smite light-emitter projection constant stays in
-//     spells-active-effects.ts with the light-emitter projection code.
+//   - Illumination emission is retained in the admitted procedure binding;
+//     the durable target effect retains only its lifecycle and source ref.
 //   - The metamagic table entry remains Wave 9 migration work.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -46,11 +47,11 @@ import {
   type BattleState,
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
-import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "../spells-active-effects.ts";
 import {
   sameStringSet,
   supportedSpellSlotDamageFacts,
 } from "../spells-execution-facts.ts";
+import { illuminationEmissionFactsFromSurface } from "./illumination-emission-facts.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -64,6 +65,7 @@ import {
 } from "./profile.ts";
 import {
   DamageTypeSchema,
+  BrightAndDimIlluminationEmissionFactsSchema,
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -117,6 +119,7 @@ function admitAfterHitDamageAndIllumination(
         expr: damageExpr,
         damageType: projection.damageType,
       },
+      illumination: projection.illumination,
       activeEffect: {
         kind: "afterHitDamageAndIllumination",
         sourceCombatantId: ctx.actor.combatantId,
@@ -132,6 +135,7 @@ function afterHitDamageAndIlluminationSpellProjection(
 ): {
   readonly damageAmount: SurfaceDiceAmount;
   readonly damageType: Extract<DamageType, "radiant">;
+  readonly illumination: AfterHitDamageAndIlluminationSpellInvocation["illumination"];
   readonly expiresAt: AfterHitDamageAndIlluminationSpellInvocation["activeEffect"]["expiresAt"];
 } | null {
   if (
@@ -162,7 +166,16 @@ function afterHitDamageAndIlluminationSpellProjection(
   const operationEffects = spell.mechanics.operations.map(
     (operation) => operation.effect,
   );
-  const light = operationEffects.find((effect) => effect.kind === "emit_light");
+  const illuminationEffect = operationEffects.find(
+    (effect) => effect.kind === "emit_light",
+  );
+  const illumination =
+    illuminationEffect?.kind === "emit_light"
+      ? illuminationEmissionFactsFromSurface({
+          effect: illuminationEffect,
+          opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
+        })
+      : null;
   const attackAdvantage = operationEffects.find(
     (effect) => effect.kind === "modify_roll_advantage",
   );
@@ -181,9 +194,7 @@ function afterHitDamageAndIlluminationSpellProjection(
     damage?.kind !== "damage" ||
     damage.damageType !== "radiant" ||
     damage.amount === undefined ||
-    light?.kind !== "emit_light" ||
-    light.brightRadiusFeet !== SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET ||
-    (light.dimAdditionalFeet ?? 0) !== 0 ||
+    illumination?.emission.kind !== "brightAndDim" ||
     attackAdvantage?.kind !== "modify_roll_advantage" ||
     attackAdvantage.mode !== "advantage" ||
     attackAdvantage.affects !== "rolls_against_self" ||
@@ -199,6 +210,12 @@ function afterHitDamageAndIlluminationSpellProjection(
   return {
     damageAmount: damage.amount,
     damageType: "radiant",
+    illumination: {
+      emission: illumination.emission,
+      opaqueCoverInteraction: {
+        kind: illumination.opaqueCoverInteraction.kind,
+      },
+    },
     expiresAt: {
       kind: "concentration",
       combatantId: actorId,
@@ -275,6 +292,7 @@ const AfterHitDamageAndIlluminationInvocationSchema =
         expr: DiceExprSchema,
         damageType: DamageTypeSchema,
       }),
+      illumination: BrightAndDimIlluminationEmissionFactsSchema,
       activeEffect: AfterHitDamageAndIlluminationEffectSchema,
     }),
   );
