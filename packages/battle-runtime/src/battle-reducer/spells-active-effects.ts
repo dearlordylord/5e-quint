@@ -30,6 +30,7 @@
 export { applyDirectConditionSpellEffects } from "./direct-condition-lifecycle.ts";
 
 import { Match } from "effect";
+import { persistentAreaSaveDamageRepositionKind } from "./persistent-area-save-damage-lifecycle.ts";
 import {
   applyCondition,
   hasCondition,
@@ -242,17 +243,20 @@ type SavedPersistentAreaSaveDamageEffect = Extract<
 type MovablePersistentAreaActiveEffect = Extract<
   PersistentAreaSaveDamageEffect,
   {
-    readonly savedThisTurn: readonly CombatantId[];
-    readonly shapeShiftSuppressed: readonly CombatantId[];
+    readonly lifecycle: "directedReposition";
   }
+>;
+type MovablePersistentAreaOccurrenceRef = Pick<
+  MovablePersistentAreaActiveEffect,
+  "areaId" | "effectRef" | "sourceCombatantId"
 >;
 type StationaryPersistentAreaSaveDamageActiveEffect = Extract<
   PersistentAreaSaveDamageEffect,
-  { readonly lifecycle: { readonly kind: "stationary" } }
+  { readonly lifecycle: "stationary" }
 >;
 type TranslatingPersistentAreaSaveDamageActiveEffect = Extract<
   PersistentAreaSaveDamageEffect,
-  { readonly lifecycle: { readonly kind: "sourceTurnTranslation" } }
+  { readonly lifecycle: "sourceTurnTranslation" }
 >;
 type SingleSaveAreaActiveEffect =
   | SavedPersistentAreaSaveDamageEffect
@@ -2156,7 +2160,9 @@ export function applyRamMovablePersistentAreaCastEffect(input: {
     actorId: input.actorId,
     activeEffect: {
       kind: "persistentAreaSaveDamage" as const,
-      lifecycle: { kind: input.invocation.lifecycle.kind },
+      lifecycle: persistentAreaSaveDamageRepositionKind(
+        input.invocation.lifecycle,
+      ),
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
@@ -2315,7 +2321,9 @@ export function applyMovablePersistentAreaCastEffect(input: {
     actorId: input.actorId,
     activeEffect: {
       kind: "persistentAreaSaveDamage" as const,
-      lifecycle: { kind: input.invocation.lifecycle.kind },
+      lifecycle: persistentAreaSaveDamageRepositionKind(
+        input.invocation.lifecycle,
+      ),
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
@@ -2402,7 +2410,7 @@ export function applyStationaryPersistentAreaAreaHazardCastEffect(input: {
     actorId: input.actorId,
     activeEffect: {
       kind: "persistentAreaSaveDamage" as const,
-      lifecycle: { kind: input.invocation.lifecycle.kind },
+      lifecycle: input.invocation.lifecycle.kind,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       appearanceOccurrence: {
@@ -2437,7 +2445,7 @@ export function applyTranslatingPersistentAreaAreaHazardCastEffect(input: {
     actorId: input.actorId,
     activeEffect: {
       kind: "persistentAreaSaveDamage" as const,
-      lifecycle: { kind: input.invocation.lifecycle.kind },
+      lifecycle: input.invocation.lifecycle.kind,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       appearanceOccurrence: {
@@ -2528,10 +2536,14 @@ export function replaceDirectionalPersistentAreaDirection(input: {
 function isSingleSaveAreaActiveEffect(
   activeEffect: BattleActiveEffect,
 ): activeEffect is SingleSaveAreaActiveEffect {
-  return (
-    activeEffect.kind === "persistentAreaSaveComposite" ||
-    (activeEffect.kind === "persistentAreaSaveDamage" &&
-      "savedThisTurn" in activeEffect)
+  if (activeEffect.kind === "persistentAreaSaveComposite") return true;
+  if (activeEffect.kind !== "persistentAreaSaveDamage") return false;
+  return Match.value(activeEffect.lifecycle).pipe(
+    Match.when("stationary", () => true),
+    Match.when("sourceTurnTranslation", () => true),
+    Match.when("collisionReposition", () => false),
+    Match.when("directedReposition", () => true),
+    Match.exhaustive,
   );
 }
 
@@ -2562,7 +2574,7 @@ export function resetAllMovablePersistentAreaSavedThisTurn(
     combatants,
     (effect) =>
       effect.kind === "persistentAreaSaveDamage" &&
-      effect.shapeShiftSuppressed !== undefined,
+      effect.lifecycle === "directedReposition",
   );
 }
 
@@ -2609,7 +2621,7 @@ export function resetAllStationaryPersistentAreaSavedThisTurn(
     combatants,
     (effect) =>
       effect.kind === "persistentAreaSaveDamage" &&
-      effect.appearanceOccurrence !== undefined,
+      effect.lifecycle === "stationary",
   );
 }
 
@@ -2620,17 +2632,14 @@ export function resetAllTranslatingPersistentAreaSavedThisTurn(
     combatants,
     (effect) =>
       effect.kind === "persistentAreaSaveDamage" &&
-      effect.appearanceOccurrence !== undefined,
+      effect.lifecycle === "sourceTurnTranslation",
   );
 }
 
 export function markMovablePersistentAreaSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
-  effect: Extract<
-    MovablePersistentAreaActiveEffect,
-    { readonly kind: "persistentAreaSaveDamage" }
-  >,
+  effect: MovablePersistentAreaOccurrenceRef,
 ): BattleState {
   return updateEffectOwnerActiveEffects({
     state,
@@ -2652,18 +2661,14 @@ export function markMovablePersistentAreaSavedThisTurn(
 
 function movablePersistentAreaEffectMatches(
   current: BattleActiveEffect,
-  effect: Extract<
-    MovablePersistentAreaActiveEffect,
-    { readonly kind: "persistentAreaSaveDamage" }
-  >,
+  effect: MovablePersistentAreaOccurrenceRef,
 ): current is Extract<
   MovablePersistentAreaActiveEffect,
   { readonly kind: "persistentAreaSaveDamage" }
 > {
   return (
     current.kind === "persistentAreaSaveDamage" &&
-    current.shapeShiftSuppressed !== undefined &&
-    current.savedThisTurn !== undefined &&
+    current.lifecycle === "directedReposition" &&
     current.effectRef === effect.effectRef &&
     current.areaId === effect.areaId
   );
@@ -2672,10 +2677,7 @@ function movablePersistentAreaEffectMatches(
 export function addMovablePersistentAreaShapeShiftSuppression(
   state: BattleState,
   targetId: CombatantId,
-  effect: Extract<
-    MovablePersistentAreaActiveEffect,
-    { readonly kind: "persistentAreaSaveDamage" }
-  >,
+  effect: MovablePersistentAreaOccurrenceRef,
 ): BattleState {
   return updateEffectOwnerActiveEffects({
     state,
@@ -2698,10 +2700,7 @@ export function addMovablePersistentAreaShapeShiftSuppression(
 export function removeMovablePersistentAreaShapeShiftSuppression(
   state: BattleState,
   targetId: CombatantId,
-  effect: Extract<
-    MovablePersistentAreaActiveEffect,
-    { readonly kind: "persistentAreaSaveDamage" }
-  >,
+  effect: MovablePersistentAreaOccurrenceRef,
 ): BattleState {
   return updateEffectOwnerActiveEffects({
     state,

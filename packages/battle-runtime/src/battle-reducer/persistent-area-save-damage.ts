@@ -85,7 +85,7 @@ type PersistentAreaSaveDamageOccurrence = Extract<
 
 type StationaryPersistentAreaAreaHazardEffect = Extract<
   PersistentAreaSaveDamageOccurrence,
-  { readonly lifecycle: { readonly kind: "stationary" } }
+  { readonly lifecycle: "stationary" }
 > & {
   readonly save: {
     readonly ability: StationaryPersistentAreaSaveDamageSpellProcedureExecution["ability"];
@@ -96,7 +96,7 @@ type StationaryPersistentAreaAreaHazardEffect = Extract<
 
 export type TranslatingPersistentAreaAreaHazardEffect = Extract<
   PersistentAreaSaveDamageOccurrence,
-  { readonly lifecycle: { readonly kind: "sourceTurnTranslation" } }
+  { readonly lifecycle: "sourceTurnTranslation" }
 > & {
   readonly save: {
     readonly ability: SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution["ability"];
@@ -1481,12 +1481,7 @@ function persistentAreaSaveDamageEffectForRef(
         continue;
       }
       if (located !== undefined) return undefined;
-      if (
-        candidate.kind !== "persistentAreaSaveDamage" ||
-        candidate.appearanceOccurrence === undefined ||
-        candidate.savedThisTurn === undefined ||
-        candidate.shapeShiftSuppressed !== undefined
-      ) {
+      if (!isAppearanceTriggeredPersistentAreaSaveDamage(candidate)) {
         return undefined;
       }
       located = { effectOwnerId, effect: candidate };
@@ -1517,6 +1512,19 @@ function persistentAreaSaveDamageEffectForRef(
         },
       }
     : undefined;
+}
+
+function isAppearanceTriggeredPersistentAreaSaveDamage(
+  effect: BattleActiveEffect,
+): effect is PersistentAreaSaveDamageOccurrence {
+  if (effect.kind !== "persistentAreaSaveDamage") return false;
+  return Match.value(effect.lifecycle).pipe(
+    Match.when("stationary", () => true),
+    Match.when("sourceTurnTranslation", () => true),
+    Match.when("collisionReposition", () => false),
+    Match.when("directedReposition", () => false),
+    Match.exhaustive,
+  );
 }
 
 function persistentAreaTriggerFromMembershipFact(

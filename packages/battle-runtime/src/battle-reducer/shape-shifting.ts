@@ -292,7 +292,7 @@ export function combatantShapeShiftingSuppressed(
     combatant.activeEffects.some(
       (effect) =>
         effect.kind === "persistentAreaSaveDamage" &&
-        "shapeShiftSuppressed" in effect &&
+        effect.lifecycle === "directedReposition" &&
         effect.shapeShiftSuppressed.includes(combatantId),
     ),
   );

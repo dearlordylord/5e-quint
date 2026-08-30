@@ -145,7 +145,7 @@ type CloudkillEffect = Extract<
   BattleActiveEffect,
   {
     readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+    readonly lifecycle: "sourceTurnTranslation";
   }
 >;
 

@@ -77,7 +77,7 @@ type SourceTurnTranslationPersistentAreaSaveDamageEffect = Extract<
   BattleActiveEffect,
   {
     readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+    readonly lifecycle: "sourceTurnTranslation";
   }
 >;
 import {
@@ -156,7 +156,7 @@ function withCloudkillTranslationDistance(
       candidate,
     ): candidate is SourceTurnTranslationPersistentAreaSaveDamageEffect =>
       candidate.kind === "persistentAreaSaveDamage" &&
-      candidate.lifecycle.kind === "sourceTurnTranslation",
+      candidate.lifecycle === "sourceTurnTranslation",
   );
   if (effect === undefined) {
     throw new Error("Expected the active Cloudkill effect.");
@@ -222,7 +222,7 @@ function withNonTranslatingCloudkillLifecycle(
       candidate,
     ): candidate is SourceTurnTranslationPersistentAreaSaveDamageEffect =>
       candidate.kind === "persistentAreaSaveDamage" &&
-      candidate.lifecycle.kind === "sourceTurnTranslation",
+      candidate.lifecycle === "sourceTurnTranslation",
   );
   if (effect === undefined) {
     throw new Error("Expected the active Cloudkill effect.");
@@ -264,7 +264,7 @@ function withNonTranslatingCloudkillLifecycle(
   const syntheticEffect = Match.value(lifecycle).pipe(
     Match.when(
       "stationary",
-      () => ({ ...effect, lifecycle: { kind: "stationary" } }) as const,
+      () => ({ ...effect, lifecycle: "stationary" }) as const,
     ),
     Match.when("collisionReposition", () => {
       const {
@@ -274,7 +274,7 @@ function withNonTranslatingCloudkillLifecycle(
       } = effect;
       return {
         ...effectBase,
-        lifecycle: { kind: "casterActionReposition" },
+        lifecycle: "collisionReposition",
       } as const;
     }),
     Match.when("directedReposition", () => {
@@ -282,7 +282,7 @@ function withNonTranslatingCloudkillLifecycle(
         effect;
       return {
         ...effectBase,
-        lifecycle: { kind: "casterActionReposition" },
+        lifecycle: "directedReposition",
         shapeShiftSuppressed: [],
       } as const;
     }),
@@ -719,11 +719,11 @@ function activeCloudkill(
     .find(
       (candidate) =>
         candidate.kind === "persistentAreaSaveDamage" &&
-        candidate.lifecycle.kind === "sourceTurnTranslation",
+        candidate.lifecycle === "sourceTurnTranslation",
     );
   if (
     effect?.kind !== "persistentAreaSaveDamage" ||
-    effect.lifecycle.kind !== "sourceTurnTranslation"
+    effect.lifecycle !== "sourceTurnTranslation"
   ) {
     throw new Error("Expected an active Cloudkill effect.");
   }

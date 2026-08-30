@@ -63,7 +63,7 @@ type InsectPlagueEffect = Extract<
   BattleActiveEffect,
   {
     readonly kind: "persistentAreaSaveDamage";
-    readonly lifecycle: { readonly kind: "stationary" };
+    readonly lifecycle: "stationary";
   }
 >;
 
