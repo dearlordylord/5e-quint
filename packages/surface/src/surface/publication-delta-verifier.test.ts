@@ -16,8 +16,10 @@ import { describe, expect, test } from "vitest";
 
 import {
   SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH,
+  type SurfacePublicationDeltaVerificationOptions,
   verifySurfacePublicationDelta,
 } from "./publication-delta-verifier.ts";
+import { verifySurfacePublicationDeltaFixture } from "./publication-delta-verifier.test-support.ts";
 import { PublishedSrdSurfaceSchema } from "./schema.ts";
 
 const repositoryRoot = resolve(
@@ -63,10 +65,10 @@ function withFixture(
       publicationDir,
       certificatePath: fixtureCertificatePath,
     });
-    return verifySurfacePublicationDelta({
+    return verifySurfacePublicationDeltaFixture({
       repoRoot: options.repoRoot ?? repositoryRoot,
       publicationDir,
-      certificateAuthority: {
+      reviewedCertificate: {
         path: fixtureCertificatePath,
         sha256: options.reviewMutatedCertificate
           ? sha256(readFileSync(fixtureCertificatePath))
@@ -267,6 +269,21 @@ describe("Surface publication delta verifier", () => {
     if (result.tag === "verified") {
       expect(result.baselineCommit).toMatch(/^[0-9a-f]{40}$/u);
     }
+  }, 180_000);
+
+  test("production verification cannot be redirected to caller-selected certificate authority", () => {
+    const options: SurfacePublicationDeltaVerificationOptions = {
+      repoRoot: repositoryRoot,
+    };
+    // @ts-expect-error Certificate authority belongs only to fixture verification.
+    options.certificateAuthority = {
+      path: "/tmp/unreviewed-surface-certificate.json",
+      sha256: "0".repeat(64),
+    };
+
+    const result = verifySurfacePublicationDelta(options);
+
+    expect(result.tag).toBe("verified");
   }, 180_000);
 
   test("reports when the baseline commit is unavailable in checkout history", () => {
@@ -576,6 +593,49 @@ describe("Surface publication delta verifier", () => {
     expect(result.tag).toBe("invalid");
     expect(issueKinds(result)).toContain("certificate-invalid");
   }, 180_000);
+
+  test("rejects a changed delta classified as catalog membership", () => {
+    const result = withFixture(
+      ({ certificatePath: fixturePath }) => {
+        const certificate = readFileSync(fixturePath, "utf8");
+        writeFileSync(
+          fixturePath,
+          certificate.replace(
+            '"semanticClass": "authored-persistent-rule-facts"',
+            '"semanticClass": "authored-catalog-membership"',
+          ),
+        );
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("certificate-invalid");
+  }, 180_000);
+
+  test.each(["added", "removed"] as const)(
+    "rejects a %s delta classified as a content change",
+    (kind) => {
+      const result = withFixture(
+        (paths) => {
+          certifyMembershipDelta(paths, kind);
+          const certificate = readFileSync(paths.certificatePath, "utf8");
+          writeFileSync(
+            paths.certificatePath,
+            certificate.replace(
+              '"semanticClass": "authored-catalog-membership"',
+              '"semanticClass": "authored-persistent-rule-facts"',
+            ),
+          );
+        },
+        { reviewMutatedCertificate: true },
+      );
+
+      expect(result.tag).toBe("invalid");
+      expect(issueKinds(result)).toContain("certificate-invalid");
+    },
+    180_000,
+  );
 
   test("rejects a copied record substituted for a distinct reviewed delta", () => {
     const result = withFixture(({ publicationDir }) => {

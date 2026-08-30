@@ -15,6 +15,8 @@ has the hashes applicable to that shape, and has one reviewed semantic class.
 The current candidate has 18 changed records, no additions, and no removals.
 Their classes are persistent rule facts, companion lifecycle, modal ongoing
 effect, identity-free execution vocabulary, and truthful illumination emission.
+The certificate schema couples those five classes to `changed`; `added` and
+`removed` accept only the catalog-membership class.
 The baseline and candidate membership evidence each record counts and ordered
 identity hashes for every family, so a classified addition or removal can
 change one snapshot without contradicting the other.
@@ -44,6 +46,10 @@ The certificate contains only executable evidence. The verifier owns the two
 publication artifact paths, the immutable baseline commit contract, hashing and
 canonicalization algorithms, and validation procedure. This document owns the
 review rationale; it is not duplicated as unconstrained machine metadata.
+The production verifier always resolves the repository certificate path and
+pinned digest itself. Custom reviewed-certificate authority exists only in the
+colocated test-support seam and is absent from package exports and public
+scripts.
 
 Run the executable verifier with:
 
