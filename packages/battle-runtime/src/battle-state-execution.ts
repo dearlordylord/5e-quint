@@ -812,6 +812,12 @@ export type BattleStartTurnOccurrenceSequenceCheckpoint = {
     readonly targetId: CombatantId;
   };
 };
+export type BattleSpatialMeleeSpellAttackProxyCommitCheckpoint = {
+  readonly kind: "spatialMeleeSpellAttackProxyCommitApplied";
+  readonly actorId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly operation: "createAndAttack" | "repositionAndAttack";
+};
 export type BattleInterruptedProcedure =
   | {
       readonly kind: "replay";
@@ -822,6 +828,7 @@ export type BattleInterruptedProcedure =
       readonly attackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly attackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
       readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
+      readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: BattleSpatialMeleeSpellAttackProxyCommitCheckpoint;
     }
   | {
       readonly kind: "replay";
@@ -832,6 +839,7 @@ export type BattleInterruptedProcedure =
       readonly attackDamageReductions?: never;
       readonly attackDamageAdditions?: never;
       readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
+      readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: never;
     }
   | {
       readonly kind: "replay";
@@ -842,6 +850,7 @@ export type BattleInterruptedProcedure =
       readonly attackDamageReductions?: never;
       readonly attackDamageAdditions?: never;
       readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
+      readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: never;
     }
   | {
       readonly kind: "resolved";
@@ -1245,6 +1254,7 @@ type BattleActiveInterruptProcedure = {
   readonly subject: BattleInterruptProcedureChoiceWithSubject["subject"];
   readonly fills: readonly BattleFill[];
   readonly handledInterruptOccurrence?: BattleHandledInterruptOccurrence;
+  readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: BattleSpatialMeleeSpellAttackProxyCommitCheckpoint;
   readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
   readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
 };
@@ -1392,10 +1402,14 @@ export type BattleHandledInterruptOccurrence =
       readonly effectRef?: BattleEffectExecutionRef;
     }
   | {
-      [T in Exclude<BattleInterruptTrigger, "saveFailed">]: {
+      readonly trigger: "attackHit";
+      readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: BattleSpatialMeleeSpellAttackProxyCommitCheckpoint;
+    }
+  | {
+      [T in Exclude<BattleInterruptTrigger, "saveFailed" | "attackHit">]: {
         readonly trigger: T;
       };
-    }[Exclude<BattleInterruptTrigger, "saveFailed">];
+    }[Exclude<BattleInterruptTrigger, "saveFailed" | "attackHit">];
 
 export type BattleHandledInterruptRouteProjection =
   | {
@@ -7377,6 +7391,7 @@ export type BattleInterruptRouteOptions =
       readonly replayParentPosition?: never;
       readonly pendingAttackDamageReductions?: never;
       readonly pendingAttackDamageAdditions?: never;
+      readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: never;
     }
   | (BattleHandledInterruptRouteProjection & {
       readonly replayingInterruptedProcedure: true;
@@ -7384,6 +7399,7 @@ export type BattleInterruptRouteOptions =
       readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
       readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
+      readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: BattleSpatialMeleeSpellAttackProxyCommitCheckpoint;
     });
 export type BattleInterruptConsumerOptions =
   | {
@@ -7392,6 +7408,7 @@ export type BattleInterruptConsumerOptions =
       readonly replayParentPosition?: never;
       readonly pendingAttackDamageReductions?: never;
       readonly pendingAttackDamageAdditions?: never;
+      readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: never;
     }
   | {
       readonly replayingInterruptedProcedure: true;
@@ -7399,6 +7416,7 @@ export type BattleInterruptConsumerOptions =
       readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
       readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
+      readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: BattleSpatialMeleeSpellAttackProxyCommitCheckpoint;
     };
 export type AttackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "action"; readonly action: "attack" }>
@@ -7491,13 +7509,13 @@ export type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
 export type BonusActionSpellBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "bonusActionSpell" }>
-  > & {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-    readonly reactionContinuation?: {
-      readonly subject: BattleSubject;
-      readonly fills: readonly BattleFill[];
+  > &
+    BattleInterruptConsumerOptions & {
+      readonly reactionContinuation?: {
+        readonly subject: BattleSubject;
+        readonly fills: readonly BattleFill[];
+      };
     };
-  };
 export type BonusActionDashSpellBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "bonusActionDashSpell" }>

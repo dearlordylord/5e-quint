@@ -153,6 +153,7 @@ import {
   type TranslatingPersistentAreaMovementSaveDamageRequest,
   type TranslatingPersistentAreaMovementSaveDamageSequenceResult,
 } from "./persistent-area-save-damage.ts";
+import { boundPersistentAreaSaveDamageEffect } from "./persistent-area-save-damage-binding.ts";
 import { isBattleContinuationComparableFill } from "./battle-fill-equality.ts";
 import {
   projectReplayChildResult,
@@ -268,28 +269,47 @@ type ResolvedTurnBoundaryFills = {
   readonly deferStatBlockRecharge: boolean;
 };
 
-const TRANSLATING_PERSISTENT_AREA_START_TURN_MOVE_FEET = movementFeet(10);
+type TranslatingPersistentAreaStartTurnMovement = {
+  readonly effect: TranslatingPersistentAreaAreaHazardEffect;
+  readonly distanceFeet: BattlePersistentAreaSourceTurnTranslationHole["distanceFeet"];
+  readonly directionRequirement: BattlePersistentAreaSourceTurnTranslationHole["directionRequirement"];
+};
 
 function translatingPersistentAreaStartTurnMovementEffects(
   state: BattleState,
   sourceCombatantId: CombatantId,
-): readonly TranslatingPersistentAreaAreaHazardEffect[] {
+): readonly TranslatingPersistentAreaStartTurnMovement[] {
   return [...state.combatants.values()].flatMap((combatant) =>
-    combatant.activeEffects.filter(
-      (effect): effect is TranslatingPersistentAreaAreaHazardEffect =>
-        effect.kind === "persistentAreaSaveDamage" &&
-        effect.sourceCombatantId === sourceCombatantId,
-    ),
+    combatant.activeEffects.flatMap((effect) => {
+      if (
+        effect.kind !== "persistentAreaSaveDamage" ||
+        effect.sourceCombatantId !== sourceCombatantId
+      ) {
+        return [];
+      }
+      const bound = boundPersistentAreaSaveDamageEffect(combatant, effect);
+      return bound?.kind === "sourceTurnTranslation"
+        ? [
+            {
+              effect: {
+                ...bound.effect,
+                save: { ability: bound.facts.ability, dc: bound.facts.dc },
+                damage: bound.facts.damage,
+              },
+              distanceFeet: bound.facts.lifecycle.distanceFeet,
+              directionRequirement: bound.facts.lifecycle.direction,
+            },
+          ]
+        : [];
+    }),
   );
 }
 
 function translatingPersistentAreaStartTurnMovementHole(
   sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
-  effect: Pick<
-    TranslatingPersistentAreaAreaHazardEffect,
-    "effectRef" | "sourceCombatantId" | "sourceProcedureRef" | "areaId"
-  >,
+  movement: TranslatingPersistentAreaStartTurnMovement,
 ): BattlePersistentAreaSourceTurnTranslationHole {
+  const { effect } = movement;
   const key = translatingPersistentAreaStartTurnMovementHoleKey(
     sourceTurn,
     effect.effectRef,
@@ -303,8 +323,8 @@ function translatingPersistentAreaStartTurnMovementHole(
     sourceProcedureRef: effect.sourceProcedureRef,
     effectRef: effect.effectRef,
     areaId: effect.areaId,
-    distanceFeet: TRANSLATING_PERSISTENT_AREA_START_TURN_MOVE_FEET,
-    directionRequirement: "awayFromSource",
+    distanceFeet: movement.distanceFeet,
+    directionRequirement: movement.directionRequirement,
     requiresTableSpatialFact: true,
   };
 }
@@ -388,7 +408,7 @@ type StartTurnOccurrenceHandle =
     }
   | {
       readonly kind: "persistentAreaSourceTurnTranslation";
-      readonly effect: TranslatingPersistentAreaAreaHazardEffect;
+      readonly movement: TranslatingPersistentAreaStartTurnMovement;
     };
 
 function startTurnOccurrenceOption(
@@ -448,8 +468,10 @@ function startTurnOccurrenceOptionForHandle(
     Match.when({ kind: "spellTurnStartDamageAndSave" }, ({ effect }) =>
       spellTurnStartDamageOccurrenceOption(effect),
     ),
-    Match.when({ kind: "persistentAreaSourceTurnTranslation" }, ({ effect }) =>
-      persistentAreaSourceTurnTranslationOccurrenceOption(effect),
+    Match.when(
+      { kind: "persistentAreaSourceTurnTranslation" },
+      ({ movement }) =>
+        persistentAreaSourceTurnTranslationOccurrenceOption(movement.effect),
     ),
     Match.exhaustive,
   );
@@ -479,9 +501,9 @@ function startTurnOccurrenceHandlesForState(
           : { kind: "spellTurnStartDamageAndSave", effect },
     ),
     ...translatingPersistentAreaStartTurnMovementEffects(state, actorId).map(
-      (effect): StartTurnOccurrenceHandle => ({
+      (movement): StartTurnOccurrenceHandle => ({
         kind: "persistentAreaSourceTurnTranslation",
-        effect,
+        movement,
       }),
     ),
   ];
@@ -849,11 +871,11 @@ function resolveTranslatingPersistentAreaMovementSequenceResume(input: {
     resolution.state,
     checkpoint.sourceTurn.actorId,
   ).map(
-    (effect): TranslatingPersistentAreaMovementBoundary => ({
-      effect,
+    (movement): TranslatingPersistentAreaMovementBoundary => ({
+      effect: movement.effect,
       hole: translatingPersistentAreaStartTurnMovementHole(
         checkpoint.sourceTurn,
-        effect,
+        movement,
       ),
     }),
   );
@@ -4193,14 +4215,18 @@ function resolveOrderedTranslatingPersistentAreaMovementFill(input: {
   readonly movementFills: readonly TranslatingPersistentAreaMovementFill[];
   readonly matchedMovementFillHoleIds: ReadonlySet<BattleHoleId>;
 }): OrderedTranslatingPersistentAreaMovementFillStage {
-  const effect = translatingPersistentAreaStartTurnMovementEffects(
+  const movement = translatingPersistentAreaStartTurnMovementEffects(
     input.state,
     input.input.sourceTurn.actorId,
-  ).find((candidate) => candidate.effectRef === input.handle.effect.effectRef);
-  if (effect === undefined) return { tag: "skipped" };
+  ).find(
+    (candidate) =>
+      candidate.effect.effectRef === input.handle.movement.effect.effectRef,
+  );
+  if (movement === undefined) return { tag: "skipped" };
+  const { effect } = movement;
   const hole = translatingPersistentAreaStartTurnMovementHole(
     input.input.sourceTurn,
-    effect,
+    movement,
   );
   const matchingFills = input.movementFills.filter(
     (fill) => fill.holeId === hole.holeId,

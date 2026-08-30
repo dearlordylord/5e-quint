@@ -251,6 +251,12 @@ export function resolveInterruptLifecycleDecision(input: {
       responderId: input.fill.value.responderId,
       subject: choice.subject,
       fills: admittedChoice.selection.fills,
+      ...optionalProperty(
+        "spatialMeleeSpellAttackProxyCommitCheckpoint",
+        frame.continuation.kind === "replay"
+          ? frame.continuation.spatialMeleeSpellAttackProxyCommitCheckpoint
+          : undefined,
+      ),
     },
   };
 
@@ -281,7 +287,15 @@ export function resolveInterruptLifecycleDecision(input: {
   }
   const interruptResult = input.execution.resolveSubject({
     input: admission.input,
-    interruptRouteOptions: { replayingInterruptedProcedure: true },
+    interruptRouteOptions: {
+      replayingInterruptedProcedure: true,
+      ...optionalProperty(
+        "spatialMeleeSpellAttackProxyCommitCheckpoint",
+        frame.continuation.kind === "replay"
+          ? frame.continuation.spatialMeleeSpellAttackProxyCommitCheckpoint
+          : undefined,
+      ),
+    },
     [admittedActiveInterruptProcedure]: true,
   });
   return withInterruptRoute(
@@ -351,6 +365,10 @@ export function resolveActiveInterruptProcedure(input: {
             pendingAttackDamageAdditions:
               activeInterrupt.pendingAttackDamageAdditions,
           }),
+      ...optionalProperty(
+        "spatialMeleeSpellAttackProxyCommitCheckpoint",
+        activeInterrupt.spatialMeleeSpellAttackProxyCommitCheckpoint,
+      ),
     },
     [admittedActiveInterruptProcedure]: true,
   });
@@ -931,8 +949,14 @@ function handledInterruptOccurrenceFor(
       ...optionalProperty("sourceProcedureRef", saveFailed.sourceProcedureRef),
       ...optionalProperty("effectRef", saveFailed.effectRef),
     })),
-    Match.when({ trigger: "attackHit" }, () => ({
+    Match.when({ trigger: "attackHit" }, (attackHit) => ({
       trigger: "attackHit" as const,
+      ...optionalProperty(
+        "spatialMeleeSpellAttackProxyCommitCheckpoint",
+        attackHit.continuation.kind === "replay"
+          ? attackHit.continuation.spatialMeleeSpellAttackProxyCommitCheckpoint
+          : undefined,
+      ),
     })),
     Match.when({ trigger: "attackDamage" }, () => ({
       trigger: "attackDamage" as const,

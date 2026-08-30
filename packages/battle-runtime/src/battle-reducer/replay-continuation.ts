@@ -372,6 +372,13 @@ function replayInterruptRouteOptions(
       "pendingAttackDamageAdditions",
       continuation.attackDamageAdditions,
     ),
+    ...optionalProperty(
+      "spatialMeleeSpellAttackProxyCommitCheckpoint",
+      continuation.spatialMeleeSpellAttackProxyCommitCheckpoint ??
+        (handledInterruptOccurrence.trigger === "attackHit"
+          ? handledInterruptOccurrence.spatialMeleeSpellAttackProxyCommitCheckpoint
+          : undefined),
+    ),
   };
 }
 
