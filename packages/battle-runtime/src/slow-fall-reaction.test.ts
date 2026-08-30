@@ -145,7 +145,6 @@ describe("Slow Fall Reaction", () => {
       fallDamagePrevented: false,
       fallingPronePrevented: false,
       slowFallReductionAmount: damageAmount(25),
-      featherFallMitigated: false,
     });
     if (landing.tag !== "landed") {
       throw new Error("Expected Slow Fall landing resolution.");

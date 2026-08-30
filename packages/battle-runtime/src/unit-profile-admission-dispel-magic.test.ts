@@ -9,6 +9,7 @@ import {
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
   requireCharacterSpellProcedureRefForTest,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
   magicSuppressionEmanationEffectTemplateForTest,
@@ -1855,7 +1856,10 @@ function stateWithActiveEffects(
     },
   },
 ): BattleRuntimeSession {
-  const session = stateWithLightEmitters([]);
+  const session = dispelTestSessionWithObjectContactBindings();
+  const boundActiveEffects = activeEffects.map((effect) =>
+    bindDispellableObjectContactEffect(session, effect),
+  );
   const caster = session.state.combatants.get(spellCasterId);
   if (caster === undefined) {
     throw new Error("Expected spell caster combatant.");
@@ -1864,14 +1868,17 @@ function stateWithActiveEffects(
     ...session.state,
     combatants: new Map(session.state.combatants).set(spellCasterId, {
       ...caster,
-      concentration: input.concentration ?? null,
+      concentration: concentrationForBoundEffects(
+        input.concentration,
+        boundActiveEffects,
+      ),
     }),
   };
   return battleRuntimeSessionForTest({
     ...session,
     state: battleStateWithAllocatedEffectOccurrencesForTest({
       state: concentrationState,
-      occurrences: activeEffects.map((effect) => ({
+      occurrences: boundActiveEffects.map((effect) => ({
         kind: "activeEffect" as const,
         ownerId: spellCasterId,
         effect,
@@ -1900,8 +1907,14 @@ function stateWithCombatantActiveEffects(input: {
     } | null;
   };
 }): BattleRuntimeSession {
-  const session = stateWithLightEmitters([]);
+  const session = dispelTestSessionWithObjectContactBindings();
   const combatants = new Map(session.state.combatants);
+  const casterActiveEffects = (input.caster?.activeEffects ?? []).map(
+    (effect) => bindDispellableObjectContactEffect(session, effect),
+  );
+  const targetActiveEffects = (input.target?.activeEffects ?? []).map(
+    (effect) => bindDispellableObjectContactEffect(session, effect),
+  );
   if (input.caster !== undefined) {
     const caster = combatants.get(spellCasterId);
     if (caster === undefined) {
@@ -1909,7 +1922,10 @@ function stateWithCombatantActiveEffects(input: {
     }
     combatants.set(spellCasterId, {
       ...caster,
-      concentration: input.caster.concentration ?? null,
+      concentration: concentrationForBoundEffects(
+        input.caster.concentration,
+        casterActiveEffects,
+      ),
     });
   }
   if (input.target !== undefined) {
@@ -1919,28 +1935,97 @@ function stateWithCombatantActiveEffects(input: {
     }
     combatants.set(spellTargetId, {
       ...target,
-      concentration: input.target.concentration ?? null,
+      concentration: concentrationForBoundEffects(
+        input.target.concentration,
+        targetActiveEffects,
+      ),
     });
   }
   const state = battleStateWithAllocatedEffectOccurrencesForTest({
     state: { ...session.state, combatants },
     occurrences: [
-      ...(input.caster?.activeEffects.map((effect) => ({
+      ...casterActiveEffects.map((effect) => ({
         kind: "activeEffect" as const,
         ownerId: spellCasterId,
         effect,
-      })) ?? []),
-      ...(input.target?.activeEffects.map((effect) => ({
+      })),
+      ...targetActiveEffects.map((effect) => ({
         kind: "activeEffect" as const,
         ownerId: spellTargetId,
         effect,
-      })) ?? []),
+      })),
     ],
   }).state;
   return battleRuntimeSessionForTest({
     ...session,
     state,
   });
+}
+
+function dispelTestSessionWithObjectContactBindings(): BattleRuntimeSession {
+  const heatMetal = spellRecord(heatMetalUnitId);
+  return spellBattle({
+    preparedSpells: [spellRecord(dispelMagicUnitId), heatMetal],
+    spellSlots: [
+      { spellLevel: 2, count: 1 },
+      { spellLevel: 3, count: 1 },
+      { spellLevel: 4, count: 1 },
+    ],
+    targetSpellcasting: wizardSpellcasting({
+      preparedSpells: [heatMetal],
+      spellSlots: [
+        { spellLevel: 2, count: 1 },
+        { spellLevel: 4, count: 1 },
+      ],
+    }),
+  });
+}
+
+function bindDispellableObjectContactEffect(
+  session: BattleRuntimeSession,
+  effect: BattleActiveEffectOccurrenceTemplate,
+): BattleActiveEffectOccurrenceTemplate {
+  if (effect.kind !== "spellObjectContactDamage") {
+    return effect;
+  }
+  return {
+    ...effect,
+    sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+      session,
+      effect.sourceCombatantId,
+      spellSlotInvocationRef(
+        heatMetalUnitId,
+        effect.sourceSpellLevel,
+        "objectContactDamage",
+      ),
+    ),
+  };
+}
+
+function concentrationForBoundEffects(
+  concentration:
+    | {
+        readonly sourceProcedureRef: ReturnType<
+          typeof battleProcedureExecutionRefForTest
+        >;
+        readonly effectKind: "spellEffect";
+      }
+    | null
+    | undefined,
+  effects: readonly BattleActiveEffectOccurrenceTemplate[],
+) {
+  if (concentration === null) {
+    return null;
+  }
+  const boundEffect = effects.find(
+    (effect) => effect.kind === "spellObjectContactDamage",
+  );
+  return boundEffect === undefined
+    ? (concentration ?? null)
+    : {
+        sourceProcedureRef: boundEffect.sourceProcedureRef,
+        effectKind: "spellEffect" as const,
+      };
 }
 
 function objectSpellEmitter(input: {

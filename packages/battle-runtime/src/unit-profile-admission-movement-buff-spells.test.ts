@@ -205,7 +205,7 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Expeditious Retreat no longer has its required runtime spell resource.",
+        "bonus-action Dash effect no longer has its required runtime spell resource.",
     });
     for (const state of [afterSpellSlotUse, withoutBonusAction]) {
       expect(
@@ -261,7 +261,7 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
       tag: "invalid",
       reason: "unsupportedActOption",
       message:
-        "Bonus Action Dash spell act requires a supported Expeditious Retreat spell.",
+        "Bonus Action Dash spell act requires a supported bonus-action Dash effect spell.",
     });
   });
 
@@ -412,18 +412,20 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
 
 describe("SRDINV53 Jump movement replacement interactions", () => {
   test("low-level injected occurrence identity: using one of two mechanically identical Jump effects consumes only its exact occurrence", () => {
-    const session = spellBattle({ preparedSpells: [] });
+    const session = spellBattle({
+      preparedSpells: [spellRecord(jumpUnitId)],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
     // Two coherent occurrences are injected to isolate exact-ref selection;
     // this identity test does not claim either effect was admitted by casting.
-    const sourceProcedureRef = battleProcedureExecutionRefForTest(
-      "two-jump-occurrences",
-    );
+    const sourceProcedureRef = bonusSpellAct({
+      session,
+      spellId: jumpUnitId,
+    }).subject.procedureRef;
     const jumpEffect = {
       kind: "fixedCostMovementReplacement" as const,
       sourceProcedureRef,
       sourceCombatantId: spellCasterId,
-      movementCostFeet: movementFeet(10),
-      maxJumpDistanceFeet: movementFeet(30),
       usedThisTurn: false,
       expiresAt: {
         kind: "duration" as const,
@@ -572,7 +574,8 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Jump movement replacement is not available.",
+      message:
+        "distance-multiplier effect movement replacement is not available.",
     });
   });
 
@@ -612,8 +615,6 @@ describe("SRDINV53 Jump movement replacement interactions", () => {
         kind: "fixedCostMovementReplacement",
         sourceProcedureRef: castAct.subject.procedureRef,
         sourceCombatantId: spellCasterId,
-        movementCostFeet: movementFeet(10),
-        maxJumpDistanceFeet: movementFeet(30),
         usedThisTurn: false,
         expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
       }),

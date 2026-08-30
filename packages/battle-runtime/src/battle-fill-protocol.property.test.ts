@@ -1356,10 +1356,7 @@ describe("battle fill protocol boundary owners", () => {
         skeletonCreatureInit({ initiative: 10 }),
       ],
     });
-    const commandAct = findAct(
-      commandSession,
-      magicSubject("compelledNextTurnBehavior"),
-    );
+    const commandAct = findAct(commandSession, magicSubject("command"));
     const commandInvocation = characterSpellProcedureFromAct(
       commandSession.state,
       commandAct,
@@ -1656,7 +1653,7 @@ describe("battle fill protocol boundary owners", () => {
       holeId: directDamage.holeId,
     } as Extract<BattleFill, { readonly kind: "rolledDice" }>;
     expect(validateSpellBurstDamageFill(wrongBurst, iceInvocation)).toBe(
-      "Ice Knife burst damage must use the burst damage hole.",
+      "attack-burst damage burst damage must use the burst damage hole.",
     );
 
     const cureAct = findAct(session, magicSubject("cure_wounds"));

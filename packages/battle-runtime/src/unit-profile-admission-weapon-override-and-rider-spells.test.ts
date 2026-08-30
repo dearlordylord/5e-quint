@@ -3,6 +3,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import {
@@ -1175,7 +1176,6 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
         sourceCombatantId: spellCasterId,
         holderCombatantId: spellCasterId,
         weaponItemId: battleObjectId("main:weapon_longsword"),
-        bonus: 1,
         expiresAt: {
           kind: "duration",
           durationTicks: magicWeaponDurationTicks,
@@ -1456,9 +1456,15 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       expect.objectContaining({
         holderCombatantId: spellCasterId,
         weaponItemId: battleObjectId("main:weapon_longsword"),
-        bonus: 2,
       }),
     ]);
+    expect(
+      battleWeaponItemWeaponAttackDamageEnhancementBonus(
+        recast.state,
+        spellCasterId,
+        battleObjectId("main:weapon_longsword"),
+      ),
+    ).toBe(2);
   });
 
   test("magic_weapon rejects an item already made magical by another caster and expires on duration", () => {
@@ -1467,7 +1473,20 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       preparedSpells: [magicWeapon],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      targetSpellcasting: wizardSpellcasting({
+        preparedSpells: [magicWeapon],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
     });
+    const otherCasterProcedureRef = requireCharacterSpellProcedureRefForTest(
+      session,
+      spellTargetId,
+      spellSlotInvocationRef(
+        magicWeaponUnitId,
+        2,
+        "weaponAttackDamageEnhancement",
+      ),
+    );
     const alreadyMagicalSession = battleRuntimeSessionForTest({
       ...session,
       state: battleStateWithAllocatedEffectForTest({
@@ -1475,9 +1494,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
         ownerId: spellTargetId,
         effect: {
           kind: "weaponAttackDamageEnhancement",
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            "other-magic-weapon-caster",
-          ),
+          sourceProcedureRef: otherCasterProcedureRef,
           sourceCombatantId: spellTargetId,
           holderCombatantId: spellCasterId,
           weaponItemId: battleObjectId("main:weapon_longsword"),

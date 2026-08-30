@@ -2534,7 +2534,8 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: "Fireball requires caller-supplied object ignition area facts.",
+      message:
+        "object-igniting spherical burst requires caller-supplied object ignition area facts.",
     });
   });
   test("shatter is admitted as point-origin Sphere save damage", () => {
@@ -2740,7 +2741,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Shatter requires caller-supplied nonmagical unattended object damage area facts.",
+        "object-affecting thunder burst requires caller-supplied nonmagical unattended object damage area facts.",
     });
   });
 });
