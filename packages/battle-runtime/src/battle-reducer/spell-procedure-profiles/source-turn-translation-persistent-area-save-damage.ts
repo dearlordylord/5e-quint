@@ -11,8 +11,7 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // Concentration duration, caller-supplied Sphere identity, Heavily Obscured
 // projection, Constitution Saving Throw-gated Poison damage, once-per-turn save
 // ledger, and strong-wind cleanup. The table owns spatial membership, cloud
-// movement geometry away from the caster, descending terrain behavior, and wind
-// predicate facts.
+// movement geometry away from the caster, and wind predicate facts.
 //
 // RAW anchors:
 //   - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Cloudkill":
