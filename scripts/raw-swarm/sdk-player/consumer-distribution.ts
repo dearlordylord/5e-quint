@@ -313,15 +313,17 @@ function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
   )}\n`;
 }
 
-type PackageEffectOwners = Parameters<
-  typeof validatedPackageEffectRuntimeEntries
->[0];
+const CONSUMER_DISTRIBUTION_EFFECT_RUNTIME_OWNERS = [
+  "surface",
+  "battle-runtime",
+] as const satisfies Parameters<typeof validatedPackageEffectRuntimeEntries>[0];
 
-export function buildPackageEffectRuntimeBundle(
-  packageOwners: PackageEffectOwners,
+export function buildConsumerDistributionBundle(
   options: Omit<BuildOptions, "alias" | "plugins">,
 ): BuildResult {
-  const runtimeEntries = validatedPackageEffectRuntimeEntries(packageOwners);
+  const runtimeEntries = validatedPackageEffectRuntimeEntries(
+    CONSUMER_DISTRIBUTION_EFFECT_RUNTIME_OWNERS,
+  );
   const substitutionDirectory = mkdtempSync(
     join(tmpdir(), "dnd-package-effect-runtime-bundle-"),
   );
@@ -408,7 +410,7 @@ export function buildConsumerDistribution(
     resolve(input.trustedDestination, "tooling/typescript"),
     { recursive: true, dereference: true },
   );
-  buildPackageEffectRuntimeBundle(["surface", "battle-runtime"], {
+  buildConsumerDistributionBundle({
     entryPoints: [
       resolve(repoRoot, CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS.supervisor),
     ],
@@ -420,7 +422,7 @@ export function buildConsumerDistribution(
     sourcemap: false,
     logLevel: "silent",
   });
-  buildPackageEffectRuntimeBundle(["surface", "battle-runtime"], {
+  buildConsumerDistributionBundle({
     entryPoints: [
       resolve(repoRoot, CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS.playerClient),
     ],
