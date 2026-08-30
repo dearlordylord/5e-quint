@@ -1695,6 +1695,8 @@ describe("Raw Swarm scenario catalogue", () => {
     } finally {
       rmSync(repositoryRoot, { recursive: true, force: true });
     }
+  });
+
   test("surfaces the #283 scenario as an explicit unsupported probe before play", () => {
     const catalogue = readRawSwarmCatalogue({
       repositoryRoot: repoRoot,
@@ -1709,7 +1711,7 @@ describe("Raw Swarm scenario catalogue", () => {
       throw new Error(JSON.stringify(catalogue.left));
     }
 
-    const scenario = findAdmittedScenarioInCatalogue({
+    const scenario = findAuthorableScenarioInCatalogue({
       catalogue: catalogue.right,
       scenarioId: decodeRight(
         decodeScenarioId("orc-fighter-rogue-close-interception"),

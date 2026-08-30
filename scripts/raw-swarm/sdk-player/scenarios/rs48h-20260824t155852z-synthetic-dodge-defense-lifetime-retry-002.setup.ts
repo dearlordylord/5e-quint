@@ -51,7 +51,9 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeletonResult)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeletonResult.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        skeletonResult.left,
+      ),
       observation: {
         operation: "battleCreatureInitFromStatBlock",
         combatant: "Skeleton",
@@ -70,7 +72,9 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(goblinResult)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblinResult.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        goblinResult.left,
+      ),
       observation: {
         operation: "battleCreatureInitFromStatBlock",
         combatant: "Goblin Warrior",
@@ -105,7 +109,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],

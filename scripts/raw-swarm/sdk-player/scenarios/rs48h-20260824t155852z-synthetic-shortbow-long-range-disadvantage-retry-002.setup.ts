@@ -52,7 +52,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeletonInit)) {
     return {
       kind: "obstructed",
-      obstruction: `The canonical Skeleton could not be initialized: ${sdk.battleStateInitIssueMessage(skeletonInit.left)}`,
+      obstruction: `The canonical Skeleton could not be initialized: ${sdk.authoredStatBlockBattleInitIssueMessage(skeletonInit.left)}`,
       observation: {
         stage: "stat-block-creature-init",
         combatant: "stat_block_skeleton",
@@ -72,7 +72,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(wolfInit)) {
     return {
       kind: "obstructed",
-      obstruction: `The canonical Wolf could not be initialized: ${sdk.battleStateInitIssueMessage(wolfInit.left)}`,
+      obstruction: `The canonical Wolf could not be initialized: ${sdk.authoredStatBlockBattleInitIssueMessage(wolfInit.left)}`,
       observation: {
         stage: "stat-block-creature-init",
         combatant: "stat_block_wolf",
@@ -108,7 +108,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],

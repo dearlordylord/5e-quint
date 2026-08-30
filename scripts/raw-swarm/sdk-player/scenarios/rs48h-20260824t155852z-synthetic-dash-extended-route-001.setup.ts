@@ -45,7 +45,9 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeletonInit)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeletonInit.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        skeletonInit.left,
+      ),
       observation: {
         scenarioId,
         blockedOperation: "battleCreatureInitFromStatBlock",
@@ -64,7 +66,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(wolfInit)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(wolfInit.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(wolfInit.left),
       observation: {
         scenarioId,
         blockedOperation: "battleCreatureInitFromStatBlock",
@@ -106,7 +108,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: { overhead: { kind: "open" }, barrierHeights: [] },
     initialRangedAttackEnemyRelationships: [],
     movementAllyRelationships: [],

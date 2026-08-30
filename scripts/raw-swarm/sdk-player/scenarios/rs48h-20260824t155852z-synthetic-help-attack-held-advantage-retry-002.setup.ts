@@ -57,7 +57,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(goblin)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblin.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(goblin.left),
       observation: { stage: "goblin-warrior-initialization" },
     };
   }
@@ -72,7 +72,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeleton)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeleton.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(skeleton.left),
       observation: { stage: "skeleton-initialization" },
     };
   }
@@ -87,7 +87,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(wolf)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(wolf.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(wolf.left),
       observation: { stage: "wolf-initialization" },
     };
   }
@@ -125,7 +125,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],
