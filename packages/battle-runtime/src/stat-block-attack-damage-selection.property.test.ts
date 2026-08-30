@@ -10,6 +10,7 @@ import {
   type StatBlockAttackDamageComponent,
 } from "./battle-action-options.ts";
 import {
+  parseSelectedStatBlockAttackDamage,
   selectedStatBlockAttackDamageHasCanonicalComponentRefs,
   selectedStatBlockAttackDamageOptions,
   supportedStatBlockAttackDamage,
@@ -198,6 +199,88 @@ describe("Stat Block per-component damage selection properties", () => {
             kind: "conditional_bonus_damage",
             when: { kind: "attack_roll_had_advantage" },
             damageType: "poison",
+            amount: { kind: "fixed", static: 3 },
+          },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects selected damage whose component roles are not canonical", () => {
+    expect(
+      parseSelectedStatBlockAttackDamage({
+        baseComponents: [
+          {
+            kind: "fixed",
+            componentRef: statBlockAdvantageBonusDamageComponentRef,
+            amount: 3,
+            damageType: "slashing",
+          },
+        ],
+      }),
+    ).toEqual(Either.left({ kind: "nonCanonicalStatBlockAttackDamageRoles" }));
+  });
+
+  it("omits a projected damage component with no admitted notation", () => {
+    expect(
+      selectedStatBlockAttackDamageOptions({
+        baseComponents: [
+          {
+            componentRef: statBlockBaseDamageComponentRef(
+              statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
+            ),
+            damageType: "slashing",
+            expr: { dice: 0, dieSize: 6 },
+          },
+        ],
+      }),
+    ).toEqual([]);
+  });
+
+  it("rejects multiple Advantage bonus damage effects", () => {
+    expect(
+      supportedStatBlockAttackDamage({
+        onHit: [
+          {
+            kind: "damage",
+            damageType: "slashing",
+            amount: { kind: "fixed", static: 5 },
+          },
+          {
+            kind: "conditional_bonus_damage",
+            when: { kind: "attack_roll_had_advantage" },
+            damageType: "slashing",
+            amount: { kind: "fixed", static: 2 },
+          },
+          {
+            kind: "conditional_bonus_damage",
+            when: { kind: "attack_roll_had_advantage" },
+            damageType: "slashing",
+            amount: { kind: "fixed", static: 3 },
+          },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects an Advantage bonus between base damage components", () => {
+    expect(
+      supportedStatBlockAttackDamage({
+        onHit: [
+          {
+            kind: "damage",
+            damageType: "slashing",
+            amount: { kind: "fixed", static: 5 },
+          },
+          {
+            kind: "conditional_bonus_damage",
+            when: { kind: "attack_roll_had_advantage" },
+            damageType: "slashing",
+            amount: { kind: "fixed", static: 2 },
+          },
+          {
+            kind: "damage",
+            damageType: "slashing",
             amount: { kind: "fixed", static: 3 },
           },
         ],

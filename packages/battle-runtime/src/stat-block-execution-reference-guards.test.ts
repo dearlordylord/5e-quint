@@ -88,6 +88,12 @@ describe("Stat Block execution stale references", () => {
       }),
     ).toBe(false);
     expect(
+      statBlockMultiattackResourcesAvailable(currentExecution, binding, {
+        kind: "oneListedDispatch",
+        procedureRefs: [staleDispatchProcedureRef],
+      }),
+    ).toBe(false);
+    expect(
       spendStatBlockMultiattackActivationResources(currentExecution, binding),
     ).toStrictEqual(currentExecution);
   });

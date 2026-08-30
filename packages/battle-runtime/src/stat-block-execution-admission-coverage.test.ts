@@ -19,6 +19,11 @@ import { admitStatBlockResourceGraph } from "./stat-block-execution-state.ts";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { Schema } from "effect";
 import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
+import type {
+  StatBlockProcedureEntry,
+  StatBlockRecord,
+} from "@dnd/surface/surface/types";
+import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
 
 type RuntimeSource = ReturnType<typeof projectedStatBlockRuntimeSource>;
 type RuntimeProcedure = RuntimeSource["procedures"][number];
@@ -139,7 +144,14 @@ describe("Stat Block execution admission branch coverage", () => {
 
     const admitted = admitStatBlockResourceGraph({
       ...source,
-      resources: [firstResource, firstResource, secondResource, secondResource],
+      resources: [
+        firstResource,
+        firstResource,
+        firstResource,
+        secondResource,
+        secondResource,
+        secondResource,
+      ],
       procedures: [
         {
           ...firstProcedure,
@@ -219,5 +231,78 @@ describe("Stat Block execution admission branch coverage", () => {
     );
 
     expect(multiattackBindings(execution)).toEqual([]);
+  });
+
+  test("omits a Multiattack with an unknown later dispatch ordinal", () => {
+    const source = projectedStatBlockRuntimeSource(
+      monsterMultiattackStatBlock(),
+    );
+    const multiattack = multiattackProcedure(source);
+    const [firstDispatch, secondDispatch] = multiattack.dispatches;
+    if (firstDispatch === undefined || secondDispatch === undefined) {
+      throw new Error("Expected both synthetic Multiattack dispatches.");
+    }
+
+    const execution = executionFor(
+      withMultiattackDispatches(
+        source,
+        dispatches(firstDispatch, {
+          ...secondDispatch,
+          procedureOrdinal: authoredProcedureOrdinal(999),
+        }),
+      ),
+      "unknown-later-multiattack-ordinal",
+    );
+
+    expect(multiattackBindings(execution)).toEqual([]);
+  });
+
+  test("preserves absent optional spellcasting metadata through execution admission", () => {
+    const base = monsterResourceStatBlock();
+    const actions = base.statBlock.actions;
+    if (actions === undefined) {
+      throw new Error("Expected the resource-backed Stat Block actions.");
+    }
+    const spellcasting = syntheticSpellcastingProcedureEntry();
+    if (spellcasting.procedure.kind !== "spellcasting") {
+      throw new Error("Expected the synthetic Spellcasting procedure.");
+    }
+    const spellcastingWithoutOptionalMetadata = {
+      kind: "executable",
+      procedureOrdinal: spellcasting.procedureOrdinal,
+      procedure: {
+        kind: "spellcasting",
+        name: spellcasting.procedure.name,
+        ability: spellcasting.procedure.ability,
+        groups: spellcasting.procedure.groups,
+      },
+      resourceRefs: { kind: "none" },
+    } as const satisfies StatBlockProcedureEntry;
+    const record = {
+      ...base,
+      statBlock: {
+        ...base.statBlock,
+        actions: [...actions, spellcastingWithoutOptionalMetadata],
+      },
+    } satisfies StatBlockRecord;
+
+    const execution = executionFor(
+      projectedStatBlockRuntimeSource(record),
+      "spellcasting-without-optional-metadata",
+    );
+    const binding = execution.procedureBindings.find(
+      (candidate) => candidate.procedure.kind === "spellcasting",
+    );
+    if (binding?.procedure.kind !== "spellcasting") {
+      throw new Error("Expected the admitted Spellcasting binding.");
+    }
+
+    expect(binding.procedure).toMatchObject({
+      kind: "spellcasting",
+      ability: "int",
+    });
+    expect("spellSaveDc" in binding.procedure).toBe(false);
+    expect("spellAttackBonus" in binding.procedure).toBe(false);
+    expect("components" in binding.procedure).toBe(false);
   });
 });
