@@ -69,6 +69,10 @@ export type ScenarioSpatialRelationAnswer = Readonly<{
   readonly traversal: BoundaryOpenness;
 }>;
 
+export type ScenarioPhysicalReachabilityAnswer = Readonly<{
+  readonly kind: "physicalReachability";
+}>;
+
 type ScenarioSpatialDecisionQuestionCore =
   | Readonly<{
       readonly kind: "relation";
@@ -229,7 +233,7 @@ type ScenarioAreaControlShakeAwakeTargetSpatialDecisionInput = Readonly<{
     ScenarioSpatialDecisionQuestionCore,
     { readonly kind: "areaControlShakeAwakeTarget" }
   >;
-  readonly answer: ScenarioSpatialRelationAnswer;
+  readonly answer: ScenarioPhysicalReachabilityAnswer;
 }>;
 type ScenarioHelpAttackTargetSpatialDecisionInput = Readonly<{
   readonly decisionId: string;
@@ -322,7 +326,7 @@ type ScenarioAreaControlShakeAwakeTargetSpatialDecision = Readonly<{
     ScenarioSpatialDecisionQuestionCore,
     { readonly kind: "areaControlShakeAwakeTarget" }
   >;
-  readonly answer: ScenarioSpatialRelationAnswer;
+  readonly answer: ScenarioPhysicalReachabilityAnswer;
 }>;
 type ScenarioHelpAttackTargetSpatialDecision = Readonly<{
   readonly decisionId: ScenarioSpatialDecisionId;
@@ -1481,6 +1485,23 @@ function parseSpatialDecisionInput(
       answer: answer.success,
     });
   }
+  if (question.success.kind === "areaControlShakeAwakeTarget") {
+    if (
+      !isRecord(input.answer) ||
+      !hasOnlyKeys(input.answer, ["kind"]) ||
+      input.answer.kind !== "physicalReachability"
+    ) {
+      return malformedDecision(
+        input,
+        "An area-control shake-awake decision requires a physicalReachability answer with no geometry fields.",
+      );
+    }
+    return Result.succeed({
+      decisionId: input.decisionId,
+      question: question.success,
+      answer: { kind: "physicalReachability" },
+    });
+  }
   const answer = parseRelationAnswer(input.answer, input);
   if (Result.isFailure(answer)) return Result.fail(answer.failure);
   return Result.succeed({
@@ -1496,7 +1517,8 @@ function makeNonMovementSpatialDecisionInput(
   decisionId: string,
   question: Exclude<
     ScenarioSpatialDecisionQuestionCore,
-    { readonly kind: "movementRoute" }
+    | { readonly kind: "movementRoute" }
+    | { readonly kind: "areaControlShakeAwakeTarget" }
   >,
   answer: ScenarioSpatialRelationAnswer,
 ): ScenarioNonMovementSpatialDecisionInput {
@@ -1536,11 +1558,6 @@ function makeNonMovementSpatialDecisionInput(
       question,
       answer,
     })),
-    Match.when({ kind: "areaControlShakeAwakeTarget" }, (question) => ({
-      decisionId,
-      question,
-      answer,
-    })),
     Match.when({ kind: "helpAttackTarget" }, (question) => ({
       decisionId,
       question,
@@ -1561,7 +1578,24 @@ function validateSpatialDecisionInput(
       "A Table-authored spatial decision requires a non-empty decision id.",
     );
   }
+  if (input.question.kind === "areaControlShakeAwakeTarget") {
+    return "kind" in input.answer &&
+      input.answer.kind === "physicalReachability"
+      ? undefined
+      : spatialDecisionIssue(
+          "invalid-spatial-decision",
+          decisionId,
+          "An area-control shake-awake decision requires physical reachability for its exact actor/target pair.",
+        );
+  }
   if ("kind" in input.answer) {
+    if (input.answer.kind !== "movementRoute") {
+      return spatialDecisionIssue(
+        "invalid-spatial-decision",
+        decisionId,
+        "A physical-reachability answer requires an area-control shake-awake question.",
+      );
+    }
     const question = input.question;
     if (question.kind !== "movementRoute") {
       return spatialDecisionIssue(

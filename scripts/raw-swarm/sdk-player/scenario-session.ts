@@ -37,7 +37,6 @@ import {
   HELP_ATTACK_TARGET_ADJACENCY_FEET,
   HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_ADJACENCY_FEET,
   RANGED_ATTACK_ENEMY_PROXIMITY_FEET,
-  SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_ADJACENCY_FEET,
   SHOVE_TARGET_REACH_FEET,
   battleTablePositionId,
   battleRuntimeSessionFollows,
@@ -473,6 +472,7 @@ export function projectGeometryTargetHoles(input: {
     }
     const choices = hole.choices.filter((targetId) => {
       const question = targetQuestionForSubject(targetId);
+      if (question.kind === "areaControlShakeAwakeTarget") return false;
       const relation = scenarioRelationForSpatialQuestion(
         input.session,
         question,
@@ -1498,7 +1498,11 @@ export function scenarioRelation(input: {
 
 type ScenarioRelationSpatialQuestion = Exclude<
   ScenarioSpatialDecisionQuestion,
-  Extract<ScenarioSpatialDecisionQuestion, { readonly kind: "movementRoute" }>
+  Extract<
+    ScenarioSpatialDecisionQuestion,
+    | { readonly kind: "movementRoute" }
+    | { readonly kind: "areaControlShakeAwakeTarget" }
+  >
 >;
 
 function scenarioSpatialQuestionEndpoints(
@@ -1534,10 +1538,6 @@ function scenarioSpatialQuestionEndpoints(
     })),
     Match.when(
       { kind: "stagedConditionShakeAwakeTarget" },
-      ({ actorId, targetId }) => ({ sourceId: actorId, targetId }),
-    ),
-    Match.when(
-      { kind: "areaControlShakeAwakeTarget" },
       ({ actorId, targetId }) => ({ sourceId: actorId, targetId }),
     ),
     Match.when({ kind: "helpAttackTarget" }, ({ helperId, targetEnemyId }) => ({
@@ -1870,7 +1870,10 @@ export function planScenarioMovement(input: {
   }
   if (tableDecision.tag === "found") {
     const decision = tableDecision.decision;
-    if (!("kind" in decision.decision.answer)) {
+    if (
+      !("kind" in decision.decision.answer) ||
+      decision.decision.answer.kind !== "movementRoute"
+    ) {
       return Result.fail({
         tag: "scenario-movement-rejected",
         message:
@@ -2430,6 +2433,11 @@ export type ScenarioTableSpatialFactQuestion = Extract<
   | { readonly kind: "helpAttackTarget" }
 >;
 
+type ScenarioDistanceBoundTableSpatialFactQuestion = Exclude<
+  ScenarioTableSpatialFactQuestion,
+  { readonly kind: "areaControlShakeAwakeTarget" }
+>;
+
 type ScenarioTableSpatialFactQuestionForSubject = Extract<
   ScenarioTableSpatialFactQuestion,
   | { readonly kind: "grappleTarget" }
@@ -2439,7 +2447,7 @@ type ScenarioTableSpatialFactQuestionForSubject = Extract<
 >;
 
 export function scenarioTableSpatialFactDistanceLimitFeet(
-  question: ScenarioTableSpatialFactQuestion,
+  question: ScenarioDistanceBoundTableSpatialFactQuestion,
 ): MovementFeet {
   return Match.value(question).pipe(
     Match.when({ kind: "grappleTarget" }, () => GRAPPLE_TARGET_REACH_FEET),
@@ -2447,10 +2455,6 @@ export function scenarioTableSpatialFactDistanceLimitFeet(
     Match.when(
       { kind: "stagedConditionShakeAwakeTarget" },
       () => HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_ADJACENCY_FEET,
-    ),
-    Match.when(
-      { kind: "areaControlShakeAwakeTarget" },
-      () => SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_ADJACENCY_FEET,
     ),
     Match.when(
       { kind: "helpAttackTarget" },
@@ -2461,7 +2465,7 @@ export function scenarioTableSpatialFactDistanceLimitFeet(
 }
 
 export function scenarioTableSpatialFactDistanceWithinLimit(
-  question: ScenarioTableSpatialFactQuestion,
+  question: ScenarioDistanceBoundTableSpatialFactQuestion,
   distanceFeet: MovementFeet | DistanceFeet,
 ): boolean {
   return (
@@ -2471,7 +2475,7 @@ export function scenarioTableSpatialFactDistanceWithinLimit(
 }
 
 function scenarioTableSpatialFactForQuestion(
-  question: ScenarioTableSpatialFactQuestion,
+  question: ScenarioDistanceBoundTableSpatialFactQuestion,
 ): BattleTargetSpatialFact {
   return Match.value(question).pipe(
     Match.when({ kind: "grappleTarget" }, ({ grapplerId, targetId }) => ({
@@ -2492,14 +2496,6 @@ function scenarioTableSpatialFactForQuestion(
         targetId,
       }),
     ),
-    Match.when(
-      { kind: "areaControlShakeAwakeTarget" },
-      ({ actorId, targetId }) => ({
-        kind: "areaControlShakeAwakeActorWithin5Feet" as const,
-        actorId,
-        targetId,
-      }),
-    ),
     Match.when({ kind: "helpAttackTarget" }, ({ helperId, targetEnemyId }) => ({
       kind: "helpAttackTargetWithin5Feet" as const,
       helperId,
@@ -2507,6 +2503,45 @@ function scenarioTableSpatialFactForQuestion(
     })),
     Match.exhaustive,
   );
+}
+
+export function scenarioAreaControlShakeAwakePhysicalReachabilityFact(
+  session: ScenarioSession,
+  question: Extract<
+    ScenarioTableSpatialFactQuestion,
+    { readonly kind: "areaControlShakeAwakeTarget" }
+  >,
+): Result.Result<
+  Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "areaControlShakeAwakePhysicalReachability" }
+  >,
+  ScenarioTableSpatialFactProjectionIssue
+> {
+  if (session.battlefield.spatial.kind !== "tableAuthored") {
+    return Result.fail({
+      tag: "table-spatial-fact-projection",
+      message:
+        "Area-control shake-awake physical reachability requires an exact Table-authored actor/target decision; geometry distance is not a rules criterion.",
+    });
+  }
+  const decision = scenarioSpatialDecision(session, question);
+  if (decision.tag !== "found") {
+    return Result.fail({
+      tag: "table-spatial-fact-projection",
+      message:
+        decision.tag === "stale"
+          ? `Table-authored area-control physical reachability decision ${String(decision.decision.decision.decisionId)} is stale for the current ScenarioSession spatial lineage.`
+          : decision.tag === "lineageConflict"
+            ? `Table-authored area-control physical reachability decision ${String(decision.decision.decision.decisionId)} belongs to a different ScenarioSession/BattleRuntime lineage.`
+            : "Area-control shake-awake physical reachability requires an exact Table-authored actor/target decision.",
+    });
+  }
+  return Result.succeed({
+    kind: "areaControlShakeAwakePhysicalReachability",
+    actorId: question.actorId,
+    targetId: question.targetId,
+  });
 }
 
 type ScenarioTableSpatialFactQuestionFactory = (
@@ -2655,34 +2690,45 @@ export function scenarioTableSpatialFactFills(input: {
       projectedFills.push(fill);
       continue;
     }
-    const relation = scenarioRelationForSpatialQuestion(
-      input.session,
-      targetQuestion,
-    );
-    if (relation.tag !== "relation") {
-      return Result.fail({
-        tag: "table-spatial-fact-projection",
-        message: relation.message,
-      });
-    }
-    if (
-      !scenarioTableSpatialFactDistanceWithinLimit(
-        targetQuestion,
-        relation.relation.distanceFeet,
-      )
-    ) {
-      return Result.fail({
-        tag: "table-spatial-fact-projection",
-        message: `The ${targetQuestion.kind} spatial witness is outside the supported ${scenarioTableSpatialFactDistanceLimitFeet(targetQuestion)}-foot reach/adjacency boundary.`,
-      });
-    }
-    const fact = scenarioTableSpatialFactForQuestion(targetQuestion);
+    const fact =
+      targetQuestion.kind === "areaControlShakeAwakeTarget"
+        ? scenarioAreaControlShakeAwakePhysicalReachabilityFact(
+            input.session,
+            targetQuestion,
+          )
+        : (() => {
+            const relation = scenarioRelationForSpatialQuestion(
+              input.session,
+              targetQuestion,
+            );
+            if (relation.tag !== "relation") {
+              return Result.fail({
+                tag: "table-spatial-fact-projection" as const,
+                message: relation.message,
+              });
+            }
+            if (
+              !scenarioTableSpatialFactDistanceWithinLimit(
+                targetQuestion,
+                relation.relation.distanceFeet,
+              )
+            ) {
+              return Result.fail({
+                tag: "table-spatial-fact-projection" as const,
+                message: `The ${targetQuestion.kind} spatial witness is outside the supported ${scenarioTableSpatialFactDistanceLimitFeet(targetQuestion)}-foot reach/adjacency boundary.`,
+              });
+            }
+            return Result.succeed(
+              scenarioTableSpatialFactForQuestion(targetQuestion),
+            );
+          })();
+    if (Result.isFailure(fact)) return Result.fail(fact.failure);
     const canonicalKinds: ReadonlySet<BattleTargetSpatialFact["kind"]> =
       new Set([
         "grappleTargetWithinReach",
         "shoveTargetWithinReach",
         "stagedConditionShakeAwakeActorWithin5Feet",
-        "areaControlShakeAwakeActorWithin5Feet",
+        "areaControlShakeAwakePhysicalReachability",
         "helpAttackTargetWithin5Feet",
       ]);
     projectedFills.push({
@@ -2691,7 +2737,7 @@ export function scenarioTableSpatialFactFills(input: {
         ...(fill.spatialFacts ?? []).filter(
           (candidate) => !canonicalKinds.has(candidate.kind),
         ),
-        fact,
+        fact.success,
       ],
     });
   }

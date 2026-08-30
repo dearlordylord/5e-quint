@@ -87,7 +87,10 @@ function nonMovementDecision(kind: string): unknown {
   return {
     decisionId: `normalize-${kind}`,
     question: questionByKind[kind],
-    answer: relationAnswer,
+    answer:
+      kind === "areaControlShakeAwakeTarget"
+        ? { kind: "physicalReachability" }
+        : relationAnswer,
   };
 }
 
@@ -135,6 +138,28 @@ describe("table-authored spatial decision normalization", () => {
         question: { kind },
       },
     });
+  });
+
+  test("rejects geometry fields on physical-reachability decisions", () => {
+    for (const answer of [
+      relationAnswer,
+      { kind: "physicalReachability", distanceFeet: 5 },
+    ]) {
+      const decision = nonMovementDecision("areaControlShakeAwakeTarget") as {
+        readonly decisionId: string;
+        readonly question: unknown;
+      };
+      expect(
+        tableAuthoredSpatialDecision({ ...decision, answer }),
+      ).toMatchObject({
+        _tag: "Failure",
+        failure: {
+          message: expect.stringContaining(
+            "physicalReachability answer with no geometry fields",
+          ),
+        },
+      });
+    }
   });
 
   test("normalizes the movement-route member and its table state", () => {

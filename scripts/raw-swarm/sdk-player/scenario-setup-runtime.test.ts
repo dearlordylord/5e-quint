@@ -75,6 +75,7 @@ import {
   scenarioBattleSubject,
   scenarioCreatureSpellTargetFills,
   scenarioTableSpatialFactFills,
+  scenarioAreaControlShakeAwakePhysicalReachabilityFact,
   scenarioTableSpatialFactDistanceWithinLimit,
   scenarioRangedAttackEnemyWithinProximity,
   scenarioAttackTargetFills,
@@ -145,18 +146,6 @@ const spatialFactBoundaryCases: readonly {
           kind: "stagedConditionShakeAwakeTarget",
           actorId: combatantId("boundary-waker"),
           targetId: combatantId("boundary-sleeping"),
-        },
-        distanceFeet,
-      ),
-  },
-  {
-    name: "Area-control wake",
-    accepts: (distanceFeet) =>
-      scenarioTableSpatialFactDistanceWithinLimit(
-        {
-          kind: "areaControlShakeAwakeTarget",
-          actorId: combatantId("boundary-waker"),
-          targetId: combatantId("boundary-hypnotized"),
         },
         distanceFeet,
       ),
@@ -246,6 +235,17 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(Result.isSuccess(helpDecision)).toBe(true);
     if (Result.isFailure(helpDecision)) return;
+    const areaControlReachabilityDecision = tableAuthoredSpatialDecision({
+      decisionId: "wolf-can-physically-shake-goblin",
+      question: {
+        kind: "areaControlShakeAwakeTarget",
+        actorId: helperId,
+        targetId: enemyId,
+      },
+      answer: { kind: "physicalReachability" },
+    });
+    expect(Result.isSuccess(areaControlReachabilityDecision)).toBe(true);
+    if (Result.isFailure(areaControlReachabilityDecision)) return;
 
     const battlefield = setup.session.battlefield;
     const sessionForSpatialSource = (
@@ -274,6 +274,7 @@ describe("scenario setup public-SDK boundary", () => {
           ({ decision }) => decision,
         ),
         helpDecision.success,
+        areaControlReachabilityDecision.success,
       ],
     });
     const geometrySession = sessionForSpatialSource({
@@ -295,6 +296,48 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(tableSession).toBeDefined();
     expect(geometrySession).toBeDefined();
+    if (tableSession !== undefined) {
+      expect(
+        scenarioAreaControlShakeAwakePhysicalReachabilityFact(tableSession, {
+          kind: "areaControlShakeAwakeTarget",
+          actorId: helperId,
+          targetId: enemyId,
+        }),
+      ).toMatchObject({
+        _tag: "Success",
+        success: {
+          kind: "areaControlShakeAwakePhysicalReachability",
+          actorId: helperId,
+          targetId: enemyId,
+        },
+      });
+      expect(
+        scenarioAreaControlShakeAwakePhysicalReachabilityFact(tableSession, {
+          kind: "areaControlShakeAwakeTarget",
+          actorId: helperId,
+          targetId: allyId,
+        }),
+      ).toMatchObject({
+        _tag: "Failure",
+        failure: { message: expect.stringContaining("Table-authored") },
+      });
+    }
+    if (geometrySession !== undefined) {
+      expect(
+        scenarioAreaControlShakeAwakePhysicalReachabilityFact(geometrySession, {
+          kind: "areaControlShakeAwakeTarget",
+          actorId: helperId,
+          targetId: enemyId,
+        }),
+      ).toMatchObject({
+        _tag: "Failure",
+        failure: {
+          message: expect.stringContaining(
+            "geometry distance is not a rules criterion",
+          ),
+        },
+      });
+    }
 
     for (const session of [geometrySession, tableSession]) {
       if (session === undefined) continue;

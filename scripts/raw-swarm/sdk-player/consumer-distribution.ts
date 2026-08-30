@@ -88,7 +88,7 @@ const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
 /** The emitted declaration graph is compilation support, not an unbounded SDK. */
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE = {
   files: 511,
-  bytes: 4_074_177,
+  bytes: 4_074_692,
 } as const;
 /**
  * Effect 4's reviewed declaration graph uses every admitted file and leaves a
