@@ -299,6 +299,7 @@ function findingsProjection(
   const initialSession = {
     battle: {
       state: {
+        battleId: "battle:synthetic-complete-path",
         initiative: { round: 1, stillToAct: [{ creature: "actor" }] },
         subjectResolutionPhase: { kind: "subjectSelection" },
         combatants: {
@@ -363,10 +364,10 @@ function findingsProjection(
     "setup.json",
     `${JSON.stringify(setupObservation)}\n`,
   );
-  const returnedCall = (seq: 1 | 2) => ({
+  const returnedCall = (seq: 1 | 2 | 3, continuation: 1 | 2) => ({
     type: "sdk-call" as const,
     seq,
-    continuation: seq,
+    continuation,
     operation: "discoverBattleActs" as const,
     inputSession: initialSession,
     inputSessionSha256: initialSessionSha256,
@@ -377,17 +378,21 @@ function findingsProjection(
     result: [],
     resultSha256: sha256Canonical([]),
   });
-  const returnedCalls = [returnedCall(1), returnedCall(2)] as const;
+  const returnedCalls = [returnedCall(1, 1), returnedCall(2, 2)] as const;
   const calls = firstCallThrows
     ? [
+        returnedCall(1, 1),
         {
           type: "sdk-call" as const,
-          seq: 1,
+          seq: 2,
           continuation: 1,
-          operation: "discoverBattleActs" as const,
+          operation: "resolveBattleRuntimeSubject" as const,
           inputSession: initialSession,
           inputSessionSha256: initialSessionSha256,
-          input: {},
+          input: {
+            subject: { tag: "action", actorId: "actor", action: "attack" },
+            fills: [],
+          },
           outcome: "threw" as const,
           rejection: "operationFailure" as const,
           error: {
@@ -396,7 +401,7 @@ function findingsProjection(
               "Synthetic first-call failure recovered on continuation two.",
           },
         },
-        returnedCalls[1],
+        returnedCall(3, 2),
       ]
     : returnedCalls;
   const initialProjection = playerInitialTurnProjection({
@@ -908,7 +913,10 @@ function measurement(
   );
   const findings = findingsProjection(
     root,
-    [finding("accepted-call-verdict", 1), finding("successful-correction", 2)],
+    [
+      finding("accepted-call-verdict", 1),
+      finding("successful-correction", firstCallThrows ? 3 : 2),
+    ],
     retainedInvocations,
     executionGitSha,
     firstCallThrows,
@@ -2399,11 +2407,11 @@ describe("complete Raw Swarm path comparison", () => {
       identity: "equivalent-path",
       baseline: {
         outcome: { tag: "completed" },
-        sdkCallCount: { tag: "available", count: 2 },
+        sdkCallCount: { tag: "available", count: 3 },
       },
       candidate: {
         outcome: { tag: "completed" },
-        sdkCallCount: { tag: "available", count: 2 },
+        sdkCallCount: { tag: "available", count: 3 },
       },
     });
   });

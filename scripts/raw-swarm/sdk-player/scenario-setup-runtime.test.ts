@@ -24,8 +24,9 @@ import {
   readyTriggerDescription,
   resolveBattleRuntimeSubject,
   resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
-  statBlockAttackDamageSelectionUsesOnlyComponentNotation,
   type BattleRuntimeResolutionResult,
+  type StatBlockAttackDamageSelection,
+  type StatBlockDamageComponentNotation,
 } from "../../../packages/battle-runtime/src/index.ts";
 import {
   battleRuntimeContextFromCharacterAdmission,
@@ -103,6 +104,13 @@ function requireBattleHoles(
     throw new Error("Expected a Battle Hole frontier.");
   }
   return result.envelope.frontier.holes;
+}
+
+function selectionUsesOnlyNotation(
+  selection: StatBlockAttackDamageSelection,
+  notation: StatBlockDamageComponentNotation,
+): boolean {
+  return selection.every((component) => component.notation === notation);
 }
 
 const spatialFactBoundaryCases: readonly {
@@ -454,20 +462,19 @@ describe("scenario setup public-SDK boundary", () => {
       repoRoot,
       "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001.setup.ts",
     );
-    const writeCatalogVariant = (filename: string, lookup: string): string => {
+    const writeCatalogVariant = (
+      filename: string,
+      includes: string,
+    ): string => {
       const setupPath = resolve(directory, filename);
       writeFileSync(
         setupPath,
-        `import { Option } from "effect";
-import { setupScenario as watchfireSetup } from ${JSON.stringify(watchfireSetupPath)};
+        `import { setupScenario as watchfireSetup } from ${JSON.stringify(watchfireSetupPath)};
 
 export const setupScenario = (context) =>
   watchfireSetup({
     ...context,
-    statBlockCatalog: {
-      ...context.statBlockCatalog,
-      getStatBlock: (id) => ${lookup},
-    },
+    statBlocks: context.statBlocks.filter(({ id }) => ${includes}),
   });
 `,
       );
@@ -477,14 +484,12 @@ export const setupScenario = (context) =>
       const partial = await evaluateScenarioSetup(
         writeCatalogVariant(
           "partial.setup.ts",
-          `id === "stat_block_goblin_warrior"
-        ? context.statBlockCatalog.getStatBlock(id)
-        : Option.none()`,
+          `id === "stat_block_goblin_warrior"`,
         ),
         [],
       );
       const empty = await evaluateScenarioSetup(
-        writeCatalogVariant("empty.setup.ts", "Option.none()"),
+        writeCatalogVariant("empty.setup.ts", "false"),
         [],
       );
       const expectedPrefix = {
@@ -2382,7 +2387,7 @@ export const setupScenario = (context) =>
       expect(staticStatBlockThreats).not.toEqual([]);
       expect(
         staticStatBlockThreats.every(({ selection }) =>
-          statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          selectionUsesOnlyNotation(
             selection.statBlockDamageSelection,
             "static",
           ),
@@ -2673,7 +2678,7 @@ export const setupScenario = (context) =>
       (response) =>
         response.kind === "attack" &&
         response.selection.attackAbility === undefined &&
-        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+        selectionUsesOnlyNotation(
           response.selection.statBlockDamageSelection,
           "static",
         ) &&
@@ -2683,7 +2688,7 @@ export const setupScenario = (context) =>
             candidate.selection.attackAbility === undefined &&
             candidate.selection.procedureRef ===
               response.selection.procedureRef &&
-            statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+            selectionUsesOnlyNotation(
               candidate.selection.statBlockDamageSelection,
               "rolled",
             ),
@@ -2703,7 +2708,7 @@ export const setupScenario = (context) =>
           response.selection.attackAbility === undefined &&
           response.selection.procedureRef ===
             rawStaticResponse?.selection.procedureRef &&
-          statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          selectionUsesOnlyNotation(
             response.selection.statBlockDamageSelection,
             "static",
           ),
@@ -2737,7 +2742,7 @@ export const setupScenario = (context) =>
         projectedReadyFill.value.response.selection.attackAbility === undefined
       ) {
         expect(
-          statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          selectionUsesOnlyNotation(
             projectedReadyFill.value.response.selection
               .statBlockDamageSelection,
             "rolled",
@@ -2774,17 +2779,14 @@ export const setupScenario = (context) =>
             subject.action === "attack" &&
             subject.procedureRef === attack.subject.procedureRef &&
             subject.attackAbility === undefined &&
-            statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+            selectionUsesOnlyNotation(
               subject.statBlockDamageSelection,
               "static",
             ),
         ),
       ).toBe(false);
       const rawStaticAttack = rawStatBlockAttacks.find((subject) =>
-        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
-          subject.statBlockDamageSelection,
-          "static",
-        ),
+        selectionUsesOnlyNotation(subject.statBlockDamageSelection, "static"),
       );
       expect(rawStaticAttack).toBeDefined();
       if (rawStaticAttack !== undefined) {
@@ -2796,7 +2798,7 @@ export const setupScenario = (context) =>
           projectedAttack.tag === "action" &&
             projectedAttack.action === "attack" &&
             projectedAttack.attackAbility === undefined &&
-            statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+            selectionUsesOnlyNotation(
               projectedAttack.statBlockDamageSelection,
               "rolled",
             ),
