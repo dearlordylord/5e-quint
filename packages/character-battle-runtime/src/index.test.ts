@@ -136,6 +136,10 @@ import {
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import {
+  decodeCreatureImmunityDeclarationSync,
+  decodeStatBlockRecordSync,
+} from "@dnd/surface/surface/schema";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Either, Match, Option } from "effect";
 import { describe, expect, test } from "vitest";
@@ -443,6 +447,34 @@ describe("Character Sheet battle handoff", () => {
         handoffReason: "battleInitializationUnavailable",
         initializationTag: "weaponLoadoutMismatch",
         slot: "off-hand",
+      },
+    ]);
+  });
+
+  test("preserves Stat Block resource graph facts through handoff issues", () => {
+    const statBlock = assertStatBlockForTest(
+      statBlockCatalog,
+      authoredStatBlockId("stat_block_chimera"),
+    );
+    const resource = statBlock.statBlock.resources?.[0];
+    if (resource === undefined) {
+      throw new Error("Expected the Chimera resource declaration fixture.");
+    }
+    const issues = [
+      { kind: "missingResourceDeclaration", ordinal: resource.ordinal },
+    ] as const;
+
+    expect(
+      characterSheetBattleHandoffIssuesFromStateInit({
+        tag: "statBlockResourceGraphIssue",
+        issues,
+      }),
+    ).toEqual([
+      {
+        tag: "characterSheetBattleHandoffIssue",
+        message: `Battle runtime requires Stat Block procedure resource reference ${String(resource.ordinal)} to match a declared resource.`,
+        handoffReason: "battleInitializationResourceGraph",
+        issues,
       },
     ]);
   });
@@ -1616,6 +1648,155 @@ describe("Character Sheet battle handoff", () => {
           index: 1,
           combatantId: sharedCombatantId,
           firstIndex: 0,
+        },
+      ],
+    });
+  });
+
+  test("preserves every authored Stat Block initialization failure in roster order", () => {
+    const baseStatBlock = assertStatBlockForTest(
+      statBlockCatalog,
+      authoredStatBlockId("stat_block_goblin_warrior"),
+    );
+    const projectionFailureStatBlock = decodeStatBlockRecordSync({
+      ...baseStatBlock,
+      statBlock: {
+        ...baseStatBlock.statBlock,
+        size: {
+          kind: "alternatives",
+          options: ["small", "medium"],
+        },
+      },
+    });
+    const resourceStatBlock = assertStatBlockForTest(
+      statBlockCatalog,
+      authoredStatBlockId("stat_block_chimera"),
+    );
+    const resource = resourceStatBlock.statBlock.resources?.[0];
+    if (resource === undefined) {
+      throw new Error("Expected the Chimera resource declaration fixture.");
+    }
+    const duplicateResourceStatBlock = {
+      ...baseStatBlock,
+      statBlock: {
+        ...baseStatBlock.statBlock,
+        resources: [resource, resource] as const,
+      },
+    };
+    const initialConditionImmuneStatBlock = {
+      ...baseStatBlock,
+      statBlock: {
+        ...baseStatBlock.statBlock,
+        immunities: decodeCreatureImmunityDeclarationSync({
+          conditions: ["prone"],
+        }),
+      },
+    };
+    const projectionCombatantId = combatantId(
+      "combatant:roster-stat-block-projection-failure",
+    );
+    const resourceCombatantId = combatantId(
+      "combatant:roster-stat-block-resource-graph",
+    );
+    const immunityCombatantId = combatantId(
+      "combatant:roster-stat-block-initial-condition",
+    );
+    const projectionFailure = {
+      tag: "battleStatBlockProjectionFailure" as const,
+      reason: "nonLiteralSize" as const,
+    };
+
+    expect(
+      characterBattleRuntimeIssueMessage({
+        tag: "statBlockProjectionFailure",
+        failure: projectionFailure,
+      }),
+    ).toBe(
+      "Stat Block authored projection failed: battle initialization requires a concrete Size.",
+    );
+
+    const composition = composeBattleRoster([
+      {
+        kind: "statBlock",
+        source: {
+          kind: "available",
+          input: {
+            combatantId: projectionCombatantId,
+            statBlock: projectionFailureStatBlock,
+            initiative: initiativeScore(12),
+            ammunitionStocks: testAmmunitionStocksForStatBlock(
+              projectionFailureStatBlock,
+            ),
+            conditions: [],
+          },
+        },
+      },
+      {
+        kind: "statBlock",
+        source: {
+          kind: "available",
+          input: {
+            combatantId: resourceCombatantId,
+            statBlock: duplicateResourceStatBlock,
+            initiative: initiativeScore(11),
+            ammunitionStocks: testAmmunitionStocksForStatBlock(
+              duplicateResourceStatBlock,
+            ),
+            conditions: [],
+          },
+        },
+      },
+      {
+        kind: "statBlock",
+        source: {
+          kind: "available",
+          input: {
+            combatantId: immunityCombatantId,
+            statBlock: initialConditionImmuneStatBlock,
+            initiative: initiativeScore(10),
+            ammunitionStocks: testAmmunitionStocksForStatBlock(
+              initialConditionImmuneStatBlock,
+            ),
+            conditions: ["prone"],
+          },
+        },
+      },
+    ]);
+
+    expect(composition).toEqual({
+      tag: "rejected",
+      admissions: [],
+      issues: [
+        {
+          kind: "statBlockProjection",
+          index: 0,
+          combatantId: projectionCombatantId,
+          issueTag: "statBlockProjectionFailure",
+          failure: projectionFailure,
+          message:
+            "Stat Block authored projection failed: battle initialization requires a concrete Size.",
+        },
+        {
+          kind: "statBlockProjection",
+          index: 1,
+          combatantId: resourceCombatantId,
+          issueTag: "statBlockResourceGraphIssue",
+          issues: [
+            {
+              kind: "duplicateResourceOrdinal",
+              ordinal: resource.ordinal,
+            },
+          ],
+          message: `Battle runtime requires Stat Block resource declaration ordinal ${String(resource.ordinal)} to be unique.`,
+        },
+        {
+          kind: "statBlockProjection",
+          index: 2,
+          combatantId: immunityCombatantId,
+          issueTag: "battleStateInitIssue",
+          reason: "initialConditionImmune",
+          condition: "prone",
+          message: "Stat Block combatant is immune to initial prone condition.",
         },
       ],
     });
