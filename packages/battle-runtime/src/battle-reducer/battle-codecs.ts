@@ -6584,10 +6584,16 @@ export const BattleInterruptProcedureChoiceWithSubjectSchema =
     ),
   );
 
-export const BattleInterruptProcedureChoiceSchema = Schema.Union(
-  BattleInterruptProcedureChoiceWithSubjectSchema,
-  BattleInterruptProcedureModifierChoiceSchema,
-);
+type BattleInterruptProcedureChoiceSchemaMembers = [
+  typeof BattleInterruptProcedureChoiceWithSubjectSchema,
+  typeof BattleInterruptProcedureModifierChoiceSchema,
+];
+
+export const BattleInterruptProcedureChoiceSchema: Schema.Union<BattleInterruptProcedureChoiceSchemaMembers> =
+  Schema.Union(
+    BattleInterruptProcedureChoiceWithSubjectSchema,
+    BattleInterruptProcedureModifierChoiceSchema,
+  );
 
 const BattleDimLightEmissionSchema = Schema.Struct({
   kind: Schema.Literal("dim"),
@@ -6797,8 +6803,6 @@ type EncodedRuntimeCommandBattleSubject = Extract<
   { readonly tag: "runtimeCommand" }
 >;
 type EncodedBattleHole = typeof BattleHolePayloadUnionSchema.Type;
-type EncodedBattleActDiscoveryCandidate =
-  typeof BattleActDiscoveryCandidateSchema.Type;
 type EncodedBattleInterruptProcedureChoice =
   typeof BattleInterruptProcedureChoiceSchema.Type;
 
@@ -7780,7 +7784,18 @@ const battleSnapshotInvariantAnnotations = {
     "Battle combatants and execution scopes must be unique and battle-owned.",
 };
 
-export const BattlePresentedSnapshotSchema = Schema.Struct({
+type BattlePresentedSnapshotShapeSchema = Schema.Struct<
+  typeof BattleSnapshotCommonFields &
+    typeof BattleSnapshotExcludedFields & {
+      combatants: Schema.Array$<typeof BattlePresentedCreatureSnapshotSchema>;
+    }
+>;
+
+export const BattlePresentedSnapshotSchema: Schema.Schema<
+  Schema.Schema.Type<BattlePresentedSnapshotShapeSchema>,
+  Schema.Schema.Encoded<BattlePresentedSnapshotShapeSchema>,
+  never
+> = Schema.Struct({
   ...BattleSnapshotCommonFields,
   ...BattleSnapshotExcludedFields,
   combatants: Schema.Array(BattlePresentedCreatureSnapshotSchema),
@@ -7793,7 +7808,18 @@ export const BattlePresentedSnapshotSchema = Schema.Struct({
   )
   .annotations({ identifier: "BattlePresentedSnapshot" });
 
-export const BattleSnapshotSchema = Schema.Struct({
+type BattleSnapshotShapeSchema = Schema.Struct<
+  typeof BattleSnapshotCommonFields &
+    typeof BattleSnapshotExcludedFields & {
+      combatants: Schema.Array$<typeof BattleCreatureSnapshotSchema>;
+    }
+>;
+
+export const BattleSnapshotSchema: Schema.Schema<
+  Schema.Schema.Type<BattleSnapshotShapeSchema>,
+  Schema.Schema.Encoded<BattleSnapshotShapeSchema>,
+  never
+> = Schema.Struct({
   ...BattleSnapshotCommonFields,
   ...BattleSnapshotExcludedFields,
   combatants: Schema.Array(BattleCreatureSnapshotSchema),
@@ -7820,13 +7846,24 @@ const BattleInterruptDecisionHoleSchema = Schema.Struct({
   eligibleResponders: Schema.Array(CombatantId),
 });
 
-export const BattleInterruptDecisionFrontierSchema = Schema.Struct({
-  kind: Schema.Literal("interruptDecision"),
-  trigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
-  decisionHole: BattleInterruptDecisionHoleSchema,
-  choices: Schema.NonEmptyArray(BattleInterruptProcedureChoiceSchema),
-  stackDepth: BattleReplayStackDepth,
-});
+type BattleInterruptDecisionFrontierSchemaFields = {
+  readonly kind: Schema.Literal<readonly ["interruptDecision"]>;
+  readonly trigger: Schema.Literal<typeof BATTLE_INTERRUPT_TRIGGERS>;
+  readonly decisionHole: typeof BattleInterruptDecisionHoleSchema;
+  readonly choices: Schema.NonEmptyArray<
+    typeof BattleInterruptProcedureChoiceSchema
+  >;
+  readonly stackDepth: typeof BattleReplayStackDepth;
+};
+
+export const BattleInterruptDecisionFrontierSchema: Schema.Struct<BattleInterruptDecisionFrontierSchemaFields> =
+  Schema.Struct({
+    kind: Schema.Literal("interruptDecision"),
+    trigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
+    decisionHole: BattleInterruptDecisionHoleSchema,
+    choices: Schema.NonEmptyArray(BattleInterruptProcedureChoiceSchema),
+    stackDepth: BattleReplayStackDepth,
+  });
 
 export const BattleCheckpointFrontierHolesSchema = Schema.Struct({
   kind: Schema.Literal("holes"),
@@ -7838,18 +7875,26 @@ export const BattleCheckpointFrontierHolesSchema = Schema.Struct({
   ),
 });
 
-type EncodedBattleCheckpointFrontier =
-  | {
-      readonly kind: "acts";
-      readonly acts: readonly EncodedBattleActDiscoveryCandidate[];
-    }
-  | Schema.Schema.Type<typeof BattleCheckpointFrontierHolesSchema>
-  | Schema.Schema.Type<typeof BattleInterruptDecisionFrontierSchema>;
+const BattleCheckpointFrontierActsSchema = Schema.Struct({
+  kind: Schema.Literal("acts"),
+  acts: Schema.Array(BattleActDiscoveryCandidateSchema),
+});
 
-type EncodedBattleCheckpointFrontierEnvelope = {
-  readonly checkpoint: Schema.Schema.Type<typeof BattleSnapshotSchema>;
-  readonly frontier: EncodedBattleCheckpointFrontier;
-};
+type BattleCheckpointFrontierShapeSchema = Schema.Union<
+  [
+    typeof BattleCheckpointFrontierActsSchema,
+    typeof BattleCheckpointFrontierHolesSchema,
+    typeof BattleInterruptDecisionFrontierSchema,
+  ]
+>;
+
+type BattleCheckpointFrontierEnvelopeShapeSchema = Schema.Struct<{
+  checkpoint: typeof BattleSnapshotSchema;
+  frontier: BattleCheckpointFrontierShapeSchema;
+}>;
+
+type EncodedBattleCheckpointFrontierEnvelope =
+  Schema.Schema.Type<BattleCheckpointFrontierEnvelopeShapeSchema>;
 
 function serializedInterruptChoiceSubject(
   choice: EncodedBattleInterruptProcedureChoice,
@@ -8084,13 +8129,14 @@ function battleCheckpointFrontierInvariantsHold(
   );
 }
 
-export const BattleCheckpointFrontierEnvelopeSchema = Schema.Struct({
+export const BattleCheckpointFrontierEnvelopeSchema: Schema.Schema<
+  Schema.Schema.Type<BattleCheckpointFrontierEnvelopeShapeSchema>,
+  Schema.Schema.Encoded<BattleCheckpointFrontierEnvelopeShapeSchema>,
+  never
+> = Schema.Struct({
   checkpoint: BattleSnapshotSchema,
   frontier: Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("acts"),
-      acts: Schema.Array(BattleActDiscoveryCandidateSchema),
-    }),
+    BattleCheckpointFrontierActsSchema,
     BattleCheckpointFrontierHolesSchema,
     BattleInterruptDecisionFrontierSchema,
   ),

@@ -121,12 +121,6 @@ export {
   type BattleStatBlockProjectionFailure,
 } from "./stat-block-authored-projection.ts";
 
-export {
-  admitCompleteStatBlockMechanics,
-  admitCompleteStatBlockMechanicsGraph,
-  type StatBlockMechanicsAdmissionInput,
-} from "./stat-block-mechanics-admission.ts";
-
 export type {
   CharacterZeroHpLifecycleInit,
   ZeroHpLifecycle,

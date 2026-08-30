@@ -171,15 +171,20 @@ describe("SDK player consumer distribution", () => {
 
   test("rejects a new named diagnostic in a pinned owner", () => {
     const exactDiagnostics = observedPinnedDeclarationDiagnostics(300, 14);
-    const namedDiagnostic = exactDiagnostics.find((diagnostic) =>
-      diagnostic.includes("StatBlockExecutionSnapshotSchema"),
-    );
-    if (namedDiagnostic === undefined) {
-      throw new Error("Expected pinned named declaration diagnostic.");
+    const pinnedOwner = PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE[0];
+    if (pinnedOwner === undefined) {
+      throw new Error("Expected nonempty declaration diagnostic baseline.");
     }
-    const newNamedDiagnostic = namedDiagnostic.replace(
-      "StatBlockExecutionSnapshotSchema",
-      "UnexpectedStatBlockExecutionSnapshotSchema",
+    const newNamedDiagnostic = declarationDiagnosticAtLocation(
+      {
+        owner: pinnedOwner.owner,
+        code: "TS4023",
+        message:
+          "Exported variable 'UnexpectedStatBlockExecutionSnapshotSchema' has or is using name 'UnexpectedPrivateType' from external module \"<repo>/packages/surface/src/surface/schema-spell\" but cannot be named.",
+        count: 1,
+      },
+      300,
+      14,
     );
     expect(
       publicDeclarationDiagnosticBaselineMismatches([

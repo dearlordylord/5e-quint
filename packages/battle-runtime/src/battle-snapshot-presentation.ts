@@ -38,36 +38,6 @@ import {
   BattlePresentedSnapshotSchema,
 } from "./battle-reducer/battle-codecs.ts";
 
-const BattleAvailableActSchema = Schema.Struct({
-  ...BattleActDiscoveryCandidateSchema.fields,
-  label: Schema.NonEmptyTrimmedString,
-  summary: Schema.NonEmptyTrimmedString,
-  presentation: BattleActPresentationSchema,
-});
-
-const BattlePresentedInterruptChoiceSchema = Schema.Union(
-  Schema.Struct({ choice: BattleInterruptProcedureModifierChoiceSchema }),
-  Schema.Struct({
-    choice: BattleInterruptProcedureChoiceWithSubjectSchema,
-    presentation: BattleActPresentationSchema,
-  }),
-);
-
-export const BattlePresentedCheckpointFrontierEnvelopeSchema = Schema.Struct({
-  checkpoint: BattlePresentedSnapshotSchema,
-  frontier: Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("acts"),
-      acts: Schema.Array(BattleAvailableActSchema),
-    }),
-    BattleCheckpointFrontierHolesSchema,
-    Schema.Struct({
-      ...BattleInterruptDecisionFrontierSchema.fields,
-      choices: Schema.NonEmptyArray(BattlePresentedInterruptChoiceSchema),
-    }),
-  ),
-}).annotations({ identifier: "BattlePresentedCheckpointFrontierEnvelope" });
-
 export type BattlePresentedInterruptChoice =
   | {
       readonly choice: Extract<
@@ -95,6 +65,126 @@ export type BattlePresentedCheckpointFrontierEnvelope = {
         readonly choices: ReadonlyNonEmptyArray<BattlePresentedInterruptChoice>;
       });
 };
+
+type EncodedBattleAvailableAct = Schema.Schema.Encoded<
+  typeof BattleActDiscoveryCandidateSchema
+> & {
+  readonly label: string;
+  readonly summary: string;
+  readonly presentation: Schema.Schema.Encoded<
+    typeof BattleActPresentationSchema
+  >;
+};
+
+type DecodedBattleAvailableAct = Schema.Schema.Type<
+  typeof BattleActDiscoveryCandidateSchema
+> & {
+  readonly label: Schema.Schema.Type<typeof Schema.NonEmptyTrimmedString>;
+  readonly summary: Schema.Schema.Type<typeof Schema.NonEmptyTrimmedString>;
+  readonly presentation: Schema.Schema.Type<typeof BattleActPresentationSchema>;
+};
+
+type EncodedBattlePresentedInterruptChoice =
+  | {
+      readonly choice: Schema.Schema.Encoded<
+        typeof BattleInterruptProcedureModifierChoiceSchema
+      >;
+    }
+  | {
+      readonly choice: Schema.Schema.Encoded<
+        typeof BattleInterruptProcedureChoiceWithSubjectSchema
+      >;
+      readonly presentation: Schema.Schema.Encoded<
+        typeof BattleActPresentationSchema
+      >;
+    };
+
+type DecodedBattlePresentedInterruptChoice =
+  | {
+      readonly choice: Schema.Schema.Type<
+        typeof BattleInterruptProcedureModifierChoiceSchema
+      >;
+    }
+  | {
+      readonly choice: Schema.Schema.Type<
+        typeof BattleInterruptProcedureChoiceWithSubjectSchema
+      >;
+      readonly presentation: Schema.Schema.Type<
+        typeof BattleActPresentationSchema
+      >;
+    };
+
+type EncodedBattlePresentedInterruptDecisionFrontier = Omit<
+  Schema.Schema.Encoded<typeof BattleInterruptDecisionFrontierSchema>,
+  "choices"
+> & {
+  readonly choices: ReadonlyNonEmptyArray<EncodedBattlePresentedInterruptChoice>;
+};
+
+type DecodedBattlePresentedInterruptDecisionFrontier = Omit<
+  Schema.Schema.Type<typeof BattleInterruptDecisionFrontierSchema>,
+  "choices"
+> & {
+  readonly choices: ReadonlyNonEmptyArray<DecodedBattlePresentedInterruptChoice>;
+};
+
+type DecodedBattlePresentedCheckpointFrontierEnvelope = {
+  readonly checkpoint: Schema.Schema.Type<typeof BattlePresentedSnapshotSchema>;
+  readonly frontier:
+    | {
+        readonly kind: "acts";
+        readonly acts: readonly DecodedBattleAvailableAct[];
+      }
+    | Schema.Schema.Type<typeof BattleCheckpointFrontierHolesSchema>
+    | DecodedBattlePresentedInterruptDecisionFrontier;
+};
+
+type EncodedBattlePresentedCheckpointFrontierEnvelope = {
+  readonly checkpoint: Schema.Schema.Encoded<
+    typeof BattlePresentedSnapshotSchema
+  >;
+  readonly frontier:
+    | {
+        readonly kind: "acts";
+        readonly acts: readonly EncodedBattleAvailableAct[];
+      }
+    | Schema.Schema.Encoded<typeof BattleCheckpointFrontierHolesSchema>
+    | EncodedBattlePresentedInterruptDecisionFrontier;
+};
+
+const BattleAvailableActSchema = Schema.Struct({
+  ...BattleActDiscoveryCandidateSchema.fields,
+  label: Schema.NonEmptyTrimmedString,
+  summary: Schema.NonEmptyTrimmedString,
+  presentation: BattleActPresentationSchema,
+});
+
+const BattlePresentedInterruptChoiceSchema = Schema.Union(
+  Schema.Struct({ choice: BattleInterruptProcedureModifierChoiceSchema }),
+  Schema.Struct({
+    choice: BattleInterruptProcedureChoiceWithSubjectSchema,
+    presentation: BattleActPresentationSchema,
+  }),
+);
+
+export const BattlePresentedCheckpointFrontierEnvelopeSchema: Schema.Schema<
+  DecodedBattlePresentedCheckpointFrontierEnvelope,
+  EncodedBattlePresentedCheckpointFrontierEnvelope,
+  never
+> = Schema.Struct({
+  checkpoint: BattlePresentedSnapshotSchema,
+  frontier: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("acts"),
+      acts: Schema.Array(BattleAvailableActSchema),
+    }),
+    BattleCheckpointFrontierHolesSchema,
+    Schema.Struct({
+      ...BattleInterruptDecisionFrontierSchema.fields,
+      choices: Schema.NonEmptyArray(BattlePresentedInterruptChoiceSchema),
+    }),
+  ),
+}).annotations({ identifier: "BattlePresentedCheckpointFrontierEnvelope" });
 
 export function battlePresentedSnapshot(
   session: BattleRuntimeSession,

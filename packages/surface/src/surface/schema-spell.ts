@@ -902,7 +902,7 @@ type ObjectContactDamageEffect = {
   };
 };
 
-type CurseOccurrenceEffect = {
+export type CurseOccurrenceEffect = {
   readonly kind: "curse_occurrence";
   readonly removal: {
     readonly kind: "all_curses_affecting_target_end";
@@ -7148,11 +7148,23 @@ export const SpellMechanicsSchema = Schema.Union(
   MinorMagicEffectMenuMechanicsSchema,
 );
 
-export const SpellRecordSchema = Schema.Struct({
-  id: surfaceIdentity(UnitId, "id"),
-  name: surfaceIdentity(Schema.String, "name"),
-  provenance: ProvenanceSchema,
-  kind: Schema.Literal("spell"),
-  mechanics: SpellMechanicsSchema,
-});
+const SpellRecordIdSchema = surfaceIdentity(UnitId, "id");
+const SpellRecordNameSchema = surfaceIdentity(Schema.String, "name");
+
+type SpellRecordSchemaFields = {
+  readonly id: typeof SpellRecordIdSchema;
+  readonly name: typeof SpellRecordNameSchema;
+  readonly provenance: typeof ProvenanceSchema;
+  readonly kind: Schema.Literal<readonly ["spell"]>;
+  readonly mechanics: typeof SpellMechanicsSchema;
+};
+
+export const SpellRecordSchema: Schema.Struct<SpellRecordSchemaFields> =
+  Schema.Struct({
+    id: SpellRecordIdSchema,
+    name: SpellRecordNameSchema,
+    provenance: ProvenanceSchema,
+    kind: Schema.Literal("spell"),
+    mechanics: SpellMechanicsSchema,
+  });
 // KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE

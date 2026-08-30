@@ -1,5 +1,6 @@
 import { Either, JSONSchema, ParseResult, Schema } from "effect";
 import { StatBlockId } from "@dnd/shared/game-facts";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import * as SchemaAST from "effect/SchemaAST";
 
 export {
@@ -781,30 +782,93 @@ export const PublishedSrdUnitRecordSchema = specializePublishedSrdRecordSchema(
   "PublishedSrdUnitRecord",
 );
 
-export const PublishedSrdStatBlockRecordSchema =
-  specializePublishedSrdRecordSchema(
-    StatBlockRecordSchema,
-    "PublishedSrdStatBlockRecord",
-  );
+export const PublishedSrdStatBlockRecordSchema: Schema.Schema<
+  PublishedSrdRecord<Schema.Schema.Type<typeof StatBlockRecordSchema>>,
+  PublishedSrdRecord<Schema.Schema.Encoded<typeof StatBlockRecordSchema>>,
+  never
+> = specializePublishedSrdRecordSchema(
+  StatBlockRecordSchema,
+  "PublishedSrdStatBlockRecord",
+);
 
 const nonEmptyPublicationArray = <S extends Schema.Schema.AnyNoContext>(
   item: S,
 ) => Schema.Tuple([item], item);
 
-const SrdUnitPublicationSchema = Schema.suspend(
-  () => SrdUnitRecordSchema,
-).annotations({ identifier: "SrdUnitPublication" });
-const SrdStatBlockPublicationSchema = Schema.suspend(
-  () => SrdStatBlockRecordSchema,
-).annotations({ identifier: "SrdStatBlockPublication" });
-const PublishedSrdUnitPublicationSchema = Schema.suspend(
-  () => PublishedSrdUnitRecordSchema,
-).annotations({ identifier: "PublishedSrdUnitPublication" });
-const PublishedSrdStatBlockPublicationSchema = Schema.suspend(
-  () => PublishedSrdStatBlockRecordSchema,
-).annotations({ identifier: "PublishedSrdStatBlockPublication" });
+const SrdUnitPublicationSchema: Schema.suspend<
+  Schema.Schema.Type<typeof SrdUnitRecordSchema>,
+  Schema.Schema.Encoded<typeof SrdUnitRecordSchema>,
+  never
+> = Schema.suspend(() => SrdUnitRecordSchema).annotations({
+  identifier: "SrdUnitPublication",
+});
+const SrdStatBlockPublicationSchema: Schema.suspend<
+  Schema.Schema.Type<typeof SrdStatBlockRecordSchema>,
+  Schema.Schema.Encoded<typeof SrdStatBlockRecordSchema>,
+  never
+> = Schema.suspend(() => SrdStatBlockRecordSchema).annotations({
+  identifier: "SrdStatBlockPublication",
+});
+const PublishedSrdUnitPublicationSchema: Schema.suspend<
+  Schema.Schema.Type<typeof PublishedSrdUnitRecordSchema>,
+  Schema.Schema.Encoded<typeof PublishedSrdUnitRecordSchema>,
+  never
+> = Schema.suspend(() => PublishedSrdUnitRecordSchema).annotations({
+  identifier: "PublishedSrdUnitPublication",
+});
+const PublishedSrdStatBlockPublicationSchema: Schema.suspend<
+  Schema.Schema.Type<typeof PublishedSrdStatBlockRecordSchema>,
+  Schema.Schema.Encoded<typeof PublishedSrdStatBlockRecordSchema>,
+  never
+> = Schema.suspend(() => PublishedSrdStatBlockRecordSchema).annotations({
+  identifier: "PublishedSrdStatBlockPublication",
+});
 
-export const SrdSurfaceSchema = Schema.Struct({
+export type SrdSurface = {
+  readonly kind: "srd-5.2.1-surface-catalog";
+  readonly units: ReadonlyNonEmptyArray<
+    Schema.Schema.Type<typeof SrdUnitPublicationSchema>
+  >;
+  readonly statBlocks: ReadonlyNonEmptyArray<
+    Schema.Schema.Type<typeof SrdStatBlockPublicationSchema>
+  >;
+};
+
+type SrdSurfaceEncoded = {
+  readonly kind: "srd-5.2.1-surface-catalog";
+  readonly units: ReadonlyNonEmptyArray<
+    Schema.Schema.Encoded<typeof SrdUnitPublicationSchema>
+  >;
+  readonly statBlocks: ReadonlyNonEmptyArray<
+    Schema.Schema.Encoded<typeof SrdStatBlockPublicationSchema>
+  >;
+};
+
+export type PublishedSrdSurface = {
+  readonly kind: "srd-5.2.1-surface-catalog";
+  readonly units: ReadonlyNonEmptyArray<
+    Schema.Schema.Type<typeof PublishedSrdUnitPublicationSchema>
+  >;
+  readonly statBlocks: ReadonlyNonEmptyArray<
+    Schema.Schema.Type<typeof PublishedSrdStatBlockPublicationSchema>
+  >;
+};
+
+type PublishedSrdSurfaceEncoded = {
+  readonly kind: "srd-5.2.1-surface-catalog";
+  readonly units: ReadonlyNonEmptyArray<
+    Schema.Schema.Encoded<typeof PublishedSrdUnitPublicationSchema>
+  >;
+  readonly statBlocks: ReadonlyNonEmptyArray<
+    Schema.Schema.Encoded<typeof PublishedSrdStatBlockPublicationSchema>
+  >;
+};
+
+export const SrdSurfaceSchema: Schema.Schema<
+  SrdSurface,
+  SrdSurfaceEncoded,
+  never
+> = Schema.Struct({
   kind: Schema.Literal("srd-5.2.1-surface-catalog"),
   units: nonEmptyPublicationArray(
     Schema.suspend(() => SrdUnitPublicationSchema),
@@ -814,7 +878,11 @@ export const SrdSurfaceSchema = Schema.Struct({
   ),
 });
 
-export const PublishedSrdSurfaceSchema = Schema.Struct({
+export const PublishedSrdSurfaceSchema: Schema.Schema<
+  PublishedSrdSurface,
+  PublishedSrdSurfaceEncoded,
+  never
+> = Schema.Struct({
   kind: Schema.Literal("srd-5.2.1-surface-catalog"),
   units: nonEmptyPublicationArray(
     Schema.suspend(() => PublishedSrdUnitPublicationSchema),
@@ -827,11 +895,6 @@ export const PublishedSrdSurfaceSchema = Schema.Struct({
 export const SrdSurfaceJsonSchema = JSONSchema.make(PublishedSrdSurfaceSchema, {
   target: "jsonSchema2020-12",
 });
-
-export type SrdSurface = Schema.Schema.Type<typeof SrdSurfaceSchema>;
-export type PublishedSrdSurface = Schema.Schema.Type<
-  typeof PublishedSrdSurfaceSchema
->;
 
 const STRICT_DECODE_OPTIONS = { onExcessProperty: "error" } as const;
 

@@ -86,7 +86,6 @@ function contextText(delivery: ContextDelivery): string {
 
 const DECLARATION_SERIALIZATION_LENGTH_MESSAGE =
   "The inferred type of this node exceeds the maximum length the compiler will serialize. An explicit type annotation is needed.";
-const DECLARATION_SERIALIZATION_EXTERNAL_NAME_SUFFIX = `has or is using name 'CurseOccurrenceEffect' from external module "<repo>/packages/surface/src/surface/schema-spell" but cannot be named.`;
 const DECLARATION_SERIALIZATION_LENGTH_BASELINE = [
   {
     owner: "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
@@ -100,83 +99,6 @@ const DECLARATION_SERIALIZATION_LENGTH_BASELINE = [
   { owner: "packages/surface/src/surface/schema-nonspell.ts", count: 52 },
   { owner: "packages/surface/src/surface/schema-spell.ts", count: 5 },
   { owner: "packages/surface/src/surface/schema.ts", count: 4 },
-] as const;
-const DECLARATION_SERIALIZATION_EXTERNAL_NAME_BASELINE = [
-  {
-    owner: "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
-    exportedVariables: [
-      "StatBlockExecutionSnapshotSchema",
-      "BattleUnitSupportSourceSchema",
-      "BattlePresentedSnapshotSchema",
-      "BattleSnapshotSchema",
-    ],
-  },
-  {
-    owner: "packages/surface/src/surface/schema-nonspell.ts",
-    exportedVariables: [
-      "PassiveOperationSchema",
-      "ActivatedAbilityMechanicsSchema",
-      "TriggeredReactionAbilityMechanicsSchema",
-      "MagicItemSpawnedCreatureMechanicsSchema",
-      "ClassFeatureActivationMechanicsSchema",
-      "ClassFeatureAcquisitionChoiceMechanicsSchema",
-      "ClassFeatureComponentMechanicsSchema",
-      "CompositeClassFeatureMechanicsSchema",
-      "PassiveMechanicsSchema",
-      "ClassFeatureMechanicsSchema",
-      "ClassGeneralFeatureMechanicsSchema",
-      "BardClassFeatureMechanicsSchema",
-      "ClericClassFeatureMechanicsSchema",
-      "DruidClassFeatureMechanicsSchema",
-      "WizardClassFeatureMechanicsSchema",
-      "BarbarianClassFeatureMechanicsSchema",
-      "FighterClassFeatureMechanicsSchema",
-      "MonkClassFeatureMechanicsSchema",
-      "PaladinClassFeatureMechanicsSchema",
-      "RangerClassFeatureMechanicsSchema",
-      "RogueClassFeatureMechanicsSchema",
-      "SorcererClassFeatureMechanicsSchema",
-      "WarlockClassFeatureMechanicsSchema",
-      "BardClassFeatureRecordSchema",
-      "WizardClassFeatureRecordSchema",
-      "BarbarianClassFeatureRecordSchema",
-      "FighterClassFeatureRecordSchema",
-      "ClericClassFeatureRecordSchema",
-      "DruidClassFeatureRecordSchema",
-      "MonkClassFeatureRecordSchema",
-      "PaladinClassFeatureRecordSchema",
-      "RangerClassFeatureRecordSchema",
-      "RogueClassFeatureRecordSchema",
-      "SorcererClassFeatureRecordSchema",
-      "WarlockClassFeatureRecordSchema",
-      "OtherClassFeatureRecordSchema",
-      "ClassFeatureRecordSchema",
-      "FeatMechanicsSchema",
-      "FeatRecordSchema",
-      "SpeciesTraitMechanicsSchema",
-      "SpeciesTraitRecordSchema",
-      "MagicItemComponentMechanicsSchema",
-      "CompositeMagicItemMechanicsSchema",
-      "MagicItemMechanicsSchema",
-      "MagicItemVariantSchema",
-      "MagicItemRecordSchema",
-      "MagicEquipmentTraitSchema",
-      "MagicEquipmentVariantSchema",
-      "ArmorTemplateRecordSchema",
-      "ShieldTemplateRecordSchema",
-      "WeaponTemplateRecordSchema",
-      "UnitRecordSchema",
-    ],
-  },
-  {
-    owner: "packages/surface/src/surface/schema.ts",
-    exportedVariables: [
-      "SrdUnitRecordSchema",
-      "PublishedSrdUnitRecordSchema",
-      "SrdSurfaceSchema",
-      "PublishedSrdSurfaceSchema",
-    ],
-  },
 ] as const;
 
 const PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_CODES = [
@@ -202,39 +124,17 @@ function declarationDiagnosticFingerprintFromParts(
 }
 
 export const PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE: readonly PublicDeclarationSerializationDiagnosticBaselineEntry[] =
-  [
-    ...DECLARATION_SERIALIZATION_LENGTH_BASELINE.map(
-      ({
-        owner,
-        count,
-      }): PublicDeclarationSerializationDiagnosticBaselineEntry => ({
-        owner,
-        code: "TS7056",
-        message: DECLARATION_SERIALIZATION_LENGTH_MESSAGE,
-        count,
-      }),
-    ),
-    ...DECLARATION_SERIALIZATION_EXTERNAL_NAME_BASELINE.flatMap(
-      ({ owner, exportedVariables }) =>
-        exportedVariables.map(
-          (
-            exportedVariable,
-          ): PublicDeclarationSerializationDiagnosticBaselineEntry => ({
-            owner,
-            code: "TS4023",
-            message: `Exported variable '${exportedVariable}' ${DECLARATION_SERIALIZATION_EXTERNAL_NAME_SUFFIX}`,
-            count: 1,
-          }),
-        ),
-    ),
-    {
-      owner:
-        "packages/battle-runtime/src/battle-reducer/ongoing-concentration-area-spell.ts",
-      code: "TS4058",
-      message: `Return type of exported function ${DECLARATION_SERIALIZATION_EXTERNAL_NAME_SUFFIX}`,
-      count: 1,
-    },
-  ];
+  DECLARATION_SERIALIZATION_LENGTH_BASELINE.map(
+    ({
+      owner,
+      count,
+    }): PublicDeclarationSerializationDiagnosticBaselineEntry => ({
+      owner,
+      code: "TS7056",
+      message: DECLARATION_SERIALIZATION_LENGTH_MESSAGE,
+      count,
+    }),
+  );
 
 function diagnosticCountMap(
   baseline: readonly PublicDeclarationSerializationDiagnosticBaselineEntry[],
