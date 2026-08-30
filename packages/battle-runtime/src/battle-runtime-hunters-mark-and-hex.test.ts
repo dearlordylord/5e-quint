@@ -866,7 +866,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           displayName: "Counterspell reactor",
           initiative: 10,
           spellcasting: wizardSpellcasting({
-            preparedSpells: [spellRecord("spellCastInterruptionReaction")],
+            preparedSpells: [spellRecord("counterspell")],
             spellSlots: [{ spellLevel: 3, count: 1 }],
           }),
         }),
@@ -899,7 +899,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
                 session,
                 skeletonId,
                 spellSlotInvocationRef(
-                  "spellCastInterruptionReaction",
+                  "counterspell",
                   3,
                   "spellCastInterruptionReaction",
                 ),

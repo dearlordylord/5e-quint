@@ -203,7 +203,7 @@ function quickenedCreatureSizeAct(input?: {
             proficiencyBonus: proficiencyBonus(2),
             canCastSpells: true,
             cantrips: [],
-            preparedSpells: [spellRecord("spellCastInterruptionReaction")],
+            preparedSpells: [spellRecord("counterspell")],
             featurePreparedSpells: [],
             spellAccesses: [],
             spellbookRitualSpellAccesses: [],
@@ -1817,7 +1817,7 @@ function spellCastInterruptionReactionTriggerFact(
       session,
       reactorId,
       spellSlotInvocationRef(
-        "spellCastInterruptionReaction",
+        "counterspell",
         3,
         "spellCastInterruptionReaction",
       ),
@@ -1868,7 +1868,7 @@ function requireCounterspellChoice(
       );
       return (
         invocation.tag === "spellSlot" &&
-        invocation.spellId === "spellCastInterruptionReaction" &&
+        invocation.spellId === "counterspell" &&
         invocation.procedure === "spellCastInterruptionReaction" &&
         Number(invocation.slotLevel) === 3
       );

@@ -1,6 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
 } from "./battle-runtime.test-support.ts";
@@ -20,18 +19,15 @@ import {
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { describe, expect, test } from "vitest";
 
-import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { openClassFeatureExtraAttackResource } from "./battle-reducer/attack-resolution.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
-import {
-  requireCharacterSpellProcedureRefForTest,
-  savingThrowOutcomeFill,
-} from "./battle-runtime.test-support.ts";
+import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import {
   extraAttackSupportProfile,
   fighterExtraAttackUnitId,
   hasteUnitId,
+  sleepUnitId,
   spellCasterId,
   spellTargetId,
   unitLibrary,
@@ -353,56 +349,68 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(hasHasteSpeedZero(target)).toBe(true);
   });
 
-  test("Sleep repeat-save Haste concentration loss breaks the target's own Concentration", () => {
+  test("a failed Sleep save breaks Haste and the Sleep caster's Concentration", () => {
     const spell = spellRecord(hasteUnitId);
+    const sleep = spellRecord(sleepUnitId);
     const base = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
+      targetPreparedSpells: [sleep],
     });
-    const state = stateWithSyntheticTargetConcentration(base.state);
     const act = spellAct({
-      session: battleRuntimeSessionForTest({ ...base, state }),
+      session: base,
       spellId: hasteUnitId,
       slotLevel: 3,
     });
     const resolved = resolveHaste({
-      state,
+      state: base.state,
       subject: act.subject,
       targetHole: requireHole(act.initialHoles, "targetChoice"),
     });
-    const stateWithRepeatSave = stateWithSleepPendingRepeatSave(
-      resolved.state,
-      spellCasterId,
-    );
-    const repeatSaveRequest = endTurn({
-      state: stateWithRepeatSave,
+    const targetTurn = endTurn({
+      state: resolved.state,
       actorId: spellCasterId,
     });
-    expect(repeatSaveRequest.tag).toBe("needsHoles");
-    if (repeatSaveRequest.tag !== "needsHoles") {
-      throw new Error("Expected Sleep repeat-save hole.");
-    }
-    const repeatSave = requireHole(
-      repeatSaveRequest.holes,
-      "savingThrowOutcome",
-    );
-
-    const ended = endTurn({
-      state: stateWithRepeatSave,
-      actorId: spellCasterId,
+    expect(targetTurn.tag).toBe("resolved");
+    if (targetTurn.tag !== "resolved") return;
+    const sleepSession = battleRuntimeSessionForTest({
+      ...base,
+      state: targetTurn.state,
+    });
+    const sleepAct = spellAct({
+      session: sleepSession,
+      spellId: sleepUnitId,
+      slotLevel: 1,
+    });
+    const sleepSave = requireHole(sleepAct.initialHoles, "savingThrowOutcome");
+    const ended = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: sleepAct.subject,
       fills: [
-        savingThrowOutcomeFill(repeatSave, [
-          { targetId: spellCasterId, succeeded: false },
-        ]),
+        {
+          kind: "savingThrowOutcome",
+          holeId: sleepSave.holeId,
+          value: {
+            area: {
+              originAnchorId: spellTargetId,
+              affectedTargetIds: [spellCasterId],
+            },
+            outcomes: [{ targetId: spellCasterId, succeeded: false }],
+          },
+        },
       ],
     });
+    if (ended.tag !== "resolved") {
+      throw new Error(
+        `Expected the failed Sleep save to resolve: ${ended.tag === "invalid" ? ended.message : ended.tag}`,
+      );
+    }
     expect(ended.tag).toBe("resolved");
-    if (ended.tag !== "resolved") return;
 
     const caster = requireCombatant(ended.state, spellCasterId);
     const target = requireCombatant(ended.state, spellTargetId);
     expect(caster.concentration).toBeNull();
-    expect(hasCondition(caster.conditions, "unconscious")).toBe(true);
+    expect(hasCondition(caster.conditions, "incapacitated")).toBe(false);
     expect(target.concentration).toBeNull();
     expect(hasSyntheticTargetConcentrationEffect(target)).toBe(false);
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
@@ -737,43 +745,6 @@ function hasSyntheticTargetConcentrationEffect(
       "sourceProcedureRef" in effect &&
       effect.sourceCombatantId === spellTargetId,
   );
-}
-
-function stateWithSleepPendingRepeatSave(
-  state: BattleState,
-  combatantId: CombatantId,
-): BattleState {
-  const combatant = requireCombatant(state, combatantId);
-  const sleepPendingEffect: BattleActiveEffect = {
-    kind: "stagedSaveConditionPendingRepeat",
-    effectRef: battleEffectExecutionRefForTest(
-      "synthetic-sleep-repeat-save-effect",
-    ),
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      "synthetic-sleep-repeat-save-fixture",
-    ),
-    sourceCombatantId: spellTargetId,
-    conditionHadNonSpellSource: false,
-    repeatAt: {
-      kind: "endOfTurn",
-      combatantId,
-      round: state.initiative.round,
-    },
-    expiresAt: {
-      kind: "concentration",
-      combatantId: spellTargetId,
-    },
-  };
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(
-      combatantId,
-      battleCreatureWithSpellActiveEffects(combatant, [
-        ...combatant.activeEffects,
-        sleepPendingEffect,
-      ]),
-    ),
-  };
 }
 
 function stateWithDirectIncapacitated(

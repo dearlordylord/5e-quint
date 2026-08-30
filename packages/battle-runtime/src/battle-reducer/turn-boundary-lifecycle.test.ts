@@ -1,10 +1,5 @@
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-  classLevel,
-  difficultyClass,
-  movementDeltaFeet,
-  movementFeet,
-} from "@dnd/shared/types";
+import { classLevel, movementDeltaFeet, movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
@@ -17,7 +12,6 @@ import {
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   fighterId,
   fighterVsGoblinBattle,
-  goblinTurnBattle,
   goblinId,
   KNOCKED_OUT_UNCONSCIOUS,
   savingThrowOutcomeFill,
@@ -33,6 +27,7 @@ import {
 import {
   acidArrowUnitId,
   orcRelentlessEnduranceUnitId,
+  sleepUnitId,
   spellCasterId,
   spellTargetId,
   unitLibrary,
@@ -430,62 +425,58 @@ describe("turn-boundary active-effect occurrence updates", () => {
   });
 
   test("resolves a reachable sleep repeat-save frontier at turn end", () => {
-    const state = goblinTurnBattle();
-    const fighter = state.combatants.get(fighterId);
-    const goblin = state.combatants.get(goblinId);
-    if (fighter === undefined || goblin === undefined) {
-      throw new Error("Expected the source and current goblin actor.");
-    }
-    const sourceProcedureRef = battleProcedureExecutionRefForTest(
-      "sleep-repeat-source",
-    );
-    const pendingSleepTemplate = {
-      kind: "stagedSaveConditionPendingRepeat" as const,
-      sourceProcedureRef,
-      sourceCombatantId: fighterId,
-      conditionHadNonSpellSource: false,
-      save: {
-        ability: "wis" as const,
-        dc: { kind: "fixed" as const, dc: difficultyClass(12) },
-      },
-      repeatAt: {
-        kind: "endOfTurn" as const,
-        combatantId: goblinId,
-        round: state.initiative.round,
-      },
-      expiresAt: {
-        kind: "concentration" as const,
-        combatantId: fighterId,
-      },
-    } as const;
-    const concentratingState: BattleState = {
-      ...state,
-      combatants: new Map(state.combatants).set(fighterId, {
-        ...fighter,
-        concentration: { sourceProcedureRef, effectKind: "spellEffect" },
-      }),
-    };
-    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
-      state: concentratingState,
-      occurrences: [
+    const spell = spellRecord(sleepUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: sleepUnitId,
+      slotLevel: 1,
+    });
+    const initialSaveHole = requireHole(act.initialHoles, "savingThrowOutcome");
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
         {
-          kind: "activeEffect",
-          ownerId: goblinId,
-          effect: pendingSleepTemplate,
+          kind: "savingThrowOutcome",
+          holeId: initialSaveHole.holeId,
+          value: {
+            area: {
+              originAnchorId: spellCasterId,
+              affectedTargetIds: [spellTargetId],
+            },
+            outcomes: [{ targetId: spellTargetId, succeeded: false }],
+          },
         },
       ],
     });
-    const pendingSleepOccurrence = allocated.occurrences[0];
-    if (
-      pendingSleepOccurrence?.kind !== "activeEffect" ||
-      pendingSleepOccurrence.effect.kind !== "stagedSaveConditionPendingRepeat"
-    ) {
-      throw new Error("Expected the allocated pending Sleep occurrence.");
+    if (cast.tag !== "resolved") {
+      throw new Error(
+        `Expected the admitted Sleep cast: ${cast.tag === "invalid" ? cast.message : cast.tag}`,
+      );
     }
-    const sleepingState = allocated.state;
+    expect(cast.tag).toBe("resolved");
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn.tag).toBe("resolved");
+    if (targetTurn.tag !== "resolved") return;
+    const sleepingState = targetTurn.state;
+    const pendingSleepOccurrence = sleepingState.combatants
+      .get(spellTargetId)
+      ?.activeEffects.find(
+        (effect) => effect.kind === "stagedSaveConditionPendingRepeat",
+      );
+    if (pendingSleepOccurrence === undefined) {
+      throw new Error("Expected the admitted pending Sleep occurrence.");
+    }
     const subject = {
       tag: "runtimeCommand" as const,
-      actorId: goblinId,
+      actorId: spellTargetId,
       command: "endTurn" as const,
     };
     const frontier = resolveEndTurnCommand({
@@ -496,7 +487,9 @@ describe("turn-boundary active-effect occurrence updates", () => {
     expect(frontier.tag).toBe("needsHoles");
     if (frontier.tag !== "needsHoles") return;
     const saveHole = frontier.holes.find(
-      (hole) => hole.kind === "savingThrowOutcome" && "sleepRepeatSave" in hole,
+      (hole) =>
+        hole.kind === "savingThrowOutcome" &&
+        "stagedConditionRepeatSave" in hole,
     );
     if (saveHole === undefined) {
       throw new Error("Expected the sleep repeat-save hole.");
@@ -506,29 +499,31 @@ describe("turn-boundary active-effect occurrence updates", () => {
       subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
-          { targetId: goblinId, succeeded: true },
+          { targetId: spellTargetId, succeeded: true },
         ]),
       ],
     });
     expect(succeeded.tag).toBe("resolved");
     if (succeeded.tag !== "resolved") return;
-    expect(succeeded.state.combatants.get(goblinId)?.activeEffects).toEqual([]);
+    expect(
+      succeeded.state.combatants.get(spellTargetId)?.activeEffects,
+    ).toEqual([]);
 
     const failed = resolveEndTurnCommand({
       state: sleepingState,
       subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
-          { targetId: goblinId, succeeded: false },
+          { targetId: spellTargetId, succeeded: false },
         ]),
       ],
     });
     expect(failed.tag).toBe("resolved");
     if (failed.tag !== "resolved") return;
-    expect(failed.state.combatants.get(goblinId)?.activeEffects).toEqual([
+    expect(failed.state.combatants.get(spellTargetId)?.activeEffects).toEqual([
       expect.objectContaining({
         kind: "stagedSaveConditionApplied",
-        effectRef: pendingSleepOccurrence.effect.effectRef,
+        effectRef: pendingSleepOccurrence.effectRef,
       }),
     ]);
   });
