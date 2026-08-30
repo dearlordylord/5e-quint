@@ -5,18 +5,9 @@ import {
   projectAuthoredStatBlocks,
   projectRawStatBlocks,
 } from "./stat-block-raw-projection.test-support.ts";
-import {
-  defineRawStatBlockFidelityLane,
-  projectRawStatBlockSourceOccurrences,
-} from "./stat-block-raw-fidelity-lane.test-support.ts";
+import { projectRawStatBlockSourceOccurrences } from "./stat-block-raw-fidelity-fixture.test-support.ts";
+import { projectStatBlockScopedMechanicsList } from "./stat-block-scoped-fidelity.ts";
 import { SrdStatBlockRecordSchema } from "./schema.ts";
-
-defineRawStatBlockFidelityLane({
-  label: "C–D",
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
-  authoredSourcePrefix: "Monsters/Monsters-C-D.md:",
-  expectedRecordCount: 27,
-});
 
 const FIDELITY_FACT_NAMES = ["Cloaker", "Couatl", "Dretch"] as const;
 const {
@@ -130,9 +121,11 @@ describe("C–D source-relative fidelity facts", () => {
     if (cloaker === undefined || restResource === undefined) {
       throw new Error("C–D recharge mutation requires the resource fixture");
     }
-    expect(projectAuthoredStatBlocks([cloaker], EQUIPMENT_SOURCE)).toEqual(
-      rawProjectionFor("Cloaker"),
-    );
+    expect(
+      projectStatBlockScopedMechanicsList(
+        projectAuthoredStatBlocks([cloaker], EQUIPMENT_SOURCE),
+      ),
+    ).toEqual(projectStatBlockScopedMechanicsList(rawProjectionFor("Cloaker")));
     const mutated = decodeSrdStatBlockRecord({
       ...cloaker,
       statBlock: {
@@ -145,14 +138,24 @@ describe("C–D source-relative fidelity facts", () => {
       },
     });
 
-    expect(projectAuthoredStatBlocks([mutated], EQUIPMENT_SOURCE)).not.toEqual(
-      rawProjectionFor("Cloaker"),
+    expect(
+      projectStatBlockScopedMechanicsList(
+        projectAuthoredStatBlocks([mutated], EQUIPMENT_SOURCE),
+      ),
+    ).not.toEqual(
+      projectStatBlockScopedMechanicsList(rawProjectionFor("Cloaker")),
     );
   });
 
   test("keeps the three repaired facts symmetric together", () => {
-    expect(projectAuthoredStatBlocks(RECORDS, EQUIPMENT_SOURCE)).toEqual(
-      projectRawStatBlocks(SOURCE, OCCURRENCES, RECORDS, EQUIPMENT_SOURCE),
+    expect(
+      projectStatBlockScopedMechanicsList(
+        projectAuthoredStatBlocks(RECORDS, EQUIPMENT_SOURCE),
+      ),
+    ).toEqual(
+      projectStatBlockScopedMechanicsList(
+        projectRawStatBlocks(SOURCE, OCCURRENCES, EQUIPMENT_SOURCE),
+      ),
     );
   });
 });

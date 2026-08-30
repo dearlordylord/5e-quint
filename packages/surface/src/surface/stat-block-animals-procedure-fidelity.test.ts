@@ -93,9 +93,7 @@ describe("Animals Stat Block procedure fidelity", () => {
       .slice(1401, 1426)
       .join("\n");
 
-    expect(giantWolfSpider.provenance.section).toBe(
-      "Animals.md:1402-1426",
-    );
+    expect(giantWolfSpider.provenance.section).toBe("Animals.md:1402-1426");
     expect(sourceSpan).toContain("## Giant Wolf Spider");
     expect(sourceSpan).toContain(
       "**Senses** Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 13",

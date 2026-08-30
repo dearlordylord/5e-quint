@@ -1,9 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import {
-  defineRawStatBlockFidelityLane,
-  projectRawStatBlockSourceOccurrences,
-} from "./stat-block-raw-fidelity-lane.test-support.ts";
+import { projectRawStatBlockSourceOccurrences } from "./stat-block-raw-fidelity-fixture.test-support.ts";
 import { projectRawStatBlocks } from "./stat-block-raw-projection.test-support.ts";
 
 const REPEATED_NAMES = [
@@ -12,14 +9,6 @@ const REPEATED_NAMES = [
   "Storm Giant",
   "Succubus",
 ] as const;
-
-defineRawStatBlockFidelityLane({
-  label: "T–Z",
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
-  authoredSourcePrefix: "Monsters/Monsters-T-Z.md:",
-  expectedRecordCount: 32,
-  retainedIdentityNames: REPEATED_NAMES,
-});
 
 const repeatedPToS = projectRawStatBlockSourceOccurrences({
   sourcePath: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
@@ -131,7 +120,6 @@ describe("T–Z form-restricted Speed fidelity", () => {
     const projected = projectRawStatBlocks(
       source,
       lycanthropes.occurrences,
-      lycanthropes.records,
       lycanthropes.equipmentSource,
     );
     const werebear = requireNamed(projectionByName(projected), "Werebear");

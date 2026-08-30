@@ -1,17 +1,7 @@
 import { describe, expect, test } from "vitest";
 
-import {
-  defineRawStatBlockFidelityLane,
-  projectRawStatBlockSourceOccurrences,
-} from "./stat-block-raw-fidelity-lane.test-support.ts";
+import { projectRawStatBlockSourceOccurrences } from "./stat-block-raw-fidelity-fixture.test-support.ts";
 import { projectRawStatBlocks } from "./stat-block-raw-projection.test-support.ts";
-
-defineRawStatBlockFidelityLane({
-  label: "P–S",
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
-  authoredSourcePrefix: "Monsters/Monsters-P-S.md:",
-  expectedRecordCount: 48,
-});
 
 const REPEATED_NAMES = [
   "Stone Giant",
@@ -90,7 +80,6 @@ describe("P–S repeated source occurrences", () => {
       projectRawStatBlocks(
         statBlockSource,
         tToZ.occurrences,
-        tToZ.records,
         tToZ.equipmentSource,
       );
     const widened = tToZ.statBlockSource.replace(

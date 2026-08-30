@@ -35,6 +35,7 @@ function cleanParityReport(
       identities: [],
       issues: [],
     },
+    installedRecords: [],
     issues: [],
     ...overrides,
   };

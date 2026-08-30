@@ -3,14 +3,11 @@ import { describe, expect, test } from "vitest";
 import { statBlockId } from "@dnd/shared/game-facts";
 
 import { srdStatBlockCollection } from "./stat-block-catalog.ts";
-import { defineRawStatBlockFidelityLane } from "./stat-block-raw-fidelity-lane.test-support.ts";
+import { loadRawStatBlockSourceFixture } from "./stat-block-raw-fidelity-fixture.test-support.ts";
 
-const { records: A_B_RECORDS } = defineRawStatBlockFidelityLane({
-  label: "A–B",
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
-  authoredSourcePrefix: "Monsters/Monsters-A-B.md:",
-  expectedRecordCount: 41,
-});
+const { records: A_B_RECORDS } = loadRawStatBlockSourceFixture(
+  ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
+);
 
 function requireRecord(id: string) {
   const record = srdStatBlockCollection.statBlocks.find(

@@ -17,6 +17,12 @@ import {
   SURFACE_PUBLICATION_MEMBERS,
   SURFACE_SCHEMA_BOUND_MEASURES,
 } from "../packages/surface/src/surface/publication-artifacts.ts";
+import {
+  projectSrdStatBlockPeerObservation,
+  type SurfacePublicationKnownRecordKind,
+  type SurfacePublicationPeerObservation,
+  type SurfacePublicationRecordKind,
+} from "../packages/surface/src/surface/surface-publication-peer-observation.ts";
 import dhallJsonToolchain from "../packages/surface/dhall-json-toolchain.json" with { type: "json" };
 import {
   buildSrdSurfacePublication,
@@ -29,12 +35,6 @@ import {
   readSrdStatBlockParity,
   type SrdStatBlockParityReport,
 } from "./srd521-stat-block-parity.ts";
-import {
-  projectSrdStatBlockPeerObservation,
-  type SurfacePublicationPeerObservation,
-  type SurfacePublicationKnownRecordKind,
-  type SurfacePublicationRecordKind,
-} from "./surface-publication-peer-observations.ts";
 import { discoverCanonicalSurfaceContentPeers } from "./surface-content-peer-discovery.ts";
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
 

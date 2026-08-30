@@ -4,12 +4,10 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
-import {
-  discoverSrdStatBlocks,
-  type SrdStatBlockSourceOccurrence,
-} from "../../../../scripts/srd521-stat-block-parity.ts";
+import { discoverSrdStatBlocks } from "../../../../scripts/srd521-stat-block-parity.ts";
 
 import { srdStatBlockCollection } from "./stat-block-catalog.ts";
+import type { SrdStatBlockSourceOccurrence } from "./stat-block-parity-observation.ts";
 
 const PACK_TACTICS_EFFECT = {
   kind: "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target",

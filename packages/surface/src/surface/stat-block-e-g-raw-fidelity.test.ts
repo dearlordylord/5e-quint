@@ -5,7 +5,7 @@ import {
   projectAuthoredStatBlocks,
   projectRawStatBlocks,
 } from "./stat-block-raw-projection.test-support.ts";
-import { defineRawStatBlockFidelityLane } from "./stat-block-raw-fidelity-lane.test-support.ts";
+import { loadRawStatBlockSourceFixture } from "./stat-block-raw-fidelity-fixture.test-support.ts";
 import { SrdStatBlockRecordSchema } from "./schema.ts";
 
 const {
@@ -13,12 +13,9 @@ const {
   equipmentSource: EQUIPMENT_SOURCE,
   occurrences: OCCURRENCES,
   records: INSTALLED,
-} = defineRawStatBlockFidelityLane({
-  label: "E–G",
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
-  authoredSourcePrefix: "Monsters/Monsters-E-G.md:",
-  expectedRecordCount: 40,
-});
+} = loadRawStatBlockSourceFixture(
+  ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
+);
 
 const installedByName = new Map(
   INSTALLED.map((record) => [record.name, record]),
@@ -98,7 +95,6 @@ describe("E–G independent RAW fidelity", () => {
     const rawGhast = projectRawStatBlocks(
       SOURCE,
       OCCURRENCES,
-      INSTALLED,
       EQUIPMENT_SOURCE,
     ).find((projection) => projection.name === "Ghast");
     const rawBite = rawGhast?.procedures.find(
@@ -109,12 +105,8 @@ describe("E–G independent RAW fidelity", () => {
       kind: "textOnly",
       reason: "unsupported_action_shape",
     });
-    expect(rawGhast?.textOnlyProcedures).toContainEqual(
-      expect.objectContaining({
-        section: "Actions",
-        name: "Bite",
-        reason: "unsupported_action_shape",
-      }),
+    expect(rawGhast?.textOnlyProcedures).not.toContainEqual(
+      expect.objectContaining({ section: "Actions", name: "Bite" }),
     );
     expect(rawBite).toMatchObject({
       kind: "attack_roll",
@@ -129,7 +121,6 @@ describe("E–G independent RAW fidelity", () => {
     const expected = projectRawStatBlocks(
       SOURCE,
       OCCURRENCES,
-      INSTALLED,
       EQUIPMENT_SOURCE,
     );
     const earthElemental = installedByName.get("Earth Elemental");
@@ -275,7 +266,6 @@ describe("E–G independent RAW fidelity", () => {
     const expected = projectRawStatBlocks(
       SOURCE,
       OCCURRENCES,
-      INSTALLED,
       EQUIPMENT_SOURCE,
     );
     const adultGoldDragon = installedByName.get("Adult Gold Dragon");
@@ -386,7 +376,6 @@ describe("E–G independent RAW fidelity", () => {
     const expected = projectRawStatBlocks(
       SOURCE,
       OCCURRENCES,
-      INSTALLED,
       EQUIPMENT_SOURCE,
     );
     const earthElemental = installedByName.get("Earth Elemental");

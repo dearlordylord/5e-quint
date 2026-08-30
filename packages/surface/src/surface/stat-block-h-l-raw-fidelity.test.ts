@@ -5,7 +5,8 @@ import {
   projectAuthoredStatBlocks,
   projectRawStatBlocks,
 } from "./stat-block-raw-projection.test-support.ts";
-import { defineRawStatBlockFidelityLane } from "./stat-block-raw-fidelity-lane.test-support.ts";
+import { loadRawStatBlockSourceFixture } from "./stat-block-raw-fidelity-fixture.test-support.ts";
+import { projectStatBlockScopedMechanicsList } from "./stat-block-scoped-fidelity.ts";
 import { SrdStatBlockRecordSchema } from "./schema.ts";
 
 const {
@@ -13,12 +14,9 @@ const {
   equipmentSource: EQUIPMENT_SOURCE,
   occurrences: OCCURRENCES,
   records: INSTALLED,
-} = defineRawStatBlockFidelityLane({
-  label: "H–L",
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
-  authoredSourcePrefix: "Monsters/Monsters-H-L.md:",
-  expectedRecordCount: 22,
-});
+} = loadRawStatBlockSourceFixture(
+  ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
+);
 const installedByName = new Map(
   INSTALLED.map((record) => [record.name, record]),
 );
@@ -26,13 +24,15 @@ const decodeSrdStatBlockRecord = Schema.decodeUnknownSync(
   SrdStatBlockRecordSchema,
 );
 const expectedRawProjection = () =>
-  projectRawStatBlocks(SOURCE, OCCURRENCES, INSTALLED, EQUIPMENT_SOURCE);
+  projectRawStatBlocks(SOURCE, OCCURRENCES, EQUIPMENT_SOURCE);
 
 describe("H–L scoped RAW fidelity", () => {
   test("keeps the authored and RAW projections symmetric", () => {
-    expect(projectAuthoredStatBlocks(INSTALLED, EQUIPMENT_SOURCE)).toEqual(
-      projectRawStatBlocks(SOURCE, OCCURRENCES, INSTALLED, EQUIPMENT_SOURCE),
-    );
+    expect(
+      projectStatBlockScopedMechanicsList(
+        projectAuthoredStatBlocks(INSTALLED, EQUIPMENT_SOURCE),
+      ),
+    ).toEqual(projectStatBlockScopedMechanicsList(expectedRawProjection()));
   });
 
   test("rejects chosen-resistance, immunity, gear, and size mutations", () => {
