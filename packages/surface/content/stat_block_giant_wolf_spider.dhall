@@ -54,7 +54,10 @@ in  { challengeRating = 0.25
         , { ability = "wis", modifier = +1 }
         , { ability = "cha", modifier = -3 }
         ]
-      , senses = [ { kind = "blindsight", rangeFeet = 10 } ]
+      , senses =
+        [ { kind = "blindsight", rangeFeet = 10 }
+        , { kind = "darkvision", rangeFeet = 60 }
+        ]
       , size = "medium"
       , skillModifiers =
         [ { modifier = +3, skill = "perception" }
