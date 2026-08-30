@@ -18,6 +18,7 @@ import {
   Hp,
   NonNegativeInteger,
   Round,
+  spellSlotLevel,
 } from "@dnd/shared/types";
 import {
   battleProcedureExecutionCursor,
@@ -68,11 +69,20 @@ import {
   type BattleState,
   type OngoingFeatureSourceKey,
 } from "./index.ts";
-import type { UnitFeatureProcedureExecution } from "./character-execution-admission.ts";
+import {
+  spellProcedureExecution,
+  type UnitFeatureProcedureExecution,
+} from "./character-execution-admission.ts";
 import {
   battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest,
   type LowLevelEffectOccurrenceTemplate,
 } from "./low-level-effect-occurrence.test-support.ts";
+import { supportedPreparedStagedSaveConditionProfile } from "./battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts";
+import {
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
+import { sleepUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 
 type TurnBoundaryLifecycleScenario =
   | "init"
@@ -388,7 +398,8 @@ describe("turn-boundary effect lifecycle MBT", () => {
     expect(
       awaitingBoundary.holes.some(
         (hole) =>
-          hole.kind === "savingThrowOutcome" && "sleepRepeatSave" in hole,
+          hole.kind === "savingThrowOutcome" &&
+          "stagedConditionRepeatSave" in hole,
       ),
     ).toBe(true);
     expect(
@@ -923,6 +934,27 @@ function battleWithTurnBoundaryEffectsAndConditionSave(): BattleState {
   }).state;
 }
 
+function requireExactlyOneSleepStagedSaveConditionInvocation(): ReturnType<
+  typeof supportedPreparedStagedSaveConditionProfile
+>[number] {
+  const invocations = supportedPreparedStagedSaveConditionProfile(
+    spellAdmissionSource(spellRecord(sleepUnitId)),
+    [
+      {
+        spellLevel: spellSlotLevel(1),
+        payment: { tag: "slot" },
+      },
+    ],
+  );
+  const invocation = invocations[0];
+  if (invocations.length !== 1 || invocation === undefined) {
+    throw new Error(
+      `Expected exactly one Sleep staged-save procedure profile, got ${invocations.length}.`,
+    );
+  }
+  return invocation;
+}
+
 function battleWithTurnBoundaryEffectsAndSleepRepeatSave(): BattleState {
   const battle = battleWithTurnBoundaryEffects();
   const allocated = battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
@@ -932,6 +964,10 @@ function battleWithTurnBoundaryEffectsAndSleepRepeatSave(): BattleState {
     effect: stagedSaveConditionPendingRepeatEffect(),
   });
   const goblin = requireCombatant(allocated.state, goblinId);
+  if (goblin.origin.kind !== "character") {
+    throw new Error("Expected the Sleep repeat-save source to be a character.");
+  }
+  const sleepInvocation = requireExactlyOneSleepStagedSaveConditionInvocation();
   return {
     ...allocated.state,
     combatants: new Map(allocated.state.combatants).set(goblinId, {
@@ -939,6 +975,24 @@ function battleWithTurnBoundaryEffectsAndSleepRepeatSave(): BattleState {
       concentration: {
         sourceProcedureRef: allocated.sourceProcedureRef,
         effectKind: "spellEffect",
+      },
+      origin: {
+        ...goblin.origin,
+        execution: {
+          ...goblin.origin.execution,
+          procedureBindings: goblin.origin.execution.procedureBindings.map(
+            (binding) =>
+              binding.procedureRef === allocated.sourceProcedureRef
+                ? {
+                    procedureRef: binding.procedureRef,
+                    procedure: {
+                      kind: "spellInvocation",
+                      execution: spellProcedureExecution(sleepInvocation),
+                    },
+                  }
+                : binding,
+          ),
+        },
       },
     }),
   };

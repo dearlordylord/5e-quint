@@ -614,20 +614,16 @@ function createSleepRepeatSaveRouteDriver() {
         ]);
       },
       doEndCasterTurnAfterConcentrationBreak: () => {
-        state = routeState("casterTurnEndedAfterConcentrationBreak", [
-          ...state.route,
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            "battleTurnBoundary",
-          ),
-        ]);
+        state = routeState(
+          "casterTurnEndedAfterConcentrationBreak",
+          state.route,
+        );
       },
       doEndTargetTurnAfterConcentrationBreak: () => {
-        state = routeState("targetTurnEndedAfterConcentrationBreak", [
-          ...state.route,
-          hitPointBudgetConditionRepeatSaveResolveWithoutFill(
-            "battleTurnBoundary",
-          ),
-        ]);
+        state = routeState(
+          "targetTurnEndedAfterConcentrationBreak",
+          state.route,
+        );
       },
       doDiscoverRepeatSave: () => {
         state = routeState("repeatSaveFrontier", [
@@ -712,7 +708,7 @@ function createTurnBoundaryRouteDriver() {
       doResolveTargetStartTurn: () => {
         state = routeState("targetStartTurnResolved", [
           ...state.route,
-          turnBoundaryDiscover(routeHoles("rolledDice", "savingThrowOutcome")),
+          turnBoundaryDiscover(routeHoles("rolledDice")),
           turnBoundaryResolve(
             "rolledDice",
             routeHoles("savingThrowOutcome"),
