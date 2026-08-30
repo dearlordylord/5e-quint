@@ -29,7 +29,7 @@ import {
   activeEffectArmorClass,
   combatantCanTakeReactions,
 } from "./battle-reducer/creature-state.ts";
-import { SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/domain-constants.ts";
+import { SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/domain-constants.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
 import {
@@ -620,7 +620,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       expect.objectContaining({
         actorId: spellTargetId,
         sourceProcedureRef: act.subject.procedureRef,
-        failurePercent: SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
+        failurePercent: SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
         activeEffectSources: [
           {
             sourceProcedureRef: slowEffect?.sourceProcedureRef,

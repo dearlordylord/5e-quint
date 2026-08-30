@@ -2987,16 +2987,17 @@ export function resolveSelectedAttackProcedure<
       spatialFacts: fillSet.targetSpatialFacts,
       relationshipDecisions: relationshipCheck.decisions,
     });
-    const fixedDamageWithSlowState = applyWeaponMasterySlowAfterDamage({
-      state: fixedDamageAppliedState,
-      attackerId,
-      targetId: target.combatantId,
-      attack,
-      damageAmount: Number(reducedFixedDamageAmount),
-    });
+    const fixedDamageWithWeaponMasterySpeedReductionState =
+      applyWeaponMasterySlowAfterDamage({
+        state: fixedDamageAppliedState,
+        attackerId,
+        targetId: target.combatantId,
+        attack,
+        damageAmount: Number(reducedFixedDamageAmount),
+      });
     const spent = spendAttackProcedure(
       battleStateAfterBrutalStrikeAttackCompletion(
-        fixedDamageWithSlowState,
+        fixedDamageWithWeaponMasterySpeedReductionState,
         brutalStrikePending,
       ),
       attackerId,
@@ -3529,22 +3530,23 @@ export function resolveSelectedAttackProcedure<
       return invalidResult(input.state, "invalidFill", cunningStrike.message);
     }
     /* v8 ignore stop -- @preserve */
-    const damageWithSlowState = applyWeaponMasterySlowAfterDamage({
-      state: cunningStrike.state,
-      attackerId,
-      targetId: target.combatantId,
-      attack,
-      damageAmount: Number(reducedDamageAmount),
-    });
+    const damageWithWeaponMasterySpeedReductionState =
+      applyWeaponMasterySlowAfterDamage({
+        state: cunningStrike.state,
+        attackerId,
+        targetId: target.combatantId,
+        attack,
+        damageAmount: Number(reducedDamageAmount),
+      });
     const brutalStrikeApplied =
       brutalStrikeSupportSelection === null
         ? ({
             tag: "ok",
-            state: damageWithSlowState,
+            state: damageWithWeaponMasterySpeedReductionState,
             shovePushes: [],
           } as const)
         : resolveBrutalStrikeAfterDamage({
-            state: damageWithSlowState,
+            state: damageWithWeaponMasterySpeedReductionState,
             replayState: attackRolledState,
             subject: input.subject,
             targetId: target.combatantId,

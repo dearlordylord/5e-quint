@@ -212,7 +212,7 @@ type ResolvedTurnBoundaryFills = {
   readonly state: BattleState;
   readonly deathSavingThrowRoll: DieRollResult | undefined;
   readonly statBlockRechargeRolls: readonly BattleStatBlockRechargeRollResult[];
-  readonly sleepRepeatSaves: readonly Extract<
+  readonly hitPointBudgetConditionRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
@@ -1064,7 +1064,7 @@ function resolveEndTurn({
   state,
   deathSavingThrowRoll,
   statBlockRechargeRolls,
-  sleepRepeatSaves,
+  hitPointBudgetConditionRepeatSaves,
   saveGatedConditionWithRepeatRepeatSaves,
   spellConditionEndTurnSaves,
   spellConditionCountedEndTurnSaves,
@@ -1143,7 +1143,7 @@ function resolveEndTurn({
     currentActorId(state),
     state.initiative.round,
   );
-  const stateAfterSleepRepeatSaves =
+  const stateAfterHitPointBudgetConditionRepeatSaves =
     applyHitPointBudgetConditionRepeatSaveFills(
       {
         ...state,
@@ -1154,13 +1154,14 @@ function resolveEndTurn({
       },
       currentActorId(state),
       state.initiative.round,
-      sleepRepeatSaves,
+      hitPointBudgetConditionRepeatSaves,
     );
-  const combatantsAfterSleepRepeatSaves = stateAfterSleepRepeatSaves.combatants;
+  const combatantsAfterHitPointBudgetConditionRepeatSaves =
+    stateAfterHitPointBudgetConditionRepeatSaves.combatants;
   const combatantsAfterSaveGatedConditionWithRepeatRepeatSaves =
     applySaveGatedConditionWithRepeatRepeatSaveFills(
-      stateAfterSleepRepeatSaves,
-      combatantsAfterSleepRepeatSaves,
+      stateAfterHitPointBudgetConditionRepeatSaves,
+      combatantsAfterHitPointBudgetConditionRepeatSaves,
       currentActorId(state),
       saveGatedConditionWithRepeatRepeatSaves,
     );
@@ -1182,7 +1183,7 @@ function resolveEndTurn({
       currentActorId(state),
       unitFeatureConditionEndTurnSaves,
     );
-  const combatantsAfterSlowActivePenaltyRepeatSaves =
+  const combatantsAfterSaveGatedTurnConstraintRepeatSaves =
     applySaveGatedTurnConstraintBundleEndTurnSaveFills(
       { ...state, combatants: combatantsAfterUnitFeatureConditionRepeatSaves },
       combatantsAfterUnitFeatureConditionRepeatSaves,
@@ -1191,7 +1192,7 @@ function resolveEndTurn({
     );
   const combatantsAfterAbilityD20TestRepeatSaves =
     applyAbilityD20TestRollModeEndTurnSaveFills(
-      combatantsAfterSlowActivePenaltyRepeatSaves,
+      combatantsAfterSaveGatedTurnConstraintRepeatSaves,
       currentActorId(state),
       abilityD20TestRollModeEndTurnSaves,
     );
@@ -1289,12 +1290,12 @@ function resolveEndTurn({
     combatantsAfterDamageReductionReset.get(nextActorId),
   );
   const stateAfterCompelledHalt = applyCompelledHaltAtTurnStart({
-    ...stateAfterSleepRepeatSaves,
+    ...stateAfterHitPointBudgetConditionRepeatSaves,
     combatants: combatantsAfterDamageReductionReset,
     initiative,
     currentTurnResources: resetTurnResources,
   });
-  const currentTurnResourcesAfterSlow =
+  const currentTurnResourcesAfterSaveGatedTurnConstraint =
     saveGatedTurnConstraintActionOrBonusActionTurnResources(
       stateAfterCompelledHalt,
       stateAfterCompelledHalt.currentTurnResources,
@@ -1302,12 +1303,12 @@ function resolveEndTurn({
     );
   const currentTurnResourcesAfterActionRestriction =
     moveActionBonusActionTurnResources(
-      currentTurnResourcesAfterSlow,
+      currentTurnResourcesAfterSaveGatedTurnConstraint,
       stateAfterCompelledHalt.combatants.get(nextActorId),
     );
   const nextState = battleStateWithFlySpeedGrantEndFallCleanupFrames(
     {
-      ...stateAfterSleepRepeatSaves,
+      ...stateAfterHitPointBudgetConditionRepeatSaves,
       initiative,
       combatants: stateAfterCompelledHalt.combatants,
       lightEmitters: lightEmittersAfterDurationTick,
@@ -1946,7 +1947,7 @@ function hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
   effect: StagedSaveConditionPendingRepeatEffect,
   targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleStagedConditionRepeatSavingThrowOutcomeHole {
-  const key = `battle:sleep-repeat-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}`;
+  const key = `battle:hit-point-budget-condition-repeat-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -1966,7 +1967,7 @@ function hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
   };
 }
 
-function sleepRepeatSavingThrowOutcomeFor(
+function hitPointBudgetConditionRepeatSavingThrowOutcomeFor(
   fills: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
@@ -2386,17 +2387,17 @@ function saveGatedConditionWithRepeatRepeatSavingThrowOutcomeFor(
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
 
-function validateSleepRepeatSavingThrowOutcome(
+function validateSingleTargetSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
-  /* v8 ignore start -- @preserve -- Malformed fill: a Sleep repeat-save hole is single-target and cannot carry area geometry or an outcome for a different combatant. */
+  /* v8 ignore start -- @preserve -- Malformed fill: a single-target save hole cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
-    return "hit-point-budget condition repeat Saving Throw outcome must not include area facts.";
+    return "Single-target Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
-    : "hit-point-budget condition repeat Saving Throw outcome must match the ending-turn target.";
+    : "Single-target Saving Throw outcome must match the expected target.";
   /* v8 ignore stop -- @preserve */
 }
 
@@ -2457,7 +2458,10 @@ function applyHitPointBudgetConditionRepeatSaveFills(
       actorId,
       effect,
     );
-    const save = sleepRepeatSavingThrowOutcomeFor(saves, hole);
+    const save = hitPointBudgetConditionRepeatSavingThrowOutcomeFor(
+      saves,
+      hole,
+    );
     if (save === undefined) {
       return nextState;
     }
@@ -2524,18 +2528,18 @@ function applyHitPointBudgetConditionRepeatSaveFills(
         ),
       ),
     );
-    const stateWithSleepFailure = {
+    const stateWithHitPointBudgetConditionFailure = {
       ...nextState,
       combatants: nextMap,
     };
     const broken = breakCombatantConcentration(
-      stateWithSleepFailure,
+      stateWithHitPointBudgetConditionFailure,
       nextMap,
       actorId,
     );
     const brokenState = battleStateWithFlySpeedGrantEndFallCleanupFrames(
       {
-        ...stateWithSleepFailure,
+        ...stateWithHitPointBudgetConditionFailure,
         combatants: broken.value,
       },
       broken.grantedFlightEndFallCleanupFrames,
@@ -4998,22 +5002,26 @@ function resolveEndTurnCommandForParent(
   const nextActor = input.state.combatants.get(nextActorId);
   const actorId = currentActorId(input.state);
   const actor = input.state.combatants.get(actorId);
-  const sleepRepeatSaveRequests = stagedSaveConditionPendingRepeatEffects(
-    input.state,
-    actor,
-    actorId,
-    input.state.initiative.round,
-  ).map((effect) => ({
-    effect,
-    hole: hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
+  const hitPointBudgetConditionRepeatSaveRequests =
+    stagedSaveConditionPendingRepeatEffects(
+      input.state,
+      actor,
       actorId,
+      input.state.initiative.round,
+    ).map((effect) => ({
       effect,
-      endTurnSavingThrowFlatBonuses(input.state, actorId, effect.save.ability),
-    ),
-  }));
-  const sleepRepeatSaveHoles = sleepRepeatSaveRequests.map(
-    (request) => request.hole,
-  );
+      hole: hitPointBudgetConditionRepeatSavingThrowOutcomeHole(
+        actorId,
+        effect,
+        endTurnSavingThrowFlatBonuses(
+          input.state,
+          actorId,
+          effect.save.ability,
+        ),
+      ),
+    }));
+  const hitPointBudgetConditionRepeatSaveHoles =
+    hitPointBudgetConditionRepeatSaveRequests.map((request) => request.hole);
   const saveGatedConditionWithRepeatRepeatSaveRequests =
     saveGatedConditionWithRepeatEffects(input.state, actor).map((effect) => ({
       effect,
@@ -5255,7 +5263,7 @@ function resolveEndTurnCommandForParent(
       (handle): handle is StartTurnOccurrenceHandle => handle !== undefined,
     );
   const initialHoles = [
-    ...sleepRepeatSaveHoles,
+    ...hitPointBudgetConditionRepeatSaveHoles,
     ...saveGatedConditionWithRepeatRepeatSaveHoles,
     ...spellConditionEndTurnSaveHoles,
     ...unitFeatureConditionEndTurnSaveHoles,
@@ -5328,13 +5336,19 @@ function resolveEndTurnCommandForParent(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const sleepRepeatSaveCollection = collectTurnBoundaryHoleFills(
-    sleepRepeatSaveRequests,
-    (hole) => sleepRepeatSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
-  );
-  const sleepRepeatSaves = sleepRepeatSaveCollection.resolved.map(
-    ({ fill }) => fill,
-  );
+  const hitPointBudgetConditionRepeatSaveCollection =
+    collectTurnBoundaryHoleFills(
+      hitPointBudgetConditionRepeatSaveRequests,
+      (hole) =>
+        hitPointBudgetConditionRepeatSavingThrowOutcomeFor(
+          savingThrowOutcomeFills,
+          hole,
+        ),
+    );
+  const hitPointBudgetConditionRepeatSaves =
+    hitPointBudgetConditionRepeatSaveCollection.resolved.map(
+      ({ fill }) => fill,
+    );
   const saveGatedConditionWithRepeatRepeatSaveCollection =
     collectTurnBoundaryHoleFills(
       saveGatedConditionWithRepeatRepeatSaveRequests,
@@ -5401,7 +5415,8 @@ function resolveEndTurnCommandForParent(
   const abilityD20TestEndTurnSaves =
     abilityD20TestEndTurnSaveCollection.resolved.map(({ fill }) => fill);
   const missingEndTurnSaveHoles = firstMissingEndTurnSaveHoleFrontier({
-    sleepRepeat: sleepRepeatSaveCollection.missingHoles,
+    hitPointBudgetConditionRepeat:
+      hitPointBudgetConditionRepeatSaveCollection.missingHoles,
     saveGatedConditionWithRepeatRepeat:
       saveGatedConditionWithRepeatRepeatSaveCollection.missingHoles,
     spellCondition: spellConditionEndTurnSaveCollection.missingHoles,
@@ -5618,7 +5633,7 @@ function resolveEndTurnCommandForParent(
   ];
   const savingThrowOutcomeHoleIds = new Set<BattleHoleId>(
     [
-      ...sleepRepeatSaveHoles,
+      ...hitPointBudgetConditionRepeatSaveHoles,
       ...saveGatedConditionWithRepeatRepeatSaveHoles,
       ...spellConditionEndTurnSaveHoles,
       ...spellConditionCountedEndTurnSaveRequests.map(
@@ -5635,7 +5650,7 @@ function resolveEndTurnCommandForParent(
     savingThrowOutcomeFills.filter((fill) =>
       savingThrowOutcomeHoleIds.has(fill.holeId),
     ).length !==
-    sleepRepeatSaves.length +
+    hitPointBudgetConditionRepeatSaves.length +
       saveGatedConditionWithRepeatRepeatSaves.length +
       spellConditionEndTurnSaves.length +
       spellConditionCountedEndTurnSaves.length +
@@ -5651,8 +5666,8 @@ function resolveEndTurnCommandForParent(
     );
   }
   /* v8 ignore stop -- @preserve */
-  for (const { fill } of sleepRepeatSaveCollection.resolved) {
-    const validation = validateSleepRepeatSavingThrowOutcome(
+  for (const { fill } of hitPointBudgetConditionRepeatSaveCollection.resolved) {
+    const validation = validateSingleTargetSavingThrowOutcome(
       fill.value,
       actorId,
     );
@@ -5679,7 +5694,7 @@ function resolveEndTurnCommandForParent(
   for (const {
     fill,
   } of saveGatedConditionWithRepeatRepeatSaveCollection.resolved) {
-    const validation = validateSleepRepeatSavingThrowOutcome(
+    const validation = validateSingleTargetSavingThrowOutcome(
       fill.value,
       actorId,
     );
@@ -5738,7 +5753,7 @@ function resolveEndTurnCommandForParent(
       startTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles.find(
         (candidate) => candidate.holeId === fill.holeId,
       );
-    const validation = validateSleepRepeatSavingThrowOutcome(
+    const validation = validateSingleTargetSavingThrowOutcome(
       fill.value,
       hole?.saveGatedConditionRepeatSave.targetId ?? nextActorId,
     );
@@ -5752,7 +5767,7 @@ function resolveEndTurnCommandForParent(
     const hole = endTurnSaveGatedConditionWithRepeatDamageRepeatSaveHoles.find(
       (candidate) => candidate.holeId === fill.holeId,
     );
-    const validation = validateSleepRepeatSavingThrowOutcome(
+    const validation = validateSingleTargetSavingThrowOutcome(
       fill.value,
       hole?.saveGatedConditionRepeatSave.targetId ?? actorId,
     );
@@ -5965,7 +5980,7 @@ function resolveEndTurnCommandForParent(
     state: input.state,
     deathSavingThrowRoll: undefined,
     statBlockRechargeRolls: [],
-    sleepRepeatSaves,
+    hitPointBudgetConditionRepeatSaves,
     saveGatedConditionWithRepeatRepeatSaves,
     spellConditionEndTurnSaves,
     spellConditionCountedEndTurnSaves,

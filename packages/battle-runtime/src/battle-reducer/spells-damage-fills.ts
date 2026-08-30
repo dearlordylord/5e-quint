@@ -115,7 +115,7 @@ import {
 } from "../character-execution-queries.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
 import {
-  SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
+  SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA,
   MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
   MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_INSTANCE,
   TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
@@ -1593,7 +1593,7 @@ function saveGatedTurnConstraintBundleSavingThrowFlatBonusProjection(
           targetId: target.combatantId,
           sourceCombatantId: effect.sourceCombatantId,
           sourceProcedureRef: effect.sourceProcedureRef,
-          bonus: SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
+          bonus: SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA,
         },
       ];
 }

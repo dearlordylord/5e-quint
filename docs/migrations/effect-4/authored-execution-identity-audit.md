@@ -135,6 +135,72 @@ The passing condition is zero authored-record-name intersections in production
 execution discriminants, keys, protocol identities, or messages. Stale,
 duplicate, or allowlisted execution findings fail.
 
+### Generic-word collision cohort
+
+The reviewed generic-word cohort at revision `32cf03c292e1aad3c745d72ea152b7570888f1ee`
+contained 205 production execution findings in 54 files after excluding the
+spell-procedure admission profiles owned by the admission cohort. The audit
+classified each occurrence as either a spell-derived execution name that had
+to change or a mechanically meaningful rules word that required an exact
+collision exemption.
+
+| Surface spell word |  Before | Renamed | Exact mechanic exemptions | After |
+| ------------------ | ------: | ------: | ------------------------: | ----: |
+| `command`          |     110 |       4 |                       106 |     0 |
+| `resistance`       |      19 |       0 |                        19 |     0 |
+| `sleep`            |      16 |      15 |                         1 |     0 |
+| `shield`           |      14 |       0 |                        14 |     0 |
+| `fly`              |       9 |       0 |                         9 |     0 |
+| `jump`             |       7 |       0 |                         7 |     0 |
+| `knock`            |       6 |       0 |                         6 |     0 |
+| `slow`             |      24 |      22 |                         2 |     0 |
+| **Total**          | **205** |  **41** |                   **164** | **0** |
+
+The renamed production owners are:
+
+- `domain-constants.ts`, `spells-targeting.ts`, `battle-codecs.ts`, and
+  `compelled-behavior-procedures.ts`: authored `COMMAND_*` execution names are
+  now `COMPELLED_BEHAVIOR_*` names;
+- `damage-apply.ts`, `reducer-route.ts`, `spells-resolve-save-gates.ts`,
+  `turn-boundary-hole-frontier.ts`, and `turn-boundary-lifecycle.ts`: Sleep-
+  derived names and the `battle:sleep-repeat-save` key are now hit-point-budget
+  condition or staged-condition names;
+- `domain-constants.ts`, `battle-codecs.ts`, `creature-state-execution.ts`,
+  `movement-speed-facts.ts`, `save-gated-turn-constraint-facts.ts`,
+  `save-gated-turn-constraint-runtime.ts`, `spells-damage-fills.ts`,
+  `spells-resolve.ts`, and `turn-boundary-lifecycle.ts`: Slow-derived runtime
+  constants and temporaries are now save-gated-turn-constraint names;
+- `attack-main.ts`: result-state temporaries name the weapon-mastery speed
+  reduction rather than the colliding spell word; and
+- `environmental-fall-procedures.ts` and `battle-state-execution.ts`: the
+  landing result now carries `fallDamageReductionAmount`, a generic mechanical
+  fact, rather than an authored feature-shaped name.
+
+The 164 permitted occurrences span 46 files and are finite semantic sites:
+
+- runtime `command` request parameters, labels, routes, subjects, and serialized
+  reference-policy helpers (106 occurrences across 27 files);
+- damage `resistance` relationships, Rage resistance types, chosen resistance,
+  and linked-defense resistance/damage-sharing projections (19 occurrences
+  across 9 files);
+- the generic `doesNotSleep` creature predicate (1 occurrence);
+- `shield` equipment/loadout state and its codec key (14 occurrences across 6
+  files);
+- `fly` speed and ended-flight fall-cleanup witnesses (9 occurrences across 4
+  files);
+- `jump` movement distance and validation facts (7 occurrences across 4 files);
+- the `knockOut` zero-hit-point combat choice and lifecycle (6 occurrences
+  across 4 files); and
+- the distinct Weapon Mastery Slow support-profile identifier (2 occurrences
+  across 2 files).
+
+These are not path, file, or word allowlists. Each exemption remains joined to
+one spell id, AST role, and identifier, while the site certificate binds every
+matched occurrence to its repository path, normalized owning-statement hash,
+and cardinality. The self-test also copies a reviewed generic `command`
+parameter into an unrelated production path and requires the certificate to
+reject that laundering attempt.
+
 ## Sequencing and ownership
 
 The integrator first lands generic core procedure/effect/protocol types and the

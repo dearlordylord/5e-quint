@@ -1,5 +1,5 @@
-// Runtime consumption of Slow active-effect penalties that are admitted from
-// typed Surface facts by the Slow spell procedure profile.
+// Runtime consumption of save-gated turn constraints admitted from typed
+// Surface facts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
@@ -38,7 +38,7 @@ export type BattleFillAfterTurnConstraintSomaticSpellFailureOutcome = Exclude<
   { readonly kind: "turnConstraintSomaticSpellFailureOutcome" }
 >;
 
-type SlowSomaticSpellFailureResolution =
+type TurnConstraintSomaticSpellFailureResolution =
   | {
       readonly tag: "continue";
       readonly fills: readonly BattleFillAfterTurnConstraintSomaticSpellFailureOutcome[];
@@ -71,7 +71,7 @@ export function resolveSaveGatedTurnConstraintSomaticSpellFailure(input: {
   readonly fills: readonly BattleFill[];
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-}): SlowSomaticSpellFailureResolution {
+}): TurnConstraintSomaticSpellFailureResolution {
   const hole = turnConstraintSomaticSpellFailureOutcomeHole(input);
   const fills = input.fills.filter(
     (

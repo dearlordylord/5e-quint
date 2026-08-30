@@ -1073,12 +1073,140 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     ["execution-diagnostic"],
     "the authored rule names this exact cross-record interaction",
   ),
+  ...[
+    "COMPELLED_HALT_SUPPRESSES_RUNTIME_COMMAND",
+    "EncodedRuntimeCommandBattleSubject",
+    "SerializedRuntimeCommandReferencePolicy",
+    "byCommand",
+    "command",
+    "commandLabel",
+    "commandRoute",
+    "runtimeCommandSubject",
+    "serializedRuntimeCommandOwnsBoundProcedure",
+    "serializedRuntimeCommandReferencePolicy",
+    "serializedRuntimeCommandTargetIsLive",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "command",
+      identifier,
+      ["declaration-identifier"],
+      "command names the generic runtime request protocol",
+    ),
+  ),
+  ...[
+    "RAGE_RESISTANCE_DAMAGE_TYPES",
+    "afterLinkedDefenseResistanceDamageShareDamageShare",
+    "afterResistance",
+    "applyLinkedDefenseResistanceDamageShareDamageShare",
+    "chosenDamageResistance",
+    "damageResistance",
+    "linkedDefenseResistanceDamageShare",
+    "linkedDefenseResistanceDamageShareCaster",
+    "linkedDefenseResistanceDamageShareCasters",
+    "linkedDefenseResistanceDamageShareConcentrationSavingThrows",
+    "linkedDefenseResistanceDamageShareSeparationAct",
+    "linkedDefenseResistanceDamageShareSeparationActs",
+    "suppressLinkedDefenseResistanceDamageShareDamageShare",
+    "targetHasRuntimeDamageResistance",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "resistance",
+      identifier,
+      ["declaration-identifier"],
+      "resistance names the generic damage relationship mechanic",
+    ),
+  ),
+  ...exactCollision(
+    "sleep",
+    "doesNotSleep",
+    ["declaration-identifier"],
+    "sleep names a generic creature-state predicate",
+  ),
+  ...[
+    "WildShapeShieldLoadoutObjectRefSchema",
+    "characterBattleLoadoutShieldOffhandIssues",
+    "shield",
+    "shieldAvailable",
+    "shieldGrounded",
+    "shieldWorn",
+    "usesShield",
+    "wieldingShield",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "shield",
+      identifier,
+      ["declaration-identifier"],
+      "shield names the generic equipment category",
+    ),
+  ),
+  ...exactCollision(
+    "shield",
+    "shield",
+    ["registry-key", "schema-discriminant-literal"],
+    "shield names the generic equipment category",
+  ),
+  ...[
+    "FlyEndCanStopFallReason",
+    "FlySpeedGrantEndFallWitness",
+    "FlySpeedGrantEndFallWitnessResult",
+    "expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames",
+    "expireConcentrationDurationSourcesWithFlySpeedGrantEndFallCleanupFrames",
+    "flySpeed",
+    "resolveFlySpeedGrantEndFallCleanup",
+    "resolveFlySpeedGrantEndFallCleanupStateOnly",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "fly",
+      identifier,
+      ["declaration-identifier"],
+      "fly names the generic movement mode",
+    ),
+  ),
+  ...[
+    "applyStepOfTheWindJumpDistanceMultiplier",
+    "jumpDistanceMultiplier",
+    "jumpMovementValidation",
+    "maxJumpDistanceFeet",
+    "withJumpDistanceMultiplier",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "jump",
+      identifier,
+      ["declaration-identifier"],
+      "jump names the generic movement operation",
+    ),
+  ),
+  ...[
+    "KnockOutEligibleZeroHpLifecycle",
+    "applyKnockOut",
+    "hpDamageProjectionAllowsKnockOut",
+    "initialKnockOutLifecycleFields",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "knock",
+      identifier,
+      ["declaration-identifier"],
+      "knock out names the generic zero-hit-point combat choice",
+    ),
+  ),
+  ...exactCollision(
+    "knock",
+    "knockOut",
+    ["schema-discriminant-literal"],
+    "knock out names the generic zero-hit-point combat choice",
+  ),
+  ...exactCollision(
+    "slow",
+    "WEAPON_MASTERY_SLOW_SUPPORT_PROFILE",
+    ["declaration-identifier"],
+    "slow names the distinct weapon-mastery support profile",
+  ),
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "081fca9741a1444e93180cb3115a5e7191c479e0602c27c879aa6587526ae280",
-  siteCount: 1030,
-  violationCount: 1145,
+  sha256: "da271cca0b9f5a60509b275445530b95db4a75991f2f6ab70d6ef01409fc13cc",
+  siteCount: 1183,
+  violationCount: 1314,
 };
 
 function escapeForRegExp(text) {
@@ -3400,6 +3528,8 @@ function runExecutionIdentityCohortSelfTest() {
     { kind: "spell", id: "feather_fall", name: "Feather Fall" },
     { kind: "spell", id: "sanctuary", name: "Sanctuary" },
     { kind: "spell", id: "light", name: "Light" },
+    { kind: "spell", id: "command", name: "Command" },
+    { kind: "spell", id: "shield", name: "Shield" },
     { kind: "unit", id: "cloudkill_unit", name: "Cloudkill Unit" },
   ]);
   assert.deepEqual(malformed, []);
@@ -3584,6 +3714,56 @@ function runExecutionIdentityCohortSelfTest() {
     ).siteEvidenceMatches,
     false,
     "cohort scanner accepted an exempt identifier copied into an unrelated production file",
+  );
+
+  const runtimeCommandCollisionSource =
+    "export function executeRuntime(command: unknown) { return command }";
+  const runtimeCommandCollision = executionIdentityViolationsForFile(
+    fixturePath,
+    runtimeCommandCollisionSource,
+    lexicon,
+  ).filter(
+    (violation) =>
+      violation.spellId === "command" &&
+      violation.role === "declaration-identifier" &&
+      violation.identifier === "command",
+  );
+  const runtimeCommandExemption = {
+    spellId: "command",
+    role: "declaration-identifier",
+    identifier: "command",
+    reason: "synthetic generic runtime command collision",
+  };
+  const runtimeCommandEvidence = collisionSiteCountEvidence(
+    runtimeCommandCollision,
+  );
+  assert.equal(
+    applyExecutionIdentityCollisionExemptions(
+      runtimeCommandCollision,
+      [runtimeCommandExemption],
+      runtimeCommandEvidence,
+    ).siteEvidenceMatches,
+    true,
+    "cohort scanner rejected a reviewed generic runtime command collision",
+  );
+  const launderedRuntimeCommandCollision = executionIdentityViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/unrelated-command.ts",
+    runtimeCommandCollisionSource,
+    lexicon,
+  ).filter(
+    (violation) =>
+      violation.spellId === "command" &&
+      violation.role === "declaration-identifier" &&
+      violation.identifier === "command",
+  );
+  assert.equal(
+    applyExecutionIdentityCollisionExemptions(
+      launderedRuntimeCommandCollision,
+      [runtimeCommandExemption],
+      runtimeCommandEvidence,
+    ).siteEvidenceMatches,
+    false,
+    "cohort scanner accepted a generic command exemption copied into an unrelated production file",
   );
 
   const surplusCollision = executionIdentityViolationsForFile(

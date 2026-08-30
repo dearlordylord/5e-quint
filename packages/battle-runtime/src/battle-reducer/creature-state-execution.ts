@@ -51,7 +51,7 @@ export {
 } from "./creature-hit-point-state.ts";
 
 import {
-  SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA,
+  SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA,
   WARDING_BOND_ARMOR_CLASS_BONUS,
 } from "./domain-constants.ts";
 import { effectiveHitPointMaximum } from "./hit-point-maximum.ts";
@@ -568,7 +568,9 @@ export function activeEffectArmorClass(
           ...spellArmorClassBonuses,
           {
             kind: "flat" as const,
-            bonus: armorClassDelta(SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA),
+            bonus: armorClassDelta(
+              SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA,
+            ),
           },
         ];
   const withBonuses =

@@ -35,7 +35,7 @@ import {
 } from "./creature-state-leaves.ts";
 import { activeDruidWildShapeForm } from "./druid-wild-shape.ts";
 import { selfTransformationModeSpecialSpeedKind } from "./self-transformation-speed.ts";
-import { SLOW_ACTIVE_PENALTIES_SPEED_RATIO } from "./domain-constants.ts";
+import { SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO } from "./domain-constants.ts";
 
 type BattleSpecialSpeedCandidate =
   | {
@@ -144,11 +144,11 @@ export function battleSpeedChanges(
         numerator: effect.numerator,
         denominator: effect.denominator,
       })),
-    ...battleSlowSpeedChanges(combatant),
+    ...battleSaveGatedTurnConstraintSpeedChanges(combatant),
   ];
 }
 
-function battleSlowSpeedChanges(
+function battleSaveGatedTurnConstraintSpeedChanges(
   combatant: BattleCreatureState,
 ): readonly SpeedChange[] {
   return combatant.activeEffects.some(
@@ -157,8 +157,8 @@ function battleSlowSpeedChanges(
     ? [
         {
           kind: "ratio",
-          numerator: SLOW_ACTIVE_PENALTIES_SPEED_RATIO.numerator,
-          denominator: SLOW_ACTIVE_PENALTIES_SPEED_RATIO.denominator,
+          numerator: SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.numerator,
+          denominator: SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.denominator,
         },
       ]
     : [];
