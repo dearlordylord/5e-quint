@@ -810,7 +810,8 @@ describe("battle runtime: Ice Knife", () => {
     });
     expect(missingPrimary).toMatchObject({
       tag: "invalid",
-      message: "Ice Knife burst area must include the primary target.",
+      message:
+        "attack-burst damage burst area must include the primary target.",
     });
 
     const wrongOrigin = resolveBattleSubject({
@@ -834,7 +835,8 @@ describe("battle runtime: Ice Knife", () => {
     });
     expect(wrongOrigin).toMatchObject({
       tag: "invalid",
-      message: "Ice Knife burst area must originate from the primary target.",
+      message:
+        "attack-burst damage burst area must originate from the primary target.",
     });
   });
 

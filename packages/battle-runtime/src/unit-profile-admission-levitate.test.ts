@@ -86,8 +86,14 @@ describe("L12G deterministic Levitate creature admission", () => {
       }),
     );
     expect(target.activeEffects).toContainEqual(
-      requireLevitatedEffect(cast.state),
+      expect.objectContaining({
+        kind: "controlledVerticalSuspension",
+        sourceCombatantId: spellCasterId,
+        altitudeFeet: movementFeet(12),
+      }),
     );
+    expect(target.activeEffects[0]).not.toHaveProperty("rangeFeet");
+    expect(target.activeEffects[0]).not.toHaveProperty("maxAltitudeChangeFeet");
   });
 
   test("unwilling creature save success spends the slot without levitating or starting concentration", () => {
@@ -223,7 +229,7 @@ describe("L12G deterministic Levitate creature admission", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Successful Levitate creature saves are unaffected and do not use an initial-rise fill.",
+        "Successful ControlledVerticalSuspension creature saves are unaffected and do not use an initial-rise fill.",
     });
   });
 
@@ -352,7 +358,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     expect(underpaidClimbingCost).toMatchObject({
       tag: "invalid",
       message:
-        "Levitated movement must spend the altitude-change distance as climbing, plus any area movement costs.",
+        "ControlledVerticalSuspension movement must spend the altitude-change distance as climbing, plus any area movement costs.",
     });
 
     const moved = resolveBattleSubject({
@@ -445,7 +451,8 @@ describe("L12G deterministic Levitate creature admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Levitate altitude control is no longer active for the target.",
+      message:
+        "ControlledVerticalSuspension altitude control is no longer active for the target.",
     });
 
     const raised = resolveBattleSubject({
@@ -473,7 +480,7 @@ describe("L12G deterministic Levitate creature admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Magic action is no longer available for Levitate altitude control.",
+        "Magic action is no longer available for ControlledVerticalSuspension altitude control.",
     });
   });
 

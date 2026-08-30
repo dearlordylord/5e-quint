@@ -491,7 +491,7 @@ describe("damage and hit point lifecycle helpers", () => {
     ).toEqual({
       tag: "invalid",
       message:
-        "Concentration Saving Throw fill does not match the damaged target or linked Warding Bond caster.",
+        "Concentration Saving Throw fill does not match the damaged target or linked-protection caster.",
     });
     expect(
       damageLifecycleConcentrationSavingThrowFillCheck({

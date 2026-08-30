@@ -718,7 +718,8 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Hypnotic Pattern shake-awake is no longer available.",
+      message:
+        "Save-gated area-control condition shake-awake is no longer available.",
     });
   });
 

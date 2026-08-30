@@ -278,7 +278,8 @@ describe("battle runtime: Color Spray and Entangle", () => {
     });
     expect(casterIncluded).toMatchObject({
       tag: "invalid",
-      message: "Entangle area affected targets must exclude the caster.",
+      message:
+        "Restraining ground-area affected targets must exclude the caster.",
     });
   });
 

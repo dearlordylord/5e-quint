@@ -117,6 +117,7 @@ import {
   heroismUnitId,
   saveGatedAreaControlDurationTicks,
   saveGatedAreaControlUnitId,
+  saveGatedConditionWithRepeatUnitId,
   iceKnifeUnitId,
   invisibilityUnitId,
   levitateUnitId,
@@ -184,6 +185,7 @@ import {
   hasCondition,
   resolveBattleInterrupt,
   resolveBattleSubject,
+  spellSlotInvocationRef,
   spellSaveDcForCaster,
 } from "./unit-profile-admission.test-support.ts";
 import {
@@ -199,6 +201,7 @@ import {
   combatantId,
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
+  requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 
@@ -3176,7 +3179,6 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         ),
         sourceCombatantId: spellCasterId,
         areaId: greaseAreaId,
-        save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
         expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
       }),
     ]);
@@ -3413,12 +3415,6 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         ),
         sourceCombatantId: spellCasterId,
         forcePositionId: glyphHarmfulObjectPositionId,
-        forceReachFeet: movementFeet(5),
-        repeatMoveMaxFeet: movementFeet(20),
-        repeatTargeting: {
-          kind: "fixedCombatant",
-          combatantId: spellTargetId,
-        },
         expiresAt: {
           kind: "duration",
           durationTicks: elapsedTimeTicks(10),
@@ -3485,7 +3481,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Glyph-stored Spiritual Weapon repeat attacks must target the triggering creature.",
+        "Glyph-stored spatial melee spell-attack proxy repeat attacks must target the triggering creature.",
     });
   });
 
@@ -4603,14 +4599,29 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
   });
 
   test("explosive-rune release rejects duplicate Hideous Laughter repeat-save fills", () => {
+    const baseSession = glyphBattleSession({
+      preparedSpells: [spellRecord(saveGatedConditionWithRepeatUnitId)],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+      targetHp: 50,
+      targetMaxHp: 50,
+    });
     const baseState = stateWithTargetHideousLaughter(
       stateWithGlyphEffect(
         requireCompletedGlyphEffect({
           anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
         }),
-        glyphBattle({ targetHp: 50, targetMaxHp: 50 }),
+        baseSession.state,
       ),
       spellTargetId,
+      requireCharacterSpellProcedureRefForTest(
+        baseSession,
+        spellCasterId,
+        spellSlotInvocationRef(
+          saveGatedConditionWithRepeatUnitId,
+          1,
+          "saveGatedConditionWithRepeat",
+        ),
+      ),
     );
     const effect = glyphEffects(baseState)[0];
     expect(effect).toBeDefined();
@@ -5562,17 +5573,15 @@ function stateWithTargetConcentration(
 function stateWithTargetHideousLaughter(
   state: BattleState,
   combatantId: typeof spellTargetId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
 ): BattleState {
   const saveGatedConditionWithRepeatEffect = {
     kind: "saveGatedConditionWithRepeat",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String("synthetic_laughter"),
-    ),
+    sourceProcedureRef,
     sourceCombatantId: spellCasterId,
     conditionHadNonSpellProneSource: false,
     conditionHadNonSpellIncapacitatedSource: false,
     repeatSaveRollMode: null,
-    save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
     expiresAt: {
       kind: "concentration",
       combatantId: spellCasterId,

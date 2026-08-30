@@ -495,7 +495,8 @@ describe("Heat Metal object-contact public entry boundaries", () => {
     expect(staleRepeat).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Object-contact damage is suppressed by Antimagic Field.",
+      message:
+        "Object-contact damage is suppressed by magic-suppression emanation.",
     });
   });
 
