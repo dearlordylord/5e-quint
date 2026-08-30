@@ -3,19 +3,33 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-hypnotic-pattern-control
 
 module battleRuntimeSaveGatedControlEscape {
+  type PhysicalShakeActionWitness = {
+    actionAvailable: bool,
+    actorIsAffectedCreature: bool,
+    actorCanAct: bool,
+    actorCanPhysicallyShakeAffectedCreature: bool,
+  }
+
   type ControlEscapeEvent =
     | NoEscapeEvent
     | TargetDamaged
-    | OtherCreatureAction
+    | PhysicalShakeAction(PhysicalShakeActionWitness)
+
+  pure def physicalShakeActionEndsControl(
+    witness: PhysicalShakeActionWitness
+  ): bool =
+    witness.actionAvailable
+      and not(witness.actorIsAffectedCreature)
+      and witness.actorCanAct
+      and witness.actorCanPhysicallyShakeAffectedCreature
 
   pure def controlEffectRemainsAfter(
-    event: ControlEscapeEvent,
-    actionWitnessSatisfied: bool
+    event: ControlEscapeEvent
   ): bool =
     match event {
       | NoEscapeEvent => true
       | TargetDamaged => false
-      | OtherCreatureAction => not(actionWitnessSatisfied)
+      | PhysicalShakeAction(witness) => not(physicalShakeActionEndsControl(witness))
     }
 
   pure def controlProjectionIsActive(

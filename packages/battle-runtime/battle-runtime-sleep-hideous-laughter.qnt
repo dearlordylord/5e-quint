@@ -3,6 +3,7 @@
 
 module battleRuntimeSleepHideousLaughter {
   import battleRuntimeRepeatedSaveConditionControl.* from "./battle-runtime-repeated-save-condition-control"
+  import battleRuntimeSaveGatedControlEscape.* from "./battle-runtime-save-gated-control-escape"
   import battleRuntimeSpellSaveBridge.* from "./battle-runtime-spell-save-bridge"
   import battleRuntimeSpellLifecycleBridge.* from "./battle-runtime-spell-lifecycle-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -436,13 +437,13 @@ module battleRuntimeSleepHideousLaughter {
     else
       target
 
-  pure def shakeAwakeFromHypnoticPattern(state: BattleState, targetActor: Actor, actorWithin5Feet: bool): BattleState =
-    if (not(adjacentActionEndedConditionControl(
-      state.actionAvailable,
-      actorWithin5Feet,
-      currentActor(state) == targetActor,
-      currentActor(state) == Fighter and not(state.fighter.unconscious) and not(state.fighter.incapacitated),
-    )))
+  pure def shakeAwakeFromHypnoticPattern(state: BattleState, targetActor: Actor, physicalShakeReachable: bool): BattleState =
+    if (controlEffectRemainsAfter(PhysicalShakeAction({
+      actionAvailable: state.actionAvailable,
+      actorIsAffectedCreature: currentActor(state) == targetActor,
+      actorCanAct: currentActor(state) == Fighter and not(state.fighter.unconscious) and not(state.fighter.incapacitated),
+      actorCanPhysicallyShakeAffectedCreature: physicalShakeReachable,
+    })))
       state
     else {
       match targetActor {

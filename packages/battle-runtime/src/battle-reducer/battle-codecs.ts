@@ -1079,7 +1079,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     targetId: CombatantId,
   }),
   Schema.Struct({
-    kind: Schema.Literal("areaControlShakeAwakeActorWithin5Feet"),
+    kind: Schema.Literal("areaControlShakeAwakePhysicalReachability"),
     actorId: CombatantId,
     targetId: CombatantId,
   }),

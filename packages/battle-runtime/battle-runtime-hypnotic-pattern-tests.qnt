@@ -84,7 +84,7 @@ module battleRuntimeHypnoticPatternTests {
     val noDamage = combatantAfterHypnoticPatternDamage(controlled, Fighter, Goblin, 0)
     all {
       assert(combatantHasHypnoticPattern(controlled)),
-      assert(not(controlEffectRemainsAfter(TargetDamaged, false))),
+      assert(not(controlEffectRemainsAfter(TargetDamaged))),
       assert(not(combatantHasHypnoticPattern(damaged))),
       assert(damaged.activeEffects.contains(CharmPersonCharmed({ source: Goblin, durationTicks: 10 }))),
       assert(not(damaged.incapacitated)),
@@ -93,7 +93,7 @@ module battleRuntimeHypnoticPatternTests {
     }
   }
 
-  run test_hypnotic_pattern_adjacent_action_shakes_target_awake = {
+  run test_hypnotic_pattern_physical_shake_action_ends_control = {
     val controlled = resolveHypnoticPattern(initialState, false, 3)
     val nextRoundFighterTurn = {
       ...controlled,
@@ -101,14 +101,20 @@ module battleRuntimeHypnoticPatternTests {
       actionAvailable: true,
     }
     val shaken = shakeAwakeFromHypnoticPattern(nextRoundFighterTurn, Goblin, true)
-    val notAdjacent = shakeAwakeFromHypnoticPattern(nextRoundFighterTurn, Goblin, false)
+    val physicallyUnreachable = shakeAwakeFromHypnoticPattern(nextRoundFighterTurn, Goblin, false)
+    val affectedCreatureTurn = {
+      ...controlled,
+      initiative: { round: 2, alreadyActed: List(), stillToAct: { actor: Goblin, waiting: List(Fighter) } },
+      actionAvailable: true,
+    }
+    val affectedCreatureSelfShake = shakeAwakeFromHypnoticPattern(affectedCreatureTurn, Goblin, true)
     all {
       assert(not(shaken.actionAvailable)),
-      assert(not(controlEffectRemainsAfter(OtherCreatureAction, true))),
       assert(not(shaken.goblin.incapacitated)),
       assert(not(combatantHasHypnoticPattern(shaken.goblin))),
       assert(hypnoticPatternEffectiveSpeed(shaken.goblin) == initialState.goblin.speed),
-      assert(notAdjacent == nextRoundFighterTurn),
+      assert(physicallyUnreachable == nextRoundFighterTurn),
+      assert(affectedCreatureSelfShake == affectedCreatureTurn),
     }
   }
 

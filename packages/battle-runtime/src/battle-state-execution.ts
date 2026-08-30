@@ -2017,7 +2017,7 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
     }
   | {
-      readonly kind: "areaControlShakeAwakeActorWithin5Feet";
+      readonly kind: "areaControlShakeAwakePhysicalReachability";
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
     }

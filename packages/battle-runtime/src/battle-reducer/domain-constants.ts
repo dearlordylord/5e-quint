@@ -25,8 +25,6 @@ export const SHOVE_PUSH_DISTANCE_FEET = movementFeet(5);
 export const PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET = movementFeet(5);
 export const HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_ADJACENCY_FEET =
   movementFeet(5);
-export const SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_ADJACENCY_FEET =
-  movementFeet(5);
 export const HELP_ATTACK_TARGET_ADJACENCY_FEET = movementFeet(5);
 export const RANGED_ATTACK_ENEMY_PROXIMITY_FEET = movementFeet(5);
 export const BATTLE_D20_ROLL_MODIFIER_DIE_SIZES = [1, 4] as const;

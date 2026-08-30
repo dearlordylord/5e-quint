@@ -766,6 +766,22 @@
           "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
         }
       ],
       "profiles": [
@@ -795,11 +811,13 @@
         "packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt"
       ],
+      "reason": "The mapped profile runtime tests join to profile-level QNT proof owners. Hypnotic Pattern specifically requires an exact caller-supplied physical-shake reachability witness bound to the eligible other creature and affected target; the reducer owns Action spend and source-owned control cleanup without inventing a distance.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
-        "packages/battle-runtime/src/battle-reducer/damage-apply.ts"
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [],
@@ -8866,13 +8884,13 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "Focused executable proof for generic control projection and escape events.",
+      "evidence": "Focused executable proof for save-gated control projection, damage cleanup, and exact physical-shake Action eligibility including other-creature, action-resource, actor-eligibility, and reachability witnesses.",
       "obligationIds": ["BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
       "role": "proof-only"
     },
     {
-      "evidence": "Identity-free save-gated control projection and damage or other-creature Action escape semantics.",
+      "evidence": "Identity-free save-gated control projection plus damage or exact physically reachable other-creature Action escape semantics.",
       "obligationIds": ["BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
       "role": "semantic-core"

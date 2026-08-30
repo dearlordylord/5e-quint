@@ -22,11 +22,4 @@ module battleRuntimeRepeatedSaveConditionControl {
 
   pure def damageEndedConditionControl(damage: int): bool = damage > 0
 
-  pure def adjacentActionEndedConditionControl(
-    actionAvailable: bool,
-    actorWithinRequiredDistance: bool,
-    actorIsTarget: bool,
-    actorCanAct: bool,
-  ): bool =
-    actionAvailable and actorWithinRequiredDistance and not(actorIsTarget) and actorCanAct
 }
