@@ -25,6 +25,9 @@
       "module/binding:intrinsicActPresentationText": 22,
       "module/binding:spellProcedurePresentationText": 13
     },
+    "packages/battle-runtime/src/battle-reducer/action-eligibility.ts": {
+      "module/binding:actionSubjectEligibilityFacts": 9
+    },
     "packages/battle-runtime/src/battle-reducer/action-spell-slot-expenditure.ts": {
       "module/binding:expendActionSpellSlot": 11
     },
@@ -45,7 +48,8 @@
     },
     "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts": {
       "module/binding:admitBattleCombatant": 11,
-      "module/binding:applyInitiativeSwap": 12
+      "module/binding:applyInitiativeSwap": 12,
+      "module/binding:battleInitializationLeafIssueFromStateIssue": 10
     },
     "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts": {
       "module/binding:attackActionOptionsForActor": 9,
@@ -85,6 +89,7 @@
       "module/binding:resolveShakeAwakeFromSleep": 9,
       "module/binding:resolveShove": 14,
       "module/binding:spendAttackAction": 11,
+      "module/binding:spendAttackTurnResources": 10,
       "module/binding:validateAttackDamageFill": 17,
       "module/binding:validateRolledDiceForWeaponAttack": 11
     },
@@ -102,14 +107,14 @@
       "module/binding:weaponHostedAttackCompositionRouteForResolution": 23
     },
     "packages/battle-runtime/src/battle-reducer/battle-codecs.ts": {
-      "module/binding:battleCreatureSnapshotInvariantsHold": 13,
-      "module/binding:statBlockExecutionSnapshotGraphIsValid": 12,
-      "module/binding:statBlockExecutionSnapshotGraphIsValid/call:snapshot.procedureBindings.every:argument-0": 19
+      "module/binding:characterBattleCreatureSnapshotInvariantsHold": 10,
+      "module/binding:statBlockProcedurePoolShapeIsValid": 10
     },
     "packages/battle-runtime/src/battle-reducer/battle-discovery.ts": {
       "module/binding:companionProtocolActs": 13,
       "module/binding:discoverBattleActsWithoutRouteEvents": 69,
-      "module/binding:pactOfTheChainFamiliarAttackActs": 9
+      "module/binding:pactOfTheChainFamiliarAttackActs": 9,
+      "module/binding:subjectAllowedDuringStatBlockMultiattackDispatch": 11
     },
     "packages/battle-runtime/src/battle-reducer/battle-movement.ts": {
       "module/binding:applyBattleMovement": 11
@@ -860,7 +865,7 @@
       "module/binding:withFindFamiliarCombatant": 11
     },
     "packages/battle-runtime/src/find-familiar-lifecycle.ts": {
-      "module/binding:castResolvedFindFamiliar": 13,
+      "module/binding:admitCompanionToBattleWithPresentation": 10,
       "module/binding:castWildCompanion": 13,
       "module/binding:selectedStoredFormStatBlockId": 9,
       "module/binding:spendWildCompanionCost": 10
@@ -882,14 +887,22 @@
       "module/binding:weaponAttackOverrideExecutor/binding:resolveWeaponAttackOverride": 9
     },
     "packages/battle-runtime/src/stat-block-combatant-admission.ts": {
-      "module/binding:admitBattleStatBlockCombatantSource": 14
+      "module/binding:admitBattleStatBlockCombatantSource": 16
     },
     "packages/battle-runtime/src/stat-block-execution.ts": {
-      "module/binding:admitStatBlock": 12,
+      "module/binding:admitStatBlock": 17,
+      "module/binding:allocateStatBlockExecution": 12,
       "module/binding:persistedValuesEqual": 12
     },
+    "packages/battle-runtime/src/stat-block-procedure-pressure.ts": {
+      "module/binding:classifyUnrestrictedStatBlockSpellReferences/call:records.flatMap:argument-0/call:statBlockProcedurePressureOccurrences( record, recordOrdinal, sourceAuthority, ) .filter( ( occurrence, ): occurrence is StatBlockProcedurePressureOccurrence & { readonly kind: \"spellReference\"; readonly witness: StatBlockProcedurePressureWitness & { readonly location: Extract< StatBlockProcedurePressureLocation, { readonly kind: \"spellReference\" } >; }; } => occurrence.kind === \"spellReference\" && occurrence.witness.location.kind === \"spellReference\", ) .flatMap:argument-0": 9,
+      "module/binding:countUnrestrictedStatBlockSpellReferenceDefinitions": 9
+    },
     "packages/battle-runtime/src/statblock-attack-damage-support.ts": {
-      "module/binding:supportedStatBlockAttackDamage": 10
+      "module/binding:supportedStatBlockAttackDamage": 13
+    },
+    "packages/battle-runtime/src/statblock-attack-execution-mechanics.ts": {
+      "module/binding:statBlockAttackMechanicsSupport": 12
     },
     "packages/battle-runtime/src/unit-feature-support.ts": {
       "module/binding:acrobaticMovementProfileForUnit": 11,
