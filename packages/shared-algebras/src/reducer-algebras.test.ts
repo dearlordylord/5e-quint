@@ -26,6 +26,7 @@ import {
   grantSpellEffectActionResource,
   grantUnitActionResource,
   HASTE_ACTION_RESOURCE_RESTRICTION,
+  isHasteActionResourceRestriction,
   isSupportedSurfaceCastingTimeKind,
   markMovementSpentForMovementActionBonusActionExclusion,
   resetTurnActionEconomy,
@@ -90,60 +91,69 @@ const attackOnlyRestriction: ActionRestriction = {
   kind: "exclude",
   actions: ["magic"],
 };
+const turnActionResource = {
+  kind: "action",
+  source: "turn",
+} as const satisfies RuntimeActionResource;
+const unitActionResource = {
+  kind: "action",
+  source: "unit",
+  sourceOwnerId,
+  sourceProcedureRef: unitActionProcedureRef,
+  restriction: attackOnlyRestriction,
+} as const satisfies RuntimeActionResource;
+const spellEffectActionResource = {
+  kind: "action",
+  source: "spellEffect",
+  sourceEffectRef: spellEffectRef,
+  restriction: HASTE_ACTION_RESOURCE_RESTRICTION,
+} as const satisfies RuntimeActionResource;
+const statBlockMultiattackActionResource = {
+  kind: "action",
+  source: "statBlockMultiattack",
+  sourceOwnerId,
+  sourceProcedureRef: statBlockMultiattackProcedureRef,
+  dispatch: {
+    kind: "listedOccurrence",
+    attackProcedureRef: statBlockAttackProcedureRef,
+  },
+} as const satisfies RuntimeActionResource;
+const classFeatureExtraAttackActionResource = {
+  kind: "action",
+  source: "classFeatureExtraAttack",
+  sourceOwnerId,
+  sourceProcedureRef: unitActionProcedureRef,
+  restriction: { kind: "none" },
+} as const satisfies RuntimeActionResource;
+const monkFocusFlurryOfBlowsActionResource = {
+  kind: "action",
+  source: "monkFocusFlurryOfBlows",
+  sourceOwnerId,
+  sourceProcedureRef: unitActionProcedureRef,
+} as const satisfies RuntimeActionResource;
 const actionResourceConsumptionCases = [
   {
-    resource: { kind: "action", source: "turn" },
+    resource: turnActionResource,
     takesAction: true,
   },
   {
-    resource: {
-      kind: "action",
-      source: "unit",
-      sourceOwnerId,
-      sourceProcedureRef: unitActionProcedureRef,
-      restriction: attackOnlyRestriction,
-    },
+    resource: unitActionResource,
     takesAction: true,
   },
   {
-    resource: {
-      kind: "action",
-      source: "spellEffect",
-      sourceEffectRef: spellEffectRef,
-      restriction: HASTE_ACTION_RESOURCE_RESTRICTION,
-    },
+    resource: spellEffectActionResource,
     takesAction: true,
   },
   {
-    resource: {
-      kind: "action",
-      source: "statBlockMultiattack",
-      sourceOwnerId,
-      sourceProcedureRef: statBlockMultiattackProcedureRef,
-      dispatch: {
-        kind: "listedOccurrence",
-        attackProcedureRef: statBlockAttackProcedureRef,
-      },
-    },
+    resource: statBlockMultiattackActionResource,
     takesAction: false,
   },
   {
-    resource: {
-      kind: "action",
-      source: "classFeatureExtraAttack",
-      sourceOwnerId,
-      sourceProcedureRef: unitActionProcedureRef,
-      restriction: attackOnlyRestriction,
-    },
+    resource: classFeatureExtraAttackActionResource,
     takesAction: false,
   },
   {
-    resource: {
-      kind: "action",
-      source: "monkFocusFlurryOfBlows",
-      sourceOwnerId,
-      sourceProcedureRef: unitActionProcedureRef,
-    },
+    resource: monkFocusFlurryOfBlowsActionResource,
     takesAction: false,
   },
 ] as const satisfies ReadonlyArray<{
@@ -213,6 +223,49 @@ describe("action-economy-algebra", () => {
     if (Either.isLeft(spent)) return;
     expect(spent.right.actionTakenThisTurn).toBe(true);
     expect(resetTurnActionEconomy(spent.right).actionTakenThisTurn).toBe(false);
+  });
+
+  it("recognizes the canonical Haste action-resource restriction", () => {
+    const [attack, dash, disengage, hide] =
+      HASTE_ACTION_RESOURCE_RESTRICTION.actions;
+    const missingUtilize: ActionRestriction = {
+      kind: "allow_only",
+      actions: [attack, dash, disengage, hide],
+    };
+    const duplicateHide: ActionRestriction = {
+      kind: "allow_only",
+      actions: [attack, dash, disengage, hide, hide],
+    };
+    expect(isHasteActionResourceRestriction(undefined)).toBe(false);
+    expect(isHasteActionResourceRestriction({ kind: "none" })).toBe(false);
+    expect(
+      isHasteActionResourceRestriction(HASTE_ACTION_RESOURCE_RESTRICTION),
+    ).toBe(true);
+    expect(isHasteActionResourceRestriction(missingUtilize)).toBe(false);
+    expect(isHasteActionResourceRestriction(duplicateHide)).toBe(false);
+  });
+
+  it("applies each restricted action-resource dispatch contract", () => {
+    expect(actionResourceAllowsAdditionalAttacks(unitActionResource)).toBe(
+      true,
+    );
+    expect(
+      actionResourceAllowsAdditionalAttacks(statBlockMultiattackActionResource),
+    ).toBe(false);
+    expect(
+      actionResourceAllowsAdditionalAttacks(
+        monkFocusFlurryOfBlowsActionResource,
+      ),
+    ).toBe(false);
+    expect(
+      actionResourceAllows(statBlockMultiattackActionResource, "attack"),
+    ).toBe(true);
+    expect(
+      actionResourceAllows(statBlockMultiattackActionResource, "dash"),
+    ).toBe(false);
+    expect(
+      actionResourceAllows(classFeatureExtraAttackActionResource, "magic"),
+    ).toBe(true);
   });
 
   it("spends restricted unit action resources before the ordinary turn action", () => {
@@ -587,6 +640,10 @@ describe("action-economy-algebra", () => {
   it("covers unrestricted resources and idempotent exclusion activation", () => {
     const unrestricted: ActionRestriction = { kind: "none" };
     const turnResource = { kind: "action", source: "turn" } as const;
+    const unrestrictedState = emptyActionEconomyState();
+    expect(disableActionOrBonusActionExclusion(unrestrictedState)).toBe(
+      unrestrictedState,
+    );
     expect(actionResourceAllowsAdditionalAttacks(turnResource)).toBe(true);
     expect(
       actionResourceAllowsAdditionalAttacks({
