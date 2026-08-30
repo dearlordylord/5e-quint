@@ -942,7 +942,7 @@ describe("level 5 SDK tracer bullets", () => {
         session,
         hasteSpellId,
         hasteCastLevel,
-        "hastePositive",
+        "compositeTargetBuffWithAftermath",
       );
       const target = requireHoleFromList(act.initialHoles, "targetChoice");
       const resolved = requireResolved(
@@ -1164,7 +1164,7 @@ describe("level 5 SDK tracer bullets", () => {
         sessionWithTargetConcentration,
         sleetStormSpellId,
         sleetStormCastLevel,
-        "sleetStormAreaHazard",
+        "persistentAreaSaveComposite",
       );
       const area = requireHoleFromList(act.initialHoles, "spellAreaChoice");
 
@@ -1178,7 +1178,7 @@ describe("level 5 SDK tracer bullets", () => {
           tag: "spellSlot",
           spellId: sleetStormSpellId,
           slotLevel: sleetStormCastLevel,
-          procedure: "sleetStormAreaHazard",
+          procedure: "persistentAreaSaveComposite",
         },
         mode: { tag: "cast" },
       });
@@ -1197,7 +1197,7 @@ describe("level 5 SDK tracer bullets", () => {
           act.subject.procedureRef,
         ),
       ).toMatchObject({
-        procedure: "sleetStormAreaHazard",
+        procedure: "persistentAreaSaveComposite",
         resource: { tag: "spellSlot", slotLevel: sleetStormCastLevel },
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
@@ -1226,8 +1226,8 @@ describe("level 5 SDK tracer bullets", () => {
           effect,
         ): effect is Extract<
           BattleActiveEffect,
-          { readonly kind: "sleetStormAreaHazard" }
-        > => effect.kind === "sleetStormAreaHazard",
+          { readonly kind: "persistentAreaSaveComposite" }
+        > => effect.kind === "persistentAreaSaveComposite",
       );
       if (sleetStormEffect === undefined) {
         throw new Error("Expected the cast Sleet Storm occurrence.");
@@ -1240,13 +1240,11 @@ describe("level 5 SDK tracer bullets", () => {
         },
         activeEffects: expect.arrayContaining([
           expect.objectContaining({
-            kind: "sleetStormAreaHazard",
+            kind: "persistentAreaSaveComposite",
             sourceProcedureRef: sleetStormProcedureRef,
             sourceCombatantId: sleetStormCase.casterId,
             areaId: sleetStormAreaId,
-            radiusFeet: movementFeet(20),
-            heightFeet: movementFeet(40),
-            save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
+            savedThisTurn: [],
           }),
         ]),
       });
@@ -1302,7 +1300,7 @@ describe("level 5 SDK tracer bullets", () => {
                 kind: "areaDifficultTerrain",
                 sources: [
                   {
-                    kind: "sleetStormHazard",
+                    kind: "persistentAreaSaveComposite",
                     effectRef: sleetStormEffect.effectRef,
                     sourceCombatantId: sleetStormCase.casterId,
                     sourceProcedureRef: sleetStormProcedureRef,
@@ -1321,7 +1319,7 @@ describe("level 5 SDK tracer bullets", () => {
         movementSpentFeet: movementFeet(15),
       });
 
-      const entrySaveSubject = sleetStormAreaHazardSaveSubject(
+      const entrySaveSubject = persistentAreaSaveCompositeSaveSubject(
         sleetStormEffect.effectRef,
       );
       const entrySave = requireHole(
@@ -1336,7 +1334,7 @@ describe("level 5 SDK tracer bullets", () => {
       expect(entrySave).toMatchObject({
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
-        sleetStormAreaHazard: {
+        persistentAreaSaveComposite: {
           trigger: "entersArea",
           areaId: sleetStormAreaId,
           sourceCombatantId: sleetStormCase.casterId,
@@ -1378,7 +1376,7 @@ describe("level 5 SDK tracer bullets", () => {
       expect(
         requireCombatant(ended, sleetStormCase.casterId).activeEffects.some(
           (effect) =>
-            effect.kind === "sleetStormAreaHazard" &&
+            effect.kind === "persistentAreaSaveComposite" &&
             effect.sourceProcedureRef === sleetStormProcedureRef,
         ),
       ).toBe(false);
@@ -1451,7 +1449,7 @@ describe("level 5 SDK tracer bullets", () => {
         session,
         slowSpellId,
         slowCastLevel,
-        "slowActivePenalties",
+        "saveGatedTurnConstraintBundle",
       );
       const savingThrow = requireHoleFromList(
         act.initialHoles,
@@ -1468,7 +1466,7 @@ describe("level 5 SDK tracer bullets", () => {
           tag: "spellSlot",
           spellId: slowSpellId,
           slotLevel: slowCastLevel,
-          procedure: "slowActivePenalties",
+          procedure: "saveGatedTurnConstraintBundle",
         },
         mode: { tag: "cast" },
       });
@@ -1484,7 +1482,7 @@ describe("level 5 SDK tracer bullets", () => {
           act.subject.procedureRef,
         ),
       ).toMatchObject({
-        procedure: "slowActivePenalties",
+        procedure: "saveGatedTurnConstraintBundle",
         resource: { tag: "spellSlot", slotLevel: slowCastLevel },
         targeting: {
           kind: "pointOriginCube",
@@ -1550,10 +1548,9 @@ describe("level 5 SDK tracer bullets", () => {
       expect(failedSaveTarget.activeEffects).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            kind: "slowActivePenalties",
+            kind: "saveGatedTurnConstraintBundle",
             sourceProcedureRef: act.subject.procedureRef,
             sourceCombatantId: slowCase.casterId,
-            save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
             expiresAt: {
               kind: "concentration",
               combatantId: slowCase.casterId,
@@ -1565,7 +1562,7 @@ describe("level 5 SDK tracer bullets", () => {
       expect(
         successfulSaveTarget.activeEffects.some(
           (effect) =>
-            effect.kind === "slowActivePenalties" &&
+            effect.kind === "saveGatedTurnConstraintBundle" &&
             effect.sourceProcedureRef === act.subject.procedureRef,
         ),
       ).toBe(false);
@@ -2220,7 +2217,7 @@ describe("level 5 SDK tracer bullets", () => {
         session,
         hypnoticPatternSpellId,
         hypnoticPatternCastLevel,
-        "hypnoticPattern",
+        "saveGatedAreaControl",
       );
       const savingThrow = requireHoleFromList(
         act.initialHoles,
@@ -2237,7 +2234,7 @@ describe("level 5 SDK tracer bullets", () => {
           tag: "spellSlot",
           spellId: hypnoticPatternSpellId,
           slotLevel: hypnoticPatternCastLevel,
-          procedure: "hypnoticPattern",
+          procedure: "saveGatedAreaControl",
         },
         mode: { tag: "cast" },
       });
@@ -2253,7 +2250,7 @@ describe("level 5 SDK tracer bullets", () => {
           act.subject.procedureRef,
         ),
       ).toMatchObject({
-        procedure: "hypnoticPattern",
+        procedure: "saveGatedAreaControl",
         resource: { tag: "spellSlot", slotLevel: hypnoticPatternCastLevel },
         targeting: { kind: "pointOriginCube", sideFeet: 30 },
         rangeFeet: 120,
@@ -2294,7 +2291,7 @@ describe("level 5 SDK tracer bullets", () => {
       expect(target.activeEffects).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            kind: "hypnoticPatternControl",
+            kind: "saveGatedAreaControl",
             sourceProcedureRef: act.subject.procedureRef,
             sourceCombatantId: hypnoticPatternCase.casterId,
           }),
@@ -3120,7 +3117,7 @@ function expectSleetStormClassAccess(input: {
     session,
     sleetStormSpellId,
     sleetStormCastLevel,
-    "sleetStormAreaHazard",
+    "persistentAreaSaveComposite",
   );
   const area = requireHoleFromList(act.initialHoles, "spellAreaChoice");
 
@@ -3134,7 +3131,7 @@ function expectSleetStormClassAccess(input: {
       tag: "spellSlot",
       spellId: sleetStormSpellId,
       slotLevel: sleetStormCastLevel,
-      procedure: "sleetStormAreaHazard",
+      procedure: "persistentAreaSaveComposite",
     },
     mode: { tag: "cast" },
   });
@@ -3153,7 +3150,7 @@ function expectSleetStormClassAccess(input: {
       act.subject.procedureRef,
     ),
   ).toMatchObject({
-    procedure: "sleetStormAreaHazard",
+    procedure: "persistentAreaSaveComposite",
     resource: { tag: "spellSlot", slotLevel: sleetStormCastLevel },
     targeting: {
       kind: "pointOriginCylinder",
@@ -3306,7 +3303,7 @@ function fireballSavingThrowOutcomeFill(input: {
     holeId: input.hole.holeId,
     value: {
       area: {
-        kind: "fireballArea",
+        kind: "pointOriginSphereSaveDamageArea",
         originAnchorId: input.casterId,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts: input.objectIgnitionFacts,
@@ -3329,7 +3326,7 @@ function hypnoticPatternSavingThrowOutcomeFill(input: {
     holeId: input.hole.holeId,
     value: {
       area: {
-        kind: "hypnoticPatternArea",
+        kind: "saveGatedAreaControlArea",
         originAnchorId: input.casterId,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         cubeSideFeet: 30,
@@ -3357,7 +3354,7 @@ function slowSavingThrowOutcomeFill(input: {
     holeId: input.hole.holeId,
     value: {
       area: {
-        kind: "slowArea",
+        kind: "saveGatedTurnConstraintBundleArea",
         originAnchorId: input.casterId,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         cubeSideFeet: slowCubeSideFeet,
@@ -3445,7 +3442,8 @@ function startCounterspellableMagicMissile(input: {
   const counterspellProcedureRef =
     reactor.origin.execution.procedureBindings.flatMap((binding) => {
       return binding?.procedure.kind === "spellInvocation" &&
-        binding.procedure.execution.procedure === "counterspell" &&
+        binding.procedure.execution.procedure ===
+          "spellCastInterruptionReaction" &&
         binding.procedure.execution.resource.tag === "spellSlot" &&
         Number(binding.procedure.execution.resource.slotLevel) ===
           counterspellCastLevel
@@ -3461,7 +3459,7 @@ function startCounterspellableMagicMissile(input: {
     fills: [
       allocationFill,
       spellCastReactionFactsFill([
-        counterspellTriggerFact({
+        spellCastInterruptionTriggerFact({
           reactorId: input.reactorId,
           casterId: input.casterId,
           sourceProcedureRef: counterspellProcedureRef,
@@ -3504,21 +3502,21 @@ function magicMissileTargetAllocationFill(input: {
   };
 }
 
-type CounterspellTriggerFact = Extract<
+type SpellCastInterruptionTriggerFact = Extract<
   Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(input: {
+function spellCastInterruptionTriggerFact(input: {
   readonly reactorId: CombatantId;
   readonly casterId: CombatantId;
-  readonly sourceProcedureRef: CounterspellTriggerFact["sourceProcedureRef"];
-}): CounterspellTriggerFact {
+  readonly sourceProcedureRef: SpellCastInterruptionTriggerFact["sourceProcedureRef"];
+}): SpellCastInterruptionTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: input.sourceProcedureRef,
@@ -3527,7 +3525,7 @@ function counterspellTriggerFact(input: {
 }
 
 function spellCastReactionFactsFill(
-  facts: readonly CounterspellTriggerFact[],
+  facts: readonly SpellCastInterruptionTriggerFact[],
 ): Extract<BattleFill, { readonly kind: "targetSpatialFacts" }> {
   return {
     kind: "targetSpatialFacts",
@@ -3562,7 +3560,8 @@ function requireCounterspellChoice(
     );
     return (
       binding?.procedure.kind === "spellInvocation" &&
-      binding.procedure.execution.procedure === "counterspell" &&
+      binding.procedure.execution.procedure ===
+        "spellCastInterruptionReaction" &&
       binding.procedure.execution.resource.tag === "spellSlot" &&
       Number(binding.procedure.execution.resource.slotLevel) ===
         counterspellCastLevel
@@ -4059,7 +4058,11 @@ function sleetStormAreaChoiceFill(
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "sleetStormCylinderArea", areaId: sleetStormAreaId },
+    value: {
+      kind: "anchoredPointOriginCylinderArea",
+      areaId: sleetStormAreaId,
+      originAnchor: { kind: "tableSelectedPoint" },
+    },
   };
 }
 
@@ -4091,22 +4094,22 @@ function movementFill(
   };
 }
 
-function sleetStormAreaHazardSaveSubject(
+function persistentAreaSaveCompositeSaveSubject(
   effectRef: Extract<
     BattleActiveEffect,
-    { readonly kind: "sleetStormAreaHazard" }
+    { readonly kind: "persistentAreaSaveComposite" }
   >["effectRef"],
 ): Extract<
   AvailableBattleAct["subject"],
   {
     readonly tag: "runtimeCommand";
-    readonly command: "sleetStormAreaHazardSave";
+    readonly command: "persistentAreaSaveCompositeSave";
   }
 > {
   return {
     tag: "runtimeCommand",
     actorId: sleetStormTargetId,
-    command: "sleetStormAreaHazardSave",
+    command: "persistentAreaSaveCompositeSave",
     areaMembershipTrigger: {
       kind: "firstEntryOnTurn",
       effectRef,

@@ -498,6 +498,18 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     ["execution-diagnostic"],
     "resistance names a damage relationship mechanic",
   ),
+  ...exactCollision(
+    "fly",
+    "Druid Wild Shape battle forms cannot have a Fly Speed at this Druid level.",
+    ["execution-diagnostic"],
+    "Fly Speed is a creature movement mode and Wild Shape admission fact",
+  ),
+  ...exactCollision(
+    "shield",
+    "Character battle loadout cannot wield shield and off-hand weapon.",
+    ["execution-diagnostic"],
+    "shield is an equipment category",
+  ),
   ...[
     "runtimeCommandSubjectKind",
     "resolveControlledVerticalSuspensionAltitudeControlCommand",
@@ -2491,6 +2503,29 @@ function collectSurfaceSpellLexicon(records) {
   };
 }
 
+function collectSurfaceSpellHoleIds() {
+  const holeIds = new Set();
+  const visit = (value) => {
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+      return;
+    }
+    if (value == null || typeof value !== "object") return;
+    for (const [key, nestedValue] of Object.entries(value)) {
+      if (key === "holeId" && typeof nestedValue === "string") {
+        holeIds.add(nestedValue);
+      }
+      visit(nestedValue);
+    }
+  };
+
+  for (const filePath of listSurfaceContentFiles(SURFACE_CONTENT_ROOT)) {
+    const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    if (parsed?.kind === "spell") visit(parsed);
+  }
+  return holeIds;
+}
+
 function wordsContainPhrase(words, phrase) {
   if (phrase.length === 0 || phrase.length > words.length) return false;
   for (let start = 0; start <= words.length - phrase.length; start += 1) {
@@ -2560,6 +2595,25 @@ function isExecutionIdentitySource(relativePath, executionImportClosure) {
     executionImportClosure.has(relativePath) &&
     executionIdentityBoundaryReason(relativePath) === null
   );
+}
+
+function executionDiagnosticViolationsForFile(
+  relativePath,
+  content,
+  spellLexicon,
+) {
+  if (
+    !relativePath.startsWith("packages/battle-runtime/src/") ||
+    executionIdentityBoundaryReason(relativePath) !== null
+  ) {
+    return [];
+  }
+  return executionIdentityViolationsForFile(
+    relativePath,
+    content,
+    spellLexicon,
+    new Set([relativePath]),
+  ).filter((violation) => violation.role === "execution-diagnostic");
 }
 
 function declarationName(node) {
@@ -3098,6 +3152,7 @@ function runExecutionIdentityCohortSelfTest() {
     throw new Error("Cloudkill constructor diagnostic.")
     export const MIRROR_IMAGE_HOLE_PREFIX = "battle:mirror-image:duplicate:"
     export function occurrenceMessage() { return "Find Familiar lifecycle failed." }
+    const lifecycleConfig = { emptyRosterMessage: "Find Familiar admission requires combatants." }
     export function resolve(input) {
       const sanctuaryCheck = input
       return invalidTransition("invalidFill", \`Spell \${input.part} Mirror Image duplicate roll is invalid.\`)
@@ -3130,6 +3185,7 @@ function runExecutionIdentityCohortSelfTest() {
     "MIRROR_IMAGE_HOLE_PREFIX",
     "battle:mirror-image:duplicate:",
     "Find Familiar lifecycle failed.",
+    "Find Familiar admission requires combatants.",
     "sanctuaryCheck",
     "Spell   Mirror Image duplicate roll is invalid.",
   ]) {
@@ -3140,6 +3196,18 @@ function runExecutionIdentityCohortSelfTest() {
       `cohort self-test missed ${identifier}`,
     );
   }
+  assert.ok(
+    executionDiagnosticViolationsForFile(
+      "packages/battle-runtime/src/companion-lifecycle.ts",
+      `const lifecycle = { emptyRosterMessage: "Find Familiar admission requires combatants." }`,
+      lexicon,
+    ).some(
+      (violation) =>
+        violation.role === "execution-diagnostic" &&
+        violation.identifier === "Find Familiar admission requires combatants.",
+    ),
+    "cohort scanner did not inspect arbitrary diagnostic fields in battle runtime production outside the declared execution closure",
+  );
   assert.throws(
     () =>
       assertEveryPathRuleMatches(
@@ -4222,6 +4290,7 @@ function runSelfTest() {
     "addle",
     "push",
     "topple",
+    "flaming_sphere_area",
   ]) {
     addAuthoredIdentityLiteral(selfTestLiterals, literal);
   }
@@ -4277,6 +4346,27 @@ function runSelfTest() {
   assert(
     productionKinds.has("effect-match-identity-branch"),
     `Self-test failed: effect/Match spell.name branch was not caught. Got ${JSON.stringify(productionViolations)}`,
+  );
+
+  const authoredHoleIdBranch = [
+    "export function authoredHoleSelection(attachment) {",
+    '  return attachment.holeId === "flaming_sphere_area";',
+    "}",
+  ].join("\n");
+  const authoredHoleIdViolations = findViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/synthetic-area.ts",
+    authoredHoleIdBranch,
+    authoredAlternation,
+    new Set(),
+    new Map(),
+  );
+  assert(
+    authoredHoleIdViolations.some(
+      (violation) =>
+        violation.literal === "flaming_sphere_area" &&
+        violation.context.kind === "id-comparison",
+    ),
+    `Self-test failed: authored hole-ID dispatch was not caught. Got ${JSON.stringify(authoredHoleIdViolations)}`,
   );
 
   const someOnlyBranch = [
@@ -4598,6 +4688,9 @@ function main() {
   const authoredAlternation = buildAuthoredAlternation(
     authoredIdentityLiterals,
   );
+  const battleAuthoredAlternation = buildAuthoredAlternation(
+    new Set([...authoredIdentityLiterals, ...collectSurfaceSpellHoleIds()]),
+  );
   const { lexicon: surfaceSpellLexicon, malformed: malformedSpellRecords } =
     collectSurfaceSpellLexicon();
   if (malformedSpellRecords.length > 0) {
@@ -4683,12 +4776,19 @@ function main() {
         surfaceSpellLexicon,
         executionImportClosure,
       ),
+      ...executionDiagnosticViolationsForFile(
+        relativePath,
+        content,
+        surfaceSpellLexicon,
+      ),
     );
     violations.push(
       ...findViolationsForFile(
         relativePath,
         content,
-        authoredAlternation,
+        relativePath.startsWith("packages/battle-runtime/")
+          ? battleAuthoredAlternation
+          : authoredAlternation,
         sourceFilesSet,
         authoredExportsByFile,
       ),

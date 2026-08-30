@@ -943,7 +943,7 @@ function withInitialInitiativeOrder(
   const initiative = createInitialInitiativeForCombatants({
     combatants: [...state.combatants.values()],
     initialCombatantOrder,
-    emptyRosterMessage: "Find Familiar admission requires combatants.",
+    emptyRosterMessage: "Companion admission requires combatants.",
   });
   /* v8 ignore start -- @preserve -- Malformed handoff: the character-battle boundary supplies one unique initial-order entry for every admitted combatant. */
   if (Result.isFailure(initiative)) {

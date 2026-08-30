@@ -15,7 +15,7 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   spellSaveDcForCaster,
-  thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
+  temporaryAbilityCheckRollModeInfluenceAbilityCheckHole,
   type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleFill,
@@ -2407,7 +2407,7 @@ function assertLevelOneThunderwave(input: {
   ]);
   expect(saveFill.value).toEqual({
     area: {
-      kind: "thunderwaveArea",
+      kind: "selfOriginCubePushArea",
       originAnchorId: input.casterId,
       affectedTargetIds: [monsterId, secondMonsterId],
       creaturePushes: [
@@ -3052,7 +3052,7 @@ function assertLevelOneSorcerousBurst(input: {
     targeting: { kind: "singleCreatureOrObject" },
     rangeFeet: 120,
     damage: {
-      kind: "sorcerousBurstDamageTypeChoice",
+      kind: "spellAttackDamageTypeChoice",
       expr: { dice: 1, dieSize: 8 },
       damageTypeChoices: expect.arrayContaining(["thunder"]),
       maxDieAdditionalDiceLimit: 2,
@@ -3744,11 +3744,11 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
     session,
     input.casterId,
     authoredUnitId(thaumaturgySpellId),
-    "thaumaturgyBoomingVoice",
+    "temporaryAbilityCheckRollMode",
   );
   const countHole = requireHoleFromList(
     act.initialHoles,
-    "thaumaturgyActiveOneMinuteEffectCount",
+    "temporaryAbilityCheckRollModeActiveEffectCount",
   );
 
   expect(act.initialHoles).toHaveLength(1);
@@ -3770,7 +3770,7 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
   expect(caster.activeEffects).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        kind: "thaumaturgyBoomingVoice",
+        kind: "temporaryAbilityCheckRollMode",
         sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         expiresAt: {
@@ -3787,7 +3787,7 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
     input.expectedSpellSlots,
   );
   expect(
-    thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
+    temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
       resolved.state,
       input.casterId,
       difficultyClass(13),
@@ -3994,13 +3994,13 @@ function assertLevelOneSanctuary(input: {
     ),
   ).toMatchObject({
     access: { tag: "prepared" },
-    procedure: "sanctuaryTargetingInterdiction",
+    procedure: "targetingSaveInterdiction",
     resource: { tag: "spellSlot", slotLevel: 1 },
     actionCost: "bonusAction",
     targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
     rangeFeet: movementFeet(30),
     activeEffect: {
-      kind: "sanctuaryWard",
+      kind: "targetingSaveInterdiction",
       sourceCombatantId: input.casterId,
       save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       expiresAt: { kind: "duration", durationTicks: sanctuaryDurationTicks },
@@ -4030,10 +4030,9 @@ function assertLevelOneSanctuary(input: {
   ).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        kind: "sanctuaryWard",
+        kind: "targetingSaveInterdiction",
         sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
-        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
         expiresAt: {
           kind: "duration",
           durationTicks: sanctuaryDurationTicks,
@@ -8964,7 +8963,7 @@ function sanctuaryBonusActionSpellSlotAct(
         sanctuarySpellId &&
       battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1 &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "sanctuaryTargetingInterdiction",
+        "targetingSaveInterdiction",
   );
   if (act === undefined) {
     throw new Error("Expected Sanctuary Bonus Action spell-slot act.");
@@ -9169,9 +9168,9 @@ function thunderwaveArea(
   originAnchorId: CombatantId,
   affectedTargetIds: readonly CombatantId[],
   failedTargetIds: readonly CombatantId[],
-): Extract<BattleSpellAreaChoice, { readonly kind: "thunderwaveArea" }> {
+): Extract<BattleSpellAreaChoice, { readonly kind: "selfOriginCubePushArea" }> {
   return {
-    kind: "thunderwaveArea",
+    kind: "selfOriginCubePushArea",
     originAnchorId,
     affectedTargetIds,
     creaturePushes: failedTargetIds.map((targetId) => ({
@@ -9208,14 +9207,14 @@ function thunderwaveArea(
 function noActiveThaumaturgyOneMinuteEffectsFill(
   hole: Extract<
     BattleHole,
-    { readonly kind: "thaumaturgyActiveOneMinuteEffectCount" }
+    { readonly kind: "temporaryAbilityCheckRollModeActiveEffectCount" }
   >,
 ): Extract<
   BattleFill,
-  { readonly kind: "thaumaturgyActiveOneMinuteEffectCount" }
+  { readonly kind: "temporaryAbilityCheckRollModeActiveEffectCount" }
 > {
   return {
-    kind: "thaumaturgyActiveOneMinuteEffectCount",
+    kind: "temporaryAbilityCheckRollModeActiveEffectCount",
     holeId: hole.holeId,
     value: { activeOneMinuteEffectCount: 0 },
   };
