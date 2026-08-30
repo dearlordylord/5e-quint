@@ -52,6 +52,7 @@ import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
+import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 
 type TranslatingPersistentAreaAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -181,6 +182,12 @@ function persistentAreaSaveDamageSpell(
     translatingPersistentAreaSaveGateDamageAmount(initialPhase);
   const initialUsageLimit =
     initialPhase?.kind === "save_gate" ? initialPhase.usageLimit : undefined;
+  const saveLimitGroup = sharedOncePerTurnLimitGroup([
+    initialUsageLimit,
+    movedAreaOperation?.usageLimit,
+    enterOperation?.usageLimit,
+    endTurnOperation?.usageLimit,
+  ]);
 
   if (
     mechanics.level !== TRANSLATING_PERSISTENT_AREA_LEVEL ||
@@ -210,12 +217,8 @@ function persistentAreaSaveDamageSpell(
       null ||
     translatingPersistentAreaSaveGateDamageAmount(endTurnOperation?.effect) ===
       null ||
-    sharedOncePerTurnLimitGroup([
-      initialUsageLimit,
-      movedAreaOperation?.usageLimit,
-      enterOperation?.usageLimit,
-      endTurnOperation?.usageLimit,
-    ]) === null
+    saveLimitGroup === null ||
+    saveLimitGroup.length === 0
   ) {
     return null;
   }
@@ -227,28 +230,6 @@ function persistentAreaSaveDamageSpell(
     translationDistanceFeet: moveOperation.effect.distanceFeet,
     damageAmount: initialDamageAmount,
   };
-}
-
-function sharedOncePerTurnLimitGroup(
-  limits: readonly (
-    | {
-        readonly kind: "once_per_round" | "once_per_turn";
-        readonly limitGroup?: string;
-      }
-    | undefined
-  )[],
-): string | null {
-  const [first, ...remaining] = limits;
-  return first?.kind === "once_per_turn" &&
-    typeof first.limitGroup === "string" &&
-    first.limitGroup.length > 0 &&
-    remaining.every(
-      (limit) =>
-        limit?.kind === "once_per_turn" &&
-        limit.limitGroup === first.limitGroup,
-    )
-    ? first.limitGroup
-    : null;
 }
 
 function translatingPersistentAreaSaveGateDamageAmount(

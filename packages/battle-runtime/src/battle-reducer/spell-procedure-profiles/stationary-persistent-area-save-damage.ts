@@ -49,6 +49,7 @@ import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
+import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 
 type StationaryPersistentAreaAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -162,6 +163,11 @@ function persistentAreaSaveDamageSpell(
     stationaryPersistentAreaSaveGateDamageAmount(initialPhase);
   const initialUsageLimit =
     initialPhase?.kind === "save_gate" ? initialPhase.usageLimit : undefined;
+  const saveLimitGroup = sharedOncePerTurnLimitGroup([
+    initialUsageLimit,
+    enterOperation?.usageLimit,
+    endTurnOperation?.usageLimit,
+  ]);
 
   if (
     mechanics.level !== STATIONARY_PERSISTENT_AREA_LEVEL ||
@@ -183,11 +189,8 @@ function persistentAreaSaveDamageSpell(
       null ||
     stationaryPersistentAreaSaveGateDamageAmount(endTurnOperation?.effect) ===
       null ||
-    sharedOncePerTurnLimitGroup([
-      initialUsageLimit,
-      enterOperation?.usageLimit,
-      endTurnOperation?.usageLimit,
-    ]) === null
+    saveLimitGroup === null ||
+    saveLimitGroup.length === 0
   ) {
     return null;
   }
@@ -198,28 +201,6 @@ function persistentAreaSaveDamageSpell(
     radiusFeet: area.shape.radiusFeet,
     damageAmount: initialDamageAmount,
   };
-}
-
-function sharedOncePerTurnLimitGroup(
-  limits: readonly (
-    | {
-        readonly kind: "once_per_round" | "once_per_turn";
-        readonly limitGroup?: string;
-      }
-    | undefined
-  )[],
-): string | null {
-  const [first, ...remaining] = limits;
-  return first?.kind === "once_per_turn" &&
-    typeof first.limitGroup === "string" &&
-    first.limitGroup.length > 0 &&
-    remaining.every(
-      (limit) =>
-        limit?.kind === "once_per_turn" &&
-        limit.limitGroup === first.limitGroup,
-    )
-    ? first.limitGroup
-    : null;
 }
 
 function isStationaryPersistentAreaPassiveOperation(
