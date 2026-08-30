@@ -20,10 +20,13 @@
     "detect_magic",
     "detect_poison_and_disease",
     "detect_thoughts",
+    "disguise_self",
     "druid_ability_score_improvement_l4",
     "druid_druidic",
     "druid_wild_companion",
     "druid_wild_shape",
+    "druidcraft",
+    "elementalism",
     "enlarge_reduce",
     "enthrall",
     "fighter_ability_score_improvement_l4",
@@ -36,6 +39,7 @@
     "levitate",
     "locate_animals_or_plants",
     "locate_object",
+    "mage_hand",
     "magic_mouth",
     "mending",
     "mind_spike",
@@ -456,7 +460,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -564,7 +568,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -723,7 +727,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -1277,7 +1281,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -1439,7 +1443,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "animate_dead"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -1610,7 +1614,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -2319,7 +2323,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "spirit_guardians"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -2376,7 +2380,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -3143,7 +3147,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -4765,7 +4769,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -5288,7 +5292,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -5500,7 +5504,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -5865,7 +5869,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -6128,7 +6132,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -6242,7 +6246,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -6504,7 +6508,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -6777,7 +6781,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -6891,7 +6895,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -7110,7 +7114,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "animate_dead"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -7281,7 +7285,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -7436,7 +7440,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -7909,7 +7913,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -8514,7 +8518,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -8628,7 +8632,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -15609,9 +15613,15 @@
       "concept": "Bard spell list Mage Hand",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-0",
-      "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+      "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
       "ownerBoundaryStatus": "unresolved-review",
@@ -15626,22 +15636,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/mage_hand.json",
+          "state": "authored-record-present",
+          "unitId": "mage_hand"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "mage_hand"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -16408,9 +16425,15 @@
       "concept": "Bard spell list Disguise Self",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-1",
-      "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+      "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion presentation and perception owner",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
       "ownerBoundaryStatus": "unresolved-review",
@@ -16425,22 +16448,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/disguise_self.json",
+          "state": "authored-record-present",
+          "unitId": "disguise_self"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion presentation and perception owner",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "disguise_self"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -16768,7 +16798,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "identify"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -18313,7 +18343,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -18421,7 +18451,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -18580,7 +18610,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -19134,7 +19164,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -22199,7 +22229,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "animate_dead"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -22370,7 +22400,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -23079,7 +23109,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "spirit_guardians"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -23136,7 +23166,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -24407,9 +24437,15 @@
       "concept": "Druid spell list Druidcraft",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-0",
-      "nextAction": "Weather signs, harmless sensory effects, plant blossoming, and candle/torch/campfire narration are noncombat environmental effects outside promoted runtime owners.",
+      "nextAction": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
       "ownerBoundaryStatus": "unresolved-review",
@@ -24424,22 +24460,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/druidcraft.json",
+          "state": "authored-record-present",
+          "unitId": "druidcraft"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "druidcraft"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -24451,9 +24494,15 @@
       "concept": "Druid spell list Elementalism",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-0",
-      "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+      "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
       "ownerBoundaryStatus": "unresolved-review",
@@ -24468,22 +24517,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/elementalism.json",
+          "state": "authored-record-present",
+          "unitId": "elementalism"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "elementalism"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -27381,7 +27437,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -35908,7 +35964,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -38643,9 +38699,15 @@
       "concept": "Sorcerer spell list Elementalism",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-0",
-      "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+      "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
       "ownerBoundaryStatus": "unresolved-review",
@@ -38660,22 +38722,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/elementalism.json",
+          "state": "authored-record-present",
+          "unitId": "elementalism"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "elementalism"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -38777,9 +38846,15 @@
       "concept": "Sorcerer spell list Mage Hand",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-0",
-      "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+      "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
       "ownerBoundaryStatus": "unresolved-review",
@@ -38794,22 +38869,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/mage_hand.json",
+          "state": "authored-record-present",
+          "unitId": "mage_hand"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "mage_hand"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -39568,9 +39650,15 @@
       "concept": "Sorcerer spell list Disguise Self",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-1",
-      "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+      "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion presentation and perception owner",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
       "ownerBoundaryStatus": "unresolved-review",
@@ -39585,22 +39673,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/disguise_self.json",
+          "state": "authored-record-present",
+          "unitId": "disguise_self"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion presentation and perception owner",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "disguise_self"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -41539,7 +41634,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -41751,7 +41846,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -42116,7 +42211,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -42379,7 +42474,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -42493,7 +42588,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -43619,9 +43714,15 @@
       "concept": "Warlock spell list Mage Hand",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-0",
-      "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+      "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
       "ownerBoundaryStatus": "unresolved-review",
@@ -43636,22 +43737,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/mage_hand.json",
+          "state": "authored-record-present",
+          "unitId": "mage_hand"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "mage_hand"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -45044,7 +45152,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -45317,7 +45425,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -45431,7 +45539,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -46720,9 +46828,15 @@
       "concept": "Wizard spell list Elementalism",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-0",
-      "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+      "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
       "ownerBoundaryStatus": "unresolved-review",
@@ -46737,22 +46851,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/elementalism.json",
+          "state": "authored-record-present",
+          "unitId": "elementalism"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "elementalism"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -46854,9 +46975,15 @@
       "concept": "Wizard spell list Mage Hand",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-0",
-      "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+      "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
       "ownerBoundaryStatus": "unresolved-review",
@@ -46871,22 +46998,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/mage_hand.json",
+          "state": "authored-record-present",
+          "unitId": "mage_hand"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "mage_hand"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -47652,9 +47786,15 @@
       "concept": "Wizard spell list Disguise Self",
       "finalDisposition": "catalog-only/dead-for-now",
       "levelBand": "spell-level-1",
-      "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+      "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
       "ownerBoundaryEvidence": {
-        "closureState": "not-recorded",
+        "closure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion presentation and perception owner",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
         "source": "battle-readiness-closure"
       },
       "ownerBoundaryStatus": "unresolved-review",
@@ -47669,22 +47809,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/disguise_self.json",
+          "state": "authored-record-present",
+          "unitId": "disguise_self"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion presentation and perception owner",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "disguise_self"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -48139,7 +48286,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "identify"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -50467,7 +50614,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "animate_dead"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -50638,7 +50785,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -50793,7 +50940,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -51266,7 +51413,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -51871,7 +52018,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -51985,7 +52132,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -52651,6 +52798,66 @@
         },
         {
           "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Bard spell list Disguise Self",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
+              "levelBand": "spell-level-1",
+              "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 170,
+                "lineStart": 170,
+                "path": ".references/srd-5.2.1/Classes/Bard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Sorcerer spell list Disguise Self",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
+              "levelBand": "spell-level-1",
+              "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 250,
+                "lineStart": 250,
+                "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Wizard spell list Disguise Self",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
+              "levelBand": "spell-level-1",
+              "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 169,
+                "lineStart": 169,
+                "path": ".references/srd-5.2.1/Classes/Wizard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "disguise_self"
+        },
+        {
+          "claimTag": "unsupported-profile",
           "kind": "class_feature",
           "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content.",
           "sourceRows": [
@@ -52678,11 +52885,97 @@
         {
           "claimTag": "unsupported-profile",
           "kind": "spell",
+          "reason": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Druid spell list Druidcraft",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 188,
+                "lineStart": 188,
+                "path": ".references/srd-5.2.1/Classes/Druid.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "druidcraft"
+        },
+        {
+          "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Druid spell list Elementalism",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 189,
+                "lineStart": 189,
+                "path": ".references/srd-5.2.1/Classes/Druid.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Sorcerer spell list Elementalism",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 226,
+                "lineStart": 226,
+                "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Wizard spell list Elementalism",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 145,
+                "lineStart": 145,
+                "path": ".references/srd-5.2.1/Classes/Wizard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "elementalism"
+        },
+        {
+          "claimTag": "unsupported-profile",
+          "kind": "spell",
           "reason": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts.",
           "sourceRows": [
             {
               "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "not-installed",
+              "catalogAdmissionState": "installed",
               "category": "spell Unit pressure",
               "concept": "Bard spell list Identify",
               "finalDisposition": "catalog-only/dead-for-now",
@@ -52699,7 +52992,7 @@
             },
             {
               "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "not-installed",
+              "catalogAdmissionState": "installed",
               "category": "spell Unit pressure",
               "concept": "Wizard spell list Identify",
               "finalDisposition": "catalog-only/dead-for-now",
@@ -52717,6 +53010,83 @@
           ],
           "status": "closed-runtime-detached-table-adjudication",
           "unitId": "identify"
+        },
+        {
+          "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Bard spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 149,
+                "lineStart": 149,
+                "path": ".references/srd-5.2.1/Classes/Bard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Sorcerer spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 229,
+                "lineStart": 229,
+                "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Warlock spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 338,
+                "lineStart": 338,
+                "path": ".references/srd-5.2.1/Classes/Warlock.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Wizard spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 148,
+                "lineStart": 148,
+                "path": ".references/srd-5.2.1/Classes/Wizard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "mage_hand"
         },
         {
           "claimTag": "unsupported-profile",
@@ -53195,13 +53565,13 @@
       },
       "sourcePath": "plans/unit-profile-coverage/level1-full-support.json",
       "strictRuntimeProfileSupport": {
-        "denominator": 96,
+        "denominator": 100,
         "numerator": 80,
-        "percent": "83.3%"
+        "percent": "80%"
       },
       "strictTargetClosure": {
-        "denominator": 96,
-        "numerator": 96,
+        "denominator": 100,
+        "numerator": 100,
         "percent": "100%"
       },
       "summary": {
@@ -53209,16 +53579,16 @@
         "groupsByClaimTag": {
           "profile-subset-supported": 3,
           "supported-profile": 80,
-          "unsupported-profile": 13
+          "unsupported-profile": 17
         },
         "groupsByStatus": {
           "closed-character-fact-and-runtime-detached-split": 2,
           "closed-later-level-only": 1,
-          "closed-runtime-detached-table-adjudication": 13,
+          "closed-runtime-detached-table-adjudication": 17,
           "supported-profile": 80
         },
-        "nonSupportedFrontier": 16,
-        "strictDenominator": 96
+        "nonSupportedFrontier": 20,
+        "strictDenominator": 100
       },
       "title": "Character Level 1"
     },
@@ -53705,6 +54075,66 @@
         },
         {
           "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Bard spell list Disguise Self",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
+              "levelBand": "spell-level-1",
+              "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 170,
+                "lineStart": 170,
+                "path": ".references/srd-5.2.1/Classes/Bard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Sorcerer spell list Disguise Self",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
+              "levelBand": "spell-level-1",
+              "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 250,
+                "lineStart": 250,
+                "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Wizard spell list Disguise Self",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
+              "levelBand": "spell-level-1",
+              "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 169,
+                "lineStart": 169,
+                "path": ".references/srd-5.2.1/Classes/Wizard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "disguise_self"
+        },
+        {
+          "claimTag": "unsupported-profile",
           "kind": "class_feature",
           "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content.",
           "sourceRows": [
@@ -53784,11 +54214,97 @@
         {
           "claimTag": "unsupported-profile",
           "kind": "spell",
+          "reason": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Druid spell list Druidcraft",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 188,
+                "lineStart": 188,
+                "path": ".references/srd-5.2.1/Classes/Druid.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "druidcraft"
+        },
+        {
+          "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Druid spell list Elementalism",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 189,
+                "lineStart": 189,
+                "path": ".references/srd-5.2.1/Classes/Druid.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Sorcerer spell list Elementalism",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 226,
+                "lineStart": 226,
+                "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Wizard spell list Elementalism",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 145,
+                "lineStart": 145,
+                "path": ".references/srd-5.2.1/Classes/Wizard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "elementalism"
+        },
+        {
+          "claimTag": "unsupported-profile",
+          "kind": "spell",
           "reason": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts.",
           "sourceRows": [
             {
               "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "not-installed",
+              "catalogAdmissionState": "installed",
               "category": "spell Unit pressure",
               "concept": "Bard spell list Identify",
               "finalDisposition": "catalog-only/dead-for-now",
@@ -53805,7 +54321,7 @@
             },
             {
               "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "not-installed",
+              "catalogAdmissionState": "installed",
               "category": "spell Unit pressure",
               "concept": "Wizard spell list Identify",
               "finalDisposition": "catalog-only/dead-for-now",
@@ -53823,6 +54339,83 @@
           ],
           "status": "closed-runtime-detached-table-adjudication",
           "unitId": "identify"
+        },
+        {
+          "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Bard spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 149,
+                "lineStart": 149,
+                "path": ".references/srd-5.2.1/Classes/Bard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Sorcerer spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 229,
+                "lineStart": 229,
+                "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Warlock spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 338,
+                "lineStart": 338,
+                "path": ".references/srd-5.2.1/Classes/Warlock.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Wizard spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 148,
+                "lineStart": 148,
+                "path": ".references/srd-5.2.1/Classes/Wizard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "mage_hand"
         },
         {
           "claimTag": "unsupported-profile",
@@ -54379,13 +54972,13 @@
       },
       "sourcePath": "plans/unit-profile-coverage/level1-2-full-support.json",
       "strictRuntimeProfileSupport": {
-        "denominator": 117,
+        "denominator": 121,
         "numerator": 96,
-        "percent": "82.1%"
+        "percent": "79.3%"
       },
       "strictTargetClosure": {
-        "denominator": 117,
-        "numerator": 117,
+        "denominator": 121,
+        "numerator": 121,
         "percent": "100%"
       },
       "summary": {
@@ -54393,18 +54986,18 @@
         "groupsByClaimTag": {
           "profile-subset-supported": 8,
           "supported-profile": 96,
-          "unsupported-profile": 13
+          "unsupported-profile": 17
         },
         "groupsByStatus": {
           "closed-character-fact-and-runtime-detached-split": 4,
           "closed-companion-control-boundary": 1,
           "closed-later-level-only": 1,
           "closed-outside-battle-runtime-boundary": 1,
-          "closed-runtime-detached-table-adjudication": 14,
+          "closed-runtime-detached-table-adjudication": 18,
           "supported-profile": 96
         },
-        "nonSupportedFrontier": 21,
-        "strictDenominator": 117
+        "nonSupportedFrontier": 25,
+        "strictDenominator": 121
       },
       "title": "Character Levels 1-2"
     },
@@ -55389,6 +55982,66 @@
         },
         {
           "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Bard spell list Disguise Self",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
+              "levelBand": "spell-level-1",
+              "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 170,
+                "lineStart": 170,
+                "path": ".references/srd-5.2.1/Classes/Bard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Sorcerer spell list Disguise Self",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
+              "levelBand": "spell-level-1",
+              "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 250,
+                "lineStart": 250,
+                "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Wizard spell list Disguise Self",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
+              "levelBand": "spell-level-1",
+              "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 169,
+                "lineStart": 169,
+                "path": ".references/srd-5.2.1/Classes/Wizard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "disguise_self"
+        },
+        {
+          "claimTag": "unsupported-profile",
           "kind": "class_feature",
           "reason": "Druidic hidden-message spotting, Investigation adjudication, and deciphering are runtime-detached table adjudication outside promoted battle runtime; Druidic language and always-prepared Speak with Animals Spell Access remain character-owned CharacterBuild facts derived from authored Surface content.",
           "sourceRows": [
@@ -55464,6 +56117,92 @@
           ],
           "status": "closed-character-fact-and-runtime-detached-split",
           "unitId": "druid_wild_shape"
+        },
+        {
+          "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Druid spell list Druidcraft",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 188,
+                "lineStart": 188,
+                "path": ".references/srd-5.2.1/Classes/Druid.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "druidcraft"
+        },
+        {
+          "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Druid spell list Elementalism",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 189,
+                "lineStart": 189,
+                "path": ".references/srd-5.2.1/Classes/Druid.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Sorcerer spell list Elementalism",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 226,
+                "lineStart": 226,
+                "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Wizard spell list Elementalism",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 145,
+                "lineStart": 145,
+                "path": ".references/srd-5.2.1/Classes/Wizard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "elementalism"
         },
         {
           "claimTag": "profile-subset-supported",
@@ -55815,7 +56554,7 @@
           "sourceRows": [
             {
               "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "not-installed",
+              "catalogAdmissionState": "installed",
               "category": "spell Unit pressure",
               "concept": "Bard spell list Identify",
               "finalDisposition": "catalog-only/dead-for-now",
@@ -55832,7 +56571,7 @@
             },
             {
               "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "not-installed",
+              "catalogAdmissionState": "installed",
               "category": "spell Unit pressure",
               "concept": "Wizard spell list Identify",
               "finalDisposition": "catalog-only/dead-for-now",
@@ -56124,6 +56863,83 @@
           ],
           "status": "closed-runtime-detached-table-adjudication",
           "unitId": "locate_object"
+        },
+        {
+          "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Bard spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 149,
+                "lineStart": 149,
+                "path": ".references/srd-5.2.1/Classes/Bard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Sorcerer spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 229,
+                "lineStart": 229,
+                "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Warlock spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 338,
+                "lineStart": 338,
+                "path": ".references/srd-5.2.1/Classes/Warlock.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Wizard spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 148,
+                "lineStart": 148,
+                "path": ".references/srd-5.2.1/Classes/Wizard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "mage_hand"
         },
         {
           "claimTag": "unsupported-profile",
@@ -57263,13 +58079,13 @@
       },
       "sourcePath": "plans/unit-profile-coverage/level1-3-full-support.json",
       "strictRuntimeProfileSupport": {
-        "denominator": 200,
+        "denominator": 204,
         "numerator": 146,
-        "percent": "73%"
+        "percent": "71.6%"
       },
       "strictTargetClosure": {
-        "denominator": 200,
-        "numerator": 200,
+        "denominator": 204,
+        "numerator": 204,
         "percent": "100%"
       },
       "summary": {
@@ -57277,18 +58093,18 @@
         "groupsByClaimTag": {
           "profile-subset-supported": 22,
           "supported-profile": 146,
-          "unsupported-profile": 32
+          "unsupported-profile": 36
         },
         "groupsByStatus": {
           "closed-character-fact-and-runtime-detached-split": 4,
           "closed-companion-control-boundary": 2,
           "closed-later-level-only": 2,
           "closed-outside-battle-runtime-boundary": 9,
-          "closed-runtime-detached-table-adjudication": 37,
+          "closed-runtime-detached-table-adjudication": 41,
           "supported-profile": 146
         },
-        "nonSupportedFrontier": 54,
-        "strictDenominator": 200
+        "nonSupportedFrontier": 58,
+        "strictDenominator": 204
       },
       "title": "Character Levels 1-3"
     },
@@ -58351,6 +59167,66 @@
         },
         {
           "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Bard spell list Disguise Self",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
+              "levelBand": "spell-level-1",
+              "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 170,
+                "lineStart": 170,
+                "path": ".references/srd-5.2.1/Classes/Bard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Sorcerer spell list Disguise Self",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
+              "levelBand": "spell-level-1",
+              "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 250,
+                "lineStart": 250,
+                "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Wizard spell list Disguise Self",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
+              "levelBand": "spell-level-1",
+              "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 169,
+                "lineStart": 169,
+                "path": ".references/srd-5.2.1/Classes/Wizard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "disguise_self"
+        },
+        {
+          "claimTag": "unsupported-profile",
           "kind": "class_feature",
           "reason": "The class feature opens a level-4 feat choice. Selected feat Units own executable behavior, the Ability Score Improvement feat's ability-score mutation remains character-creation state outside promoted battle runtime, and level-4 class progression admission is outside this promoted battle-profile claim.",
           "sourceRows": [
@@ -58452,6 +59328,92 @@
           ],
           "status": "closed-character-fact-and-runtime-detached-split",
           "unitId": "druid_wild_shape"
+        },
+        {
+          "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Druid spell list Druidcraft",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 188,
+                "lineStart": 188,
+                "path": ".references/srd-5.2.1/Classes/Druid.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "druidcraft"
+        },
+        {
+          "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Druid spell list Elementalism",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 189,
+                "lineStart": 189,
+                "path": ".references/srd-5.2.1/Classes/Druid.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Sorcerer spell list Elementalism",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 226,
+                "lineStart": 226,
+                "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Wizard spell list Elementalism",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 145,
+                "lineStart": 145,
+                "path": ".references/srd-5.2.1/Classes/Wizard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "elementalism"
         },
         {
           "claimTag": "profile-subset-supported",
@@ -58829,7 +59791,7 @@
           "sourceRows": [
             {
               "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "not-installed",
+              "catalogAdmissionState": "installed",
               "category": "spell Unit pressure",
               "concept": "Bard spell list Identify",
               "finalDisposition": "catalog-only/dead-for-now",
@@ -58846,7 +59808,7 @@
             },
             {
               "battleReadinessStatus": "accepted-no-battle-effect",
-              "catalogAdmissionState": "not-installed",
+              "catalogAdmissionState": "installed",
               "category": "spell Unit pressure",
               "concept": "Wizard spell list Identify",
               "finalDisposition": "catalog-only/dead-for-now",
@@ -59138,6 +60100,83 @@
           ],
           "status": "closed-runtime-detached-table-adjudication",
           "unitId": "locate_object"
+        },
+        {
+          "claimTag": "unsupported-profile",
+          "kind": "spell",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "sourceRows": [
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Bard spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 149,
+                "lineStart": 149,
+                "path": ".references/srd-5.2.1/Classes/Bard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Sorcerer spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 229,
+                "lineStart": 229,
+                "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Warlock spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 338,
+                "lineStart": 338,
+                "path": ".references/srd-5.2.1/Classes/Warlock.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            },
+            {
+              "battleReadinessStatus": "accepted-no-battle-effect",
+              "catalogAdmissionState": "installed",
+              "category": "spell Unit pressure",
+              "concept": "Wizard spell list Mage Hand",
+              "finalDisposition": "catalog-only/dead-for-now",
+              "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
+              "levelBand": "spell-level-0",
+              "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+              "rowKind": "spell-unit-pressure",
+              "source": {
+                "lineEnd": 148,
+                "lineStart": 148,
+                "path": ".references/srd-5.2.1/Classes/Wizard.md"
+              },
+              "unitProfileDisposition": "unsupported-profile"
+            }
+          ],
+          "status": "closed-runtime-detached-table-adjudication",
+          "unitId": "mage_hand"
         },
         {
           "claimTag": "unsupported-profile",
@@ -60460,13 +61499,13 @@
       },
       "sourcePath": "plans/unit-profile-coverage/level1-4-full-support.json",
       "strictRuntimeProfileSupport": {
-        "denominator": 213,
+        "denominator": 217,
         "numerator": 147,
-        "percent": "69%"
+        "percent": "67.7%"
       },
       "strictTargetClosure": {
-        "denominator": 213,
-        "numerator": 213,
+        "denominator": 217,
+        "numerator": 217,
         "percent": "100%"
       },
       "summary": {
@@ -60474,19 +61513,19 @@
         "groupsByClaimTag": {
           "profile-subset-supported": 22,
           "supported-profile": 147,
-          "unsupported-profile": 44
+          "unsupported-profile": 48
         },
         "groupsByStatus": {
           "closed-character-fact-and-runtime-detached-split": 4,
           "closed-companion-control-boundary": 2,
           "closed-later-level-only": 2,
           "closed-outside-battle-runtime-boundary": 9,
-          "closed-runtime-detached-table-adjudication": 37,
+          "closed-runtime-detached-table-adjudication": 41,
           "closed-selection-grant-container": 12,
           "supported-profile": 147
         },
-        "nonSupportedFrontier": 66,
-        "strictDenominator": 213
+        "nonSupportedFrontier": 70,
+        "strictDenominator": 217
       },
       "title": "Character Levels 1-4"
     }
@@ -60494,7 +61533,7 @@
   "metrics": {
     "cumulativeReports": {
       "level1": {
-        "nonSupportedFrontier": 16,
+        "nonSupportedFrontier": 20,
         "productReadiness": {
           "denominator": 367,
           "numerator": 367,
@@ -60504,15 +61543,15 @@
             "accepted-no-battle-effect": 85
           }
         },
-        "strictDenominator": 96,
+        "strictDenominator": 100,
         "strictTargetClosure": {
-          "denominator": 96,
-          "numerator": 96,
+          "denominator": 100,
+          "numerator": 100,
           "percent": "100%"
         }
       },
       "level1-2": {
-        "nonSupportedFrontier": 21,
+        "nonSupportedFrontier": 25,
         "productReadiness": {
           "denominator": 400,
           "numerator": 400,
@@ -60522,15 +61561,15 @@
             "accepted-no-battle-effect": 99
           }
         },
-        "strictDenominator": 117,
+        "strictDenominator": 121,
         "strictTargetClosure": {
-          "denominator": 117,
-          "numerator": 117,
+          "denominator": 121,
+          "numerator": 121,
           "percent": "100%"
         }
       },
       "level1-3": {
-        "nonSupportedFrontier": 54,
+        "nonSupportedFrontier": 58,
         "productReadiness": {
           "denominator": 610,
           "numerator": 610,
@@ -60540,15 +61579,15 @@
             "accepted-no-battle-effect": 163
           }
         },
-        "strictDenominator": 200,
+        "strictDenominator": 204,
         "strictTargetClosure": {
-          "denominator": 200,
-          "numerator": 200,
+          "denominator": 204,
+          "numerator": 204,
           "percent": "100%"
         }
       },
       "level1-4": {
-        "nonSupportedFrontier": 66,
+        "nonSupportedFrontier": 70,
         "productReadiness": {
           "denominator": 635,
           "numerator": 635,
@@ -60558,15 +61597,15 @@
             "accepted-no-battle-effect": 187
           }
         },
-        "strictDenominator": 213,
+        "strictDenominator": 217,
         "strictTargetClosure": {
-          "denominator": 213,
-          "numerator": 213,
+          "denominator": 217,
+          "numerator": 217,
           "percent": "100%"
         }
       }
     },
-    "level4CumulativeFrontierUnitCount": 66,
+    "level4CumulativeFrontierUnitCount": 70,
     "level5CompletionRows": 156,
     "level5CompletionRowsByLevelBand": {
       "level-5": 28,
