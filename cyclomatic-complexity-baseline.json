@@ -1232,9 +1232,6 @@
     "packages/shared-algebras/src/initiative-algebra.ts": {
       "module/binding:insertByInitiative": 9
     },
-    "packages/shared/src/structural-value.ts": {
-      "module/binding:processCanonicalStructuralValue": 10
-    },
     "packages/surface/src/interpreter/mermaid.ts": {
       "module/binding:get5etoolsUrl": 18
     },

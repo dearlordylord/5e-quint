@@ -138,38 +138,46 @@ function processCanonicalStructuralValue(
   frame: Extract<CanonicalStructuralFrame, { readonly tag: "visit" }>,
   state: CanonicalStructuralState,
 ): void {
-  switch (typeof frame.value) {
-    case "undefined":
-      state.output.push("undefined;");
-      return;
-    case "boolean":
-      state.output.push(canonicalBooleanToken(frame.value));
-      return;
-    case "string":
-      state.output.push(`string:${encodeString(frame.value)};`);
-      return;
-    case "number":
-      state.output.push(`number:${canonicalNumber(frame.value)};`);
-      return;
-    case "bigint":
-      state.output.push(`bigint:${encodeString(String(frame.value))};`);
-      return;
-    case "symbol":
-      state.output.push(
-        `symbol:${encodeString(symbolDescription(frame.value))};`,
-      );
-      return;
-    case "function":
-      state.output.push("function;");
-      return;
-    case "object":
-      if (frame.value === null) {
-        state.output.push("null;");
-        return;
-      }
-      processCanonicalObjectValue(frame.value, frame.depth, state);
-      return;
+  if (frame.value === null) {
+    state.output.push("null;");
+    return;
   }
+  if (typeof frame.value === "object") {
+    processCanonicalObjectValue(frame.value, frame.depth, state);
+    return;
+  }
+  appendCanonicalPrimitiveStructuralValue(frame.value, state);
+}
+
+function appendCanonicalPrimitiveStructuralValue(
+  value: unknown,
+  state: CanonicalStructuralState,
+): void {
+  if (typeof value === "undefined") {
+    state.output.push("undefined;");
+    return;
+  }
+  if (typeof value === "boolean") {
+    state.output.push(canonicalBooleanToken(value));
+    return;
+  }
+  if (typeof value === "string") {
+    state.output.push(`string:${encodeString(value)};`);
+    return;
+  }
+  if (typeof value === "number") {
+    state.output.push(`number:${canonicalNumber(value)};`);
+    return;
+  }
+  if (typeof value === "bigint") {
+    state.output.push(`bigint:${encodeString(String(value))};`);
+    return;
+  }
+  if (typeof value === "symbol") {
+    state.output.push(`symbol:${encodeString(symbolDescription(value))};`);
+    return;
+  }
+  if (typeof value === "function") state.output.push("function;");
 }
 
 function canonicalBooleanToken(value: boolean): string {
