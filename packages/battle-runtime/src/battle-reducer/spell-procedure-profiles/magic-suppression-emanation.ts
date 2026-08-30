@@ -86,11 +86,11 @@ type MagicSuppressionEmanationProfileShape = {
   readonly durationTicks: ElapsedTimeTicks;
 };
 
-const ANTIMAGIC_FIELD_LEVEL = 8;
-const ANTIMAGIC_FIELD_RANGE_FEET = 0;
-const ANTIMAGIC_FIELD_DURATION_HOURS = 1;
-const ANTIMAGIC_FIELD_RADIUS_FEET = 10;
-const ANTIMAGIC_FIELD_SUPPRESSION_EXCEPT_SOURCES = [
+const MAGIC_SUPPRESSION_EMANATION_LEVEL = 8;
+const MAGIC_SUPPRESSION_EMANATION_RANGE_FEET = 0;
+const MAGIC_SUPPRESSION_EMANATION_DURATION_HOURS = 1;
+const MAGIC_SUPPRESSION_EMANATION_RADIUS_FEET = 10;
+const MAGIC_SUPPRESSION_EXEMPT_SOURCES = [
   "artifact",
   "deity",
 ] as const satisfies readonly string[];
@@ -106,7 +106,7 @@ function admitMagicSuppressionEmanation(
 
   return ctx.spellCastOptions.flatMap(
     (slot): readonly MagicSuppressionEmanationInvocation[] => {
-      if (Number(slot.spellLevel) < ANTIMAGIC_FIELD_LEVEL) {
+      if (Number(slot.spellLevel) < MAGIC_SUPPRESSION_EMANATION_LEVEL) {
         return [];
       }
       return [
@@ -120,7 +120,7 @@ function admitMagicSuppressionEmanation(
             radiusFeet: movementFeet(profile.radiusFeet),
           },
           durationTicks: profile.durationTicks,
-          rangeFeet: movementFeet(ANTIMAGIC_FIELD_RANGE_FEET),
+          rangeFeet: movementFeet(MAGIC_SUPPRESSION_EMANATION_RANGE_FEET),
         },
       ];
     },
@@ -144,21 +144,22 @@ function magicSuppressionEmanationSpell(
       operation.effect.kind === "suppress_ongoing_magic_effects",
   );
   if (
-    spell.mechanics.level !== ANTIMAGIC_FIELD_LEVEL ||
+    spell.mechanics.level !== MAGIC_SUPPRESSION_EMANATION_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "self" ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "hour" ||
-    spell.mechanics.duration.upTo.amount !== ANTIMAGIC_FIELD_DURATION_HOURS ||
+    spell.mechanics.duration.upTo.amount !==
+      MAGIC_SUPPRESSION_EMANATION_DURATION_HOURS ||
     attachment.kind !== "area" ||
     attachment.origin.kind !== "self" ||
     attachment.shape.kind !== "emanation" ||
-    attachment.shape.radiusFeet !== ANTIMAGIC_FIELD_RADIUS_FEET ||
+    attachment.shape.radiusFeet !== MAGIC_SUPPRESSION_EMANATION_RADIUS_FEET ||
     suppressOperation?.effect.kind !== "suppress_ongoing_magic_effects" ||
     suppressOperation.effect.suppressedTimeCountsAgainstDuration !== true ||
     !sameStringSet(
       suppressOperation.effect.exceptSources ?? [],
-      ANTIMAGIC_FIELD_SUPPRESSION_EXCEPT_SOURCES,
+      MAGIC_SUPPRESSION_EXEMPT_SOURCES,
     ) ||
     durationTicks === null ||
     Result.isFailure(durationTicks)

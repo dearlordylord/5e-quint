@@ -24,10 +24,10 @@ import {
 } from "../../battle-state-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
-  WARDING_BOND_ARMOR_CLASS_BONUS,
-  WARDING_BOND_CAST_RANGE_FEET,
-  WARDING_BOND_CONNECTION_RANGE_FEET,
-  WARDING_BOND_SAVING_THROW_BONUS,
+  WARDING_BOND_ARMOR_CLASS_BONUS as LINKED_DEFENSE_ARMOR_CLASS_BONUS,
+  WARDING_BOND_CAST_RANGE_FEET as LINKED_DEFENSE_CAST_RANGE_FEET,
+  WARDING_BOND_CONNECTION_RANGE_FEET as LINKED_DEFENSE_CONNECTION_RANGE_FEET,
+  WARDING_BOND_SAVING_THROW_BONUS as LINKED_DEFENSE_SAVING_THROW_BONUS,
 } from "../domain-constants.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
@@ -106,7 +106,7 @@ function linkedDefenseResistanceDamageShareSpellProjection(
     spell.mechanics.attachment.kind !== "caster_target_bond" ||
     spell.mechanics.attachment.range.kind !== "within_feet" ||
     spell.mechanics.attachment.range.feet !==
-      Number(WARDING_BOND_CONNECTION_RANGE_FEET) ||
+      Number(LINKED_DEFENSE_CONNECTION_RANGE_FEET) ||
     spell.mechanics.attachment.target.kind !== "hole" ||
     spell.mechanics.attachment.target.value.kind !== "target" ||
     spell.mechanics.attachment.target.value.selection.mode !== "one" ||
@@ -133,8 +133,8 @@ function linkedDefenseResistanceDamageShareSpellProjection(
   return Result.isFailure(durationTicks)
     ? null
     : {
-        rangeFeet: WARDING_BOND_CAST_RANGE_FEET,
-        connectionRangeFeet: WARDING_BOND_CONNECTION_RANGE_FEET,
+        rangeFeet: LINKED_DEFENSE_CAST_RANGE_FEET,
+        connectionRangeFeet: LINKED_DEFENSE_CONNECTION_RANGE_FEET,
         activeEffect: {
           kind: "linkedDefenseResistanceDamageShare",
           sourceCombatantId: actorId,
@@ -225,7 +225,7 @@ function linkedDefenseResistanceDamageShareArmorClassOperationIsSupported(
     effect.kind === "modify_ac" &&
     effect.delta.kind === "fixed_dice" &&
     effect.delta.sign === "+" &&
-    effect.delta.dice === WARDING_BOND_ARMOR_CLASS_BONUS &&
+    effect.delta.dice === LINKED_DEFENSE_ARMOR_CLASS_BONUS &&
     effect.delta.dieSize === 1
   );
 }
@@ -246,7 +246,7 @@ function linkedDefenseResistanceDamageShareSavingThrowOperationIsSupported(
     sameStringSet(effect.on, ["saving_throw"]) &&
     effect.delta.kind === "fixed_dice" &&
     effect.delta.sign === "+" &&
-    effect.delta.dice === WARDING_BOND_SAVING_THROW_BONUS &&
+    effect.delta.dice === LINKED_DEFENSE_SAVING_THROW_BONUS &&
     effect.delta.dieSize === 1
   );
 }

@@ -47,8 +47,8 @@ import type { CombatantId } from "../identity.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
   BATTLE_D20_ROLL_MODIFIER_KINDS,
-  THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
-  THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+  THAUMATURGY_BOOMING_VOICE_DURATION_TICKS as TEMPORARY_ABILITY_CHECK_ROLL_MODE_DURATION_TICKS,
+  THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL as TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
   TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import {
@@ -152,14 +152,14 @@ export function temporaryAbilityCheckRollModeProjection(
   if (
     Result.isFailure(durationTicks) ||
     Number(durationTicks.success) !==
-      Number(THAUMATURGY_BOOMING_VOICE_DURATION_TICKS) ||
+      Number(TEMPORARY_ABILITY_CHECK_ROLL_MODE_DURATION_TICKS) ||
     effect.mode !== "advantage" ||
     (effect.affects ?? "self_roll") !== "self_roll" ||
     !sameStringSet(effect.on, ["ability_check"]) ||
     !Array.isArray(abilityFilter) ||
     !sameStringSet(abilityFilter, ["cha"]) ||
     skillFilter?.kind !== "fixed" ||
-    skillFilter.skill !== THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL
+    skillFilter.skill !== TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL
   ) {
     return null;
   }

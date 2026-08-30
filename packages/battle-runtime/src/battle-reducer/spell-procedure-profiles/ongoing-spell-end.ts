@@ -94,9 +94,9 @@ type ActivationPhase = Extract<
   { readonly family: "activation" }
 >["phases"][number];
 
-const DISPEL_MAGIC_LEVEL = 3;
-const DISPEL_MAGIC_RANGE_FEET = 120;
-const DISPEL_MAGIC_TARGET_KINDS = [
+const ONGOING_SPELL_END_LEVEL = 3;
+const ONGOING_SPELL_END_RANGE_FEET = 120;
+const ONGOING_SPELL_END_TARGET_KINDS = [
   "creature",
   "object",
   "magical_effect",
@@ -137,9 +137,9 @@ function ongoingSpellEndSpellRangeFeet(
   if (
     spell.mechanics.family !== "activation" ||
     range === null ||
-    spell.mechanics.level !== DISPEL_MAGIC_LEVEL ||
+    spell.mechanics.level !== ONGOING_SPELL_END_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
-    rangeFeet !== DISPEL_MAGIC_RANGE_FEET ||
+    rangeFeet !== ONGOING_SPELL_END_RANGE_FEET ||
     spell.mechanics.duration.kind !== "instantaneous" ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
@@ -203,7 +203,7 @@ function isOngoingSpellEndTargetAttachment(
     attachment.value.kind === "target" &&
     attachment.value.selection.mode === "one" &&
     targetKinds !== undefined &&
-    sameStringSet(targetKinds, DISPEL_MAGIC_TARGET_KINDS)
+    sameStringSet(targetKinds, ONGOING_SPELL_END_TARGET_KINDS)
   );
 }
 
@@ -570,7 +570,7 @@ function ongoingSpellEndDispelException(
   if (target.effect.kind !== "magicSuppressionEmanation") {
     return { kind: "notException" };
   }
-  return activeAntimagicFieldAuraMatchesTarget(state, target.effect)
+  return activeMagicSuppressionAuraMatchesTarget(state, target.effect)
     ? {
         kind: "magicSuppressionAuraNoEffect",
         effect: target.effect,
@@ -582,7 +582,7 @@ function ongoingSpellEndDispelException(
       };
 }
 
-function activeAntimagicFieldAuraMatchesTarget(
+function activeMagicSuppressionAuraMatchesTarget(
   state: BattleState,
   target: MagicSuppressionEmanationOngoingSpellEffectRef,
 ): boolean {
