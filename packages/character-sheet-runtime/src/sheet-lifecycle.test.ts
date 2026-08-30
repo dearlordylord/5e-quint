@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import {
   CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
   CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
-  Either,
+  Result,
   Hp,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
   SORCERER_METAMAGIC_UNIT_ID,
@@ -19,7 +19,7 @@ import {
   rebuildCharacterSheetFixture,
   druidLanguageBuild,
   parseCharacterSheet,
-  requireRight,
+  requireSuccess,
   rogueLanguageBuild,
   sorcererFontOfMagicBuild,
   sorcererMetamagicKnownOptionsGateTestName,
@@ -44,7 +44,7 @@ export const sorcererMetamagicKnownOptionsGateRuntimeTestName =
 
 describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   test("projects Knocked Out HP and treats zero healing as an identity operation", () => {
-    const knockedOut = requireRight(
+    const knockedOut = requireSuccess(
       characterSheetHitPoints({
         currentHp: Hp(1),
         tempHp: Hp(0),
@@ -54,7 +54,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     expect(knockedOut).toEqual({ tag: "knockedOut", tempHp: Hp(0) });
     expect(characterSheetHitPointsCurrentHp(knockedOut)).toBe(Hp(1));
 
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:synthetic-zero-healing"),
         build,
@@ -64,7 +64,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       }),
     );
     expect(
-      requireRight(
+      requireSuccess(
         recoverCharacterSheetHitPoints({
           sheet,
           unitLibrary,
@@ -77,7 +77,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   });
 
   test("retains nondefault stored sheet state", () => {
-    const parsed = requireRight(
+    const parsed = requireSuccess(
       parseCharacterSheet(
         {
           ...storedAvailableSheetInput({
@@ -122,7 +122,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   ] as const)(
     "retains $expectedTag Hit Point state through full sheet parsing",
     ({ characterId, hitPoints, expectedTag }) => {
-      const parsed = requireRight(
+      const parsed = requireSuccess(
         parseCharacterSheet(
           {
             ...storedAvailableSheetInput({ characterId, build }),
@@ -137,19 +137,19 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   );
 
   test.each([
-    { value: null, expectedTag: "Left" },
-    { value: {}, expectedTag: "Left" },
+    { value: null, expectedTag: "Failure" },
+    { value: {}, expectedTag: "Failure" },
     {
       value: { tag: "positive", currentHp: "not-hp" },
-      expectedTag: "Left",
+      expectedTag: "Failure",
     },
     {
       value: { tag: "positive", currentHp: 2, tempHp: "not-hp" },
-      expectedTag: "Left",
+      expectedTag: "Failure",
     },
-    { value: { tag: "positive", currentHp: 2 }, expectedTag: "Right" },
-    { value: { tag: "knockedOut", tempHp: 1 }, expectedTag: "Right" },
-    { value: { tag: "zero", lifecycle: null }, expectedTag: "Left" },
+    { value: { tag: "positive", currentHp: 2 }, expectedTag: "Success" },
+    { value: { tag: "knockedOut", tempHp: 1 }, expectedTag: "Success" },
+    { value: { tag: "zero", lifecycle: null }, expectedTag: "Failure" },
     {
       value: {
         tag: "zero",
@@ -161,14 +161,14 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           },
         },
       },
-      expectedTag: "Right",
+      expectedTag: "Success",
     },
     {
       value: {
         tag: "zero",
         lifecycle: { tag: "stable", recovery: null },
       },
-      expectedTag: "Left",
+      expectedTag: "Failure",
     },
     {
       value: {
@@ -178,7 +178,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           recovery: { kind: "unsupportedRecovery" },
         },
       },
-      expectedTag: "Left",
+      expectedTag: "Failure",
     },
     {
       value: {
@@ -188,7 +188,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           recovery: { kind: "regains1HpAfter", remaining: 1 },
         },
       },
-      expectedTag: "Right",
+      expectedTag: "Success",
     },
     {
       value: {
@@ -198,7 +198,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           deathSaves: { successes: 1, failures: 2 },
         },
       },
-      expectedTag: "Right",
+      expectedTag: "Success",
     },
     {
       value: {
@@ -208,14 +208,14 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           deathSaves: { successes: 0, failures: 4 },
         },
       },
-      expectedTag: "Left",
+      expectedTag: "Failure",
     },
     {
       value: {
         tag: "zero",
         lifecycle: { tag: "unstable", deathSaves: null },
       },
-      expectedTag: "Left",
+      expectedTag: "Failure",
     },
   ])("parses stored Hit Point boundary case %#", ({ value, expectedTag }) => {
     expect(parseStoredHitPoints(value)._tag).toBe(expectedTag);
@@ -230,9 +230,9 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isRight(sheet)) {
-      expect(sheet.right.hitPoints).toEqual({
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isSuccess(sheet)) {
+      expect(sheet.success.hitPoints).toEqual({
         tag: "positive",
         currentHp: 8,
         tempHp: 0,
@@ -249,9 +249,9 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isRight(sheet)) {
-      expect(characterSheetTempHp(sheet.right)).toBe(5);
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isSuccess(sheet)) {
+      expect(characterSheetTempHp(sheet.success)).toBe(5);
     }
   });
 
@@ -268,7 +268,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       },
     });
 
-    expect(Either.isLeft(sheet)).toBe(true);
+    expect(Result.isFailure(sheet)).toBe(true);
   });
 
   test("rejects current HP above sheet maximum HP", () => {
@@ -280,7 +280,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(sheet)).toBe(true);
+    expect(Result.isFailure(sheet)).toBe(true);
   });
 
   test("defaults omitted current HP to the derived effective maximum", () => {
@@ -292,19 +292,19 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isRight(sheet)) {
-      expect("maximumHp" in sheet.right).toBe(false);
-      expect(sheet.right.hitPoints).toEqual({
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isSuccess(sheet)) {
+      expect("maximumHp" in sheet.success).toBe(false);
+      expect(sheet.success.hitPoints).toEqual({
         tag: "positive",
         currentHp: 8,
         tempHp: 0,
       });
-      expect(characterSheetHitPointMaximum(sheet.right)).toBe(8);
+      expect(characterSheetHitPointMaximum(sheet.success)).toBe(8);
       expect(
-        requireRight(
+        requireSuccess(
           characterSheetNormalHitPointMaximum({
-            sheet: sheet.right,
+            sheet: sheet.success,
             unitLibrary,
           }),
         ),
@@ -324,7 +324,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     });
 
     expect(structured).toEqual(
-      Either.left([
+      Result.fail([
         {
           tag: "characterBuildProjection",
           cause: {
@@ -344,7 +344,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
         unitLibrary,
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSheetIssue",
         message: expect.stringContaining(missingSpecies),
       }),
@@ -356,21 +356,21 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       sheet: { build, hitPointMaximumReduction: Hp(0) },
       unitLibrary,
     });
-    expect(successful).toMatchObject({
-      _tag: "Right",
-      right: {
+    expect(Result.isSuccess(successful)).toBe(true);
+    if (Result.isSuccess(successful)) {
+      expect(successful.success).toMatchObject({
         normalHitPointMaximum: 11,
         effectiveHitPointMaximum: 11,
         hitPointMaximumReduction: 0,
-      },
-    });
+      });
+    }
 
     const invalidReduction = characterSheetHitPointMaximumProjectionWithIssues({
       sheet: { build, hitPointMaximumReduction: Hp(11) },
       unitLibrary,
     });
     expect(invalidReduction).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSheetIssue",
         message:
           "Character Sheet Hit Point maximum reduction must leave a positive Hit Point maximum.",
@@ -397,8 +397,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Stored Character Sheet must not carry build-derived maximum HP.",
       },
@@ -418,8 +418,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Stored Character Sheet must not carry build-derived ordinary Spell Slot capacity.",
       },
@@ -439,8 +439,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Stored Character Sheet must not carry build-derived Pact Slot capacity.",
       },
@@ -463,8 +463,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Pact Slot expenditure state must contain exactly expended count.",
       },
@@ -484,8 +484,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Spent Hit Dice state must contain exactly class Unit id and spent count.",
       },
@@ -513,7 +513,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     );
 
-    expect(Either.isLeft(sheet)).toBe(true);
+    expect(Result.isFailure(sheet)).toBe(true);
   });
 
   test("preserves stored Druid class-feature language facts separately from origin languages", () => {
@@ -525,7 +525,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     );
 
-    const parsed = requireRight(sheet);
+    const parsed = requireSuccess(sheet);
     expect(parsed.build.originLanguages).toEqual([
       "Common",
       "Dwarvish",
@@ -549,7 +549,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     );
 
-    const parsed = requireRight(sheet);
+    const parsed = requireSuccess(sheet);
     expect(parsed.build.originLanguages).toEqual([
       "Common",
       "Dwarvish",
@@ -570,7 +570,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   });
 
   test("creates fresh sheets without merging class-feature languages into origin languages", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:rogue-language-sheet"),
         build: rogueLanguageBuild("Elvish"),
@@ -613,8 +613,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message:
           "Character Build class-feature language projection is incomplete for source Unit druid_druidic.",
@@ -641,8 +641,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message:
           "Character Build class-feature language choices for source Unit rogue_thieves_cant must match the source choice count.",
@@ -669,8 +669,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message:
           "Character Build class-feature language source Unit druid_druidic is not owned by the build.",
@@ -704,8 +704,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message:
           "Character Build class-feature language source Unit druid_druidic is not owned by the build.",
@@ -732,8 +732,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message: "Duplicate Character Build language Thieves' Cant.",
       },
@@ -769,8 +769,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message:
           "Character Build class-feature language choices for source Unit rogue_thieves_cant must match the source choice count.",
@@ -824,7 +824,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     );
 
-    const parsed = requireRight(sheet);
+    const parsed = requireSuccess(sheet);
     expect(parsed.build.features).toEqual(
       expect.arrayContaining([
         {
@@ -867,7 +867,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     );
 
-    const parsed = requireRight(sheet);
+    const parsed = requireSuccess(sheet);
     expect(parsed.build.features).toEqual(
       expect.arrayContaining([
         {
@@ -882,7 +882,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
         },
       ]),
     );
-    const metamagicFacts = requireRight(
+    const metamagicFacts = requireSuccess(
       characterBuildSorcererMetamagicFacts({
         build: parsed.build,
         unitLibrary,
@@ -911,8 +911,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message: "Metamagic known option count must match the Sorcerer level.",
       },
@@ -962,8 +962,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       );
 
       expect(sheet).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           message:
             "Character Build Eldritch Invocation repeatable known cantrip choice must be a known Warlock cantrip.",
         },
@@ -998,8 +998,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Character Build Eldritch Invocation repeatable choice is invalid.",
       },
@@ -1066,7 +1066,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
         unitLibrary,
       );
 
-      expect(Either.isLeft(sheet)).toBe(true);
+      expect(Result.isFailure(sheet)).toBe(true);
     }
   });
 
@@ -1130,14 +1130,14 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     );
 
-    if (Either.isLeft(sheet)) {
+    if (Result.isFailure(sheet)) {
       throw new Error(
-        `Expected parsed sheet, got ${JSON.stringify(sheet.left)}`,
+        `Expected parsed sheet, got ${JSON.stringify(sheet.failure)}`,
       );
     }
-    expect(sheet.right.build.spellcasting?.sources[0]?.bookOfShadows).toEqual(
+    expect(sheet.success.build.spellcasting?.sources[0]?.bookOfShadows).toEqual(
       bookOfShadows,
     );
-    expect(sheet.right.bookOfShadowsPresence).toEqual({ tag: "notOnPerson" });
+    expect(sheet.success.bookOfShadowsPresence).toEqual({ tag: "notOnPerson" });
   });
 });

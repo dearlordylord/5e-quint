@@ -65,7 +65,7 @@ import {
   type GitSha,
   type ScenarioId,
 } from "./transcript.ts";
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 import {
   runCodexInvocation,
   terminateOwnedProcess,
@@ -104,19 +104,21 @@ const PLAYER_REASONING_EFFORT = "medium";
 
 function repositoryReadPath(value: string): string {
   const result = canonicalRepositoryReadPath(repoRoot, value);
-  if (Either.isRight(result)) return result.right;
+  if (Result.isSuccess(result)) return result.success;
   const prospective = canonicalRepositoryOutputPath(repoRoot, value);
-  return Either.isRight(prospective)
-    ? prospective.right
-    : fail(`Read path is not a repository authority: ${value}: ${result.left}`);
+  return Result.isSuccess(prospective)
+    ? prospective.success
+    : fail(
+        `Read path is not a repository authority: ${value}: ${result.failure}`,
+      );
 }
 
 function repositoryOutputPath(value: string): string {
   const result = canonicalRepositoryOutputPath(repoRoot, value);
-  return Either.isRight(result)
-    ? result.right
+  return Result.isSuccess(result)
+    ? result.success
     : fail(
-        `Output path is not a repository destination: ${value}: ${result.left}`,
+        `Output path is not a repository destination: ${value}: ${result.failure}`,
       );
 }
 
@@ -126,24 +128,24 @@ function fail(message: string): never {
 
 function parseOptionalImplementationGitSha(
   input: string | undefined,
-): Either.Either<GitSha | undefined, string> {
-  if (input === undefined) return Either.right(undefined);
+): Result.Result<GitSha | undefined, string> {
+  if (input === undefined) return Result.succeed(undefined);
   if (input.trim().length === 0 || input.startsWith("-")) {
-    return Either.left(
+    return Result.fail(
       "--implementation-git-sha requires a lowercase Git SHA value.",
     );
   }
-  return Schema.decodeUnknownEither(GitShaSchema)(input).pipe(
-    Either.mapLeft((error) => error.message),
+  return Schema.decodeUnknownResult(GitShaSchema)(input).pipe(
+    Result.mapError((error) => error.message),
   );
 }
 
 function parseOptionalBenchmarkProfile(
   input: string | undefined,
-): Either.Either<BenchmarkContextProfile | undefined, string> {
-  if (input === undefined) return Either.right(undefined);
-  return Schema.decodeUnknownEither(BenchmarkContextProfileSchema)(input).pipe(
-    Either.mapLeft((error) => error.message),
+): Result.Result<BenchmarkContextProfile | undefined, string> {
+  if (input === undefined) return Result.succeed(undefined);
+  return Schema.decodeUnknownResult(BenchmarkContextProfileSchema)(input).pipe(
+    Result.mapError((error) => error.message),
   );
 }
 
@@ -400,21 +402,22 @@ function playerEvidenceState(
       resolve(player, "OBSERVATION.json"),
     );
   }
-  const prefix = Schema.decodeUnknownEither(
+  const prefix = Schema.decodeUnknownResult(
     Schema.Struct({ run: PlayerExecutionStateSchema }),
   )(
     JSON.parse(
       readFileSync(resolve(trusted, "evidence/frozen-prefix.json"), "utf8"),
     ),
   );
-  if (Either.isLeft(prefix)) fail("Player frozen-prefix evidence is invalid.");
+  if (Result.isFailure(prefix))
+    fail("Player frozen-prefix evidence is invalid.");
   const finalArtifactExists = existsSync(
     resolve(trusted, "evidence/final.json"),
   );
-  if ((prefix.right.run.kind === "playerConcluded") !== finalArtifactExists) {
+  if ((prefix.success.run.kind === "playerConcluded") !== finalArtifactExists) {
     fail("Player terminal state and final artifact disagree.");
   }
-  return Match.value(prefix.right.run).pipe(
+  return Match.value(prefix.success.run).pipe(
     Match.when(
       { kind: "active" },
       (): PlayerEvidenceState => ({
@@ -463,31 +466,31 @@ export type PlayerInvocationDisposition =
 export function reconcilePlayerInvocation(
   lifecycle: ModelInvocationRun<string, "expectedLastMessage">,
   evidence: PlayerEvidenceState,
-): Either.Either<PlayerInvocationDisposition, string> {
+): Result.Result<PlayerInvocationDisposition, string> {
   if (lifecycle.tag === "failed") {
     return evidence.tag === "obstructed"
-      ? Either.right({
+      ? Result.succeed({
           tag: "obstructed",
           obstruction: evidence.obstruction,
           recordedContinuations: evidence.recordedContinuations,
         })
-      : Either.left(
+      : Result.fail(
           `Player agent invocation failed: ${lifecycle.cause.reason}`,
         );
   }
   if (evidence.tag === "active") {
-    return Either.left(
+    return Result.fail(
       `Player agent exited after ${String(evidence.recordedContinuations)} continuations without a recorded conclusion.`,
     );
   }
   if (evidence.tag === "obstructed") {
-    return Either.right({
+    return Result.succeed({
       tag: "obstructed",
       obstruction: evidence.obstruction,
       recordedContinuations: evidence.recordedContinuations,
     });
   }
-  return Either.right({ tag: "completed", output: lifecycle.output.value });
+  return Result.succeed({ tag: "completed", output: lifecycle.output.value });
 }
 
 async function main(args: readonly string[]): Promise<void> {
@@ -583,11 +586,11 @@ async function main(args: readonly string[]): Promise<void> {
       !pathOptionIndexes.has(index),
   );
   if (
-    Either.isLeft(decodedScenarioId) ||
-    Either.isLeft(decodedExecutionId) ||
-    Either.isLeft(decodedEvidenceSetId) ||
-    Either.isLeft(decodedImplementationGitSha) ||
-    Either.isLeft(decodedBenchmarkProfile) ||
+    Result.isFailure(decodedScenarioId) ||
+    Result.isFailure(decodedExecutionId) ||
+    Result.isFailure(decodedEvidenceSetId) ||
+    Result.isFailure(decodedImplementationGitSha) ||
+    Result.isFailure(decodedBenchmarkProfile) ||
     invalidPathValue ||
     acceptedOptions.some((option) => option !== "--instructional-isolation") ||
     options.some(
@@ -618,11 +621,11 @@ async function main(args: readonly string[]): Promise<void> {
       "Usage: run-sdk-player.ts <scenario-id> --execution-id <execution-id> --evidence-set-id <evidence-set-id> [--implementation-git-sha <git-sha>] [--benchmark-profile <profile>] [--instructional-isolation] [--scenario-path <path>] [--scenario-review-path <path>] [--characters-path <path>] [--setup-path <path>] [--stage-plan-path <path>] [--stage-plan-findings-path <path>] [--output-path <path>] [--benchmark-context-path <path>]",
     );
   }
-  const acceptedScenarioId = decodedScenarioId.right;
-  const acceptedExecutionId = decodedExecutionId.right;
-  const acceptedEvidenceSetId = decodedEvidenceSetId.right;
-  const requestedImplementationGitSha = decodedImplementationGitSha.right;
-  const requestedBenchmarkProfile = decodedBenchmarkProfile.right;
+  const acceptedScenarioId = decodedScenarioId.success;
+  const acceptedExecutionId = decodedExecutionId.success;
+  const acceptedEvidenceSetId = decodedEvidenceSetId.success;
+  const requestedImplementationGitSha = decodedImplementationGitSha.success;
+  const requestedBenchmarkProfile = decodedBenchmarkProfile.success;
   const pathValue = (flag: PathFlag): string | undefined =>
     pathValues.get(flag);
   const benchmarkContextPathInput = pathValue("--benchmark-context-path");
@@ -686,37 +689,37 @@ async function main(args: readonly string[]): Promise<void> {
     ),
     evidenceDirectory: resolve(repoRoot, "scripts/raw-swarm/out"),
   });
-  if (Either.isLeft(catalogue)) {
+  if (Result.isFailure(catalogue)) {
     fail(
-      `Scenario admission catalogue is invalid: ${JSON.stringify(catalogue.left)}`,
+      `Scenario admission catalogue is invalid: ${JSON.stringify(catalogue.failure)}`,
     );
   }
   const admittedCatalogueScenario = findAuthorableScenarioInCatalogue({
-    catalogue: catalogue.right,
+    catalogue: catalogue.success,
     scenarioId: acceptedScenarioId,
   });
-  if (Either.isLeft(admittedCatalogueScenario))
-    fail(admittedCatalogueScenario.left);
+  if (Result.isFailure(admittedCatalogueScenario))
+    fail(admittedCatalogueScenario.failure);
   const revision = currentGitRevision();
   if (revision.tag === "dirty") {
     fail("SDK player recording requires a clean Git worktree.");
   }
-  const currentGitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
-  if (Either.isLeft(currentGitSha)) fail(currentGitSha.left.message);
+  const currentGitSha = Schema.decodeUnknownResult(GitShaSchema)(revision.sha);
+  if (Result.isFailure(currentGitSha)) fail(currentGitSha.failure.message);
   if (
     requestedImplementationGitSha !== undefined &&
-    requestedImplementationGitSha !== currentGitSha.right
+    requestedImplementationGitSha !== currentGitSha.success
   ) {
     fail(
-      `--implementation-git-sha does not match the current clean Git revision: expected ${requestedImplementationGitSha}, current ${currentGitSha.right}.`,
+      `--implementation-git-sha does not match the current clean Git revision: expected ${requestedImplementationGitSha}, current ${currentGitSha.success}.`,
     );
   }
-  const gitSha = requestedImplementationGitSha ?? currentGitSha.right;
-  const startedAtResult = Schema.decodeUnknownEither(StartedAtSchema)(
+  const gitSha = requestedImplementationGitSha ?? currentGitSha.success;
+  const startedAtResult = Schema.decodeUnknownResult(StartedAtSchema)(
     new Date().toISOString(),
   );
-  if (Either.isLeft(startedAtResult)) fail(startedAtResult.left.message);
-  const startedAt = startedAtResult.right;
+  if (Result.isFailure(startedAtResult)) fail(startedAtResult.failure.message);
+  const startedAt = startedAtResult.success;
   if (existsSync(output)) {
     fail(`Refusing to overwrite SDK player evidence: ${output}`);
   }
@@ -743,12 +746,12 @@ async function main(args: readonly string[]): Promise<void> {
             role: "player" as const,
             ...authority,
           };
-          const parsed = Schema.decodeUnknownEither(
+          const parsed = Schema.decodeUnknownResult(
             BenchmarkContextDeliveryEvidenceSchema,
             { onExcessProperty: "error" },
           )(evidence);
-          if (Either.isLeft(parsed)) fail(parsed.left.message);
-          return parsed.right;
+          if (Result.isFailure(parsed)) fail(parsed.failure.message);
+          return parsed.success;
         })();
   const contextDelivery: ContextDelivery<"player"> =
     benchmarkContextEvidence === undefined
@@ -772,9 +775,9 @@ async function main(args: readonly string[]): Promise<void> {
     reviewPath: scenarioReviewPath,
     recordPath: scenarioPath.replace(/\.md$/, ".scenario.json"),
   });
-  if (Either.isLeft(admission)) fail(admission.left);
+  if (Result.isFailure(admission)) fail(admission.failure);
   mkdirSync(resolve(output, "evidence"), { recursive: true });
-  const executionRecord = Schema.decodeUnknownEither(
+  const executionRecord = Schema.decodeUnknownResult(
     ScenarioExecutionRecordSchema,
     { onExcessProperty: "error" },
   )({
@@ -783,10 +786,10 @@ async function main(args: readonly string[]): Promise<void> {
     scenarioId: acceptedScenarioId,
     evidenceSetId: acceptedEvidenceSetId,
   });
-  if (Either.isLeft(executionRecord)) fail(executionRecord.left.message);
+  if (Result.isFailure(executionRecord)) fail(executionRecord.failure.message);
   writeFileSync(
     resolve(output, "execution.json"),
-    `${JSON.stringify(executionRecord.right, null, 2)}\n`,
+    `${JSON.stringify(executionRecord.success, null, 2)}\n`,
     { flag: "wx" },
   );
   if (benchmarkContextEvidence !== undefined) {
@@ -820,33 +823,33 @@ async function main(args: readonly string[]): Promise<void> {
       ? retainAdmittedScenarioStagePlan({
           scenarioId: acceptedScenarioId,
           scenarioPath,
-          scenarioSha256: admission.right.scenarioSha256,
-          scenarioReviewSha256: admission.right.scenarioReviewSha256,
+          scenarioSha256: admission.success.scenarioSha256,
+          scenarioReviewSha256: admission.success.scenarioReviewSha256,
         })
       : (() => {
           const planPath = customStagePlanPath;
           const findingsPath = customStagePlanFindingsPath;
           if (!existsSync(planPath) || !existsSync(findingsPath)) {
-            return Either.left(
+            return Result.fail(
               "Profile stage-plan authorities must both be readable.",
             );
           }
           const plan = validateScenarioStagePlan(
             JSON.parse(readFileSync(planPath, "utf8")),
           );
-          if (Either.isLeft(plan)) return Either.left(plan.left);
+          if (Result.isFailure(plan)) return Result.fail(plan.failure);
           const validation = validateAdmittedScenarioStagePlanEvidence({
-            plan: plan.right,
+            plan: plan.success,
             findings: JSON.parse(readFileSync(findingsPath, "utf8")),
             scenarioId: acceptedScenarioId,
-            scenarioSha256: admission.right.scenarioSha256,
-            scenarioReviewSha256: admission.right.scenarioReviewSha256,
+            scenarioSha256: admission.success.scenarioSha256,
+            scenarioReviewSha256: admission.success.scenarioReviewSha256,
           });
-          return Either.isLeft(validation)
-            ? Either.left(validation.left)
-            : Either.right(plan.right);
+          return Result.isFailure(validation)
+            ? Result.fail(validation.failure)
+            : Result.succeed(plan.success);
         })();
-  if (Either.isLeft(retainedPlan)) {
+  if (Result.isFailure(retainedPlan)) {
     emitTranscriptlessFindings({
       output,
       executionStartPath,
@@ -857,7 +860,7 @@ async function main(args: readonly string[]): Promise<void> {
       category: "scenario-author-defect",
       kind: "generation-rejection",
       summary: "Scenario stage planning could not produce a retained plan.",
-      detail: retainedPlan.left,
+      detail: retainedPlan.failure,
       authorityPaths: [
         { role: "scenario", path: scenarioPath },
         { role: "scenarioReview", path: scenarioReviewPath },
@@ -876,7 +879,7 @@ async function main(args: readonly string[]): Promise<void> {
         ? "stageFacts"
         : "scenario",
     });
-    fail(retainedPlan.left);
+    fail(retainedPlan.failure);
   }
   const stagePlanPath = resolve(
     customStagePlanPath ?? retainedScenarioStagePlanPath(acceptedScenarioId),
@@ -885,7 +888,7 @@ async function main(args: readonly string[]): Promise<void> {
     customStagePlanFindingsPath ??
       retainedScenarioStagePlanFindingsPath(acceptedScenarioId),
   );
-  if (retainedPlan.right.outcome.tag === "rejected") {
+  if (retainedPlan.success.outcome.tag === "rejected") {
     mkdirSync(output, { recursive: true });
     copyFileSync(scenarioPath, resolve(output, "SCENARIO.md"));
     copyFileSync(scenarioReviewPath, resolve(output, "SCENARIO_REVIEW.json"));
@@ -898,7 +901,7 @@ async function main(args: readonly string[]): Promise<void> {
     }
     writeFileSync(
       resolve(output, "STAGE_PLAN_REJECTION.json"),
-      `${JSON.stringify(retainedPlan.right.outcome, null, 2)}\n`,
+      `${JSON.stringify(retainedPlan.success.outcome, null, 2)}\n`,
     );
     emitTranscriptlessFindings({
       output,
@@ -911,7 +914,7 @@ async function main(args: readonly string[]): Promise<void> {
       kind: "generation-rejection",
       summary:
         "Scenario stage planning rejected the candidate before SDK preparation.",
-      detail: retainedPlan.right.outcome.reason,
+      detail: retainedPlan.success.outcome.reason,
       authorityPaths: [
         { role: "scenario", path: resolve(output, "SCENARIO.md") },
         {
@@ -939,7 +942,7 @@ async function main(args: readonly string[]): Promise<void> {
         : "stagePlan",
     });
     console.log(
-      `Scenario stage plan rejected before SDK player preparation: ${retainedPlan.right.outcome.reason}`,
+      `Scenario stage plan rejected before SDK player preparation: ${retainedPlan.success.outcome.reason}`,
     );
     return;
   }
@@ -984,7 +987,7 @@ async function main(args: readonly string[]): Promise<void> {
     );
   }
   const characterStage = stagePlanEntry(
-    retainedPlan.right,
+    retainedPlan.success,
     "scenarioCharacterAuthoring",
   );
   if (characterStage?.decision === "skipped") {
@@ -1090,8 +1093,8 @@ async function main(args: readonly string[]): Promise<void> {
         createHash("sha256")
           .update(readFileSync(resolve(trusted, "supervisor.mjs")))
           .digest("hex"),
-        admission.right.scenarioSha256,
-        admission.right.scenarioReviewSha256,
+        admission.success.scenarioSha256,
+        admission.success.scenarioReviewSha256,
       ],
       trusted,
       { ...process.env, RAW_SWARM_PLAYER_ROOT: scratch },
@@ -1174,16 +1177,16 @@ async function main(args: readonly string[]): Promise<void> {
         tag: "expectedLastMessage",
         expected: {
           path: agentFinalPath,
-          decode: (contents) => Either.right(contents),
+          decode: (contents) => Result.succeed(contents),
         },
       },
     });
     const evidenceState = playerEvidenceState(trusted, scratch);
     const disposition = reconcilePlayerInvocation(result, evidenceState);
-    if (Either.isLeft(disposition)) fail(disposition.left);
-    if (disposition.right.tag === "obstructed") {
+    if (Result.isFailure(disposition)) fail(disposition.failure);
+    if (disposition.success.tag === "obstructed") {
       console.log(
-        `Player Execution retained a player-protocol obstruction after ${String(disposition.right.recordedContinuations)} continuations: ${disposition.right.obstruction.message}`,
+        `Player Execution retained a player-protocol obstruction after ${String(disposition.success.recordedContinuations)} continuations: ${disposition.success.obstruction.message}`,
       );
     }
   } catch (error: unknown) {

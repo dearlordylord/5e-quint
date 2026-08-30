@@ -1,21 +1,21 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import publicPlaySessionPolicy from "./public-play-session-policy.json" with { type: "json" };
 
 const PublicPlaySessionPolicySchema = Schema.Struct({
   guestInactivityRetentionMs: Schema.Number.pipe(
-    Schema.int(),
-    Schema.positive(),
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0)),
   ),
   guestPressureProtectionMs: Schema.Number.pipe(
-    Schema.int(),
-    Schema.positive(),
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0)),
   ),
   savedInactivityRetentionMs: Schema.Number.pipe(
-    Schema.int(),
-    Schema.positive(),
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0)),
   ),
 });
 const decodedPublicPlaySessionPolicy = Schema.decodeUnknownSync(
@@ -36,37 +36,38 @@ export const DEFAULT_PLAY_SESSION_REQUESTS_PER_MINUTE = 120;
 export const PLAY_SESSION_RATE_LIMIT_WINDOW_MS = 60_000;
 
 export const GuestAccessGrantSchema = Schema.String.pipe(
-  Schema.pattern(/^guest-access:[0-9a-f]{64}$/u),
+  Schema.check(Schema.isPattern(/^guest-access:[0-9a-f]{64}$/u)),
   Schema.brand("GuestAccessGrant"),
 );
 export type GuestAccessGrant = typeof GuestAccessGrantSchema.Type;
 export type GuestAccessGrantFactory = () => GuestAccessGrant;
 
 export const GuestAccessGrantDigestSchema = Schema.String.pipe(
-  Schema.pattern(/^[0-9a-f]{64}$/u),
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
   Schema.brand("GuestAccessGrantDigest"),
 );
 export type GuestAccessGrantDigest = typeof GuestAccessGrantDigestSchema.Type;
 
 const PlaySessionRateLimitKeyDigestSchema = Schema.String.pipe(
-  Schema.pattern(/^[0-9a-f]{64}$/u),
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
   Schema.brand("PlaySessionRateLimitKeyDigest"),
 );
 export type PlaySessionRateLimitKeyDigest =
   typeof PlaySessionRateLimitKeyDigestSchema.Type;
 
-export const PrincipalIdSchema = Schema.NonEmptyTrimmedString.pipe(
-  Schema.maxLength(512),
+export const PrincipalIdSchema = Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
+  Schema.check(Schema.isMaxLength(512)),
   Schema.brand("PrincipalId"),
 );
 export type PrincipalId = typeof PrincipalIdSchema.Type;
 
-export const EpochMillisecondsSchema = Schema.NonNegativeInt.pipe(
-  Schema.brand("EpochMilliseconds"),
-);
+export const EpochMillisecondsSchema = Schema.Number.check(
+  Schema.isInt(),
+  Schema.isGreaterThanOrEqualTo(0),
+).pipe(Schema.brand("EpochMilliseconds"));
 export type EpochMilliseconds = typeof EpochMillisecondsSchema.Type;
 
-export const decodeEpochMilliseconds = Schema.decodeUnknownEither(
+export const decodeEpochMilliseconds = Schema.decodeUnknownResult(
   EpochMillisecondsSchema,
 );
 
@@ -116,29 +117,29 @@ export const GUEST_ONLY_PLAY_SESSION_GUIDANCE =
   "This Play Session is temporary and is not saved to an account. Keep its guest access grant private. Saving is not available on this server.";
 
 export function generatedGuestAccessGrant(): GuestAccessGrant {
-  const decoded = Schema.decodeUnknownEither(GuestAccessGrantSchema)(
+  const decoded = Schema.decodeUnknownResult(GuestAccessGrantSchema)(
     `guest-access:${randomBytes(32).toString("hex")}`,
   );
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     throw new Error("Generated Guest Play Session access grant was invalid.");
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 export function decodeGuestAccessGrant(
   input: unknown,
-): Either.Either<GuestAccessGrant, string> {
-  return Either.mapLeft(
-    Schema.decodeUnknownEither(GuestAccessGrantSchema)(input),
+): Result.Result<GuestAccessGrant, string> {
+  return Result.mapError(
+    Schema.decodeUnknownResult(GuestAccessGrantSchema)(input),
     (issue) => issue.message,
   );
 }
 
 export function decodePrincipalId(
   input: unknown,
-): Either.Either<PrincipalId, string> {
-  return Either.mapLeft(
-    Schema.decodeUnknownEither(PrincipalIdSchema)(input),
+): Result.Result<PrincipalId, string> {
+  return Result.mapError(
+    Schema.decodeUnknownResult(PrincipalIdSchema)(input),
     (issue) => issue.message,
   );
 }

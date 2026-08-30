@@ -1,6 +1,6 @@
 // Multiclass prerequisite algebra (SRD 5.2.1 Character Creation > Multiclassing)
 
-import { Brand, Either, Match } from "effect";
+import { Brand, Match, Result } from "effect";
 
 import { type Ability, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { CLASS_NAMES, type ClassName } from "@dnd/shared/game-facts";
@@ -54,10 +54,10 @@ export type MulticlassClassChangeIssue =
 export function multiclassClassChange(input: {
   readonly currentClasses: readonly ClassName[];
   readonly newClass: ClassName;
-}): Either.Either<MulticlassClassChange, MulticlassClassChangeIssue> {
+}): Result.Result<MulticlassClassChange, MulticlassClassChangeIssue> {
   const [firstClass, ...restClasses] = input.currentClasses;
   if (firstClass === undefined) {
-    return Either.left({ tag: "missingCurrentClass" });
+    return Result.fail({ tag: "missingCurrentClass" });
   }
   const nonEmptyCurrentClasses = [
     firstClass,
@@ -67,19 +67,19 @@ export function multiclassClassChange(input: {
   const currentClasses = new Set<ClassName>();
   for (const className of nonEmptyCurrentClasses) {
     if (currentClasses.has(className)) {
-      return Either.left({ tag: "duplicateCurrentClass", className });
+      return Result.fail({ tag: "duplicateCurrentClass", className });
     }
     currentClasses.add(className);
   }
 
   if (currentClasses.has(input.newClass)) {
-    return Either.left({
+    return Result.fail({
       tag: "newClassAlreadyCurrent",
       className: input.newClass,
     });
   }
 
-  return Either.right(
+  return Result.succeed(
     MulticlassClassChange({
       currentClasses: nonEmptyCurrentClasses,
       newClass: input.newClass,
@@ -89,11 +89,11 @@ export function multiclassClassChange(input: {
 
 export function multiclassAbilityScores(
   scores: unknown,
-): Either.Either<
+): Result.Result<
   MulticlassAbilityScores,
   ReadonlyNonEmptyArray<MulticlassAbilityScoresIssue>
 > {
-  return Either.mapLeft(abilityScoreAssignment(scores), (issues) => {
+  return Result.mapError(abilityScoreAssignment(scores), (issues) => {
     const [first, ...rest] = issues;
     return [
       multiclassScoresIssue(first),
@@ -190,7 +190,7 @@ function multiclassScorePrerequisite(ability: Ability): MulticlassPrerequisite {
 
 export function multiclassPrerequisitesFromSrdClassContainers(
   units: readonly UnitRecord[] = srdUnitCollection.units,
-): Either.Either<
+): Result.Result<
   MulticlassPrerequisiteTable,
   ReadonlyNonEmptyArray<MulticlassPrerequisiteTableIssue>
 > {
@@ -224,15 +224,15 @@ export function multiclassPrerequisitesFromSrdClassContainers(
 
   const [firstIssue, ...restIssues] = issues;
   if (firstIssue !== undefined) {
-    return Either.left([firstIssue, ...restIssues]);
+    return Result.fail([firstIssue, ...restIssues]);
   }
 
-  return Either.right(
+  return Result.succeed(
     Object.fromEntries(prerequisites) as MulticlassPrerequisiteTable,
   );
 }
 
-export const MULTICLASS_PREREQUISITES: Either.Either<
+export const MULTICLASS_PREREQUISITES: Result.Result<
   MulticlassPrerequisiteTable,
   ReadonlyNonEmptyArray<MulticlassPrerequisiteTableIssue>
 > = multiclassPrerequisitesFromSrdClassContainers();
@@ -243,11 +243,11 @@ export const MULTICLASS_PREREQUISITES: Either.Either<
 export function meetsMulticlassPrerequisite(
   scores: MulticlassAbilityScores,
   className: ClassName,
-): Either.Either<
+): Result.Result<
   boolean,
   ReadonlyNonEmptyArray<MulticlassPrerequisiteLookupIssue>
 > {
-  return Either.map(MULTICLASS_PREREQUISITES, (prerequisites) =>
+  return Result.map(MULTICLASS_PREREQUISITES, (prerequisites) =>
     evalPrereq(prerequisites[className], scores),
   );
 }
@@ -278,21 +278,21 @@ function evalPrereq(
 export function canMulticlass(
   scores: MulticlassAbilityScores,
   classChange: MulticlassClassChange,
-): Either.Either<
+): Result.Result<
   boolean,
   ReadonlyNonEmptyArray<MulticlassPrerequisiteLookupIssue>
 > {
-  return Either.flatMap(MULTICLASS_PREREQUISITES, (prerequisites) => {
+  return Result.flatMap(MULTICLASS_PREREQUISITES, (prerequisites) => {
     for (const className of [
       ...classChange.currentClasses,
       classChange.newClass,
     ]) {
       const prerequisite = prerequisites[className];
       if (!evalPrereq(prerequisite, scores)) {
-        return Either.right(false);
+        return Result.succeed(false);
       }
     }
 
-    return Either.right(true);
+    return Result.succeed(true);
   });
 }

@@ -1,9 +1,20 @@
 import * as path from "node:path";
 
-// KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
-
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Brand, Either, Option, Schema } from "effect";
+import {
+  defineDriver,
+  ITFBigInt,
+  quintRun,
+  stateCheck,
+} from "@firfi/quint-connect/effect";
+import {
+  Brand,
+  Effect,
+  Match,
+  Option,
+  Result,
+  Schema,
+  SchemaGetter,
+} from "effect";
 import { describe, expect, it } from "vitest";
 
 import type { ActionRestriction } from "@dnd/surface/surface/types";
@@ -173,39 +184,47 @@ function createActionEconomyDriver() {
         sourceProcedureRef,
         magicExcludedRestriction,
       );
-      if (Either.isRight(result)) {
-        state = result.right;
+      if (Result.isSuccess(result)) {
+        state = result.success;
       }
     }
 
     function spendActionIfAllowed(action: "attack" | "magic"): void {
       const result = spendAction(state, action);
-      if (Either.isRight(result)) {
-        state = result.right;
+      if (Result.isSuccess(result)) {
+        state = result.success;
       }
     }
 
     return {
-      init: reset,
-      doSpendAttackAction: () => spendActionIfAllowed("attack"),
-      doSpendMagicAction: () => spendActionIfAllowed("magic"),
-      doGrantRestrictedUnitActionA: () => grantUnitAction(unitActionA),
-      doGrantRestrictedUnitActionB: () => grantUnitAction(unitActionB),
-      doSpendBonusAction: () => {
-        const result = spendActivationResource(state, { kind: "bonusAction" });
-        if (Either.isRight(result)) {
-          state = result.right;
-        }
-      },
-      doSpendFreeAction: () => {
-        const result = spendActivationResource(state, { kind: "free" });
-        if (Either.isRight(result)) {
-          state = result.right;
-        }
-      },
-      doResetTurn: reset,
-      step: () => {},
-      getState: () => projectActionEconomy(state),
+      init: () => Effect.sync(reset),
+      doSpendAttackAction: () =>
+        Effect.sync(() => spendActionIfAllowed("attack")),
+      doSpendMagicAction: () =>
+        Effect.sync(() => spendActionIfAllowed("magic")),
+      doGrantRestrictedUnitActionA: () =>
+        Effect.sync(() => grantUnitAction(unitActionA)),
+      doGrantRestrictedUnitActionB: () =>
+        Effect.sync(() => grantUnitAction(unitActionB)),
+      doSpendBonusAction: () =>
+        Effect.sync(() => {
+          const result = spendActivationResource(state, {
+            kind: "bonusAction",
+          });
+          if (Result.isSuccess(result)) {
+            state = result.success;
+          }
+        }),
+      doSpendFreeAction: () =>
+        Effect.sync(() => {
+          const result = spendActivationResource(state, { kind: "free" });
+          if (Result.isSuccess(result)) {
+            state = result.success;
+          }
+        }),
+      doResetTurn: () => Effect.sync(reset),
+      step: () => Effect.void,
+      getState: () => Effect.succeed(projectActionEconomy(state)),
     };
   });
 }
@@ -219,39 +238,49 @@ function createConditionsDriver() {
     }
 
     return {
-      init: reset,
-      doApplyBlinded: () => {
-        state = applyCondition(state, "blinded");
-      },
-      doRemoveBlinded: () => {
-        state = removeCondition(state, "blinded");
-      },
-      doApplyProne: () => {
-        state = applyCondition(state, "prone");
-      },
-      doRemoveProne: () => {
-        state = removeCondition(state, "prone");
-      },
-      doApplyParalyzed: () => {
-        state = applyCondition(state, "paralyzed");
-      },
-      doRemoveParalyzed: () => {
-        state = removeCondition(state, "paralyzed");
-      },
-      doApplyUnconscious: () => {
-        state = applyCondition(state, "unconscious");
-      },
-      doRemoveUnconscious: () => {
-        state = removeCondition(state, "unconscious");
-      },
-      doApplyDirectIncapacitated: () => {
-        state = applyCondition(state, "incapacitated");
-      },
-      doRemoveDirectIncapacitated: () => {
-        state = removeCondition(state, "incapacitated");
-      },
-      step: () => {},
-      getState: () => projectConditions(state),
+      init: () => Effect.sync(reset),
+      doApplyBlinded: () =>
+        Effect.sync(() => {
+          state = applyCondition(state, "blinded");
+        }),
+      doRemoveBlinded: () =>
+        Effect.sync(() => {
+          state = removeCondition(state, "blinded");
+        }),
+      doApplyProne: () =>
+        Effect.sync(() => {
+          state = applyCondition(state, "prone");
+        }),
+      doRemoveProne: () =>
+        Effect.sync(() => {
+          state = removeCondition(state, "prone");
+        }),
+      doApplyParalyzed: () =>
+        Effect.sync(() => {
+          state = applyCondition(state, "paralyzed");
+        }),
+      doRemoveParalyzed: () =>
+        Effect.sync(() => {
+          state = removeCondition(state, "paralyzed");
+        }),
+      doApplyUnconscious: () =>
+        Effect.sync(() => {
+          state = applyCondition(state, "unconscious");
+        }),
+      doRemoveUnconscious: () =>
+        Effect.sync(() => {
+          state = removeCondition(state, "unconscious");
+        }),
+      doApplyDirectIncapacitated: () =>
+        Effect.sync(() => {
+          state = applyCondition(state, "incapacitated");
+        }),
+      doRemoveDirectIncapacitated: () =>
+        Effect.sync(() => {
+          state = removeCondition(state, "incapacitated");
+        }),
+      step: () => Effect.void,
+      getState: () => Effect.succeed(projectConditions(state)),
     };
   });
 }
@@ -265,27 +294,33 @@ function createDeathSavesDriver() {
     }
 
     return {
-      init: reset,
-      doRollFail: () => {
-        state = resolveDeathSavingThrow(state, 5);
-      },
-      doRollNat1: () => {
-        state = resolveDeathSavingThrow(state, 1);
-      },
-      doRollSuccess: () => {
-        state = resolveDeathSavingThrow(state, 10);
-      },
-      doRollNat20: () => {
-        state = resolveDeathSavingThrow(state, 20);
-      },
-      doDamageFailure: () => {
-        state = addDeathFailures(state, 1);
-      },
-      doCriticalDamageFailure: () => {
-        state = addDeathFailures(state, 2);
-      },
-      step: () => {},
-      getState: () => projectDeathSaves(state),
+      init: () => Effect.sync(reset),
+      doRollFail: () =>
+        Effect.sync(() => {
+          state = resolveDeathSavingThrow(state, 5);
+        }),
+      doRollNat1: () =>
+        Effect.sync(() => {
+          state = resolveDeathSavingThrow(state, 1);
+        }),
+      doRollSuccess: () =>
+        Effect.sync(() => {
+          state = resolveDeathSavingThrow(state, 10);
+        }),
+      doRollNat20: () =>
+        Effect.sync(() => {
+          state = resolveDeathSavingThrow(state, 20);
+        }),
+      doDamageFailure: () =>
+        Effect.sync(() => {
+          state = addDeathFailures(state, 1);
+        }),
+      doCriticalDamageFailure: () =>
+        Effect.sync(() => {
+          state = addDeathFailures(state, 2);
+        }),
+      step: () => Effect.void,
+      getState: () => Effect.succeed(projectDeathSaves(state)),
     };
   });
 }
@@ -324,114 +359,325 @@ function createInitiativeDriver() {
         return;
       }
       if (result.status === "decide") {
-        lastInsert = initiativeLastInsert("decide", result.tie);
+        lastInsert = { status: "decide", tie: result.tie };
         return;
       }
       lastInsert = { status: "error", tie: [] };
     }
 
     return {
-      init: reset,
-      doNext: () => {
-        stack = nextInitiative(stack);
-      },
-      doRemoveC1: () => removeCreature("c1"),
-      doRemoveC2: () => removeCreature("c2"),
-      doInsertC3NoDecision: () => insertCreature("c3", 3),
-      doInsertCxTieNoDecision: () => insertCreature("cx", 2),
-      doInsertCxTieDecision: () => insertCreature("cx", 2, [["c2", "c2b"], 1]),
-      doInsertC3WrongDecision: () => insertCreature("c3", 3, [["c1"], 0]),
-      step: () => {},
-      getState: () => projectInitiative(stack, lastInsert),
+      init: () => Effect.sync(reset),
+      doNext: () =>
+        Effect.sync(() => {
+          stack = nextInitiative(stack);
+        }),
+      doRemoveC1: () => Effect.sync(() => removeCreature("c1")),
+      doRemoveC2: () => Effect.sync(() => removeCreature("c2")),
+      doInsertC3NoDecision: () => Effect.sync(() => insertCreature("c3", 3)),
+      doInsertCxTieNoDecision: () => Effect.sync(() => insertCreature("cx", 2)),
+      doInsertCxTieDecision: () =>
+        Effect.sync(() => insertCreature("cx", 2, [["c2", "c2b"], 1])),
+      doInsertC3WrongDecision: () =>
+        Effect.sync(() => insertCreature("c3", 3, [["c1"], 0])),
+      step: () => Effect.void,
+      getState: () => Effect.succeed(projectInitiative(stack, lastInsert)),
     };
   });
 }
 
+const RESTRICTED_UNIT_ACTION_ORDERS = [0, 1, 2, 3, 4] as const;
+type RestrictedUnitActionOrder = (typeof RESTRICTED_UNIT_ACTION_ORDERS)[number];
+
+const quintNumberSchema = Schema.Union([
+  Schema.Number,
+  Schema.BigInt,
+  ITFBigInt,
+]).pipe(
+  Schema.decodeTo(Schema.Number, {
+    decode: SchemaGetter.transform<number, number | bigint>((value) =>
+      typeof value === "bigint" ? Number(value) : value,
+    ),
+    encode: SchemaGetter.transform<number, number>((value) => value),
+  }),
+);
+
+const quintRestrictedUnitActionOrderSchema = quintNumberSchema.pipe(
+  Schema.refine(
+    (value): value is RestrictedUnitActionOrder =>
+      RESTRICTED_UNIT_ACTION_ORDERS.some((order) => order === value),
+    { expected: "a restricted unit action order from 0 through 4" },
+  ),
+);
+
+const restrictedUnitActionProcedureRefsByOrder = [
+  [],
+  [unitActionA],
+  [unitActionB],
+  [unitActionA, unitActionB],
+  [unitActionB, unitActionA],
+] as const;
+
+const actionEconomySpecStateSchema = Schema.Struct({
+  qTurnActionAvailable: Schema.Boolean,
+  qRestrictedUnitActionOrder: quintRestrictedUnitActionOrderSchema,
+  qHasBonusAction: Schema.Boolean,
+});
+
 const actionEconomyStateCheck = stateCheck(
-  normalizeActionEconomySpecState,
+  decodeActionEconomySpecState,
   compareState,
 );
+
+const conditionsSpecStateSchema = Schema.Struct({
+  qBlinded: Schema.Boolean,
+  qCharmed: Schema.Boolean,
+  qDeafened: Schema.Boolean,
+  qFrightened: Schema.Boolean,
+  qGrappled: Schema.Boolean,
+  qInvisible: Schema.Boolean,
+  qParalyzed: Schema.Boolean,
+  qPetrified: Schema.Boolean,
+  qPoisoned: Schema.Boolean,
+  qProne: Schema.Boolean,
+  qRestrained: Schema.Boolean,
+  qStunned: Schema.Boolean,
+  qUnconscious: Schema.Boolean,
+  qDirectIncapacitated: Schema.Boolean,
+  qHasIncapacitated: Schema.Boolean,
+  qHasProne: Schema.Boolean,
+});
+
 const conditionsStateCheck = stateCheck(
-  normalizeConditionsSpecState,
+  decodeConditionsSpecState,
   compareState,
 );
+
+const deathSavesSpecStateSchema = Schema.Struct({
+  qSuccesses: quintNumberSchema,
+  qFailures: quintNumberSchema,
+  qStable: Schema.Boolean,
+  qDead: Schema.Boolean,
+  qHpRegained: Schema.Boolean,
+});
+
 const deathSavesStateCheck = stateCheck(
-  normalizeDeathSavesSpecState,
+  decodeDeathSavesSpecState,
   compareState,
 );
+
+const initiativeEntrySchema = Schema.Struct({
+  creature: Schema.String,
+  initiative: quintNumberSchema,
+});
+
+const LAST_INSERT_SIMPLE_VARIANTS = [
+  "LastInsertNone",
+  "LastInsertOk",
+  "LastInsertErrorDecisionSuppliedWithoutTie",
+] as const;
+const lastInsertVariantTagSchema = Schema.Literals(LAST_INSERT_SIMPLE_VARIANTS);
+
+const initiativeLastInsertObjectSchema = Schema.Union([
+  Schema.Struct({ tag: Schema.Literal("LastInsertNone") }),
+  Schema.Struct({ tag: Schema.Literal("LastInsertOk") }),
+  Schema.Struct({
+    tag: Schema.Literal("LastInsertDecision"),
+    value: Schema.NonEmptyArray(Schema.String),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("LastInsertErrorDecisionSuppliedWithoutTie"),
+  }),
+]);
+
+const initiativeLastInsertSchema = Schema.Union([
+  lastInsertVariantTagSchema,
+  initiativeLastInsertObjectSchema,
+]);
+
+const initiativeSpecStateSchema = Schema.Struct({
+  qRound: quintNumberSchema,
+  qAlreadyActed: Schema.Array(initiativeEntrySchema),
+  qStillToAct: Schema.Array(initiativeEntrySchema),
+  qLastInsert: initiativeLastInsertSchema,
+});
+
 const initiativeStateCheck = stateCheck(
-  normalizeInitiativeSpecState,
+  decodeInitiativeSpecState,
   compareState,
 );
 
 describe("shared reducer algebra MBT", () => {
   it("replays action economy traces against the TypeScript reducer", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../proofs/action-economy-algebra-inductive.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createActionEconomyDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
-      invariants: ["invariant"],
-      stateCheck: actionEconomyStateCheck,
-    });
+    await Effect.runPromise(
+      quintRun({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../proofs/action-economy-algebra-inductive.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driverFactory: createActionEconomyDriver(),
+        backend: "typescript",
+        nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+        maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
+        invariants: ["invariant"],
+        stateCheck: actionEconomyStateCheck,
+      }),
+    );
   }, 120_000);
 
   it("replays condition traces against the TypeScript reducer", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../proofs/conditions-algebra-inductive.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createConditionsDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
-      invariants: ["invariant"],
-      stateCheck: conditionsStateCheck,
-    });
+    await Effect.runPromise(
+      quintRun({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../proofs/conditions-algebra-inductive.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driverFactory: createConditionsDriver(),
+        backend: "typescript",
+        nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+        maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
+        invariants: ["invariant"],
+        stateCheck: conditionsStateCheck,
+      }),
+    );
   }, 120_000);
 
   it("replays death save traces against the TypeScript reducer", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../proofs/death-saves-algebra-inductive.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDeathSavesDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
-      invariants: ["invariant"],
-      stateCheck: deathSavesStateCheck,
-    });
+    await Effect.runPromise(
+      quintRun({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../proofs/death-saves-algebra-inductive.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driverFactory: createDeathSavesDriver(),
+        backend: "typescript",
+        nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+        maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
+        invariants: ["invariant"],
+        stateCheck: deathSavesStateCheck,
+      }),
+    );
   }, 120_000);
 
   it("replays initiative traces against the TypeScript reducer", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../proofs/initiative-algebra-invariant.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createInitiativeDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
-      invariants: ["invariant"],
-      stateCheck: initiativeStateCheck,
-    });
+    await Effect.runPromise(
+      quintRun({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../proofs/initiative-algebra-invariant.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driverFactory: createInitiativeDriver(),
+        backend: "typescript",
+        nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+        maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
+        invariants: ["invariant"],
+        stateCheck: initiativeStateCheck,
+      }),
+    );
   }, 120_000);
+});
+
+describe("shared reducer algebra trace-state decoders", () => {
+  it("decodes encoded ITF bigint fields across projections", async () => {
+    const actionState = await Effect.runPromise(
+      decodeActionEconomySpecState({
+        qTurnActionAvailable: true,
+        qRestrictedUnitActionOrder: { "#bigint": "3" },
+        qHasBonusAction: false,
+      }),
+    );
+    const deathSaveState = await Effect.runPromise(
+      decodeDeathSavesSpecState({
+        qSuccesses: { "#bigint": "2" },
+        qFailures: { "#bigint": "1" },
+        qStable: false,
+        qDead: false,
+        qHpRegained: false,
+      }),
+    );
+    const initiativeState = await Effect.runPromise(
+      decodeInitiativeSpecState({
+        qRound: { "#bigint": "2" },
+        qAlreadyActed: [{ creature: "c4", initiative: { "#bigint": "4" } }],
+        qStillToAct: [{ creature: "c1", initiative: { "#bigint": "1" } }],
+        qLastInsert: {
+          tag: "LastInsertDecision",
+          value: ["c1"],
+        },
+      }),
+    );
+
+    expect(actionState).toEqual({
+      turnActionAvailable: true,
+      restrictedUnitActionProcedureRefs: [unitActionA, unitActionB],
+      hasBonusAction: false,
+    });
+    expect(deathSaveState).toEqual({
+      successes: 2,
+      failures: 1,
+      stable: false,
+      dead: false,
+      hpRegained: false,
+    });
+    expect(initiativeState).toEqual({
+      round: 2,
+      alreadyActed: [{ creature: "c4", initiative: 4 }],
+      stillToAct: [{ creature: "c1", initiative: 1 }],
+      lastInsert: { status: "decide", tie: ["c1"] },
+    });
+  });
+
+  it("returns a typed failure for malformed action-economy state", async () => {
+    const result = await Effect.runPromise(
+      Effect.result(
+        decodeActionEconomySpecState({
+          qTurnActionAvailable: true,
+          qRestrictedUnitActionOrder: 5,
+          qHasBonusAction: true,
+        }),
+      ),
+    );
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
+
+  it("returns a typed failure for malformed conditions state", async () => {
+    const result = await Effect.runPromise(
+      Effect.result(decodeConditionsSpecState({ qBlinded: "not-a-boolean" })),
+    );
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
+
+  it("returns a typed failure for malformed death-save state", async () => {
+    const result = await Effect.runPromise(
+      Effect.result(decodeDeathSavesSpecState({ qSuccesses: "not-a-number" })),
+    );
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
+
+  it("returns a typed failure for malformed initiative state", async () => {
+    const result = await Effect.runPromise(
+      Effect.result(
+        decodeInitiativeSpecState({
+          qRound: 1,
+          qAlreadyActed: [],
+          qStillToAct: [],
+          qLastInsert: "LastInsertDecision",
+        }),
+      ),
+    );
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
 });
 
 function initialActionEconomyState(): ActionEconomyState {
@@ -542,194 +788,109 @@ function projectInitiativeEntry(
   };
 }
 
-function normalizeActionEconomySpecState(
-  raw: unknown,
-): ActionEconomyProjection {
-  const state = quintStateRecord(raw);
-  return {
-    turnActionAvailable: booleanField(state, "qTurnActionAvailable"),
-    restrictedUnitActionProcedureRefs: quintRestrictedUnitActionProcedureRefs(
-      numberField(state, "qRestrictedUnitActionOrder"),
+function decodeActionEconomySpecState(raw: unknown) {
+  return Schema.decodeUnknownEffect(actionEconomySpecStateSchema)(raw).pipe(
+    Effect.map(
+      (state): ActionEconomyProjection => ({
+        turnActionAvailable: state.qTurnActionAvailable,
+        restrictedUnitActionProcedureRefs: [
+          ...restrictedUnitActionProcedureRefsByOrder[
+            state.qRestrictedUnitActionOrder
+          ],
+        ],
+        hasBonusAction: state.qHasBonusAction,
+      }),
     ),
-    hasBonusAction: booleanField(state, "qHasBonusAction"),
-  };
-}
-
-function quintRestrictedUnitActionProcedureRefs(
-  order: number,
-): readonly BattleProcedureExecutionRef[] {
-  if (order === 0) return [];
-  if (order === 1) return [unitActionA];
-  if (order === 2) return [unitActionB];
-  if (order === 3) return [unitActionA, unitActionB];
-  if (order === 4) return [unitActionB, unitActionA];
-  throw new Error(`Unknown Quint restricted unit action order: ${order}.`);
-}
-
-function normalizeConditionsSpecState(raw: unknown): ConditionsProjection {
-  const state = quintStateRecord(raw);
-  return {
-    blinded: booleanField(state, "qBlinded"),
-    charmed: booleanField(state, "qCharmed"),
-    deafened: booleanField(state, "qDeafened"),
-    frightened: booleanField(state, "qFrightened"),
-    grappled: booleanField(state, "qGrappled"),
-    invisible: booleanField(state, "qInvisible"),
-    paralyzed: booleanField(state, "qParalyzed"),
-    petrified: booleanField(state, "qPetrified"),
-    poisoned: booleanField(state, "qPoisoned"),
-    prone: booleanField(state, "qProne"),
-    restrained: booleanField(state, "qRestrained"),
-    stunned: booleanField(state, "qStunned"),
-    unconscious: booleanField(state, "qUnconscious"),
-    directIncapacitated: booleanField(state, "qDirectIncapacitated"),
-    hasIncapacitated: booleanField(state, "qHasIncapacitated"),
-    hasProne: booleanField(state, "qHasProne"),
-  };
-}
-
-function normalizeDeathSavesSpecState(raw: unknown): DeathSavesProjection {
-  const state = quintStateRecord(raw);
-  return {
-    successes: numberField(state, "qSuccesses"),
-    failures: numberField(state, "qFailures"),
-    stable: booleanField(state, "qStable"),
-    dead: booleanField(state, "qDead"),
-    hpRegained: booleanField(state, "qHpRegained"),
-  };
-}
-
-function normalizeInitiativeSpecState(raw: unknown): InitiativeProjection {
-  const state = quintStateRecord(raw);
-  return {
-    round: numberField(state, "qRound"),
-    alreadyActed: listField(state, "qAlreadyActed").map(
-      normalizeInitiativeEntry,
-    ),
-    stillToAct: listField(state, "qStillToAct").map(normalizeInitiativeEntry),
-    lastInsert: normalizeInitiativeLastInsert(state["qLastInsert"]),
-  };
-}
-
-function normalizeInitiativeLastInsert(raw: unknown): InitiativeLastInsert {
-  const variant = quintVariant(raw, "qLastInsert");
-  if (variant.tag === "LastInsertNone") return { status: "none", tie: [] };
-  if (variant.tag === "LastInsertOk") return { status: "ok", tie: [] };
-  if (variant.tag === "LastInsertErrorDecisionSuppliedWithoutTie") {
-    return { status: "error", tie: [] };
-  }
-  if (variant.tag === "LastInsertDecision") {
-    return initiativeLastInsert(
-      "decide",
-      listValue(variant.value, "qLastInsert.value").map(stringValue),
-    );
-  }
-  throw new Error(
-    `Unknown Quint initiative last insert variant ${variant.tag}.`,
   );
 }
 
-function initiativeLastInsert(
-  status: InitiativeLastInsert["status"],
-  tie: readonly string[],
+function decodeConditionsSpecState(raw: unknown) {
+  return Schema.decodeUnknownEffect(conditionsSpecStateSchema)(raw).pipe(
+    Effect.map((state) => ({
+      blinded: state.qBlinded,
+      charmed: state.qCharmed,
+      deafened: state.qDeafened,
+      frightened: state.qFrightened,
+      grappled: state.qGrappled,
+      invisible: state.qInvisible,
+      paralyzed: state.qParalyzed,
+      petrified: state.qPetrified,
+      poisoned: state.qPoisoned,
+      prone: state.qProne,
+      restrained: state.qRestrained,
+      stunned: state.qStunned,
+      unconscious: state.qUnconscious,
+      directIncapacitated: state.qDirectIncapacitated,
+      hasIncapacitated: state.qHasIncapacitated,
+      hasProne: state.qHasProne,
+    })),
+  );
+}
+
+function decodeDeathSavesSpecState(raw: unknown) {
+  return Schema.decodeUnknownEffect(deathSavesSpecStateSchema)(raw).pipe(
+    Effect.map((state) => ({
+      successes: state.qSuccesses,
+      failures: state.qFailures,
+      stable: state.qStable,
+      dead: state.qDead,
+      hpRegained: state.qHpRegained,
+    })),
+  );
+}
+
+function decodeInitiativeSpecState(raw: unknown) {
+  return Schema.decodeUnknownEffect(initiativeSpecStateSchema)(raw).pipe(
+    Effect.map((state) => ({
+      round: state.qRound,
+      alreadyActed: state.qAlreadyActed,
+      stillToAct: state.qStillToAct,
+      lastInsert: decodeInitiativeLastInsert(state.qLastInsert),
+    })),
+  );
+}
+
+type InitiativeLastInsertInput = Schema.Schema.Type<
+  typeof initiativeLastInsertSchema
+>;
+
+function decodeInitiativeLastInsert(
+  raw: InitiativeLastInsertInput,
 ): InitiativeLastInsert {
-  if (status === "decide") {
-    if (tie.length === 0) {
-      throw new Error("Expected decide insert status to carry a nonempty tie.");
-    }
-    return { status, tie: nonEmptyTie(tie) };
-  }
-
-  if (tie.length > 0) {
-    throw new Error("Expected non-decide insert status to carry no tie.");
-  }
-  return { status, tie: [] };
-}
-
-function nonEmptyTie(tie: readonly string[]): readonly [string, ...string[]] {
-  if (tie.length === 0) {
-    throw new Error("Expected initiative tie to be nonempty.");
-  }
-  return [tie[0], ...tie.slice(1)];
-}
-
-function normalizeInitiativeEntry(raw: unknown): InitiativeProjectionEntry {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint initiative entry to be an object.");
-  }
-  return {
-    creature: stringField(raw, "creature"),
-    initiative: numberField(raw, "initiative"),
-  };
+  return Match.value(raw).pipe(
+    Match.when("LastInsertNone", () => ({
+      status: "none" as const,
+      tie: [] as const,
+    })),
+    Match.when("LastInsertOk", () => ({
+      status: "ok" as const,
+      tie: [] as const,
+    })),
+    Match.when("LastInsertErrorDecisionSuppliedWithoutTie", () => ({
+      status: "error" as const,
+      tie: [] as const,
+    })),
+    Match.when({ tag: "LastInsertNone" }, () => ({
+      status: "none" as const,
+      tie: [] as const,
+    })),
+    Match.when({ tag: "LastInsertOk" }, () => ({
+      status: "ok" as const,
+      tie: [] as const,
+    })),
+    Match.when({ tag: "LastInsertErrorDecisionSuppliedWithoutTie" }, () => ({
+      status: "error" as const,
+      tie: [] as const,
+    })),
+    Match.when({ tag: "LastInsertDecision" }, ({ value }) => ({
+      status: "decide" as const,
+      tie: value,
+    })),
+    Match.exhaustive,
+  );
 }
 
 function compareState<T>(spec: T, impl: T): boolean {
   expect(impl).toEqual(spec);
   return true;
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint state to be an object.");
-  }
-  return raw;
-}
-
-function numberField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): number {
-  const value = state[field];
-  if (typeof value === "number") return value;
-  if (typeof value === "bigint") return Number(value);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function stringField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): string {
-  return stringValue(state[field]);
-}
-
-function stringValue(value: unknown): string {
-  if (typeof value === "string") return value;
-  throw new Error(`Expected Quint string, got ${String(value)}.`);
-}
-
-function listField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): readonly unknown[] {
-  return listValue(state[field], field);
-}
-
-function listValue(value: unknown, field: string): readonly unknown[] {
-  if (Array.isArray(value)) return value;
-  throw new Error(`Expected Quint list field ${field}.`);
-}
-
-function quintVariant(
-  raw: unknown,
-  field: string,
-): { readonly tag: string; readonly value: unknown } {
-  if (typeof raw === "string") return { tag: raw, value: undefined };
-  if (isRecord(raw)) {
-    const tag = raw["tag"];
-    if (typeof tag === "string") return { tag, value: raw["value"] };
-  }
-  throw new Error(`Expected Quint variant field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }

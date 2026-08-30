@@ -7,93 +7,105 @@ import {
 } from "@dnd/shared/types";
 import { semanticRefinement } from "@dnd/shared/semantic-refinement";
 
+const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
+  Schema.check(Schema.isNonEmpty()),
+);
+
 export const CombatantId = CreatureId.pipe(Schema.brand("CombatantId"));
 export type CombatantId = typeof CombatantId.Type;
 export const combatantId: (value: string) => CombatantId = CombatantId.make;
 
-export const BattleObjectId = Schema.NonEmptyTrimmedString.pipe(
+export const BattleObjectId = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("BattleObjectId"),
 );
 export type BattleObjectId = typeof BattleObjectId.Type;
 export const battleObjectId: (value: string) => BattleObjectId =
   BattleObjectId.make;
 
-export const BattleAreaId = Schema.NonEmptyTrimmedString.pipe(
+export const BattleAreaId = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("BattleAreaId"),
 );
 export type BattleAreaId = typeof BattleAreaId.Type;
 export const battleAreaId: (value: string) => BattleAreaId = BattleAreaId.make;
 
-export const BattleTablePositionId = Schema.NonEmptyTrimmedString.pipe(
+export const BattleTablePositionId = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("BattleTablePositionId"),
 );
 export type BattleTablePositionId = typeof BattleTablePositionId.Type;
 export const battleTablePositionId: (value: string) => BattleTablePositionId =
   BattleTablePositionId.make;
 
-export const BattleCompanionFormId = Schema.NonEmptyTrimmedString.pipe(
+export const BattleCompanionFormId = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("BattleCompanionFormId"),
 );
 export type BattleCompanionFormId = typeof BattleCompanionFormId.Type;
 export const battleCompanionFormId: (value: string) => BattleCompanionFormId =
   BattleCompanionFormId.make;
 
-export const BattleLineDirectionId = Schema.NonEmptyTrimmedString.pipe(
+export const BattleLineDirectionId = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("BattleLineDirectionId"),
 );
 export type BattleLineDirectionId = typeof BattleLineDirectionId.Type;
 export const battleLineDirectionId: (value: string) => BattleLineDirectionId =
   BattleLineDirectionId.make;
 
-export const BattleDancingLightId = Schema.NonEmptyTrimmedString.pipe(
-  Schema.brand("BattleDancingLightId"),
+export const BattleMovableLightId = NonEmptyTrimmedStringSchema.pipe(
+  Schema.brand("BattleMovableLightId"),
 );
-export type BattleDancingLightId = typeof BattleDancingLightId.Type;
-export const battleDancingLightId: (value: string) => BattleDancingLightId =
-  BattleDancingLightId.make;
+export type BattleMovableLightId = typeof BattleMovableLightId.Type;
+export const battleMovableLightId: (value: string) => BattleMovableLightId =
+  BattleMovableLightId.make;
 
-export const BattleSpellEffectOccurrenceId = Schema.NonEmptyTrimmedString.pipe(
+export const BattleSpellEffectOccurrenceId = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("BattleSpellEffectOccurrenceId"),
 );
 export type BattleSpellEffectOccurrenceId =
   typeof BattleSpellEffectOccurrenceId.Type;
 
-export const BattleActiveEffectExecutionRef = Schema.NonEmptyTrimmedString.pipe(
-  Schema.filter(battleActiveEffectExecutionReferenceIsCanonical, {
-    message: () => "Invalid canonical Battle active-effect execution ref.",
-    ...semanticRefinement("canonicalExecutionReferenceSyntax"),
-  }),
-  Schema.brand("BattleActiveEffectExecutionRef"),
+export const BattleStartTurnOccurrenceId = NonEmptyTrimmedStringSchema.pipe(
+  Schema.brand("BattleStartTurnOccurrenceId"),
 );
-export type BattleActiveEffectExecutionRef =
-  typeof BattleActiveEffectExecutionRef.Type;
-export const battleActiveEffectExecutionRef: (
+export type BattleStartTurnOccurrenceId =
+  typeof BattleStartTurnOccurrenceId.Type;
+export const battleStartTurnOccurrenceId: (
   value: string,
-) => BattleActiveEffectExecutionRef = BattleActiveEffectExecutionRef.make;
+) => BattleStartTurnOccurrenceId = BattleStartTurnOccurrenceId.make;
 
-export const BattleActiveEffectExecutionOrdinal = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
-  Schema.brand("BattleActiveEffectExecutionOrdinal"),
+export const BattleEffectExecutionRef = NonEmptyTrimmedStringSchema.pipe(
+  Schema.check(
+    Schema.makeFilter(battleEffectExecutionReferenceIsCanonical, {
+      message: "Invalid canonical Battle effect execution ref.",
+      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
+    }),
+  ),
+  Schema.brand("BattleEffectExecutionRef"),
 );
-export type BattleActiveEffectExecutionOrdinal =
-  typeof BattleActiveEffectExecutionOrdinal.Type;
-export const battleActiveEffectExecutionOrdinal: (
+export type BattleEffectExecutionRef = typeof BattleEffectExecutionRef.Type;
+export const battleEffectExecutionRef: (
+  value: string,
+) => BattleEffectExecutionRef = BattleEffectExecutionRef.make;
+
+export const BattleEffectExecutionOrdinal = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+  Schema.brand("BattleEffectExecutionOrdinal"),
+);
+export type BattleEffectExecutionOrdinal =
+  typeof BattleEffectExecutionOrdinal.Type;
+export const battleEffectExecutionOrdinal: (
   value: number,
-) => BattleActiveEffectExecutionOrdinal =
-  BattleActiveEffectExecutionOrdinal.make;
+) => BattleEffectExecutionOrdinal = BattleEffectExecutionOrdinal.make;
 
 export const battleSpellEffectOccurrenceId: (
   value: string,
 ) => BattleSpellEffectOccurrenceId = BattleSpellEffectOccurrenceId.make;
 
-export const SpellId = Schema.NonEmptyTrimmedString.pipe(
+export const SpellId = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("SpellId"),
 );
 export type SpellId = typeof SpellId.Type;
 export const spellId: (value: string) => SpellId = SpellId.make;
 
-export const BattleId = Schema.NonEmptyTrimmedString.pipe(
+export const BattleId = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("BattleId"),
 );
 export type BattleId = typeof BattleId.Type;
@@ -115,14 +127,17 @@ export type BattleReplayStackDepth = typeof BattleReplayStackDepth.Type;
 export const battleReplayStackDepth: (value: number) => BattleReplayStackDepth =
   BattleReplayStackDepth.make;
 
-export const BattleProcedureExecutionRef = Schema.NonEmptyTrimmedString.pipe(
-  Schema.filter(
-    (reference) => nestedExecutionReferenceIsCanonical(reference, "procedure"),
-    {
-      /* v8 ignore next -- @preserve -- Only a malformed externally decoded reference requests this diagnostic; constructors emit the canonical nested identity shape. */
-      message: () => "Invalid canonical Battle procedure execution ref.",
-      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
-    },
+export const BattleProcedureExecutionRef = NonEmptyTrimmedStringSchema.pipe(
+  Schema.check(
+    Schema.makeFilter(
+      (reference) =>
+        nestedExecutionReferenceIsCanonical(reference, "procedure"),
+      {
+        /* v8 ignore next -- @preserve -- Only a malformed externally decoded reference requests this diagnostic; constructors emit the canonical nested identity shape. */
+        message: "Invalid canonical Battle procedure execution ref.",
+        ...semanticRefinement("canonicalExecutionReferenceSyntax"),
+      },
+    ),
   ),
   Schema.brand("BattleProcedureExecutionRef"),
 );
@@ -130,8 +145,7 @@ export type BattleProcedureExecutionRef =
   typeof BattleProcedureExecutionRef.Type;
 
 export const BattleProcedureExecutionCursor = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   Schema.brand("BattleProcedureExecutionCursor"),
 );
 export type BattleProcedureExecutionCursor =
@@ -142,10 +156,12 @@ export const battleProcedureExecutionCursor: (
 
 export const BattleAttackProcedureExecutionRef =
   BattleProcedureExecutionRef.pipe(
-    Schema.filter(attackProcedureExecutionReferenceIsCanonical, {
-      message: () => "Invalid canonical Battle attack procedure execution ref.",
-      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
-    }),
+    Schema.check(
+      Schema.makeFilter(attackProcedureExecutionReferenceIsCanonical, {
+        message: "Invalid canonical Battle attack procedure execution ref.",
+        ...semanticRefinement("canonicalExecutionReferenceSyntax"),
+      }),
+    ),
     Schema.brand("BattleAttackProcedureExecutionRef"),
   );
 export type BattleAttackProcedureExecutionRef =
@@ -153,28 +169,31 @@ export type BattleAttackProcedureExecutionRef =
 
 export const BattleStatBlockProcedureExecutionRef =
   BattleProcedureExecutionRef.pipe(
-    Schema.filter(statBlockProcedureExecutionReferenceIsCanonical, {
-      /* v8 ignore next -- @preserve -- Only a malformed externally decoded Stat Block reference requests this diagnostic; the scoped constructor is canonical. */
-      message: () =>
-        "Invalid canonical Battle Stat Block procedure execution ref.",
-      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
-    }),
+    Schema.check(
+      Schema.makeFilter(statBlockProcedureExecutionReferenceIsCanonical, {
+        /* v8 ignore next -- @preserve -- Only a malformed externally decoded Stat Block reference requests this diagnostic; the scoped constructor is canonical. */
+        message: "Invalid canonical Battle Stat Block procedure execution ref.",
+        ...semanticRefinement("canonicalExecutionReferenceSyntax"),
+      }),
+    ),
     Schema.brand("BattleStatBlockProcedureExecutionRef"),
   );
 export type BattleStatBlockProcedureExecutionRef =
   typeof BattleStatBlockProcedureExecutionRef.Type;
 
-export const BattleResourcePoolExecutionRef = Schema.NonEmptyTrimmedString.pipe(
-  Schema.filter(battleResourcePoolExecutionReferenceIsCanonical, {
-    message: () => "Invalid canonical Battle resource-pool execution ref.",
-    ...semanticRefinement("canonicalExecutionReferenceSyntax"),
-  }),
+export const BattleResourcePoolExecutionRef = NonEmptyTrimmedStringSchema.pipe(
+  Schema.check(
+    Schema.makeFilter(battleResourcePoolExecutionReferenceIsCanonical, {
+      message: "Invalid canonical Battle resource-pool execution ref.",
+      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
+    }),
+  ),
   Schema.brand("BattleResourcePoolExecutionRef"),
 );
 export type BattleResourcePoolExecutionRef =
   typeof BattleResourcePoolExecutionRef.Type;
 
-export const BattleSpellAccessExecutionRef = Schema.NonEmptyTrimmedString.pipe(
+export const BattleSpellAccessExecutionRef = NonEmptyTrimmedStringSchema.pipe(
   Schema.brand("BattleSpellAccessExecutionRef"),
 );
 export type BattleSpellAccessExecutionRef =
@@ -185,39 +204,45 @@ export type BattleResourceOwningExecutionScopeRef =
   | BattleCharacterExecutionScopeRef;
 
 export const BattleStatBlockExecutionScopeRef =
-  Schema.NonEmptyTrimmedString.pipe(
-    Schema.filter(battleStatBlockExecutionScopeReferenceIsCanonical, {
-      message: () => "Invalid canonical Battle Stat Block execution scope ref.",
-      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
-    }),
+  NonEmptyTrimmedStringSchema.pipe(
+    Schema.check(
+      Schema.makeFilter(battleStatBlockExecutionScopeReferenceIsCanonical, {
+        message: "Invalid canonical Battle Stat Block execution scope ref.",
+        ...semanticRefinement("canonicalExecutionReferenceSyntax"),
+      }),
+    ),
     Schema.brand("BattleStatBlockExecutionScopeRef"),
   );
 export type BattleStatBlockExecutionScopeRef =
   typeof BattleStatBlockExecutionScopeRef.Type;
 
 export const BattleCharacterExecutionScopeRef =
-  Schema.NonEmptyTrimmedString.pipe(
-    Schema.filter(battleCharacterExecutionScopeReferenceIsCanonical, {
-      message: () => "Invalid canonical Battle character execution scope ref.",
-      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
-    }),
+  NonEmptyTrimmedStringSchema.pipe(
+    Schema.check(
+      Schema.makeFilter(battleCharacterExecutionScopeReferenceIsCanonical, {
+        message: "Invalid canonical Battle character execution scope ref.",
+        ...semanticRefinement("canonicalExecutionReferenceSyntax"),
+      }),
+    ),
     Schema.brand("BattleCharacterExecutionScopeRef"),
   );
 export type BattleCharacterExecutionScopeRef =
   typeof BattleCharacterExecutionScopeRef.Type;
 
-export const BattleAttackExecutionScopeRef = Schema.NonEmptyTrimmedString.pipe(
-  Schema.filter(
-    (reference) =>
-      battleOwnedExecutionScopeReferenceIsCanonical(
-        reference,
-        "attackExecution",
-      ),
-    /* v8 ignore next -- @preserve -- Only a malformed externally decoded attack scope requests this diagnostic; the battle-owned scope constructor is canonical. */
-    {
-      message: () => "Invalid canonical Battle attack execution scope ref.",
-      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
-    },
+export const BattleAttackExecutionScopeRef = NonEmptyTrimmedStringSchema.pipe(
+  Schema.check(
+    Schema.makeFilter(
+      (reference) =>
+        battleOwnedExecutionScopeReferenceIsCanonical(
+          reference,
+          "attackExecution",
+        ),
+      /* v8 ignore next -- @preserve -- Only a malformed externally decoded attack scope requests this diagnostic; the battle-owned scope constructor is canonical. */
+      {
+        message: "Invalid canonical Battle attack execution scope ref.",
+        ...semanticRefinement("canonicalExecutionReferenceSyntax"),
+      },
+    ),
   ),
   Schema.brand("BattleAttackExecutionScopeRef"),
 );
@@ -230,8 +255,7 @@ export type BattleExecutionScopeRef =
   | BattleAttackExecutionScopeRef;
 
 export const BattleExecutionScopeOrdinal = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   Schema.brand("BattleExecutionScopeOrdinal"),
 );
 export type BattleExecutionScopeOrdinal =
@@ -247,7 +271,7 @@ export function battleExecutionScopeInitialOrNextOrdinal(
 }
 
 export const BattleExecutionScopeCursor = BattleExecutionScopeOrdinal.pipe(
-  Schema.greaterThan(0),
+  Schema.check(Schema.isGreaterThan(0)),
   Schema.brand("BattleExecutionScopeCursor"),
 );
 export type BattleExecutionScopeCursor = typeof BattleExecutionScopeCursor.Type;
@@ -596,32 +620,33 @@ export function battleResourcePoolExecutionRefBelongsToScope(
   );
 }
 
-export function battleActiveEffectExecutionRefOrdinalIsBefore(
-  effectRef: BattleActiveEffectExecutionRef,
+export function battleEffectExecutionRefOrdinalIsBefore(
+  effectRef: BattleEffectExecutionRef,
   scopeRef: BattleExecutionScopeRef,
-  nextEffectOrdinal: BattleActiveEffectExecutionOrdinal,
+  nextEffectOrdinal: BattleEffectExecutionOrdinal,
 ): boolean {
   const decoded = parseExecutionReference(effectRef);
   return (
     decoded !== null &&
     decoded.ownerScopeRef === scopeRef &&
-    decoded.kind === "activeEffectOccurrence" &&
+    decoded.kind === "effectOccurrence" &&
     nonNegativeIntegerProperty(decoded, "ordinal") &&
     Number(decoded.ordinal) < nextEffectOrdinal &&
-    battleActiveEffectExecutionReferenceIsCanonical(effectRef)
+    battleEffectExecutionReferenceIsCanonical(effectRef)
   );
 }
 
-export function battleActiveEffectExecutionRefBelongsToScope(
-  effectRef: BattleActiveEffectExecutionRef,
+export function battleEffectExecutionRefBelongsToScope(
+  effectRef: BattleEffectExecutionRef,
   scopeRef: BattleExecutionScopeRef,
 ): boolean {
   const decoded = parseExecutionReference(effectRef);
   return (
     decoded !== null &&
     decoded.ownerScopeRef === scopeRef &&
-    decoded.kind === "activeEffectOccurrence" &&
-    battleActiveEffectExecutionReferenceIsCanonical(effectRef)
+    decoded.kind === "effectOccurrence" &&
+    nonNegativeIntegerProperty(decoded, "ordinal") &&
+    battleEffectExecutionReferenceIsCanonical(effectRef)
   );
 }
 
@@ -721,21 +746,19 @@ function battleOwnedExecutionScopeReferenceIsCanonical(
   );
 }
 
-function battleActiveEffectExecutionReferenceIsCanonical(
-  reference: string,
-): boolean {
+function battleEffectExecutionReferenceIsCanonical(reference: string): boolean {
   const decoded = parseExecutionReference(reference);
   return (
     decoded !== null &&
     hasExactKeys(decoded, ["kind", "ownerScopeRef", "ordinal"]) &&
-    decoded.kind === "activeEffectOccurrence" &&
+    decoded.kind === "effectOccurrence" &&
     typeof decoded.ownerScopeRef === "string" &&
     (Schema.is(BattleStatBlockExecutionScopeRef)(decoded.ownerScopeRef) ||
       Schema.is(BattleCharacterExecutionScopeRef)(decoded.ownerScopeRef)) &&
     nonNegativeIntegerProperty(decoded, "ordinal") &&
     reference ===
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: decoded.ownerScopeRef,
         ordinal: decoded.ordinal,
       })

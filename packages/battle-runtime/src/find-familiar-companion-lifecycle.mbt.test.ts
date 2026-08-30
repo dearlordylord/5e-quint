@@ -1,7 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.companion-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 // RAW trace:
@@ -24,10 +24,10 @@ import {
   proficiencyBonus,
 } from "@dnd/shared/types";
 import {
-  findFamiliarFormEligibilityForSpell,
-  type FindFamiliarFormEligibility,
+  spawnedCompanionFormEligibilityForSpell,
+  type SpawnedCompanionFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -52,18 +52,18 @@ import {
 import {
   battleReducerStartRouteEvent,
   battleId,
-  castFindFamiliar,
+  castSpawnedCompanion,
   combatantId,
-  deliverTouchSpellThroughFindFamiliar,
+  deliverTouchSpellThroughSpawnedCompanion,
   discoverBattleActs,
-  findFamiliarCompanionEntryForOwner,
-  findFamiliarTelepathicConnection,
+  spawnedCompanionEntryForOwner,
+  spawnedCompanionTelepathicConnection,
   initiativeScore,
-  reappearTemporarilyDismissedFindFamiliar,
+  reappearTemporarilyDismissedSpawnedCompanion,
   sameBattleSubject,
-  shareFindFamiliarSenses,
+  shareSpawnedCompanionSenses,
   startBattle,
-  temporarilyDismissFindFamiliar,
+  temporarilyDismissSpawnedCompanion,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -109,7 +109,7 @@ const FIND_FAMILIAR_COMPANION_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
   PactAttack: "pactAttack",
 };
 
-type FindFamiliarCompanionProjection = {
+type SpawnedCompanionProjection = {
   readonly familiarStatus: FamiliarStatus;
   readonly familiarId: FamiliarIdentity;
   readonly familiarForm: FamiliarForm;
@@ -127,7 +127,7 @@ type FindFamiliarCompanionProjection = {
   readonly lastResult: LastResult;
 };
 
-type FindFamiliarCompanionRuntimeState = {
+type SpawnedCompanionRuntimeState = {
   readonly battle: BattleRuntimeSession;
   readonly lastResult: LastResult;
 };
@@ -136,11 +136,11 @@ const casterId = combatantId("find-familiar-mbt-caster");
 const familiarId = combatantId("find-familiar-mbt-familiar");
 const targetId = combatantId("find-familiar-mbt-target");
 const initialTargetHp = 12;
-const findFamiliarSpell = spellRecord("find_familiar");
+const spawnedCompanionLifecycleSpell = spellRecord("find_familiar");
 const cureWoundsSpell = spellRecord("cure_wounds");
 const barkskinSpell = spellRecord("barkskin");
-const familiarEligibility = requireFindFamiliarEligibility(
-  findFamiliarFormEligibilityForSpell(findFamiliarSpell),
+const familiarEligibility = requireSpawnedCompanionEligibility(
+  spawnedCompanionFormEligibilityForSpell(spawnedCompanionLifecycleSpell),
 );
 
 const driverSchema = {
@@ -153,7 +153,7 @@ const driverSchema = {
   step: {},
 } as const;
 
-const findFamiliarCompanionRouteDriverSchema = {
+const spawnedCompanionLifecycleCompanionRouteDriverSchema = {
   init: {},
   doRouteFamiliarCreation: {},
   doRouteFamiliarReplacement: {},
@@ -165,7 +165,7 @@ const findFamiliarCompanionRouteDriverSchema = {
   step: {},
 } as const;
 
-function createFindFamiliarCompanionLifecycleDriver() {
+function createSpawnedCompanionLifecycleDriver() {
   return defineDriver(driverSchema, () => {
     let state = initialRuntimeState();
     return {
@@ -188,60 +188,62 @@ function createFindFamiliarCompanionLifecycleDriver() {
         state = resolvePactFamiliarAttack(state);
       },
       step: () => {},
-      getState: () => findFamiliarCompanionProjection(state),
+      getState: () => spawnedCompanionLifecycleCompanionProjection(state),
     };
   });
 }
 
-type FindFamiliarCompanionRouteState = {
+type SpawnedCompanionRouteState = {
   readonly route: readonly ReducerRouteEvent[];
 };
 
-function createFindFamiliarCompanionRouteDriver() {
-  return defineDriver(findFamiliarCompanionRouteDriverSchema, () => {
-    let route: readonly ReducerRouteEvent[] = [battleReducerStartRouteEvent()];
-    return {
-      init: () => {
-        route = [battleReducerStartRouteEvent()];
-      },
-      doRouteFamiliarCreation: () => {
-        route = observeFamiliarCreationRoute();
-      },
-      doRouteFamiliarReplacement: () => {
-        route = observeFamiliarReplacementRoute();
-      },
-      doRouteFamiliarDismissalReappearance: () => {
-        route = observeFamiliarDismissalReappearanceRoute();
-      },
-      doRouteSharedSenses: () => {
-        route = observeSharedSensesRoute();
-      },
-      doRouteTouchDelivery: () => {
-        route = observeTouchDeliveryRoute();
-      },
-      doRouteTouchDeliveryNoRoll: () => {
-        route = observeNoRollTouchDeliveryRoute();
-      },
-      doRoutePactFamiliarAttack: () => {
-        route = observePactFamiliarAttackRoute();
-      },
-      step: () => {},
-      getState: (): FindFamiliarCompanionRouteState => ({ route }),
-    };
-  });
+function createSpawnedCompanionRouteDriver() {
+  return defineDriver(
+    spawnedCompanionLifecycleCompanionRouteDriverSchema,
+    () => {
+      let route: readonly ReducerRouteEvent[] = [
+        battleReducerStartRouteEvent(),
+      ];
+      return {
+        init: () => {
+          route = [battleReducerStartRouteEvent()];
+        },
+        doRouteFamiliarCreation: () => {
+          route = observeFamiliarCreationRoute();
+        },
+        doRouteFamiliarReplacement: () => {
+          route = observeFamiliarReplacementRoute();
+        },
+        doRouteFamiliarDismissalReappearance: () => {
+          route = observeFamiliarDismissalReappearanceRoute();
+        },
+        doRouteSharedSenses: () => {
+          route = observeSharedSensesRoute();
+        },
+        doRouteTouchDelivery: () => {
+          route = observeTouchDeliveryRoute();
+        },
+        doRouteTouchDeliveryNoRoll: () => {
+          route = observeNoRollTouchDeliveryRoute();
+        },
+        doRoutePactFamiliarAttack: () => {
+          route = observePactFamiliarAttackRoute();
+        },
+        step: () => {},
+        getState: (): SpawnedCompanionRouteState => ({ route }),
+      };
+    },
+  );
 }
 
-const findFamiliarCompanionStateCheck = stateCheck(
-  normalizeFindFamiliarCompanionQuintState,
-  compareFindFamiliarCompanionStates,
+const spawnedCompanionLifecycleCompanionStateCheck = stateCheck(
+  normalizeSpawnedCompanionQuintState,
+  compareSpawnedCompanionStates,
 );
 
-const findFamiliarCompanionRouteStateCheck = stateCheck(
-  normalizeFindFamiliarCompanionRouteQuintState,
-  (
-    spec: FindFamiliarCompanionRouteState,
-    impl: FindFamiliarCompanionRouteState,
-  ) => {
+const spawnedCompanionLifecycleCompanionRouteStateCheck = stateCheck(
+  normalizeSpawnedCompanionRouteQuintState,
+  (spec: SpawnedCompanionRouteState, impl: SpawnedCompanionRouteState) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -252,16 +254,20 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
     const created = createCatFamiliar(initialRuntimeState());
     const replaced = replaceWithRatFamiliar(created);
 
-    expect(findFamiliarCompanionProjection(created)).toMatchObject({
-      familiarStatus: "present",
-      familiarId: "primary",
-      familiarForm: "cat",
-      creatureTypeOverride: "fey",
-      companionCount: 1,
-      telepathyAvailable: true,
-      lastResult: "createdCat",
-    });
-    expect(findFamiliarCompanionProjection(replaced)).toMatchObject({
+    expect(spawnedCompanionLifecycleCompanionProjection(created)).toMatchObject(
+      {
+        familiarStatus: "present",
+        familiarId: "primary",
+        familiarForm: "cat",
+        creatureTypeOverride: "fey",
+        companionCount: 1,
+        telepathyAvailable: true,
+        lastResult: "createdCat",
+      },
+    );
+    expect(
+      spawnedCompanionLifecycleCompanionProjection(replaced),
+    ).toMatchObject({
       familiarStatus: "present",
       familiarId: "primary",
       familiarForm: "rat",
@@ -276,14 +282,16 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
     const shared = shareSenses(createCatFamiliar(initialRuntimeState()));
     const delivered = deliverTouchSpell(shared);
 
-    expect(findFamiliarCompanionProjection(shared)).toMatchObject({
+    expect(spawnedCompanionLifecycleCompanionProjection(shared)).toMatchObject({
       telepathyAvailable: true,
       sharedSensesActive: true,
       bonusActionAvailable: false,
       familiarReactionAvailable: true,
       lastResult: "sharedSenses",
     });
-    expect(findFamiliarCompanionProjection(delivered)).toMatchObject({
+    expect(
+      spawnedCompanionLifecycleCompanionProjection(delivered),
+    ).toMatchObject({
       familiarReactionAvailable: false,
       touchDeliveryReactionSpent: true,
       spellSlotCommitted: true,
@@ -297,7 +305,9 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
       createCatFamiliar(initialRuntimeState()),
     );
 
-    expect(findFamiliarCompanionProjection(resolved)).toMatchObject({
+    expect(
+      spawnedCompanionLifecycleCompanionProjection(resolved),
+    ).toMatchObject({
       ownerAttackAvailable: false,
       familiarReactionAvailable: false,
       pactReactionAttackResolved: true,
@@ -316,11 +326,11 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
         ),
         init: "init",
         step: "step",
-        driver: createFindFamiliarCompanionLifecycleDriver(),
+        driver: createSpawnedCompanionLifecycleDriver(),
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(5),
-        stateCheck: findFamiliarCompanionStateCheck,
+        stateCheck: spawnedCompanionLifecycleCompanionStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -336,11 +346,11 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
         ),
         init: "init",
         step: "step",
-        driver: createFindFamiliarCompanionRouteDriver(),
+        driver: createSpawnedCompanionRouteDriver(),
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(1),
-        stateCheck: findFamiliarCompanionRouteStateCheck,
+        stateCheck: spawnedCompanionLifecycleCompanionRouteStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -366,12 +376,12 @@ function observeFamiliarReplacementRoute(): readonly ReducerRouteEvent[] {
 
 function observeFamiliarDismissalReappearanceRoute(): readonly ReducerRouteEvent[] {
   const created = createCatFamiliar(initialRuntimeState());
-  const dismissed = temporarilyDismissFindFamiliar({
+  const dismissed = temporarilyDismissSpawnedCompanion({
     state: created.battle.state,
     casterId,
     heldObjectIds: [],
   });
-  const reappeared = reappearTemporarilyDismissedFindFamiliar({
+  const reappeared = reappearTemporarilyDismissedSpawnedCompanion({
     state: requireResolved(dismissed),
     casterId,
     catalog: statBlockCatalog,
@@ -380,7 +390,7 @@ function observeFamiliarDismissalReappearanceRoute(): readonly ReducerRouteEvent
   });
   return [
     battleReducerStartRouteEvent(),
-    ...routeEventsOf(reappeared, "Find Familiar reappearance"),
+    ...routeEventsOf(reappeared, "Companion reappearance"),
   ];
 }
 
@@ -391,8 +401,8 @@ function observeSharedSensesRoute(): readonly ReducerRouteEvent[] {
     state: session.state,
     subject: act.subject,
     fills: [
-      findFamiliarConnectionFill(
-        requireHole(act.initialHoles, "findFamiliarConnection"),
+      spawnedCompanionConnectionFill(
+        requireHole(act.initialHoles, "spawnedCompanionConnection"),
       ),
     ],
   });
@@ -406,8 +416,8 @@ function observeSharedSensesRoute(): readonly ReducerRouteEvent[] {
 function observeTouchDeliveryRoute(): readonly ReducerRouteEvent[] {
   const session = createCatFamiliar(initialRuntimeState()).battle;
   const act = touchDeliveryAct(session);
-  const connectionFill = findFamiliarConnectionFill(
-    requireHole(act.initialHoles, "findFamiliarConnection"),
+  const connectionFill = spawnedCompanionConnectionFill(
+    requireHole(act.initialHoles, "spawnedCompanionConnection"),
   );
   const targetFill = touchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
@@ -450,8 +460,8 @@ function observeTouchDeliveryRoute(): readonly ReducerRouteEvent[] {
 function observeNoRollTouchDeliveryRoute(): readonly ReducerRouteEvent[] {
   const session = createCatFamiliar(initialRuntimeState()).battle;
   const act = touchDeliveryAct(session, "barkskin");
-  const connectionFill = findFamiliarConnectionFill(
-    requireHole(act.initialHoles, "findFamiliarConnection"),
+  const connectionFill = spawnedCompanionConnectionFill(
+    requireHole(act.initialHoles, "spawnedCompanionConnection"),
   );
   const targetFill = willingTouchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
@@ -511,7 +521,7 @@ function observePactFamiliarAttackRoute(): readonly ReducerRouteEvent[] {
   ];
 }
 
-function initialRuntimeState(): FindFamiliarCompanionRuntimeState {
+function initialRuntimeState(): SpawnedCompanionRuntimeState {
   const result = startBattle({
     battleId: battleId("find-familiar-companion-lifecycle-mbt"),
     combatants: [
@@ -538,8 +548,8 @@ function initialRuntimeState(): FindFamiliarCompanionRuntimeState {
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [
             {
-              tag: "pactOfTheChainFindFamiliar",
-              spell: findFamiliarSpell,
+              tag: "pactOfTheChainSpawnedCompanion",
+              spell: spawnedCompanionLifecycleSpell,
             },
           ],
           spellSlots: [
@@ -557,29 +567,29 @@ function initialRuntimeState(): FindFamiliarCompanionRuntimeState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return { battle: result.right, lastResult: "init" };
+  return { battle: result.success, lastResult: "init" };
 }
 
 function createCatFamiliar(
-  state: FindFamiliarCompanionRuntimeState,
-): FindFamiliarCompanionRuntimeState {
+  state: SpawnedCompanionRuntimeState,
+): SpawnedCompanionRuntimeState {
   return castNormalFamiliar(state, "cat", "createdCat");
 }
 
 function replaceWithRatFamiliar(
-  state: FindFamiliarCompanionRuntimeState,
-): FindFamiliarCompanionRuntimeState {
+  state: SpawnedCompanionRuntimeState,
+): SpawnedCompanionRuntimeState {
   return castNormalFamiliar(state, "rat", "replacedRat");
 }
 
 function castNormalFamiliar(
-  state: FindFamiliarCompanionRuntimeState,
+  state: SpawnedCompanionRuntimeState,
   formId: Extract<FamiliarForm, "cat" | "rat">,
   lastResult: Extract<LastResult, "createdCat" | "replacedRat">,
-): FindFamiliarCompanionRuntimeState {
+): SpawnedCompanionRuntimeState {
   const result = castNormalFamiliarResult(state, formId);
   return {
     battle: battleRuntimeSessionForTest({
@@ -591,10 +601,10 @@ function castNormalFamiliar(
 }
 
 function castNormalFamiliarResult(
-  state: FindFamiliarCompanionRuntimeState,
+  state: SpawnedCompanionRuntimeState,
   formId: Extract<FamiliarForm, "cat" | "rat">,
 ): BattleResolutionResult {
-  return castFindFamiliar({
+  return castSpawnedCompanion({
     state: state.battle.state,
     casterId,
     ammunitionStocks: [],
@@ -609,9 +619,9 @@ function castNormalFamiliarResult(
 }
 
 function shareSenses(
-  state: FindFamiliarCompanionRuntimeState,
-): FindFamiliarCompanionRuntimeState {
-  const result = shareFindFamiliarSenses({
+  state: SpawnedCompanionRuntimeState,
+): SpawnedCompanionRuntimeState {
+  const result = shareSpawnedCompanionSenses({
     state: state.battle.state,
     casterId,
     fact: familiarWithin100FeetFact(),
@@ -626,14 +636,14 @@ function shareSenses(
 }
 
 function deliverTouchSpell(
-  state: FindFamiliarCompanionRuntimeState,
-): FindFamiliarCompanionRuntimeState {
+  state: SpawnedCompanionRuntimeState,
+): SpawnedCompanionRuntimeState {
   const act = actionSpellAct(state.battle, "cure_wounds");
   const targetFill = touchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
     act.subject.procedureRef,
   );
-  const awaitingHealingRoll = deliverTouchSpellThroughFindFamiliar({
+  const awaitingHealingRoll = deliverTouchSpellThroughSpawnedCompanion({
     state: state.battle.state,
     subject: act.subject,
     fills: [targetFill],
@@ -648,7 +658,7 @@ function deliverTouchSpell(
       }.`,
     );
   }
-  const result = deliverTouchSpellThroughFindFamiliar({
+  const result = deliverTouchSpellThroughSpawnedCompanion({
     state: state.battle.state,
     subject: act.subject,
     fills: [
@@ -667,8 +677,8 @@ function deliverTouchSpell(
 }
 
 function resolvePactFamiliarAttack(
-  state: FindFamiliarCompanionRuntimeState,
-): FindFamiliarCompanionRuntimeState {
+  state: SpawnedCompanionRuntimeState,
+): SpawnedCompanionRuntimeState {
   const result = resolveBattleSubject({
     state: state.battle.state,
     subject: pactScratchSubject(state.battle.state),
@@ -683,10 +693,10 @@ function resolvePactFamiliarAttack(
   };
 }
 
-function findFamiliarCompanionProjection(
-  state: FindFamiliarCompanionRuntimeState,
-): FindFamiliarCompanionProjection {
-  const familiarEntry = findFamiliarCompanionEntryForOwner(
+function spawnedCompanionLifecycleCompanionProjection(
+  state: SpawnedCompanionRuntimeState,
+): SpawnedCompanionProjection {
+  const familiarEntry = spawnedCompanionEntryForOwner(
     state.battle.state,
     casterId,
   );
@@ -702,7 +712,7 @@ function findFamiliarCompanionProjection(
       (use) => use.kind === "committed",
     );
   const targetHp = Number(requireCombatant(state.battle.state, targetId).hp);
-  const connection = findFamiliarTelepathicConnection(
+  const connection = spawnedCompanionTelepathicConnection(
     state.battle.state,
     familiarWithin100FeetFact(),
   );
@@ -721,7 +731,7 @@ function findFamiliarCompanionProjection(
     telepathyAvailable: connection !== null,
     sharedSensesActive: caster.activeEffects.some(
       (effect) =>
-        effect.kind === "findFamiliarSharedSenses" &&
+        effect.kind === "spawnedCompanionSharedSenses" &&
         effect.familiarId === familiarId,
     ),
     bonusActionAvailable: canSpendBonusAction(
@@ -737,7 +747,7 @@ function findFamiliarCompanionProjection(
     spellSlotCommitted,
     targetHp,
     lastResult: state.lastResult,
-  } satisfies FindFamiliarCompanionProjection;
+  } satisfies SpawnedCompanionProjection;
   expect(projection.companionCount).toBe(
     projection.familiarStatus === "present" ? 1 : 0,
   );
@@ -746,7 +756,7 @@ function findFamiliarCompanionProjection(
 
 function familiarWithin100FeetFact() {
   return {
-    kind: "findFamiliarWithin100FeetOfOwner" as const,
+    kind: "companionWithinCommunicationRangeOfOwner" as const,
     ownerId: casterId,
     familiarId,
   };
@@ -776,7 +786,7 @@ function actionSpellAct(
 function sharedSensesAct(session: BattleRuntimeSession): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "findFamiliarSharedSenses" }
+    { readonly tag: "spawnedCompanionSharedSenses" }
   >;
 } {
   const act = discoverBattleActs(session).find(
@@ -785,9 +795,9 @@ function sharedSensesAct(session: BattleRuntimeSession): AvailableBattleAct & {
     ): candidate is AvailableBattleAct & {
       readonly subject: Extract<
         BattleSubject,
-        { readonly tag: "findFamiliarSharedSenses" }
+        { readonly tag: "spawnedCompanionSharedSenses" }
       >;
-    } => candidate.subject.tag === "findFamiliarSharedSenses",
+    } => candidate.subject.tag === "spawnedCompanionSharedSenses",
   );
   if (act === undefined) {
     throw new Error("Expected Share Familiar Senses act.");
@@ -801,7 +811,7 @@ function touchDeliveryAct(
 ): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "findFamiliarTouchSpell" }
+    { readonly tag: "spawnedCompanionTouchSpellProxy" }
   >;
 } {
   const act = discoverBattleActs(session).find(
@@ -810,10 +820,10 @@ function touchDeliveryAct(
     ): candidate is AvailableBattleAct & {
       readonly subject: Extract<
         BattleSubject,
-        { readonly tag: "findFamiliarTouchSpell" }
+        { readonly tag: "spawnedCompanionTouchSpellProxy" }
       >;
     } =>
-      candidate.subject.tag === "findFamiliarTouchSpell" &&
+      candidate.subject.tag === "spawnedCompanionTouchSpellProxy" &&
       battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
@@ -834,7 +844,7 @@ function pactFamiliarAttackAct(
     ): candidate is AvailableBattleAct & {
       readonly subject: PactOfTheChainFamiliarAttackSubject;
     } =>
-      candidate.subject.tag === "pactOfTheChainFamiliarAttack" &&
+      candidate.subject.tag === "companionAttack" &&
       sameBattleSubject(candidate.subject, subject),
   );
   if (act === undefined) {
@@ -853,9 +863,9 @@ function routeEventsOf(
   return source.routeEvents;
 }
 
-function requireFindFamiliarEligibility(
-  eligibility: FindFamiliarFormEligibility | null,
-): FindFamiliarFormEligibility {
+function requireSpawnedCompanionEligibility(
+  eligibility: SpawnedCompanionFormEligibility | null,
+): SpawnedCompanionFormEligibility {
   if (eligibility === null) {
     throw new Error("Expected Find Familiar form eligibility.");
   }
@@ -875,7 +885,7 @@ function touchSpellTargetFill(
     value: targetId,
     spatialFacts: [
       {
-        kind: "findFamiliarTouchSpellTarget",
+        kind: "spawnedCompanionTouchSpellTarget",
         ownerId: casterId,
         familiarId,
         targetId,
@@ -885,11 +895,11 @@ function touchSpellTargetFill(
   };
 }
 
-function findFamiliarConnectionFill(
-  hole: Extract<BattleHole, { readonly kind: "findFamiliarConnection" }>,
-): Extract<BattleFill, { readonly kind: "findFamiliarConnection" }> {
+function spawnedCompanionConnectionFill(
+  hole: Extract<BattleHole, { readonly kind: "spawnedCompanionConnection" }>,
+): Extract<BattleFill, { readonly kind: "spawnedCompanionConnection" }> {
   return {
-    kind: "findFamiliarConnection",
+    kind: "spawnedCompanionConnection",
     holeId: hole.holeId,
     value: { withinRange: true },
   };
@@ -923,7 +933,7 @@ function pactScratchSubject(
     throw new Error("Expected admitted Scratch procedure.");
   }
   return {
-    tag: "pactOfTheChainFamiliarAttack",
+    tag: "companionAttack",
     actorId: casterId,
     familiarId,
     procedureRef,
@@ -935,7 +945,7 @@ function willingTouchSpellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   procedureRef: Extract<
     BattleSubject,
-    { readonly tag: "findFamiliarTouchSpell" }
+    { readonly tag: "spawnedCompanionTouchSpellProxy" }
   >["procedureRef"],
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
@@ -944,7 +954,7 @@ function willingTouchSpellTargetFill(
     value: casterId,
     spatialFacts: [
       {
-        kind: "findFamiliarTouchSpellTarget",
+        kind: "spawnedCompanionTouchSpellTarget",
         ownerId: casterId,
         familiarId,
         targetId: casterId,
@@ -1050,22 +1060,22 @@ function requireResolved(result: BattleResolutionResult): BattleState {
   return result.state;
 }
 
-function normalizeFindFamiliarCompanionQuintState(
+function normalizeSpawnedCompanionQuintState(
   raw: unknown,
-): FindFamiliarCompanionProjection {
+): SpawnedCompanionProjection {
   const state = quintRecordField(quintStateRecord(raw), "qState");
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "protocol",
     noInvalidReason: "",
-    decodeHole: findFamiliarCompanionUnexpectedHole,
+    decodeHole: spawnedCompanionLifecycleCompanionUnexpectedHole,
   });
   if (protocol.holes.length !== 0) {
     throw new Error(
       "Expected Find Familiar companion witness holes to be empty.",
     );
   }
-  const scenarioResult = findFamiliarCompanionLastResult(
+  const scenarioResult = spawnedCompanionLifecycleCompanionLastResult(
     state["qScenarioOutcome"],
   );
   assertWitnessProtocolConsistentWithScenario({
@@ -1107,22 +1117,24 @@ function normalizeFindFamiliarCompanionQuintState(
   };
 }
 
-function normalizeFindFamiliarCompanionRouteQuintState(
+function normalizeSpawnedCompanionRouteQuintState(
   raw: unknown,
-): FindFamiliarCompanionRouteState {
+): SpawnedCompanionRouteState {
   const state = quintStateRecord(raw);
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 
-function findFamiliarCompanionUnexpectedHole(raw: unknown): never {
+function spawnedCompanionLifecycleCompanionUnexpectedHole(raw: unknown): never {
   throw new Error(
     `Unexpected Find Familiar companion witness hole ${String(raw)}.`,
   );
 }
 
-function findFamiliarCompanionLastResult(raw: unknown): LastResult {
+function spawnedCompanionLifecycleCompanionLastResult(
+  raw: unknown,
+): LastResult {
   const tag = quintVariantTag(raw, "qScenarioOutcome");
   const value = FIND_FAMILIAR_COMPANION_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
   if (value !== undefined) {
@@ -1131,9 +1143,9 @@ function findFamiliarCompanionLastResult(raw: unknown): LastResult {
   throw new Error(`Unknown Find Familiar companion result: ${tag}.`);
 }
 
-function compareFindFamiliarCompanionStates(
-  runtime: FindFamiliarCompanionProjection,
-  quint: FindFamiliarCompanionProjection,
+function compareSpawnedCompanionStates(
+  runtime: SpawnedCompanionProjection,
+  quint: SpawnedCompanionProjection,
 ): boolean {
   try {
     expect(runtime).toEqual(quint);

@@ -1,5 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A16 cleric_disciple_of_life cleric_preserve_life druid_lands_aid warlock_dark_ones_blessing
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   clericDiscipleOfLifeUnitId,
   clericPreserveLifeUnitId,
@@ -19,7 +20,6 @@ import {
   battleSpellSlotHealingModifierSupportForUnit,
   battleUnitRefWithSupportProfiles,
   classLevel,
-  Either,
   ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
   MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
@@ -79,7 +79,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [supportProfile],
       }),
@@ -149,7 +149,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [supportProfile],
       }),
@@ -237,7 +237,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [supportProfile],
       }),
@@ -382,7 +382,7 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [supportProfile],
       }),

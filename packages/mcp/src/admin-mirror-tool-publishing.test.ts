@@ -1,3 +1,4 @@
+import { Hp } from "@dnd/shared/types";
 import { Effect } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -153,7 +154,7 @@ describe("Admin Mirror MCP tool publishing", () => {
             ...battle.checkpoint,
             combatants: battle.checkpoint.combatants.map((combatant) =>
               combatant.combatantId === damagedCombatant.combatantId
-                ? { ...combatant, hp: 1 }
+                ? { ...combatant, hp: Hp(1) }
                 : combatant,
             ),
             currentActorId: nextActorId,

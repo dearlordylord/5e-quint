@@ -40,7 +40,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   currentHasBonusAction: false,
   actionOrBonusActionExclusion: { kind: "notRestricted" },
   movementActionBonusActionExclusion: { kind: "notRestricted" },
-  commandHalt: null,
+  compelledHalt: null,
   jumpDistanceMultiplier: null,
   heightenedStepOfTheWindCarriedCreatures: [],
   spellSlotUsesThisTurn: [],
@@ -115,17 +115,16 @@ export const HELP_ATTACK_ALLY_HOLE_INSTANCE = holeInstanceKey(
 export const HELP_ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey(
   "battle:help-attack:target",
 );
-export const SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID = holeId(
-  "battle:sleep-shake-awake:target",
+export const HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_ID = holeId(
+  "battle:hit-point-budget-condition-shake-awake:target",
 );
-export const SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE = holeInstanceKey(
-  "battle:sleep-shake-awake:target",
+export const HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_INSTANCE =
+  holeInstanceKey("battle:hit-point-budget-condition-shake-awake:target");
+export const SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_ID = holeId(
+  "battle:save-gated-area-control-shake-awake:target",
 );
-export const HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID = holeId(
-  "battle:hypnotic-pattern-shake-awake:target",
-);
-export const HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE =
-  holeInstanceKey("battle:hypnotic-pattern-shake-awake:target");
+export const SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_INSTANCE =
+  holeInstanceKey("battle:save-gated-area-control-shake-awake:target");
 export const DEATH_SAVING_THROW_HOLE_ID = holeId(
   "battle:end-turn:death-saving-throw",
 );
@@ -146,18 +145,6 @@ export const INTERRUPT_DECISION_HOLE_INSTANCE = holeInstanceKey(
 );
 export const MOVEMENT_HOLE_ID = holeId("battle:movement");
 export const MOVEMENT_HOLE_INSTANCE = holeInstanceKey("battle:movement");
-export const LEVITATE_ALTITUDE_CHANGE_HOLE_ID = holeId(
-  "battle:levitate:altitude-change",
-);
-export const LEVITATE_ALTITUDE_CHANGE_HOLE_INSTANCE = holeInstanceKey(
-  "battle:levitate:altitude-change",
-);
-export const LEVITATE_INITIAL_RISE_HOLE_ID = holeId(
-  "battle:levitate:initial-rise",
-);
-export const LEVITATE_INITIAL_RISE_HOLE_INSTANCE = holeInstanceKey(
-  "battle:levitate:initial-rise",
-);
 export const HIDE_ABILITY_CHECK_HOLE_ID = holeId("battle:hide:stealth-check");
 export const HIDE_ABILITY_CHECK_HOLE_INSTANCE = holeInstanceKey(
   "battle:hide:stealth-check",
@@ -194,11 +181,6 @@ export const ESCAPE_GRAPPLE_OUTCOME_HOLE_ID = holeId(
 export const ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE = holeInstanceKey(
   "battle:escape-grapple:outcome",
 );
-export const ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID = holeId(
-  "battle:escape-spell-restraint:athletics-check",
-);
-export const ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE =
-  holeInstanceKey("battle:escape-spell-restraint:athletics-check");
 export const REACTION_MODIFIER_ROLL_HOLE_ID = holeId(
   "battle:reaction:modifier-roll",
 );
@@ -243,14 +225,14 @@ export type AttackFillSet =
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }
       >[];
-      readonly hideousLaughterDamageRepeatSaves: readonly Extract<
+      readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
         BattleFill,
         { readonly kind: "savingThrowOutcome" }
       >[];
       readonly damageDisposition: BattleAttackDamageDisposition;
       readonly damageDispositionFilled: boolean;
       readonly damageRoll: BattleRolledDiceFill | undefined;
-      readonly mirrorImageDuplicateRoll: BattleRolledDiceFill | undefined;
+      readonly duplicateHitInterceptionRoll: BattleRolledDiceFill | undefined;
       readonly spellDamageReductionRoll: BattleRolledDiceFill | undefined;
       readonly sourceDamageRollPenaltyRolls: readonly BattleRolledDiceFill[];
       readonly attackDamageReductionRedirectTarget:

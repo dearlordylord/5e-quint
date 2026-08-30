@@ -1,6 +1,6 @@
 import { startBattleWithInitialInitiativeSetup } from "@dnd/battle-runtime";
 import { composeBattleCompanionRoster } from "@dnd/character-battle-runtime";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
@@ -91,10 +91,10 @@ export function startInitialInitiativeSetup(
         "global",
       ],
   });
-  if (Either.isLeft(setup)) {
+  if (Result.isFailure(setup)) {
     return battleStartIssuesContent([
       ...rosterIssues,
-      ...battleRuntimeIssuePayload(setup.left),
+      ...battleRuntimeIssuePayload(setup.failure),
     ]);
   }
   if (combatants.composition.tag === "rejected") {
@@ -106,7 +106,7 @@ export function startInitialInitiativeSetup(
     transition: root.sessionStore.commitBattleStart({
       nextBattleState: {
         tag: "initialInitiativeSetup",
-        setup: setup.right,
+        setup: setup.success,
       },
       characterSessions: combatants.characterSessions.map(
         ({ session }) => session,

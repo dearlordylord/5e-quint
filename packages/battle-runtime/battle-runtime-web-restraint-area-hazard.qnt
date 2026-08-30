@@ -4,6 +4,7 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
 module battleRuntimeWebRestraintAreaHazard {
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
+  import battleRuntimePersistentAreaCore.* from "./battle-runtime-persistent-area-core"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
@@ -12,6 +13,7 @@ module battleRuntimeWebRestraintAreaHazard {
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
   pure val webDurationTicks = 600
+  pure val webLifecycle: PersistentAreaLifecycle = StationaryPersistentArea
   pure val webAreaId = 4
   pure val webSideFeet = 20
 
@@ -120,16 +122,15 @@ module battleRuntimeWebRestraintAreaHazard {
     savingThrowSucceeded: bool,
     areaId: int,
   ): Combatant =
-    if (savingThrowSucceeded)
-      target
-    else {
+    if (persistentAreaConditionApplies(savingThrowSucceeded)) {
       val durationTicks = webRestraintHazardDurationTicks(state, areaId)
       {
         ...target,
         activeEffects: activeEffectsWithoutWebRestrainedFrom(target.activeEffects, Fighter)
           .union(Set(WebRestrained({ source: Fighter, durationTicks: durationTicks }))),
       }
-    }
+    } else
+      target
 
   pure def resolveWebRestraintSave(
     state: BattleState,
@@ -137,13 +138,22 @@ module battleRuntimeWebRestraintAreaHazard {
     areaId: int,
     triggerIsEntry: bool,
     savingThrowSucceeded: bool,
-  ): BattleState =
+  ): BattleState = {
+    val resolvedTimings = Set(
+      CreatureEntersArea,
+      CreatureStartsTurnInArea,
+    ).filter(timing =>
+      if (timing == CreatureEntersArea)
+        webEntrySaveAlreadyResolved(state, targetActor, areaId)
+      else
+        webStartTurnSaveAlreadyResolved(state, targetActor, areaId)
+    )
     if (not(areaEffectTriggerCanResolve(
       webRestraintHazardActive(state, areaId),
       true,
-      webRestraintFirstEntryAndStartTurnProfile(
-        webEntrySaveAlreadyResolved(state, targetActor, areaId),
-        webStartTurnSaveAlreadyResolved(state, targetActor, areaId),
+      firstPerTimingPerTurnAreaTriggerProfile(
+        Set(CreatureEntersArea, CreatureStartsTurnInArea),
+        resolvedTimings,
       ),
       webRestraintSaveTriggerTiming(triggerIsEntry),
     )))
@@ -155,6 +165,7 @@ module battleRuntimeWebRestraintAreaHazard {
         | Goblin => { ...marked, goblin: combatantAfterWebRestraintSave(marked, marked.goblin, savingThrowSucceeded, areaId) }
       }
     }
+  }
 
   pure def escapeWebRestrained(state: BattleState, targetActor: Actor, checkSucceeded: bool): BattleState =
     if (currentActor(state) != targetActor or not(state.actionAvailable))

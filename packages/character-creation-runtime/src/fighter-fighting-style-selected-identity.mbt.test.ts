@@ -11,7 +11,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
@@ -798,7 +798,7 @@ function abilityScoreFill(holes: readonly CreationHole[]): CreationFill {
     wis: 10,
     cha: 12,
   });
-  if (Either.isLeft(scores)) {
+  if (Result.isFailure(scores)) {
     throw new Error(
       "Fighter Fighting Style selected identity Standard Array fixture must parse.",
     );
@@ -808,7 +808,7 @@ function abilityScoreFill(holes: readonly CreationHole[]): CreationFill {
     kind: "abilityScores",
     holeId: hole.holeId,
     method: "standardArray",
-    value: scores.right,
+    value: scores.success,
   };
 }
 
@@ -894,14 +894,14 @@ function acceptedBatch(
   return result;
 }
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Expected Either.right, received ${JSON.stringify(result.left)}.`,
+      `Expected Result.succeed, received ${JSON.stringify(result.failure)}.`,
     );
   }
 
-  return result.right;
+  return result.success;
 }
 
 function qStateValue(raw: unknown): unknown {

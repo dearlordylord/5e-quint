@@ -8,14 +8,14 @@ import { describe, expect, it, test } from "vitest";
 
 import {
   AWAKEN_MATERIAL_COMPONENTS,
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castAwaken,
   characterSheetAwakenTargetId,
   characterSheetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -90,7 +90,7 @@ describe("Character Sheet runtime / Awaken", () => {
 
   test("Awaken spends a prepared level-5 spell slot and returns the natural Plant transformation contract", () => {
     const target = awakenNaturalPlantTarget();
-    const result = requireRight(
+    const result = requireSuccess(
       castAwaken({
         sheet: awakenBardSheet({ preparedSpells: ["awaken"], slots: 1 }),
         unitLibrary,
@@ -148,7 +148,7 @@ describe("Character Sheet runtime / Awaken", () => {
       intelligenceScore: 3,
       languageGranted: "Sylvan",
     });
-    const result = requireRight(
+    const result = requireSuccess(
       castAwaken({
         sheet: awakenBardSheet({ preparedSpells: ["awaken"], slots: 1 }),
         unitLibrary,
@@ -186,9 +186,9 @@ describe("Character Sheet runtime / Awaken", () => {
       }),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Awaken creature targets must have Intelligence 3 or less.",
       );
     }
@@ -203,9 +203,9 @@ describe("Character Sheet runtime / Awaken", () => {
       target: awakenNaturalPlantTarget(),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Awaken requires prepared class Spell Access.",
       );
     }
@@ -219,7 +219,7 @@ const completedAwakenCasting = {
 
 const awakenSelectedIdentityActions = {
   doCastAwaken: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castAwaken({
         sheet: awakenBardSheet({ preparedSpells: ["awaken"], slots: 1 }),
         unitLibrary,
@@ -276,7 +276,9 @@ function expectedAwakenProjection(): AwakenSelectedIdentityProjection {
 function awakenNaturalPlantTarget(): CharacterSheetAwakenTarget {
   return {
     tag: "naturalPlant",
-    targetId: requireRight(characterSheetAwakenTargetId("awaken:oak-sapling")),
+    targetId: requireSuccess(
+      characterSheetAwakenTargetId("awaken:oak-sapling"),
+    ),
     languageGranted: "Druidic",
   };
 }
@@ -288,7 +290,7 @@ function awakenCreatureTarget(input: {
 }): CharacterSheetAwakenTarget {
   return {
     tag: "beastOrPlantCreature",
-    targetId: requireRight(characterSheetAwakenTargetId("awaken:creature")),
+    targetId: requireSuccess(characterSheetAwakenTargetId("awaken:creature")),
     creatureType: input.creatureType,
     intelligenceScore: input.intelligenceScore,
     languageGranted: input.languageGranted,
@@ -299,7 +301,7 @@ function awakenBardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:awaken-bard-9"),
       build: {

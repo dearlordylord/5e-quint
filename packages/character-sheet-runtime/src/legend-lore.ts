@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   LEGEND_LORE_MATERIAL_COMPONENTS,
@@ -29,7 +29,7 @@ export function castLegendLore(input: {
   readonly unitLibrary: UnitCatalog;
   readonly subject: CharacterSheetLegendLoreSubject;
   readonly casting: CharacterSheetLegendLoreCasting;
-}): Either.Either<CharacterSheetLegendLoreResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetLegendLoreResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -50,7 +50,7 @@ function legendLoreInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly subject: CharacterSheetLegendLoreSubject;
   readonly casting: CharacterSheetLegendLoreCasting;
-}): Either.Either<CharacterSheetLegendLoreInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetLegendLoreInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Legend Lore support profile required by this projector. */
   if (
@@ -78,7 +78,7 @@ function legendLoreInvocationFromSpell(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "legendLore",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,

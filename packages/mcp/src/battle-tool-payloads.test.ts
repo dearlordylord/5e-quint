@@ -6,7 +6,7 @@ import {
   sameBattleSubject,
   settleBattleRuntimeTransaction,
 } from "@dnd/battle-runtime";
-import { Either, Option, Schema } from "effect";
+import { Option, Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -40,12 +40,11 @@ function readToolPayload(response: ReturnType<typeof handleToolCall>) {
 describe("battle tool payload boundaries", () => {
   test("projects the explicit no-session state", () => {
     const root = createMcpPlaySessionRoot();
-    expect(battleSessionPayload(root, null)).toMatchObject({
-      _tag: "Right",
-      right: {
-        envelope: null,
-      },
-    });
+    const payload = battleSessionPayload(root, null);
+    expect(Result.isSuccess(payload)).toBe(true);
+    if (Result.isSuccess(payload)) {
+      expect(payload.success.envelope).toBeNull();
+    }
     expect(noStoredBattleContent()).toMatchObject({
       isError: true,
       content: [
@@ -59,20 +58,16 @@ describe("battle tool payload boundaries", () => {
   test("projects an active session without an interrupt window", () => {
     const { root, session } = startedStatBlockBattle();
 
-    expect(battleSessionPayload(root, session)).toMatchObject({
-      _tag: "Right",
-      right: {
-        envelope: {
-          checkpoint: { battleId: "battle:payload-boundaries" },
-        },
-      },
-    });
     const payload = battleSessionPayload(root, session);
-    if (Either.isLeft(payload)) throw new Error("Expected an active payload.");
-    if (payload.right.envelope === null) {
+    if (Result.isFailure(payload))
+      throw new Error("Expected an active payload.");
+    if (payload.success.envelope === null) {
       throw new Error("Expected an active battle envelope.");
     }
-    expect(payload.right.envelope.checkpoint).not.toHaveProperty(
+    expect(payload.success.envelope.checkpoint.battleId).toBe(
+      "battle:payload-boundaries",
+    );
+    expect(payload.success.envelope.checkpoint).not.toHaveProperty(
       "pendingInterrupt",
     );
   });
@@ -137,7 +132,7 @@ describe("battle tool payload boundaries", () => {
     }
     expect(
       root.sessionStore.storeBattleTransactionResult(session, pending),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
     const holesFrontier = battleMechanicsEnvelopeForSession(
       root,
       pending.resolution.session,
@@ -271,13 +266,13 @@ describe("battle tool payload boundaries", () => {
     }
     const competingSession = startedStatBlockBattle().session;
     expect(root.sessionStore.storeActiveBattle(competingSession)).toEqual(
-      Either.right(undefined),
+      Result.succeed(undefined),
     );
     const staleStoreSnapshot = root.sessionStore.snapshot();
     expect(
       root.sessionStore.storeBattleTransactionResult(session, result),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateSessionChanged",
         battleId: session.state.battleId,
       }),
@@ -285,13 +280,13 @@ describe("battle tool payload boundaries", () => {
     expect(root.sessionStore.snapshot()).toEqual(staleStoreSnapshot);
     expect(
       root.sessionStore.storeActiveBattle(result.resolution.session),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
     expect(
       root.sessionStore.storeBattleTransactionResult(
         result.resolution.session,
         result,
       ),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
     expect(root.sessionStore.battleSession).toBe(result.resolution.session);
     expect(root.sessionStore.getPendingBattleTransaction()).toBe(
       result.transaction,
@@ -334,13 +329,13 @@ describe("battle tool payload boundaries", () => {
     expect(invalid.session).toBe(session);
 
     const payload = battleResolutionPayload(root, invalid);
-    expect(Either.isRight(payload)).toBe(true);
-    if (Either.isLeft(payload)) {
+    expect(Result.isSuccess(payload)).toBe(true);
+    if (Result.isFailure(payload)) {
       throw new Error("Expected the rejected fill to have a payload.");
     }
     expect(
-      Schema.decodeUnknownEither(BattleResolutionOutputSchema)(payload.right),
-    ).toSatisfy((decoded) => Either.isRight(decoded));
+      Schema.decodeUnknownResult(BattleResolutionOutputSchema)(payload.success),
+    ).toSatisfy((decoded) => Result.isSuccess(decoded));
   });
 
   test("delegates transaction admission and maps typed runtime issues", () => {
@@ -379,7 +374,7 @@ describe("battle tool payload boundaries", () => {
     }
     expect(
       root.sessionStore.storeBattleTransactionResult(session, pendingResult),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
 
     const interruptAgainstOrdinary = handleToolCall(root, "fill_battle_hole", {
       subject: pendingAct.subject,
@@ -538,7 +533,7 @@ describe("battle tool payload boundaries", () => {
     expect(pending.tag).toBe("needsHoles");
     expect(
       root.sessionStore.storeBattleTransactionResult(session, pending),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
 
     expect(
       readToolPayload(

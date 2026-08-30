@@ -27,7 +27,7 @@ import {
   CUNNING_STRIKE_END_TURN_COVER_HOLE_ID,
   CUNNING_STRIKE_TOOL_POSSESSION_HOLE_ID,
   BRUTAL_STRIKE_FORCEFUL_BLOW_MOVEMENT_HOLE_ID,
-  HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
+  STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
   HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID,
   OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID,
   BRUTAL_STRIKE_DECISION_HOLE_ID,
@@ -45,6 +45,7 @@ import {
   attackRollFill,
   battleId,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   characterSeed,
   damageRollFillWithGroups,
   fighterId,
@@ -120,19 +121,19 @@ function isSavingThrowInvocation(
     case "rollModifier":
     case "creatureSizeIncrease":
     case "creatureSizeDecrease":
-    case "levitatedCreature":
+    case "controlledVerticalSuspension":
     case "saveGatedDamage":
     case "saveGatedCondition":
     case "saveGatedConditionImmunity":
     case "saveGatedAttackRollAdvantage":
-    case "counterspell":
-    case "sleepTargetAdmission":
-    case "hideousLaughter":
-    case "hypnoticPattern":
-    case "slowActivePenalties":
-    case "command":
-    case "greaseGroundHazard":
-    case "gustOfWindLine":
+    case "spellCastInterruptionReaction":
+    case "stagedSaveCondition":
+    case "saveGatedConditionWithRepeat":
+    case "saveGatedAreaControl":
+    case "saveGatedTurnConstraintBundle":
+    case "compelledNextTurnBehavior":
+    case "persistentAreaSaveCondition":
+    case "directionalPersistentArea":
       return true;
   }
   return false;
@@ -159,12 +160,12 @@ function isSaveMetamagicInvocation(
     case "saveGatedCondition":
     case "saveGatedConditionImmunity":
     case "saveGatedAttackRollAdvantage":
-    case "hideousLaughter":
-    case "hypnoticPattern":
-    case "slowActivePenalties":
-    case "command":
-    case "greaseGroundHazard":
-    case "gustOfWindLine":
+    case "saveGatedConditionWithRepeat":
+    case "saveGatedAreaControl":
+    case "saveGatedTurnConstraintBundle":
+    case "compelledNextTurnBehavior":
+    case "persistentAreaSaveCondition":
+    case "directionalPersistentArea":
       return true;
   }
   return false;
@@ -632,26 +633,55 @@ describe("battle replay and spell route frontiers", () => {
       message: "Ordinary object attacks require object attack table facts.",
     });
 
-    const hideousLaughterRepeat = malformedSavingThrowFill(
-      holeId(`${HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX}synthetic`),
+    const saveGatedConditionWithRepeatRepeat = malformedSavingThrowFill(
+      holeId(`${STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX}synthetic`),
     );
     expect(
       attackFillSet(
-        [hideousLaughterRepeat, hideousLaughterRepeat],
+        [
+          saveGatedConditionWithRepeatRepeat,
+          saveGatedConditionWithRepeatRepeat,
+        ],
         fighterId,
         state,
       ),
     ).toEqual({
       tag: "invalid",
-      message: "Hideous Laughter damage repeat save was filled twice.",
+      message: "Staged-condition damage repeat save was filled twice.",
     });
 
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      "spell-complexity-source-penalty",
+    );
+    const allocatedSourcePenalty =
+      battleStateWithAllocatedEffectOccurrencesForTest({
+        state,
+        occurrences: [
+          {
+            kind: "activeEffect",
+            ownerId: fighterId,
+            effect: {
+              kind: "sourceDamageRollPenalty",
+              sourceProcedureRef,
+              sourceCombatantId: fighterId,
+              amount: { dice: 1, dieSize: 8 },
+              expiresAt: { kind: "concentration", combatantId: fighterId },
+            },
+          },
+        ],
+      });
+    const sourcePenaltyOccurrence = allocatedSourcePenalty.occurrences[0];
+    if (
+      sourcePenaltyOccurrence?.kind !== "activeEffect" ||
+      sourcePenaltyOccurrence.effect.kind !== "sourceDamageRollPenalty"
+    ) {
+      throw new Error("Expected allocated source damage roll penalty.");
+    }
     const sourcePenaltyHole = sourceDamageRollPenaltyRollHole({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "spell-complexity-source-penalty",
-      ),
+      effectRef: sourcePenaltyOccurrence.effect.effectRef,
+      sourceProcedureRef,
       sourceCombatantId: fighterId,
-      affectedCombatantId: foreignCombatantId,
+      affectedCombatantId: fighterId,
       damageRollHoleId: holeId("battle:spell-complexity:damage"),
       amount: { dice: 1, dieSize: 8 },
     });
@@ -996,7 +1026,7 @@ describe("save-gate outcome validation frontiers", () => {
       validateSavingThrowOutcomes(
         {
           area: {
-            kind: "faerieFireArea",
+            kind: "saveGatedTargetProjectionArea",
             originAnchorId: spellCasterId,
             affectedTargetIds: [spellTargetId],
             affectedObjectIds: [],

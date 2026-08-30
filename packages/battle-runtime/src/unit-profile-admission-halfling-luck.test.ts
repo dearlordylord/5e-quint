@@ -17,12 +17,13 @@ import {
 } from "@dnd/shared/types";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
-  type BattleTrackedOngoingSpellLightEmitter,
+  type BattleStoredLightEmitterTemplate,
 } from "./battle-state-execution.ts";
 import { BattleFillSchema } from "./battle-reducer/battle-codecs.ts";
 import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
@@ -45,7 +46,6 @@ import {
   battleUnitRefWithSupportProfiles,
   barbarianDangerSenseUnitId,
   D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE,
-  Either,
   parseSupportedUnitFeatureProfile,
   speciesHalflingLuckUnitId,
   spellCasterId,
@@ -73,6 +73,7 @@ import {
   attackExecutionSelectionForSubjectForTest,
   attackRollFill,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   battleFrontierInterruptDecisionForState,
   characterBattleFeatureInitForTest,
   characterAttackSubjectForTest,
@@ -138,7 +139,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(speciesHalflingLuckUnitId),
         supportProfiles: [expectedSupport],
       }),
@@ -841,13 +842,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     });
   });
 
-  test("Spellcasting Ability Checks expose the post-roll natural-1 reroll choice", () => {
+  test("a low-level ongoing-spell emitter exposes the Dispel check natural-1 reroll choice", () => {
     const { unit, unitRef } = halflingLuckSelection();
     const objectId = battleObjectId("halfling-luck-dispel-object");
-    const emitter = spellLightEmitter({
+    const emitterTemplate = lowLevelOngoingSpellEmitter({
       objectId,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String("synthetic_blue_flame"),
+        "synthetic-low-level-dispel-emitter",
       ),
       sourceSpellLevel: 4,
     });
@@ -857,8 +858,18 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       casterUnitRefs: [unitRef],
       casterUnitFeatures: [characterBattleFeatureInitForTest(unit)],
     });
+    const withEmitter = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: baseState.state,
+      occurrences: [
+        {
+          kind: "storedLightEmitter",
+          ownerId: spellTargetId,
+          emitter: emitterTemplate,
+        },
+      ],
+    });
     const state = battleRuntimeSessionForTest({
-      state: { ...baseState.state, lightEmitters: [emitter] },
+      state: withEmitter.state,
       context: baseState.context,
     });
     const act = spellAct({
@@ -1069,15 +1080,15 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       unitRef: { unitId: dangerSense.id },
       unit: dangerSense,
     });
-    expect(Either.isRight(dangerSenseRef)).toBe(true);
-    if (Either.isLeft(dangerSenseRef)) {
-      throw new Error(dangerSenseRef.left.message);
+    expect(Result.isSuccess(dangerSenseRef)).toBe(true);
+    if (Result.isFailure(dangerSenseRef)) {
+      throw new Error(dangerSenseRef.failure.message);
     }
     const spell = spellRecord(acidSplashUnitId);
     const session = spellBattle({
       cantrips: [spell],
       targetClassLevels: [{ className: "barbarian", level: classLevel(2) }],
-      targetUnitRefs: [halflingLuck.unitRef, dangerSenseRef.right],
+      targetUnitRefs: [halflingLuck.unitRef, dangerSenseRef.success],
       targetUnitFeatures: [
         characterBattleFeatureInitForTest(halflingLuck.unit),
         characterBattleFeatureInitForTest(dangerSense, [
@@ -1416,7 +1427,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     });
   });
 
-  test("Concentration Saving Throws consume natural-1 reroll decisions", () => {
+  test("low-level injected readied-spell concentration: saving throws consume natural-1 reroll decisions", () => {
     const { unit, unitRef } = halflingLuckSelection();
     const baseSession = startBattleSessionRight({
       battleId: battleId("halfling-luck-concentration-save"),
@@ -1458,6 +1469,8 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     if (targetCombatant === undefined) {
       throw new Error("Expected concentrating target.");
     }
+    // This fixture injects the exact concentration state needed to exercise the
+    // save/reroll interaction; it does not claim a readied-spell admission history.
     const state = {
       ...base,
       combatants: new Map(base.combatants).set(skeletonId, {
@@ -1728,11 +1741,11 @@ function halflingLuckSelection() {
     unitRef: { unitId: unit.id },
     unit,
   });
-  expect(Either.isRight(unitRef)).toBe(true);
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  expect(Result.isSuccess(unitRef)).toBe(true);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return { unit, unitRef: unitRef.right };
+  return { unit, unitRef: unitRef.success };
 }
 
 function attackSubject(
@@ -1774,13 +1787,13 @@ function ongoingSpellTargetWithinRangeFact(
   };
 }
 
-function spellLightEmitter(input: {
+function lowLevelOngoingSpellEmitter(input: {
   readonly objectId: ReturnType<typeof battleObjectId>;
   readonly sourceProcedureRef: ReturnType<
     typeof battleProcedureExecutionRefForTest
   >;
   readonly sourceSpellLevel: number;
-}): BattleTrackedOngoingSpellLightEmitter {
+}): BattleStoredLightEmitterTemplate {
   return {
     kind: "spellLightEmitter",
     sourceProcedureRef: battleProcedureExecutionRefForTest(

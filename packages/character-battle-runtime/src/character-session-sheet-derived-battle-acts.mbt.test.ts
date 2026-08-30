@@ -32,7 +32,7 @@ import {
 import {
   characterSheetId,
   characterSheetSpellSlots,
-  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  rebuildCharacterSheet as rebuildCharacterSheetCore,
   type CharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import {
@@ -51,7 +51,6 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -61,6 +60,7 @@ import {
 import { battleProcedureExecutionRefForHole } from "./sdk-integration.test-support.ts";
 
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
 
 function battleCreatureInitFromStatBlock(
   input: Omit<
@@ -68,7 +68,7 @@ function battleCreatureInitFromStatBlock(
     "ammunitionStocks" | "conditions"
   >,
 ) {
-  return expectRight(
+  return expectSuccess(
     parseBattleCreatureInitFromStatBlock({
       ...input,
       ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
@@ -511,7 +511,7 @@ function createSheetDerivedBattleActsDriver(input: {
         const currentSession = requireSession(session);
         const state = requireAcceptedState(acceptedState);
         const character = requireCharacterCombatant(state);
-        const settled = expectRight(
+        const settled = expectSuccess(
           settleCharacterSheetFromBattle({
             state,
             context: currentSession.battle.context,
@@ -610,13 +610,14 @@ function startSheetDerivedSession(
   input?: { readonly levelOneSlotsExpended?: number },
 ): SheetDerivedSession {
   const levelOneSlotsExpended = input?.levelOneSlotsExpended ?? 0;
-  const sheet = expectRight(
-    createFreshCharacterSheetCore({
+  const sheet = expectSuccess(
+    rebuildCharacterSheetCore({
       characterId: characterSheetId("character:sheet-derived-caster"),
       build,
       currentHp: Hp(7),
       tempHp: Hp(0),
       conditions: [],
+      companion: { tag: "none" },
       hitPointMaximumReduction: Hp(0),
       spellSlotExpenditures:
         build.spellcasting === undefined
@@ -630,7 +631,7 @@ function startSheetDerivedSession(
       unitLibrary,
     }),
   );
-  const characterInit = expectRight(
+  const characterInit = expectSuccess(
     characterSheetBattleInit({
       sheet,
       unitLibrary,
@@ -642,7 +643,7 @@ function startSheetDerivedSession(
     }),
   );
   const targetInit = battleCreatureInitFromRidingHorse();
-  const battle = expectRight(
+  const battle = expectSuccess(
     startBattle({
       battleId: battleId("battle:sheet-derived-acts"),
       combatants: [characterInit, targetInit],
@@ -668,7 +669,7 @@ function sheetDerivedBuild(input?: {
   readonly wieldedWeapon?: boolean;
   readonly preparedSpell?: boolean;
 }): CharacterBuild {
-  const daggerUnitId = expectRight(
+  const daggerUnitId = expectSuccess(
     characterEquipmentItemUnitId(authoredUnitId("weapon_dagger")),
   );
   const daggerItemId = characterEquipmentItemId({
@@ -687,7 +688,7 @@ function sheetDerivedBuild(input?: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: expectRight(
+    abilityScores: expectSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -931,13 +932,6 @@ function damageRollFill(
       },
     ],
   };
-}
-
-function expectRight<A, E>(value: Either.Either<A, E>): A {
-  if (Either.isLeft(value)) {
-    throw new Error(`Expected Right, got ${JSON.stringify(value.left)}.`);
-  }
-  return value.right;
 }
 
 function normalizeSheetDerivedQuintState(raw: unknown): SheetDerivedProjection {

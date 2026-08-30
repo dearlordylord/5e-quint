@@ -8,7 +8,7 @@ import {
 } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import { BattleInterruptProcedureChoiceSchema } from "../../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
 
@@ -545,8 +545,8 @@ function resolutionFrontierHoles(
   }
   if (
     frontier.choices.some((choice) =>
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleInterruptProcedureChoiceSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleInterruptProcedureChoiceSchema, {
           onExcessProperty: "error",
         })(choice),
       ),

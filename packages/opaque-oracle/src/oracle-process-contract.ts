@@ -12,32 +12,32 @@ export const ORACLE_LOOPBACK_HOST = "127.0.0.1" as const;
 
 export const OracleLoopbackHostSchema = Schema.Literal(
   ORACLE_LOOPBACK_HOST,
-).annotations({ identifier: "OracleLoopbackHost" });
+).annotate({ identifier: "OracleLoopbackHost" });
 
 export type OracleLoopbackHost = typeof OracleLoopbackHostSchema.Type;
 
 /** A requested TCP bind port, including zero for operating-system assignment. */
 export const OracleBindPortSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.between(0, 65_535),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isBetween({ minimum: 0, maximum: 65_535 })),
   Schema.brand("OracleBindPort"),
-).annotations({ identifier: "OracleBindPort" });
+).annotate({ identifier: "OracleBindPort" });
 
 export type OracleBindPort = typeof OracleBindPortSchema.Type;
 
 export const decodeOracleBindPort =
-  Schema.decodeUnknownEither(OracleBindPortSchema);
+  Schema.decodeUnknownResult(OracleBindPortSchema);
 
 /** A TCP port returned after the operating system has completed a bind. */
 export const OracleListeningPortSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.between(1, 65_535),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isBetween({ minimum: 1, maximum: 65_535 })),
   Schema.brand("OracleListeningPort"),
-).annotations({ identifier: "OracleListeningPort" });
+).annotate({ identifier: "OracleListeningPort" });
 
 export type OracleListeningPort = typeof OracleListeningPortSchema.Type;
 
-export const decodeOracleListeningPort = Schema.decodeUnknownEither(
+export const decodeOracleListeningPort = Schema.decodeUnknownResult(
   OracleListeningPortSchema,
 );
 
@@ -45,7 +45,7 @@ export const decodeOracleListeningPort = Schema.decodeUnknownEither(
 export const OracleHttpReadinessSchema = Schema.Struct({
   host: OracleLoopbackHostSchema,
   port: OracleListeningPortSchema,
-}).annotations({
+}).annotate({
   identifier: "OracleHttpReadiness",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -54,19 +54,19 @@ export type OracleHttpReadiness = typeof OracleHttpReadinessSchema.Type;
 
 /** The identity of the executable and immutable services used for evaluation. */
 export const DistributionIdSchema = Schema.String.pipe(
-  Schema.pattern(/^sha256:[0-9a-f]{64}$/u),
+  Schema.check(Schema.isPattern(/^sha256:[0-9a-f]{64}$/u)),
   Schema.brand("DistributionId"),
-).annotations({ identifier: "DistributionId" });
+).annotate({ identifier: "DistributionId" });
 
 export type DistributionId = typeof DistributionIdSchema.Type;
 
 export const decodeDistributionId =
-  Schema.decodeUnknownEither(DistributionIdSchema);
+  Schema.decodeUnknownResult(DistributionIdSchema);
 
 export const OracleDecodeIssueSchema = Schema.Struct({
   path: Schema.String,
-  code: Schema.Literal(...ORACLE_DECODE_ISSUE_CODES),
-}).annotations({
+  code: Schema.Literals(ORACLE_DECODE_ISSUE_CODES),
+}).annotate({
   identifier: "OracleDecodeIssue",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -76,12 +76,13 @@ export const OracleDecodeIssuesSchema = Schema.NonEmptyArray(
   OracleDecodeIssueSchema,
 )
   .pipe(
-    Schema.filter(isCanonicalOracleDecodeIssues, {
-      message: () =>
-        "Oracle decode issues must be unique and canonically ordered",
-    }),
+    Schema.check(
+      Schema.makeFilter(isCanonicalOracleDecodeIssues, {
+        message: "Oracle decode issues must be unique and canonically ordered",
+      }),
+    ),
   )
-  .annotations({
+  .annotate({
     identifier: "OracleDecodeIssues",
     parseOptions: { onExcessProperty: "error" },
   });
@@ -97,7 +98,7 @@ const OracleEvaluatedResponseSchema = Schema.Struct({
   tag: Schema.Literal("evaluated"),
   distributionId: DistributionIdSchema,
   traces: Schema.NonEmptyArray(OracleTraceSchema),
-}).annotations({
+}).annotate({
   identifier: "OracleEvaluatedResponse",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -106,16 +107,16 @@ const OracleDecodeRejectedResponseSchema = Schema.Struct({
   tag: Schema.Literal("decodeRejected"),
   distributionId: DistributionIdSchema,
   issues: OracleDecodeIssuesSchema,
-}).annotations({
+}).annotate({
   identifier: "OracleDecodeRejectedResponse",
   parseOptions: { onExcessProperty: "error" },
 });
 
 /** The complete response algebra for one raw batch frame. */
-export const OracleBatchResponseSchema = Schema.Union(
+export const OracleBatchResponseSchema = Schema.Union([
   OracleEvaluatedResponseSchema,
   OracleDecodeRejectedResponseSchema,
-).annotations({
+]).annotate({
   identifier: "OracleBatchResponse",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -132,7 +133,7 @@ export type OracleBatchResponse = Schema.Schema.Type<
 
 export const OracleIdentityResponseSchema = Schema.Struct({
   distributionId: DistributionIdSchema,
-}).annotations({
+}).annotate({
   identifier: "OracleIdentityResponse",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -144,23 +145,23 @@ export type OracleIdentityResponse = Schema.Schema.Type<
 export const OracleDefectResponseSchema = Schema.Struct({
   tag: Schema.Literal("defect"),
   distributionId: DistributionIdSchema,
-}).annotations({
+}).annotate({
   identifier: "OracleDefectResponse",
   parseOptions: { onExcessProperty: "error" },
 });
 
 export type OracleDefectResponse = typeof OracleDefectResponseSchema.Type;
 
-const OracleBatchResponseJsonSchema = Schema.parseJson(
+const OracleBatchResponseJsonSchema = Schema.fromJsonString(
   OracleBatchResponseSchema,
 );
-const OracleIdentityResponseJsonSchema = Schema.parseJson(
+const OracleIdentityResponseJsonSchema = Schema.fromJsonString(
   OracleIdentityResponseSchema,
 );
-const OracleHttpReadinessJsonSchema = Schema.parseJson(
+const OracleHttpReadinessJsonSchema = Schema.fromJsonString(
   OracleHttpReadinessSchema,
 );
-const OracleDefectResponseJsonSchema = Schema.parseJson(
+const OracleDefectResponseJsonSchema = Schema.fromJsonString(
   OracleDefectResponseSchema,
 );
 

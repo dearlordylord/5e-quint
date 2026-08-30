@@ -1,4 +1,4 @@
-import { Brand, Either, Match } from "effect";
+import { Brand, Result, Match } from "effect";
 import {
   CHARACTER_CLASS_LEVELS,
   characterClassLevel,
@@ -74,18 +74,18 @@ export type CharacterProgressionLevelIssue =
 export function characterTotalLevelHitPointRule(input: {
   readonly totalLevel: CharacterClassLevel;
   readonly hitPointRule: ClassHitPointRule;
-}): Either.Either<
+}): Result.Result<
   CharacterTotalLevelHitPointRule,
   CharacterProgressionLevelIssue
 > {
   return Match.value(input.hitPointRule).pipe(
     Match.when({ tag: "levelOneMaximumHitDie" }, (hitPointRule) =>
       input.totalLevel === 1
-        ? Either.right({
+        ? Result.succeed({
             totalLevel: LevelOneCharacterClassLevel(input.totalLevel),
             hitPointRule,
           })
-        : Either.left({
+        : Result.fail({
             code: "invalidHitPointRuleForLevel" as const,
             totalLevel: input.totalLevel,
             hitPointRule,
@@ -93,11 +93,11 @@ export function characterTotalLevelHitPointRule(input: {
     ),
     Match.when({ tag: "fixedHigherLevelGain" }, (hitPointRule) =>
       input.totalLevel > 1
-        ? Either.right({
+        ? Result.succeed({
             totalLevel: PostLevelOneCharacterClassLevel(input.totalLevel),
             hitPointRule,
           })
-        : Either.left({
+        : Result.fail({
             code: "invalidHitPointRuleForLevel" as const,
             totalLevel: input.totalLevel,
             hitPointRule,
@@ -111,15 +111,15 @@ export function characterProgressionEntry(input: {
   readonly classUnitId: ClassUnitId;
   readonly characterLevel: CharacterClassLevel;
   readonly hitPointRule: FixedHigherLevelClassHitPointRule;
-}): Either.Either<CharacterProgressionEntry, CharacterProgressionLevelIssue> {
+}): Result.Result<CharacterProgressionEntry, CharacterProgressionLevelIssue> {
   const levelRule = characterTotalLevelHitPointRule({
     totalLevel: input.characterLevel,
     hitPointRule: input.hitPointRule,
   });
 
-  return Either.isLeft(levelRule)
-    ? Either.left(levelRule.left)
-    : Either.right({
+  return Result.isFailure(levelRule)
+    ? Result.fail(levelRule.failure)
+    : Result.succeed({
         classUnitId: input.classUnitId,
         hitPointRule: input.hitPointRule,
       });
@@ -129,10 +129,10 @@ export function characterProgressionWithClassLevelGain(input: {
   readonly progression: CharacterProgression;
   readonly classUnitId: ClassUnitId;
   readonly hitPointRule: FixedHigherLevelClassHitPointRule;
-}): Either.Either<CharacterProgression, CharacterProgressionLevelIssue> {
+}): Result.Result<CharacterProgression, CharacterProgressionLevelIssue> {
   const nextCharacterLevel = 2 + input.progression.advancements.length;
   if (!CHARACTER_CLASS_LEVELS.some((level) => level === nextCharacterLevel)) {
-    return Either.left({
+    return Result.fail({
       code: "invalidCharacterClassLevel",
       classLevel: nextCharacterLevel,
     });
@@ -144,12 +144,12 @@ export function characterProgressionWithClassLevelGain(input: {
     hitPointRule: input.hitPointRule,
   });
   /* v8 ignore start -- @preserve -- The consecutive level and fixed higher-level Hit Point rule satisfy this narrowed constructor. */
-  if (Either.isLeft(entry)) return Either.left(entry.left);
+  if (Result.isFailure(entry)) return Result.fail(entry.failure);
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     startingClass: input.progression.startingClass,
-    advancements: [...input.progression.advancements, entry.right],
+    advancements: [...input.progression.advancements, entry.success],
   });
 }
 

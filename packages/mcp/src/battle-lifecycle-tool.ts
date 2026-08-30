@@ -1,4 +1,4 @@
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleLifecycleToolInput } from "./battle-lifecycle-tool-input.ts";
@@ -85,12 +85,12 @@ function applySwap(
     candidateWitness: operation.candidateWitness,
   });
   if (
-    Either.isLeft(transition) &&
-    transition.left.tag === "initialInitiativeSwapRejected"
+    Result.isFailure(transition) &&
+    transition.failure.tag === "initialInitiativeSwapRejected"
   ) {
     return errorContent("Initiative Swap was rejected.", {
       code: "INITIAL_INITIATIVE_SWAP_REJECTED",
-      message: transition.left.message,
+      message: transition.failure.message,
     });
   }
   return completeBattleStateTransition({
@@ -107,7 +107,7 @@ function applySwap(
 function finalizeSetup(root: McpPlaySessionRoot) {
   return completeBattleStateTransition({
     root,
-    transition: Either.map(
+    transition: Result.map(
       root.sessionStore.finalizeInitialInitiativeSetup(),
       () => undefined,
     ),
@@ -123,8 +123,8 @@ function finalizeSetup(root: McpPlaySessionRoot) {
         root,
         state.session,
       );
-      if (Either.isLeft(envelope)) {
-        return battlePresentationIssueContent(envelope.left);
+      if (Result.isFailure(envelope)) {
+        return battlePresentationIssueContent(envelope.failure);
       }
       const battleState = battleStateSnapshot(root.sessionStore.battleState);
       if (battleState.tag !== "activeBattle") {
@@ -136,7 +136,7 @@ function finalizeSetup(root: McpPlaySessionRoot) {
         );
       }
       return schemaJsonContent(BattleLifecycleOutputSchema, {
-        envelope: envelope.right,
+        envelope: envelope.success,
         session: {
           ...mcpSessionSummary(root.sessionStore.snapshot()),
           battleState,

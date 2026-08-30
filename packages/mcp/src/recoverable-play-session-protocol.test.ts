@@ -7,7 +7,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import { Either } from "effect";
+import { Result } from "effect";
 import { afterEach, describe, expect, test } from "vitest";
 import { characterDraftId } from "@dnd/character-creation-runtime";
 
@@ -1331,15 +1331,15 @@ async function listen(
   server: ReturnType<typeof createDndMcpHttpServer>,
 ): Promise<URL> {
   const endpoint = await server.listen();
-  if (Either.isLeft(endpoint)) throw new Error(endpoint.left.message);
-  return endpoint.right;
+  if (Result.isFailure(endpoint)) throw new Error(endpoint.failure.message);
+  return endpoint.success;
 }
 
 async function close(
   server: ReturnType<typeof createDndMcpHttpServer>,
 ): Promise<void> {
   const closed = await server.close();
-  if (Either.isLeft(closed)) throw new Error(closed.left.message);
+  if (Result.isFailure(closed)) throw new Error(closed.failure.message);
 }
 
 async function connectHttpClient(endpoint: URL): Promise<Client> {
@@ -1378,8 +1378,8 @@ async function connectClient(
 
 function openRepository(databasePath: string) {
   const repository = openSqlitePlaySessionRepository(databasePath);
-  if (Either.isLeft(repository)) throw new Error(repository.left.message);
-  return repository.right;
+  if (Result.isFailure(repository)) throw new Error(repository.failure.message);
+  return repository.success;
 }
 
 async function callStructuredTool(

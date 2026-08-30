@@ -8,7 +8,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
@@ -30,6 +30,7 @@
 
 import { Match } from "effect";
 import { resolveReportReadyTriggerCommand } from "./ready-trigger.ts";
+import { optionalProperty } from "../optional-property.ts";
 
 import { currentInterruptFrame, snapshotBattle } from "./battle-snapshot.ts";
 export {
@@ -79,11 +80,11 @@ import {
 } from "./creature-state-execution.ts";
 import { consumeOrCloseLegendaryActionWindow } from "./legendary-action-window.ts";
 import {
-  FindFamiliarProcedureExecution,
+  CompanionLifecycleProcedureExecution,
   resolveCompanionLifecycleSubject,
-  resolveFindFamiliarSharedSensesSubject,
-  resolveFindFamiliarTouchSpellSubject,
-} from "./find-familiar-procedures.ts";
+  resolveSpawnedCompanionSharedSensesSubject,
+  resolveSpawnedCompanionTouchSpellSubject,
+} from "./companion-lifecycle-procedures.ts";
 import {
   type AdmittedReplayContinuationSubject,
   ReplayContinuationExecution,
@@ -101,13 +102,13 @@ import {
 } from "./interrupt-lifecycle.ts";
 import { resolveCastTriggeredReactionSpellCommand } from "./triggered-reaction-spell-procedures.ts";
 import {
-  resolveLevitateAltitudeControlCommand,
+  resolveControlledVerticalSuspensionAltitudeControlCommand,
   resolveReplaceSelfTransformationModeCommand,
 } from "./active-spell-control-procedures.ts";
 import {
-  resolveDisperseCloudkillCommand,
-  resolveDisperseFogCloudCommand,
-  resolveWardingBondSeparationCommand,
+  resolveDisperseTranslatingPersistentAreaCommand,
+  resolveDispersePersistentAreaTraitCommand,
+  resolveLinkedDefenseResistanceDamageShareSeparationCommand,
 } from "./spell-effect-cleanup-procedures.ts";
 import {
   resolveCreatureTypeProtectionConditionAttemptCommand,
@@ -120,9 +121,9 @@ import { invalidResult } from "./result-helpers.ts";
 import { battleReducerRouteForInterrupt } from "./interrupt-route-projection.ts";
 import { battleReducerRouteForResolution } from "./reducer-route.ts";
 import {
-  antimagicFieldInterdictionMessage,
-  battleSubjectInterdictedByAntimagicField,
-} from "./antimagic-field-action-interdiction.ts";
+  magicSuppressionInterdictionMessage,
+  battleSubjectInterdictedByMagicSuppressionEmanation,
+} from "./magic-suppression-action-interdiction.ts";
 import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import {
   currentActorHasOpenStatBlockMultiattackDispatch,
@@ -135,7 +136,7 @@ import {
   resolveSpellAct,
 } from "./spells-resolve.ts";
 import { resolveReleaseSpellCreatedHeldObjectCommand } from "./spells-resolve-release.ts";
-import { resolveDragonsBreathExhaleCommand } from "./dragons-breath.ts";
+import { resolveGrantedAreaSaveDamageActionCommand } from "./granted-area-save-damage.ts";
 import type { BattleAttackRouteResolvers } from "./attack-resolvers.ts";
 import {
   resolveBonusActionDash,
@@ -152,8 +153,8 @@ import {
   resolveReady,
   resolveReleaseGrappleCommand,
   resolveSearch,
-  resolveShakeAwakeFromHypnoticPattern,
-  resolveShakeAwakeFromSleep,
+  resolveShakeAwakeFromSaveGatedAreaControl,
+  resolveShakeAwakeFromHitPointBudgetCondition,
   resolveShove,
   resolveStatBlockBonusActionOption,
 } from "./attack-resolution.ts";
@@ -172,12 +173,12 @@ import {
   resolveReleaseReadiedSpellCommand,
 } from "./readied-release.ts";
 import {
-  isCommandFollowUpSubject,
-  pendingCommandObligationIssue,
-  resolveCommandHaltEndTurn,
-  resolveCommandFollowUp,
-} from "./command-procedures.ts";
-import { commandHaltSuppressionIssue } from "./command-halt.ts";
+  isCompelledBehaviorFollowUpSubject,
+  pendingCompelledBehaviorObligationIssue,
+  resolveCompelledHaltEndTurn,
+  resolveCompelledBehaviorFollowUp,
+} from "./compelled-behavior-procedures.ts";
+import { compelledHaltSuppressionIssue } from "./compelled-behavior-halt.ts";
 import {
   isMovementProcedureSubject,
   resolveMovementProcedure,
@@ -185,7 +186,7 @@ import {
 import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
 import {
   isPersistentSpatialSpellProcedureSubject,
-  persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn,
+  isPersistentAreaSubjectAllowedOutsideCurrentActorTurn,
   resolvePersistentSpatialSpellProcedureCommand,
 } from "./persistent-spatial-spell-procedures.ts";
 import { resolveEndConcentrationCommand } from "./concentration-procedures.ts";
@@ -263,11 +264,11 @@ function interruptLifecycleExecution(
         executionRegistry,
         attackResolvers,
       ),
-    ({ state, continuation, handledInterruptTrigger }) =>
+    ({ state, continuation, handledInterruptOccurrence }) =>
       resolveInterruptContinuation({
         state,
         continuation,
-        handledInterruptTrigger,
+        handledInterruptOccurrence,
         execution: interruptContinuationExecution(
           executionRegistry,
           attackResolvers,
@@ -372,7 +373,7 @@ function resolvePendingInterruptSubject(input: {
     }
     const nonContinuationFrame = activeContinuation.frame;
     /* v8 ignore start -- @preserve -- Defensive stale-subject rejection: these typed cleanup frames are resolved by their dedicated witness APIs, not ordinary subject dispatch. */
-    if (nonContinuationFrame.kind === "flySpeedGrantEndFallCleanup") {
+    if (nonContinuationFrame.kind === "grantedFlightEndFallCleanup") {
       return invalidResult(
         input.input.state,
         "staleSubject",
@@ -404,32 +405,127 @@ function resolvePendingInterruptSubject(input: {
   );
 }
 
-function resolveBattleSubjectAfterD20TestNaturalOneReroll(
+function handledInterruptOccurrenceForRoute(
+  options: BattleInterruptRouteOptions,
+) {
+  return options.replayingInterruptedProcedure === true
+    ? options.handledInterruptOccurrence
+    : undefined;
+}
+
+function handledInterruptTriggerForRoute(
+  options: BattleInterruptRouteOptions,
+  occurrence: ReturnType<typeof handledInterruptOccurrenceForRoute>,
+) {
+  return options.replayingInterruptedProcedure === true
+    ? occurrence?.trigger
+    : options.handledInterruptTrigger;
+}
+
+function replayObjectOutcomesRouteOption(options: BattleInterruptRouteOptions) {
+  return options.replayingInterruptedProcedure === true
+    ? optionalProperty("replayObjectOutcomes", options.objectOutcomes)
+    : {};
+}
+
+function interruptConsumerRouteOptions(
+  options: BattleInterruptRouteOptions,
+  occurrence: ReturnType<typeof handledInterruptOccurrenceForRoute>,
+  handledInterruptRouteOption: ReturnType<
+    typeof optionalProperty<
+      "handledInterruptTrigger",
+      ReturnType<typeof handledInterruptTriggerForRoute>
+    >
+  >,
+  replayParentRouteOption: ReturnType<
+    typeof optionalProperty<
+      "replayParentPosition",
+      BattleInterruptRouteOptions["replayParentPosition"]
+    >
+  >,
+) {
+  if (
+    options.replayingInterruptedProcedure === true &&
+    occurrence !== undefined
+  ) {
+    return {
+      replayingInterruptedProcedure: true as const,
+      handledInterruptTrigger: occurrence.trigger,
+      ...replayParentRouteOption,
+      ...optionalProperty(
+        "pendingAttackDamageReductions",
+        options.pendingAttackDamageReductions,
+      ),
+      ...optionalProperty(
+        "pendingAttackDamageAdditions",
+        options.pendingAttackDamageAdditions,
+      ),
+      ...optionalProperty(
+        "spatialMeleeSpellAttackProxyCommitCheckpoint",
+        options.spatialMeleeSpellAttackProxyCommitCheckpoint ??
+          (occurrence.trigger === "attackHit"
+            ? occurrence.spatialMeleeSpellAttackProxyCommitCheckpoint
+            : undefined),
+      ),
+    };
+  }
+  return handledInterruptRouteOption;
+}
+
+function handledSaveFailedOccurrenceForRoute(
+  occurrence: ReturnType<typeof handledInterruptOccurrenceForRoute>,
+) {
+  return occurrence?.trigger === "saveFailed" ? occurrence : undefined;
+}
+
+function battleSubjectInterruptRouteProjection(
+  options: BattleInterruptRouteOptions,
+) {
+  const handledInterruptOccurrence =
+    handledInterruptOccurrenceForRoute(options);
+  const handledInterruptTrigger = handledInterruptTriggerForRoute(
+    options,
+    handledInterruptOccurrence,
+  );
+  const handledInterruptRouteOption = optionalProperty(
+    "handledInterruptTrigger",
+    handledInterruptTrigger,
+  );
+  const replayParentRouteOption = optionalProperty(
+    "replayParentPosition",
+    options.replayParentPosition,
+  );
+  const handledSaveFailedOccurrence = handledSaveFailedOccurrenceForRoute(
+    handledInterruptOccurrence,
+  );
+  return {
+    handledInterruptOccurrence,
+    handledInterruptTrigger,
+    handledInterruptRouteOption,
+    replayParentRouteOption,
+    replayObjectOutcomesOption: replayObjectOutcomesRouteOption(options),
+    interruptConsumerOptions: interruptConsumerRouteOptions(
+      options,
+      handledInterruptOccurrence,
+      handledInterruptRouteOption,
+      replayParentRouteOption,
+    ),
+    persistentSpatialReplayRouteOption: {
+      ...optionalProperty(
+        "handledSaveFailedOccurrence",
+        handledSaveFailedOccurrence,
+      ),
+      ...replayParentRouteOption,
+    },
+  };
+}
+
+function battleSubjectActorAdmissionResult(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
-): BattleResolutionResult {
-  const interruptRouteOptions = options.interruptRouteOptions;
-  const handledInterruptRouteOption =
-    interruptRouteOptions.handledInterruptTrigger === undefined
-      ? {}
-      : {
-          handledInterruptTrigger:
-            interruptRouteOptions.handledInterruptTrigger,
-        };
-  const pendingInterruptResult = resolvePendingInterruptSubject({
-    input,
-    options,
-  });
-  if (pendingInterruptResult !== null) return pendingInterruptResult;
-
+): BattleResolutionResult | null {
   const actorId = battleSubjectActorId(input.subject);
-  if (
-    actorId !== currentActorId(input.state) &&
-    actorId !== options.readiedActionActorId &&
-    !isLegendaryAttackSubject(input.state, input.subject) &&
-    !isReleaseGrappleSubject(input.subject) &&
-    !persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(input.subject)
-  ) {
+  if (battleSubjectHasWrongActor(input, options, actorId)) {
     return invalidResult(
       input.state,
       "wrongActor",
@@ -448,7 +544,6 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     );
   }
   /* v8 ignore stop -- @preserve */
-
   /* v8 ignore start -- @preserve -- Defensive malformed/stale subject rejection: admitted and rediscovered subjects always name a combatant still present in the battle. */
   if (!input.state.combatants.has(actorId)) {
     return invalidResult(
@@ -458,21 +553,45 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const commandObligationIssue = pendingCommandObligationIssue(
-    input.state,
-    input.subject,
+  return null;
+}
+
+function battleSubjectHasWrongActor(
+  input: AdmittedBattleResolutionInput,
+  options: ResolveBattleSubjectInternalOptions,
+  actorId: CombatantId,
+): boolean {
+  return (
+    actorId !== currentActorId(input.state) &&
+    actorId !== options.readiedActionActorId &&
+    options.interruptRouteOptions.replayParentPosition === undefined &&
+    !isLegendaryAttackSubject(input.state, input.subject) &&
+    !isReleaseGrappleSubject(input.subject) &&
+    !isPersistentAreaSubjectAllowedOutsideCurrentActorTurn(input.subject)
   );
+}
+
+function battleSubjectObligationAdmissionResult(
+  input: AdmittedBattleResolutionInput,
+  options: ResolveBattleSubjectInternalOptions,
+): BattleResolutionResult | null {
+  const compelledBehaviorObligationIssue =
+    pendingCompelledBehaviorObligationIssue(input.state, input.subject);
   /* v8 ignore start -- @preserve -- Defensive stale-subject rejection: rediscovery exposes the pending Command obligation instead of unrelated subjects. */
-  if (commandObligationIssue !== null) {
-    return invalidResult(input.state, "staleSubject", commandObligationIssue);
+  if (compelledBehaviorObligationIssue !== null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      compelledBehaviorObligationIssue,
+    );
   }
   /* v8 ignore stop -- @preserve */
-  const commandHaltIssue = commandHaltSuppressionIssue(
+  const compelledHaltIssue = compelledHaltSuppressionIssue(
     input.state,
     input.subject,
   );
-  if (commandHaltIssue !== null) {
-    return invalidResult(input.state, "staleSubject", commandHaltIssue);
+  if (compelledHaltIssue !== null) {
+    return invalidResult(input.state, "staleSubject", compelledHaltIssue);
   }
   if (
     options.readiedActionActorId === undefined &&
@@ -488,21 +607,81 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       "Pending Stat Block Multiattack dispatches must be resolved, Movement may be taken between attacks, or the turn must end before other battle subjects.",
     );
   }
-  if (battleSubjectInterdictedByAntimagicField(input.state, input.subject)) {
+  if (
+    spatialMeleeSpellAttackProxyCommitCheckpointMatchesSubject(input, options)
+  ) {
+    return null;
+  }
+  if (
+    battleSubjectInterdictedByMagicSuppressionEmanation(
+      input.state,
+      input.subject,
+    )
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
-      antimagicFieldInterdictionMessage(input.state, input.subject),
+      magicSuppressionInterdictionMessage(input.state, input.subject),
     );
   }
-
   const actionEligibilityIssue = battleSubjectActionEligibilityIssue(
     input.state,
     input.subject,
   );
-  if (actionEligibilityIssue !== null) {
-    return invalidResult(input.state, "staleSubject", actionEligibilityIssue);
-  }
+  return actionEligibilityIssue === null
+    ? null
+    : invalidResult(input.state, "staleSubject", actionEligibilityIssue);
+}
+
+function spatialMeleeSpellAttackProxyCommitCheckpointMatchesSubject(
+  input: AdmittedBattleResolutionInput,
+  options: ResolveBattleSubjectInternalOptions,
+): boolean {
+  const checkpoint =
+    options.interruptRouteOptions
+      .spatialMeleeSpellAttackProxyCommitCheckpoint ??
+    (options.interruptRouteOptions.replayingInterruptedProcedure === true &&
+    options.interruptRouteOptions.handledInterruptOccurrence?.trigger ===
+      "attackHit"
+      ? options.interruptRouteOptions.handledInterruptOccurrence
+          .spatialMeleeSpellAttackProxyCommitCheckpoint
+      : undefined);
+  const subject = input.subject;
+  return (
+    checkpoint?.kind === "spatialMeleeSpellAttackProxyCommitApplied" &&
+    (subject.tag === "actionSpell" || subject.tag === "bonusActionSpell") &&
+    checkpoint.actorId === subject.actorId &&
+    checkpoint.sourceProcedureRef === subject.procedureRef
+  );
+}
+
+function resolveBattleSubjectAfterD20TestNaturalOneReroll(
+  input: AdmittedBattleResolutionInput,
+  options: ResolveBattleSubjectInternalOptions,
+): BattleResolutionResult {
+  const interruptRouteOptions = options.interruptRouteOptions;
+  const route = battleSubjectInterruptRouteProjection(interruptRouteOptions);
+  const {
+    handledInterruptTrigger,
+    handledInterruptRouteOption,
+    replayParentRouteOption,
+    replayObjectOutcomesOption,
+    interruptConsumerOptions,
+    persistentSpatialReplayRouteOption,
+  } = route;
+  const pendingInterruptResult = resolvePendingInterruptSubject({
+    input,
+    options,
+  });
+  if (pendingInterruptResult !== null) return pendingInterruptResult;
+
+  const actorAdmission = battleSubjectActorAdmissionResult(input, options);
+  if (actorAdmission !== null) return actorAdmission;
+  const obligationAdmission = battleSubjectObligationAdmissionResult(
+    input,
+    options,
+  );
+  if (obligationAdmission !== null) return obligationAdmission;
   const result = (() => {
     if (input.admissionKind !== "general") {
       return resolveSpecializedAdmission(input);
@@ -519,7 +698,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         return options.attackResolvers.resolveAttack({
           ...input,
           subject,
-          ...interruptRouteOptions,
+          ...interruptConsumerOptions,
         });
       }
       if (subject.action === "dash") {
@@ -561,14 +740,17 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       if (subject.action === "escapeSpellRestraint") {
         return resolveEscapeSpellRestraint({ ...input, subject });
       }
-      if (subject.action === "shakeAwakeFromSleep") {
-        return resolveShakeAwakeFromSleep({ ...input, subject });
+      if (subject.action === "shakeAwakeFromStagedCondition") {
+        return resolveShakeAwakeFromHitPointBudgetCondition({
+          ...input,
+          subject,
+        });
       }
-      if (subject.action === "shakeAwakeFromHypnoticPattern") {
-        return resolveShakeAwakeFromHypnoticPattern({ ...input, subject });
+      if (subject.action === "shakeAwakeFromAreaControl") {
+        return resolveShakeAwakeFromSaveGatedAreaControl({ ...input, subject });
       }
     }
-    if (subject.tag === "pactOfTheChainFamiliarAttack") {
+    if (subject.tag === "companionAttack") {
       return options.attackResolvers.resolvePactOfTheChainFamiliarReactionAttack(
         {
           ...input,
@@ -581,7 +763,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolveOffHandAttack({
         ...input,
         subject,
-        ...interruptRouteOptions,
+        ...interruptConsumerOptions,
       });
     }
     if (
@@ -591,7 +773,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolveMartialArtsBonusUnarmedStrike({
         ...input,
         subject,
-        ...interruptRouteOptions,
+        ...interruptConsumerOptions,
       });
     }
     if (subject.tag === "monkFocusOption") {
@@ -601,7 +783,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return options.attackResolvers.resolveMonkFocusFlurryOfBlowsStrike({
         ...input,
         subject,
-        ...interruptRouteOptions,
+        ...interruptConsumerOptions,
       });
     }
     if (
@@ -613,13 +795,13 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     if (subject.tag === "companionLifecycle") {
       return resolveCompanionLifecycleSubject({ ...input, subject });
     }
-    if (subject.tag === "findFamiliarSharedSenses") {
-      return resolveFindFamiliarSharedSensesSubject({ ...input, subject });
+    if (subject.tag === "spawnedCompanionSharedSenses") {
+      return resolveSpawnedCompanionSharedSensesSubject({ ...input, subject });
     }
-    if (subject.tag === "findFamiliarTouchSpell") {
-      return resolveFindFamiliarTouchSpellSubject(
+    if (subject.tag === "spawnedCompanionTouchSpellProxy") {
+      return resolveSpawnedCompanionTouchSpellSubject(
         { ...input, subject },
-        FindFamiliarProcedureExecution.fromResolver((admitted) =>
+        CompanionLifecycleProcedureExecution.fromResolver((admitted) =>
           resolveBattleSubjectInternal(admitted, options),
         ),
         options.interruptRouteOptions.replayingInterruptedProcedure === true
@@ -632,7 +814,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         {
           ...input,
           subject,
-          ...interruptRouteOptions,
+          ...interruptConsumerOptions,
         },
         options.executionRegistry,
       );
@@ -642,12 +824,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         {
           ...input,
           subject,
-          ...(interruptRouteOptions.handledInterruptTrigger === undefined
-            ? {}
-            : {
-                handledInterruptTrigger:
-                  interruptRouteOptions.handledInterruptTrigger,
-              }),
+          ...interruptConsumerOptions,
         },
         options.executionRegistry,
       );
@@ -657,11 +834,10 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         {
           ...input,
           subject,
-          ...(interruptRouteOptions.handledInterruptTrigger === undefined
+          ...(handledInterruptTrigger === undefined
             ? {}
             : {
-                handledInterruptTrigger:
-                  interruptRouteOptions.handledInterruptTrigger,
+                handledInterruptTrigger,
               }),
         },
         options.executionRegistry,
@@ -671,15 +847,26 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolveUnitFeatureHeldWeaponActivation({ ...input, subject });
     }
     if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
-      return input.state.currentTurnResources.commandHalt === null
-        ? resolveEndTurnCommand(input)
-        : resolveCommandHaltEndTurn({ ...input, subject });
+      return input.state.currentTurnResources.compelledHalt === null
+        ? resolveEndTurnCommand({
+            ...input,
+            ...handledInterruptRouteOption,
+            ...replayParentRouteOption,
+          })
+        : resolveCompelledHaltEndTurn({
+            ...input,
+            subject,
+            ...handledInterruptRouteOption,
+            ...replayParentRouteOption,
+          });
     }
-    if (isCommandFollowUpSubject(subject)) {
-      return resolveCommandFollowUp({
+    if (isCompelledBehaviorFollowUpSubject(subject)) {
+      return resolveCompelledBehaviorFollowUp({
         ...input,
         subject,
         ...handledInterruptRouteOption,
+        ...replayParentRouteOption,
+        ...replayObjectOutcomesOption,
       });
     }
     if (isMovementProcedureSubject(subject)) {
@@ -700,15 +887,18 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     }
     if (
       subject.tag === "runtimeCommand" &&
-      subject.command === "levitateAltitudeControl"
+      subject.command === "controlledVerticalSuspensionAltitudeControl"
     ) {
-      return resolveLevitateAltitudeControlCommand({ ...input, subject });
+      return resolveControlledVerticalSuspensionAltitudeControlCommand({
+        ...input,
+        subject,
+      });
     }
     if (isPersistentSpatialSpellProcedureSubject(subject)) {
       return resolvePersistentSpatialSpellProcedureCommand({
         ...input,
         subject,
-        ...handledInterruptRouteOption,
+        ...persistentSpatialReplayRouteOption,
       });
     }
     if (subject.tag === "runtimeCommand") {
@@ -730,14 +920,20 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
           subject,
         });
       }
-      if (subject.command === "disperseFogCloud") {
-        return resolveDisperseFogCloudCommand({ ...input, subject });
+      if (subject.command === "endPersistentAreaTraitForEnvironment") {
+        return resolveDispersePersistentAreaTraitCommand({ ...input, subject });
       }
-      if (subject.command === "disperseCloudkill") {
-        return resolveDisperseCloudkillCommand({ ...input, subject });
+      if (subject.command === "endPersistentAreaSaveDamageForEnvironment") {
+        return resolveDisperseTranslatingPersistentAreaCommand({
+          ...input,
+          subject,
+        });
       }
-      if (subject.command === "wardingBondSeparation") {
-        return resolveWardingBondSeparationCommand({ ...input, subject });
+      if (subject.command === "linkedDefenseResistanceDamageShareSeparation") {
+        return resolveLinkedDefenseResistanceDamageShareSeparationCommand({
+          ...input,
+          subject,
+        });
       }
       if (subject.command === "releaseReadiedSpell") {
         return resolveReleaseReadiedSpellCommand(
@@ -827,8 +1023,8 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         };
       }
       /* v8 ignore stop -- @preserve */
-      if (subject.command === "dragonsBreathExhale") {
-        return resolveDragonsBreathExhaleCommand({
+      if (subject.command === "grantedAreaSaveDamageAction") {
+        return resolveGrantedAreaSaveDamageActionCommand({
           ...input,
           subject,
         });
@@ -878,7 +1074,7 @@ function resolveBonusActionStandardActionSubject(
     Match.when(
       {
         bonusActionStandardActionAdmission: {
-          procedure: { kind: "expeditiousRetreatDash" },
+          procedure: { kind: "grantedAlternateActionCost" },
         },
       },
       (dashInput) =>

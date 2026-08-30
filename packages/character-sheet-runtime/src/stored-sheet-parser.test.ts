@@ -1,5 +1,5 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { Either } from "effect";
+import { Result } from "effect";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
@@ -7,7 +7,7 @@ import {
   armorClassBuild,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
-  requireRight,
+  requireSuccess,
   sorcererFontOfMagicBuild,
   unitLibrary,
   warlockSpellcastingWithCantrips,
@@ -39,7 +39,7 @@ describe("stored Character Sheet primitive parsers", () => {
   test("resource counts parse exactly the nonnegative integers", () => {
     fc.assert(
       fc.property(fc.integer(), (value) => {
-        expect(Either.isRight(parseResourceCount(value))).toBe(value >= 0);
+        expect(Result.isSuccess(parseResourceCount(value))).toBe(value >= 0);
       }),
     );
     fc.assert(
@@ -54,7 +54,7 @@ describe("stored Character Sheet primitive parsers", () => {
         ),
         (value) => {
           if (typeof value !== "number" || !Number.isInteger(value)) {
-            expect(Either.isLeft(parseResourceCount(value))).toBe(true);
+            expect(Result.isFailure(parseResourceCount(value))).toBe(true);
           }
         },
       ),
@@ -166,15 +166,17 @@ describe("stored Character Sheet primitive parsers", () => {
 describe("stored Character Sheet Spell Slot parsers", () => {
   test("accepts omitted state for builds without either slot source", () => {
     expect(parseStoredSpellSlots(fighterBuild, unitLibrary, {})).toEqual(
-      Either.right(undefined),
+      Result.succeed(undefined),
     );
     expect(parseStoredPactSlots(fighterBuild, {})).toEqual(
-      Either.right(undefined),
+      Result.succeed(undefined),
     );
   });
 
   test("accepts omitted Pact Slot expenditure for a Pact Magic build", () => {
-    expect(parseStoredPactSlots(warlock, {})).toEqual(Either.right(undefined));
+    expect(parseStoredPactSlots(warlock, {})).toEqual(
+      Result.succeed(undefined),
+    );
   });
 
   test.each([
@@ -323,7 +325,7 @@ describe("stored Character Sheet Spell Slot parsers", () => {
       spellSlotExpenditures: [{ spellLevel: 1, expended: 1 }],
       createdSpellSlots: [{ spellLevel: 1, count: 1, expended: 1 }],
     });
-    expect(Either.isRight(result), JSON.stringify(result)).toBe(true);
+    expect(Result.isSuccess(result), JSON.stringify(result)).toBe(true);
   });
 
   test.each([
@@ -375,12 +377,12 @@ describe("stored Character Sheet Spell Slot parsers", () => {
       parseStoredPactSlots(warlock, {
         pactSlotExpenditure: { expended: 0 },
       }),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
     expect(
       parseStoredPactSlots(warlock, {
         pactSlotExpenditure: { expended: 1 },
       }),
-    ).toEqual(Either.right({ expended: 1 }));
+    ).toEqual(Result.succeed({ expended: 1 }));
   });
 });
 
@@ -405,7 +407,9 @@ describe("stored Character Sheet resource and optional feature-state parsers", (
         expended: 1,
       },
     ];
-    expect(parseStoredResourceExpenditures(value)).toEqual(Either.right(value));
+    expect(parseStoredResourceExpenditures(value)).toEqual(
+      Result.succeed(value),
+    );
   });
 
   test.each([
@@ -514,13 +518,13 @@ describe("stored Character Sheet resource and optional feature-state parsers", (
 
   test("distinguishes omitted, valid, and invalid Wild Shape state", () => {
     expect(parseStoredDruidWildShapeKnownForms(undefined)).toEqual(
-      Either.right(undefined),
+      Result.succeed(undefined),
     );
     expect(
       parseStoredDruidWildShapeKnownForms({
         statBlockIds: ["stat_block_rat"],
       }),
-    ).toEqual(Either.right({ statBlockIds: ["stat_block_rat"] }));
+    ).toEqual(Result.succeed({ statBlockIds: ["stat_block_rat"] }));
     expectIssue(
       parseStoredDruidWildShapeKnownForms({ statBlockIds: [1] }),
       "Expected Wild Shape known-form state.",
@@ -529,10 +533,10 @@ describe("stored Character Sheet resource and optional feature-state parsers", (
 
   test("distinguishes omitted, valid, and invalid Circle of the Land state", () => {
     expect(parseStoredDruidCircleLand(undefined)).toEqual(
-      Either.right(undefined),
+      Result.succeed(undefined),
     );
     expect(parseStoredDruidCircleLand({ land: "temperate" })).toEqual(
-      Either.right({ land: "temperate" }),
+      Result.succeed({ land: "temperate" }),
     );
     expectIssue(
       parseStoredDruidCircleLand({ land: "moon" }),
@@ -570,7 +574,7 @@ describe("stored Character Sheet resource and optional feature-state parsers", (
     expect(characterBuildHasBookOfShadows(bookBuild)).toBe(true);
     expect(
       parseStoredCharacterSheetBookOfShadowsPresence(fighterBuild, undefined),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
     expectIssue(
       parseStoredCharacterSheetBookOfShadowsPresence(fighterBuild, {
         tag: "onPerson",
@@ -585,14 +589,14 @@ describe("stored Character Sheet resource and optional feature-state parsers", (
       parseStoredCharacterSheetBookOfShadowsPresence(bookBuild, {
         tag: "onPerson",
       }),
-    ).toEqual(Either.right({ tag: "onPerson" }));
+    ).toEqual(Result.succeed({ tag: "onPerson" }));
   });
 });
 
 describe("stored Character Build parser", () => {
   test("round-trips the canonical fixture", () => {
     expect(parseCharacterBuild(fighterBuild, unitLibrary)).toEqual(
-      Either.right(fighterBuild),
+      Result.succeed(fighterBuild),
     );
   });
 
@@ -611,9 +615,9 @@ describe("stored Character Build parser", () => {
           { ...fighterBuild, proficiencyChoices },
           unitLibrary,
         );
-        expect(Either.isRight(result)).toBe(true);
-        if (Either.isRight(result)) {
-          expect(result.right.proficiencyChoices).toEqual(proficiencyChoices);
+        expect(Result.isSuccess(result)).toBe(true);
+        if (Result.isSuccess(result)) {
+          expect(result.success.proficiencyChoices).toEqual(proficiencyChoices);
         }
       }),
     );
@@ -639,9 +643,9 @@ describe("stored Character Build parser", () => {
       unitLibrary,
     );
 
-    expect(Either.isRight(result), JSON.stringify(result)).toBe(true);
-    if (Either.isRight(result)) {
-      expect(result.right.features).toEqual(features);
+    expect(Result.isSuccess(result), JSON.stringify(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(result.success.features).toEqual(features);
     }
   });
 
@@ -672,7 +676,7 @@ describe("stored Character Build parser", () => {
       unitLibrary,
     );
 
-    expect(Either.isRight(result), JSON.stringify(result)).toBe(true);
+    expect(Result.isSuccess(result), JSON.stringify(result)).toBe(true);
   });
 
   test("parses owned equipment and its loadout identity", () => {
@@ -682,18 +686,18 @@ describe("stored Character Build parser", () => {
       shield: true,
     });
     expect(parseCharacterBuild(equipped, unitLibrary)).toEqual(
-      Either.right(equipped),
+      Result.succeed(equipped),
     );
 
     const mainWeaponUnitId = authoredUnitId("weapon_quarterstaff");
     const offHandWeaponUnitId = authoredUnitId("weapon_dagger");
     const mainWeaponItemId = characterEquipmentItemId({
       slot: "main",
-      unitId: requireRight(characterEquipmentItemUnitId(mainWeaponUnitId)),
+      unitId: requireSuccess(characterEquipmentItemUnitId(mainWeaponUnitId)),
     });
     const offHandWeaponItemId = characterEquipmentItemId({
       slot: "off",
-      unitId: requireRight(characterEquipmentItemUnitId(offHandWeaponUnitId)),
+      unitId: requireSuccess(characterEquipmentItemUnitId(offHandWeaponUnitId)),
     });
     const armed = {
       ...fighterBuild,
@@ -733,7 +737,7 @@ describe("stored Character Build parser", () => {
       },
     };
     expect(parseCharacterBuild(armed, unitLibrary)).toEqual(
-      Either.right(armed),
+      Result.succeed(armed),
     );
   });
 
@@ -747,7 +751,7 @@ describe("stored Character Build parser", () => {
     };
 
     expect(parseCharacterBuild(withCurrency, unitLibrary)).toEqual(
-      Either.right(withCurrency),
+      Result.succeed(withCurrency),
     );
     expectIssue(
       parseCharacterBuild(
@@ -803,6 +807,24 @@ describe("stored Character Build parser", () => {
       ),
       "Character Build starting-equipment currency remainder is required.",
     );
+  });
+
+  test("projects a stored alignment to its exact domain fields", () => {
+    const parsed = requireSuccess(
+      parseCharacterBuild(
+        {
+          ...fighterBuild,
+          alignment: {
+            ...fighterBuild.alignment,
+            externalAnnotation: "must not survive boundary parsing",
+          },
+        },
+        unitLibrary,
+      ),
+    );
+
+    expect(parsed.alignment).toEqual(fighterBuild.alignment);
+    expect(parsed.alignment).not.toHaveProperty("externalAnnotation");
   });
 
   test.each([
@@ -1199,6 +1221,35 @@ describe("stored Character Build parser", () => {
       expected: "Character Build weapon loadout is invalid.",
     },
     {
+      name: "an off-hand item id in the main-hand loadout",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          ...fighterBuild.equipment,
+          loadout: {
+            weapon: {
+              itemId: "off:weapon_quarterstaff",
+              grip: "one_handed",
+            },
+          },
+        },
+      },
+      expected: "Character Build equipment item slot is invalid.",
+    },
+    {
+      name: "a main-hand item id in the off-hand loadout",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          ...fighterBuild.equipment,
+          loadout: {
+            offHandWeapon: { itemId: "main:weapon_quarterstaff" },
+          },
+        },
+      },
+      expected: "Character Build equipment item slot is invalid.",
+    },
+    {
       name: "a loadout item that is not owned",
       value: {
         ...fighterBuild,
@@ -1209,7 +1260,7 @@ describe("stored Character Build parser", () => {
             weapon: {
               itemId: characterEquipmentItemId({
                 slot: "main",
-                unitId: requireRight(
+                unitId: requireSuccess(
                   characterEquipmentItemUnitId(
                     authoredUnitId("weapon_quarterstaff"),
                   ),
@@ -1229,11 +1280,11 @@ describe("stored Character Build parser", () => {
 });
 
 function expectIssue(
-  result: Either.Either<unknown, { readonly message: string }>,
+  result: Result.Result<unknown, { readonly message: string }>,
   message: string,
 ): void {
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(result.left.message).toBe(message);
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(result.failure.message).toBe(message);
   }
 }

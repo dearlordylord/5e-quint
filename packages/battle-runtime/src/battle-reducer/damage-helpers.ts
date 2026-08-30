@@ -21,7 +21,7 @@ import {
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { Match } from "effect";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -54,7 +54,7 @@ import {
   activeOngoingFeatureOccurrencesForCombatant,
   ongoingFeatureProfileForSourceKey,
 } from "./creature-state-execution.ts";
-import { combatantHasWardingBondResistance } from "./warding-bond.ts";
+import { combatantHasLinkedDefenseResistanceDamageShareResistance } from "./linked-defense-damage-share.ts";
 import {
   attackDamageComponents,
   attackDamageModifier,
@@ -450,6 +450,7 @@ export function spellDamageReductionRollProtocolId(
 ): string {
   return [
     SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX,
+    reduction.effectRef,
     reduction.sourceProcedureRef,
     reduction.sourceCombatantId,
     reduction.targetId,
@@ -475,6 +476,7 @@ export function sourceDamageRollPenaltyRollProtocolId(
 ): string {
   return [
     SOURCE_DAMAGE_ROLL_PENALTY_ROLL_HOLE_PREFIX,
+    penalty.effectRef,
     penalty.sourceProcedureRef,
     penalty.sourceCombatantId,
     penalty.affectedCombatantId,
@@ -533,27 +535,40 @@ export function applySpellDamageReductionConsumption(
       "Resolved spell damage reduction must belong to its application target.",
     );
   }
-  const effectIndex = target.activeEffects.findIndex(
-    (candidate) =>
-      candidate.kind === "spellDamageReduction" &&
-      candidate.sourceProcedureRef ===
-        consumption.identity.sourceProcedureRef &&
-      candidate.sourceCombatantId === consumption.identity.sourceCombatantId &&
-      candidate.damageType === consumption.identity.damageType,
+  const consumed = spellDamageReductionEffectForConsumption(
+    target,
+    consumption.identity,
   );
-  const effect = target.activeEffects[effectIndex];
-  if (effect?.kind !== "spellDamageReduction") {
-    return target;
-  }
-  if (effect.usedThisTurn) {
+  if (consumed === null || consumed.effect.usedThisTurn) {
     return target;
   }
   return {
     ...target,
     activeEffects: target.activeEffects.map((candidate, index) =>
-      index === effectIndex ? { ...effect, usedThisTurn: true } : candidate,
+      index === consumed.effectIndex
+        ? { ...consumed.effect, usedThisTurn: true }
+        : candidate,
     ),
   };
+}
+
+function spellDamageReductionEffectForConsumption(
+  target: BattleCreatureState,
+  identity: SpellDamageReductionIdentity,
+): AvailableSpellDamageReduction | null {
+  const effectIndex = target.activeEffects.findIndex(
+    (candidate) => candidate.effectRef === identity.effectRef,
+  );
+  const effect = target.activeEffects[effectIndex];
+  if (
+    effect?.kind !== "spellDamageReduction" ||
+    effect.sourceProcedureRef !== identity.sourceProcedureRef ||
+    effect.sourceCombatantId !== identity.sourceCombatantId ||
+    effect.damageType !== identity.damageType
+  ) {
+    return null;
+  }
+  return { effectIndex, effect };
 }
 
 function spellDamageReductionRollForAvailable(
@@ -572,6 +587,7 @@ function spellDamageReductionIdentityForAvailable(
 ): SpellDamageReductionIdentity {
   const { effect } = available;
   return {
+    effectRef: effect.effectRef,
     sourceProcedureRef: effect.sourceProcedureRef,
     sourceCombatantId: effect.sourceCombatantId,
     targetId: target.combatantId,
@@ -611,6 +627,7 @@ export function availableSourceDamageRollPenalty(
   );
   return effect?.kind === "sourceDamageRollPenalty"
     ? {
+        effectRef: effect.effectRef,
         sourceProcedureRef: effect.sourceProcedureRef,
         sourceCombatantId: effect.sourceCombatantId,
         affectedCombatantId: source.combatantId,
@@ -889,7 +906,7 @@ export function activeSpellWeaponDamageRiders(
 
 export function activeMarkedDamageRiderEffect(
   attacker: BattleCreatureState | undefined,
-  effectRef: BattleActiveEffectExecutionRef,
+  effectRef: BattleEffectExecutionRef,
 ): SpellMarkedDamageRider | null {
   return (
     attacker?.activeEffects.find(
@@ -994,7 +1011,7 @@ function targetHasRuntimeDamageResistance(
       (effect) =>
         effect.kind === "damageResistance" && effect.damageType === damageType,
     ) ||
-    combatantHasWardingBondResistance(target) ||
+    combatantHasLinkedDefenseResistanceDamageShareResistance(target) ||
     characterExecutionGrantsPassiveDamageResistance(target, damageType) ||
     [...activeOngoingFeatureOccurrencesForCombatant(state, target)].some(
       ([key]) =>

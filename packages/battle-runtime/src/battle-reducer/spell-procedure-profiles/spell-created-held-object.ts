@@ -51,7 +51,8 @@ import type {
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
 } from "@dnd/surface/surface/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -63,12 +64,12 @@ import {
 } from "../../battle-state-execution.ts";
 import { snapshotBattle } from "../interrupt-execution.ts";
 import {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
-import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
+import { allocateBattleEffectExecutionRef } from "../../effect-execution-ref.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.ts";
@@ -105,6 +106,7 @@ type SpellCreatedHeldObjectInvocation = Extract<
 >;
 
 const SpellCreatedHeldObjectTemplateSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("spellCreatedHeldObject"),
   sourceCombatantId: CombatantId,
   objectState: Schema.Struct({ kind: Schema.Literal("held") }),
@@ -160,7 +162,7 @@ type SpellCreatedHeldObjectLightOperation =
   OngoingEffectSpellMechanics["operations"][number] & {
     readonly effect: Extract<
       OngoingEffectSpellMechanics["operations"][number]["effect"],
-      { readonly kind: "emit_light" }
+      { readonly kind: "emit_bright_and_dim_illumination" }
     >;
   };
 
@@ -242,7 +244,7 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
     (operation): operation is SpellCreatedHeldObjectLightOperation =>
       operation.trigger.kind === "passive" &&
       operation.predicate?.kind === "spell_created_held_object_active" &&
-      operation.effect.kind === "emit_light",
+      operation.effect.kind === "emit_bright_and_dim_illumination",
   );
   const attackOperations = mechanics.operations.filter(
     (operation): operation is SpellCreatedHeldObjectAttackOperation =>
@@ -266,11 +268,9 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
     attackOperations.length !== 1 ||
     heldObject?.kind !== "spell_created_held_object" ||
     !spellCreatedHeldObjectLifecycleIsSupported(heldObject) ||
-    lightOperation?.effect.kind !== "emit_light" ||
-    lightOperation.effect.brightRadiusFeet === undefined ||
-    lightOperation.effect.dimAdditionalFeet === undefined ||
+    lightOperation?.effect.kind !== "emit_bright_and_dim_illumination" ||
     attackOperation === undefined ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
@@ -318,7 +318,7 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
     expiresAt: {
       kind: "concentration",
       combatantId: input.actorId,
-      durationTicks: durationTicks.right,
+      durationTicks: durationTicks.success,
     },
   };
 }
@@ -471,7 +471,7 @@ function resolveSpellCreatedHeldObject(
     return resourced;
   }
   /* v8 ignore stop -- @preserve */
-  const allocation = allocateBattleActiveEffectRef({
+  const allocation = allocateBattleEffectExecutionRef({
     state: resourced.state,
     ownerId: input.actorId,
   });
@@ -568,7 +568,7 @@ function resolveSpellCreatedHeldObjectReEvoke(
     },
   );
   /* v8 ignore start -- @preserve -- The dispatcher rechecks the stored Bonus Action subject before invoking this synthesized profile; this fallback keeps direct callers of the action-economy operation total. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.input.state,
       "staleSubject",
@@ -577,7 +577,7 @@ function resolveSpellCreatedHeldObjectReEvoke(
   }
   /* v8 ignore stop -- @preserve */
   const reEvoked = setSpellCreatedHeldObjectState({
-    state: { ...input.input.state, currentTurnResources: spent.right },
+    state: { ...input.input.state, currentTurnResources: spent.success },
     actorId: input.actorId,
     effect: activeEffect,
     objectState: { kind: "held" },
@@ -652,7 +652,7 @@ const SpellCreatedHeldObjectAttackInvocationSchema =
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("melee_spell_attack"),
       attackBonus: AttackBonus,
-      sourceEffectRef: BattleActiveEffectExecutionRef,
+      sourceEffectRef: BattleEffectExecutionRef,
       sourceHeldObjectProcedureRef: BattleProcedureExecutionRef,
     }),
   );
@@ -665,7 +665,7 @@ const SpellCreatedHeldObjectReEvokeInvocationSchema =
       procedure: Schema.Literal("spellCreatedHeldObjectReEvoke"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
-      sourceEffectRef: BattleActiveEffectExecutionRef,
+      sourceEffectRef: BattleEffectExecutionRef,
       sourceHeldObjectProcedureRef: BattleProcedureExecutionRef,
     }),
   );

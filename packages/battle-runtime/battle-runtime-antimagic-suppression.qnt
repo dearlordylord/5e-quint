@@ -1,8 +1,9 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-magic-suppression-emanation
 
 module battleRuntimeAntimagicSuppression {
+  import battleRuntimeMagicSuppression.* from "./battle-runtime-magic-suppression"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
@@ -36,8 +37,14 @@ module battleRuntimeAntimagicSuppression {
     activeEffectKind: OngoingSpellActiveEffectKind,
     effectId: int,
   ): bool =
-    antimagicSuppressedOngoingSpellEffects(state)
-      .contains(OngoingSpellActiveEffectRef({ activeEffectKind: activeEffectKind, effectId: effectId }))
+    all {
+      not(ongoingEffectFunctions({
+        insideSuppressionArea: true,
+        exemptSource: false,
+      })),
+      antimagicSuppressedOngoingSpellEffects(state)
+        .contains(OngoingSpellActiveEffectRef({ activeEffectKind: activeEffectKind, effectId: effectId })),
+    }
 
   pure def resolveAntimagicFieldOngoingSpellSuppression(
     state: BattleState,
@@ -66,7 +73,7 @@ module battleRuntimeAntimagicSuppression {
       }, Fighter)
     }
 
-  pure def antimagicFieldOngoingSpellSuppressionActive(state: BattleState, areaId: int): bool =
+  pure def magicSuppressionOngoingSpellEffectActive(state: BattleState, areaId: int): bool =
     state.fighter.activeEffects.exists(effect => match effect {
       | AntimagicFieldOngoingSpellSuppression(data) => data.areaId == areaId
       | _ => false

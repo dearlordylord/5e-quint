@@ -12,6 +12,7 @@
 // Concentration; Rules-Glossary#Cone owns geometry that callers witness.
 
 module battleRuntimeDragonsBreath {
+  import battleRuntimeGrantedAreaSaveDamage.* from "./battle-runtime-granted-area-save-damage"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
@@ -23,19 +24,19 @@ module battleRuntimeDragonsBreath {
 
   type DragonsBreathExhaleAccumulator = { state: BattleState, resolved: bool }
 
-  pure def dragonsBreathDurationTicks(): int = 10
+  pure def dragonsBreathDurationTicks(): int = grantedAreaSaveDamageDurationTicks
 
   pure def dragonsBreathDamageTypeChoiceIsLegal(damageType: DamageType): bool =
     Set(Acid, Cold, Fire, Lightning, Poison).contains(damageType)
 
   pure def dragonsBreathDamageDice(slotLevel: int): int =
-    3 + (slotLevel - 2)
+    grantedAreaSaveDamageDice(slotLevel, 2, 3)
 
   pure def dragonsBreathDamageRollAccepted(damageRoll: int, damageDice: int): bool =
-    damageRoll >= damageDice and damageRoll <= damageDice * 6
+    grantedAreaSaveDamageRollAccepted(damageRoll, damageDice)
 
   pure def dragonsBreathDamageAfterSave(damageRoll: int, savingThrowSucceeded: bool): int =
-    if (savingThrowSucceeded) damageRoll / 2 else damageRoll
+    grantedAreaDamageAfterSave(damageRoll, savingThrowSucceeded)
 
   pure def dragonsBreathInitialEffect(source: Actor, damageType: DamageType, slotLevel: int, spellSaveDc: int): ActiveEffect =
     DragonsBreathEffect({

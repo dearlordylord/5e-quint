@@ -2,7 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy spell.invocation-glyph-stored-summon-object-placement
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
 
@@ -16,19 +16,19 @@ import {
   type BattleObjectContactTargetsHole,
   type BattleExecutableSpellInvocation,
   type BattleHoleId,
-  type BattleCommandOptionChoiceHole,
-  type BattleDancingLightsPlacementHole,
+  type BattleCompelledBehaviorOptionChoiceHole,
+  type BattleMovableLightPlacementHole,
   type BattleSelfTransformationModeChoiceHole,
   type BattleSpellTargetAllocation,
-  type BattleSpiritualWeaponForcePosition,
+  type BattleSpatialMeleeSpellAttackProxyPosition,
   type BattleSpellAreaChoiceHole,
-  type BattleSpiritualWeaponForcePositionHole,
+  type BattleSpatialMeleeSpellAttackProxyPositionHole,
   type BattleSpellTargetAllocationHole,
   type BattleSpellTargetListHole,
   type BattleSpellTargetListSpatialFact,
   type BattleState,
   type BattleTeleportDestinationHole,
-  type BattleMagicWeaponTargetItemHole,
+  type BattleWeaponEnhancementTargetItemHole,
   type BattleObjectTargetChoiceHole,
   type BattleCreatureState,
   type BattleTargetChoiceHole,
@@ -40,7 +40,7 @@ import {
   ATTACK_TARGET_HOLE_INSTANCE,
 } from "./battle-runtime-protocol.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
-import { COMMAND_OPTIONS } from "./domain-constants.ts";
+import { COMPELLED_BEHAVIOR_OPTIONS } from "./domain-constants.ts";
 import {
   distantSpellRangeModifierForApplications,
   type SpellMetamagicApplicationFact,
@@ -67,7 +67,7 @@ import {
 import {
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
-} from "./antimagic-field-magical-effect-interdiction.ts";
+} from "./magic-suppression-magical-effect-interdiction.ts";
 
 type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
 
@@ -107,13 +107,13 @@ type SingleObjectSpellInvocation =
 
 type MechanicalTargetListSpellInvocation =
   import("../battle-state-execution.ts").TargetListSpellInvocationOf<RuntimeSpellProcedure>;
-type MagicWeaponEnhancementSpellExecution = Extract<
+type WeaponAttackDamageEnhancementSpellExecution = Extract<
   RuntimeSpellProcedure,
-  { readonly procedure: "magicWeaponEnhancement" }
+  { readonly procedure: "weaponAttackDamageEnhancement" }
 >;
 
 type SpellTargetLegalityOptions = {
-  readonly spiritualWeaponForcePositionId?: BattleTablePositionId;
+  readonly spatialMeleeSpellAttackProxyPositionId?: BattleTablePositionId;
 };
 export type ObjectLightTargetFact = Extract<
   BattleTargetSpatialFact,
@@ -159,7 +159,7 @@ export function spellTargetHole(
   const choices = [...state.combatants.keys()].filter(
     (id) =>
       spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation) &&
-      spiritualWeaponRepeatTargetingAllows(invocation, id),
+      spatialMeleeSpellAttackProxyRepeatTargetingAllows(invocation, id),
   );
   return {
     kind: "targetChoice",
@@ -168,9 +168,8 @@ export function spellTargetHole(
     label: `Spell target`,
     procedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
-    ...(invocation.procedure === "spiritualWeaponAttackProxy" ||
-    invocation.procedure === "spiritualWeaponRepeatAttack" ||
-    invocation.procedure === "featherFallMitigation"
+    ...(invocation.procedure === "spatialMeleeSpellAttackProxy" ||
+    invocation.procedure === "fallingCreatureMitigationReaction"
       ? {}
       : ordinarySpellTargetSpatialFactRequest(actorId, invocation)),
     ...(spellTargetRequiresAttackRollRelationshipFact(invocation) &&
@@ -198,8 +197,7 @@ export function spellTargetRequiresAttackRollRelationshipFact(
     invocation.procedure === "spellAttackSequence" ||
     invocation.procedure === "heldLightHurl" ||
     invocation.procedure === "spellCreatedHeldObjectAttack" ||
-    invocation.procedure === "spiritualWeaponAttackProxy" ||
-    invocation.procedure === "spiritualWeaponRepeatAttack" ||
+    invocation.procedure === "spatialMeleeSpellAttackProxy" ||
     invocation.procedure === "weaponAttackOverride" ||
     invocation.procedure === "spellHostedWeaponAttack" ||
     invocation.procedure === "attackBurstSaveDamage" ||
@@ -207,40 +205,33 @@ export function spellTargetRequiresAttackRollRelationshipFact(
   );
 }
 
-function spiritualWeaponRepeatTargetingAllows(
+function spatialMeleeSpellAttackProxyRepeatTargetingAllows(
   invocation: RuntimeSpellProcedure,
   targetId: CombatantId,
 ): boolean {
   return (
-    invocation.procedure !== "spiritualWeaponRepeatAttack" ||
-    invocation.activeEffect.repeatTargeting.kind === "unrestricted" ||
-    invocation.activeEffect.repeatTargeting.combatantId === targetId
+    invocation.procedure !== "spatialMeleeSpellAttackProxy" ||
+    invocation.operation !== "repositionAndAttack" ||
+    invocation.repeatTargeting.kind === "unrestricted" ||
+    invocation.repeatTargeting.combatantId === targetId
   );
 }
 
-export function spiritualWeaponForcePositionHole(
-  invocation: BattleExecutableSpellInvocation<
-    Extract<
-      RuntimeSpellProcedure,
-      {
-        readonly procedure:
-          | "spiritualWeaponAttackProxy"
-          | "spiritualWeaponRepeatAttack";
-      }
-    >
+export function spatialMeleeSpellAttackProxyPositionHole(
+  invocation: Extract<
+    BattleExecutableSpellInvocation,
+    { readonly procedure: "spatialMeleeSpellAttackProxy" }
   >,
-): BattleSpiritualWeaponForcePositionHole {
+): BattleSpatialMeleeSpellAttackProxyPositionHole {
   const mode =
-    invocation.procedure === "spiritualWeaponAttackProxy"
-      ? "cast"
-      : "reposition";
+    invocation.operation === "createAndAttack" ? "cast" : "reposition";
   const maxDistanceFeet =
-    invocation.procedure === "spiritualWeaponAttackProxy"
+    invocation.operation === "createAndAttack"
       ? invocation.rangeFeet
       : invocation.repeatMoveMaxFeet;
-  const key = `battle:spiritual-weapon-force-position:${invocation.procedure}:${mode}`;
+  const key = `battle:spatial-melee-spell-attack-proxy-force-position:${invocation.procedure}:${mode}`;
   return {
-    kind: "spiritualWeaponForcePosition",
+    kind: "spatialMeleeSpellAttackProxyPosition",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: mode === "cast" ? `Spell force position` : `Spell force reposition`,
@@ -251,39 +242,35 @@ export function spiritualWeaponForcePositionHole(
   };
 }
 
-export function spiritualWeaponForcePositionInvalidReason(
-  forcePosition: BattleSpiritualWeaponForcePosition,
+export function spatialMeleeSpellAttackProxyPositionInvalidReason(
+  forcePosition: BattleSpatialMeleeSpellAttackProxyPosition,
   invocation: Extract<
     RuntimeSpellProcedure,
-    {
-      readonly procedure:
-        | "spiritualWeaponAttackProxy"
-        | "spiritualWeaponRepeatAttack";
-    }
+    { readonly procedure: "spatialMeleeSpellAttackProxy" }
   >,
 ): string | null {
-  if (invocation.procedure === "spiritualWeaponAttackProxy") {
+  if (invocation.operation === "createAndAttack") {
     if (forcePosition.mode !== "cast") {
-      return "Spiritual Weapon cast requires a cast force-position fill.";
+      return "spatial melee spell-attack proxy cast requires a cast force-position fill.";
     }
     if (
       !Number.isInteger(forcePosition.distanceFromCasterFeet) ||
       forcePosition.distanceFromCasterFeet < 0 ||
       forcePosition.distanceFromCasterFeet > invocation.rangeFeet
     ) {
-      return "Spiritual Weapon force placement must be within the spell range.";
+      return "spatial melee spell-attack proxy force placement must be within the spell range.";
     }
     return null;
   }
   if (forcePosition.mode !== "reposition") {
-    return "Spiritual Weapon repeat attack requires a reposition fill.";
+    return "spatial melee spell-attack proxy repeat attack requires a reposition fill.";
   }
   if (
     !Number.isInteger(forcePosition.moveDistanceFeet) ||
     forcePosition.moveDistanceFeet < 0 ||
     forcePosition.moveDistanceFeet > invocation.repeatMoveMaxFeet
   ) {
-    return "Spiritual Weapon force movement exceeds the spell's maximum.";
+    return "spatial melee spell-attack proxy force movement exceeds the spell's maximum.";
   }
   return null;
 }
@@ -407,12 +394,12 @@ export function spellObjectTargetHoleId(
   return holeId(`battle:spell:object-target:${invocation.procedure}`);
 }
 
-export function magicWeaponTargetItemHole(
-  invocation: BattleExecutableSpellInvocation<MagicWeaponEnhancementSpellExecution>,
-): BattleMagicWeaponTargetItemHole {
-  const holeKey = `battle:spell:magic-weapon-target-item:${invocation.procedure}`;
+export function weaponAttackDamageEnhancementTargetItemHole(
+  invocation: BattleExecutableSpellInvocation<WeaponAttackDamageEnhancementSpellExecution>,
+): BattleWeaponEnhancementTargetItemHole {
+  const holeKey = `battle:spell:weapon-attack-damage-enhancement-target-item:${invocation.procedure}`;
   return {
-    kind: "magicWeaponTargetItem",
+    kind: "weaponAttackDamageEnhancementTargetItem",
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `Spell target item`,
@@ -421,11 +408,11 @@ export function magicWeaponTargetItemHole(
   };
 }
 
-export function magicWeaponTargetItemHoleId(
-  invocation: MagicWeaponEnhancementSpellExecution,
+export function weaponAttackDamageEnhancementTargetItemHoleId(
+  invocation: WeaponAttackDamageEnhancementSpellExecution,
 ): BattleHoleId {
   return holeId(
-    `battle:spell:magic-weapon-target-item:${invocation.procedure}`,
+    `battle:spell:weapon-attack-damage-enhancement-target-item:${invocation.procedure}`,
   );
 }
 
@@ -500,26 +487,20 @@ export function spellObjectContactTargetsHoleId(input: {
   );
 }
 
-export function spellDancingLightsPlacementHole(
+export function spellMovableLightPlacementHole(
   invocation: BattleExecutableSpellInvocation<
     Extract<
       RuntimeSpellProcedure,
-      {
-        readonly procedure:
-          | "dancingLightsSeparateCast"
-          | "dancingLightsCombinedCast"
-          | "dancingLightsReposition";
-      }
+      { readonly procedure: "movableLightManifestation" }
     >
   >,
-  form: BattleDancingLightsPlacementHole["form"],
-  activeLightIds: readonly BattleDancingLightsPlacementHole["activeLightIds"][number][],
-): BattleDancingLightsPlacementHole {
-  const mode =
-    invocation.procedure === "dancingLightsReposition" ? "reposition" : "cast";
-  const holeKey = `battle:spell:dancing-lights-placement:${invocation.procedure}:${mode}:${form}`;
+  form: BattleMovableLightPlacementHole["form"],
+  activeLightIds: readonly BattleMovableLightPlacementHole["activeLightIds"][number][],
+): BattleMovableLightPlacementHole {
+  const mode = invocation.operation === "reposition" ? "reposition" : "cast";
+  const holeKey = `battle:spell:movable-light-placement:${invocation.procedure}:${invocation.operation}:${form}`;
   return {
-    kind: "dancingLightsPlacement",
+    kind: "movableLightPlacement",
     holeId: holeId(holeKey),
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `Spell placement`,
@@ -534,22 +515,15 @@ export function spellDancingLightsPlacementHole(
   };
 }
 
-export function spellDancingLightsPlacementHoleId(
+export function spellMovableLightPlacementHoleId(
   invocation: Extract<
     RuntimeSpellProcedure,
-    {
-      readonly procedure:
-        | "dancingLightsSeparateCast"
-        | "dancingLightsCombinedCast"
-        | "dancingLightsReposition";
-    }
+    { readonly procedure: "movableLightManifestation" }
   >,
-  form: BattleDancingLightsPlacementHole["form"],
+  form: BattleMovableLightPlacementHole["form"],
 ): BattleHoleId {
-  const mode =
-    invocation.procedure === "dancingLightsReposition" ? "reposition" : "cast";
   return holeId(
-    `battle:spell:dancing-lights-placement:${invocation.procedure}:${mode}:${form}`,
+    `battle:spell:movable-light-placement:${invocation.procedure}:${invocation.operation}:${form}`,
   );
 }
 
@@ -691,26 +665,34 @@ function targetListHoleMaxTargets(
     : choiceCount;
 }
 
-export function commandOptionChoiceHole(
+export function compelledBehaviorOptionChoiceHole(
   invocation: BattleExecutableSpellInvocation<
-    Extract<RuntimeSpellProcedure, { readonly procedure: "command" }>
+    Extract<
+      RuntimeSpellProcedure,
+      { readonly procedure: "compelledNextTurnBehavior" }
+    >
   >,
-): BattleCommandOptionChoiceHole {
-  const holeKey = `battle:spell:command-option:${invocation.procedure}`;
+): BattleCompelledBehaviorOptionChoiceHole {
+  const holeKey = `battle:spell:compelled-behavior-option:${invocation.procedure}`;
   return {
-    kind: "commandOptionChoice",
-    holeId: commandOptionChoiceHoleId(invocation),
+    kind: "compelledBehaviorOptionChoice",
+    holeId: compelledBehaviorOptionChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(holeKey),
-    label: `Spell command option`,
+    label: `Compelled-behavior option`,
     sourceProcedureRef: invocation.sourceProcedureRef,
-    choices: COMMAND_OPTIONS,
+    choices: COMPELLED_BEHAVIOR_OPTIONS,
   };
 }
 
-export function commandOptionChoiceHoleId(
-  invocation: Extract<RuntimeSpellProcedure, { readonly procedure: "command" }>,
+export function compelledBehaviorOptionChoiceHoleId(
+  invocation: Extract<
+    RuntimeSpellProcedure,
+    { readonly procedure: "compelledNextTurnBehavior" }
+  >,
 ): BattleHoleId {
-  return holeId(`battle:spell:command-option:${invocation.procedure}`);
+  return holeId(
+    `battle:spell:compelled-behavior-option:${invocation.procedure}`,
+  );
 }
 
 export function selfTransformationModeChoiceHole(
@@ -749,16 +731,17 @@ export function spellAreaChoiceHole(
       RuntimeSpellProcedure,
       {
         readonly procedure:
-          | "fogCloudObscurement"
+          | "persistentAreaTrait"
           | "magicalDarknessPointOrigin"
-          | "antimagicFieldOngoingSpellSuppression"
-          | "flamingSphere"
-          | "spikeGrowthMovementHazard"
-          | "moonbeam"
-          | "sleetStormAreaHazard"
-          | "insectPlagueAreaHazard"
-          | "cloudkillAreaHazard"
-          | "webRestraintHazard";
+          | "magicSuppressionEmanation"
+          | "magicSuppressionOngoingSpellEffect"
+          | "persistentAreaSaveDamage"
+          | "areaMovementDistanceDamage"
+          | "persistentAreaSaveDamage"
+          | "persistentAreaSaveComposite"
+          | "persistentAreaSaveDamage"
+          | "persistentAreaSaveDamage"
+          | "persistentAreaSaveConditionEscape";
       }
     >
   >,
@@ -779,16 +762,17 @@ export function spellAreaChoiceHoleId(
     RuntimeSpellProcedure,
     {
       readonly procedure:
-        | "fogCloudObscurement"
+        | "persistentAreaTrait"
         | "magicalDarknessPointOrigin"
-        | "antimagicFieldOngoingSpellSuppression"
-        | "flamingSphere"
-        | "spikeGrowthMovementHazard"
-        | "moonbeam"
-        | "sleetStormAreaHazard"
-        | "insectPlagueAreaHazard"
-        | "cloudkillAreaHazard"
-        | "webRestraintHazard";
+        | "magicSuppressionEmanation"
+        | "magicSuppressionOngoingSpellEffect"
+        | "persistentAreaSaveDamage"
+        | "areaMovementDistanceDamage"
+        | "persistentAreaSaveDamage"
+        | "persistentAreaSaveComposite"
+        | "persistentAreaSaveDamage"
+        | "persistentAreaSaveDamage"
+        | "persistentAreaSaveConditionEscape";
     }
   >,
 ): BattleHoleId {
@@ -886,13 +870,10 @@ export function spellTargetSpatialFactMatches(
   options: SpellTargetLegalityOptions = {},
 ): boolean {
   const sourceProcedureRef = invocation.sourceProcedureRef;
-  if (
-    invocation.procedure === "spiritualWeaponAttackProxy" ||
-    invocation.procedure === "spiritualWeaponRepeatAttack"
-  ) {
-    const forcePositionId = options.spiritualWeaponForcePositionId;
+  if (invocation.procedure === "spatialMeleeSpellAttackProxy") {
+    const forcePositionId = options.spatialMeleeSpellAttackProxyPositionId;
     return (
-      fact.kind === "spiritualWeaponTargetWithinForceReach" &&
+      fact.kind === "spatialMeleeSpellAttackProxyTargetWithinReach" &&
       fact.casterId === actorId &&
       fact.targetId === targetId &&
       fact.sourceProcedureRef === sourceProcedureRef &&
@@ -901,9 +882,9 @@ export function spellTargetSpatialFactMatches(
       fact.reachFeet === invocation.forceReachFeet
     );
   }
-  if (invocation.procedure === "featherFallMitigation") {
+  if (invocation.procedure === "fallingCreatureMitigationReaction") {
     return (
-      fact.kind === "featherFallTargetFallingWithinRange" &&
+      fact.kind === "fallingCreatureTargetWithinRange" &&
       fact.casterId === actorId &&
       fact.targetId === targetId &&
       fact.sourceProcedureRef === sourceProcedureRef &&
@@ -1086,7 +1067,10 @@ export function spellTargetHasNonSpatialPrerequisites(
   ) {
     return false;
   }
-  if (invocation.procedure === "wardingBond" && targetId === actorId) {
+  if (
+    invocation.procedure === "linkedDefenseResistanceDamageShare" &&
+    targetId === actorId
+  ) {
     return false;
   }
   if (invocation.procedure === "makeStable") {
@@ -1354,8 +1338,8 @@ export function spellInvocationRequiresKnownWillingTarget(
     invocation.procedure === "creatureTypeProtection" ||
     invocation.procedure ===
       "conditionImmunityAndTurnStartTemporaryHitPoints" ||
-    invocation.procedure === "wardingBond" ||
-    invocation.procedure === "dragonsBreathInitial" ||
+    invocation.procedure === "linkedDefenseResistanceDamageShare" ||
+    invocation.procedure === "grantedAreaSaveDamageAction" ||
     invocationHasWillingTargetList(invocation)
   );
 }

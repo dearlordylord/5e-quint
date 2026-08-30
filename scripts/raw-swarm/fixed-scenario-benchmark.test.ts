@@ -10,7 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { capabilityContextForRole } from "./capability-projection.ts";
@@ -318,7 +318,7 @@ describe("fixed scenario benchmark boundary", () => {
           scratch,
           namedInputs: [contextPath],
         }),
-      ).toEqual(Either.right(undefined));
+      ).toEqual(Result.succeed(undefined));
     } finally {
       rmSync(scratch, { recursive: true });
     }
@@ -353,7 +353,7 @@ describe("fixed scenario benchmark boundary", () => {
           namedInputs: [contextPath],
         }),
       ).toEqual(
-        Either.left(
+        Result.fail(
           "Preparation model invocation failed: Synthetic service capacity is exhausted.",
         ),
       );
@@ -386,7 +386,7 @@ describe("fixed scenario benchmark boundary", () => {
       );
 
       expect(
-        Either.isLeft(
+        Result.isFailure(
           validateBenchmarkPreparationEventStream({
             eventPath,
             scratch,
@@ -429,7 +429,7 @@ describe("fixed scenario benchmark boundary", () => {
       writeFileSync(contextPath, "synthetic context\n");
       writeFileSync(eventPath, JSON.stringify(event) + "\n");
       expect(
-        Either.isLeft(
+        Result.isFailure(
           validateBenchmarkPreparationEventStream({
             eventPath,
             scratch,
@@ -533,7 +533,7 @@ describe("fixed scenario benchmark boundary", () => {
           scratch,
           namedInputs: [contextPath],
         });
-        expect(Either.isLeft(validation)).toBe(true);
+        expect(Result.isFailure(validation)).toBe(true);
       } finally {
         rmSync(scratch, { recursive: true });
       }
@@ -606,7 +606,7 @@ describe("fixed scenario benchmark boundary", () => {
           }) + "\n",
         );
         expect(
-          Either.isLeft(
+          Result.isFailure(
             validateBenchmarkPreparationEventStream({
               eventPath,
               scratch,
@@ -638,7 +638,7 @@ describe("fixed scenario benchmark boundary", () => {
       writeFileSync(contextPath, "synthetic context\n");
       writeFileSync(eventPath, JSON.stringify(event) + "\n");
       expect(
-        Either.isLeft(
+        Result.isFailure(
           validateBenchmarkPreparationEventStream({
             eventPath,
             scratch,
@@ -653,13 +653,13 @@ describe("fixed scenario benchmark boundary", () => {
 
   test("parses the CLI profile as a closed domain value", () => {
     expect(parseFixedBenchmarkProfile("documentDeclarationSet")).toEqual(
-      Either.right("documentDeclarationSet"),
+      Result.succeed("documentDeclarationSet"),
     );
     expect(parseFixedBenchmarkProfile("boundedCapabilityProjection")).toEqual(
-      Either.right("boundedCapabilityProjection"),
+      Result.succeed("boundedCapabilityProjection"),
     );
-    expect(Either.isLeft(parseFixedBenchmarkProfile("node"))).toBe(true);
-    expect(Either.isLeft(parseFixedBenchmarkProfile([]))).toBe(true);
+    expect(Result.isFailure(parseFixedBenchmarkProfile("node"))).toBe(true);
+    expect(Result.isFailure(parseFixedBenchmarkProfile([]))).toBe(true);
   });
 
   test("rejects compare benchmark-id traversal before constructing measurement paths", () => {
@@ -687,13 +687,13 @@ describe("fixed scenario benchmark boundary", () => {
     const bundle = fixedScenarioCanonicalBundle();
     const executionId = decodeExecutionId("synthetic-execution");
     const evidenceSetId = decodeEvidenceSetId("synthetic-evidence");
-    if (Either.isLeft(executionId) || Either.isLeft(evidenceSetId)) {
+    if (Result.isFailure(executionId) || Result.isFailure(evidenceSetId)) {
       throw new Error("Synthetic benchmark identities must decode.");
     }
     const commands = benchmarkCommands({
       benchmarkId: paths.benchmarkId,
-      executionId: executionId.right,
-      evidenceSetId: evidenceSetId.right,
+      executionId: executionId.success,
+      evidenceSetId: evidenceSetId.success,
       profile: "boundedCapabilityProjection",
       implementationGitSha: Schema.decodeUnknownSync(GitShaSchema)(
         "a".repeat(40),
@@ -756,7 +756,7 @@ describe("fixed scenario benchmark boundary", () => {
         scratch,
         namedInputs: [contextPath],
       });
-      expect(Either.isLeft(validation)).toBe(true);
+      expect(Result.isFailure(validation)).toBe(true);
 
       writeFileSync(
         eventPath,
@@ -766,7 +766,7 @@ describe("fixed scenario benchmark boundary", () => {
         }) + "\n",
       );
       expect(
-        Either.isLeft(
+        Result.isFailure(
           validateBenchmarkPreparationEventStream({
             eventPath,
             scratch,
@@ -823,7 +823,7 @@ describe("fixed scenario benchmark boundary", () => {
     );
 
     expect(
-      Either.isRight(
+      Result.isSuccess(
         validateBenchmarkReviewAuthority({
           profile: "documentDeclarationSet",
           reviewStage: "final",
@@ -834,7 +834,7 @@ describe("fixed scenario benchmark boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         validateBenchmarkReviewAuthority({
           profile: "documentDeclarationSet",
           reviewStage: "final",
@@ -845,7 +845,7 @@ describe("fixed scenario benchmark boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         validateBenchmarkReviewAuthority({
           profile: "boundedCapabilityProjection",
           reviewStage: "final",
@@ -856,7 +856,7 @@ describe("fixed scenario benchmark boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         validateBenchmarkReviewAuthority({
           profile: "boundedCapabilityProjection",
           reviewStage: "final",
@@ -880,9 +880,9 @@ describe("fixed scenario benchmark boundary", () => {
       outputJsonSchema: historicalSchema,
     });
 
-    expect(Either.isLeft(mismatch)).toBe(true);
-    if (Either.isRight(mismatch)) return;
-    expect(mismatch.left).toContain("schema version 2");
+    expect(Result.isFailure(mismatch)).toBe(true);
+    if (Result.isSuccess(mismatch)) return;
+    expect(mismatch.failure).toContain("schema version 2");
   });
 
   test.each([
@@ -959,9 +959,9 @@ describe("fixed scenario benchmark boundary", () => {
         ),
       });
 
-      expect(Either.isLeft(rejected)).toBe(true);
-      if (Either.isRight(rejected)) return;
-      expect(rejected.left).toContain(message);
+      expect(Result.isFailure(rejected)).toBe(true);
+      if (Result.isSuccess(rejected)) return;
+      expect(rejected.failure).toContain(message);
     },
   );
 
@@ -977,9 +977,9 @@ describe("fixed scenario benchmark boundary", () => {
       outputJsonSchema: currentSchema,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toContain("only its final composite review");
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toContain("only its final composite review");
   });
 
   test("awaits the canonical zero-sheet character evaluation", async () => {

@@ -3,9 +3,9 @@
 import { movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
-import { validateGustOfWindLineAreaPushFacts } from "./battle-reducer/gust-of-wind-push-facts.ts";
+import { validateDirectionalPersistentAreaAreaPushFacts } from "./battle-reducer/directional-area-push-facts.ts";
 import type {
-  BattleGustOfWindLineCreaturePushOutcome,
+  BattleDirectionalPersistentAreaCreaturePushOutcome,
   BattleSpellAreaChoice,
 } from "./battle-state-execution.ts";
 import {
@@ -32,7 +32,7 @@ describe("Gust of Wind Line push facts", () => {
     {
       name: "for another spell area",
       area: {
-        kind: "greaseGroundArea",
+        kind: "persistentAreaSaveConditionArea",
         areaId: greaseAreaId,
         originAnchorId: spellCasterId,
         affectedTargetIds: [spellTargetId],
@@ -42,30 +42,32 @@ describe("Gust of Wind Line push facts", () => {
     "requires caller-supplied Line facts when the area is $name",
     ({ area }) => {
       expect(
-        validateGustOfWindLineAreaPushFacts({
+        validateDirectionalPersistentAreaAreaPushFacts({
           area,
           failedTargetIds: [spellTargetId],
           pushDistanceFeet,
         }),
       ).toBe(
-        "Gust of Wind requires caller-supplied Line area, direction, and failed-save push facts.",
+        "directional persistent area requires caller-supplied Line area, direction, and failed-save push facts.",
       );
     },
   );
 
   test("rejects a push for a creature that did not fail its save", () => {
     expect(
-      validateGustOfWindLineAreaPushFacts({
+      validateDirectionalPersistentAreaAreaPushFacts({
         area: gustOfWindArea([pushedCreature(gustOfWindSecondTargetId)]),
         failedTargetIds: [spellTargetId],
         pushDistanceFeet,
       }),
-    ).toBe("Gust of Wind push facts must match failed-save targets.");
+    ).toBe(
+      "directional persistent area push facts must match failed-save targets.",
+    );
   });
 
   test("rejects duplicate push facts for one creature", () => {
     expect(
-      validateGustOfWindLineAreaPushFacts({
+      validateDirectionalPersistentAreaAreaPushFacts({
         area: gustOfWindArea([
           pushedCreature(spellTargetId),
           pushedCreature(spellTargetId),
@@ -73,22 +75,26 @@ describe("Gust of Wind Line push facts", () => {
         failedTargetIds: [spellTargetId],
         pushDistanceFeet,
       }),
-    ).toBe("Gust of Wind push facts must not duplicate targets.");
+    ).toBe(
+      "directional persistent area push facts must not duplicate targets.",
+    );
   });
 
   test("requires one push disposition for every failed save", () => {
     expect(
-      validateGustOfWindLineAreaPushFacts({
+      validateDirectionalPersistentAreaAreaPushFacts({
         area: gustOfWindArea([pushedCreature(spellTargetId)]),
         failedTargetIds: [spellTargetId, gustOfWindSecondTargetId],
         pushDistanceFeet,
       }),
-    ).toBe("Gust of Wind push facts must cover every failed-save target.");
+    ).toBe(
+      "directional persistent area push facts must cover every failed-save target.",
+    );
   });
 
   test("rejects a disposition with the wrong push distance", () => {
     expect(
-      validateGustOfWindLineAreaPushFacts({
+      validateDirectionalPersistentAreaAreaPushFacts({
         area: gustOfWindArea([
           {
             ...pushedCreature(spellTargetId),
@@ -102,13 +108,13 @@ describe("Gust of Wind Line push facts", () => {
         pushDistanceFeet,
       }),
     ).toBe(
-      "Gust of Wind push disposition must use the spell's 15-foot distance.",
+      "directional persistent area push disposition must use the spell's 15-foot distance.",
     );
   });
 
   test("accepts both a supplied destination and a blocked push", () => {
     expect(
-      validateGustOfWindLineAreaPushFacts({
+      validateDirectionalPersistentAreaAreaPushFacts({
         area: gustOfWindArea([
           pushedCreature(spellTargetId),
           {
@@ -129,10 +135,13 @@ describe("Gust of Wind Line push facts", () => {
 });
 
 function gustOfWindArea(
-  creaturePushes: readonly BattleGustOfWindLineCreaturePushOutcome[],
-): Extract<BattleSpellAreaChoice, { readonly kind: "gustOfWindLineArea" }> {
+  creaturePushes: readonly BattleDirectionalPersistentAreaCreaturePushOutcome[],
+): Extract<
+  BattleSpellAreaChoice,
+  { readonly kind: "directionalPersistentAreaArea" }
+> {
   return {
-    kind: "gustOfWindLineArea",
+    kind: "directionalPersistentAreaArea",
     areaId: gustOfWindAreaId,
     directionId: gustOfWindEastDirectionId,
     originAnchorId: spellCasterId,
@@ -142,8 +151,8 @@ function gustOfWindArea(
 }
 
 function pushedCreature(
-  targetId: BattleGustOfWindLineCreaturePushOutcome["targetId"],
-): BattleGustOfWindLineCreaturePushOutcome {
+  targetId: BattleDirectionalPersistentAreaCreaturePushOutcome["targetId"],
+): BattleDirectionalPersistentAreaCreaturePushOutcome {
   return {
     targetId,
     disposition: {

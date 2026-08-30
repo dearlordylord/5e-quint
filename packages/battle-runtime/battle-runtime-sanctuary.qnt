@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-sanctuary-targeting-interdiction
 
 module battleRuntimeSanctuary {
+  import battleRuntimeTargetingSaveInterdiction.* from "./battle-runtime-targeting-save-interdiction"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeTargetActionEffectEarlyEnd.* from "./battle-runtime-target-action-effect-early-end"
@@ -34,20 +35,20 @@ module battleRuntimeSanctuary {
   pure def wardTargetingInterdictionApplies(
     trigger: SanctuaryTargetingTrigger,
   ): bool =
-    match trigger {
-      | SanctuaryAttackRollTargeting => true
-      | SanctuaryDamagingSpellTargeting => true
-      | SanctuaryAreaOfEffectTargeting => false
-    }
+    targetingSaveInterdictionApplies(match trigger {
+      | SanctuaryAttackRollTargeting => TargetingSaveInterdictionAttackRoll
+      | SanctuaryDamagingSpellTargeting => TargetingSaveInterdictionDamagingSpell
+      | SanctuaryAreaOfEffectTargeting => TargetingSaveInterdictionAreaOfEffect
+    })
 
   pure def wardInterdictionLosesAttackOrSpell(
     outcome: SanctuaryInterdictionOutcome,
   ): bool =
-    match outcome {
-      | SanctuarySaveSucceeded => false
-      | SanctuaryLoseAttackOrSpell => true
-      | SanctuaryChooseNewTarget(_) => false
-    }
+    targetingSaveInterdictionLosesAttackOrSpell(match outcome {
+      | SanctuarySaveSucceeded => TargetingSaveInterdictionSaveSucceeded
+      | SanctuaryLoseAttackOrSpell => TargetingSaveInterdictionLoseAttackOrSpell
+      | SanctuaryChooseNewTarget(_) => TargetingSaveInterdictionChooseNewTarget
+    })
 
   pure def wardInterdictionTarget(
     warded: Actor,

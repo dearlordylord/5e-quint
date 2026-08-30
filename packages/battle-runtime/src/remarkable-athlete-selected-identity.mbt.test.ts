@@ -1,3 +1,4 @@
+import { Result } from "effect";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES fighter_remarkable_athlete
 // UNIT-IDENTITY-REPLAY: L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES fighter_remarkable_athlete doProjectRemarkableAthleteRollModes
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT fighter_remarkable_athlete
@@ -12,7 +13,6 @@ import {
   battleId,
   battleUnitRefWithSupportProfiles,
   combatantId,
-  Either,
   fighterRemarkableAthleteUnitId,
   attackRollFill,
   attackTargetFill,
@@ -123,8 +123,8 @@ function remarkableAthleteBattle(): BattleState {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const state = startBattle({
     battleId: battleId("remarkable-athlete-selected-identity"),
@@ -133,7 +133,7 @@ function remarkableAthleteBattle(): BattleState {
         combatantId: remarkableAthleteActorId,
         displayName: "Remarkable Athlete MBT Actor",
         initiative: 18,
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
         classLevels: [{ className: "fighter", level: 3 }],
         unitFeatures: [
           characterBattleFeatureInitForTest(unit, [
@@ -154,10 +154,10 @@ function remarkableAthleteBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(state)) {
-    throw new Error(battleStateInitIssueMessage(state.left));
+  if (Result.isFailure(state)) {
+    throw new Error(battleStateInitIssueMessage(state.failure));
   }
-  return state.right.state;
+  return state.success.state;
 }
 
 function projectRemarkableAthleteRollModes(

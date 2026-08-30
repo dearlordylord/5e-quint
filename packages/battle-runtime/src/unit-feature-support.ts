@@ -3,8 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 import { optionalProperty } from "./optional-property.ts";
-import { Match } from "effect";
-import * as Either from "effect/Either";
+import { Match, Result } from "effect";
 import {
   elapsedTimeTicksFromTimeSpanDuration,
   type ElapsedTimeTicks,
@@ -1164,8 +1163,8 @@ export type BattleUnitSupportSource =
 
 function battleUnitSupportProfileIssue(
   message: string,
-): Either.Either<never, BattleUnitSupportProfileIssue> {
-  return Either.left({ tag: "battleUnitSupportProfileIssue", message });
+): Result.Result<never, BattleUnitSupportProfileIssue> {
+  return Result.fail({ tag: "battleUnitSupportProfileIssue", message });
 }
 
 type BattleUnitSupportProfilesInput = {
@@ -1188,7 +1187,7 @@ type AdmittedBattleUnitSupportProfiles = {
 
 export function battleUnitSupportProfilesForUnit(
   input: BattleUnitSupportProfilesInput,
-): Either.Either<
+): Result.Result<
   readonly BattleUnitSupportProfile[],
   BattleUnitSupportProfileIssue
 > {
@@ -1197,14 +1196,14 @@ export function battleUnitSupportProfilesForUnit(
     ...supportInput,
     huntersPreyAdmission: huntersPreyAdmissionForUnit(unit),
   });
-  return Either.isLeft(result)
-    ? Either.left(result.left)
-    : Either.right(result.right.supportProfiles);
+  return Result.isFailure(result)
+    ? Result.fail(result.failure)
+    : Result.succeed(result.success.supportProfiles);
 }
 
 function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   inputWithHuntersPreyAdmission: BattleUnitSupportProfilesInputWithHuntersPreyAdmission,
-): Either.Either<
+): Result.Result<
   AdmittedBattleUnitSupportProfiles,
   BattleUnitSupportProfileIssue
 > {
@@ -1243,7 +1242,7 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   }
 
   if (isClassicNonSrdMechanicsUnit(input.unit)) {
-    return Either.right({
+    return Result.succeed({
       supportProfiles,
       huntersPreyAdmission: { tag: "notHuntersPrey", unit: input.unit },
     });
@@ -1926,7 +1925,7 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     supportProfiles.push(weaponMasterySlowSupport);
   }
 
-  return Either.right({ supportProfiles, huntersPreyAdmission });
+  return Result.succeed({ supportProfiles, huntersPreyAdmission });
 }
 
 export function battleUnitRefWithSupportProfiles(input: {
@@ -1937,7 +1936,7 @@ export function battleUnitRefWithSupportProfiles(input: {
   readonly unit: BattleUnitSupportSource;
   readonly classLevels?: readonly CharacterBattleClassLevelInit[];
   readonly sourceFacts?: BattleUnitSupportProfileSourceFacts;
-}): Either.Either<BattleUnitRef, BattleUnitSupportProfileIssue> {
+}): Result.Result<BattleUnitRef, BattleUnitSupportProfileIssue> {
   if (input.unitRef.unitId !== input.unit.id) {
     return battleUnitSupportProfileIssue(
       `Battle Unit ref ${input.unitRef.unitId} does not match Unit ${input.unit.id}.`,
@@ -1954,11 +1953,11 @@ export function battleUnitRefWithSupportProfiles(input: {
           }),
       ...optionalProperty("sourceFacts", input.sourceFacts),
     });
-  if (Either.isLeft(admittedSupportProfiles)) {
-    return Either.left(admittedSupportProfiles.left);
+  if (Result.isFailure(admittedSupportProfiles)) {
+    return Result.fail(admittedSupportProfiles.failure);
   }
   const admittedHuntersPrey =
-    admittedSupportProfiles.right.huntersPreyAdmission;
+    admittedSupportProfiles.success.huntersPreyAdmission;
   const huntersPreySupport = battleHuntersPreySupportForSupportedAdmission(
     admittedHuntersPrey,
     input.unitRef.selectedOption,
@@ -1976,13 +1975,13 @@ export function battleUnitRefWithSupportProfiles(input: {
       `Battle Unit ref ${input.unitRef.unitId} selected Hunter's Prey option requires Hunter's Prey support.`,
     );
   }
-  return Either.right({
+  return Result.succeed({
     unit: input.unit,
     supportProfiles:
       huntersPreySupport === null
-        ? admittedSupportProfiles.right.supportProfiles
+        ? admittedSupportProfiles.success.supportProfiles
         : [
-            ...admittedSupportProfiles.right.supportProfiles,
+            ...admittedSupportProfiles.success.supportProfiles,
             huntersPreySupport,
           ],
   });
@@ -4560,7 +4559,7 @@ export function magicActionSaveGatedConditionProfileForUnit(
       "action",
       "bonus_action",
     ]) ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
@@ -4592,7 +4591,7 @@ export function magicActionSaveGatedConditionProfileForUnit(
       save: { ability: "wis", dc: "classSpellcastingSpellSaveDc" },
       onFail: {
         condition: "frightened",
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
         earlyEnd: "targetTakesAnyDamage",
         turnRestriction: "moveActionOrBonusAction",
       },
@@ -6373,7 +6372,11 @@ function cunningStrikePoisonDurationTicks(duration: {
   readonly amount: 1;
   readonly unit: "minute";
 }): ElapsedTimeTicks {
-  return Either.getOrThrow(elapsedTimeTicksFromTimeSpanDuration(duration));
+  const ticks = elapsedTimeTicksFromTimeSpanDuration(duration);
+  if (Result.isFailure(ticks)) {
+    throw new Error("Expected a supported duration.");
+  }
+  return ticks.success;
 }
 
 function cunningStrikeEffectForSurfaceOption(
@@ -7605,7 +7608,7 @@ function parseBardicInspirationGrantUnitFeatureProfile(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(effect.duration);
   const dieSize = bardicInspirationDieSizeAtClassLevel(effect.die, classLevel);
   /* v8 ignore start -- @preserve -- Unsupported structured input: the threshold die table or duration failed its typed SRD projection. */
-  if (dieSize === null || Either.isLeft(durationTicks)) {
+  if (dieSize === null || Result.isFailure(durationTicks)) {
     return null;
   }
   /* v8 ignore stop -- @preserve */
@@ -7614,7 +7617,7 @@ function parseBardicInspirationGrantUnitFeatureProfile(
     unit,
     rangeFeet: movementFeet(BARDIC_INSPIRATION_RANGE_FEET),
     dieSize,
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     spends: { resourceUnitId: unit.id, amount: 1 },
   };
 }
@@ -8470,10 +8473,10 @@ function durationToRounds(duration: {
 }): number | null {
   const ticks = elapsedTimeTicksFromTimeSpanDuration(duration);
   /* v8 ignore next -- @preserve -- Unsupported structured input: admitted ongoing-feature durations use positive Surface time spans convertible to whole combat rounds. */
-  if (Either.isLeft(ticks)) {
+  if (Result.isFailure(ticks)) {
     return null;
   }
-  return Number(ticks.right);
+  return Number(ticks.success);
 }
 
 function parseOngoingFeatureEffects(

@@ -4,6 +4,7 @@ import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   battleAfterFailedSleepInitialSave,
   battleAfterGoblinFailedSleepRepeatSave,
+  battleStateWithAllocatedEffectForTest,
   battleProcedureExecutionRefForTest,
   battleId,
   characterSeed,
@@ -33,17 +34,14 @@ import {
   rollModifierRouteForResolution,
   scalarBuffRouteForDiscoveredAct,
   scalarBuffRouteForResolution,
-  sleepRepeatSaveRouteForResolution,
+  hitPointBudgetConditionRepeatSaveRouteForResolution,
   spellBaseArmorClassEffectTurnBoundaryRouteForResolution,
   spellDamageReductionRouteForDiscoveredAct,
   spellDamageReductionRouteForResolution,
   repeatSaveConditionEffectRouteForResolution,
   turnBoundaryEffectLifecycleRouteForResolution,
 } from "./effect-lifecycle-routes.ts";
-import type {
-  BattleActiveEffect,
-  BattleState,
-} from "../battle-state-execution.ts";
+import type { BattleActiveEffect } from "../battle-state-execution.ts";
 import { spellBattle } from "../unit-profile-admission-spell-battle.test-support.ts";
 import {
   damageTypeChoiceFill,
@@ -55,7 +53,7 @@ import { requireHole } from "../unit-profile-admission-creature-fixture.test-sup
 import {
   blessUnitId,
   baneUnitId,
-  hideousLaughterUnitId,
+  saveGatedConditionWithRepeatUnitId,
   longstriderUnitId,
   resistanceUnitId,
   spellCasterId,
@@ -413,7 +411,13 @@ describe("effect lifecycle route boundary", () => {
     };
     const needsSave = endTurn({ state: sleeping, actorId: goblinId });
     expect(
-      sleepRepeatSaveRouteForResolution(
+      hitPointBudgetConditionRepeatSaveRouteForResolution(
+        { state: sleeping, subject: endTurnSubject, fills: [] },
+        needsSave,
+      ),
+    ).toBeUndefined();
+    expect(
+      repeatSaveConditionEffectRouteForResolution(
         { state: sleeping, subject: endTurnSubject, fills: [] },
         needsSave,
       ),
@@ -424,12 +428,6 @@ describe("effect lifecycle route boundary", () => {
         holes: ["savingThrowOutcome"],
       }),
     ]);
-    expect(
-      repeatSaveConditionEffectRouteForResolution(
-        { state: sleeping, subject: endTurnSubject, fills: [] },
-        needsSave,
-      ),
-    ).toBeUndefined();
 
     const saveHole = requireBattleHole(needsSave, "savingThrowOutcome");
     const saveFill = savingThrowOutcomeFill(saveHole, [
@@ -442,7 +440,13 @@ describe("effect lifecycle route boundary", () => {
     });
     expect(repeated.tag).toBe("resolved");
     expect(
-      sleepRepeatSaveRouteForResolution(
+      hitPointBudgetConditionRepeatSaveRouteForResolution(
+        { state: sleeping, subject: endTurnSubject, fills: [saveFill] },
+        repeated,
+      ),
+    ).toBeUndefined();
+    expect(
+      repeatSaveConditionEffectRouteForResolution(
         { state: sleeping, subject: endTurnSubject, fills: [saveFill] },
         repeated,
       ),
@@ -451,12 +455,6 @@ describe("effect lifecycle route boundary", () => {
         expect.objectContaining({ owner: "battleConditionLifecycle" }),
       ]),
     );
-    expect(
-      repeatSaveConditionEffectRouteForResolution(
-        { state: sleeping, subject: endTurnSubject, fills: [saveFill] },
-        repeated,
-      ),
-    ).toBeUndefined();
 
     const endConcentrationSubject = {
       tag: "runtimeCommand" as const,
@@ -476,7 +474,7 @@ describe("effect lifecycle route boundary", () => {
       fills: [],
     });
     expect(
-      sleepRepeatSaveRouteForResolution(
+      hitPointBudgetConditionRepeatSaveRouteForResolution(
         {
           state: wizardTurnWithSleep,
           subject: endConcentrationSubject,
@@ -494,19 +492,19 @@ describe("effect lifecycle route boundary", () => {
 
   test("routes Hideous Laughter end-turn repeat-save discovery and failed-save lifecycle", () => {
     const session = spellBattle({
-      preparedSpells: [spellRecord(hideousLaughterUnitId)],
+      preparedSpells: [spellRecord(saveGatedConditionWithRepeatUnitId)],
       spellSlots: [{ spellLevel: 1, count: 1 }],
     });
     const act = spellAct({
       session,
-      spellId: hideousLaughterUnitId,
+      spellId: saveGatedConditionWithRepeatUnitId,
       slotLevel: 1,
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const target = spellTargetListFill(
       targetHole,
       spellCasterId,
-      hideousLaughterUnitId,
+      saveGatedConditionWithRepeatUnitId,
       [spellTargetId],
     );
     const initialSave = requireBattleHole(
@@ -584,37 +582,33 @@ describe("effect lifecycle route boundary", () => {
     expect(
       retained.state.combatants
         .get(spellTargetId)
-        ?.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
+        ?.activeEffects.some(
+          (effect) => effect.kind === "saveGatedConditionWithRepeat",
+        ),
     ).toBe(true);
   });
 
-  test("routes turn-end damage and base armor expiration from resolved boundaries", () => {
+  test("routes low-level turn-end damage and admitted base armor expiration from resolved boundaries", () => {
     const base = goblinTurnBattle();
     const goblin = base.combatants.get(goblinId);
     if (goblin === undefined) throw new Error("Expected Goblin combatant.");
-    const turnEndDamage: Extract<
-      BattleActiveEffect,
-      { readonly kind: "spellTurnEndDamage" }
-    > = {
-      kind: "spellTurnEndDamage",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "effect-route-turn-end-damage",
-      ),
-      sourceCombatantId: fighterId,
-      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "fire" },
-      expiresAt: {
-        kind: "endOfTurn",
-        combatantId: goblinId,
-        round: Round(1),
+    const withDamage = battleStateWithAllocatedEffectForTest({
+      state: base,
+      ownerId: goblinId,
+      effect: {
+        kind: "spellTurnEndDamage",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "synthetic-low-level-effect-route-turn-end-damage",
+        ),
+        sourceCombatantId: fighterId,
+        damage: { expr: { dice: 1, dieSize: 6 }, damageType: "fire" },
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: goblinId,
+          round: Round(1),
+        },
       },
-    };
-    const withDamage = {
-      ...base,
-      combatants: new Map(base.combatants).set(goblinId, {
-        ...goblin,
-        activeEffects: [...goblin.activeEffects, turnEndDamage],
-      }),
-    } satisfies BattleState;
+    });
     const endTurnSubject = {
       tag: "runtimeCommand" as const,
       actorId: goblinId,
@@ -737,5 +731,74 @@ describe("effect lifecycle route boundary", () => {
         expect.objectContaining({ owner: "battleArmorClass" }),
       ]),
     );
+  });
+
+  test("routes a low-level next-round start-turn save by its advanced turn anchor", () => {
+    const base = goblinTurnBattle();
+    const fighter = base.combatants.get(fighterId);
+    if (fighter === undefined) throw new Error("Expected Fighter combatant.");
+    const withStartDamage = battleStateWithAllocatedEffectForTest({
+      state: base,
+      ownerId: fighterId,
+      effect: {
+        kind: "spellTurnStartDamageAndSave",
+        source: "turnBoundaryEffectLifecycle",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "synthetic-low-level-effect-route-round-wrap-start-damage",
+        ),
+        sourceCombatantId: goblinId,
+        damage: { expr: { dice: 1, dieSize: 4 }, damageType: "fire" },
+        save: {
+          ability: "con",
+          dc: { kind: "caster_spell_save_dc" },
+          successEnds: "spell",
+        },
+        expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+      },
+    });
+    const subject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "endTurn" as const,
+    };
+    const damageFrontier = endTurn({
+      state: withStartDamage,
+      actorId: goblinId,
+    });
+    const damageFill = damageRollFill(
+      requireBattleHole(damageFrontier, "rolledDice"),
+      1,
+    );
+    const saveFrontier = endTurn({
+      state: withStartDamage,
+      actorId: goblinId,
+      fills: [damageFill],
+    });
+    const saveFill = savingThrowOutcomeFill(
+      requireBattleHole(saveFrontier, "savingThrowOutcome"),
+      [{ targetId: fighterId, succeeded: true }],
+    );
+    const resolved = endTurn({
+      state: withStartDamage,
+      actorId: goblinId,
+      fills: [damageFill, saveFill],
+    });
+
+    expect(
+      turnBoundaryEffectLifecycleRouteForResolution(
+        {
+          state: withStartDamage,
+          subject,
+          fills: [damageFill, saveFill],
+        },
+        resolved,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        kind: "resolveBattleSubject",
+        fill: "savingThrowOutcome",
+        owner: "battleActiveEffect",
+      }),
+    ]);
   });
 });

@@ -11,7 +11,7 @@ import {
   type CharacterSheetSpellSlotState,
 } from "@dnd/character-sheet-runtime";
 import type { Hp } from "@dnd/shared/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -28,7 +28,7 @@ import {
 
 export function characterListRows(
   root: McpPlaySessionRoot,
-): Either.Either<readonly CharacterSessionRow[], string> {
+): Result.Result<readonly CharacterSessionRow[], string> {
   const rows: CharacterSessionRow[] = [];
   for (const [characterId, session] of root.sessionStore.characters.entries()) {
     if (session.tag === "inBattle") {
@@ -43,12 +43,12 @@ export function characterListRows(
       continue;
     }
     const detail = availableCharacterSessionDetail(root, session);
-    if (Either.isLeft(detail)) {
-      return Either.left(characterSessionDetailIssueMessage(detail.left));
+    if (Result.isFailure(detail)) {
+      return Result.fail(characterSessionDetailIssueMessage(detail.failure));
     }
-    rows.push(availableCharacterListRow(detail.right));
+    rows.push(availableCharacterListRow(detail.success));
   }
-  return Either.right(rows);
+  return Result.succeed(rows);
 }
 
 export type CharacterSessionDetailIssue =
@@ -106,16 +106,16 @@ export type CharacterSessionDetail =
 export function characterSessionDetail(
   root: McpPlaySessionRoot,
   characterId: CharacterId,
-): Either.Either<CharacterSessionDetail, CharacterSessionDetailIssue> {
+): Result.Result<CharacterSessionDetail, CharacterSessionDetailIssue> {
   const session = root.sessionStore.characters.get(characterId);
   if (session === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "unknownCharacterSession",
       characterId,
     });
   }
   if (session.tag === "inBattle") {
-    return Either.right({
+    return Result.succeed({
       tag: session.tag,
       characterId: session.sheet.characterId,
       displayName: characterBuildDisplayName(
@@ -132,7 +132,7 @@ export function characterSessionDetail(
 export function characterSessionDetailForAvailableSheet(
   root: McpPlaySessionRoot,
   sheet: AvailableCharacterSession,
-): Either.Either<
+): Result.Result<
   Extract<CharacterSessionDetail, { readonly tag: "available" }>,
   Extract<
     CharacterSessionDetailIssue,
@@ -159,7 +159,7 @@ export function characterSessionDetailOutput(detail: CharacterSessionDetail) {
 function availableCharacterSessionDetail(
   root: McpPlaySessionRoot,
   sheet: AvailableCharacterSession,
-): Either.Either<
+): Result.Result<
   Extract<CharacterSessionDetail, { readonly tag: "available" }>,
   Extract<
     CharacterSessionDetailIssue,
@@ -170,30 +170,30 @@ function availableCharacterSessionDetail(
     sheet,
     unitLibrary: root.unitLibrary,
   });
-  if (Either.isLeft(hitPointMaximum)) {
-    return Either.left({
+  if (Result.isFailure(hitPointMaximum)) {
+    return Result.fail({
       tag: "characterSessionDetailInvalid",
-      message: hitPointMaximum.left.message,
+      message: hitPointMaximum.failure.message,
     });
   }
   const hitDice = characterSheetHitDice(sheet, root.unitLibrary);
   /* v8 ignore next -- @preserve -- The immediately preceding HP maximum projection proved the same build/catalog Hit Die facts. */
-  if (Either.isLeft(hitDice)) {
-    return Either.left({
+  if (Result.isFailure(hitDice)) {
+    return Result.fail({
       tag: "characterSessionDetailInvalid",
-      message: hitDice.left.message,
+      message: hitDice.failure.message,
     });
   }
   const resources = characterSheetResources(sheet, root.unitLibrary);
-  if (Either.isLeft(resources)) {
-    return Either.left({
+  if (Result.isFailure(resources)) {
+    return Result.fail({
       tag: "characterSessionDetailInvalid",
-      message: resources.left.message,
+      message: resources.failure.message,
     });
   }
   const spellSlots = characterBattleSpellSlots(sheet);
   const pactSlots = characterSheetPactSlots(sheet);
-  return Either.right({
+  return Result.succeed({
     tag: sheet.tag,
     characterId: sheet.characterId,
     displayName: characterBuildDisplayName(root.unitLibrary, sheet.build),
@@ -201,11 +201,11 @@ function availableCharacterSessionDetail(
     sheetProjection: {
       currentHp: characterSessionCurrentHp(sheet),
       companion: characterSheetCompanionProjection(sheet),
-      hitPointMaximum: hitPointMaximum.right,
-      hitDice: hitDice.right,
+      hitPointMaximum: hitPointMaximum.success,
+      hitDice: hitDice.success,
       ...(spellSlots === undefined ? {} : { spellSlots }),
       ...(pactSlots === undefined ? {} : { pactSlots }),
-      resources: resources.right.map(characterSheetResourceDisplayRow),
+      resources: resources.success.map(characterSheetResourceDisplayRow),
     },
   });
 }

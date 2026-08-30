@@ -5,7 +5,6 @@ import {
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 
-import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./battle-reducer/spells-active-effects.ts";
 import {
   shiningSmiteUnitId,
   spellCasterId,
@@ -187,9 +186,8 @@ export const shiningSmiteSelectedIdentityReplay = {
                 sourceCombatantId: spellCasterId,
                 attachment: { kind: "combatant", combatantId: spellTargetId },
                 emission: {
-                  kind: "brightAndDim",
-                  brightRadiusFeet: SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET,
-                  dimAdditionalFeet: movementFeet(0),
+                  kind: "bright",
+                  radiusFeet: movementFeet(5),
                 },
                 opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
                 expiresAt: {

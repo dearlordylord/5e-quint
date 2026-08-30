@@ -1,5 +1,5 @@
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { Schema } from "effect";
@@ -112,9 +112,7 @@ describe("BattleSubject identity", () => {
       ),
       NonNegativeInteger(0),
     );
-    const effectRef = battleActiveEffectExecutionRefForTest(
-      "runtime-command-effect",
-    );
+    const effectRef = battleEffectExecutionRefForTest("runtime-command-effect");
     const areaId = "runtime-command-area";
     const runtimeCommandExtras = {
       endTurn: {},
@@ -157,33 +155,58 @@ describe("BattleSubject identity", () => {
         attackAbility: "str",
         attackDamageType: "slashing",
       },
-      greaseGroundHazardSave: { areaId, trigger: "entersArea" },
-      webRestraintSave: { areaId, trigger: "startsTurnInArea" },
-      sleetStormAreaHazardSave: {
-        areaMembershipTrigger: { kind: "turnStartInArea", areaId },
-      },
-      insectPlagueAreaHazardSave: {
-        areaMembershipTrigger: { kind: "turnEndInArea", areaId },
-      },
-      cloudkillAreaHazardSave: {
-        areaMembershipTrigger: { kind: "areaMovesIntoSpace", areaId },
-      },
-      disperseCloudkill: { areaId },
-      webRestrainedNoLongerInArea: { areaId },
-      webAreaRemoved: { areaId },
-      gustOfWindLineSave: {
+      persistentAreaSaveConditionSave: {
         areaId,
+        effectRef,
+        trigger: "entersArea",
+      },
+      persistentAreaSaveConditionEscapeSave: {
+        areaId,
+        effectRef,
+        trigger: "startsTurnInArea",
+      },
+      persistentAreaSaveCompositeSave: {
+        areaMembershipTrigger: { kind: "turnStartInArea", areaId, effectRef },
+      },
+      persistentAreaSaveDamageSave: {
+        areaMembershipTrigger: {
+          kind: "areaMovesIntoSpace",
+          areaId,
+          effectRef,
+        },
+      },
+      endPersistentAreaSaveDamageForEnvironment: {
+        effectOwnerId: actorId,
+        effectRef,
+      },
+      endPersistentAreaSaveConditionEscapeForDeparture: {
+        areaId,
+        effectRef,
+      },
+      endPersistentAreaSaveConditionEscapeForAreaRemoval: {
+        areaId,
+        effectRef,
+      },
+      directionalPersistentAreaSave: {
+        areaId,
+        effectRef,
         directionId: "runtime-command-direction",
         trigger: "endsTurnInLine",
       },
-      gustOfWindLineDirectionChange: {
+      directionalPersistentAreaDirectionChange: {
         areaId,
+        effectRef,
         directionId: "runtime-command-direction",
       },
-      movableZoneSave: { areaId, trigger: "entersArea" },
-      moonbeamCylinderExit: { areaId },
-      movableZoneReposition: { areaId },
-      movableZoneRam: { targetId, areaId, trigger: "rammedBySphere" },
+      movableZoneSave: { areaId, effectRef, trigger: "entersArea" },
+      persistentAreaSaveDamageExit: { areaId, effectRef },
+      movableZoneReposition: { areaId, effectRef },
+      movableZoneRam: {
+        targetId,
+        areaId,
+        effectRef,
+        trigger: "rammedBySphere",
+      },
       releaseSpellCreatedHeldObject: { effectRef },
       protectionRelevantEffectSave: { effectRef, relevantEffect: "charmed" },
       creatureTypeProtectionConditionAttempt: {
@@ -193,20 +216,20 @@ describe("BattleSubject identity", () => {
       creatureTypeProtectionPossessionAttempt: {
         sourceCombatantId: targetId,
       },
-      disperseFogCloud: { areaId },
-      wardingBondSeparation: { effectRef, targetId },
-      jumpMovementReplacement: { effectRef },
-      dragonsBreathExhale: { effectRef },
+      endPersistentAreaTraitForEnvironment: { areaId },
+      linkedDefenseResistanceDamageShareSeparation: { effectRef, targetId },
+      fixedCostMovementReplacement: { effectRef },
+      grantedAreaSaveDamageAction: { effectRef },
       replaceSelfTransformationMode: {
         effectRef,
         mode: "naturalWeapons",
         naturalWeaponDamageType: "fire",
       },
-      commandGrovel: { effectRef },
-      commandDrop: { effectRef },
-      commandApproach: { effectRef },
-      commandFlee: { effectRef },
-      levitateAltitudeControl: { effectRef, targetId },
+      executeCompelledGrovel: { effectRef },
+      executeCompelledDrop: { effectRef },
+      executeCompelledApproach: { effectRef },
+      executeCompelledFlee: { effectRef },
+      controlledVerticalSuspensionAltitudeControl: { effectRef, targetId },
       creatureFalls: { fallingCreatureId: targetId },
     } as const satisfies Record<
       BattleRuntimeCommand,
@@ -256,9 +279,7 @@ describe("BattleSubject identity", () => {
       ),
       NonNegativeInteger(0),
     );
-    const effectRef = battleActiveEffectExecutionRefForTest(
-      "action-subject-effect",
-    );
+    const effectRef = battleEffectExecutionRefForTest("action-subject-effect");
     const actionExtras = {
       attack: {
         procedureRef: attackProcedureRef,
@@ -277,8 +298,8 @@ describe("BattleSubject identity", () => {
       shove: {},
       escapeGrapple: {},
       escapeSpellRestraint: { targetId, effectRef },
-      shakeAwakeFromSleep: {},
-      shakeAwakeFromHypnoticPattern: {},
+      shakeAwakeFromStagedCondition: {},
+      shakeAwakeFromAreaControl: {},
     } as const satisfies Record<
       BattleSubjectAction,
       Readonly<Record<string, unknown>>
@@ -348,14 +369,14 @@ describe("BattleSubject identity", () => {
       actorId,
       battleExecutionScopeOrdinal(3),
     );
-    const effectRef = battleActiveEffectExecutionRefForTest(
+    const effectRef = battleEffectExecutionRefForTest(
       "reference-bearing-subject-effect",
     );
     const candidates = [
       {
         name: "pact familiar attack with rolled damage",
         subject: {
-          tag: "pactOfTheChainFamiliarAttack",
+          tag: "companionAttack",
           actorId,
           familiarId: companionId,
           procedureRef: statBlockProcedureRef,
@@ -364,7 +385,7 @@ describe("BattleSubject identity", () => {
       {
         name: "pact familiar attack with static damage",
         subject: {
-          tag: "pactOfTheChainFamiliarAttack",
+          tag: "companionAttack",
           actorId,
           familiarId: companionId,
           procedureRef: statBlockProcedureRef,
@@ -575,7 +596,7 @@ describe("BattleSubject identity", () => {
       {
         name: "share familiar senses",
         subject: {
-          tag: "findFamiliarSharedSenses",
+          tag: "spawnedCompanionSharedSenses",
           actorId,
           familiarId: companionId,
         },
@@ -583,7 +604,7 @@ describe("BattleSubject identity", () => {
       {
         name: "familiar touch action spell",
         subject: {
-          tag: "findFamiliarTouchSpell",
+          tag: "spawnedCompanionTouchSpellProxy",
           actorId,
           procedureRef,
           companionId,
@@ -594,7 +615,7 @@ describe("BattleSubject identity", () => {
       {
         name: "familiar touch bonus-action spell with metamagic",
         subject: {
-          tag: "findFamiliarTouchSpell",
+          tag: "spawnedCompanionTouchSpellProxy",
           actorId,
           procedureRef,
           companionId,
@@ -771,8 +792,9 @@ describe("BattleSubject identity", () => {
       {
         tag: "runtimeCommand",
         actorId,
-        command: "greaseGroundHazardSave",
+        command: "persistentAreaSaveConditionSave",
         areaId: "synthetic-area",
+        effectRef: battleEffectExecutionRefForTest("synthetic-area-effect"),
         trigger: "entersArea",
         sourceCombatantId: actorId,
         sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -782,7 +804,7 @@ describe("BattleSubject identity", () => {
       {
         tag: "runtimeCommand",
         actorId,
-        command: "commandGrovel",
+        command: "executeCompelledGrovel",
         sourceCombatantId: actorId,
         sourceProcedureRef: battleProcedureExecutionRefForTest(
           String("synthetic-spell"),

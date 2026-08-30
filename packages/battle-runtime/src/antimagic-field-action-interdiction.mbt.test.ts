@@ -1,16 +1,19 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import {
-  antimagicFieldAuraEffectForTest,
-  antimagicFieldAuraMembershipForTest,
+  battleStateWithAllocatedEffectForTest,
+  resolveBattleSubject,
+} from "./battle-runtime.test-support.ts";
+import {
+  magicSuppressionEmanationEffectTemplateForTest,
+  magicSuppressionEmanationMembershipForTest,
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-action-interdiction
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-magic-suppression-action-interdiction
 import { classLevel, Hp, NonNegativeInteger } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 import { battleProcedureExecutionRef } from "./identity.ts";
@@ -96,7 +99,7 @@ describe("Antimagic Field action interdiction MBT", () => {
       await run({
         spec: mbtSpecPath(
           import.meta.dirname,
-          "battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+          "battle-runtime-magic-suppression-action-interdiction.mbt.qnt",
         ),
         init: "init",
         step: "step",
@@ -119,7 +122,7 @@ function createAntimagicActionInterdictionDriver() {
         projection = discoveryProjection(
           activeAntimagicAuraSession(
             spellInterdictionBattle(),
-            antimagicFieldAuraMembershipForTest({
+            magicSuppressionEmanationMembershipForTest({
               sourceCombatantId: spellCasterId,
               originIncluded: true,
               nonOriginCombatantIds: [],
@@ -127,7 +130,7 @@ function createAntimagicActionInterdictionDriver() {
           ),
           activeAntimagicAuraSession(
             preserveLifeBattle(),
-            antimagicFieldAuraMembershipForTest({
+            magicSuppressionEmanationMembershipForTest({
               sourceCombatantId: spellTargetId,
               originIncluded: false,
               nonOriginCombatantIds: [spellCasterId],
@@ -139,7 +142,7 @@ function createAntimagicActionInterdictionDriver() {
         projection = discoveryProjection(
           activeAntimagicAuraSession(
             spellInterdictionBattle(),
-            antimagicFieldAuraMembershipForTest({
+            magicSuppressionEmanationMembershipForTest({
               sourceCombatantId: spellCasterId,
               originIncluded: false,
               nonOriginCombatantIds: [],
@@ -155,7 +158,7 @@ function createAntimagicActionInterdictionDriver() {
           resolveBattleSubject({
             state: activeAntimagicAuraSession(
               base,
-              antimagicFieldAuraMembershipForTest({
+              magicSuppressionEmanationMembershipForTest({
                 sourceCombatantId: spellTargetId,
                 originIncluded: false,
                 nonOriginCombatantIds: [spellCasterId],
@@ -173,7 +176,7 @@ function createAntimagicActionInterdictionDriver() {
           resolveBattleSubject({
             state: activeAntimagicAuraSession(
               base,
-              antimagicFieldAuraMembershipForTest({
+              magicSuppressionEmanationMembershipForTest({
                 sourceCombatantId: spellTargetId,
                 originIncluded: false,
                 nonOriginCombatantIds: [spellCasterId],
@@ -189,7 +192,7 @@ function createAntimagicActionInterdictionDriver() {
           resolveBattleSubject({
             state: activeAntimagicAuraSession(
               spellInterdictionBattle(),
-              antimagicFieldAuraMembershipForTest({
+              magicSuppressionEmanationMembershipForTest({
                 sourceCombatantId: spellCasterId,
                 originIncluded: true,
                 nonOriginCombatantIds: [],
@@ -339,24 +342,24 @@ function activeAntimagicAuraSession(
   session: BattleRuntimeSession,
   aura: TestAntimagicFieldAuraMembership,
 ): BattleRuntimeSession {
-  const combatants = new Map(session.state.combatants);
-  const source = combatants.get(aura.sourceCombatantId);
-  if (source === undefined) {
+  const sourceBefore = session.state.combatants.get(aura.sourceCombatantId);
+  if (sourceBefore === undefined) {
     throw new Error("Antimagic Field test source must be in the battle.");
   }
-  combatants.set(aura.sourceCombatantId, {
-    ...source,
-    activeEffects: [
-      ...source.activeEffects,
-      antimagicFieldAuraEffectForTest({
-        areaId: antimagicFieldAreaId,
-        aura,
-      }),
-    ],
+  const state = battleStateWithAllocatedEffectForTest({
+    state: session.state,
+    ownerId: aura.sourceCombatantId,
+    effect: magicSuppressionEmanationEffectTemplateForTest({
+      areaId: antimagicFieldAreaId,
+      aura,
+    }),
   });
+  expect(
+    Number(state.combatants.get(aura.sourceCombatantId)?.nextEffectOrdinal),
+  ).toBe(Number(sourceBefore.nextEffectOrdinal) + 1);
   return battleRuntimeSessionForTest({
     ...session,
-    state: { ...session.state, combatants },
+    state,
   });
 }
 
@@ -395,10 +398,10 @@ function preserveLifeBattle(): BattleRuntimeSession {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function preserveLifeAct(session: BattleRuntimeSession) {
@@ -424,15 +427,15 @@ function preserveLifeUnitRefWithSupport() {
     unit: preserveLifeUnit,
     classLevels: [{ className: "cleric", level: classLevel(3) }],
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const support = battleMagicActionHealingPoolSupportForUnit(preserveLifeUnit);
   if (support === null || support === "unsupported") {
     throw new Error("Expected Preserve Life Magic Action support.");
   }
-  expect(unitRef.right.supportProfiles).toContainEqual(support);
-  return unitRef.right;
+  expect(unitRef.success.supportProfiles).toContainEqual(support);
+  return unitRef.success;
 }
 
 function requireCounterspellProcedureRef(state: BattleState) {

@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castScrying,
@@ -16,7 +16,7 @@ import {
   characterSheetScryingTargetId,
   completedScryingCasting,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   scryingSavingThrowModifier,
   spellSlotLevel,
   unitLibrary,
@@ -104,7 +104,7 @@ describe("Character Sheet runtime / Scrying", () => {
       },
       savingThrowOutcome: { tag: "failed" },
     });
-    const result = requireRight(
+    const result = requireSuccess(
       castScrying({
         sheet: scryingWizardSheet({ preparedSpells: ["scrying"], slots: 1 }),
         unitLibrary,
@@ -168,7 +168,7 @@ describe("Character Sheet runtime / Scrying", () => {
       },
       savingThrowOutcome: { tag: "succeeded" },
     });
-    const result = requireRight(
+    const result = requireSuccess(
       castScrying({
         sheet: scryingWizardSheet({ preparedSpells: ["scrying"], slots: 1 }),
         unitLibrary,
@@ -201,7 +201,7 @@ describe("Character Sheet runtime / Scrying", () => {
 
   test("Scrying can target a seen location and returns a stationary sensor without a Wisdom Saving Throw", () => {
     const locationTarget = scryingLocationTarget();
-    const result = requireRight(
+    const result = requireSuccess(
       castScrying({
         sheet: scryingWizardSheet({ preparedSpells: ["scrying"], slots: 1 }),
         unitLibrary,
@@ -240,9 +240,9 @@ describe("Character Sheet runtime / Scrying", () => {
       target: scryingLocationTarget(),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Scrying requires prepared class Spell Access.",
       );
     }
@@ -260,7 +260,7 @@ const scryingSelectedIdentityActions = {
       },
       savingThrowOutcome: { tag: "failed" },
     });
-    const result = requireRight(
+    const result = requireSuccess(
       castScrying({
         sheet: scryingWizardSheet({ preparedSpells: ["scrying"], slots: 1 }),
         unitLibrary,
@@ -325,7 +325,7 @@ function scryingCreatureTarget(input: {
 }): CharacterSheetScryingCreatureTarget {
   return {
     tag: "creature",
-    targetId: requireRight(characterSheetScryingTargetId("scrying-target:1")),
+    targetId: requireSuccess(characterSheetScryingTargetId("scrying-target:1")),
     plane: "same_plane_as_caster",
     knowledge: input.knowledge,
     connection: input.connection,
@@ -336,7 +336,7 @@ function scryingCreatureTarget(input: {
 function scryingLocationTarget(): CharacterSheetScryingLocationTarget {
   return {
     tag: "location",
-    locationId: requireRight(
+    locationId: requireSuccess(
       characterSheetScryingLocationId("scrying-location:seen-courtyard"),
     ),
     seenByCaster: true,
@@ -347,7 +347,7 @@ function scryingWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:scrying-wizard-9"),
       build: {

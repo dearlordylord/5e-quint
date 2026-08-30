@@ -26,14 +26,16 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   battleSpellEffectOccurrenceId,
   type BattleObjectId,
   type CombatantId,
 } from "../../identity.ts";
+import { allocateBattleStoredLightEmitterForCreature } from "../../effect-execution-ref.ts";
 import {
   type BattleActDiscoveryCandidate,
+  type BattleCreatureState,
   type BattleResolutionResult,
   type BattleState,
   type BattleExecutableSpellInvocation,
@@ -149,7 +151,9 @@ function isObjectLightDirectPhase(
     phase.attachment.value.count === 1 &&
     phase.attachment.value.filter?.targetRelation === "not_worn_or_carried" &&
     phase.attachment.value.filter?.maxSize === LIGHT_OBJECT_MAX_SIZE &&
-    phase.effects?.some((effect) => effect.kind === "emit_light") === true
+    phase.effects?.some(
+      (effect) => effect.kind === "emit_bright_and_dim_illumination",
+    ) === true
   );
 }
 
@@ -167,11 +171,11 @@ function admitCantripObjectLight(
       ? undefined
       : lightPhase.effects;
   const lightEffect = lightEffects?.find(
-    (effect) => effect.kind === "emit_light",
+    (effect) => effect.kind === "emit_bright_and_dim_illumination",
   );
   if (
     lightEffect === undefined ||
-    lightEffect.kind !== "emit_light" ||
+    lightEffect.kind !== "emit_bright_and_dim_illumination" ||
     maxObjectSize === undefined ||
     lightEffect.brightRadiusFeet !== 20 ||
     lightEffect.dimAdditionalFeet !== 20
@@ -183,7 +187,7 @@ function admitCantripObjectLight(
     return [];
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? []
     : [
         {
@@ -204,12 +208,12 @@ function admitCantripObjectLight(
             brightRadiusFeet: movementFeet(lightEffect.brightRadiusFeet),
             dimAdditionalFeet: movementFeet(lightEffect.dimAdditionalFeet),
           },
-          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
         },
       ];
 }
 
-function isContinualFlameObjectSpell(
+function isPermanentDispellableObjectIlluminationSpell(
   spell: BattleSpellAdmissionSource,
 ): spell is BattleSpellAdmissionSource & {
   readonly mechanics: Extract<
@@ -249,7 +253,9 @@ function isTouchedObjectLightDirectPhase(
     phase.attachment.value.kind === "object" &&
     phase.attachment.value.count === 1 &&
     phase.attachment.value.filter === undefined &&
-    phase.effects?.some((effect) => effect.kind === "emit_light") === true
+    phase.effects?.some(
+      (effect) => effect.kind === "emit_bright_and_dim_illumination",
+    ) === true
   );
 }
 
@@ -257,7 +263,7 @@ function admitPreparedObjectLight(
   spell: BattleSpellAdmissionSource,
   castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly ObjectLightInvocation[] {
-  if (!isContinualFlameObjectSpell(spell)) {
+  if (!isPermanentDispellableObjectIlluminationSpell(spell)) {
     return [];
   }
   const lightPhase = spell.mechanics.phases.find(
@@ -268,13 +274,13 @@ function admitPreparedObjectLight(
       ? undefined
       : lightPhase.effects;
   const lightEffect = lightEffects?.find(
-    (effect) => effect.kind === "emit_light",
+    (effect) => effect.kind === "emit_bright_and_dim_illumination",
   );
   const brightRadiusFeet = lightEffect?.brightRadiusFeet;
   const dimAdditionalFeet = lightEffect?.dimAdditionalFeet;
   if (
     lightEffect === undefined ||
-    lightEffect.kind !== "emit_light" ||
+    lightEffect.kind !== "emit_bright_and_dim_illumination" ||
     brightRadiusFeet !== 20 ||
     dimAdditionalFeet !== 20
   ) {
@@ -349,10 +355,11 @@ function discoverObjectLightCastAct(
 
 function applyObjectLightEffect(
   state: BattleState,
-  actorId: CombatantId,
+  actor: BattleCreatureState,
   objectId: BattleObjectId,
   invocation: BattleExecutableSpellInvocation<ObjectLightInvocation>,
 ): BattleState {
+  const actorId = actor.combatantId;
   const retainedEmitters =
     invocation.targeting.object.kind === "lightCantripObject"
       ? state.lightEmitters.filter(
@@ -364,27 +371,29 @@ function applyObjectLightEffect(
             ),
         )
       : state.lightEmitters;
+  const allocation = allocateBattleStoredLightEmitterForCreature({
+    owner: actor,
+    emitter: {
+      kind: "spellLightEmitter",
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+      sourceEffectId: objectLightSpellEffectOccurrenceId(
+        state,
+        actorId,
+        objectId,
+        invocation,
+      ),
+      sourceSpellLevel: spellInvocationEffectiveSpellLevel(invocation),
+      attachment: { kind: "object", objectId },
+      emission: invocation.light,
+      opaqueCoverInteraction: { kind: "blocksEmission" },
+      expiresAt: invocation.expiresAt,
+    },
+  });
   return {
     ...state,
-    lightEmitters: [
-      ...retainedEmitters,
-      {
-        kind: "spellLightEmitter",
-        sourceProcedureRef: invocation.sourceProcedureRef,
-        sourceCombatantId: actorId,
-        sourceEffectId: objectLightSpellEffectOccurrenceId(
-          state,
-          actorId,
-          objectId,
-          invocation,
-        ),
-        sourceSpellLevel: spellInvocationEffectiveSpellLevel(invocation),
-        attachment: { kind: "object", objectId },
-        emission: invocation.light,
-        opaqueCoverInteraction: { kind: "blocksEmission" },
-        expiresAt: invocation.expiresAt,
-      },
-    ],
+    combatants: new Map(state.combatants).set(actorId, allocation.owner),
+    lightEmitters: [...retainedEmitters, allocation.emitter],
   };
 }
 
@@ -465,6 +474,15 @@ function resolveObjectLight(
   }
   /* v8 ignore stop -- @preserve */
 
+  const actor = input.input.state.combatants.get(input.actorId);
+  if (actor === undefined) {
+    return invalidResult(
+      input.input.state,
+      "missingCombatant",
+      "Object light caster is not in this battle.",
+    );
+  }
+
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,
     [],
@@ -477,7 +495,7 @@ function resolveObjectLight(
 
   const effected = applyObjectLightEffect(
     input.input.state,
-    input.actorId,
+    actor,
     objectTarget.objectId,
     input.invocation,
   );
@@ -492,7 +510,7 @@ function resolveObjectLight(
 }
 
 const ObjectLightInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
@@ -532,7 +550,7 @@ const ObjectLightInvocationSchema = spellProcedureExecutionSchema(
       }),
       expiresAt: BattleActiveEffectExpirationSchema,
     }),
-  ),
+  ]),
 );
 export const objectLightProfile: SpellProcedureDeclaration<
   "objectLight",

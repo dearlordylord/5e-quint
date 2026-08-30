@@ -18,7 +18,7 @@ import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { CharacterLevel } from "@dnd/shared/types";
 import type { SpellSlotLevel } from "@dnd/shared/types";
 import type {
-  BattleAntimagicFieldOngoingSpellEffectRef,
+  BattleMagicSuppressionOngoingSpellEffectRef,
   BattleCreatureState,
   BattleState,
   SupportedSpellInvocation,
@@ -36,11 +36,12 @@ import type {
   SpellAccessFreeCastInvocationResource,
   SpellSlotInvocationResource,
 } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import type { BattleSpellProcedureKey } from "../../character-execution.ts";
 import { cantripSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
-  antimagicFieldSuppressedOngoingSpellEffectKeys,
+  magicSuppressionOngoingSpellEffectKeys,
   ongoingSpellEffectRefKey,
-} from "../antimagic-field-suppression.ts";
+} from "../magic-suppression-ongoing-effect.ts";
 import { characterBattleLevel } from "../../character-class-level.ts";
 import type { SpellProcedureExecutionDeclaration } from "./execution-profile.ts";
 export * from "./execution-profile.ts";
@@ -175,7 +176,7 @@ export function spellAdmissionBattleTurn(
 
 export function spellAdmissionOngoingSpellEffectSuppressed(
   ctx: SpellAdmissionContext,
-  effect: BattleAntimagicFieldOngoingSpellEffectRef,
+  effect: BattleMagicSuppressionOngoingSpellEffectRef,
 ): boolean {
   return (
     ctx.battle?.suppressedOngoingSpellEffectKeys.has(
@@ -195,7 +196,7 @@ export function spellAdmissionBattleProjection(
           round: state.initiative.round,
         },
         suppressedOngoingSpellEffectKeys:
-          antimagicFieldSuppressedOngoingSpellEffectKeys(state),
+          magicSuppressionOngoingSpellEffectKeys(state),
       };
 }
 
@@ -206,7 +207,7 @@ export function spellAdmissionCharacterLevel(
 }
 
 export type SpellInvocationAdmittedByRegisteredProcedure<
-  P extends SupportedSpellInvocation["procedure"],
+  P extends BattleSpellProcedureKey,
 > = {
   readonly [I in SupportedSpellInvocation as I["procedure"]]: P extends I["procedure"]
     ? I
@@ -219,7 +220,7 @@ export type SpellInvocationAdmittedByRegisteredProcedure<
 // literal their invocation carries; a combined profile may register one literal
 // while accepting an invocation whose procedure field admits that literal.
 export type SpellProcedureAdmissionDeclaration<
-  P extends SupportedSpellInvocation["procedure"],
+  P extends BattleSpellProcedureKey,
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
 > = {
   // Discovery: enumerate every currently-admissible invocation of this
@@ -232,13 +233,13 @@ export type SpellProcedureAdmissionDeclaration<
 };
 
 export type SpellProcedureDeclaration<
-  P extends SupportedSpellInvocation["procedure"],
+  P extends BattleSpellProcedureKey,
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
 > = SpellProcedureAdmissionDeclaration<P, I> &
   SpellProcedureExecutionDeclaration<P>;
 
 export type SynthesizedSpellProcedureDeclaration<
-  P extends SupportedSpellInvocation["procedure"],
+  P extends BattleSpellProcedureKey,
 > = {
   readonly admission: "synthesized";
 } & SpellProcedureExecutionDeclaration<P>;

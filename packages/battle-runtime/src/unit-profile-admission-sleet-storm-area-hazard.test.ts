@@ -26,7 +26,7 @@ import {
 import {
   singleTargetSavingThrowOutcomeFill,
   sleetStormAreaFill,
-  sleetStormAreaHazardSaveAct,
+  persistentAreaSaveCompositeSaveAct,
   spellAct,
   spellHoleInvocation,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
@@ -35,7 +35,6 @@ import {
   spellRecord,
 } from "./unit-profile-admission-spell-record.test-support.ts";
 import type {
-  BattleActiveEffect,
   BattleState,
   BattleSubject,
 } from "./unit-profile-admission.test-support.ts";
@@ -55,6 +54,7 @@ import { discoverBattleActCandidates, discoverBattleActs } from "./index.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 
@@ -123,7 +123,7 @@ function castSleetStormForTargetTurn(
 
 function stateWithTargetConcentration(state: BattleState): BattleState {
   const target = requireCombatant(state, spellTargetId);
-  const concentrationEffect: BattleActiveEffect = {
+  const concentrationEffect = {
     kind: "spellArmorClassBonus",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(syntheticTargetConcentrationSpellId),
@@ -135,8 +135,8 @@ function stateWithTargetConcentration(state: BattleState): BattleState {
       kind: "concentration",
       combatantId: spellTargetId,
     },
-  };
-  return {
+  } as const;
+  const concentratingState = {
     ...state,
     combatants: new Map(state.combatants).set(spellTargetId, {
       ...target,
@@ -146,9 +146,13 @@ function stateWithTargetConcentration(state: BattleState): BattleState {
         ),
         effectKind: "spellEffect",
       },
-      activeEffects: [...target.activeEffects, concentrationEffect],
     }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: concentratingState,
+    ownerId: spellTargetId,
+    effect: concentrationEffect,
+  });
 }
 
 function sleetStormWithAreaMembershipSaveLimits(
@@ -244,7 +248,11 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         state,
         spellCasterId,
-        spellSlotInvocationRef(sleetStormUnitId, 3, "sleetStormAreaHazard"),
+        spellSlotInvocationRef(
+          sleetStormUnitId,
+          3,
+          "persistentAreaSaveComposite",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -261,7 +269,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
     );
     expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
-        procedure: "sleetStormAreaHazard",
+        procedure: "persistentAreaSaveComposite",
         resource: { tag: "spellSlot", slotLevel: 3 },
         ability: "dex",
         dc: { kind: "caster_spell_save_dc" },
@@ -276,7 +284,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
     );
     expect(spellHoleInvocation(state, fourthLevelAct.initialHoles)).toEqual(
       expect.objectContaining({
-        procedure: "sleetStormAreaHazard",
+        procedure: "persistentAreaSaveComposite",
         resource: { tag: "spellSlot", slotLevel: 4 },
       }),
     );
@@ -316,13 +324,10 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       },
       activeEffects: [
         expect.objectContaining({
-          kind: "sleetStormAreaHazard",
+          kind: "persistentAreaSaveComposite",
           sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           areaId: sleetStormAreaId,
-          radiusFeet: movementFeet(20),
-          heightFeet: movementFeet(40),
-          save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
           savedThisTurn: [],
           expiresAt: {
             kind: "concentration",
@@ -336,6 +341,15 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
 
   test("active Sleet Storm projects Difficult Terrain and Heavily Obscured Cylinder facts", () => {
     const { act, targetTurn } = castSleetStorm();
+    const hazard = requireCombatant(
+      targetTurn,
+      spellCasterId,
+    ).activeEffects.find(
+      (effect) => effect.kind === "persistentAreaSaveComposite",
+    );
+    if (hazard === undefined) {
+      throw new Error("Expected active Sleet Storm hazard.");
+    }
     const moveSubject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: spellTargetId,
@@ -353,9 +367,10 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       kind: "areaDifficultTerrain" as const,
       sources: [
         {
-          kind: "sleetStormHazard" as const,
+          kind: "persistentAreaSaveComposite" as const,
+          effectRef: hazard.effectRef,
           sourceCombatantId: spellCasterId,
-          sourceProcedureRef: act.subject.procedureRef,
+          sourceProcedureRef: hazard.sourceProcedureRef,
           areaId: sleetStormAreaId,
         },
       ],
@@ -420,11 +435,11 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       discoverBattleActCandidates(targetTurn).some(
         (act) =>
           act.subject.tag === "runtimeCommand" &&
-          act.subject.command === "sleetStormAreaHazardSave",
+          act.subject.command === "persistentAreaSaveCompositeSave",
       ),
     ).toBe(false);
 
-    const entryAct = sleetStormAreaHazardSaveAct(
+    const entryAct = persistentAreaSaveCompositeSaveAct(
       targetTurn,
       spellTargetId,
       "entersArea",
@@ -432,6 +447,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
     expect(entryAct.subject.areaMembershipTrigger).toEqual({
       kind: "firstEntryOnTurn",
       areaId: sleetStormAreaId,
+      effectRef: expect.any(String),
     });
     expect(
       resolveBattleSubject({
@@ -445,7 +461,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
   test("entry save failure applies Prone, breaks target Concentration, and records shared per-turn resolution", () => {
     const { targetTurn } = castSleetStorm();
     const concentrating = stateWithTargetConcentration(targetTurn);
-    const entryAct = sleetStormAreaHazardSaveAct(
+    const entryAct = persistentAreaSaveCompositeSaveAct(
       concentrating,
       spellTargetId,
       "entersArea",
@@ -471,7 +487,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
     expect(requireCombatant(failed.state, spellCasterId).activeEffects).toEqual(
       [
         expect.objectContaining({
-          kind: "sleetStormAreaHazard",
+          kind: "persistentAreaSaveComposite",
           savedThisTurn: [spellTargetId],
         }),
       ],
@@ -480,14 +496,14 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       discoverBattleActCandidates(failed.state).some(
         (act) =>
           act.subject.tag === "runtimeCommand" &&
-          act.subject.command === "sleetStormAreaHazardSave",
+          act.subject.command === "persistentAreaSaveCompositeSave",
       ),
     ).toBe(false);
   });
 
   test("entry failure replays after a declined readied-spell Reaction and breaks the held spell", () => {
     const { targetTurn } = castSleetStormWithTargetReadiedRay();
-    const entryAct = sleetStormAreaHazardSaveAct(
+    const entryAct = persistentAreaSaveCompositeSaveAct(
       targetTurn,
       spellTargetId,
       "entersArea",
@@ -515,7 +531,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       requireCombatant(declined.state, spellCasterId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "sleetStormAreaHazard",
+        kind: "persistentAreaSaveComposite",
         savedThisTurn: [spellTargetId],
       }),
     ]);
@@ -523,12 +539,12 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
 
   test("save resolution rejects a fill from the other Sleet Storm trigger hole", () => {
     const { targetTurn } = castSleetStorm();
-    const entryAct = sleetStormAreaHazardSaveAct(
+    const entryAct = persistentAreaSaveCompositeSaveAct(
       targetTurn,
       spellTargetId,
       "entersArea",
     );
-    const startTurnAct = sleetStormAreaHazardSaveAct(
+    const startTurnAct = persistentAreaSaveCompositeSaveAct(
       targetTurn,
       spellTargetId,
       "startsTurnInArea",
@@ -555,7 +571,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
 
   test("entry save suppresses a later start-turn save in the same shared turn limit group", () => {
     const { targetTurn } = castSleetStorm();
-    const entryAct = sleetStormAreaHazardSaveAct(
+    const entryAct = persistentAreaSaveCompositeSaveAct(
       targetTurn,
       spellTargetId,
       "entersArea",
@@ -572,7 +588,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       throw new Error("Expected Sleet Storm entry save to resolve.");
     }
 
-    const startTurnAct = sleetStormAreaHazardSaveAct(
+    const startTurnAct = persistentAreaSaveCompositeSaveAct(
       entryResolved.state,
       spellTargetId,
       "startsTurnInArea",
@@ -588,13 +604,13 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Sleet Storm save was already resolved for this target this turn.",
+        "persistent-area save-composite save was already resolved for this target this turn.",
     });
     expect(
       requireCombatant(entryResolved.state, spellCasterId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "sleetStormAreaHazard",
+        kind: "persistentAreaSaveComposite",
         savedThisTurn: [spellTargetId],
       }),
     ]);
@@ -602,7 +618,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
 
   test("successful start-turn save marks the shared ledger and resets on the next turn", () => {
     const { targetTurn } = castSleetStorm();
-    const startTurnAct = sleetStormAreaHazardSaveAct(
+    const startTurnAct = persistentAreaSaveCompositeSaveAct(
       targetTurn,
       spellTargetId,
       "startsTurnInArea",
@@ -629,7 +645,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       requireCombatant(succeeded.state, spellCasterId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "sleetStormAreaHazard",
+        kind: "persistentAreaSaveComposite",
         savedThisTurn: [spellTargetId],
       }),
     ]);
@@ -637,7 +653,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       discoverBattleActCandidates(succeeded.state).some(
         (act) =>
           act.subject.tag === "runtimeCommand" &&
-          act.subject.command === "sleetStormAreaHazardSave",
+          act.subject.command === "persistentAreaSaveCompositeSave",
       ),
     ).toBe(false);
 
@@ -652,7 +668,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       requireCombatant(nextTurn.state, spellCasterId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "sleetStormAreaHazard",
+        kind: "persistentAreaSaveComposite",
         savedThisTurn: [],
       }),
     ]);
@@ -660,7 +676,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
 
   test("start-turn save suppresses a later entry save in the same shared turn limit group", () => {
     const { targetTurn } = castSleetStorm();
-    const startTurnAct = sleetStormAreaHazardSaveAct(
+    const startTurnAct = persistentAreaSaveCompositeSaveAct(
       targetTurn,
       spellTargetId,
       "startsTurnInArea",
@@ -680,7 +696,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       throw new Error("Expected Sleet Storm start-turn save to resolve.");
     }
 
-    const entryAct = sleetStormAreaHazardSaveAct(
+    const entryAct = persistentAreaSaveCompositeSaveAct(
       startTurnResolved.state,
       spellTargetId,
       "entersArea",
@@ -696,13 +712,13 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Sleet Storm save was already resolved for this target this turn.",
+        "persistent-area save-composite save was already resolved for this target this turn.",
     });
     expect(
       requireCombatant(startTurnResolved.state, spellCasterId).activeEffects,
     ).toEqual([
       expect.objectContaining({
-        kind: "sleetStormAreaHazard",
+        kind: "persistentAreaSaveComposite",
         savedThisTurn: [spellTargetId],
       }),
     ]);
@@ -726,7 +742,7 @@ defineSelectedIdentityReplayWitness({
           actionName: "doReplaySleetStormAreaHazard",
           projectionAfter: {
             unitId: sleetStormUnitId,
-            procedure: "sleetStormAreaHazard",
+            procedure: "persistentAreaSaveComposite",
             areaEffects: 1,
           },
           discover: () => {
@@ -734,10 +750,10 @@ defineSelectedIdentityReplayWitness({
             const caster = requireCombatant(cast, spellCasterId);
             return {
               unitId: sleetStormUnitId,
-              procedure: "sleetStormAreaHazard",
+              procedure: "persistentAreaSaveComposite",
               areaEffects: caster.activeEffects.filter(
                 (effect) =>
-                  effect.kind === "sleetStormAreaHazard" &&
+                  effect.kind === "persistentAreaSaveComposite" &&
                   effect.sourceProcedureRef === act.subject.procedureRef,
               ).length,
             };

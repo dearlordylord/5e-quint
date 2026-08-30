@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { DieRollResult, Hp } from "@dnd/shared/types";
@@ -283,15 +283,15 @@ function halflingObjectBattle() {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   return startBattleRight({
     battleId: battleId("battle-object-natural-one-reroll"),
     combatants: [
       characterSeed({
         initiative: 20,
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
         unitFeatures: [characterBattleFeatureInitForTest(unit)],
       }),
       statBlockCreatureInit({ initiative: 10 }),

@@ -4,7 +4,7 @@ import {
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.companion-lifecycle
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar
 // UNIT-IDENTITY-REPLAY: B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar doCastFindFamiliar doRecastFindFamiliarReplacement doDismissAndReappearFindFamiliar doDeliverTouchSpellThroughFindFamiliar
 import {
@@ -13,11 +13,11 @@ import {
   proficiencyBonus,
 } from "@dnd/shared/types";
 import {
-  findFamiliarFormEligibilityForSpell,
-  type FindFamiliarFormEligibility,
+  spawnedCompanionFormEligibilityForSpell,
+  type SpawnedCompanionFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { expect, it } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
@@ -36,14 +36,14 @@ import {
 import {
   battleId,
   combatantId,
-  castFindFamiliar,
-  deliverTouchSpellThroughFindFamiliar,
+  castSpawnedCompanion,
+  deliverTouchSpellThroughSpawnedCompanion,
   discoverBattleActs,
-  findFamiliarCompanionForOwner,
+  spawnedCompanionForOwner,
   initiativeScore,
-  reappearTemporarilyDismissedFindFamiliar,
+  reappearTemporarilyDismissedSpawnedCompanion,
   startBattle,
-  temporarilyDismissFindFamiliar,
+  temporarilyDismissSpawnedCompanion,
   type BattleState,
   type BattleCompanionState,
   battleReducerStartRouteEvent,
@@ -56,7 +56,7 @@ import {
   type BattleSubject,
 } from "./index.ts";
 
-type FindFamiliarSelectedIdentityProjection = {
+type SpawnedCompanionSelectedIdentityProjection = {
   readonly familiarStatus: BattleCompanionState["status"] | "none";
   readonly formId: string;
   readonly familiarCombatantPresent: boolean;
@@ -72,17 +72,19 @@ type FindFamiliarSelectedIdentityProjection = {
     | "dismissedAndReappeared"
     | "touchDelivered";
 };
-const findFamiliarUnitId = "find_familiar";
+const spawnedCompanionLifecycleUnitId = "find_familiar";
 const casterId = combatantId("find-familiar-selected-caster");
 const familiarId = combatantId("find-familiar-selected-companion");
 const replacementFamiliarId = combatantId("find-familiar-selected-replacement");
 const targetId = combatantId("find-familiar-selected-target");
 
-const findFamiliarSpell = requireSpellRecord(findFamiliarUnitId);
+const spawnedCompanionLifecycleSpell = requireSpellRecord(
+  spawnedCompanionLifecycleUnitId,
+);
 const cureWoundsSpell = requireSpellRecord(cureWoundsUnitId);
 const healingWordSpell = requireSpellRecord(healingWordUnitId);
-const familiarEligibility = requireFindFamiliarEligibility(
-  findFamiliarFormEligibilityForSpell(findFamiliarSpell),
+const familiarEligibility = requireSpawnedCompanionEligibility(
+  spawnedCompanionFormEligibilityForSpell(spawnedCompanionLifecycleSpell),
 );
 const firstTypeOverride = familiarEligibility.creatureTypeOverrideChoices[0];
 if (firstTypeOverride === undefined) {
@@ -103,17 +105,17 @@ const FIND_FAMILIAR_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
 >;
 
 it("observes selected Find Familiar qRoute through public reducer events", () => {
-  expect(observeCastFindFamiliarRoute()).toEqual(
-    findFamiliarCompanionLifecycleRoute(),
+  expect(observeCastSpawnedCompanionRoute()).toEqual(
+    spawnedCompanionLifecycleCompanionLifecycleRoute(),
   );
-  expect(observeRecastFindFamiliarReplacementRoute()).toEqual(
-    findFamiliarCompanionLifecycleRoute(),
+  expect(observeRecastSpawnedCompanionReplacementRoute()).toEqual(
+    spawnedCompanionLifecycleCompanionLifecycleRoute(),
   );
-  expect(observeDismissAndReappearFindFamiliarRoute()).toEqual(
-    findFamiliarCompanionLifecycleRoute(),
+  expect(observeDismissAndReappearSpawnedCompanionRoute()).toEqual(
+    spawnedCompanionLifecycleCompanionLifecycleRoute(),
   );
-  expect(observeDeliverTouchSpellThroughFindFamiliarRoute()).toEqual(
-    findFamiliarTouchDeliveryRoute(),
+  expect(observeDeliverTouchSpellThroughSpawnedCompanionRoute()).toEqual(
+    spawnedCompanionLifecycleTouchDeliveryRoute(),
   );
 });
 
@@ -142,33 +144,33 @@ defineSelectedIdentityReplayAndQntReplay({
     targetHp: "int",
     lastResult: "variant",
   },
-  initialProjection: expectedFindFamiliarProjection({}),
+  initialProjection: expectedSpawnedCompanionProjection({}),
   units: [
     {
-      unitId: findFamiliarUnitId,
+      unitId: spawnedCompanionLifecycleUnitId,
       procedures: [
         {
           actionName: "doCastFindFamiliar",
-          discover: castFindFamiliarProjection,
+          discover: castSpawnedCompanionProjection,
         },
         {
           actionName: "doRecastFindFamiliarReplacement",
-          discover: recastFindFamiliarReplacementProjection,
+          discover: recastSpawnedCompanionReplacementProjection,
         },
         {
           actionName: "doDismissAndReappearFindFamiliar",
-          discover: dismissAndReappearFindFamiliarProjection,
+          discover: dismissAndReappearSpawnedCompanionProjection,
         },
         {
           actionName: "doDeliverTouchSpellThroughFindFamiliar",
-          discover: deliverTouchSpellThroughFindFamiliarProjection,
+          discover: deliverTouchSpellThroughSpawnedCompanionProjection,
         },
       ],
     },
   ],
 });
 
-function observeCastFindFamiliarRoute(): readonly BattleReducerRouteEvent[] {
+function observeCastSpawnedCompanionRoute(): readonly BattleReducerRouteEvent[] {
   const result = castCatFamiliar(startSpellcasterFixtureBattle());
   return [
     battleReducerStartRouteEvent(),
@@ -176,7 +178,7 @@ function observeCastFindFamiliarRoute(): readonly BattleReducerRouteEvent[] {
   ];
 }
 
-function observeRecastFindFamiliarReplacementRoute(): readonly BattleReducerRouteEvent[] {
+function observeRecastSpawnedCompanionReplacementRoute(): readonly BattleReducerRouteEvent[] {
   const first = castCatFamiliar(startSpellcasterFixtureBattle());
   const second = castRatFamiliar(requireResolved(first));
   return [
@@ -185,14 +187,14 @@ function observeRecastFindFamiliarReplacementRoute(): readonly BattleReducerRout
   ];
 }
 
-function observeDismissAndReappearFindFamiliarRoute(): readonly BattleReducerRouteEvent[] {
+function observeDismissAndReappearSpawnedCompanionRoute(): readonly BattleReducerRouteEvent[] {
   const cast = castCatFamiliar(startSpellcasterFixtureBattle());
-  const dismissed = temporarilyDismissFindFamiliar({
+  const dismissed = temporarilyDismissSpawnedCompanion({
     state: requireResolved(cast),
     casterId,
     heldObjectIds: [],
   });
-  const reappeared = reappearTemporarilyDismissedFindFamiliar({
+  const reappeared = reappearTemporarilyDismissedSpawnedCompanion({
     state: withFreshMagicAction(requireResolved(dismissed)),
     casterId,
     catalog: statBlockCatalog,
@@ -205,7 +207,7 @@ function observeDismissAndReappearFindFamiliarRoute(): readonly BattleReducerRou
   ];
 }
 
-function observeDeliverTouchSpellThroughFindFamiliarRoute(): readonly BattleReducerRouteEvent[] {
+function observeDeliverTouchSpellThroughSpawnedCompanionRoute(): readonly BattleReducerRouteEvent[] {
   const session = startSpellcasterFixtureSession();
   const state = requireResolved(castCatFamiliar(session.state));
   const act = touchDeliveryAct(
@@ -214,8 +216,8 @@ function observeDeliverTouchSpellThroughFindFamiliarRoute(): readonly BattleRedu
   const targetFill = selectedTouchSpellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
   );
-  const connectionFill = findFamiliarConnectionFill(
-    requireHole(act.initialHoles, "findFamiliarConnection"),
+  const connectionFill = spawnedCompanionConnectionFill(
+    requireHole(act.initialHoles, "spawnedCompanionConnection"),
   );
   const awaitingHealingRoll = resolveBattleSubject({
     state,
@@ -224,7 +226,7 @@ function observeDeliverTouchSpellThroughFindFamiliarRoute(): readonly BattleRedu
   });
   if (awaitingHealingRoll.tag !== "needsHoles") {
     throw new Error(
-      `Expected Find Familiar touch delivery healing roll, got ${awaitingHealingRoll.tag}.`,
+      `Expected Companion touch delivery healing roll, got ${awaitingHealingRoll.tag}.`,
     );
   }
   const delivered = resolveBattleSubject({
@@ -247,7 +249,7 @@ function observeDeliverTouchSpellThroughFindFamiliarRoute(): readonly BattleRedu
   ];
 }
 
-function findFamiliarCompanionLifecycleRoute(): readonly BattleReducerRouteEvent[] {
+function spawnedCompanionLifecycleCompanionLifecycleRoute(): readonly BattleReducerRouteEvent[] {
   return [
     battleReducerStartRouteEvent(),
     {
@@ -265,7 +267,7 @@ function findFamiliarCompanionLifecycleRoute(): readonly BattleReducerRouteEvent
   ];
 }
 
-function findFamiliarTouchDeliveryRoute(): readonly BattleReducerRouteEvent[] {
+function spawnedCompanionLifecycleTouchDeliveryRoute(): readonly BattleReducerRouteEvent[] {
   return [
     battleReducerStartRouteEvent(),
     {
@@ -297,7 +299,7 @@ function findFamiliarTouchDeliveryRoute(): readonly BattleReducerRouteEvent[] {
   ];
 }
 
-function castFindFamiliarProjection(): FindFamiliarSelectedIdentityProjection {
+function castSpawnedCompanionProjection(): SpawnedCompanionSelectedIdentityProjection {
   const result = castCatFamiliar(startSpellcasterFixtureBattle());
   if (result.tag !== "resolved") {
     throw new Error(`Expected Find Familiar cast, got ${result.tag}.`);
@@ -305,7 +307,7 @@ function castFindFamiliarProjection(): FindFamiliarSelectedIdentityProjection {
   return projectBattleCompanionState(result.state, "cast");
 }
 
-function recastFindFamiliarReplacementProjection(): FindFamiliarSelectedIdentityProjection {
+function recastSpawnedCompanionReplacementProjection(): SpawnedCompanionSelectedIdentityProjection {
   const first = castCatFamiliar(startSpellcasterFixtureBattle());
   if (first.tag !== "resolved") {
     throw new Error(`Expected initial Find Familiar cast, got ${first.tag}.`);
@@ -317,22 +319,22 @@ function recastFindFamiliarReplacementProjection(): FindFamiliarSelectedIdentity
   return projectBattleCompanionState(second.state, "recast");
 }
 
-function dismissAndReappearFindFamiliarProjection(): FindFamiliarSelectedIdentityProjection {
+function dismissAndReappearSpawnedCompanionProjection(): SpawnedCompanionSelectedIdentityProjection {
   const cast = castCatFamiliar(startSpellcasterFixtureBattle());
   if (cast.tag !== "resolved") {
     throw new Error(`Expected Find Familiar cast, got ${cast.tag}.`);
   }
-  const dismissed = temporarilyDismissFindFamiliar({
+  const dismissed = temporarilyDismissSpawnedCompanion({
     state: cast.state,
     casterId,
     heldObjectIds: [],
   });
   if (dismissed.tag !== "resolved") {
     throw new Error(
-      `Expected Find Familiar temporary dismissal, got ${dismissed.tag}.`,
+      `Expected Companion temporary dismissal, got ${dismissed.tag}.`,
     );
   }
-  const reappeared = reappearTemporarilyDismissedFindFamiliar({
+  const reappeared = reappearTemporarilyDismissedSpawnedCompanion({
     state: withFreshMagicAction(dismissed.state),
     casterId,
     catalog: statBlockCatalog,
@@ -340,9 +342,7 @@ function dismissAndReappearFindFamiliarProjection(): FindFamiliarSelectedIdentit
     placement: { kind: "unoccupiedSpaceWithin30Feet" },
   });
   if (reappeared.tag !== "resolved") {
-    throw new Error(
-      `Expected Find Familiar reappearance, got ${reappeared.tag}.`,
-    );
+    throw new Error(`Expected Companion reappearance, got ${reappeared.tag}.`);
   }
   return projectBattleCompanionState(
     reappeared.state,
@@ -350,7 +350,7 @@ function dismissAndReappearFindFamiliarProjection(): FindFamiliarSelectedIdentit
   );
 }
 
-function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedIdentityProjection {
+function deliverTouchSpellThroughSpawnedCompanionProjection(): SpawnedCompanionSelectedIdentityProjection {
   const session = startSpellcasterFixtureSession();
   const cast = castCatFamiliar(session.state);
   if (cast.tag !== "resolved") {
@@ -372,22 +372,22 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
   const targetFill = selectedTouchSpellTargetFill(
     requireHole(cureWoundsAct.initialHoles, "targetChoice"),
   );
-  const awaitingHealingRoll = deliverTouchSpellThroughFindFamiliar({
+  const awaitingHealingRoll = deliverTouchSpellThroughSpawnedCompanion({
     state: cast.state,
     subject: cureWoundsAct.subject,
     fills: [targetFill],
     fact: {
-      kind: "findFamiliarWithin100FeetOfOwner",
+      kind: "companionWithinCommunicationRangeOfOwner",
       ownerId: casterId,
       familiarId,
     },
   });
   if (awaitingHealingRoll.tag !== "needsHoles") {
     throw new Error(
-      `Expected Find Familiar touch delivery healing roll, got ${awaitingHealingRoll.tag}.`,
+      `Expected Companion touch delivery healing roll, got ${awaitingHealingRoll.tag}.`,
     );
   }
-  const delivered = deliverTouchSpellThroughFindFamiliar({
+  const delivered = deliverTouchSpellThroughSpawnedCompanion({
     state: cast.state,
     subject: cureWoundsAct.subject,
     fills: [
@@ -399,15 +399,13 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
       },
     ],
     fact: {
-      kind: "findFamiliarWithin100FeetOfOwner",
+      kind: "companionWithinCommunicationRangeOfOwner",
       ownerId: casterId,
       familiarId,
     },
   });
   if (delivered.tag !== "resolved") {
-    throw new Error(
-      `Expected Find Familiar touch delivery, got ${delivered.tag}.`,
-    );
+    throw new Error(`Expected Companion touch delivery, got ${delivered.tag}.`);
   }
   return projectBattleCompanionState(delivered.state, "touchDelivered");
 }
@@ -450,14 +448,14 @@ function startSpellcasterFixtureSession(): BattleRuntimeSession {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function castCatFamiliar(state: BattleState) {
-  return castFindFamiliar({
+  return castSpawnedCompanion({
     state,
     casterId,
     ammunitionStocks: [],
@@ -475,7 +473,7 @@ function castCatFamiliar(state: BattleState) {
 }
 
 function castRatFamiliar(state: BattleState) {
-  return castFindFamiliar({
+  return castSpawnedCompanion({
     state,
     casterId,
     ammunitionStocks: [],
@@ -495,7 +493,7 @@ function castRatFamiliar(state: BattleState) {
 function touchDeliveryAct(session: BattleRuntimeSession): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "findFamiliarTouchSpell" }
+    { readonly tag: "spawnedCompanionTouchSpellProxy" }
   >;
 } {
   const act = discoverBattleActs(session).find(
@@ -504,15 +502,15 @@ function touchDeliveryAct(session: BattleRuntimeSession): AvailableBattleAct & {
     ): candidate is AvailableBattleAct & {
       readonly subject: Extract<
         BattleSubject,
-        { readonly tag: "findFamiliarTouchSpell" }
+        { readonly tag: "spawnedCompanionTouchSpellProxy" }
       >;
     } =>
-      candidate.subject.tag === "findFamiliarTouchSpell" &&
+      candidate.subject.tag === "spawnedCompanionTouchSpellProxy" &&
       battleActSpellPresentation(candidate)?.invocation.spellId ===
         cureWoundsUnitId,
   );
   if (act === undefined) {
-    throw new Error("Expected Find Familiar touch delivery act.");
+    throw new Error("Expected Companion touch delivery act.");
   }
   return act;
 }
@@ -526,7 +524,7 @@ function selectedTouchSpellTargetFill(
     value: targetId,
     spatialFacts: [
       {
-        kind: "findFamiliarTouchSpellTarget",
+        kind: "spawnedCompanionTouchSpellTarget",
         ownerId: casterId,
         familiarId,
         targetId,
@@ -537,11 +535,11 @@ function selectedTouchSpellTargetFill(
   };
 }
 
-function findFamiliarConnectionFill(
-  hole: Extract<BattleHole, { readonly kind: "findFamiliarConnection" }>,
-): Extract<BattleFill, { readonly kind: "findFamiliarConnection" }> {
+function spawnedCompanionConnectionFill(
+  hole: Extract<BattleHole, { readonly kind: "spawnedCompanionConnection" }>,
+): Extract<BattleFill, { readonly kind: "spawnedCompanionConnection" }> {
   return {
-    kind: "findFamiliarConnection",
+    kind: "spawnedCompanionConnection",
     holeId: hole.holeId,
     value: { withinRange: true },
   };
@@ -594,18 +592,18 @@ function requireSpellRecord(unitId: string): SpellRecord {
   return unit;
 }
 
-function requireFindFamiliarEligibility(
-  eligibility: FindFamiliarFormEligibility | null,
-): FindFamiliarFormEligibility {
+function requireSpawnedCompanionEligibility(
+  eligibility: SpawnedCompanionFormEligibility | null,
+): SpawnedCompanionFormEligibility {
   if (eligibility === null) {
     throw new Error("Expected Find Familiar form eligibility.");
   }
   return eligibility;
 }
 
-function expectedFindFamiliarProjection(
-  input: Partial<FindFamiliarSelectedIdentityProjection>,
-): FindFamiliarSelectedIdentityProjection {
+function expectedSpawnedCompanionProjection(
+  input: Partial<SpawnedCompanionSelectedIdentityProjection>,
+): SpawnedCompanionSelectedIdentityProjection {
   return {
     familiarStatus: "none",
     formId: "none",
@@ -622,9 +620,9 @@ function expectedFindFamiliarProjection(
 
 function projectBattleCompanionState(
   state: BattleState,
-  lastResult: FindFamiliarSelectedIdentityProjection["lastResult"],
-): FindFamiliarSelectedIdentityProjection {
-  const familiar = findFamiliarCompanionForOwner(state, casterId);
+  lastResult: SpawnedCompanionSelectedIdentityProjection["lastResult"],
+): SpawnedCompanionSelectedIdentityProjection {
+  const familiar = spawnedCompanionForOwner(state, casterId);
   return {
     familiarStatus: familiar?.status ?? "none",
     formId:

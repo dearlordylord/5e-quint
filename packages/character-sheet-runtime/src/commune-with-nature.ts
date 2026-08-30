@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -23,7 +23,7 @@ const COMMUNE_WITH_NATURE_SPELL_LEVEL = spellSlotLevel(5);
 export function castCommuneWithNature(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheetCommuneWithNatureResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetCommuneWithNatureResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -38,7 +38,7 @@ export function castCommuneWithNature(input: {
 
 function communeWithNatureInvocationFromSpell(
   spell: SpellRecord,
-): Either.Either<
+): Result.Result<
   CharacterSheetCommuneWithNatureInvocation,
   CharacterSheetIssue
 > {
@@ -63,7 +63,7 @@ function communeWithNatureInvocationFromSpell(
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "communeWithNature",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,

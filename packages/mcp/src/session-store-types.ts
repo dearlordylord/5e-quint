@@ -15,7 +15,7 @@ import type {
   CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
-import type { Either } from "effect";
+import type { Result } from "effect";
 
 type CharacterId = CharacterSheetId;
 
@@ -58,7 +58,7 @@ export type CharacterSessionRegistry = {
   set(session: CharacterSession): void;
   setAll(
     sessions: readonly CharacterSession[],
-  ): Either.Either<void, CharacterSessionRegistryIssue>;
+  ): Result.Result<void, CharacterSessionRegistryIssue>;
   entries(): IterableIterator<readonly [CharacterId, CharacterSession]>;
   keys(): IterableIterator<CharacterId>;
 };

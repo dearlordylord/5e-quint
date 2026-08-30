@@ -7,7 +7,7 @@ import type {
   CombatTurnStartHeroicInspirationMechanics,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 
 import {
   CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
@@ -26,11 +26,11 @@ type CharacterSheetCombatTurnStartHeroicInspirationFeature = Extract<
 export function useHeroicWarriorAtCombatTurnStart(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+}): Result.Result<CharacterSheet, CharacterSheetIssue> {
   const feature = combatTurnStartHeroicInspirationFeature(input);
   /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: Heroic Warrior lookup can fail only when an admitted feature id no longer resolves. */
-  if (Either.isLeft(feature)) return Either.left(feature.left);
-  if (feature.right === undefined) {
+  if (Result.isFailure(feature)) return Result.fail(feature.failure);
+  if (feature.success === undefined) {
     return characterSheetIssue(
       "Heroic Warrior requires a retained combat turn-start Heroic Inspiration feature.",
     );
@@ -40,7 +40,7 @@ export function useHeroicWarriorAtCombatTurnStart(input: {
       "Heroic Warrior requires starting the combat turn without Heroic Inspiration.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     ...input.sheet,
     heroicInspiration: CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
   });
@@ -49,7 +49,7 @@ export function useHeroicWarriorAtCombatTurnStart(input: {
 function combatTurnStartHeroicInspirationFeature(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetCombatTurnStartHeroicInspirationFeature | undefined,
   CharacterSheetIssue
 > {
@@ -64,10 +64,10 @@ function combatTurnStartHeroicInspirationFeature(input: {
     }
     /* v8 ignore stop -- @preserve */
     if (isCombatTurnStartHeroicInspirationFeature(unit.value)) {
-      return Either.right(unit.value);
+      return Result.succeed(unit.value);
     }
   }
-  return Either.right(undefined);
+  return Result.succeed(undefined);
 }
 
 function isCombatTurnStartHeroicInspirationFeature(

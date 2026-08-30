@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import {
@@ -96,19 +96,19 @@ export function createRecoverablePlaySessionRegistry(
         runtime.now(),
         runtime.maximumRequestsPerMinute,
       );
-      if (Either.isLeft(admitted)) return Either.left(admitted.left);
+      if (Result.isFailure(admitted)) return Result.fail(admitted.failure);
       const prunedExpired = runtime.input.repository.pruneExpired(
         runtime.now(),
       );
-      if (Either.isLeft(prunedExpired)) {
-        return Either.left(accessFailure(prunedExpired.left));
+      if (Result.isFailure(prunedExpired)) {
+        return Result.fail(accessFailure(prunedExpired.failure));
       }
       const listed = runtime.input.repository.listSaved(principalId);
-      if (Either.isLeft(listed)) {
-        return Either.left(accessFailure(listed.left));
+      if (Result.isFailure(listed)) {
+        return Result.fail(accessFailure(listed.failure));
       }
-      return Either.right(
-        listed.right.flatMap((record) => {
+      return Result.succeed(
+        listed.success.flatMap((record) => {
           if (
             record.tenure.tag !== "saved" ||
             playSessionIsExpired(record.tenure, runtime.now())
@@ -132,12 +132,12 @@ export function createRecoverablePlaySessionRegistry(
           runtime.now(),
           runtime.maximumRequestsPerMinute,
         );
-        if (Either.isLeft(admitted)) return Either.left(admitted.left);
+        if (Result.isFailure(admitted)) return Result.fail(admitted.failure);
         const prunedExpired = runtime.input.repository.pruneExpired(
           runtime.now(),
         );
-        if (Either.isLeft(prunedExpired)) {
-          return Either.left(accessFailure(prunedExpired.left));
+        if (Result.isFailure(prunedExpired)) {
+          return Result.fail(accessFailure(prunedExpired.failure));
         }
         return deleteSavedRecord(
           runtime.input.repository,

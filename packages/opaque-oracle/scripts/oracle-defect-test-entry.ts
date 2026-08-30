@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { evaluateOracleCase } from "../src/oracle-evaluation.ts";
 import { runOracleProcess } from "../src/oracle-bootstrap.ts";
@@ -29,9 +29,9 @@ const loadApplication = (
   executablePath: string,
 ): OracleDistributionLoadResult => {
   const loaded = loadOracleApplicationFromExecutable(executablePath);
-  if (Either.isLeft(loaded)) return loaded;
-  return Either.right(
-    withOracleBatchEvaluatorForTest(loaded.right, batchEvaluator),
+  if (Result.isFailure(loaded)) return loaded;
+  return Result.succeed(
+    withOracleBatchEvaluatorForTest(loaded.success, batchEvaluator),
   );
 };
 

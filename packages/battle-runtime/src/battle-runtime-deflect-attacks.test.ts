@@ -35,13 +35,13 @@ import {
   battleProcedureExecutionRefForTest,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitSupportProfilesForUnit,
-  Either,
   endTurn,
   Hp,
   resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import { classLevel, damageAmount } from "@dnd/shared/types";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import type { BattleReactionModifierChoice } from "./battle-state-execution.ts";
 import {
@@ -98,7 +98,7 @@ describe("battle runtime: Deflect Attacks", () => {
       "attackDamageReductionZeroDamageRedirect",
     );
     expect(battleUnitSupportProfilesForUnit({ unit })).toEqual(
-      Either.right([
+      Result.succeed([
         ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
       ]),
     );

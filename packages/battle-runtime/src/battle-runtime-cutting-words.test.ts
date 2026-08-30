@@ -1,8 +1,7 @@
 import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
 import { classLevel } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { combatantId } from "./identity.ts";
 import {
   attackDamageHoleAfterHit,
@@ -123,8 +122,8 @@ describe("battle runtime: Cutting Words", () => {
       BattleCheckpointFrontierEnvelopeSchema,
     )(battleCheckpointFrontierEnvelope(awaitingReaction.state));
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encodedAttackRollFrontier,
         ),
       ),
@@ -133,8 +132,8 @@ describe("battle runtime: Cutting Words", () => {
       throw new Error("Expected the encoded attack-roll Reaction frontier.");
     }
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
           ...encodedAttackRollFrontier,
           frontier: {
             ...encodedAttackRollFrontier.frontier,
@@ -148,8 +147,8 @@ describe("battle runtime: Cutting Words", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
           ...encodedAttackRollFrontier,
           frontier: {
             ...encodedAttackRollFrontier.frontier,
@@ -297,8 +296,8 @@ describe("battle runtime: Cutting Words", () => {
       BattleCheckpointFrontierEnvelopeSchema,
     )(battleCheckpointFrontierEnvelope(awaitingReaction.state));
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encodedDamageRollFrontier,
         ),
       ),
@@ -307,8 +306,8 @@ describe("battle runtime: Cutting Words", () => {
       throw new Error("Expected the encoded damage-roll Reaction frontier.");
     }
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
           ...encodedDamageRollFrontier,
           frontier: {
             ...encodedDamageRollFrontier.frontier,

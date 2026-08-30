@@ -5,7 +5,7 @@ import {
   timeSpanDuration,
 } from "@dnd/shared/elapsed-time";
 import { Match } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 
 import type {
   AreaOccupantDispositionFilter,
@@ -66,6 +66,7 @@ export function procedureForFamily(
     Match.when("magic_circle_ward", () => "activate" as const),
     Match.when("stone_merge", () => "activate" as const),
     Match.when("ongoing_effect", () => "activate" as const),
+    Match.when("modal_ongoing_effect", () => "activate" as const),
     Match.when("activation", () => "activate" as const),
     Match.when("modal_activation", () => "activate" as const),
     Match.when("passive_hit_intercept", () => "activate" as const),
@@ -497,6 +498,8 @@ export function describeAreaShape(s: AreaShapeSpec): string {
       return `cone ${s.lengthFeet} ft`;
     case "cube":
       return `cube ${s.sideFeet} ft side`;
+    case "ground_square":
+      return `ground square ${s.sideFeet} ft side`;
     case "cube_cluster": {
       const contig = s.contiguous === true ? ", contiguous" : "";
       return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
@@ -534,6 +537,8 @@ export function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
       return `cone ${s.lengthFeet} ft`;
     case "cube":
       return `cube ${s.sideFeet} ft side`;
+    case "ground_square":
+      return `ground square ${s.sideFeet} ft side`;
     case "cube_cluster": {
       const contig = s.contiguous === true ? ", contiguous" : "";
       return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
@@ -859,8 +864,8 @@ export function describeDurationValue(
   }
   const duration = timeSpanDuration(d);
   /* v8 ignore start -- @preserve -- decoded positive integer time spans always convert; the fallback requires malformed numeric input */
-  const base = Either.isRight(duration)
-    ? formatTimeSpanDuration(duration.right)
+  const base = Result.isSuccess(duration)
+    ? formatTimeSpanDuration(duration.success)
     : `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
   /* v8 ignore stop -- @preserve */
   if (d.upcastTiers === undefined || d.upcastTiers.length === 0) return base;
@@ -876,8 +881,8 @@ export function describeDurationValue(
 export function formatElapsedHours(hours: number): string {
   const ticks = elapsedTimeTicksFromHours(hours);
   /* v8 ignore start -- @preserve -- callers supply decoded finite hour counts; the fallback requires malformed numeric input */
-  return Either.isRight(ticks)
-    ? formatElapsedTimeTicks(ticks.right)
+  return Result.isSuccess(ticks)
+    ? formatElapsedTimeTicks(ticks.success)
     : `${hours} hour${hours === 1 ? "" : "s"}`;
   /* v8 ignore stop -- @preserve */
 }

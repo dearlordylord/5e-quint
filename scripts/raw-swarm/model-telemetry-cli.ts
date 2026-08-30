@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { closeSync, openSync } from "node:fs";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   jsonModelInvocationLastMessageDecoder,
@@ -38,15 +38,15 @@ async function runPostPlayInvocation(args: readonly string[]): Promise<number> {
   const ledgerPath = flag(args, "--ledger");
   const phaseInput = flag(args, "--phase");
   const scenarioId = decodeScenarioId(flag(args, "--scenario-id"));
-  if (Either.isLeft(scenarioId)) fail(scenarioId.left);
+  if (Result.isFailure(scenarioId)) fail(scenarioId.failure);
   const executionId = decodeExecutionId(flag(args, "--execution-id"));
-  if (Either.isLeft(executionId)) fail(executionId.left);
+  if (Result.isFailure(executionId)) fail(executionId.failure);
   const evidenceSetId = decodeEvidenceSetId(flag(args, "--evidence-set-id"));
-  if (Either.isLeft(evidenceSetId)) fail(evidenceSetId.left);
-  const gitSha = Schema.decodeUnknownEither(GitShaSchema)(
+  if (Result.isFailure(evidenceSetId)) fail(evidenceSetId.failure);
+  const gitSha = Schema.decodeUnknownResult(GitShaSchema)(
     flag(args, "--git-sha"),
   );
-  if (Either.isLeft(gitSha)) fail(gitSha.left.message);
+  if (Result.isFailure(gitSha)) fail(gitSha.failure.message);
   const phase: ModelInvocationPhase =
     MODEL_INVOCATION_PHASES.find((candidate) => candidate === phaseInput) ??
     fail(`Unknown model invocation phase ${phaseInput}.`);
@@ -85,11 +85,11 @@ async function runPostPlayInvocation(args: readonly string[]): Promise<number> {
       stagePlanReason,
       subject: {
         tag: "execution",
-        executionId: executionId.right,
-        evidenceSetId: evidenceSetId.right,
-        scenarioId: scenarioId.right,
+        executionId: executionId.success,
+        evidenceSetId: evidenceSetId.success,
+        scenarioId: scenarioId.success,
       },
-      gitSha: gitSha.right,
+      gitSha: gitSha.success,
       fallbackInvocationId: randomUUID(),
       model,
       reasoningEffort,

@@ -8,9 +8,9 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // creatures and affected objects grant sight-gated attack-roll Advantage.
 //
 // RAW anchors:
-//   - SRD 5.2.1 Spells: Faerie Fire outlines objects in a 20-foot Cube and
-//     creatures that fail a Dexterity Saving Throw; attack rolls against an
-//     affected creature or object have Advantage if the attacker can see it.
+//   - SRD 5.2.1 Spells/Descriptions-E-L.md, point-origin outline spell:
+//     objects and failed-save creatures shed Dim Light; attack rolls against
+//     an affected creature or object have Advantage if the attacker can see it.
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Attack Roll, Advantage, Magic
 //     Action, and Spell Invocation.
 
@@ -31,12 +31,14 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
   AbilitySchema,
+  DimIlluminationEmissionFactsSchema,
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
@@ -44,8 +46,9 @@ import {
 } from "../codec-building-blocks.ts";
 
 const FailedSaveAttackRollAdvantageEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   sourceCombatantId: CombatantId,
-  kind: Schema.Literal("faerieFireOutline"),
+  kind: Schema.Literal("saveGatedTargetProjection"),
   expiresAt: BattleActiveEffectExpirationSchema,
 });
 
@@ -103,13 +106,14 @@ const SaveGatedAttackRollAdvantageInvocationSchema =
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       ability: AbilitySchema,
       dc: DcSourceSchema,
-      targeting: Schema.Union(
+      targeting: Schema.Union([
         Schema.Struct({
           kind: Schema.Literal("pointOriginCube"),
           sideFeet: MovementFeet,
         }),
-      ),
+      ]),
       effect: FailedSaveAttackRollAdvantageEffectSchema,
+      illumination: DimIlluminationEmissionFactsSchema,
       rangeFeet: MovementFeet,
     }),
   );

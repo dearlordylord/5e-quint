@@ -778,7 +778,7 @@ describe("battle runtime: Starry Wisp", () => {
         objectId,
       }),
     ]);
-    const emitter = hit.state.lightEmitters[0];
+    const emitter = hit.snapshot.lightEmitters[0];
     if (emitter?.kind !== "objectInvisibleRevealLightEmitter") {
       throw new Error("Expected Starry Wisp object light emitter.");
     }

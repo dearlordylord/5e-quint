@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-spiritual-weapon-attack-proxy
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   booleanField,
@@ -88,15 +88,16 @@ type SpiritualWeaponMbtProjection = {
   readonly lastInvalidReason: SpiritualWeaponMbtLastInvalidReason;
 };
 
-const spiritualWeaponUnit = unitLibrary.requireUnit("spiritual_weapon");
-if (spiritualWeaponUnit.kind !== "spell") {
+const spatialMeleeSpellAttackProxyUnit =
+  unitLibrary.requireUnit("spiritual_weapon");
+if (spatialMeleeSpellAttackProxyUnit.kind !== "spell") {
   throw new Error(
     "Expected Spiritual Weapon content to decode as a spell Unit.",
   );
 }
-const spiritualWeaponSpell = spiritualWeaponUnit;
+const spatialMeleeSpellAttackProxySpell = spatialMeleeSpellAttackProxyUnit;
 
-const spiritualWeaponDriverSchema = {
+const spatialMeleeSpellAttackProxyDriverSchema = {
   init: {},
   doFillCastTargetAndForce: {},
   doFillCastAttackHit: {},
@@ -109,25 +110,28 @@ const spiritualWeaponDriverSchema = {
 } as const;
 
 function createSpiritualWeaponDriver() {
-  return defineDriver(spiritualWeaponDriverSchema, () => {
-    let state = spiritualWeaponBattle();
+  return defineDriver(spatialMeleeSpellAttackProxyDriverSchema, () => {
+    let state = spatialMeleeSpellAttackProxyBattle();
     let subjectStartState = state;
-    let subject: BattleSubject = spiritualWeaponCastSubject(state);
+    let subject: BattleSubject = spatialMeleeSpellAttackProxyCastSubject(state);
     let fills: readonly BattleFill[] = [];
     let holes: readonly BattleHole[] = discoverSpiritualWeaponHoles(
       state,
-      "spiritualWeaponAttackProxy",
+      "spatialMeleeSpellAttackProxy",
     );
     let lastResult: SpiritualWeaponMbtProjection["lastResult"] = "init";
     let lastInvalidReason: SpiritualWeaponMbtProjection["lastInvalidReason"] =
       "";
 
     function reset(): void {
-      state = spiritualWeaponBattle();
+      state = spatialMeleeSpellAttackProxyBattle();
       subjectStartState = state;
-      subject = spiritualWeaponCastSubject(state);
+      subject = spatialMeleeSpellAttackProxyCastSubject(state);
       fills = [];
-      holes = discoverSpiritualWeaponHoles(state, "spiritualWeaponAttackProxy");
+      holes = discoverSpiritualWeaponHoles(
+        state,
+        "spatialMeleeSpellAttackProxy",
+      );
       lastResult = "init";
       lastInvalidReason = "";
     }
@@ -146,7 +150,9 @@ function createSpiritualWeaponDriver() {
         lastInvalidReason = "";
         return;
       }
-      lastInvalidReason = spiritualWeaponMbtInvalidReason(result.reason);
+      lastInvalidReason = spatialMeleeSpellAttackProxyMbtInvalidReason(
+        result.reason,
+      );
     }
 
     function submit(nextFills: readonly BattleFill[]): void {
@@ -160,11 +166,11 @@ function createSpiritualWeaponDriver() {
       const target = requireSpiritualWeaponHole(holes, "targetChoice");
       const forcePosition = requireSpiritualWeaponHole(
         holes,
-        "spiritualWeaponForcePosition",
+        "spatialMeleeSpellAttackProxyPosition",
       );
       submit([
-        spiritualWeaponForcePositionFill(forcePosition, positionId),
-        spiritualWeaponTargetFill(target, positionId),
+        spatialMeleeSpellAttackProxyPositionFill(forcePosition, positionId),
+        spatialMeleeSpellAttackProxyTargetFill(target, positionId),
       ]);
     }
 
@@ -197,11 +203,11 @@ function createSpiritualWeaponDriver() {
         subjectStartState = state;
       },
       doFillRepeatTargetAndForce: () => {
-        subject = spiritualWeaponRepeatSubject(state);
+        subject = spatialMeleeSpellAttackProxyRepeatSubject(state);
         subjectStartState = state;
         holes = discoverSpiritualWeaponHoles(
           state,
-          "spiritualWeaponRepeatAttack",
+          "spatialMeleeSpellAttackProxy",
         );
         fills = [];
         fillTargetAndForce(2);
@@ -229,7 +235,7 @@ function createSpiritualWeaponDriver() {
   });
 }
 
-const spiritualWeaponStateCheck = stateCheck(
+const spatialMeleeSpellAttackProxyStateCheck = stateCheck(
   normalizeSpiritualWeaponQuintState,
   (spec: SpiritualWeaponMbtProjection, impl: SpiritualWeaponMbtProjection) => {
     expect(impl).toEqual(spec);
@@ -250,7 +256,7 @@ describe("Spiritual Weapon MBT parity", () => {
       backend: "typescript",
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(6),
-      stateCheck: spiritualWeaponStateCheck,
+      stateCheck: spatialMeleeSpellAttackProxyStateCheck,
     });
   }, 120_000);
 });
@@ -263,7 +269,7 @@ function normalizeSpiritualWeaponQuintState(
     state,
     protocolField: "qProtocol",
     noInvalidReason: "",
-    decodeHole: spiritualWeaponHoleName,
+    decodeHole: spatialMeleeSpellAttackProxyHoleName,
     compareHoles: (left, right) => left.localeCompare(right),
   });
 
@@ -276,8 +282,8 @@ function normalizeSpiritualWeaponQuintState(
       "qForcePositionId",
     ),
     holes: protocol.holes,
-    lastResult: spiritualWeaponMbtLastResult(protocol.lastResult),
-    lastInvalidReason: spiritualWeaponMbtLastInvalidReason(
+    lastResult: spatialMeleeSpellAttackProxyMbtLastResult(protocol.lastResult),
+    lastInvalidReason: spatialMeleeSpellAttackProxyMbtLastInvalidReason(
       protocol.lastInvalidReason,
     ),
   };
@@ -303,24 +309,24 @@ function projectSpiritualWeaponMbtState(input: {
     targetHp: target.hp,
     bonusActionAvailable: snapshot.turn.bonusActionQuotaAvailable,
     casterConcentrating: caster.concentrating,
-    forcePositionId: spiritualWeaponForcePositionId(input.state),
+    forcePositionId: spatialMeleeSpellAttackProxyPositionId(input.state),
     holes: projectSpiritualWeaponHoles(input.holes),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
   };
 }
 
-function spiritualWeaponBattle(): BattleState {
+function spatialMeleeSpellAttackProxyBattle(): BattleState {
   return startBattleRight({
     battleId: battleId("battle-runtime-mbt-spiritual-weapon"),
     combatants: [
-      spiritualWeaponCasterCreatureInit({ initiative: 20 }),
+      spatialMeleeSpellAttackProxyCasterCreatureInit({ initiative: 20 }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
 }
 
-function spiritualWeaponCasterCreatureInit(input: {
+function spatialMeleeSpellAttackProxyCasterCreatureInit(input: {
   readonly initiative: number;
 }): BattleCreatureInit {
   return {
@@ -354,7 +360,7 @@ function spiritualWeaponCasterCreatureInit(input: {
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
-        preparedSpells: [spiritualWeaponSpell],
+        preparedSpells: [spatialMeleeSpellAttackProxySpell],
         featurePreparedSpells: [],
         spellAccesses: [],
         spellbookRitualSpellAccesses: [],
@@ -365,7 +371,7 @@ function spiritualWeaponCasterCreatureInit(input: {
   };
 }
 
-function spiritualWeaponCastSubject(
+function spatialMeleeSpellAttackProxyCastSubject(
   state: BattleState,
 ): Extract<BattleSubject, { readonly tag: "bonusActionSpell" }> {
   const act = discoverBattleActCandidates(state).find(
@@ -379,7 +385,7 @@ function spiritualWeaponCastSubject(
   return act.subject;
 }
 
-function spiritualWeaponRepeatSubject(
+function spatialMeleeSpellAttackProxyRepeatSubject(
   state: BattleState,
 ): Extract<BattleSubject, { readonly tag: "bonusActionSpell" }> {
   const act = discoverBattleActCandidates(state).find(
@@ -395,7 +401,7 @@ function spiritualWeaponRepeatSubject(
 
 function discoverSpiritualWeaponHoles(
   state: BattleState,
-  procedure: "spiritualWeaponAttackProxy" | "spiritualWeaponRepeatAttack",
+  procedure: "spatialMeleeSpellAttackProxy" | "spatialMeleeSpellAttackProxy",
 ): readonly BattleHole[] {
   const act = discoverBattleActCandidates(state).find(
     (candidate) =>
@@ -422,10 +428,10 @@ function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleState {
   const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function baseUnarmedStrike(): Extract<
@@ -455,8 +461,11 @@ function requireSpiritualWeaponHole(
 ): Extract<BattleHole, { readonly kind: "rolledDice" }>;
 function requireSpiritualWeaponHole(
   holes: readonly BattleHole[],
-  kind: "spiritualWeaponForcePosition",
-): Extract<BattleHole, { readonly kind: "spiritualWeaponForcePosition" }>;
+  kind: "spatialMeleeSpellAttackProxyPosition",
+): Extract<
+  BattleHole,
+  { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
+>;
 function requireSpiritualWeaponHole(
   holes: readonly BattleHole[],
   kind: "targetChoice",
@@ -466,7 +475,7 @@ function requireSpiritualWeaponHole(
   kind:
     | "attackRoll"
     | "rolledDice"
-    | "spiritualWeaponForcePosition"
+    | "spatialMeleeSpellAttackProxyPosition"
     | "targetChoice",
 ): BattleHole {
   const hole = holes.find((candidate) => candidate.kind === kind);
@@ -508,7 +517,7 @@ function fillsWithSpiritualWeaponSpellCastReactionFacts(
     : [...fills, ...spellCastReactionFactFills];
 }
 
-function spiritualWeaponTargetFill(
+function spatialMeleeSpellAttackProxyTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   forcePositionId: number,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -519,7 +528,7 @@ function spiritualWeaponTargetFill(
     value: skeletonId,
     spatialFacts: [
       {
-        kind: "spiritualWeaponTargetWithinForceReach",
+        kind: "spatialMeleeSpellAttackProxyTargetWithinReach",
         casterId: fighterId,
         targetId: skeletonId,
         sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -532,13 +541,19 @@ function spiritualWeaponTargetFill(
   };
 }
 
-function spiritualWeaponForcePositionFill(
-  hole: Extract<BattleHole, { readonly kind: "spiritualWeaponForcePosition" }>,
+function spatialMeleeSpellAttackProxyPositionFill(
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
+  >,
   positionId: number,
-): Extract<BattleFill, { readonly kind: "spiritualWeaponForcePosition" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
+> {
   const forcePositionId = battleTablePositionId(String(positionId));
   return {
-    kind: "spiritualWeaponForcePosition",
+    kind: "spatialMeleeSpellAttackProxyPosition",
     holeId: hole.holeId,
     value:
       hole.mode === "cast"
@@ -555,18 +570,18 @@ function spiritualWeaponForcePositionFill(
   };
 }
 
-function spiritualWeaponForcePositionId(state: BattleState): number {
+function spatialMeleeSpellAttackProxyPositionId(state: BattleState): number {
   const caster = state.combatants.get(fighterId);
   const effect = caster?.activeEffects.find(
-    (candidate) => candidate.kind === "spiritualWeapon",
+    (candidate) => candidate.kind === "spatialMeleeSpellAttackProxy",
   );
-  if (effect === undefined || effect.kind !== "spiritualWeapon") {
+  if (effect === undefined || effect.kind !== "spatialMeleeSpellAttackProxy") {
     return 0;
   }
   return Number(effect.forcePositionId);
 }
 
-function spiritualWeaponMbtInvalidReason(
+function spatialMeleeSpellAttackProxyMbtInvalidReason(
   reason: Extract<
     BattleResolutionResult,
     { readonly tag: "invalid" }
@@ -598,7 +613,7 @@ function projectSpiritualWeaponHole(
   if (hole.kind === "targetChoice") {
     return ["TargetChoice"];
   }
-  if (hole.kind === "spiritualWeaponForcePosition") {
+  if (hole.kind === "spatialMeleeSpellAttackProxyPosition") {
     return ["SpiritualWeaponForcePosition"];
   }
   if (hole.kind === "attackRoll") {
@@ -611,7 +626,9 @@ function projectSpiritualWeaponHole(
   throw new Error(`Unexpected Spiritual Weapon MBT hole: ${hole.kind}`);
 }
 
-function spiritualWeaponHoleName(raw: unknown): SpiritualWeaponMbtHole {
+function spatialMeleeSpellAttackProxyHoleName(
+  raw: unknown,
+): SpiritualWeaponMbtHole {
   const tag = quintVariantTag(raw);
   if (
     tag === "TargetChoice" ||
@@ -625,7 +642,7 @@ function spiritualWeaponHoleName(raw: unknown): SpiritualWeaponMbtHole {
   throw new Error(`Unknown Spiritual Weapon Quint hole variant: ${tag}`);
 }
 
-function spiritualWeaponMbtLastResult(
+function spatialMeleeSpellAttackProxyMbtLastResult(
   raw: unknown,
 ): SpiritualWeaponMbtLastResult {
   if (
@@ -640,7 +657,7 @@ function spiritualWeaponMbtLastResult(
   throw new Error(`Unknown Quint last result: ${String(raw)}.`);
 }
 
-function spiritualWeaponMbtLastInvalidReason(
+function spatialMeleeSpellAttackProxyMbtLastInvalidReason(
   raw: unknown,
 ): SpiritualWeaponMbtLastInvalidReason {
   if (

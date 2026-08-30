@@ -4,6 +4,7 @@ import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-suppor
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
 // UNIT-IDENTITY-REPLAY: L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey doColossusSlayer doSkipThenUseColossusSlayer doHordeBreaker doHordeBreakerAfterPrimaryMiss doRejectMissingSelection doRejectSameTarget doRejectInvalidTargetPredicate doSecondHordeBreakerUnavailable
 import { movementFeet } from "@dnd/shared/types";
+import { Result } from "effect";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
@@ -22,7 +23,6 @@ import {
   battleId,
   characterSeed,
   damageRollFillWithGroups,
-  Either,
   fighterAttackSubject,
   fighterId,
   goblinId,
@@ -321,7 +321,9 @@ function projectRejectMissingSelection(): HuntersPreyProjection {
   });
   return expectedProjection({
     lastResult: "rejectMissingSelection",
-    lastInvalidReason: Either.isLeft(admitted) ? "invalidFill" : "notInvalid",
+    lastInvalidReason: Result.isFailure(admitted)
+      ? "invalidFill"
+      : "notInvalid",
   });
 }
 

@@ -1,4 +1,4 @@
-import { CombatantId } from "@dnd/battle-runtime";
+import { CombatantId } from "@dnd/battle-runtime/protocol-codecs";
 import { Schema } from "effect";
 
 import type { McpSessionSnapshot } from "./session-store.ts";
@@ -6,10 +6,10 @@ import type { McpSessionSnapshot } from "./session-store.ts";
 const McpInitialInitiativeCombatantSnapshotSchema = Schema.Struct({
   combatantId: CombatantId,
   initiative: Schema.Number,
-  rollMode: Schema.Literal("normal", "advantage", "disadvantage"),
+  rollMode: Schema.Literals(["normal", "advantage", "disadvantage"]),
 });
 
-export const McpBattleStateSnapshotSchema = Schema.Union(
+export const McpBattleStateSnapshotSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("none"),
   }),
@@ -23,7 +23,7 @@ export const McpBattleStateSnapshotSchema = Schema.Union(
     battleId: Schema.String,
     currentActorId: CombatantId,
   }),
-);
+]);
 
 export const McpNoneBattleStateSnapshotSchema = Schema.Struct({
   tag: Schema.Literal("none"),
@@ -42,7 +42,7 @@ export const McpActiveBattleStateSnapshotSchema = Schema.Struct({
 const McpSessionSummaryFields = {
   draftIds: Schema.Array(Schema.String),
   characterIds: Schema.Array(Schema.String),
-  selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
+  selectedStatBlockId: Schema.Union([Schema.String, Schema.Null]),
   battleState: McpBattleStateSnapshotSchema,
 };
 
@@ -62,7 +62,7 @@ export const McpSessionSnapshotSchema = Schema.Struct({
 export const McpActiveSessionSnapshotSchema = Schema.Struct({
   draftIds: Schema.Array(Schema.String),
   characterIds: Schema.Array(Schema.String),
-  selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
+  selectedStatBlockId: Schema.Union([Schema.String, Schema.Null]),
   battleState: McpActiveBattleStateSnapshotSchema,
 });
 

@@ -4,6 +4,7 @@ import type {
 } from "./battle-state-execution.ts";
 import type {
   BattleAreaId,
+  BattleEffectExecutionRef,
   BattleSpellEffectOccurrenceId,
   BattleTablePositionId,
   CombatantId,
@@ -13,7 +14,7 @@ export const GLYPH_STORED_SPELL_TARGET_SHAPES = [
   "singleCreature",
   "area",
 ] as const;
-export const GLYPH_OF_WARDING_BASE_LEVEL = 3;
+export const DURABLE_GLYPH_BASE_SPELL_LEVEL = 3;
 export const GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS = [
   "summoned_hostile_creatures",
   "harmful_objects",
@@ -26,7 +27,7 @@ export type GlyphStoredSpellReleaseProfile = {
     readonly spellAccess: "prepared_spell";
     readonly castAsPartOfCreatingGlyph: true;
     readonly immediateEffect: "none";
-    readonly baseMaxStoredSpellLevel: typeof GLYPH_OF_WARDING_BASE_LEVEL;
+    readonly baseMaxStoredSpellLevel: typeof DURABLE_GLYPH_BASE_SPELL_LEVEL;
     readonly upcastMaxStoredSpellLevel: "same_as_cast_slot_level";
     readonly targetShapes: typeof GLYPH_STORED_SPELL_TARGET_SHAPES;
   };
@@ -50,6 +51,7 @@ export type GlyphStoredSpellReleaseProfile = {
 
 export type GlyphTriggerOccurrenceWitness = {
   readonly kind: "tableWitnessedGlyphTriggerOccurrence";
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
 };
 export type GlyphStoredSpellSingleCreatureRetargetingWitness = {

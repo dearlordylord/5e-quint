@@ -1,7 +1,10 @@
-import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import {
-  antimagicFieldAuraEffectForTest,
-  antimagicFieldAuraMembershipForTest,
+  battleStateWithAllocatedEffectForTest,
+  resolveBattleSubject,
+} from "./battle-runtime.test-support.ts";
+import {
+  magicSuppressionEmanationEffectTemplateForTest,
+  magicSuppressionEmanationMembershipForTest,
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-self-teleport
@@ -40,7 +43,7 @@ import {
 import { describe, expect, it } from "vitest";
 
 import type {
-  BattleAntimagicFieldTransitWitness,
+  BattleMagicSuppressionTransitWitness,
   BattleHole,
   BattleResolutionResult,
   BattleState,
@@ -58,7 +61,7 @@ import {
   battleTablePositionId,
   movementFeet,
 } from "./unit-profile-admission.test-support.ts";
-import { antimagicFieldTransitInvalidReason } from "./battle-reducer/antimagic-field-transit-blocking.ts";
+import { magicSuppressionTransitInvalidReason } from "./battle-reducer/magic-suppression-transit-blocking.ts";
 import {
   mistyStepUnitId,
   spellCasterId,
@@ -103,7 +106,7 @@ type SelfTeleportRuntimeState = {
   readonly battle: BattleState;
   readonly lastTeleport: SelfTeleportOutcome | undefined;
   readonly lastAntimagicTransitWitness:
-    | BattleAntimagicFieldTransitWitness
+    | BattleMagicSuppressionTransitWitness
     | undefined;
   readonly lastResult: LastResult;
 };
@@ -248,7 +251,7 @@ describe("Self-teleport lifecycle MBT parity", () => {
   it("rejects outbound Antimagic Field transit from a caller-supplied destination witness", () => {
     const battle = activeAntimagicAuraState(
       initialRuntimeState().battle,
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [spellCasterId],
@@ -256,12 +259,12 @@ describe("Self-teleport lifecycle MBT parity", () => {
     );
 
     expect(
-      antimagicFieldTransitInvalidReason({
+      magicSuppressionTransitInvalidReason({
         state: battle,
         actorId: spellCasterId,
         witnesses: [
           {
-            kind: "antimagicFieldTransit",
+            kind: "magicSuppressionTransit",
             areaId: ANTIMAGIC_FIELD_AREA_ID,
             sourceCombatantId: spellTargetId,
             originInsideAura: true,
@@ -275,7 +278,7 @@ describe("Self-teleport lifecycle MBT parity", () => {
   it("requires an Antimagic Field transit witness for every active aura", () => {
     const battle = activeAntimagicAuraState(
       initialRuntimeState().battle,
-      antimagicFieldAuraMembershipForTest({
+      magicSuppressionEmanationMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -299,7 +302,7 @@ describe("Self-teleport lifecycle MBT parity", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Teleport destination table fact must include one Antimagic Field transit witness for each active aura.",
+        "Teleport destination table fact must include one magic-suppression emanation transit witness for each active aura.",
     });
   });
 
@@ -388,7 +391,7 @@ function castSelfTeleportIntoAntimagicAura(
 ): SelfTeleportRuntimeState {
   const battle = activeAntimagicAuraState(
     state.battle,
-    antimagicFieldAuraMembershipForTest({
+    magicSuppressionEmanationMembershipForTest({
       sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],
@@ -396,8 +399,8 @@ function castSelfTeleportIntoAntimagicAura(
   );
   const act = requireSelfTeleportAct(battle);
   const destinationHole = requireTeleportDestinationHole(act.initialHoles);
-  const transitWitness: BattleAntimagicFieldTransitWitness = {
-    kind: "antimagicFieldTransit",
+  const transitWitness: BattleMagicSuppressionTransitWitness = {
+    kind: "magicSuppressionTransit",
     areaId: ANTIMAGIC_FIELD_AREA_ID,
     sourceCombatantId: spellTargetId,
     originInsideAura: false,
@@ -412,7 +415,7 @@ function castSelfTeleportIntoAntimagicAura(
         teleportDestinationFill({
           hole: destinationHole,
           destinationId: "misty-step-antimagic-field-destination",
-          antimagicFieldTransit: [transitWitness],
+          magicSuppressionTransit: [transitWitness],
         }),
       ],
     }),
@@ -541,25 +544,22 @@ function activeAntimagicAuraState(
   state: BattleState,
   aura: TestAntimagicFieldAuraMembership,
 ): BattleState {
-  const combatants = new Map(state.combatants);
-  const source = combatants.get(aura.sourceCombatantId);
-  if (source === undefined) {
+  const sourceBefore = state.combatants.get(aura.sourceCombatantId);
+  if (sourceBefore === undefined) {
     throw new Error("Antimagic Field test source must be in the battle.");
   }
-  combatants.set(aura.sourceCombatantId, {
-    ...source,
-    activeEffects: [
-      ...source.activeEffects,
-      antimagicFieldAuraEffectForTest({
-        areaId: ANTIMAGIC_FIELD_AREA_ID,
-        aura,
-      }),
-    ],
+  const withAura = battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: aura.sourceCombatantId,
+    effect: magicSuppressionEmanationEffectTemplateForTest({
+      areaId: ANTIMAGIC_FIELD_AREA_ID,
+      aura,
+    }),
   });
-  return {
-    ...state,
-    combatants,
-  };
+  expect(
+    Number(withAura.combatants.get(aura.sourceCombatantId)?.nextEffectOrdinal),
+  ).toBe(Number(sourceBefore.nextEffectOrdinal) + 1);
+  return withAura;
 }
 
 function normalizeSelfTeleportQuintState(raw: unknown): SelfTeleportProjection {

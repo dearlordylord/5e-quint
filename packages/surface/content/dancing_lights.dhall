@@ -17,8 +17,7 @@
 -- Three operations:
 --   1. passive → create_illusion (visual, medium — covers both the
 --      four-light and humanoid-form options; mechanically identical)
---   2. passive → emit_light (brightRadiusFeet=0, dimAdditionalFeet=10 —
---      dim-only: no bright-light component per RAW)
+--   2. passive → emit_dim_illumination (radiusFeet=10 — dim-only per RAW)
 --   3. on_caster_spends_action (bonus_action) → reposition_attachment
 --      (maxMoveFeet=60 — the 60-ft per-hop cap from RAW)
 --
@@ -35,21 +34,20 @@
 --     XPHB source text entries.
 --
 -- DHALL HOMOGENEITY: 3 operations with 3 structurally different effect
--- types (create_illusion, emit_light, reposition_attachment) and 2
+-- types (create_illusion, emit_dim_illumination, reposition_attachment) and 2
 -- trigger types (passive, on_caster_spends_action). Unified via
 -- Optional-field superset — None fields stripped by
 -- dhall-to-json --omit-empty.
 
 let dancingLights =
-      -- Effect superset covers create_illusion, emit_light, and
+      -- Effect superset covers create_illusion, emit_dim_illumination, and
       -- reposition_attachment variant fields.
       let Effect
           : Type
           = { kind : Text
             , maxSize : Optional Text
             , channels : Optional (List Text)
-            , brightRadiusFeet : Optional Natural
-            , dimAdditionalFeet : Optional Natural
+            , radiusFeet : Optional Natural
             , maxMoveFeet : Optional Natural
             }
 
@@ -58,20 +56,16 @@ let dancingLights =
           = { kind = "create_illusion"
             , maxSize = Some "medium"
             , channels = Some [ "visual" ]
-            , brightRadiusFeet = None Natural
-            , dimAdditionalFeet = None Natural
+            , radiusFeet = None Natural
             , maxMoveFeet = None Natural
             }
 
-      -- brightRadiusFeet=0 = no bright light; dimAdditionalFeet=10 gives
-      -- the 10-ft dim-light radius.
-      let emitLight
+      let emitDimIllumination
           : Effect
-          = { kind = "emit_light"
+          = { kind = "emit_dim_illumination"
             , maxSize = None Text
             , channels = None (List Text)
-            , brightRadiusFeet = Some 0
-            , dimAdditionalFeet = Some 10
+            , radiusFeet = Some 10
             , maxMoveFeet = None Natural
             }
 
@@ -80,8 +74,7 @@ let dancingLights =
           = { kind = "reposition_attachment"
             , maxSize = None Text
             , channels = None (List Text)
-            , brightRadiusFeet = None Natural
-            , dimAdditionalFeet = None Natural
+            , radiusFeet = None Natural
             , maxMoveFeet = Some 60
             }
 
@@ -133,7 +126,7 @@ let dancingLights =
                   }
               , operations =
                   [ { trigger = passiveTrigger, effect = createIllusion }
-                  , { trigger = passiveTrigger, effect = emitLight }
+                  , { trigger = passiveTrigger, effect = emitDimIllumination }
                   , { trigger = bonusActionTrigger
                     , effect = repositionAttachment
                     }

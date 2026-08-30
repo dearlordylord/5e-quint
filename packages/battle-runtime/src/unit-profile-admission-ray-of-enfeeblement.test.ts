@@ -1292,7 +1292,11 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       ],
     });
     const penaltyRoll = requireResultHole(penaltyRequest, "rolledDice");
+    if (!("sourceDamageRollPenalty" in penaltyRoll)) {
+      throw new Error("Expected Ray of Enfeeblement damage penalty hole.");
+    }
     const stalePenalty = sourceDamageRollPenaltyRollHole({
+      effectRef: penaltyRoll.sourceDamageRollPenalty.effectRef,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(rayOfEnfeeblementUnitId),
       ),
@@ -1373,7 +1377,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       holeId: save.holeId,
       value: {
         area: {
-          kind: "shatterArea",
+          kind: "pointOriginSphereObjectDamageArea",
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
           nonmagicalUnattendedObjectDamageFacts: [
@@ -1557,7 +1561,15 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       "sourceDamageRollPenalty.damageRollHoleId",
       damageRoll.holeId,
     );
+    const penaltyHole = penaltyHoles[0];
+    if (
+      penaltyHole === undefined ||
+      !("sourceDamageRollPenalty" in penaltyHole)
+    ) {
+      throw new Error("Expected Ray of Enfeeblement damage penalty hole.");
+    }
     const stalePenaltyHole = sourceDamageRollPenaltyRollHole({
+      effectRef: penaltyHole.sourceDamageRollPenalty.effectRef,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(rayOfEnfeeblementUnitId),
       ),
@@ -1573,7 +1585,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
         objectFill,
         contactFill,
         damageRollFillWithGroups(damageRoll, [[4, 5]]),
-        damageRollFillWithGroups(penaltyHoles[0], [[3]]),
+        damageRollFillWithGroups(penaltyHole, [[3]]),
         damageRollFillWithGroups(stalePenaltyHole, [[1]]),
       ],
     });

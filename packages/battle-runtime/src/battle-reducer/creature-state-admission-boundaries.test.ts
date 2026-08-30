@@ -11,7 +11,7 @@ import {
   characterBattleFeatureInitForTest,
   characterSeed,
   defaultArmorClassState,
-  Either,
+  Result,
   KNOCKED_OUT_UNCONSCIOUS,
   resource,
   spellRecord,
@@ -138,9 +138,9 @@ describe("creature-state admission boundaries", () => {
       combatants: [init],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(battleStateInitIssueMessage(result.left)).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
       "Battle runtime requires Stat Block resistance choices to be resolved before admission.",
     );
   });
@@ -165,9 +165,9 @@ describe("creature-state admission boundaries", () => {
       ],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(battleStateInitIssueMessage(result.left)).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
       "Positive-HP character battle initialization cannot carry zero-HP lifecycle state.",
     );
   });
@@ -192,9 +192,9 @@ describe("creature-state admission boundaries", () => {
       ],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(battleStateInitIssueMessage(result.left)).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
       "Character battle initialization zero-HP lifecycle is invalid.",
     );
   });
@@ -214,9 +214,9 @@ describe("creature-state admission boundaries", () => {
       ],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(battleStateInitIssueMessage(result.left)).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
       "Metamagic battle state requires at least one known option fact.",
     );
   });
@@ -241,9 +241,9 @@ describe("creature-state admission boundaries", () => {
       ],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(battleStateInitIssueMessage(result.left)).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
       "Spellbook Ritual Spell Access must reference ritual-tagged leveled Spell Definitions.",
     );
   });
@@ -284,7 +284,7 @@ describe("creature-state admission boundaries", () => {
       ],
     });
 
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
   });
 
   test("returns missing Unconscious condition for positive-HP Knocked Out admission", () => {
@@ -299,9 +299,9 @@ describe("creature-state admission boundaries", () => {
       ],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(battleStateInitIssueMessage(result.left)).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
       "Knocked Out Unconscious initialization requires the Unconscious condition.",
     );
   });

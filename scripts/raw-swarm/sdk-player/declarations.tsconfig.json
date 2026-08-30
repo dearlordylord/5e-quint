@@ -16,9 +16,6 @@
       "@dnd/character-creation-runtime": [
         "packages/character-creation-runtime/src/index.ts"
       ],
-      "@dnd/character-battle-runtime": [
-        "packages/character-battle-runtime/src/index.ts"
-      ],
       "@dnd/character-sheet-runtime": [
         "packages/character-sheet-runtime/src/index.ts"
       ],

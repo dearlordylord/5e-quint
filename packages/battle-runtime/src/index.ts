@@ -19,7 +19,7 @@ export {
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
   BattleCompanionFormId,
-  BattleDancingLightId,
+  BattleMovableLightId,
   BattleId,
   BattleLineDirectionId,
   BattleObjectId,
@@ -42,7 +42,7 @@ export {
   battleStatBlockExecutionScopeRef,
   battleResourcePoolExecutionRef,
   battleSpellAccessExecutionRef,
-  battleDancingLightId,
+  battleMovableLightId,
   battleId,
   battleLineDirectionId,
   battleObjectId,
@@ -152,6 +152,7 @@ export {
   BattleActPresentationSchema,
   BattleInterruptDecisionFillSchema,
   BattleCheckpointFrontierEnvelopeSchema,
+  BattleFallingCreatureMitigationTriggerFactSchema,
   BattleInterruptProcedureChoiceSchema,
   BattleInterruptDecisionFrontierSchema,
   BattleSpellPresentationSchema,
@@ -163,7 +164,7 @@ export { interruptChoiceResponderId } from "./battle-state-execution.ts";
 export {
   spellActiveEffectExecutionRef,
   spellActiveEffectForExecutionRef,
-} from "./active-effect/execution-ref.ts";
+} from "./effect-execution-ref.ts";
 
 export {
   battleActSpellPresentation,
@@ -196,14 +197,14 @@ export {
 } from "./battle-reducer/creature-state-leaves.ts";
 
 export {
-  battleWeaponItemHasMagicWeaponEnhancement,
-  battleWeaponItemMagicWeaponEnhancementBonus,
+  battleWeaponItemHasWeaponAttackDamageEnhancement,
+  battleWeaponItemWeaponAttackDamageEnhancementBonus,
 } from "./battle-reducer/attack-damage-apply.ts";
 
 export {
   battleHoleAcceptsFill,
   battleHoleFamilyKind,
-  thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
+  temporaryAbilityCheckRollModeInfluenceAbilityCheckHole,
   type BattleHoleFamilyKind,
 } from "./battle-reducer/hole-helpers.ts";
 
@@ -265,34 +266,34 @@ export {
   type CharacterBattleSpellListFact,
   type CharacterBattleSpellcastingExecutionState,
   type CharacterBattleSpellcastingState,
-  type PactOfTheChainFindFamiliarInvocationMode,
+  type CompanionReactionInvocationMode,
 } from "./character-battle-resources.ts";
 
 export {
   admitCompanionToBattle,
-  applyFindFamiliarZeroHitPointDisappearance,
-  castFindFamiliar,
+  applySpawnedCompanionZeroHitPointDisappearance,
+  castSpawnedCompanion,
   castWildCompanion,
-  permanentlyDismissFindFamiliar,
-  reappearTemporarilyDismissedFindFamiliar,
+  permanentlyDismissSpawnedCompanion,
+  reappearTemporarilyDismissedSpawnedCompanion,
   retainedStoredFormForPresentCompanion,
-  temporarilyDismissFindFamiliar,
+  temporarilyDismissSpawnedCompanion,
   type CompanionBattleAdmissionInput,
   type CompanionBattleEmbodiedAdmissionManifestation,
   type CompanionBattleAdmissionFormEligibility,
   type CompanionBattleAdmissionManifestation,
   type CompanionBattleStoredAdmissionManifestation,
-  type FindFamiliarCastInput,
-  type FindFamiliarLifecycleInputBase,
-  type FindFamiliarReappearanceInput,
+  type SpawnedCompanionCastInput,
+  type SpawnedCompanionLifecycleInputBase,
+  type SpawnedCompanionReappearanceInput,
   type WildCompanionCastInput,
   type WildCompanionSpend,
-} from "./find-familiar-lifecycle.ts";
+} from "./companion-lifecycle.ts";
 export {
   admitCompanionToBattleRuntime,
-  castRetainedFindFamiliarRuntime,
+  castRetainedSpawnedCompanionRuntime,
   type RetainedCompanionRuntimeCastResult,
-} from "./find-familiar-presentation.ts";
+} from "./companion-presentation.ts";
 
 export type {
   BattleCompanionAbsentState,
@@ -306,25 +307,25 @@ export type {
 } from "./companion-state.ts";
 
 export {
-  findFamiliarCompanionEntryForOwner,
-  findFamiliarCompanionForOwner,
-  findFamiliarCreatureTypeOverrideForOwner,
-} from "./find-familiar-state.ts";
+  spawnedCompanionEntryForOwner,
+  spawnedCompanionForOwner,
+  spawnedCompanionCreatureTypeOverrideForOwner,
+} from "./spawned-companion-state.ts";
 
 export {
-  FIND_FAMILIAR_TELEPATHY_RANGE_FEET,
-  findFamiliarTelepathicConnection,
-  type FindFamiliarSharedSensesEffect,
-  type FindFamiliarTelepathicConnection,
-  type FindFamiliarWithin100FeetFact,
-} from "./find-familiar-telepathy.ts";
+  COMPANION_TELEPATHY_RANGE_FEET,
+  spawnedCompanionTelepathicConnection,
+  type CompanionSharedSensesEffect,
+  type SpawnedCompanionTelepathicConnection,
+  type SpawnedCompanionWithin100FeetFact,
+} from "./companion-communication.ts";
 
 export {
-  deliverTouchSpellThroughFindFamiliar,
-  shareFindFamiliarSenses,
+  deliverTouchSpellThroughSpawnedCompanion,
+  shareSpawnedCompanionSenses,
 } from "./battle-execution-composition.ts";
 
-export type { PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-chain.ts";
+export type { PactOfTheChainFamiliarAttackSubject } from "./companion-reaction-attack.ts";
 
 export {
   battleCreaturePresentationDisplayName,
@@ -466,7 +467,7 @@ export {
   type BattleDamageRelationshipDecisions,
   type BattleFailedAbilityCheckFacts,
   type BattleFallDamageLandingResult,
-  type BattleFeatherFallLandingResult,
+  type BattleFallingCreatureMitigationLandingResult,
   type BattleFill,
   type BattleGrappleLink,
   type BattleGrappleOutcomeHole,
@@ -484,7 +485,13 @@ export {
   type BattleInterruptedProcedure,
   type BattleInvalidReasonCode,
   type BattleIllumination,
+  type BattleIlluminationEmissionFacts,
+  type BrightAndDimIlluminationEmissionFacts,
+  type BrightIlluminationEmissionFacts,
+  type BrightRadiusIlluminationEmissionFacts,
+  type DimIlluminationEmissionFacts,
   type BattleLightEmission,
+  type BattleLightEmitterOpaqueCoverInteraction,
   type BattleSeeInvisibleEtherealWitness,
   type BattleSeeInvisibleObjectWitness,
   type BattleLightEmitter,
@@ -495,10 +502,10 @@ export {
   type BattleMagicalDarknessNonmagicalLightProjectionFact,
   type BattleMagicalDarknessSightProjectionFact,
   type BattleMagicalDarknessZone,
-  type BattleMagicWeaponTargetItemFact,
-  type BattleMagicWeaponTargetItemHole,
-  type BattleAntimagicFieldAffectedOngoingSpellEffect,
-  type BattleAntimagicFieldOngoingSpellEffectRef,
+  type BattleWeaponEnhancementTargetItemFact,
+  type BattleWeaponEnhancementTargetItemHole,
+  type BattleMagicSuppressionAffectedOngoingSpellEffect,
+  type BattleMagicSuppressionOngoingSpellEffectRef,
   type BattleObscurementZone,
   type BattleMovementFillValue,
   type BattleMovementHole,
@@ -511,8 +518,8 @@ export {
   type BattleObjectIgnitionOutcome,
   type BattleObjectOutline,
   type BattleObjectTargetChoiceHole,
-  type BattleAntimagicFieldAuraMembership,
-  type BattleAntimagicFieldTransitWitness,
+  type BattleMagicSuppressionEmanationMembership,
+  type BattleMagicSuppressionTransitWitness,
   type BattlePossessionAttemptDisposition,
   type BattleInterruptDecision,
   type BattleInterruptDecisionFrontier,
@@ -564,12 +571,13 @@ export {
   type BattleStateInitLeafIssue,
   type BattleSuccessfulAbilityCheckFacts,
   type BattleTargetChoiceHole,
+  type BattleFallingCreatureMitigationTriggerFact,
   type BattleTargetSpatialFact,
   type AttackTargetConstraint,
   type BattleCreatureSpaceTraversalMovementFact,
   type BattleAttackExecutionSelection,
   type BattleSelectedSpellInvocation,
-  type BattleThaumaturgyActiveOneMinuteEffectCountHole,
+  type BattleTemporaryAbilityCheckRollModeActiveEffectCountHole,
   type BattleTrackedOngoingSpellLightEmitter,
   type BattleTurnResources,
   type BattleUnitFeatureRollHole,
@@ -584,9 +592,9 @@ export {
   type OngoingFeatureSourceKey,
   type SelfTransformationModeSpellInvocation,
   type SupportedSpellInvocation,
-  type MagicWeaponEnhancementBonus,
-  type MagicWeaponEnhancementSpellInvocation,
-  type ThaumaturgyBoomingVoiceSpellInvocation,
+  type WeaponAttackDamageEnhancementBonus,
+  type WeaponAttackDamageEnhancementSpellInvocation,
+  type TemporaryAbilityCheckRollModeSpellInvocation,
   type SuccessfulAbilityCheckReactionReductionResolutionInput,
   type SuccessfulAbilityCheckReactionReductionResolutionResult,
 } from "./battle-state-execution.ts";
@@ -625,7 +633,7 @@ export {
   type InitiativeSwapCandidateWitness,
 } from "./battle-reducer/api-lifecycle.ts";
 export {
-  activeFeatherFallDescentRateCapFeetPerRound,
+  activeFallingCreatureMitigationDescentRateCapFeetPerRound,
   activeSelfTransformationModeEffect,
   battleIlluminationFromLightEmitters,
   battleMagicalDarknessNonmagicalLightIllumination,
@@ -637,7 +645,7 @@ export {
   battlePerceptionRollModeForObscurement,
   battlePerceptionRollModeForSight,
   battleSightObscurement,
-  FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+  FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND,
 } from "./battle-reducer/spells-active-effects.ts";
 export { activeFeatureSpellSaveDcRouteEvents } from "./battle-reducer/active-feature-spell-routes.ts";
 export { battleReducerStartRouteEvent } from "./battle-reducer/reducer-route.ts";
@@ -681,7 +689,7 @@ export {
   openCreatureFallsInterruptWindow,
   resolveBattleInterrupt,
   resolveFallDamageLanding,
-  resolveFeatherFallLanding,
+  resolveFallingCreatureMitigationLanding,
   resolveFlySpeedGrantEndFallCleanup,
   snapshotBattle,
 } from "./battle-execution-composition.ts";
@@ -693,12 +701,11 @@ export {
 export {
   GRAPPLE_TARGET_REACH_FEET,
   HELP_ATTACK_TARGET_ADJACENCY_FEET,
-  HYPNOTIC_PATTERN_SHAKE_AWAKE_ADJACENCY_FEET,
   PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET,
   RANGED_ATTACK_ENEMY_PROXIMITY_FEET,
   SHOVE_PUSH_DISTANCE_FEET,
   SHOVE_TARGET_REACH_FEET,
-  SLEEP_SHAKE_AWAKE_ADJACENCY_FEET,
+  HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_ADJACENCY_FEET,
   STANDARD_CREATURE_MELEE_REACH_FEET,
   SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,
   SELF_TRANSFORMATION_MODE_KINDS,
@@ -800,10 +807,13 @@ export {
 export {
   opportunityAttackExecutionCandidates,
   opportunityAttackLeavesReach,
-  opportunityAttackThreatIdentityEqual,
-  opportunityAttackThreatEqual,
   type BattleOpportunityAttackExecutionCandidate,
 } from "./battle-reducer/movement-speed.ts";
+
+export {
+  opportunityAttackThreatIdentityEqual,
+  opportunityAttackThreatEqual,
+} from "./battle-reducer/opportunity-attack-equality.ts";
 
 export { zeroHpLifecycleIsTerminal } from "./battle-reducer/creature-state-leaves.ts";
 

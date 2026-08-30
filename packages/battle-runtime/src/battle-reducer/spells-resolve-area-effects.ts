@@ -34,16 +34,16 @@ import type { CombatantId } from "../identity.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
-  applyFlamingSphereCastEffect,
-  applySpikeGrowthMovementHazardCastEffect,
-  applyFogCloudObscurementCastEffect,
-  applyGustOfWindLineCastEffect,
+  applyRamMovablePersistentAreaCastEffect,
+  applyAreaMovementDistanceDamageCastEffect,
+  applyPersistentAreaTraitCastEffect,
+  applyDirectionalPersistentAreaCastEffect,
   applyMagicalDarknessPointOriginCastEffect,
-  applyCloudkillAreaHazardCastEffect,
-  applyInsectPlagueAreaHazardCastEffect,
-  applyMoonbeamCastEffect,
-  applySleetStormAreaHazardCastEffect,
-  applyWebRestraintHazardCastEffect,
+  applyTranslatingPersistentAreaAreaHazardCastEffect,
+  applyStationaryPersistentAreaAreaHazardCastEffect,
+  applyMovablePersistentAreaCastEffect,
+  applyPersistentAreaSaveCompositeCastEffect,
+  applyPersistentAreaSaveConditionEscapeCastEffect,
 } from "./spells-active-effects.ts";
 import { spellSavingThrowOutcomeHole } from "./spells-damage-fills.ts";
 import { spellAreaChoiceHole } from "./spells-holes-fills.ts";
@@ -55,10 +55,10 @@ import {
   saveMetamagicSelectionState,
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
-import { validateGustOfWindLineAreaPushFacts } from "./gust-of-wind-push-facts.ts";
+import { validateDirectionalPersistentAreaAreaPushFacts } from "./directional-area-push-facts.ts";
 import type { SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
-import { isTrackedOngoingSpellLightEmitter } from "./antimagic-field-suppression.ts";
+import { isTrackedOngoingSpellLightEmitter } from "./magic-suppression-ongoing-effect.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 
 const byProcedure = Match.discriminator("procedure");
@@ -71,12 +71,12 @@ type StoredGlyphCenteredSpellAreaChoice = Extract<
   BattleSpellAreaIdentityChoice,
   {
     readonly kind:
-      | "fogCloudArea"
+      | "persistentAreaTraitArea"
       | "magicalDarknessArea"
-      | "flamingSphereArea"
-      | "spikeGrowthArea"
-      | "moonbeamCylinderArea"
-      | "webCubeArea";
+      | "pointOriginSphereDiameterArea"
+      | "anchoredPointOriginSphereArea"
+      | "anchoredPointOriginCylinderArea"
+      | "pointOriginCubeArea";
   }
 >;
 type AreaOngoingSpellReleaseResource =
@@ -152,6 +152,7 @@ function invalidStoredGlyphAreaCenterResult(input: {
     return null;
   }
   if (
+    "originAnchor" in input.areaChoice &&
     input.areaChoice.originAnchor.kind === "combatant" &&
     input.areaChoice.originAnchor.combatantId ===
       input.releaseResource.selfOriginAreaAnchorId
@@ -180,9 +181,58 @@ export function resolveStoredGlyphAreaOngoingSpellRelease(input: {
     input.invocation,
     input.input.subject.procedureRef,
   );
+  if (invocation.procedure === "persistentAreaSaveDamage") {
+    return Match.value(invocation).pipe(
+      Match.when({ lifecycle: { kind: "stationary" } }, (invocation) =>
+        resolveStationaryPersistentAreaAreaHazardSpellAct({
+          ...input,
+          invocation,
+          releaseResource,
+        }),
+      ),
+      Match.when(
+        { lifecycle: { kind: "sourceTurnTranslation" } },
+        (invocation) =>
+          resolveTranslatingPersistentAreaAreaHazardSpellAct({
+            ...input,
+            invocation,
+            releaseResource,
+          }),
+      ),
+      Match.when(
+        {
+          lifecycle: {
+            kind: "casterActionReposition",
+            actionCost: "bonusAction",
+          },
+        },
+        (invocation) =>
+          resolveRamMovablePersistentAreaSpellAct({
+            ...input,
+            invocation,
+            releaseResource,
+          }),
+      ),
+      Match.when(
+        {
+          lifecycle: {
+            kind: "casterActionReposition",
+            actionCost: "magicAction",
+          },
+        },
+        (invocation) =>
+          resolveMovablePersistentAreaSpellAct({
+            ...input,
+            invocation,
+            releaseResource,
+          }),
+      ),
+      Match.exhaustive,
+    );
+  }
   return Match.value(invocation).pipe(
-    byProcedure("fogCloudObscurement", (invocation) =>
-      resolveFogCloudObscurementSpellAct({
+    byProcedure("persistentAreaTrait", (invocation) =>
+      resolvePersistentAreaTraitSpellAct({
         ...input,
         invocation,
         releaseResource,
@@ -195,36 +245,22 @@ export function resolveStoredGlyphAreaOngoingSpellRelease(input: {
         releaseResource,
       }),
     ),
-    byProcedure("flamingSphere", (invocation) =>
-      resolveFlamingSphereSpellAct({
+    byProcedure("areaMovementDistanceDamage", (invocation) =>
+      resolveAreaMovementDistanceDamageSpellAct({
         ...input,
         invocation,
         releaseResource,
       }),
     ),
-    byProcedure("spikeGrowthMovementHazard", (invocation) =>
-      resolveSpikeGrowthMovementHazardSpellAct({
+    byProcedure("persistentAreaSaveConditionEscape", (invocation) =>
+      resolvePersistentAreaSaveConditionEscapeSpellAct({
         ...input,
         invocation,
         releaseResource,
       }),
     ),
-    byProcedure("moonbeam", (invocation) =>
-      resolveMoonbeamSpellAct({
-        ...input,
-        invocation,
-        releaseResource,
-      }),
-    ),
-    byProcedure("webRestraintHazard", (invocation) =>
-      resolveWebRestraintHazardSpellAct({
-        ...input,
-        invocation,
-        releaseResource,
-      }),
-    ),
-    byProcedure("gustOfWindLine", (invocation) =>
-      resolveGustOfWindLineSpellAct({
+    byProcedure("directionalPersistentArea", (invocation) =>
+      resolveDirectionalPersistentAreaSpellAct({
         ...input,
         invocation,
         releaseResource,
@@ -234,12 +270,12 @@ export function resolveStoredGlyphAreaOngoingSpellRelease(input: {
   );
 }
 
-export function resolveFogCloudObscurementSpellAct(input: {
+export function resolvePersistentAreaTraitSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "fogCloudObscurement" }
+    { readonly procedure: "persistentAreaTrait" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
@@ -255,7 +291,7 @@ export function resolveFogCloudObscurementSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -268,7 +304,7 @@ export function resolveFogCloudObscurementSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Fog Cloud uses one table-supplied fog area fill.",
+      "persistent-area trait uses one table-supplied fog area fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -279,13 +315,13 @@ export function resolveFogCloudObscurementSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "fogCloudArea" ||
+    input.fillSet.areaChoice.kind !== "persistentAreaTraitArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Fog Cloud area id must be a non-empty fog area.",
+      "persistent-area trait area id must be a non-empty fog area.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -305,7 +341,7 @@ export function resolveFogCloudObscurementSpellAct(input: {
     invocation: input.invocation,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
     applyEffect: (state) =>
-      applyFogCloudObscurementCastEffect({
+      applyPersistentAreaTraitCastEffect({
         state,
         actorId: input.actorId,
         areaId: areaChoice.areaId,
@@ -335,7 +371,7 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -412,9 +448,9 @@ function magicalDarknessAreaChoiceInvalidReason(
     { readonly procedure: "magicalDarknessPointOrigin" }
   >,
 ): string | null {
-  const trackedEmitters = trackedOngoingSpellLightEmittersByEffectId(state);
+  const trackedEmitters = trackedOngoingSpellLightEmittersByEffectRef(state);
   for (const overlap of areaChoice.spellCreatedLightOverlaps) {
-    const emitter = trackedEmitters.get(overlap.sourceEffectId);
+    const emitter = trackedEmitters.get(overlap.effectRef);
     if (emitter === undefined) {
       return "Darkness spell-light overlap must reference a tracked ongoing spell light.";
     }
@@ -428,27 +464,33 @@ function magicalDarknessAreaChoiceInvalidReason(
   return null;
 }
 
-function trackedOngoingSpellLightEmittersByEffectId(
+function trackedOngoingSpellLightEmittersByEffectRef(
   state: ActionSpellBattleResolutionInput["state"],
 ): ReadonlyMap<
-  BattleTrackedOngoingSpellLightEmitter["sourceEffectId"],
+  BattleTrackedOngoingSpellLightEmitter["effectRef"],
   BattleTrackedOngoingSpellLightEmitter
 > {
   return new Map(
     state.lightEmitters.flatMap((emitter) =>
       isTrackedOngoingSpellLightEmitter(emitter)
-        ? [[emitter.sourceEffectId, emitter]]
+        ? [[emitter.effectRef, emitter]]
         : [],
     ),
   );
 }
 
-export function resolveFlamingSphereSpellAct(input: {
+export function resolveRamMovablePersistentAreaSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "flamingSphere" }
+    {
+      readonly procedure: "persistentAreaSaveDamage";
+      readonly lifecycle: {
+        readonly kind: "casterActionReposition";
+        readonly actionCost: "bonusAction";
+      };
+    }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
@@ -464,7 +506,7 @@ export function resolveFlamingSphereSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -488,7 +530,7 @@ export function resolveFlamingSphereSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "flamingSphereArea" ||
+    input.fillSet.areaChoice.kind !== "pointOriginSphereDiameterArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
@@ -514,7 +556,7 @@ export function resolveFlamingSphereSpellAct(input: {
     invocation: input.invocation,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
     applyEffect: (state) =>
-      applyFlamingSphereCastEffect({
+      applyRamMovablePersistentAreaCastEffect({
         state,
         actorId: input.actorId,
         areaId: areaChoice.areaId,
@@ -523,12 +565,12 @@ export function resolveFlamingSphereSpellAct(input: {
   });
 }
 
-export function resolveSpikeGrowthMovementHazardSpellAct(input: {
+export function resolveAreaMovementDistanceDamageSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "spikeGrowthMovementHazard" }
+    { readonly procedure: "areaMovementDistanceDamage" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
@@ -544,7 +586,7 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -557,7 +599,7 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Spike Growth uses one table-supplied sphere area fill.",
+      "area movement-distance damage uses one table-supplied sphere area fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -568,13 +610,13 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "spikeGrowthArea" ||
+    input.fillSet.areaChoice.kind !== "anchoredPointOriginSphereArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Spike Growth area id must be a non-empty sphere area.",
+      "area movement-distance damage area id must be a non-empty sphere area.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -594,7 +636,7 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
     invocation: input.invocation,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
     applyEffect: (state) =>
-      applySpikeGrowthMovementHazardCastEffect({
+      applyAreaMovementDistanceDamageCastEffect({
         state,
         actorId: input.actorId,
         areaId: areaChoice.areaId,
@@ -603,12 +645,18 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
   });
 }
 
-export function resolveMoonbeamSpellAct(input: {
+export function resolveMovablePersistentAreaSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "moonbeam" }
+    {
+      readonly procedure: "persistentAreaSaveDamage";
+      readonly lifecycle: {
+        readonly kind: "casterActionReposition";
+        readonly actionCost: "magicAction";
+      };
+    }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
@@ -624,7 +672,7 @@ export function resolveMoonbeamSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -648,7 +696,7 @@ export function resolveMoonbeamSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "moonbeamCylinderArea" ||
+    input.fillSet.areaChoice.kind !== "anchoredPointOriginCylinderArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
@@ -674,7 +722,7 @@ export function resolveMoonbeamSpellAct(input: {
     invocation: input.invocation,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
     applyEffect: (state) =>
-      applyMoonbeamCastEffect({
+      applyMovablePersistentAreaCastEffect({
         state,
         actorId: input.actorId,
         areaId: areaChoice.areaId,
@@ -683,12 +731,12 @@ export function resolveMoonbeamSpellAct(input: {
   });
 }
 
-export function resolveWebRestraintHazardSpellAct(input: {
+export function resolvePersistentAreaSaveConditionEscapeSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "webRestraintHazard" }
+    { readonly procedure: "persistentAreaSaveConditionEscape" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
@@ -704,7 +752,7 @@ export function resolveWebRestraintHazardSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -717,7 +765,7 @@ export function resolveWebRestraintHazardSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Web uses one table-supplied cube area fill.",
+      "PersistentAreaSaveConditionEscape uses one table-supplied cube area fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -728,13 +776,13 @@ export function resolveWebRestraintHazardSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "webCubeArea" ||
+    input.fillSet.areaChoice.kind !== "pointOriginCubeArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Web area id must be a non-empty cube area.",
+      "PersistentAreaSaveConditionEscape area id must be a non-empty cube area.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -754,7 +802,7 @@ export function resolveWebRestraintHazardSpellAct(input: {
     invocation: input.invocation,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
     applyEffect: (state) =>
-      applyWebRestraintHazardCastEffect({
+      applyPersistentAreaSaveConditionEscapeCastEffect({
         state,
         actorId: input.actorId,
         areaId: areaChoice.areaId,
@@ -763,12 +811,12 @@ export function resolveWebRestraintHazardSpellAct(input: {
   });
 }
 
-export function resolveSleetStormAreaHazardSpellAct(input: {
+export function resolvePersistentAreaSaveCompositeSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "sleetStormAreaHazard" }
+    { readonly procedure: "persistentAreaSaveComposite" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
@@ -783,7 +831,7 @@ export function resolveSleetStormAreaHazardSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -796,7 +844,7 @@ export function resolveSleetStormAreaHazardSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Sleet Storm uses one table-supplied cylinder area fill.",
+      "persistent-area save-composite uses one table-supplied cylinder area fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -807,13 +855,13 @@ export function resolveSleetStormAreaHazardSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "sleetStormCylinderArea" ||
+    input.fillSet.areaChoice.kind !== "anchoredPointOriginCylinderArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Sleet Storm area id must be a non-empty cylinder area.",
+      "persistent-area save-composite area id must be a non-empty cylinder area.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -825,7 +873,7 @@ export function resolveSleetStormAreaHazardSpellAct(input: {
     invocation: input.invocation,
     resource: ordinarySpellCastResource(),
     applyEffect: (state) =>
-      applySleetStormAreaHazardCastEffect({
+      applyPersistentAreaSaveCompositeCastEffect({
         state,
         actorId: input.actorId,
         areaId: areaChoice.areaId,
@@ -834,12 +882,15 @@ export function resolveSleetStormAreaHazardSpellAct(input: {
   });
 }
 
-export function resolveInsectPlagueAreaHazardSpellAct(input: {
+export function resolveStationaryPersistentAreaAreaHazardSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "insectPlagueAreaHazard" }
+    {
+      readonly procedure: "persistentAreaSaveDamage";
+      readonly lifecycle: { readonly kind: "stationary" };
+    }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
@@ -855,7 +906,7 @@ export function resolveInsectPlagueAreaHazardSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -868,7 +919,7 @@ export function resolveInsectPlagueAreaHazardSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Insect Plague uses one table-supplied sphere area fill.",
+      "stationary persistent area uses one table-supplied sphere area fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -879,13 +930,13 @@ export function resolveInsectPlagueAreaHazardSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "insectPlagueSphereArea" ||
+    input.fillSet.areaChoice.kind !== "anchoredPointOriginSphereArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Insect Plague area id must be a non-empty sphere area.",
+      "stationary persistent area area id must be a non-empty sphere area.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -897,7 +948,7 @@ export function resolveInsectPlagueAreaHazardSpellAct(input: {
     invocation: input.invocation,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
     applyEffect: (state) =>
-      applyInsectPlagueAreaHazardCastEffect({
+      applyStationaryPersistentAreaAreaHazardCastEffect({
         state,
         actorId: input.actorId,
         areaId: areaChoice.areaId,
@@ -906,12 +957,15 @@ export function resolveInsectPlagueAreaHazardSpellAct(input: {
   });
 }
 
-export function resolveCloudkillAreaHazardSpellAct(input: {
+export function resolveTranslatingPersistentAreaAreaHazardSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "cloudkillAreaHazard" }
+    {
+      readonly procedure: "persistentAreaSaveDamage";
+      readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+    }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
@@ -927,7 +981,7 @@ export function resolveCloudkillAreaHazardSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -940,7 +994,7 @@ export function resolveCloudkillAreaHazardSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Cloudkill uses one table-supplied sphere area fill.",
+      "TranslatingPersistentArea uses one table-supplied sphere area fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -951,13 +1005,13 @@ export function resolveCloudkillAreaHazardSpellAct(input: {
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.areaChoice.kind !== "cloudkillSphereArea" ||
+    input.fillSet.areaChoice.kind !== "anchoredPointOriginSphereArea" ||
     input.fillSet.areaChoice.areaId.length === 0
   ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Cloudkill area id must be a non-empty sphere area.",
+      "TranslatingPersistentArea area id must be a non-empty sphere area.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -969,7 +1023,7 @@ export function resolveCloudkillAreaHazardSpellAct(input: {
     invocation: input.invocation,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
     applyEffect: (state) =>
-      applyCloudkillAreaHazardCastEffect({
+      applyTranslatingPersistentAreaAreaHazardCastEffect({
         state,
         actorId: input.actorId,
         areaId: areaChoice.areaId,
@@ -978,12 +1032,12 @@ export function resolveCloudkillAreaHazardSpellAct(input: {
   });
 }
 
-export function resolveGustOfWindLineSpellAct(input: {
+export function resolveDirectionalPersistentAreaSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "gustOfWindLine" }
+    { readonly procedure: "directionalPersistentArea" }
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
@@ -1000,7 +1054,7 @@ export function resolveGustOfWindLineSpellAct(input: {
     input.fillSet.skillChoice !== undefined ||
     input.fillSet.targetAbilityChoices !== undefined ||
     input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
     input.fillSet.damageTypeChoice !== undefined ||
     input.fillSet.concentrationSavingThrows.length > 0 ||
     input.fillSet.damageDispositions.length > 0 ||
@@ -1013,7 +1067,7 @@ export function resolveGustOfWindLineSpellAct(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Gust of Wind uses one Line-area Saving Throw fill.",
+      "directional persistent area uses one Line-area Saving Throw fill.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1081,23 +1135,23 @@ export function resolveGustOfWindLineSpellAct(input: {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !("area" in savingThrowOutcomes) ||
-    savingThrowOutcomes.area.kind !== "gustOfWindLineArea"
+    savingThrowOutcomes.area.kind !== "directionalPersistentAreaArea"
   ) {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "Gust of Wind requires Line area and direction facts.",
+      "directional persistent area requires Line area and direction facts.",
     );
   }
   /* v8 ignore stop -- @preserve */
   const area: Extract<
     BattleSpellAreaChoice,
-    { readonly kind: "gustOfWindLineArea" }
+    { readonly kind: "directionalPersistentAreaArea" }
   > = savingThrowOutcomes.area;
   const failedTargetIds = failedSavingThrowTargetIds(
     savingThrowOutcomes.outcomes,
   );
-  const areaValidation = validateGustOfWindLineAreaPushFacts({
+  const areaValidation = validateDirectionalPersistentAreaAreaPushFacts({
     area,
     failedTargetIds,
     pushDistanceFeet: input.invocation.pushDistanceFeet,
@@ -1131,7 +1185,7 @@ export function resolveGustOfWindLineSpellAct(input: {
       input.releaseResource ??
       ordinarySpellCastResource(input.metamagicApplications),
     applyEffect: (state) =>
-      applyGustOfWindLineCastEffect({
+      applyDirectionalPersistentAreaCastEffect({
         state,
         actorId: input.actorId,
         area,

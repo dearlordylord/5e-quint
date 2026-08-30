@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
@@ -15,14 +15,14 @@ describe("scenario admission boundary", () => {
     writeFileSync(prosePath, "Battle setup.\n");
     writeFileSync(reviewPath, "not JSON\n");
     const decodedScenarioId = decodeScenarioId("example");
-    if (Either.isLeft(decodedScenarioId))
-      throw new Error(decodedScenarioId.left);
+    if (Result.isFailure(decodedScenarioId))
+      throw new Error(decodedScenarioId.failure);
 
     try {
       expect(
-        Either.isLeft(
+        Result.isFailure(
           admittedScenarioIdentity({
-            scenarioId: decodedScenarioId.right,
+            scenarioId: decodedScenarioId.success,
             scenarioPath: prosePath,
             reviewPath,
             recordPath: resolve(directory, "example.scenario.json"),
@@ -30,9 +30,9 @@ describe("scenario admission boundary", () => {
         ),
       ).toBe(true);
       expect(
-        Either.isLeft(
+        Result.isFailure(
           admittedScenarioIdentity({
-            scenarioId: decodedScenarioId.right,
+            scenarioId: decodedScenarioId.success,
             scenarioPath: prosePath,
             reviewPath: resolve(directory, "missing.json"),
             recordPath: resolve(directory, "example.scenario.json"),

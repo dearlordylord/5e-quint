@@ -1,7 +1,7 @@
 import { optionalProperty } from "../optional-property.ts";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Match } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import {
@@ -27,7 +27,7 @@ import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 import {
@@ -44,7 +44,7 @@ import {
 } from "./interrupt-execution.ts";
 import { currentInterruptCheckpoint } from "./battle-snapshot.ts";
 import {
-  hellishRebukeReactionSpellMatchesTrigger,
+  afterDamageRetaliationReactionSpellMatchesTrigger,
   reactionSpellTargetFactsForAfterDamage,
   triggeredReactionSpellTurnResourceAvailable,
 } from "./reaction-triggered-spells.ts";
@@ -223,9 +223,9 @@ type TriggeredReactionSpellExecution =
       BattleSpellProcedureExecution,
       {
         readonly procedure:
-          | "shieldReaction"
-          | "featherFallMitigation"
-          | "counterspell";
+          | "triggeredArmorDefense"
+          | "fallingCreatureMitigationReaction"
+          | "spellCastInterruptionReaction";
       }
     >
   | (Extract<
@@ -239,9 +239,9 @@ type DirectTriggeredReactionSpellExecution = Extract<
   TriggeredReactionSpellExecution,
   {
     readonly procedure:
-      | "shieldReaction"
-      | "featherFallMitigation"
-      | "counterspell";
+      | "triggeredArmorDefense"
+      | "fallingCreatureMitigationReaction"
+      | "spellCastInterruptionReaction";
   }
 >;
 
@@ -305,7 +305,7 @@ function triggeredReactionSpellCastTargetIds(input: {
     { readonly tag: "ok" }
   >;
 }): readonly CombatantId[] {
-  if (input.invocation.procedure === "shieldReaction") {
+  if (input.invocation.procedure === "triggeredArmorDefense") {
     return [input.reactorId];
   }
   /* v8 ignore next -- @preserve -- The selected Reaction choice was discovered from a matching after-damage frame. */
@@ -316,13 +316,13 @@ function triggeredReactionSpellCastTargetIds(input: {
     return [input.frame.damageSourceId];
   }
   if (
-    input.invocation.procedure === "featherFallMitigation" &&
+    input.invocation.procedure === "fallingCreatureMitigationReaction" &&
     input.fillSet.targetList !== undefined
   ) {
     return input.fillSet.targetList.targetIds;
   }
   if (
-    input.invocation.procedure === "counterspell" &&
+    input.invocation.procedure === "spellCastInterruptionReaction" &&
     input.frame.trigger === "spellCast"
   ) {
     return [input.frame.casterId];
@@ -381,27 +381,37 @@ function resolveDirectTriggeredReactionSpellCommand(
   /* v8 ignore stop -- @preserve */
   const { invocation, ...resolutionInput } = input;
   return Match.value(invocation).pipe(
-    byDirectTriggeredReactionProcedure("counterspell", (invocation) =>
-      spellProcedureExecutionFor(executionRegistry, "counterspell").resolve({
-        input: resolutionInput,
-        actorId: input.subject.reactorId,
-        invocation,
-        fillSet,
-      }),
+    byDirectTriggeredReactionProcedure(
+      "spellCastInterruptionReaction",
+      (invocation) =>
+        spellProcedureExecutionFor(
+          executionRegistry,
+          "spellCastInterruptionReaction",
+        ).resolve({
+          input: resolutionInput,
+          actorId: input.subject.reactorId,
+          invocation,
+          fillSet,
+        }),
     ),
-    byDirectTriggeredReactionProcedure("featherFallMitigation", (invocation) =>
+    byDirectTriggeredReactionProcedure(
+      "fallingCreatureMitigationReaction",
+      (invocation) =>
+        spellProcedureExecutionFor(
+          executionRegistry,
+          "fallingCreatureMitigationReaction",
+        ).resolve({
+          input: resolutionInput,
+          actorId: input.subject.reactorId,
+          invocation,
+          fillSet,
+        }),
+    ),
+    byDirectTriggeredReactionProcedure("triggeredArmorDefense", (invocation) =>
       spellProcedureExecutionFor(
         executionRegistry,
-        "featherFallMitigation",
+        "triggeredArmorDefense",
       ).resolve({
-        input: resolutionInput,
-        actorId: input.subject.reactorId,
-        invocation,
-        fillSet,
-      }),
-    ),
-    byDirectTriggeredReactionProcedure("shieldReaction", (invocation) =>
-      spellProcedureExecutionFor(executionRegistry, "shieldReaction").resolve({
         input: resolutionInput,
         actorId: input.subject.reactorId,
         invocation,
@@ -436,12 +446,15 @@ export function resolveTriggeredReactionSaveGatedDamage(
   if (
     input.frame.trigger !== "afterDamage" ||
     input.frame.damagedId !== input.subject.reactorId ||
-    !hellishRebukeReactionSpellMatchesTrigger(input.invocation, input.frame)
+    !afterDamageRetaliationReactionSpellMatchesTrigger(
+      input.invocation,
+      input.frame,
+    )
   ) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Hellish Rebuke requires a matching after-damage Reaction trigger.",
+      "after-damage reaction save requires a matching after-damage Reaction trigger.",
     );
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -454,7 +467,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Hellish Rebuke targets the creature from the after-damage trigger.",
+      "after-damage reaction save targets the creature from the after-damage trigger.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -486,7 +499,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Hellish Rebuke requires the damaging creature's Saving Throw outcome.",
+      "after-damage reaction save requires the damaging creature's Saving Throw outcome.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -528,7 +541,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Hellish Rebuke target is no longer in the battle.",
+      "after-damage reaction save target is no longer in the battle.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -666,31 +679,31 @@ export function resolveTriggeredReactionSaveGatedDamage(
       damageDispositionHole,
     ]);
   }
-  const hideousLaughterSaveCheck =
-    damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+  const saveGatedConditionWithRepeatSaveCheck =
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
       state: input.state,
       target,
       damageAmount,
-      fills: fillSet.hideousLaughterDamageRepeatSaves,
+      fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
     });
-  if (hideousLaughterSaveCheck.tag === "needsHoles") {
+  if (saveGatedConditionWithRepeatSaveCheck.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [
-      ...hideousLaughterSaveCheck.holes,
+      ...saveGatedConditionWithRepeatSaveCheck.holes,
     ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (hideousLaughterSaveCheck.tag === "invalid") {
+  if (saveGatedConditionWithRepeatSaveCheck.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
-      hideousLaughterSaveCheck.message,
+      saveGatedConditionWithRepeatSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-    fillSet.hideousLaughterDamageRepeatSaves,
-    hideousLaughterSaveCheck.holes,
+  const saveGatedConditionWithRepeatLifecycleFills = fillsMatchingHoleIds(
+    fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+    saveGatedConditionWithRepeatSaveCheck.holes,
   );
   const damageDisposition = damageDispositionForTarget(
     damageDispositionHoles,
@@ -741,12 +754,13 @@ export function resolveTriggeredReactionSaveGatedDamage(
     false,
     {
       concentrationSavingThrow: concentrationFill,
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
       saveDamageResult,
       damageDisposition,
       sourceDamageRollPenaltyRoll,
-      hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        saveGatedConditionWithRepeatLifecycleFills,
       damageSourceId: input.subject.reactorId,
       spatialFacts: fillSet.targetSpatialFacts,
       ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
@@ -761,7 +775,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     slotted.currentTurnResources,
     input.subject.reactorId,
   );
-  if (Either.isLeft(nextTurnResources)) {
+  if (Result.isFailure(nextTurnResources)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -770,7 +784,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
   }
   const nextState = {
     ...slotted,
-    currentTurnResources: nextTurnResources.right,
+    currentTurnResources: nextTurnResources.success,
   };
   return openAfterDamageSequenceInterruptWindow({
     state: nextState,

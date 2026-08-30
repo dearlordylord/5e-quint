@@ -22,7 +22,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -502,7 +502,9 @@ function replayRecordedProcedureFromRoot(): InterruptStackResumeRuntimeState {
   });
   const replayFrameState = {
     ...state,
-    interruptStack: [replayContinuationFrame(continuation, "attackHit")],
+    interruptStack: [
+      replayContinuationFrame(continuation, { trigger: "attackHit" }),
+    ],
   };
   const replayFromRoot = resolveBattleSubject({
     state: replayFrameState,
@@ -562,10 +564,10 @@ function shieldBattle(shield: SpellRecord): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function characterCreature(input: {
@@ -688,7 +690,7 @@ function requireShieldReactionChoice(
         (binding) =>
           binding.procedureRef === candidate.subject.procedureRef &&
           binding.procedure.kind === "spellInvocation" &&
-          binding.procedure.execution.procedure === "shieldReaction",
+          binding.procedure.execution.procedure === "triggeredArmorDefense",
       )
     );
   });
@@ -729,7 +731,7 @@ function interruptStackResumeProjection(
   const currentCheckpoint = currentInterruptCheckpoint(state.battle);
   const handledInterruptTrigger =
     currentFrame?.kind === "replayContinuation"
-      ? currentFrame.handledInterruptTrigger
+      ? currentFrame.handledInterruptOccurrence.trigger
       : undefined;
   const responder = snapshot.combatants.find(
     (combatant) => combatant.combatantId === state.responderId,

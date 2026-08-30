@@ -4,7 +4,10 @@ import fc from "fast-check";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+} from "./battle-runtime.test-support.ts";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
@@ -407,29 +410,20 @@ function withProneConditionImmunity(
   state: BattleState,
   targetId: CombatantId,
 ): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target === undefined) {
-    throw new Error("Expected Prone-immunity test target.");
-  }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects,
-        {
-          kind: "conditionImmunity",
-          condition: "prone",
-          conditionHadNonSpellSource: false,
-          expiresAt: { kind: "untilDispelled" },
-          sourceCombatantId: targetId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(spellId("synthetic_prone_immunity")),
-          ),
-        },
-      ],
-    }),
-  };
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: targetId,
+    effect: {
+      kind: "conditionImmunity",
+      condition: "prone",
+      conditionHadNonSpellSource: false,
+      expiresAt: { kind: "untilDispelled" },
+      sourceCombatantId: targetId,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String(spellId("synthetic_prone_immunity")),
+      ),
+    },
+  });
 }
 
 function monsterMultiDamageStatBlock(): StatBlockRecord {
@@ -958,28 +952,18 @@ describe("battle runtime: Stat Block actions", () => {
       targetId: fighterId,
       target: characterSeed({ initiative: 10 }),
       attackRollMode: "advantage",
-      stateTransform: (state) => {
-        const target = state.combatants.get(fighterId);
-        if (target === undefined) {
-          throw new Error("Expected Bite target.");
-        }
-        return {
-          ...state,
-          combatants: new Map(state.combatants).set(fighterId, {
-            ...target,
-            activeEffects: [
-              ...target.activeEffects,
-              {
-                kind: "nextAttackRollAgainstSelf",
-                sourceProcedureRef: oneShotProcedureRef,
-                sourceCombatantId: goblinId,
-                mode: "advantage",
-                expiresAt: { kind: "startOfTurn", combatantId: goblinId },
-              },
-            ],
-          }),
-        };
-      },
+      stateTransform: (state) =>
+        battleStateWithAllocatedEffectForTest({
+          state,
+          ownerId: fighterId,
+          effect: {
+            kind: "nextAttackRollAgainstSelf",
+            sourceProcedureRef: oneShotProcedureRef,
+            sourceCombatantId: goblinId,
+            mode: "advantage",
+            expiresAt: { kind: "startOfTurn", combatantId: goblinId },
+          },
+        }),
     });
     const target = resolved.combatants.get(fighterId);
     if (target === undefined) {

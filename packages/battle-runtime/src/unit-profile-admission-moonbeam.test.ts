@@ -1,7 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleFrontierInterruptDecisionForState,
-  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
 } from "./battle-runtime.test-support.ts";
 import {
   battleActDruidWildShapePresentation,
@@ -11,17 +11,13 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-moonbeam-movable-zone
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 import { describe, expect, test } from "vitest";
-import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
 import {
   activeDruidWildShapeForm,
-  battleShapeShiftedRuntimeState,
-  battleSpellEffectOccurrenceId,
   combatantShapeShiftingSuppressed,
+  type BattleActiveEffect,
   type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
-  type BattleActiveEffect,
-  type SpellShapeShiftedFormActiveEffect,
 } from "./index.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
@@ -29,7 +25,7 @@ import {
   BattleSnapshotSchema,
   characterSeed,
   concentrationSavingThrowFill,
-  Either,
+  Result,
   interruptDecisionFill,
   Schema,
   startBattleSessionRight,
@@ -58,11 +54,10 @@ import {
   spellTargetFill,
   webAreaFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  battleExecutionScopeOrdinal,
-  battleStatBlockExecutionScopeRef,
-} from "./identity.ts";
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleId,
   breakBattleConcentration,
@@ -89,13 +84,97 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
 import {
-  addMoonbeamShapeShiftSuppression,
-  markMoonbeamSavedThisTurn,
-  removeMoonbeamShapeShiftSuppression,
+  addMovablePersistentAreaShapeShiftSuppression,
+  markMovablePersistentAreaSavedThisTurn,
+  removeMovablePersistentAreaShapeShiftSuppression,
 } from "./battle-reducer/spells-active-effects.ts";
+import { boundPersistentAreaSaveDamageEffect } from "./battle-reducer/persistent-area-save-damage-binding.ts";
+import type { MovablePersistentAreaEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
+
+type MoonbeamEffect = MovablePersistentAreaEffect;
 
 describe("L12G deterministic Moonbeam admission", () => {
-  test("moonbeam is admitted as a movable Cylinder CON-save radiant hazard", () => {
+  test("admission correlates the initial save with the selected area hole without recognizing its authored spelling", () => {
+    const spell = spellRecord(moonbeamUnitId);
+    if (
+      spell.mechanics.family !== "ongoing_effect" ||
+      spell.mechanics.attachment.kind !== "hole" ||
+      spell.mechanics.initialPhase?.kind !== "save_gate" ||
+      spell.mechanics.initialPhase.attachment?.kind !== "hole"
+    ) {
+      throw new Error("Expected a hole-attached ongoing save fixture.");
+    }
+    const renamedHoleId = "synthetic_directed_area";
+    const renamed = decodeSpellRecordForTest({
+      ...spell,
+      mechanics: {
+        ...spell.mechanics,
+        attachment: {
+          ...spell.mechanics.attachment,
+          holeId: renamedHoleId,
+        },
+        initialPhase: {
+          ...spell.mechanics.initialPhase,
+          attachment: {
+            ...spell.mechanics.initialPhase.attachment,
+            holeId: renamedHoleId,
+          },
+        },
+      },
+    });
+    const session = spellBattle({
+      preparedSpells: [renamed],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+
+    expect(
+      discoverBattleActs(session).some((candidate) => {
+        const invocation = battleActSpellPresentation(candidate)?.invocation;
+        return (
+          invocation?.spellId === moonbeamUnitId &&
+          invocation.procedure === "persistentAreaSaveDamage"
+        );
+      }),
+    ).toBe(true);
+  });
+
+  test("admission rejects an initial save whose area reference differs from the selected area hole", () => {
+    const spell = spellRecord(moonbeamUnitId);
+    if (
+      spell.mechanics.family !== "ongoing_effect" ||
+      spell.mechanics.initialPhase?.kind !== "save_gate" ||
+      spell.mechanics.initialPhase.attachment?.kind !== "hole"
+    ) {
+      throw new Error("Expected a hole-attached ongoing save fixture.");
+    }
+    const mismatched = decodeSpellRecordForTest({
+      ...spell,
+      mechanics: {
+        ...spell.mechanics,
+        initialPhase: {
+          ...spell.mechanics.initialPhase,
+          attachment: {
+            ...spell.mechanics.initialPhase.attachment,
+            holeId: "synthetic_unrelated_area",
+          },
+        },
+      },
+    });
+    const session = spellBattle({
+      preparedSpells: [mismatched],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+
+    expect(
+      discoverBattleActs(session).some(
+        (candidate) =>
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+          moonbeamUnitId,
+      ),
+    ).toBe(false);
+  });
+
+  test("persistentAreaSaveDamage discovery projects a movable Cylinder CON-save radiant hazard", () => {
     const spell = spellRecord(moonbeamUnitId);
     const state = spellBattle({
       preparedSpells: [spell],
@@ -124,7 +203,7 @@ describe("L12G deterministic Moonbeam admission", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         state,
         spellCasterId,
-        spellSlotInvocationRef(moonbeamUnitId, 2, "moonbeam"),
+        spellSlotInvocationRef(moonbeamUnitId, 2, "persistentAreaSaveDamage"),
       ),
       mode: { tag: "cast" },
     });
@@ -141,7 +220,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     );
     expect(spellHoleInvocation(state, [area])).toEqual(
       expect.objectContaining({
-        procedure: "moonbeam",
+        procedure: "persistentAreaSaveDamage",
         resource: { tag: "spellSlot", slotLevel: 2 },
         ability: "con",
         dc: { kind: "caster_spell_save_dc" },
@@ -158,13 +237,13 @@ describe("L12G deterministic Moonbeam admission", () => {
     );
     expect(spellHoleInvocation(state, thirdLevelAct.initialHoles)).toEqual(
       expect.objectContaining({
-        procedure: "moonbeam",
+        procedure: "persistentAreaSaveDamage",
         damage: { expr: { dice: 3, dieSize: 10 }, damageType: "radiant" },
       }),
     );
   });
 
-  test("moonbeam invocation holes decode through the public battle codec", () => {
+  test("persistentAreaSaveDamage invocation holes decode through the public battle codec", () => {
     const spell = spellRecord(moonbeamUnitId);
     const state = spellBattle({
       preparedSpells: [spell],
@@ -179,11 +258,11 @@ describe("L12G deterministic Moonbeam admission", () => {
 
     const encodedHole = Schema.encodeSync(BattleHoleSchema)(area);
     const decodedHole =
-      Schema.decodeUnknownEither(BattleHoleSchema)(encodedHole);
-    if (Either.isLeft(decodedHole)) {
-      throw new Error(String(decodedHole.left));
+      Schema.decodeUnknownResult(BattleHoleSchema)(encodedHole);
+    if (Result.isFailure(decodedHole)) {
+      throw new Error(String(decodedHole.failure));
     }
-    expect(decodedHole.right).toEqual(
+    expect(decodedHole.success).toEqual(
       expect.objectContaining({
         kind: "spellAreaChoice",
         sourceProcedureRef: act.subject.procedureRef,
@@ -194,7 +273,7 @@ describe("L12G deterministic Moonbeam admission", () => {
         },
       }),
     );
-    expect(decodedHole.right).not.toHaveProperty("spell");
+    expect(decodedHole.success).not.toHaveProperty("spell");
 
     const resolved = resolveBattleSubject({
       state: state.state,
@@ -208,13 +287,13 @@ describe("L12G deterministic Moonbeam admission", () => {
       resolved.snapshot,
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(encodedSnapshot),
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(encodedSnapshot),
       ),
     ).toBe(true);
   });
 
-  test("cast records the source-owned moonbeam cylinder effect", () => {
+  test("cast records the source-owned persistentAreaSaveDamage cylinder effect", () => {
     const spell = spellRecord(moonbeamUnitId);
     const state = spellBattle({
       preparedSpells: [spell],
@@ -237,17 +316,14 @@ describe("L12G deterministic Moonbeam admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Moonbeam cast to resolve.");
     }
-    expect(
-      requireCombatant(resolved.state, spellCasterId).activeEffects,
-    ).toEqual([
+    const caster = requireCombatant(resolved.state, spellCasterId);
+    expect(caster.activeEffects).toEqual([
       expect.objectContaining({
-        kind: "moonbeam",
+        kind: "persistentAreaSaveDamage",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: moonbeamAreaId,
-        save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
-        damage: { expr: { dice: 2, dieSize: 10 }, damageType: "radiant" },
-        repositionMaxMoveFeet: movementFeet(60),
+        lifecycle: "directedReposition",
         savedThisTurn: [],
         shapeShiftSuppressed: [],
         expiresAt: {
@@ -257,6 +333,32 @@ describe("L12G deterministic Moonbeam admission", () => {
         },
       }),
     ]);
+    const beam = caster.activeEffects.find(
+      (effect) =>
+        effect.kind === "persistentAreaSaveDamage" &&
+        effect.lifecycle === "directedReposition",
+    );
+    if (
+      beam?.kind !== "persistentAreaSaveDamage" ||
+      beam.lifecycle !== "directedReposition"
+    ) {
+      throw new Error("Expected the active directed-reposition area effect.");
+    }
+    expect(boundPersistentAreaSaveDamageEffect(caster, beam)?.kind).toBe(
+      "directedReposition",
+    );
+    const mismatchedCollisionState = {
+      kind: beam.kind,
+      lifecycle: "collisionReposition",
+      effectRef: beam.effectRef,
+      sourceProcedureRef: beam.sourceProcedureRef,
+      sourceCombatantId: beam.sourceCombatantId,
+      areaId: beam.areaId,
+      expiresAt: beam.expiresAt,
+    } as const satisfies BattleActiveEffect;
+    expect(
+      boundPersistentAreaSaveDamageEffect(caster, mismatchedCollisionState),
+    ).toBeUndefined();
   });
 
   test("recasting the same Moonbeam occurrence replaces its source-owned area effect", () => {
@@ -283,7 +385,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     }
     expect(
       requireCombatant(cast.state, spellCasterId).activeEffects.filter(
-        (effect) => effect.kind === "moonbeam",
+        (effect) => effect.kind === "persistentAreaSaveDamage",
       ),
     ).toHaveLength(1);
 
@@ -319,11 +421,11 @@ describe("L12G deterministic Moonbeam admission", () => {
 
     expect(
       requireCombatant(recast.state, spellCasterId).activeEffects.filter(
-        (effect) => effect.kind === "moonbeam",
+        (effect) => effect.kind === "persistentAreaSaveDamage",
       ),
     ).toEqual([
       expect.objectContaining({
-        kind: "moonbeam",
+        kind: "persistentAreaSaveDamage",
         sourceProcedureRef: recastAct.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         areaId: moonbeamAreaId,
@@ -334,10 +436,10 @@ describe("L12G deterministic Moonbeam admission", () => {
   });
 
   test("Moonbeam marker updates preserve an unrelated timed spell effect", () => {
-    const moonbeam = spellRecord(moonbeamUnitId);
+    const persistentAreaSaveDamage = spellRecord(moonbeamUnitId);
     const longstrider = spellRecord(longstriderUnitId);
     const session = spellBattle({
-      preparedSpells: [moonbeam, longstrider],
+      preparedSpells: [persistentAreaSaveDamage, longstrider],
       spellSlots: [
         { spellLevel: 1, count: 1 },
         { spellLevel: 2, count: 1 },
@@ -393,45 +495,41 @@ describe("L12G deterministic Moonbeam admission", () => {
       throw new Error("Expected target turn to end after Longstrider.");
     }
 
-    const moonbeamAct = spellAct({
+    const persistentAreaSaveDamageAct = spellAct({
       session: battleSessionWithState(session, casterTurn.state),
       spellId: moonbeamUnitId,
       slotLevel: 2,
     });
-    const moonbeamArea = requireHole(
-      moonbeamAct.initialHoles,
+    const persistentAreaSaveDamageArea = requireHole(
+      persistentAreaSaveDamageAct.initialHoles,
       "spellAreaChoice",
     );
-    const moonbeamCast = resolveBattleSubject({
+    const persistentAreaSaveDamageCast = resolveBattleSubject({
       state: casterTurn.state,
-      subject: moonbeamAct.subject,
-      fills: [moonbeamAreaFill(moonbeamArea)],
+      subject: persistentAreaSaveDamageAct.subject,
+      fills: [moonbeamAreaFill(persistentAreaSaveDamageArea)],
     });
-    if (moonbeamCast.tag !== "resolved") {
+    if (persistentAreaSaveDamageCast.tag !== "resolved") {
       throw new Error("Expected Moonbeam cast to resolve.");
     }
-    const moonbeamEffect = requireCombatant(
-      moonbeamCast.state,
-      spellCasterId,
-    ).activeEffects.find((effect) => effect.kind === "moonbeam");
-    if (moonbeamEffect?.kind !== "moonbeam") {
-      throw new Error("Expected Moonbeam active effect.");
-    }
-
-    const marked = markMoonbeamSavedThisTurn(
-      moonbeamCast.state,
-      spellTargetId,
-      moonbeamEffect,
+    const persistentAreaSaveDamageEffect = requireMoonbeamEffect(
+      persistentAreaSaveDamageCast.state,
     );
-    const suppressed = addMoonbeamShapeShiftSuppression(
+
+    const marked = markMovablePersistentAreaSavedThisTurn(
+      persistentAreaSaveDamageCast.state,
+      spellTargetId,
+      persistentAreaSaveDamageEffect,
+    );
+    const suppressed = addMovablePersistentAreaShapeShiftSuppression(
       marked,
       spellTargetId,
-      moonbeamEffect,
+      persistentAreaSaveDamageEffect,
     );
     expect(requireCombatant(marked, spellCasterId).activeEffects).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "moonbeam",
+          kind: "persistentAreaSaveDamage",
           savedThisTurn: [spellTargetId],
           shapeShiftSuppressed: [],
         }),
@@ -440,16 +538,16 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(requireCombatant(suppressed, spellCasterId).activeEffects).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "moonbeam",
+          kind: "persistentAreaSaveDamage",
           savedThisTurn: [spellTargetId],
           shapeShiftSuppressed: [spellTargetId],
         }),
       ]),
     );
-    const restored = removeMoonbeamShapeShiftSuppression(
+    const restored = removeMovablePersistentAreaShapeShiftSuppression(
       suppressed,
       spellTargetId,
-      moonbeamEffect,
+      persistentAreaSaveDamageEffect,
     );
 
     expect(requireCombatant(restored, spellCasterId).activeEffects).toEqual(
@@ -459,7 +557,7 @@ describe("L12G deterministic Moonbeam admission", () => {
           sourceCombatantId: spellCasterId,
         }),
         expect.objectContaining({
-          kind: "moonbeam",
+          kind: "persistentAreaSaveDamage",
           savedThisTurn: [spellTargetId],
           shapeShiftSuppressed: [],
         }),
@@ -800,16 +898,29 @@ describe("L12G deterministic Moonbeam admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const saveSubject = {
-      tag: "runtimeCommand" as const,
-      actorId: spellTargetId,
-      command: "movableZoneSave" as const,
-      areaId: moonbeamAreaId,
-      trigger: "entersArea" as const,
-    };
+    const selectedMoonbeam = requireCombatant(
+      targetTurn.state,
+      spellCasterId,
+    ).activeEffects.find(
+      (effect) => effect.kind === "persistentAreaSaveDamage",
+    );
+    if (selectedMoonbeam?.kind !== "persistentAreaSaveDamage") {
+      throw new Error("Expected the selected Moonbeam occurrence.");
+    }
+    const { effectRef: _selectedEffectRef, ...overlappingMoonbeamTemplate } =
+      selectedMoonbeam;
+    const overlappingState = battleStateWithAllocatedEffectForTest({
+      state: targetTurn.state,
+      ownerId: spellCasterId,
+      effect: overlappingMoonbeamTemplate,
+    });
+    const saveSubject = persistentAreaSaveDamageSaveSubject(
+      overlappingState,
+      "entersArea",
+    );
 
     const needsSave = resolveBattleSubject({
-      state: targetTurn.state,
+      state: overlappingState,
       subject: saveSubject,
       fills: [],
     });
@@ -820,13 +931,13 @@ describe("L12G deterministic Moonbeam admission", () => {
       false,
     );
     const needsDamage = resolveBattleSubject({
-      state: targetTurn.state,
+      state: overlappingState,
       subject: saveSubject,
       fills: [failedSave],
     });
     const damage = requireResultHole(needsDamage, "rolledDice");
     const firstSave = resolveBattleSubject({
-      state: targetTurn.state,
+      state: overlappingState,
       subject: saveSubject,
       fills: [failedSave, damageRollFillWithGroups(damage, [[5, 8]])],
     });
@@ -837,10 +948,28 @@ describe("L12G deterministic Moonbeam admission", () => {
     const activeMoonbeam = requireCombatant(
       firstSave.state,
       spellCasterId,
-    ).activeEffects.find((effect) => effect.kind === "moonbeam");
+    ).activeEffects.find(
+      (effect) => effect.kind === "persistentAreaSaveDamage",
+    );
     expect(activeMoonbeam).toEqual(
       expect.objectContaining({ savedThisTurn: [spellTargetId] }),
     );
+    const persistentAreaSaveDamageOccurrences = requireCombatant(
+      firstSave.state,
+      spellCasterId,
+    ).activeEffects.filter(
+      (effect) => effect.kind === "persistentAreaSaveDamage",
+    );
+    expect(
+      persistentAreaSaveDamageOccurrences.find(
+        (effect) => effect.effectRef === saveSubject.effectRef,
+      ),
+    ).toEqual(expect.objectContaining({ savedThisTurn: [spellTargetId] }));
+    expect(
+      persistentAreaSaveDamageOccurrences.find(
+        (effect) => effect.effectRef !== saveSubject.effectRef,
+      ),
+    ).toEqual(expect.objectContaining({ savedThisTurn: [] }));
 
     const duplicateSave = resolveBattleSubject({
       state: firstSave.state,
@@ -869,7 +998,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(requireCombatant(nextTurn.state, spellTargetId).hp).toBe(Hp(17));
     expect(
       requireCombatant(nextTurn.state, spellCasterId).activeEffects.find(
-        (effect) => effect.kind === "moonbeam",
+        (effect) => effect.kind === "persistentAreaSaveDamage",
       ),
     ).toEqual(expect.objectContaining({ savedThisTurn: [] }));
   });
@@ -882,7 +1011,7 @@ describe("L12G deterministic Moonbeam admission", () => {
   ] as const)(
     "failed %s save reverts an active shape-shift and suppresses shape-shifting",
     (trigger) => {
-      const cast = moonbeamCastOverWildShapedTarget();
+      const cast = persistentAreaSaveDamageCastOverWildShapedTarget();
       const resolved = resolveMoonbeamSaveForShapeShiftedTarget({
         state: cast,
         trigger,
@@ -897,7 +1026,7 @@ describe("L12G deterministic Moonbeam admission", () => {
       );
       expect(
         requireCombatant(resolved, spellCasterId).activeEffects.find(
-          (effect) => effect.kind === "moonbeam",
+          (effect) => effect.kind === "persistentAreaSaveDamage",
         ),
       ).toEqual(
         expect.objectContaining({
@@ -909,7 +1038,7 @@ describe("L12G deterministic Moonbeam admission", () => {
   );
 
   test("successful save leaves an active shape-shift and shape-shifting unsuppressed", () => {
-    const cast = moonbeamCastOverWildShapedTarget();
+    const cast = persistentAreaSaveDamageCastOverWildShapedTarget();
     const resolved = resolveMoonbeamSaveForShapeShiftedTarget({
       state: cast,
       trigger: "appearsInArea",
@@ -924,83 +1053,13 @@ describe("L12G deterministic Moonbeam admission", () => {
     );
     expect(
       requireCombatant(resolved, spellCasterId).activeEffects.find(
-        (effect) => effect.kind === "moonbeam",
+        (effect) => effect.kind === "persistentAreaSaveDamage",
       ),
     ).toEqual(expect.objectContaining({ shapeShiftSuppressed: [] }));
   });
 
-  test("failed save reverts a spell-effect shape-shift through the shared owner", () => {
-    const cast = moonbeamCastOverSpellShapeShiftedTarget();
-    const failed = resolveMoonbeamSaveForShapeShiftedTarget({
-      state: cast,
-      trigger: "appearsInArea",
-      succeeded: false,
-    });
-    const target = requireCombatant(failed, spellTargetId);
-
-    expect(battleShapeShiftedRuntimeState(target).kind).toBe("trueForm");
-    expect(
-      target.activeEffects.some(
-        (effect) =>
-          effect.kind === "spellShapeShiftedForm" &&
-          effect.sourceEffectId ===
-            syntheticSpellShapeShiftEffect.sourceEffectId,
-      ),
-    ).toBe(false);
-    expect(combatantShapeShiftingSuppressed(failed, spellTargetId)).toBe(true);
-  });
-
-  test("successful save preserves a spell-effect shape-shift through the shared owner", () => {
-    const cast = moonbeamCastOverSpellShapeShiftedTarget();
-    const resolved = resolveMoonbeamSaveForShapeShiftedTarget({
-      state: cast,
-      trigger: "appearsInArea",
-      succeeded: true,
-    });
-    const target = requireCombatant(resolved, spellTargetId);
-
-    expect(battleShapeShiftedRuntimeState(target).kind).toBe("shapeShifted");
-    expect(
-      target.activeEffects.some(
-        (effect) =>
-          effect.kind === "spellShapeShiftedForm" &&
-          effect.sourceEffectId ===
-            syntheticSpellShapeShiftEffect.sourceEffectId,
-      ),
-    ).toBe(true);
-    expect(combatantShapeShiftingSuppressed(resolved, spellTargetId)).toBe(
-      false,
-    );
-  });
-
-  test("failed save clears the full shape-shift owner slot before suppression", () => {
-    const cast = moonbeamCastOverSpellShapeShiftedTarget({
-      activeShapeShiftOwners: [
-        syntheticDruidWildShapeEffect,
-        syntheticSpellShapeShiftEffect,
-      ],
-      useActiveEffectBoundary: false,
-    });
-    const failed = resolveMoonbeamSaveForShapeShiftedTarget({
-      state: cast,
-      trigger: "appearsInArea",
-      succeeded: false,
-    });
-    const target = requireCombatant(failed, spellTargetId);
-
-    expect(battleShapeShiftedRuntimeState(target).kind).toBe("trueForm");
-    expect(
-      target.activeEffects.some(
-        (effect) =>
-          effect.kind === "druidWildShapeForm" ||
-          effect.kind === "spellShapeShiftedForm",
-      ),
-    ).toBe(false);
-    expect(combatantShapeShiftingSuppressed(failed, spellTargetId)).toBe(true);
-  });
-
   test("Moonbeam suppression rejects a Wild Shape subject selected before the failed save", () => {
-    const scenario = moonbeamCastOverWildShapedTargetScenario();
+    const scenario = persistentAreaSaveDamageCastOverWildShapedTargetScenario();
     const suppressed = resolveMoonbeamSaveForShapeShiftedTarget({
       state: scenario.state,
       trigger: "appearsInArea",
@@ -1021,8 +1080,8 @@ describe("L12G deterministic Moonbeam admission", () => {
   });
 
   test("duplicate same-turn save does not repeat shape-shift rider effects", () => {
-    const cast = moonbeamCastOverWildShapedTarget();
-    const saveSubject = moonbeamSaveSubject("entersArea");
+    const cast = persistentAreaSaveDamageCastOverWildShapedTarget();
+    const saveSubject = persistentAreaSaveDamageSaveSubject(cast, "entersArea");
     const firstSave = resolveMoonbeamSaveForShapeShiftedTarget({
       state: cast,
       trigger: "entersArea",
@@ -1046,7 +1105,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     ).toBeNull();
     expect(
       requireCombatant(duplicateSave.state, spellCasterId).activeEffects.find(
-        (effect) => effect.kind === "moonbeam",
+        (effect) => effect.kind === "persistentAreaSaveDamage",
       ),
     ).toEqual(
       expect.objectContaining({
@@ -1058,22 +1117,21 @@ describe("L12G deterministic Moonbeam admission", () => {
 
   test("validated Moonbeam marker replay remains idempotent", () => {
     const failed = resolveMoonbeamSaveForShapeShiftedTarget({
-      state: moonbeamCastOverWildShapedTarget(),
+      state: persistentAreaSaveDamageCastOverWildShapedTarget(),
       trigger: "appearsInArea",
       succeeded: false,
     });
-    const effect = requireCombatant(failed, spellCasterId).activeEffects.find(
-      (activeEffect) => activeEffect.kind === "moonbeam",
-    );
-    if (effect === undefined || effect.kind !== "moonbeam") {
-      throw new Error("Expected Moonbeam marker effect after failed save.");
-    }
+    const effect = requireMoonbeamEffect(failed);
 
-    const replayed = markMoonbeamSavedThisTurn(failed, spellTargetId, effect);
+    const replayed = markMovablePersistentAreaSavedThisTurn(
+      failed,
+      spellTargetId,
+      effect,
+    );
 
     expect(
       requireCombatant(replayed, spellCasterId).activeEffects.find(
-        (activeEffect) => activeEffect.kind === "moonbeam",
+        (activeEffect) => activeEffect.kind === "persistentAreaSaveDamage",
       ),
     ).toEqual(
       expect.objectContaining({
@@ -1084,7 +1142,7 @@ describe("L12G deterministic Moonbeam admission", () => {
   });
 
   test("table-supplied Cylinder exit clears shape-shift suppression", () => {
-    const cast = moonbeamCastOverWildShapedTarget();
+    const cast = persistentAreaSaveDamageCastOverWildShapedTarget();
     const suppressed = resolveMoonbeamSaveForShapeShiftedTarget({
       state: cast,
       trigger: "appearsInArea",
@@ -1093,7 +1151,7 @@ describe("L12G deterministic Moonbeam admission", () => {
 
     const exited = resolveBattleSubject({
       state: suppressed,
-      subject: moonbeamCylinderExitSubject(),
+      subject: persistentAreaSaveDamageExitSubject(suppressed),
       fills: [],
     });
 
@@ -1106,7 +1164,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     );
     expect(
       requireCombatant(exited.state, spellCasterId).activeEffects.find(
-        (effect) => effect.kind === "moonbeam",
+        (effect) => effect.kind === "persistentAreaSaveDamage",
       ),
     ).toEqual(expect.objectContaining({ shapeShiftSuppressed: [] }));
     expect(
@@ -1119,7 +1177,7 @@ describe("L12G deterministic Moonbeam admission", () => {
   });
 
   test("spell cleanup clears shape-shift suppression with the Moonbeam effect", () => {
-    const cast = moonbeamCastOverWildShapedTarget();
+    const cast = persistentAreaSaveDamageCastOverWildShapedTarget();
     const suppressed = resolveMoonbeamSaveForShapeShiftedTarget({
       state: cast,
       trigger: "appearsInArea",
@@ -1133,12 +1191,12 @@ describe("L12G deterministic Moonbeam admission", () => {
     );
     expect(
       requireCombatant(cleaned, spellCasterId).activeEffects.some(
-        (effect) => effect.kind === "moonbeam",
+        (effect) => effect.kind === "persistentAreaSaveDamage",
       ),
     ).toBe(false);
   });
 
-  test("reposition spends magic action and offers moonbeamRepositionMovement hole", () => {
+  test("reposition spends magic action and offers persistentAreaSaveDamageRepositionMovement hole", () => {
     const spell = spellRecord(moonbeamUnitId);
     const state = spellBattle({
       preparedSpells: [spell],
@@ -1256,7 +1314,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(requireCombatant(broken, spellCasterId).concentration).toBeNull();
     expect(
       requireCombatant(broken, spellCasterId).activeEffects.some(
-        (effect) => effect.kind === "moonbeam",
+        (effect) => effect.kind === "persistentAreaSaveDamage",
       ),
     ).toBe(false);
     expect(
@@ -1274,10 +1332,12 @@ describe("L12G deterministic Moonbeam admission", () => {
 });
 
 function battleWithTargetWebConcentration(): BattleRuntimeSession {
-  const moonbeam = spellRecord(moonbeamUnitId);
+  const persistentAreaSaveDamage = spellRecord(moonbeamUnitId);
   const web = spellRecord(webUnitId);
   const initial = startBattleSessionRight({
-    battleId: battleId("battle-moonbeam-target-web-concentration"),
+    battleId: battleId(
+      "battle-persistentAreaSaveDamage-target-web-concentration",
+    ),
     combatants: [
       characterSeed({
         combatantId: spellTargetId,
@@ -1300,7 +1360,7 @@ function battleWithTargetWebConcentration(): BattleRuntimeSession {
         classLevels: [{ className: "druid", level: 3 }],
         spellcasting: {
           ...wizardSpellcasting({
-            preparedSpells: [moonbeam],
+            preparedSpells: [persistentAreaSaveDamage],
             spellSlots: [{ spellLevel: 2, count: 1 }],
           }),
           spellcastingSource: {
@@ -1334,22 +1394,25 @@ function battleWithTargetWebConcentration(): BattleRuntimeSession {
     throw new Error("Expected target Web caster End Turn to resolve.");
   }
 
-  const moonbeamAct = spellAct({
+  const persistentAreaSaveDamageAct = spellAct({
     session: battleSessionWithState(initial, casterTurn.state),
     spellId: moonbeamUnitId,
     slotLevel: 2,
   });
-  const moonbeamArea = requireHole(moonbeamAct.initialHoles, "spellAreaChoice");
-  const moonbeamCast = resolveBattleSubject({
+  const persistentAreaSaveDamageArea = requireHole(
+    persistentAreaSaveDamageAct.initialHoles,
+    "spellAreaChoice",
+  );
+  const persistentAreaSaveDamageCast = resolveBattleSubject({
     state: casterTurn.state,
-    subject: moonbeamAct.subject,
-    fills: [moonbeamAreaFill(moonbeamArea)],
+    subject: persistentAreaSaveDamageAct.subject,
+    fills: [moonbeamAreaFill(persistentAreaSaveDamageArea)],
   });
-  if (moonbeamCast.tag !== "resolved") {
+  if (persistentAreaSaveDamageCast.tag !== "resolved") {
     throw new Error("Expected Moonbeam cast to resolve.");
   }
   const targetTurn = endTurn({
-    state: moonbeamCast.state,
+    state: persistentAreaSaveDamageCast.state,
     actorId: spellCasterId,
   });
   if (targetTurn.tag !== "resolved") {
@@ -1358,43 +1421,11 @@ function battleWithTargetWebConcentration(): BattleRuntimeSession {
   return battleSessionWithState(initial, targetTurn.state);
 }
 
-const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
-  kind: "spellShapeShiftedForm",
-  sourceCombatantId: spellCasterId,
-  sourceProcedureRef: battleProcedureExecutionRefForTest(
-    String("synthetic_shape_spell"),
-  ),
-  sourceEffectId: battleSpellEffectOccurrenceId("synthetic-shape-spell-effect"),
-  replacementForm: {
-    kind: "runtimeCreatureForm",
-    creatureSize: "large",
-  },
-  expiresAt: { kind: "concentration", combatantId: spellCasterId },
-};
-const syntheticDruidWildShapeEffect: Extract<
-  BattleActiveEffect,
-  { readonly kind: "druidWildShapeForm" }
-> = {
-  kind: "druidWildShapeForm",
-  sourceCombatantId: spellTargetId,
-  sourceProcedureRef: battleProcedureExecutionRefForTest(
-    "synthetic_wild_shape_feature",
-  ),
-  formScopeRef: battleStatBlockExecutionScopeRef(
-    battleId("battle-moonbeam-shape-shift-rider"),
-    spellTargetId,
-    battleExecutionScopeOrdinal(1),
-  ),
-  formLimbs: { kind: "cannotHandleObjects" },
-  equipmentDisposition: [],
-  expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
-};
-
-function moonbeamCastOverWildShapedTarget(): BattleState {
-  return moonbeamCastOverWildShapedTargetScenario().state;
+function persistentAreaSaveDamageCastOverWildShapedTarget(): BattleState {
+  return persistentAreaSaveDamageCastOverWildShapedTargetScenario().state;
 }
 
-function moonbeamCastOverWildShapedTargetScenario(): {
+function persistentAreaSaveDamageCastOverWildShapedTargetScenario(): {
   readonly state: BattleState;
   readonly preselectedWildShapeSubject: Extract<
     BattleSubject,
@@ -1403,7 +1434,7 @@ function moonbeamCastOverWildShapedTargetScenario(): {
 } {
   const spell = spellRecord(moonbeamUnitId);
   const initial = startBattleSessionRight({
-    battleId: battleId("battle-moonbeam-shape-shift-rider"),
+    battleId: battleId("battle-persistentAreaSaveDamage-shape-shift-rider"),
     combatants: [
       characterSeed({
         combatantId: spellTargetId,
@@ -1511,80 +1542,6 @@ function moonbeamCastOverWildShapedTargetScenario(): {
   };
 }
 
-function moonbeamCastOverSpellShapeShiftedTarget(
-  input: {
-    readonly activeShapeShiftOwners?: readonly BattleActiveEffect[];
-    readonly useActiveEffectBoundary?: boolean;
-  } = {},
-): BattleState {
-  const spell = spellRecord(moonbeamUnitId);
-  const initial = startBattleSessionRight({
-    battleId: battleId("battle-moonbeam-spell-shape-shift-rider"),
-    combatants: [
-      characterCreature({
-        combatantId: spellTargetId,
-        displayName: "Spell Shape-shifted Target",
-        initiative: 20,
-        currentHp: 30,
-        maxHp: 30,
-      }),
-      characterCreature({
-        combatantId: spellCasterId,
-        displayName: "Moonbeam Caster",
-        initiative: 10,
-        classLevels: [{ className: "druid", level: 3 }],
-        spellcasting: {
-          ...wizardSpellcasting({
-            preparedSpells: [spell],
-            spellSlots: [{ spellLevel: 2, count: 1 }],
-          }),
-          spellcastingSource: {
-            tag: "classSpellcasting",
-            className: "druid",
-            abilityModifier: 3,
-          },
-        },
-      }),
-    ],
-  });
-  const target = requireCombatant(initial.state, spellTargetId);
-  const combatants = new Map(initial.state.combatants);
-  const activeEffects = [
-    ...target.activeEffects,
-    ...(input.activeShapeShiftOwners ?? [syntheticSpellShapeShiftEffect]),
-  ];
-  combatants.set(
-    spellTargetId,
-    input.useActiveEffectBoundary === false
-      ? { ...target, activeEffects }
-      : battleCreatureWithSpellActiveEffects(target, activeEffects),
-  );
-  const shaped: BattleState = { ...initial.state, combatants };
-  const casterTurn = endTurn({ state: shaped, actorId: spellTargetId });
-  if (casterTurn.tag !== "resolved") {
-    throw new Error("Expected shape-shifted target End Turn to resolve.");
-  }
-  const act = spellAct({
-    session: battleSessionWithState(initial, casterTurn.state),
-    spellId: moonbeamUnitId,
-    slotLevel: 2,
-  });
-  const area = requireHole(act.initialHoles, "spellAreaChoice");
-  const cast = resolveBattleSubject({
-    state: casterTurn.state,
-    subject: act.subject,
-    fills: [moonbeamAreaFill(area)],
-  });
-  if (cast.tag !== "resolved") {
-    throw new Error("Expected Moonbeam cast to resolve.");
-  }
-  const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
-  if (targetTurn.tag !== "resolved") {
-    throw new Error("Expected caster End Turn to resolve.");
-  }
-  return targetTurn.state;
-}
-
 function resolveMoonbeamSaveForShapeShiftedTarget(input: {
   readonly state: BattleState;
   readonly trigger: Extract<
@@ -1596,7 +1553,10 @@ function resolveMoonbeamSaveForShapeShiftedTarget(input: {
   >["trigger"];
   readonly succeeded: boolean;
 }): BattleState {
-  const subject = moonbeamSaveSubject(input.trigger);
+  const subject = persistentAreaSaveDamageSaveSubject(
+    input.state,
+    input.trigger,
+  );
   const needsSave = resolveBattleSubject({
     state: input.state,
     subject,
@@ -1635,7 +1595,8 @@ function battleSessionWithState(
   return battleRuntimeSessionForTest({ ...session, state });
 }
 
-function moonbeamSaveSubject(
+function persistentAreaSaveDamageSaveSubject(
+  state: BattleState,
   trigger: Extract<
     BattleSubject,
     {
@@ -1652,18 +1613,65 @@ function moonbeamSaveSubject(
     actorId: spellTargetId,
     command: "movableZoneSave",
     areaId: moonbeamAreaId,
+    effectRef: activeMoonbeamEffectRef(state),
     trigger,
   };
 }
 
-function moonbeamCylinderExitSubject(): Extract<
+function persistentAreaSaveDamageExitSubject(state: BattleState): Extract<
   BattleSubject,
-  { readonly tag: "runtimeCommand"; readonly command: "moonbeamCylinderExit" }
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "persistentAreaSaveDamageExit";
+  }
 > {
   return {
     tag: "runtimeCommand",
     actorId: spellTargetId,
-    command: "moonbeamCylinderExit",
+    command: "persistentAreaSaveDamageExit",
     areaId: moonbeamAreaId,
+    effectRef: activeMoonbeamEffectRef(state),
+  };
+}
+
+function activeMoonbeamEffectRef(state: BattleState) {
+  const effect = [...state.combatants.values()]
+    .flatMap((combatant) => combatant.activeEffects)
+    .find(
+      (candidate) =>
+        candidate.kind === "persistentAreaSaveDamage" &&
+        candidate.areaId === moonbeamAreaId,
+    );
+  if (effect?.kind !== "persistentAreaSaveDamage") {
+    throw new Error("Expected active Moonbeam occurrence.");
+  }
+  return effect.effectRef;
+}
+
+function requireMoonbeamEffect(state: BattleState): MoonbeamEffect {
+  const owner = requireCombatant(state, spellCasterId);
+  const effect = owner.activeEffects.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleActiveEffect,
+      { readonly kind: "persistentAreaSaveDamage" }
+    > =>
+      candidate.kind === "persistentAreaSaveDamage" &&
+      candidate.areaId === moonbeamAreaId,
+  );
+  const binding =
+    effect === undefined
+      ? undefined
+      : boundPersistentAreaSaveDamageEffect(owner, effect);
+  if (binding?.kind !== "directedReposition") {
+    throw new Error("Expected bound Moonbeam active effect.");
+  }
+  return {
+    ...binding.effect,
+    lifecycle: binding.facts.lifecycle,
+    save: { ability: binding.facts.ability, dc: binding.facts.dc },
+    repositionMaxMoveFeet: binding.facts.repositionMaxMoveFeet,
+    damage: binding.facts.damage,
   };
 }

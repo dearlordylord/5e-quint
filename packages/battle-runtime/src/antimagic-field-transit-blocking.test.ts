@@ -3,16 +3,17 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  antimagicFieldAuraEffectForTest,
-  antimagicFieldAuraMembershipForTest,
+  magicSuppressionEmanationEffectTemplateForTest,
+  magicSuppressionEmanationMembershipForTest,
 } from "./antimagic-field.test-support.ts";
+import { battleStateWithAllocatedEffectForTest } from "./battle-runtime.test-support.ts";
 import {
-  ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE,
-  antimagicFieldTransitInvalidReason,
-} from "./battle-reducer/antimagic-field-transit-blocking.ts";
+  MAGIC_SUPPRESSION_TRANSIT_BLOCKING_MESSAGE,
+  magicSuppressionTransitInvalidReason,
+} from "./battle-reducer/magic-suppression-transit-blocking.ts";
 import {
   battleAreaId,
-  type BattleAntimagicFieldTransitWitness,
+  type BattleMagicSuppressionTransitWitness,
   type BattleState,
 } from "./index.ts";
 import {
@@ -31,7 +32,7 @@ const unmatchedAntimagicFieldAreaId = battleAreaId(
 describe("Antimagic Field teleport transit witnesses", () => {
   test("accepts an empty witness set when no aura is active", () => {
     expect(
-      antimagicFieldTransitInvalidReason({
+      magicSuppressionTransitInvalidReason({
         state: transitBattleState(),
         actorId: spellCasterId,
         witnesses: [],
@@ -54,7 +55,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
     "accepts matching origin and destination facts $name",
     ({ actorInsideAura, destinationInsideAura }) => {
       expect(
-        antimagicFieldTransitInvalidReason({
+        magicSuppressionTransitInvalidReason({
           state: activeAntimagicTransitState(actorInsideAura),
           actorId: spellCasterId,
           witnesses: [
@@ -70,7 +71,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
 
   test("rejects a witness that does not identify one active aura", () => {
     expect(
-      antimagicFieldTransitInvalidReason({
+      magicSuppressionTransitInvalidReason({
         state: transitBattleState(),
         actorId: spellCasterId,
         witnesses: [
@@ -83,7 +84,9 @@ describe("Antimagic Field teleport transit witnesses", () => {
           },
         ],
       }),
-    ).toBe("Antimagic Field transit witness must reference one active aura.");
+    ).toBe(
+      "magic-suppression emanation transit witness must reference one active aura.",
+    );
   });
 
   test.each([
@@ -103,22 +106,22 @@ describe("Antimagic Field teleport transit witnesses", () => {
     },
   ] satisfies ReadonlyArray<{
     readonly name: string;
-    readonly witnesses: readonly BattleAntimagicFieldTransitWitness[];
+    readonly witnesses: readonly BattleMagicSuppressionTransitWitness[];
   }>)("rejects a $name witness for an active aura", ({ witnesses }) => {
     expect(
-      antimagicFieldTransitInvalidReason({
+      magicSuppressionTransitInvalidReason({
         state: activeAntimagicTransitState(false),
         actorId: spellCasterId,
         witnesses,
       }),
     ).toBe(
-      "Teleport destination table fact must include one Antimagic Field transit witness for each active aura.",
+      "Teleport destination table fact must include one magic-suppression emanation transit witness for each active aura.",
     );
   });
 
   test("rejects an origin fact that disagrees with active aura membership", () => {
     expect(
-      antimagicFieldTransitInvalidReason({
+      magicSuppressionTransitInvalidReason({
         state: activeAntimagicTransitState(true),
         actorId: spellCasterId,
         witnesses: [
@@ -129,7 +132,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
         ],
       }),
     ).toBe(
-      "Antimagic Field transit origin witness must match the active aura membership.",
+      "magic-suppression emanation transit origin witness must match the active aura membership.",
     );
   });
 
@@ -148,7 +151,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
     "blocks teleportation $name an active aura",
     ({ actorInsideAura, destinationInsideAura }) => {
       expect(
-        antimagicFieldTransitInvalidReason({
+        magicSuppressionTransitInvalidReason({
           state: activeAntimagicTransitState(actorInsideAura),
           actorId: spellCasterId,
           witnesses: [
@@ -158,7 +161,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
             }),
           ],
         }),
-      ).toBe(ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE);
+      ).toBe(MAGIC_SUPPRESSION_TRANSIT_BLOCKING_MESSAGE);
     },
   );
 });
@@ -169,35 +172,35 @@ function transitBattleState(): BattleState {
 
 function activeAntimagicTransitState(actorInsideAura: boolean): BattleState {
   const state = transitBattleState();
-  const aura = antimagicFieldAuraMembershipForTest({
+  const aura = magicSuppressionEmanationMembershipForTest({
     sourceCombatantId: spellTargetId,
     originIncluded: true,
     nonOriginCombatantIds: actorInsideAura ? [spellCasterId] : [],
   });
-  const combatants = new Map(state.combatants);
-  const source = combatants.get(aura.sourceCombatantId);
-  if (source === undefined) {
+  const sourceBefore = state.combatants.get(aura.sourceCombatantId);
+  if (sourceBefore === undefined) {
     throw new Error("Antimagic Field test source must be in the battle.");
   }
-  combatants.set(aura.sourceCombatantId, {
-    ...source,
-    activeEffects: [
-      ...source.activeEffects,
-      antimagicFieldAuraEffectForTest({
-        areaId: antimagicFieldAreaId,
-        aura,
-      }),
-    ],
+  const withAura = battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: aura.sourceCombatantId,
+    effect: magicSuppressionEmanationEffectTemplateForTest({
+      areaId: antimagicFieldAreaId,
+      aura,
+    }),
   });
-  return { ...state, combatants };
+  expect(
+    Number(withAura.combatants.get(aura.sourceCombatantId)?.nextEffectOrdinal),
+  ).toBe(Number(sourceBefore.nextEffectOrdinal) + 1);
+  return withAura;
 }
 
 function antimagicTransitWitness(input: {
   readonly originInsideAura: boolean;
   readonly destinationInsideAura: boolean;
-}): BattleAntimagicFieldTransitWitness {
+}): BattleMagicSuppressionTransitWitness {
   return {
-    kind: "antimagicFieldTransit",
+    kind: "magicSuppressionTransit",
     areaId: antimagicFieldAreaId,
     sourceCombatantId: spellTargetId,
     originInsideAura: input.originInsideAura,

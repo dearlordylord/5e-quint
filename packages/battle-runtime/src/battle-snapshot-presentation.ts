@@ -1,5 +1,4 @@
-import * as Either from "effect/Either";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
@@ -39,24 +38,28 @@ import {
   BattlePresentedSnapshotSchema,
 } from "./battle-reducer/battle-codecs.ts";
 
+const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
+  Schema.check(Schema.isNonEmpty()),
+);
+
 const BattleAvailableActSchema = Schema.Struct({
   ...BattleActDiscoveryCandidateSchema.fields,
-  label: Schema.NonEmptyTrimmedString,
-  summary: Schema.NonEmptyTrimmedString,
+  label: NonEmptyTrimmedStringSchema,
+  summary: NonEmptyTrimmedStringSchema,
   presentation: BattleActPresentationSchema,
 });
 
-const BattlePresentedInterruptChoiceSchema = Schema.Union(
+const BattlePresentedInterruptChoiceSchema = Schema.Union([
   Schema.Struct({ choice: BattleInterruptProcedureModifierChoiceSchema }),
   Schema.Struct({
     choice: BattleInterruptProcedureChoiceWithSubjectSchema,
     presentation: BattleActPresentationSchema,
   }),
-);
+]);
 
 export const BattlePresentedCheckpointFrontierEnvelopeSchema = Schema.Struct({
   checkpoint: BattlePresentedSnapshotSchema,
-  frontier: Schema.Union(
+  frontier: Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("acts"),
       acts: Schema.Array(BattleAvailableActSchema),
@@ -66,8 +69,10 @@ export const BattlePresentedCheckpointFrontierEnvelopeSchema = Schema.Struct({
       ...BattleInterruptDecisionFrontierSchema.fields,
       choices: Schema.NonEmptyArray(BattlePresentedInterruptChoiceSchema),
     }),
-  ),
-}).annotations({ identifier: "BattlePresentedCheckpointFrontierEnvelope" });
+  ]),
+}).pipe(
+  Schema.annotate({ identifier: "BattlePresentedCheckpointFrontierEnvelope" }),
+);
 
 export type BattlePresentedInterruptChoice =
   | {
@@ -99,15 +104,15 @@ export type BattlePresentedCheckpointFrontierEnvelope = {
 
 export function battlePresentedSnapshot(
   session: BattleRuntimeSession,
-): Either.Either<BattlePresentedSnapshot, BattleSnapshotPresentationIssues> {
+): Result.Result<BattlePresentedSnapshot, BattleSnapshotPresentationIssues> {
   return presentBattleSnapshot(session, snapshotBattle(session.state));
 }
 
 export function presentBattleSnapshot(
   session: BattleRuntimeSession,
   snapshot: import("./battle-state-execution.ts").BattleSnapshot,
-): Either.Either<BattlePresentedSnapshot, BattleSnapshotPresentationIssues> {
-  return Either.map(
+): Result.Result<BattlePresentedSnapshot, BattleSnapshotPresentationIssues> {
+  return Result.map(
     traverseValidation(snapshot.combatants, (combatant) =>
       presentedCombatant(session, combatant),
     ),
@@ -123,14 +128,14 @@ export function presentBattleSnapshot(
 export function presentBattleCheckpointFrontierEnvelope(
   session: BattleRuntimeSession,
   envelope: BattleCheckpointFrontierEnvelope,
-): Either.Either<
+): Result.Result<
   BattlePresentedCheckpointFrontierEnvelope,
   BattlePresentationIssues
 > {
-  return Either.flatMap(
+  return Result.flatMap(
     presentBattleSnapshot(session, envelope.checkpoint),
     (checkpoint) =>
-      Either.map(presentFrontier(session, envelope.frontier), (frontier) => ({
+      Result.map(presentFrontier(session, envelope.frontier), (frontier) => ({
         checkpoint,
         frontier,
       })),
@@ -139,7 +144,7 @@ export function presentBattleCheckpointFrontierEnvelope(
 
 export function battlePresentedCheckpointFrontierEnvelope(
   session: BattleRuntimeSession,
-): Either.Either<
+): Result.Result<
   BattlePresentedCheckpointFrontierEnvelope,
   BattlePresentationIssues
 > {
@@ -152,20 +157,20 @@ export function battlePresentedCheckpointFrontierEnvelope(
 function presentFrontier(
   session: BattleRuntimeSession,
   frontier: BattleCheckpointFrontierEnvelope["frontier"],
-): Either.Either<
+): Result.Result<
   BattlePresentedCheckpointFrontierEnvelope["frontier"],
   BattlePresentationIssues
 > {
   if (frontier.kind === "acts") {
-    return Either.right({
+    return Result.succeed({
       kind: "acts",
       acts: presentBattleActs(session, frontier.acts),
     });
   }
   if (frontier.kind === "holes") {
-    return Either.right(frontier);
+    return Result.succeed(frontier);
   }
-  return Either.map(
+  return Result.map(
     presentBattleInterruptChoices(session, frontier.choices),
     (choices) => ({ ...frontier, choices }),
   );
@@ -174,7 +179,7 @@ function presentFrontier(
 export function presentBattleInterruptChoices(
   session: BattleRuntimeSession,
   choices: ReadonlyNonEmptyArray<BattleInterruptProcedureChoice>,
-): Either.Either<
+): Result.Result<
   ReadonlyNonEmptyArray<BattlePresentedInterruptChoice>,
   BattleInterruptChoicePresentationIssues
 > {
@@ -186,18 +191,18 @@ export function presentBattleInterruptChoices(
 function presentBattleInterruptChoice(
   session: BattleRuntimeSession,
   choice: BattleInterruptProcedureChoice,
-): Either.Either<
+): Result.Result<
   BattlePresentedInterruptChoice,
   BattleInterruptChoicePresentationIssue
 > {
   if (choice.kind === "reactionModifier") {
     // Modifier-only choices are mechanics-owned and have no authored act
     // presentation to join. They must remain visible in the frontier.
-    return Either.right({ choice });
+    return Result.succeed({ choice });
   }
   const presentation = battleSubjectPresentation(session, choice.subject);
   if (presentation === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "battleInterruptChoicePresentationIssue",
       reason: "missingSubjectPresentation",
       responderId: interruptChoiceResponderId(choice),
@@ -205,13 +210,13 @@ function presentBattleInterruptChoice(
       subject: choice.subject,
     });
   }
-  return Either.right({ choice, presentation });
+  return Result.succeed({ choice, presentation });
 }
 
 function presentedCombatant(
   session: BattleRuntimeSession,
   combatant: BattleCreatureSnapshot,
-): Either.Either<
+): Result.Result<
   BattlePresentedCreatureSnapshot,
   BattleSnapshotPresentationIssue
 > {
@@ -221,15 +226,15 @@ function presentedCombatant(
     combatant.combatantId,
   );
   if (displayName === null) {
-    return Either.left({
+    return Result.fail({
       tag: "battleSnapshotPresentationIssue",
       reason: "missingStatBlockPresentation",
       combatantId: combatant.combatantId,
     });
   }
   return Schema.is(BattleCreatureDisplayNameSchema)(displayName)
-    ? Either.right({ ...combatant, displayName })
-    : Either.left({
+    ? Result.succeed({ ...combatant, displayName })
+    : Result.fail({
         tag: "battleSnapshotPresentationIssue",
         reason: "invalidDisplayName",
         combatantId: combatant.combatantId,

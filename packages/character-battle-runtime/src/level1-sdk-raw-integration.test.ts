@@ -15,7 +15,7 @@ import {
   resolveBattleSubject,
   snapshotBattle,
   spellSaveDcForCaster,
-  thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
+  temporaryAbilityCheckRollModeInfluenceAbilityCheckHole,
   type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleFill,
@@ -105,7 +105,7 @@ import {
   requireHole,
   requireHoleFromList,
   requireResolved,
-  requireRight,
+  requireSuccess,
   savingThrowOutcomeFill,
   srdStatBlock,
   spellSlotActForProcedure,
@@ -300,18 +300,18 @@ const magicMissileSpellId = "magic_missile";
 const thunderwaveSpellId = "thunderwave";
 const shillelaghQuarterstaffItemId = characterEquipmentItemId({
   slot: "main",
-  unitId: requireRight(
+  unitId: requireSuccess(
     characterEquipmentItemUnitId(authoredUnitId("weapon_quarterstaff")),
   ),
 });
-const mageArmorDurationTicks = requireRight(elapsedTimeTicksFromHours(8));
-const shillelaghDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
-const thaumaturgyDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
-const sanctuaryDurationTicks = requireRight(elapsedTimeTicksFromMinutes(1));
-const animalFriendshipDurationTicks = requireRight(
+const mageArmorDurationTicks = requireSuccess(elapsedTimeTicksFromHours(8));
+const shillelaghDurationTicks = requireSuccess(elapsedTimeTicksFromMinutes(1));
+const thaumaturgyDurationTicks = requireSuccess(elapsedTimeTicksFromMinutes(1));
+const sanctuaryDurationTicks = requireSuccess(elapsedTimeTicksFromMinutes(1));
+const animalFriendshipDurationTicks = requireSuccess(
   elapsedTimeTicksFromHours(24),
 );
-const huntersMarkDurationTicks = requireRight(elapsedTimeTicksFromHours(1));
+const huntersMarkDurationTicks = requireSuccess(elapsedTimeTicksFromHours(1));
 
 describe("level 1 SDK RAW integration", () => {
   test("Fighter Second Wind heals through sheet projection and spends one Bonus Action use", () => {
@@ -951,7 +951,7 @@ describe("level 1 SDK RAW integration", () => {
       "ray_of_frost",
     ]);
     expect(
-      requireRight(
+      requireSuccess(
         characterSpellcasting({
           build: wizardBuild,
           unitLibrary,
@@ -1797,8 +1797,8 @@ describe("level 1 SDK RAW integration", () => {
         unitLibrary,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Battle handoff while active battle effects or Concentration are present is blocked; end or resolve battle-local effects before Character Sheet handoff.",
       },
@@ -1814,7 +1814,7 @@ describe("level 1 SDK RAW integration", () => {
     expect(cleanedCaster.concentration).toBeNull();
     expect(cleanedCaster.activeEffects).toEqual([]);
 
-    const settled = requireRight(
+    const settled = requireSuccess(
       settleCharacterSheetFromBattle({
         sheet: hexSheet.sheet,
         state: concentrationEnded,
@@ -2407,7 +2407,7 @@ function assertLevelOneThunderwave(input: {
   ]);
   expect(saveFill.value).toEqual({
     area: {
-      kind: "thunderwaveArea",
+      kind: "selfOriginCubePushArea",
       originAnchorId: input.casterId,
       affectedTargetIds: [monsterId, secondMonsterId],
       creaturePushes: [
@@ -3052,7 +3052,7 @@ function assertLevelOneSorcerousBurst(input: {
     targeting: { kind: "singleCreatureOrObject" },
     rangeFeet: 120,
     damage: {
-      kind: "sorcerousBurstDamageTypeChoice",
+      kind: "spellAttackDamageTypeChoice",
       expr: { dice: 1, dieSize: 8 },
       damageTypeChoices: expect.arrayContaining(["thunder"]),
       maxDieAdditionalDiceLimit: 2,
@@ -3744,11 +3744,11 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
     session,
     input.casterId,
     authoredUnitId(thaumaturgySpellId),
-    "thaumaturgyBoomingVoice",
+    "temporaryAbilityCheckRollMode",
   );
   const countHole = requireHoleFromList(
     act.initialHoles,
-    "thaumaturgyActiveOneMinuteEffectCount",
+    "temporaryAbilityCheckRollModeActiveEffectCount",
   );
 
   expect(act.initialHoles).toHaveLength(1);
@@ -3770,7 +3770,7 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
   expect(caster.activeEffects).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        kind: "thaumaturgyBoomingVoice",
+        kind: "temporaryAbilityCheckRollMode",
         sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
         expiresAt: {
@@ -3787,7 +3787,7 @@ function assertLevelOneThaumaturgyBoomingVoice(input: {
     input.expectedSpellSlots,
   );
   expect(
-    thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
+    temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
       resolved.state,
       input.casterId,
       difficultyClass(13),
@@ -3994,13 +3994,13 @@ function assertLevelOneSanctuary(input: {
     ),
   ).toMatchObject({
     access: { tag: "prepared" },
-    procedure: "sanctuaryTargetingInterdiction",
+    procedure: "targetingSaveInterdiction",
     resource: { tag: "spellSlot", slotLevel: 1 },
     actionCost: "bonusAction",
     targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
     rangeFeet: movementFeet(30),
     activeEffect: {
-      kind: "sanctuaryWard",
+      kind: "targetingSaveInterdiction",
       sourceCombatantId: input.casterId,
       save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       expiresAt: { kind: "duration", durationTicks: sanctuaryDurationTicks },
@@ -4030,10 +4030,9 @@ function assertLevelOneSanctuary(input: {
   ).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        kind: "sanctuaryWard",
+        kind: "targetingSaveInterdiction",
         sourceProcedureRef: act.subject.procedureRef,
         sourceCombatantId: input.casterId,
-        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
         expiresAt: {
           kind: "duration",
           durationTicks: sanctuaryDurationTicks,
@@ -4095,12 +4094,12 @@ function assertLevelOneBless(input: {
     "rollModifier",
   );
   const targetList = requireHoleFromList(act.initialHoles, "spellTargetList");
-  const expectedEffect = expectedLevelOneBlessEffect(
+  const expectedEffectFacts = expectedLevelOneBlessEffectFacts(
     input.casterId,
     battleProcedureExecutionRefForHole(targetList),
   );
   const { sourceProcedureRef: _sourceProcedureRef, ...discoveryEffect } =
-    expectedEffect;
+    expectedEffectFacts;
 
   expect(act.subject).toMatchObject({
     tag: "actionSpell",
@@ -4149,7 +4148,12 @@ function assertLevelOneBless(input: {
 
   expect(
     requireCombatant(resolved.state, input.targetId).activeEffects,
-  ).toEqual([expectedEffect]);
+  ).toEqual([
+    {
+      ...expectedEffectFacts,
+      effectRef: expect.any(String),
+    },
+  ]);
   expect(caster.concentration).toEqual({
     sourceProcedureRef: act.subject.procedureRef,
     effectKind: "spellEffect",
@@ -4166,13 +4170,16 @@ function assertLevelOneBless(input: {
   ]);
 }
 
-function expectedLevelOneBlessEffect(
+function expectedLevelOneBlessEffectFacts(
   casterId: CombatantId,
   sourceProcedureRef: Extract<
     BattleActiveEffect,
     { readonly kind: "d20RollModifier" }
   >["sourceProcedureRef"],
-): Extract<BattleActiveEffect, { readonly kind: "d20RollModifier" }> {
+): Omit<
+  Extract<BattleActiveEffect, { readonly kind: "d20RollModifier" }>,
+  "effectRef"
+> {
   return {
     kind: "d20RollModifier",
     sourceProcedureRef,
@@ -4224,7 +4231,7 @@ function assertLevelOneShieldOfFaith(input: {
     state,
     input.targetId,
   ).armorClass;
-  const expectedEffect = expectedLevelOneShieldOfFaithEffect(
+  const expectedEffectFacts = expectedLevelOneShieldOfFaithEffectFacts(
     input.casterId,
     battleProcedureExecutionRefForHole(target),
   );
@@ -4265,7 +4272,12 @@ function assertLevelOneShieldOfFaith(input: {
   const caster = requireCharacterCombatant(resolved.state, input.casterId);
   const targetCombatant = requireCombatant(resolved.state, input.targetId);
 
-  expect(targetCombatant.activeEffects).toEqual([expectedEffect]);
+  expect(targetCombatant.activeEffects).toEqual([
+    {
+      ...expectedEffectFacts,
+      effectRef: expect.any(String),
+    },
+  ]);
   expect(snapshotCombatant(resolved.state, input.targetId).armorClass).toBe(
     initialTargetArmorClass + 2,
   );
@@ -4287,13 +4299,16 @@ function assertLevelOneShieldOfFaith(input: {
   ]);
 }
 
-function expectedLevelOneShieldOfFaithEffect(
+function expectedLevelOneShieldOfFaithEffectFacts(
   casterId: CombatantId,
   sourceProcedureRef: Extract<
     BattleActiveEffect,
     { readonly kind: "spellArmorClassBonus" }
   >["sourceProcedureRef"],
-): Extract<BattleActiveEffect, { readonly kind: "spellArmorClassBonus" }> {
+): Omit<
+  Extract<BattleActiveEffect, { readonly kind: "spellArmorClassBonus" }>,
+  "effectRef"
+> {
   return {
     kind: "spellArmorClassBonus",
     sourceProcedureRef,
@@ -4812,8 +4827,8 @@ function assertLevelOneHuntersMark(input: {
       unitLibrary,
     }),
   ).toMatchObject({
-    _tag: "Left",
-    left: {
+    _tag: "Failure",
+    failure: {
       message:
         "Battle handoff while active battle effects or Concentration are present is blocked; end or resolve battle-local effects before Character Sheet handoff.",
     },
@@ -4830,7 +4845,7 @@ function assertLevelOneHuntersMark(input: {
   expect(cleanedRanger.concentration).toBeNull();
   expect(cleanedRanger.activeEffects).toEqual([]);
 
-  const settled = requireRight(
+  const settled = requireSuccess(
     settleCharacterSheetFromBattle({
       sheet: rangerSheet.sheet,
       state: concentrationEnded,
@@ -4851,8 +4866,8 @@ function assertLevelOneHuntersMark(input: {
     },
   ]);
   expect(characterSheetResources(settled, unitLibrary)).toMatchObject({
-    _tag: "Right",
-    right: expect.arrayContaining([
+    _tag: "Success",
+    success: expect.arrayContaining([
       expect.objectContaining({
         tag: "spellAccessFreeCast",
         sourceUnitId: rangerFavoredEnemyUnitId,
@@ -4863,25 +4878,25 @@ function assertLevelOneHuntersMark(input: {
     ]),
   });
 
-  const longRest = requireRight(
+  const longRest = requireSuccess(
     startLongRest({
       sheet: settled,
       timing: { tag: "noPriorLongRest" },
     }),
   );
-  const longRestCompletion = requireRight(
+  const longRestCompletion = requireSuccess(
     finishLongRest({
       rest: longRest,
       restedTicks: longRest.requiredRestTicks,
     }),
   );
-  const rested = requireRight(
+  const rested = requireSuccess(
     completeLongRest({ completion: longRestCompletion, unitLibrary }),
   );
   expect(rested.resourceExpenditures).toEqual([]);
   expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
-    _tag: "Right",
-    right: expect.arrayContaining([
+    _tag: "Success",
+    success: expect.arrayContaining([
       expect.objectContaining({
         tag: "spellAccessFreeCast",
         sourceUnitId: rangerFavoredEnemyUnitId,
@@ -5022,7 +5037,7 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
   expect(cleanedRanger.concentration).toBeNull();
   expect(cleanedRanger.activeEffects).toEqual([]);
 
-  const settled = requireRight(
+  const settled = requireSuccess(
     settleCharacterSheetFromBattle({
       sheet: rangerSheet.sheet,
       state: concentrationEnded,
@@ -6678,7 +6693,7 @@ function levelOneSingleClassBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment(
         input.abilityScores ?? {
           str: 16,
@@ -6712,7 +6727,7 @@ function levelOneEquipment(
   }
   const weaponItemId = characterEquipmentItemId({
     slot: "main",
-    unitId: requireRight(characterEquipmentItemUnitId(weaponUnitId)),
+    unitId: requireSuccess(characterEquipmentItemUnitId(weaponUnitId)),
   });
   return {
     startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
@@ -6863,7 +6878,7 @@ function finalizedLevelOneBardBuild(input: {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: requireRight(
+          value: requireSuccess(
             abilityScoreAssignment({
               str: 8,
               dex: 14,
@@ -7125,7 +7140,7 @@ function finalizedLevelOneClericBuild(input: {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: requireRight(
+          value: requireSuccess(
             abilityScoreAssignment({
               str: 8,
               dex: 13,
@@ -7352,7 +7367,7 @@ function finalizedLevelOneDruidBuild(input: {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: requireRight(
+          value: requireSuccess(
             abilityScoreAssignment({
               str: 8,
               dex: 13,
@@ -7539,7 +7554,7 @@ function finalizedLevelOnePaladinBuild(input: {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: requireRight(
+          value: requireSuccess(
             abilityScoreAssignment({
               str: 15,
               dex: 10,
@@ -7722,7 +7737,7 @@ function finalizedLevelOneRangerBuild(input: {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: requireRight(
+          value: requireSuccess(
             abilityScoreAssignment({
               str: 10,
               dex: 15,
@@ -8045,7 +8060,7 @@ function finalizedLevelOneSorcererBuild(input: {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: requireRight(
+          value: requireSuccess(
             abilityScoreAssignment({
               str: 8,
               dex: 14,
@@ -8212,7 +8227,7 @@ function finalizedLevelOneWarlockBuild(input: {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: requireRight(
+          value: requireSuccess(
             abilityScoreAssignment({
               str: 8,
               dex: 14,
@@ -8606,7 +8621,7 @@ function finalizedLevelOneWizardBuild(input: {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: requireRight(
+          value: requireSuccess(
             abilityScoreAssignment({
               str: 8,
               dex: 14,
@@ -8782,8 +8797,8 @@ function testUnitChoiceHoleId(
 ): CreationHoleIdText {
   return unitChoiceSourceHoleIdText({
     tag: "unitChoice",
-    unitId: requireRight(unitChoiceSourceUnitId(unitId)),
-    choiceKey: requireRight(unitChoiceKey(choiceKey)),
+    unitId: requireSuccess(unitChoiceSourceUnitId(unitId)),
+    choiceKey: requireSuccess(unitChoiceKey(choiceKey)),
   });
 }
 
@@ -8793,7 +8808,7 @@ function testLoadoutHoleId(
 ): CreationHoleIdText {
   return loadoutSourceHoleIdText({
     tag: "loadout",
-    equipmentUnitId: requireRight(loadoutEquipmentUnitId(equipmentUnitId)),
+    equipmentUnitId: requireSuccess(loadoutEquipmentUnitId(equipmentUnitId)),
     slot,
   });
 }
@@ -8948,7 +8963,7 @@ function sanctuaryBonusActionSpellSlotAct(
         sanctuarySpellId &&
       battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1 &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "sanctuaryTargetingInterdiction",
+        "targetingSaveInterdiction",
   );
   if (act === undefined) {
     throw new Error("Expected Sanctuary Bonus Action spell-slot act.");
@@ -9153,9 +9168,9 @@ function thunderwaveArea(
   originAnchorId: CombatantId,
   affectedTargetIds: readonly CombatantId[],
   failedTargetIds: readonly CombatantId[],
-): Extract<BattleSpellAreaChoice, { readonly kind: "thunderwaveArea" }> {
+): Extract<BattleSpellAreaChoice, { readonly kind: "selfOriginCubePushArea" }> {
   return {
-    kind: "thunderwaveArea",
+    kind: "selfOriginCubePushArea",
     originAnchorId,
     affectedTargetIds,
     creaturePushes: failedTargetIds.map((targetId) => ({
@@ -9192,14 +9207,14 @@ function thunderwaveArea(
 function noActiveThaumaturgyOneMinuteEffectsFill(
   hole: Extract<
     BattleHole,
-    { readonly kind: "thaumaturgyActiveOneMinuteEffectCount" }
+    { readonly kind: "temporaryAbilityCheckRollModeActiveEffectCount" }
   >,
 ): Extract<
   BattleFill,
-  { readonly kind: "thaumaturgyActiveOneMinuteEffectCount" }
+  { readonly kind: "temporaryAbilityCheckRollModeActiveEffectCount" }
 > {
   return {
-    kind: "thaumaturgyActiveOneMinuteEffectCount",
+    kind: "temporaryAbilityCheckRollModeActiveEffectCount",
     holeId: hole.holeId,
     value: { activeOneMinuteEffectCount: 0 },
   };

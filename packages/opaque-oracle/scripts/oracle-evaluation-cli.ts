@@ -1,11 +1,18 @@
 import { pathToFileURL } from "node:url";
 
-import { Command, Options } from "@effect/cli";
-import { FileSystem, Path, Terminal } from "@effect/platform";
-import type { PlatformError } from "@effect/platform/Error";
-import { NodeContext, NodeRuntime } from "@effect/platform-node";
+import { Command, Flag } from "effect/unstable/cli";
+import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import type { ErrorObject, ValidateFunction } from "ajv";
-import { Effect, Either, Exit, Match } from "effect";
+import {
+  Effect,
+  Result,
+  Exit,
+  FileSystem,
+  Match,
+  Path,
+  Terminal,
+} from "effect";
+import type { PlatformError } from "effect/PlatformError";
 
 import {
   buildOracleEvaluationCorpus,
@@ -47,7 +54,6 @@ import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 export const DEFAULT_CORPUS_PATH = "corpus/oracle-evaluation-corpus.json";
 export const DEFAULT_PUBLICATION_DIRECTORY = "publication";
 
-const CLI_NAME = "opaque-oracle-evaluation";
 const CLI_VERSION = "0.0.0";
 
 export type OracleCatalogIssue =
@@ -180,7 +186,7 @@ export type OracleEvaluationCliPaths = {
 /** Injectable source builder used by tests; production uses the core builder. */
 export type OracleEvaluationCorpusBuilder = (
   services: OracleEvaluationServices,
-) => Either.Either<OracleCorpus, OracleCorpusIssues>;
+) => Result.Result<OracleCorpus, OracleCorpusIssues>;
 
 export type OracleEvaluationCliDependencies = {
   readonly buildCorpus?: OracleEvaluationCorpusBuilder;
@@ -191,7 +197,7 @@ export type OracleEvaluationCliDependencies = {
  * command handlers receive the exact evaluator service shape and never build
  * a second catalog or access authored records directly.
  */
-export function buildProductionOracleEvaluationServices(): Either.Either<
+export function buildProductionOracleEvaluationServices(): Result.Result<
   OracleEvaluationServices,
   OracleEvaluationCliError
 > {
@@ -200,15 +206,15 @@ export function buildProductionOracleEvaluationServices(): Either.Either<
       unitCollection: srdUnitCollection,
       statBlockCollection: srdStatBlockCollection,
     });
-    if (Either.isRight(services)) return Either.right(services.right);
-    const issues = services.left.flatMap((issue) =>
+    if (Result.isSuccess(services)) return Result.succeed(services.success);
+    const issues = services.failure.flatMap((issue) =>
       issue.tag === "unitCatalog"
         ? issue.issues.map(unitCatalogIssue)
         : issue.tag === "statBlockCatalog"
           ? issue.issues.map(statBlockCatalogIssue)
           : [catalogBuildDefect(issue.catalog, new Error(issue.message))],
     );
-    return Either.left(
+    return Result.fail(
       catalogBuildFailed(
         toReadonlyNonEmpty(issues, () =>
           catalogBuildDefect("unit", new Error("Missing catalog issues.")),
@@ -216,7 +222,7 @@ export function buildProductionOracleEvaluationServices(): Either.Either<
       ),
     );
   } catch (cause) {
-    return Either.left(catalogBuildFailed([catalogBuildDefect("unit", cause)]));
+    return Result.fail(catalogBuildFailed([catalogBuildDefect("unit", cause)]));
   }
 }
 
@@ -230,33 +236,30 @@ export function runOracleEvaluationCli(
     services,
     dependencies.buildCorpus ?? buildOracleEvaluationCorpus,
   );
-  return Command.run(command, {
-    name: CLI_NAME,
+  return Command.runWith(command, {
     version: CLI_VERSION,
   })(normalizeCliArgs(args));
 }
 
 function normalizeCliArgs(args: ReadonlyArray<string>): ReadonlyArray<string> {
-  // @effect/cli consumes process.argv, including executable and script. The
-  // short form keeps the exported runner convenient for focused tests.
+  // The short form keeps the exported runner convenient for focused tests;
+  // process.argv includes the executable and script path.
   return args[0] === "generate" || args[0] === "check" || args[0] === "write"
-    ? ["node", CLI_NAME, ...args]
-    : args;
+    ? args
+    : args.slice(2);
 }
 
 function makeRootCommand(
   services: OracleEvaluationServices,
   buildCorpus: OracleEvaluationCorpusBuilder,
 ) {
-  const corpusOption = Options.text("corpus").pipe(
-    Options.withDefault(DEFAULT_CORPUS_PATH),
-    Options.withDescription("Path to the one Oracle evaluation corpus."),
+  const corpusOption = Flag.string("corpus").pipe(
+    Flag.withDefault(DEFAULT_CORPUS_PATH),
+    Flag.withDescription("Path to the one Oracle evaluation corpus."),
   );
-  const publicationDirectoryOption = Options.text("publication-directory").pipe(
-    Options.withDefault(DEFAULT_PUBLICATION_DIRECTORY),
-    Options.withDescription(
-      "Directory containing committed publication schemas.",
-    ),
+  const publicationDirectoryOption = Flag.string("publication-directory").pipe(
+    Flag.withDefault(DEFAULT_PUBLICATION_DIRECTORY),
+    Flag.withDescription("Directory containing committed publication schemas."),
   );
 
   const generate = Command.make(
@@ -357,18 +360,18 @@ function checkEffect(
       text,
       services,
       paths.publicationDirectory,
-    ).pipe(Effect.either);
+    ).pipe(Effect.result);
     const canonical = yield* buildGeneratedCorpus(services, buildCorpus).pipe(
-      Effect.either,
+      Effect.result,
     );
     const issues: OracleCorpusValidationIssue[] = [
       ...(yield* validationIssuesOrFail(validation)),
       ...(yield* canonicalIssuesOrFail(canonical)),
     ];
-    if (Either.isRight(canonical)) {
+    if (Result.isSuccess(canonical)) {
       if (
         !Buffer.from(text, "utf8").equals(
-          serializeOracleCorpus(canonical.right),
+          serializeOracleCorpus(canonical.success),
         )
       ) {
         issues.push({
@@ -389,13 +392,13 @@ function checkEffect(
 }
 
 function validationIssuesOrFail(
-  validation: Either.Either<OracleCorpus, OracleEvaluationCliError>,
+  validation: Result.Result<OracleCorpus, OracleEvaluationCliError>,
 ): Effect.Effect<
   readonly OracleCorpusValidationIssue[],
   OracleEvaluationCliError
 > {
-  if (Either.isRight(validation)) return Effect.succeed([]);
-  return Match.value(validation.left).pipe(
+  if (Result.isSuccess(validation)) return Effect.succeed([]);
+  return Match.value(validation.failure).pipe(
     Match.when({ tag: "corpusValidationFailed" }, ({ issues }) =>
       Effect.succeed(issues),
     ),
@@ -408,13 +411,13 @@ function validationIssuesOrFail(
 }
 
 function canonicalIssuesOrFail(
-  canonical: Either.Either<OracleCorpus, OracleEvaluationCliError>,
+  canonical: Result.Result<OracleCorpus, OracleEvaluationCliError>,
 ): Effect.Effect<
   readonly OracleCorpusValidationIssue[],
   OracleEvaluationCliError
 > {
-  if (Either.isRight(canonical)) return Effect.succeed([]);
-  return Match.value(canonical.left).pipe(
+  if (Result.isSuccess(canonical)) return Effect.succeed([]);
+  return Match.value(canonical.failure).pipe(
     Match.when({ tag: "sourceBuildFailed" }, ({ issues }) =>
       Effect.succeed(
         oneCorpusIssue({
@@ -475,16 +478,16 @@ function buildGeneratedCorpus(
 ): Effect.Effect<OracleCorpus, OracleEvaluationCliError> {
   try {
     const result = buildCorpus(services);
-    return Either.isLeft(result)
+    return Result.isFailure(result)
       ? Effect.fail(
           sourceBuildFailed(
-            toReadonlyNonEmpty(result.left.map(sourceIssue), () => ({
-              tag: "sourceDefect",
+            toReadonlyNonEmpty(result.failure.map(sourceIssue), () => ({
+              tag: "sourceDefect" as const,
               cause: new Error("Source builder returned no diagnostic issues."),
             })),
           ),
         )
-      : Effect.succeed(result.right);
+      : Effect.succeed(result.success);
   } catch (cause) {
     return Effect.fail(sourceBuildFailed([{ tag: "sourceDefect", cause }]));
   }
@@ -615,16 +618,16 @@ function validateCorpusText(
 
 function assessCorpusText(text: string): CorpusAssessment {
   const parsed = parseJsonWithDuplicateDetection(text);
-  return Either.isLeft(parsed)
-    ? { tag: "jsonRejected", issues: parsed.left }
-    : assessCorpusDocument(parsed.right);
+  return Result.isFailure(parsed)
+    ? { tag: "jsonRejected", issues: parsed.failure }
+    : assessCorpusDocument(parsed.success);
 }
 
 function assessCorpusDocument(raw: unknown): CorpusAssessment {
   const document = decodeOracleCorpusDocument(raw);
-  return Either.isLeft(document)
-    ? { tag: "documentRejected", raw, issues: document.left }
-    : assessCorpusSemantics(raw, document.right);
+  return Result.isFailure(document)
+    ? { tag: "documentRejected", raw, issues: document.failure }
+    : assessCorpusSemantics(raw, document.success);
 }
 
 function assessCorpusSemantics(
@@ -632,9 +635,9 @@ function assessCorpusSemantics(
   document: Parameters<typeof admitOracleCorpusDocument>[0],
 ): CorpusAssessment {
   const semantic = admitOracleCorpusDocument(document);
-  return Either.isLeft(semantic)
-    ? { tag: "semanticRejected", raw, issues: semantic.left }
-    : { tag: "admitted", raw, corpus: semantic.right };
+  return Result.isFailure(semantic)
+    ? { tag: "semanticRejected", raw, issues: semantic.failure }
+    : { tag: "admitted", raw, corpus: semantic.success };
 }
 
 function readPublicationSchemas(
@@ -671,18 +674,18 @@ function readPublicationDirectory(
   publicationDirectory: string,
 ): Effect.Effect<PublicationDirectoryRead, never> {
   return fileSystem.readDirectory(publicationDirectory).pipe(
-    Effect.either,
+    Effect.result,
     Effect.map((entries) =>
-      Either.isLeft(entries)
+      Result.isFailure(entries)
         ? {
             tag: "readFailed" as const,
             path: publicationDirectory,
-            error: entries.left,
+            error: entries.failure,
           }
         : {
             tag: "read" as const,
             path: publicationDirectory,
-            entries: entries.right,
+            entries: entries.success,
           },
     ),
   );
@@ -723,13 +726,13 @@ function readPublicationSchema(
       publicationDirectory,
       ORACLE_PUBLICATION_ARTIFACTS[member].fileName,
     );
-    const bytes = yield* fileSystem.readFile(schemaPath).pipe(Effect.either);
-    return Either.isLeft(bytes)
-      ? publicationSchemaReadFailure(member, schemaPath, bytes.left)
+    const bytes = yield* fileSystem.readFile(schemaPath).pipe(Effect.result);
+    return Result.isFailure(bytes)
+      ? publicationSchemaReadFailure(member, schemaPath, bytes.failure)
       : publicationSchemaReadSuccess(
           member,
           schemaPath,
-          validateOraclePublicationSchemaBytes(member, bytes.right),
+          validateOraclePublicationSchemaBytes(member, bytes.success),
         );
   });
 }
@@ -840,9 +843,9 @@ function liveEvaluationIssues(
   return Match.value(assessment).pipe(
     Match.when({ tag: "admitted" }, ({ corpus }) => {
       const live = evaluateLiveCorpus(corpus, services);
-      return Either.isLeft(live)
-        ? oneCorpusIssue({ tag: "liveEvaluation", cause: live.left })
-        : compareLiveTraces(corpus, live.right);
+      return Result.isFailure(live)
+        ? oneCorpusIssue({ tag: "liveEvaluation", cause: live.failure })
+        : compareLiveTraces(corpus, live.success);
     }),
     Match.when({ tag: "jsonRejected" }, () => []),
     Match.when({ tag: "documentRejected" }, () => []),
@@ -919,7 +922,7 @@ function validatePublishedValues(
 function evaluateLiveCorpus(
   corpus: OracleCorpus,
   services: OracleEvaluationServices,
-): Either.Either<readonly OracleTrace[], unknown> {
+): Result.Result<readonly OracleTrace[], unknown> {
   // Check evaluates the admitted committed batch, preserving corpus order and
   // identity. The source builder is used only by generate/write.
   return evaluateAdmittedBatch(corpus, services);
@@ -928,11 +931,13 @@ function evaluateLiveCorpus(
 function evaluateAdmittedBatch(
   corpus: OracleCorpus,
   services: OracleEvaluationServices,
-): Either.Either<readonly OracleTrace[], unknown> {
+): Result.Result<readonly OracleTrace[], unknown> {
   try {
-    return Either.right(evaluateOracleBatch({ batch: corpus.batch, services }));
+    return Result.succeed(
+      evaluateOracleBatch({ batch: corpus.batch, services }),
+    );
   } catch (cause) {
-    return Either.left(cause);
+    return Result.fail(cause);
   }
 }
 
@@ -1114,12 +1119,10 @@ function oneCorpusIssue(
 
 function runMain(): void {
   const services = buildProductionOracleEvaluationServices();
-  const program = Either.isLeft(services)
-    ? Effect.fail(services.left)
-    : runOracleEvaluationCli(process.argv, services.right);
-  NodeRuntime.runMain(program.pipe(Effect.provide(NodeContext.layer)), {
-    disablePrettyLogger: true,
-  });
+  const program = Result.isFailure(services)
+    ? Effect.fail(services.failure)
+    : runOracleEvaluationCli(process.argv, services.success);
+  NodeRuntime.runMain(program.pipe(Effect.provide(NodeServices.layer)));
 }
 
 const invokedScript = process.argv[1];

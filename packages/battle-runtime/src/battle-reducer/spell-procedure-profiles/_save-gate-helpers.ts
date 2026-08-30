@@ -25,14 +25,15 @@ import {
   isFixedDistancePointRange,
   topLevelSpellCastingTime,
 } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import {
-  COLOR_SPRAY_FAILED_SAVE_CONDITION,
-  ENTANGLE_FAILED_SAVE_CONDITION,
+  FAILED_SAVE_BLINDED_CONDITION as HIT_POINT_BUDGET_FAILED_SAVE_CONDITION,
+  FAILED_SAVE_RESTRAINED_CONDITION as AREA_RESTRAINT_FAILED_SAVE_CONDITION,
   SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET,
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET,
   type DamageSpellSource,
+  type DimIlluminationEmissionFacts,
   type SaveGateFailureEffect,
   type SpellActivationPhase,
   type SpellFailedSaveAttackRollEffect,
@@ -62,6 +63,7 @@ import {
   singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
 } from "../spells-execution-facts.ts";
+import { illuminationEmissionFactsFromSurface } from "./illumination-emission-facts.ts";
 
 export type SaveGateConditionSpell = {
   readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
@@ -81,6 +83,7 @@ export type SaveGateAttackRollAdvantageSpell = {
     { readonly kind: "pointOriginCube" }
   >;
   readonly effect: SpellFailedSaveAttackRollEffect;
+  readonly illumination: DimIlluminationEmissionFacts;
   readonly rangeFeet: MovementFeet;
 };
 
@@ -99,10 +102,9 @@ type AbilityChoiceHoleFilter = {
     readonly options: readonly [Ability, ...Ability[]];
   };
 };
-type ContagionChosenAbilitySaveDisadvantageEffect =
-  ModifyRollAdvantageEffect & {
-    readonly saveAbilityFilter: AbilityChoiceHoleFilter;
-  };
+type ChosenAbilitySaveDisadvantageEffect = ModifyRollAdvantageEffect & {
+  readonly saveAbilityFilter: AbilityChoiceHoleFilter;
+};
 type TimedBattleSpell = BattleSpellAdmissionSource & {
   readonly mechanics: BattleSpellAdmissionSource["mechanics"] & {
     readonly duration: Extract<
@@ -115,7 +117,7 @@ type SupportedDamageComponent = {
   readonly expr: NonNullable<ReturnType<typeof supportedDamageAmountExpr>>;
   readonly damageType: DamageType;
 };
-type RayOfEnfeeblementPhase = Extract<
+type WeaponDamageReductionRepeatSavePhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 > & {
@@ -129,50 +131,50 @@ type RayOfEnfeeblementPhase = Extract<
   };
 };
 
-const FIREBALL_BASE_SPELL_LEVEL = 3;
-const FIREBALL_RANGE_FEET = 150;
-const FIREBALL_AREA_RADIUS_FEET = 20;
-const FIREBALL_BASE_DAMAGE_DICE = 8;
-const FIREBALL_DAMAGE_DIE_SIZE = 6;
-const FIREBALL_SLOT_DAMAGE_DICE_INCREMENT = 1;
+const LARGE_FIRE_SPHERE_BASE_SPELL_LEVEL = 3;
+const LARGE_FIRE_SPHERE_RANGE_FEET = 150;
+const LARGE_FIRE_SPHERE_RADIUS_FEET = 20;
+const LARGE_FIRE_SPHERE_BASE_DAMAGE_DICE = 8;
+const LARGE_FIRE_SPHERE_DAMAGE_DIE_SIZE = 6;
+const LARGE_FIRE_SPHERE_SLOT_DAMAGE_DICE_INCREMENT = 1;
 const LEVEL5_SELF_CONE_SAVE_GATE_LENGTH_FEET = 60;
-const LIGHTNING_BOLT_LINE_LENGTH_FEET = 100;
-const LIGHTNING_BOLT_LINE_WIDTH_FEET = 5;
-const SHATTER_BASE_SPELL_LEVEL = 2;
-const SHATTER_RANGE_FEET = 60;
-const SHATTER_AREA_RADIUS_FEET = 10;
-const SHATTER_BASE_DAMAGE_DICE = 3;
-const SHATTER_DAMAGE_DIE_SIZE = 8;
-const SHATTER_SLOT_DAMAGE_DICE_INCREMENT = 1;
-const BLINDNESS_DEAFNESS_BASE_SPELL_LEVEL = 2;
-const BLINDNESS_DEAFNESS_RANGE_FEET = 120;
-const BLINDNESS_DEAFNESS_FAILED_SAVE_CONDITION_CHOICES = [
+const SIMPLE_LINE_DAMAGE_PROFILE_LENGTH_FEET = 100;
+const SIMPLE_LINE_DAMAGE_PROFILE_WIDTH_FEET = 5;
+const SMALL_THUNDER_SPHERE_BASE_SPELL_LEVEL = 2;
+const SMALL_THUNDER_SPHERE_RANGE_FEET = 60;
+const SMALL_THUNDER_SPHERE_RADIUS_FEET = 10;
+const SMALL_THUNDER_SPHERE_BASE_DAMAGE_DICE = 3;
+const SMALL_THUNDER_SPHERE_DAMAGE_DIE_SIZE = 8;
+const SMALL_THUNDER_SPHERE_SLOT_DAMAGE_DICE_INCREMENT = 1;
+const SENSORY_CONDITION_CHOICE_BASE_SPELL_LEVEL = 2;
+const SENSORY_CONDITION_CHOICE_RANGE_FEET = 120;
+const SENSORY_CONDITION_CHOICE_FAILED_SAVE_CONDITIONS = [
   "blinded",
   "deafened",
 ] as const satisfies readonly [Condition, ...Condition[]];
-const HOLD_PERSON_BASE_SPELL_LEVEL = 2;
-const HOLD_PERSON_RANGE_FEET = 60;
-const HOLD_PERSON_FAILED_SAVE_CONDITION =
+const HUMANOID_PARALYSIS_BASE_SPELL_LEVEL = 2;
+const HUMANOID_PARALYSIS_RANGE_FEET = 60;
+const PARALYSIS_FAILED_SAVE_CONDITION =
   "paralyzed" as const satisfies Condition;
-const HOLD_PERSON_TARGET_CREATURE_TYPES = [
+const HUMANOID_PARALYSIS_TARGET_CREATURE_TYPES = [
   "humanoid",
 ] as const satisfies readonly [CreatureType, ...CreatureType[]];
-const HOLD_MONSTER_BASE_SPELL_LEVEL = 5;
-const HOLD_MONSTER_RANGE_FEET = 90;
-const CALM_EMOTIONS_BASE_SPELL_LEVEL = 2;
-const CALM_EMOTIONS_RANGE_FEET = 60;
-const CALM_EMOTIONS_AREA_RADIUS_FEET = 20;
-const CALM_EMOTIONS_CONDITION_IMMUNITIES = [
+const CREATURE_PARALYSIS_BASE_SPELL_LEVEL = 5;
+const CREATURE_PARALYSIS_RANGE_FEET = 90;
+const AREA_CONDITION_IMMUNITY_BASE_SPELL_LEVEL = 2;
+const AREA_CONDITION_IMMUNITY_RANGE_FEET = 60;
+const AREA_CONDITION_IMMUNITY_RADIUS_FEET = 20;
+const AREA_CONDITION_IMMUNITIES = [
   "charmed",
   "frightened",
 ] as const satisfies readonly [Condition, Condition];
-const CALM_EMOTIONS_TARGET_CREATURE_TYPES = [
+const AREA_CONDITION_IMMUNITY_TARGET_CREATURE_TYPES = [
   "humanoid",
 ] as const satisfies readonly [CreatureType, ...CreatureType[]];
-const RAY_OF_ENFEEBLEMENT_BASE_SPELL_LEVEL = 2;
-const RAY_OF_ENFEEBLEMENT_RANGE_FEET = 60;
-const RAY_OF_ENFEEBLEMENT_DURATION_AMOUNT = 1;
-const RAY_OF_ENFEEBLEMENT_DURATION_UNIT = "minute";
+const WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_BASE_SPELL_LEVEL = 2;
+const WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_RANGE_FEET = 60;
+const WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_AMOUNT = 1;
+const WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_UNIT = "minute";
 
 function spellHasActionCastingTime(spell: BattleSpellAdmissionSource): boolean {
   return topLevelSpellCastingTime(spell.mechanics)?.kind === "action";
@@ -248,13 +250,13 @@ export function supportedSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return (
-    animalFriendshipSaveGateConditionSpell(spell) ??
-    blindnessDeafnessSaveGateConditionSpell(spell) ??
-    charmPersonSaveGateConditionSpell(spell) ??
-    holdPersonSaveGateConditionSpell(spell) ??
-    holdMonsterSaveGateConditionSpell(spell) ??
-    colorSpraySaveGateConditionSpell(spell) ??
-    entangleSaveGateConditionSpell(spell)
+    creatureTypeRestrictedCharmSaveGateConditionSpell(spell) ??
+    sensoryConditionChoiceSaveGateSpell(spell) ??
+    humanoidCharmSaveGateConditionSpell(spell) ??
+    humanoidParalysisSaveGateConditionSpell(spell) ??
+    creatureParalysisSaveGateConditionSpell(spell) ??
+    hitPointBudgetBlindedSaveGateConditionSpell(spell) ??
+    persistentAreaRestrainedSaveGateConditionSpell(spell)
   );
 }
 
@@ -263,7 +265,7 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
   spell: BattleSpellAdmissionSource,
   castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly SupportedSpellInvocation[] {
-  const attackRollAdvantageSpell = faerieFireSaveGateAttackRollAdvantageSpell(
+  const attackRollAdvantageSpell = areaSaveGatedAttackRollAdvantageSpell(
     actorId,
     spell,
   );
@@ -272,7 +274,7 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
   }
 
   return castOptions.flatMap((slot): readonly SupportedSpellInvocation[] => {
-    /* v8 ignore start -- @preserve -- Domain invariant: this profile admits only level-1 Faerie Fire, and SpellSlotLevel cannot represent a slot below level 1. */
+    /* v8 ignore start -- @preserve -- Domain invariant: this profile admits only level-1 spells, and SpellSlotLevel cannot represent a slot below level 1. */
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
@@ -287,6 +289,7 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
         dc: attackRollAdvantageSpell.phase.dc,
         targeting: attackRollAdvantageSpell.targeting,
         effect: attackRollAdvantageSpell.effect,
+        illumination: attackRollAdvantageSpell.illumination,
         rangeFeet: attackRollAdvantageSpell.rangeFeet,
       },
     ];
@@ -332,7 +335,7 @@ export function supportedPreparedSaveGateConditionImmunityProfile(
   spell: BattleSpellAdmissionSource,
   castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly SupportedSpellInvocation[] {
-  const conditionImmunitySpell = calmEmotionsSaveGateConditionImmunitySpell(
+  const conditionImmunitySpell = areaConditionImmunitySaveGateSpell(
     actorId,
     spell,
   );
@@ -362,7 +365,7 @@ export function supportedPreparedSaveGateConditionImmunityProfile(
   });
 }
 
-function calmEmotionsSaveGateConditionImmunitySpell(
+function areaConditionImmunitySaveGateSpell(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): {
@@ -371,7 +374,7 @@ function calmEmotionsSaveGateConditionImmunitySpell(
     SpellTargeting,
     { readonly kind: "pointOriginSphere" }
   >;
-  readonly targetCreatureTypes: typeof CALM_EMOTIONS_TARGET_CREATURE_TYPES;
+  readonly targetCreatureTypes: typeof AREA_CONDITION_IMMUNITY_TARGET_CREATURE_TYPES;
   readonly activeEffects: SaveGatedConditionImmunitySpellInvocation["activeEffects"];
   readonly rangeFeet: MovementFeet;
 } | null {
@@ -391,10 +394,10 @@ function calmEmotionsSaveGateConditionImmunitySpell(
       ? conditionImmunityEffectsFromSaveGateFailure(phase.onFail)
       : null;
   if (
-    spell.mechanics.level !== CALM_EMOTIONS_BASE_SPELL_LEVEL ||
+    spell.mechanics.level !== AREA_CONDITION_IMMUNITY_BASE_SPELL_LEVEL ||
     !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== CALM_EMOTIONS_RANGE_FEET ||
+    spell.mechanics.range.feet !== AREA_CONDITION_IMMUNITY_RANGE_FEET ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "minute" ||
     spell.mechanics.duration.upTo.amount !== 1 ||
@@ -407,12 +410,12 @@ function calmEmotionsSaveGateConditionImmunitySpell(
     area === null ||
     area.origin.kind !== "point_within_range" ||
     area.shape.kind !== "sphere" ||
-    area.shape.radiusFeet !== CALM_EMOTIONS_AREA_RADIUS_FEET ||
+    area.shape.radiusFeet !== AREA_CONDITION_IMMUNITY_RADIUS_FEET ||
     targetSelection?.mode !== "any_number" ||
     !sameStringSet(targetSelection.targetKinds ?? [], ["creature"]) ||
     !sameStringSet(
       targetSelection.typeFilter ?? [],
-      CALM_EMOTIONS_TARGET_CREATURE_TYPES,
+      AREA_CONDITION_IMMUNITY_TARGET_CREATURE_TYPES,
     ) ||
     immunityEffects === null
   ) {
@@ -425,18 +428,18 @@ function calmEmotionsSaveGateConditionImmunitySpell(
       kind: "pointOriginSphere",
       radiusFeet: movementFeet(area.shape.radiusFeet),
     },
-    targetCreatureTypes: CALM_EMOTIONS_TARGET_CREATURE_TYPES,
+    targetCreatureTypes: AREA_CONDITION_IMMUNITY_TARGET_CREATURE_TYPES,
     activeEffects: [
       {
         kind: "conditionImmunity",
         sourceCombatantId: actorId,
-        condition: CALM_EMOTIONS_CONDITION_IMMUNITIES[0],
+        condition: AREA_CONDITION_IMMUNITIES[0],
         expiresAt: { kind: "concentration", combatantId: actorId },
       },
       {
         kind: "conditionImmunity",
         sourceCombatantId: actorId,
-        condition: CALM_EMOTIONS_CONDITION_IMMUNITIES[1],
+        condition: AREA_CONDITION_IMMUNITIES[1],
         expiresAt: { kind: "concentration", combatantId: actorId },
       },
     ],
@@ -463,11 +466,11 @@ function conditionImmunityEffectsFromSaveGateFailure(
     (candidate): candidate is GrantConditionImmunitySaveGateEffect =>
       candidate.kind === "grant_condition_immunity",
   );
-  return effects.length === CALM_EMOTIONS_CONDITION_IMMUNITIES.length &&
-    immunities.length === CALM_EMOTIONS_CONDITION_IMMUNITIES.length &&
+  return effects.length === AREA_CONDITION_IMMUNITIES.length &&
+    immunities.length === AREA_CONDITION_IMMUNITIES.length &&
     sameStringSet(
       immunities.map((immunity) => immunity.condition),
-      CALM_EMOTIONS_CONDITION_IMMUNITIES,
+      AREA_CONDITION_IMMUNITIES,
     )
     ? [immunities[0]!, immunities[1]!]
     : null;
@@ -497,7 +500,7 @@ function abilityD20TestRollModeSaveGateSpell(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): {
-  readonly phase: RayOfEnfeeblementPhase;
+  readonly phase: WeaponDamageReductionRepeatSavePhase;
   readonly targeting: Extract<SpellTargeting, { readonly kind: "targetList" }>;
   readonly rangeFeet: MovementFeet;
   readonly successEffect: Extract<
@@ -522,25 +525,28 @@ function abilityD20TestRollModeSaveGateSpell(
       ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
       : null;
   if (
-    spell.mechanics.level !== RAY_OF_ENFEEBLEMENT_BASE_SPELL_LEVEL ||
+    spell.mechanics.level !==
+      WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_BASE_SPELL_LEVEL ||
     !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== RAY_OF_ENFEEBLEMENT_RANGE_FEET ||
+    spell.mechanics.range.feet !==
+      WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_RANGE_FEET ||
     spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== RAY_OF_ENFEEBLEMENT_DURATION_UNIT ||
+    spell.mechanics.duration.upTo.unit !==
+      WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_UNIT ||
     spell.mechanics.duration.upTo.amount !==
-      RAY_OF_ENFEEBLEMENT_DURATION_AMOUNT ||
+      WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_AMOUNT ||
     spell.mechanics.phases.length !== 1 ||
     durationTicks === null ||
-    Either.isLeft(durationTicks) ||
-    !isRayOfEnfeeblementD20LifecyclePhase(phase)
+    Result.isFailure(durationTicks) ||
+    !isWeaponDamageReductionRepeatSavePhase(phase)
   ) {
     return null;
   }
   return {
     phase,
     targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-    rangeFeet: movementFeet(RAY_OF_ENFEEBLEMENT_RANGE_FEET),
+    rangeFeet: movementFeet(WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_RANGE_FEET),
     successEffect: {
       kind: "nextAttackRollBySelf",
       sourceCombatantId: actorId,
@@ -556,7 +562,7 @@ function abilityD20TestRollModeSaveGateSpell(
       expiresAt: {
         kind: "concentration",
         combatantId: actorId,
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
       },
     },
     failedSaveDamagePenaltyEffect: {
@@ -566,15 +572,15 @@ function abilityD20TestRollModeSaveGateSpell(
       expiresAt: {
         kind: "concentration",
         combatantId: actorId,
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
       },
     },
   };
 }
 
-function isRayOfEnfeeblementD20LifecyclePhase(
+function isWeaponDamageReductionRepeatSavePhase(
   phase: ActivationPhase | undefined,
-): phase is RayOfEnfeeblementPhase {
+): phase is WeaponDamageReductionRepeatSavePhase {
   const repeatSaves =
     phase?.kind === "save_gate" ? (phase.repeatSaves ?? []) : [];
   const repeatSave = repeatSaves.length === 1 ? repeatSaves[0] : undefined;
@@ -646,7 +652,7 @@ function sameAbilitySet(
   return Array.isArray(actual) && sameStringSet(actual, expected);
 }
 
-export function faerieFireSaveGateAttackRollAdvantageSpell(
+export function areaSaveGatedAttackRollAdvantageSpell(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): SaveGateAttackRollAdvantageSpell | null {
@@ -655,8 +661,7 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
   }
   const phase = spell.mechanics.phases[0];
   const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
-  const attackAdvantageEffect =
-    faerieFireFailedSaveAttackAdvantageEffect(failedEffect);
+  const failedSaveFacts = visibilityGrantingAreaFailedSaveFacts(failedEffect);
   if (
     spell.mechanics.level !== 1 ||
     !spellHasActionCastingTime(spell) ||
@@ -677,7 +682,7 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
     phase.attachment.value.shape.kind !== "cube" ||
     phase.attachment.value.shape.sideFeet !==
       SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET ||
-    attackAdvantageEffect === null
+    failedSaveFacts === null
   ) {
     return null;
   }
@@ -689,18 +694,21 @@ export function faerieFireSaveGateAttackRollAdvantageSpell(
       sideFeet: movementFeet(phase.attachment.value.shape.sideFeet),
     },
     effect: {
-      kind: "faerieFireOutline",
+      kind: "saveGatedTargetProjection",
       sourceCombatantId: actorId,
       expiresAt: { kind: "concentration", combatantId: actorId },
     },
+    illumination: failedSaveFacts.illumination,
     rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
 }
 
-function faerieFireFailedSaveAttackAdvantageEffect(
+function visibilityGrantingAreaFailedSaveFacts(
   effect: SaveGateFailedEffect | undefined,
-): ModifyRollAdvantageEffect | null {
-  if (effect?.kind !== "composite" || effect.effects.length !== 2) {
+): {
+  readonly illumination: SaveGateAttackRollAdvantageSpell["illumination"];
+} | null {
+  if (effect?.kind !== "composite" || effect.effects.length !== 3) {
     return null;
   }
   const attackAdvantageEffects = effect.effects.filter(
@@ -714,12 +722,34 @@ function faerieFireFailedSaveAttackAdvantageEffect(
       candidate.kind === "suppress_condition_benefit" &&
       candidate.condition === "invisible",
   );
-  return attackAdvantageEffects.length === 1 && suppressesInvisible
-    ? attackAdvantageEffects[0]
+  const illuminationEffects = effect.effects.filter(
+    (candidate) => candidate.kind === "emit_dim_illumination",
+  );
+  const illumination =
+    illuminationEffects.length === 1 &&
+    illuminationEffects[0]?.kind === "emit_dim_illumination"
+      ? illuminationEmissionFactsFromSurface({
+          effect: illuminationEffects[0],
+          opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
+        })
+      : null;
+  return attackAdvantageEffects.length === 1 &&
+    attackAdvantageEffects[0] !== undefined &&
+    suppressesInvisible &&
+    illumination?.emission.kind === "dim" &&
+    illumination !== null
+    ? {
+        illumination: {
+          emission: illumination.emission,
+          opaqueCoverInteraction: {
+            kind: illumination.opaqueCoverInteraction.kind,
+          },
+        },
+      }
     : null;
 }
 
-export function animalFriendshipSaveGateConditionSpell(
+export function creatureTypeRestrictedCharmSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return creatureTypeCharmedSaveGateConditionSpell({
@@ -730,7 +760,7 @@ export function animalFriendshipSaveGateConditionSpell(
   });
 }
 
-export function charmPersonSaveGateConditionSpell(
+export function humanoidCharmSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return creatureTypeCharmedSaveGateConditionSpell({
@@ -741,7 +771,7 @@ export function charmPersonSaveGateConditionSpell(
   });
 }
 
-export function blindnessDeafnessSaveGateConditionSpell(
+export function sensoryConditionChoiceSaveGateSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   if (spell.mechanics.family !== "activation") {
@@ -765,10 +795,10 @@ export function blindnessDeafnessSaveGateConditionSpell(
       ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.value)
       : null;
   if (
-    spell.mechanics.level !== BLINDNESS_DEAFNESS_BASE_SPELL_LEVEL ||
+    spell.mechanics.level !== SENSORY_CONDITION_CHOICE_BASE_SPELL_LEVEL ||
     !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== BLINDNESS_DEAFNESS_RANGE_FEET ||
+    spell.mechanics.range.feet !== SENSORY_CONDITION_CHOICE_RANGE_FEET ||
     spell.mechanics.duration.kind !== "timed" ||
     spell.mechanics.duration.value.unit !== "minute" ||
     spell.mechanics.duration.value.amount !== 1 ||
@@ -785,7 +815,7 @@ export function blindnessDeafnessSaveGateConditionSpell(
     failedCondition.kind !== "choose" ||
     !sameStringSet(
       failedCondition.from,
-      BLINDNESS_DEAFNESS_FAILED_SAVE_CONDITION_CHOICES,
+      SENSORY_CONDITION_CHOICE_FAILED_SAVE_CONDITIONS,
     ) ||
     repeatSave === undefined ||
     repeatSave.cadence !== "end_of_target_turn" ||
@@ -793,7 +823,7 @@ export function blindnessDeafnessSaveGateConditionSpell(
     repeatSave.onSuccess !== "ends_on_target" ||
     repeatSave.onFailAgain !== undefined ||
     durationTicks === null ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
@@ -818,8 +848,8 @@ export function blindnessDeafnessSaveGateConditionSpell(
     targetCreatureTypes: null,
     effect: {
       kind: "choice",
-      choices: BLINDNESS_DEAFNESS_FAILED_SAVE_CONDITION_CHOICES,
-      expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+      choices: SENSORY_CONDITION_CHOICE_FAILED_SAVE_CONDITIONS,
+      expiresAt: { kind: "duration", durationTicks: durationTicks.success },
       escape: null,
       turnStartDamage: null,
       repeatSave: {
@@ -832,24 +862,24 @@ export function blindnessDeafnessSaveGateConditionSpell(
   };
 }
 
-export function holdPersonSaveGateConditionSpell(
+export function humanoidParalysisSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return paralyzedTargetListSaveGateConditionSpell({
     spell,
-    baseSpellLevel: HOLD_PERSON_BASE_SPELL_LEVEL,
-    rangeFeet: HOLD_PERSON_RANGE_FEET,
-    targetCreatureTypes: HOLD_PERSON_TARGET_CREATURE_TYPES,
+    baseSpellLevel: HUMANOID_PARALYSIS_BASE_SPELL_LEVEL,
+    rangeFeet: HUMANOID_PARALYSIS_RANGE_FEET,
+    targetCreatureTypes: HUMANOID_PARALYSIS_TARGET_CREATURE_TYPES,
   });
 }
 
-export function holdMonsterSaveGateConditionSpell(
+export function creatureParalysisSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   return paralyzedTargetListSaveGateConditionSpell({
     spell,
-    baseSpellLevel: HOLD_MONSTER_BASE_SPELL_LEVEL,
-    rangeFeet: HOLD_MONSTER_RANGE_FEET,
+    baseSpellLevel: CREATURE_PARALYSIS_BASE_SPELL_LEVEL,
+    rangeFeet: CREATURE_PARALYSIS_RANGE_FEET,
     targetCreatureTypes: null,
   });
 }
@@ -900,14 +930,14 @@ function paralyzedTargetListSaveGateConditionSpell(input: {
       input.targetCreatureTypes,
     ) ||
     failedEffect?.kind !== "apply_condition" ||
-    failedEffect.condition !== HOLD_PERSON_FAILED_SAVE_CONDITION ||
+    failedEffect.condition !== PARALYSIS_FAILED_SAVE_CONDITION ||
     repeatSave === undefined ||
     repeatSave.cadence !== "end_of_target_turn" ||
     repeatSave.rollMode !== undefined ||
     repeatSave.onSuccess !== "ends_on_target" ||
     repeatSave.onFailAgain !== undefined ||
     durationTicks === null ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
@@ -929,8 +959,11 @@ function paralyzedTargetListSaveGateConditionSpell(input: {
     targetCreatureTypes: input.targetCreatureTypes,
     effect: {
       kind: "fixed",
-      condition: HOLD_PERSON_FAILED_SAVE_CONDITION,
-      expiresAt: { kind: "concentration", durationTicks: durationTicks.right },
+      condition: PARALYSIS_FAILED_SAVE_CONDITION,
+      expiresAt: {
+        kind: "concentration",
+        durationTicks: durationTicks.success,
+      },
       escape: null,
       turnStartDamage: null,
       repeatSave: {
@@ -1029,7 +1062,7 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return null;
   }
   const targetCountBySlot = oneAdditionalTargetPerSpellSlotAboveBaseLevel(
@@ -1051,7 +1084,7 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
     effect: {
       kind: "fixed",
       condition: "charmed",
-      expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+      expiresAt: { kind: "duration", durationTicks: durationTicks.success },
       escape: { kind: "targetDamagedByCasterOrAlly" },
       turnStartDamage: null,
       repeatSave: null,
@@ -1061,7 +1094,7 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
   };
 }
 
-export function colorSpraySaveGateConditionSpell(
+export function hitPointBudgetBlindedSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   if (spell.mechanics.family !== "activation") {
@@ -1088,7 +1121,7 @@ export function colorSpraySaveGateConditionSpell(
     phase.attachment.shape.lengthFeet !==
       SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET ||
     failedEffect?.kind !== "apply_condition" ||
-    failedEffect.condition !== COLOR_SPRAY_FAILED_SAVE_CONDITION
+    failedEffect.condition !== HIT_POINT_BUDGET_FAILED_SAVE_CONDITION
   ) {
     return null;
   }
@@ -1103,7 +1136,7 @@ export function colorSpraySaveGateConditionSpell(
     targetCreatureTypes: null,
     effect: {
       kind: "fixed",
-      condition: COLOR_SPRAY_FAILED_SAVE_CONDITION,
+      condition: HIT_POINT_BUDGET_FAILED_SAVE_CONDITION,
       expiresAt: "endOfCasterNextTurn",
       escape: null,
       turnStartDamage: null,
@@ -1114,7 +1147,7 @@ export function colorSpraySaveGateConditionSpell(
   };
 }
 
-export function entangleSaveGateConditionSpell(
+export function persistentAreaRestrainedSaveGateConditionSpell(
   spell: BattleSpellAdmissionSource,
 ): SaveGateConditionSpell | null {
   if (spell.mechanics.family !== "activation") {
@@ -1143,7 +1176,7 @@ export function entangleSaveGateConditionSpell(
     phase.attachment.value.shape.sideFeet !==
       SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET ||
     failedEffect?.kind !== "apply_condition" ||
-    failedEffect.condition !== ENTANGLE_FAILED_SAVE_CONDITION
+    failedEffect.condition !== AREA_RESTRAINT_FAILED_SAVE_CONDITION
   ) {
     return null;
   }
@@ -1158,7 +1191,7 @@ export function entangleSaveGateConditionSpell(
     targetCreatureTypes: null,
     effect: {
       kind: "fixed",
-      condition: ENTANGLE_FAILED_SAVE_CONDITION,
+      condition: AREA_RESTRAINT_FAILED_SAVE_CONDITION,
       expiresAt: "concentration",
       escape: {
         kind: "abilityCheck",
@@ -1382,8 +1415,8 @@ export function saveGateTargeting(
     value.kind === "area" &&
     value.origin.kind === "self" &&
     value.shape.kind === "line" &&
-    value.shape.lengthFeet === LIGHTNING_BOLT_LINE_LENGTH_FEET &&
-    value.shape.widthFeet === LIGHTNING_BOLT_LINE_WIDTH_FEET
+    value.shape.lengthFeet === SIMPLE_LINE_DAMAGE_PROFILE_LENGTH_FEET &&
+    value.shape.widthFeet === SIMPLE_LINE_DAMAGE_PROFILE_WIDTH_FEET
   ) {
     return {
       kind: "selfOriginLine",
@@ -1401,8 +1434,8 @@ function saveGatedDamageTargeting(
   return (
     saveGateTargeting(attachment) ??
     level5SelfOriginConeTargeting(spell, attachment) ??
-    fireballPointOriginSphereTargeting(spell, attachment) ??
-    shatterPointOriginSphereTargeting(spell, attachment)
+    largeFireSphereTargeting(spell, attachment) ??
+    smallThunderSphereTargeting(spell, attachment)
   );
 }
 
@@ -1428,18 +1461,18 @@ function level5SelfOriginConeTargeting(
   return null;
 }
 
-function fireballPointOriginSphereTargeting(
+function largeFireSphereTargeting(
   spell: BattleSpellAdmissionSource,
   attachment: Attachment,
 ): Extract<SpellTargeting, { readonly kind: "pointOriginSphere" }> | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
   if (
-    spell.mechanics.level === FIREBALL_BASE_SPELL_LEVEL &&
+    spell.mechanics.level === LARGE_FIRE_SPHERE_BASE_SPELL_LEVEL &&
     spellHasActionCastingTime(spell) &&
     value.kind === "area" &&
     value.origin.kind === "point_within_range" &&
     value.shape.kind === "sphere" &&
-    value.shape.radiusFeet === FIREBALL_AREA_RADIUS_FEET
+    value.shape.radiusFeet === LARGE_FIRE_SPHERE_RADIUS_FEET
   ) {
     return {
       kind: "pointOriginSphere",
@@ -1449,20 +1482,20 @@ function fireballPointOriginSphereTargeting(
   return null;
 }
 
-function shatterPointOriginSphereTargeting(
+function smallThunderSphereTargeting(
   spell: BattleSpellAdmissionSource,
   attachment: Attachment,
 ): Extract<SpellTargeting, { readonly kind: "pointOriginSphere" }> | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
   if (
-    spell.mechanics.level === SHATTER_BASE_SPELL_LEVEL &&
+    spell.mechanics.level === SMALL_THUNDER_SPHERE_BASE_SPELL_LEVEL &&
     spellHasActionCastingTime(spell) &&
     spell.mechanics.range.kind === "point" &&
-    spell.mechanics.range.feet === SHATTER_RANGE_FEET &&
+    spell.mechanics.range.feet === SMALL_THUNDER_SPHERE_RANGE_FEET &&
     value.kind === "area" &&
     value.origin.kind === "point_within_range" &&
     value.shape.kind === "sphere" &&
-    value.shape.radiusFeet === SHATTER_AREA_RADIUS_FEET
+    value.shape.radiusFeet === SMALL_THUNDER_SPHERE_RADIUS_FEET
   ) {
     return {
       kind: "pointOriginSphere",
@@ -1488,6 +1521,9 @@ export function areaSaveGateSpellRangeFeet(
       fixedPointRangeFeet(range),
     ),
     Match.when({ kind: "pointOriginCube" }, () => fixedPointRangeFeet(range)),
+    Match.when({ kind: "pointOriginGroundSquare" }, () =>
+      fixedPointRangeFeet(range),
+    ),
     Match.when({ kind: "selfOriginCube" }, () =>
       range.kind === "self" ? movementFeet(0) : null,
     ),
@@ -1532,7 +1568,10 @@ export function supportedSaveGateFailedSaveEffects(
   readonly conditionEffects: readonly SpellFailedSaveConditionEffect[];
   readonly abilityChoices: readonly Ability[] | null;
 } | null {
-  if (postSaveAreaEffect?.kind === "thunderwave" && effect.kind === "damage") {
+  if (
+    postSaveAreaEffect?.kind === "selfOriginCubePush" &&
+    effect.kind === "damage"
+  ) {
     return null;
   }
   if (effect.kind === "damage") {
@@ -1563,27 +1602,28 @@ export function supportedSaveGateFailedSaveEffects(
     (component) => component.kind !== "damage",
   );
   if (
-    postSaveAreaEffect?.kind === "thunderwave" &&
-    !isThunderwaveFailedSaveDamageShape(damage)
+    postSaveAreaEffect?.kind === "selfOriginCubePush" &&
+    !isSelfOriginCubeFailedSaveDamageShape(damage)
   ) {
     return null;
   }
   if (
-    postSaveAreaEffect?.kind === "thunderwave" &&
-    riders.filter((rider) => isThunderwaveCreaturePushRiderShape(phase, rider))
-      .length !== 1
+    postSaveAreaEffect?.kind === "selfOriginCubePush" &&
+    riders.filter((rider) =>
+      isSelfOriginCubeCreaturePushRiderShape(phase, rider),
+    ).length !== 1
   ) {
     return null;
   }
-  const dissonantWhispersForcedMovementCount = riders.filter((rider) =>
-    isDissonantWhispersForcedReactionMovementShape(spell, phase, rider),
+  const failedSaveForcedReactionMovementCount = riders.filter((rider) =>
+    isFailedSaveForcedReactionMovementShape(spell, phase, rider),
   ).length;
   if (
-    (dissonantWhispersForcedMovementCount > 0 &&
-      (dissonantWhispersForcedMovementCount !== 1 ||
-        !isDissonantWhispersFailedSaveDamageShape(damage))) ||
-    (isDissonantWhispersFailedSaveDamageShape(damage) &&
-      dissonantWhispersForcedMovementCount !== 1)
+    (failedSaveForcedReactionMovementCount > 0 &&
+      (failedSaveForcedReactionMovementCount !== 1 ||
+        !isFailedSaveForcedReactionMovementDamageShape(damage))) ||
+    (isFailedSaveForcedReactionMovementDamageShape(damage) &&
+      failedSaveForcedReactionMovementCount !== 1)
   ) {
     return null;
   }
@@ -1626,14 +1666,15 @@ function supportedFailedSaveConditionEffects(
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effects: readonly SaveGateFailureEffect[],
 ): FailedSaveConditionSupport | null {
-  const contagion = contagionFailedSaveConditionSupport(spell, phase, effects);
-  if (contagion !== null) {
-    return contagion;
+  const chosenAbilitySaveDisadvantageProfileShape =
+    chosenAbilitySaveDisadvantageConditionSupport(spell, phase, effects);
+  if (chosenAbilitySaveDisadvantageProfileShape !== null) {
+    return chosenAbilitySaveDisadvantageProfileShape;
   }
   return { conditionEffects: [], abilityChoices: null, consumedEffects: [] };
 }
 
-function contagionFailedSaveConditionSupport(
+function chosenAbilitySaveDisadvantageConditionSupport(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effects: readonly SaveGateFailureEffect[],
@@ -1642,14 +1683,14 @@ function contagionFailedSaveConditionSupport(
     (effect) =>
       effect.kind === "apply_condition" && effect.condition === "poisoned",
   );
-  const disadvantage = effects.find(isContagionChosenAbilitySaveDisadvantage);
+  const disadvantage = effects.find(isChosenAbilitySaveDisadvantage);
   if (poisoned === undefined && disadvantage === undefined) {
     return null;
   }
   if (
     poisoned === undefined ||
     disadvantage === undefined ||
-    !isContagionSaveGateSpellShape(spell, phase)
+    !isChosenAbilitySaveDisadvantageSpellShape(spell, phase)
   ) {
     return null;
   }
@@ -1669,7 +1710,7 @@ function contagionFailedSaveConditionSupport(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return null;
   }
   return {
@@ -1679,7 +1720,7 @@ function contagionFailedSaveConditionSupport(
         condition: "poisoned",
         expiresAt: {
           kind: "duration",
-          durationTicks: durationTicks.right,
+          durationTicks: durationTicks.success,
         },
         escape: null,
         turnStartDamage: null,
@@ -1697,7 +1738,7 @@ function contagionFailedSaveConditionSupport(
   };
 }
 
-function isContagionSaveGateSpellShape(
+function isChosenAbilitySaveDisadvantageSpellShape(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): spell is TimedBattleSpell {
@@ -1714,9 +1755,9 @@ function isContagionSaveGateSpellShape(
   );
 }
 
-function isContagionChosenAbilitySaveDisadvantage(
+function isChosenAbilitySaveDisadvantage(
   effect: SaveGateFailureEffect,
-): effect is ContagionChosenAbilitySaveDisadvantageEffect {
+): effect is ChosenAbilitySaveDisadvantageEffect {
   return (
     effect.kind === "modify_roll_advantage" &&
     effect.mode === "disadvantage" &&
@@ -1750,14 +1791,14 @@ export function supportedFailedSavePostDamageRiders(
   const riders: SpellFailedSavePostDamageRider[] = [];
   for (const effect of effects) {
     if (
-      postSaveAreaEffect?.kind === "thunderwave" &&
-      isThunderwaveCreaturePushRiderShape(phase, effect)
+      postSaveAreaEffect?.kind === "selfOriginCubePush" &&
+      isSelfOriginCubeCreaturePushRiderShape(phase, effect)
     ) {
       continue;
     }
     if (
       effect.kind === "forced_reaction_movement" &&
-      isDissonantWhispersForcedReactionMovementShape(spell, phase, effect)
+      isFailedSaveForcedReactionMovementShape(spell, phase, effect)
     ) {
       riders.push({
         kind: "forcedReactionMovement",
@@ -1775,7 +1816,7 @@ export function supportedFailedSavePostDamageRiders(
       effect.count !== 1 ||
       effect.expiresOn?.kind !== "end_of_next_turn" ||
       (effect.affects ?? "self_roll") !== "self_roll" ||
-      !isViciousMockeryNextAttackRiderShape(spell, phase)
+      !isPsychicDamageNextAttackDisadvantageRiderShape(spell, phase)
     ) {
       return null;
     }
@@ -1788,7 +1829,7 @@ export function supportedFailedSavePostDamageRiders(
   return riders;
 }
 
-function isDissonantWhispersForcedReactionMovementShape(
+function isFailedSaveForcedReactionMovementShape(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effect: SaveGateFailureEffect,
@@ -1811,7 +1852,7 @@ function isDissonantWhispersForcedReactionMovementShape(
   );
 }
 
-function isDissonantWhispersFailedSaveDamageShape(
+function isFailedSaveForcedReactionMovementDamageShape(
   effect: Extract<SaveGateFailureEffect, { readonly kind: "damage" }>,
 ): boolean {
   const amount = effect.amount;
@@ -1837,9 +1878,9 @@ function saveGatedDamagePostSaveAreaEffect(
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
   return (
-    fireballPostSaveAreaEffect(spell, phase, directPhase) ??
-    shatterPostSaveAreaEffect(spell, phase, directPhase) ??
-    thunderwavePostSaveAreaEffect(spell, phase, directPhase)
+    objectIgnitingSphericalBurstPostSaveAreaEffect(spell, phase, directPhase) ??
+    objectAffectingThunderBurstPostSaveAreaEffect(spell, phase, directPhase) ??
+    forcedMovementCubeBurstPostSaveAreaEffect(spell, phase, directPhase)
   );
 }
 
@@ -1850,9 +1891,9 @@ function saveGatedDamagePhaseCount(
     return 1;
   }
   return Match.value(postSaveAreaEffect).pipe(
-    Match.when({ kind: "fireballObjectIgnition" }, () => 2),
-    Match.when({ kind: "thunderwave" }, () => 2),
-    Match.when({ kind: "shatterObjectDamage" }, () => 1),
+    Match.when({ kind: "areaObjectIgnition" }, () => 2),
+    Match.when({ kind: "selfOriginCubePush" }, () => 2),
+    Match.when({ kind: "areaObjectDamage" }, () => 1),
     Match.exhaustive,
   );
 }
@@ -1861,12 +1902,12 @@ function saveGatedDamageSaveRollModeRule(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): SpellSavingThrowRollModeRule | null {
-  return isShatterSaveGateDamageShape(spell, phase)
+  return isSmallThunderSphereSaveGateDamageShape(spell, phase)
     ? { kind: "creatureType", creatureType: "construct", mode: "disadvantage" }
     : null;
 }
 
-function fireballPostSaveAreaEffect(
+function objectIgnitingSphericalBurstPostSaveAreaEffect(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
@@ -1875,10 +1916,10 @@ function fireballPostSaveAreaEffect(
   const ignite =
     directPhase?.kind === "direct" ? directPhase.effects?.[0] : undefined;
   if (
-    spell.mechanics.level !== FIREBALL_BASE_SPELL_LEVEL ||
+    spell.mechanics.level !== LARGE_FIRE_SPHERE_BASE_SPELL_LEVEL ||
     !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== FIREBALL_RANGE_FEET ||
+    spell.mechanics.range.feet !== LARGE_FIRE_SPHERE_RANGE_FEET ||
     spell.mechanics.duration.kind !== "instantaneous" ||
     phase.ability !== "dex" ||
     phase.dc.kind !== "caster_spell_save_dc" ||
@@ -1887,22 +1928,23 @@ function fireballPostSaveAreaEffect(
     phase.attachment.value.kind !== "area" ||
     phase.attachment.value.origin.kind !== "point_within_range" ||
     phase.attachment.value.shape.kind !== "sphere" ||
-    phase.attachment.value.shape.radiusFeet !== FIREBALL_AREA_RADIUS_FEET ||
+    phase.attachment.value.shape.radiusFeet !== LARGE_FIRE_SPHERE_RADIUS_FEET ||
     damage.kind !== "damage" ||
     damage.damageType !== "fire" ||
     damage.amount.kind !== "linear_per_level" ||
     damage.amount.axis !== "slot" ||
-    damage.amount.startingAtLevel !== FIREBALL_BASE_SPELL_LEVEL ||
-    damage.amount.base.dice !== FIREBALL_BASE_DAMAGE_DICE ||
-    damage.amount.base.dieSize !== FIREBALL_DAMAGE_DIE_SIZE ||
-    damage.amount.perLevel.dice !== FIREBALL_SLOT_DAMAGE_DICE_INCREMENT ||
+    damage.amount.startingAtLevel !== LARGE_FIRE_SPHERE_BASE_SPELL_LEVEL ||
+    damage.amount.base.dice !== LARGE_FIRE_SPHERE_BASE_DAMAGE_DICE ||
+    damage.amount.base.dieSize !== LARGE_FIRE_SPHERE_DAMAGE_DIE_SIZE ||
+    damage.amount.perLevel.dice !==
+      LARGE_FIRE_SPHERE_SLOT_DAMAGE_DICE_INCREMENT ||
     directPhase?.kind !== "direct" ||
     directPhase.attachment.kind !== "hole" ||
     directPhase.attachment.value.kind !== "area" ||
     directPhase.attachment.value.origin.kind !== "point_within_range" ||
     directPhase.attachment.value.shape.kind !== "sphere" ||
     directPhase.attachment.value.shape.radiusFeet !==
-      FIREBALL_AREA_RADIUS_FEET ||
+      LARGE_FIRE_SPHERE_RADIUS_FEET ||
     directPhase.effects?.length !== 1 ||
     ignite?.kind !== "ignite_objects" ||
     ignite.filter.material !== "flammable" ||
@@ -1910,29 +1952,30 @@ function fireballPostSaveAreaEffect(
   ) {
     return null;
   }
-  return { kind: "fireballObjectIgnition" };
+  return { kind: "areaObjectIgnition" };
 }
 
-function shatterPostSaveAreaEffect(
+function objectAffectingThunderBurstPostSaveAreaEffect(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
-  return directPhase === undefined && isShatterSaveGateDamageShape(spell, phase)
-    ? { kind: "shatterObjectDamage" }
+  return directPhase === undefined &&
+    isSmallThunderSphereSaveGateDamageShape(spell, phase)
+    ? { kind: "areaObjectDamage" }
     : null;
 }
 
-function isShatterSaveGateDamageShape(
+function isSmallThunderSphereSaveGateDamageShape(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): boolean {
   const damage = phase.onFail;
   return (
-    spell.mechanics.level === SHATTER_BASE_SPELL_LEVEL &&
+    spell.mechanics.level === SMALL_THUNDER_SPHERE_BASE_SPELL_LEVEL &&
     spellHasActionCastingTime(spell) &&
     spell.mechanics.range.kind === "point" &&
-    spell.mechanics.range.feet === SHATTER_RANGE_FEET &&
+    spell.mechanics.range.feet === SMALL_THUNDER_SPHERE_RANGE_FEET &&
     spell.mechanics.duration.kind === "instantaneous" &&
     phase.ability === "con" &&
     phase.dc.kind === "caster_spell_save_dc" &&
@@ -1941,15 +1984,17 @@ function isShatterSaveGateDamageShape(
     phase.attachment.value.kind === "area" &&
     phase.attachment.value.origin.kind === "point_within_range" &&
     phase.attachment.value.shape.kind === "sphere" &&
-    phase.attachment.value.shape.radiusFeet === SHATTER_AREA_RADIUS_FEET &&
+    phase.attachment.value.shape.radiusFeet ===
+      SMALL_THUNDER_SPHERE_RADIUS_FEET &&
     damage.kind === "damage" &&
     damage.damageType === "thunder" &&
     damage.amount.kind === "linear_per_level" &&
     damage.amount.axis === "slot" &&
-    damage.amount.startingAtLevel === SHATTER_BASE_SPELL_LEVEL &&
-    damage.amount.base.dice === SHATTER_BASE_DAMAGE_DICE &&
-    damage.amount.base.dieSize === SHATTER_DAMAGE_DIE_SIZE &&
-    damage.amount.perLevel.dice === SHATTER_SLOT_DAMAGE_DICE_INCREMENT &&
+    damage.amount.startingAtLevel === SMALL_THUNDER_SPHERE_BASE_SPELL_LEVEL &&
+    damage.amount.base.dice === SMALL_THUNDER_SPHERE_BASE_DAMAGE_DICE &&
+    damage.amount.base.dieSize === SMALL_THUNDER_SPHERE_DAMAGE_DIE_SIZE &&
+    damage.amount.perLevel.dice ===
+      SMALL_THUNDER_SPHERE_SLOT_DAMAGE_DICE_INCREMENT &&
     damage.amount.perLevel.dieSize === undefined &&
     damage.amount.base.flat === undefined &&
     damage.amount.base.spellcastingMod === undefined &&
@@ -1958,7 +2003,7 @@ function isShatterSaveGateDamageShape(
   );
 }
 
-function thunderwavePostSaveAreaEffect(
+function forcedMovementCubeBurstPostSaveAreaEffect(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
@@ -1997,7 +2042,7 @@ function thunderwavePostSaveAreaEffect(
     return null;
   }
   return {
-    kind: "thunderwave",
+    kind: "selfOriginCubePush",
     creaturePush: {
       distanceFeet: movementFeet(10),
       originDirection: "away_from_caster",
@@ -2014,7 +2059,7 @@ function thunderwavePostSaveAreaEffect(
   };
 }
 
-function isThunderwaveCreaturePushRiderShape(
+function isSelfOriginCubeCreaturePushRiderShape(
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effect: SaveGateFailureEffect,
 ): boolean {
@@ -2028,7 +2073,7 @@ function isThunderwaveCreaturePushRiderShape(
   );
 }
 
-function isThunderwaveFailedSaveDamageShape(
+function isSelfOriginCubeFailedSaveDamageShape(
   effect: Extract<SaveGateFailureEffect, { readonly kind: "damage" }>,
 ): boolean {
   const amount = effect.amount;
@@ -2048,7 +2093,7 @@ function isThunderwaveFailedSaveDamageShape(
   );
 }
 
-export function isViciousMockeryNextAttackRiderShape(
+export function isPsychicDamageNextAttackDisadvantageRiderShape(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): boolean {

@@ -80,7 +80,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
+import { Result } from "effect";
 import type { SimpleActionMap, SimpleDriver } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
@@ -123,6 +123,7 @@ import {
 } from "./index.ts";
 
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
 
 function battleCreatureInitFromStatBlock(
   input: Omit<
@@ -130,7 +131,7 @@ function battleCreatureInitFromStatBlock(
     "ammunitionStocks" | "conditions"
   >,
 ) {
-  return expectRight(
+  return expectSuccess(
     parseBattleCreatureInitFromStatBlock({
       ...input,
       ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
@@ -151,13 +152,13 @@ type RouteCharacterBattleRuntimeEntryIssue = BattleStateInitIssue & {
 function startBattleFromTestRoster(input: {
   readonly battleId: Parameters<typeof startBattle>[0]["battleId"];
   readonly entries: Parameters<typeof composeBattleRoster>[0];
-}): Either.Either<
+}): Result.Result<
   RouteCharacterBattleRuntimeEntry,
   RouteCharacterBattleRuntimeEntryIssue
 > {
   const roster = composeBattleRoster(input.entries);
   if (roster.tag === "rejected") {
-    return Either.left({
+    return Result.fail({
       tag: "battleStateInitIssue" as const,
       message: `Roster admission failed: ${roster.issues[0].kind}`,
       routeEvents: [],
@@ -167,11 +168,11 @@ function startBattleFromTestRoster(input: {
     battleId: input.battleId,
     combatants: roster.admissions.map((admission) => admission.combatant),
   });
-  if (Either.isLeft(session)) {
-    return Either.left({ ...session.left, routeEvents: [] });
+  if (Result.isFailure(session)) {
+    return Result.fail({ ...session.failure, routeEvents: [] });
   }
-  return Either.right({
-    session: session.right,
+  return Result.succeed({
+    session: session.success,
     initProjectionRouteEvents: roster.admissions.flatMap((admission) =>
       admission.kind === "characterSheet" ? admission.routeEvents : [],
     ),
@@ -648,7 +649,7 @@ function layOnHandsRestoresHpAndRemovesPoisonedRoute(
     restoreHp: Hp(2),
     removePoisoned: true,
   });
-  const accepted = expectRight(result);
+  const accepted = expectSuccess(result);
   expect(characterSheetCurrentHp(accepted.target)).toBe(5);
   expect(accepted.target.conditions).not.toContain("poisoned");
   return appendObservedFeatureResourceRoute(route, {
@@ -673,7 +674,7 @@ function rejectLayOnHandsOverspendRoute(
     restoreHp: Hp(1),
     removePoisoned: true,
   });
-  expect(Either.isLeft(result)).toBe(true);
+  expect(Result.isFailure(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "layOnHands",
     result,
@@ -688,7 +689,7 @@ function longRestClearsLayOnHandsPoolRoute(
     build: featureResourceBaseBuild({ startingClass: "class_paladin" }),
     currentHp: 6,
   });
-  const spent = expectRight(
+  const spent = expectSuccess(
     applyLayOnHands({
       source,
       target: source,
@@ -698,7 +699,7 @@ function longRestClearsLayOnHandsPoolRoute(
     }),
   ).source;
   const result = completeLongRestForFeatureResourceRoute(spent);
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "featureResourceRest",
     result,
@@ -743,8 +744,8 @@ function shortRestRecoversUseCountPoolsRoute(
   });
   const druidResult = completeShortRestForFeatureResourceRoute(druid);
   const monkResult = completeShortRestForFeatureResourceRoute(monk);
-  expect(Either.isRight(druidResult)).toBe(true);
-  expect(Either.isRight(monkResult)).toBe(true);
+  expect(Result.isSuccess(druidResult)).toBe(true);
+  expect(Result.isSuccess(monkResult)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "featureResourceRest",
     result: monkResult,
@@ -767,7 +768,7 @@ function longRestClearsPointPoolAndUseStateRoute(
     ],
   });
   const result = completeLongRestForFeatureResourceRoute(sheet);
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "featureResourceRest",
     result,
@@ -803,7 +804,7 @@ function fontOfMagicSlotToPointsRoute(
     unitLibrary,
     spellLevel: spellSlotLevel(2),
   });
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "fontOfMagicSlotToPoints",
     result,
@@ -819,7 +820,7 @@ function rejectFontOfMagicAmbiguousSlotSourceRoute(
     unitLibrary,
     spellLevel: spellSlotLevel(3),
   });
-  expect(Either.isLeft(result)).toBe(true);
+  expect(Result.isFailure(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "fontOfMagicSlotToPoints",
     result,
@@ -846,7 +847,7 @@ function fontOfMagicPointsToSlotRoute(
     unitLibrary,
     spellLevel: spellSlotLevel(3),
   });
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "fontOfMagicPointsToSlot",
     result,
@@ -879,7 +880,7 @@ function rejectFontOfMagicInsufficientPointsRoute(
     unitLibrary,
     spellLevel: spellSlotLevel(2),
   });
-  expect(Either.isLeft(result)).toBe(true);
+  expect(Result.isFailure(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "fontOfMagicPointsToSlot",
     result,
@@ -903,7 +904,7 @@ function shortRestPreservesUncannyUseStateRoute(
     ],
   });
   const result = completeShortRestForFeatureResourceRoute(sheet);
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "featureResourceRest",
     result,
@@ -927,7 +928,7 @@ function longRestClearsUncannyUseStateRoute(
     ],
   });
   const result = completeLongRestForFeatureResourceRoute(sheet);
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "featureResourceRest",
     result,
@@ -955,7 +956,7 @@ function uncannyMetabolismRecoversFocusAndHealsRoute(
     unitLibrary,
     martialArtsRoll: DieRollResult(4),
   });
-  const recovered = expectRight(result);
+  const recovered = expectSuccess(result);
   expect(characterSheetCurrentHp(recovered)).toBe(14);
   expect(characterSheetTempHp(recovered)).toBe(3);
   return appendObservedFeatureResourceRoute(route, {
@@ -967,7 +968,7 @@ function uncannyMetabolismRecoversFocusAndHealsRoute(
 function rejectUncannyMetabolismRepeatUseRoute(
   route: readonly CharacterBattleRouteEvent[],
 ): readonly CharacterBattleRouteEvent[] {
-  const used = expectRight(
+  const used = expectSuccess(
     useMonkUncannyMetabolismWhenRollingInitiative({
       sheet: featureResourceSheetFixture({
         characterIdText: "character:route-uncanny-repeat",
@@ -991,7 +992,7 @@ function rejectUncannyMetabolismRepeatUseRoute(
     unitLibrary,
     martialArtsRoll: DieRollResult(4),
   });
-  expect(Either.isLeft(result)).toBe(true);
+  expect(Result.isFailure(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "uncannyMetabolism",
     result,
@@ -1019,7 +1020,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
       },
     ],
   });
-  const characterInit = expectRight(
+  const characterInit = expectSuccess(
     characterSheetBattleInit({
       sheet,
       unitLibrary,
@@ -1034,7 +1035,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
     throw new Error("Expected character battle creature init.");
   }
   const targetCombatantId = combatantId("combatant:route-metamagic-skeleton");
-  const battle = expectRight(
+  const battle = expectSuccess(
     startBattle({
       battleId: battleId("battle:route-metamagic-feature-resource-bridge"),
       combatants: [
@@ -1093,7 +1094,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
     unitLibrary,
     combatant: settledCombatant,
   });
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "metamagicBattleBridgeAccepted",
     result,
@@ -1243,8 +1244,8 @@ function rolledDiceGroup(
 }
 
 function completeShortRestForFeatureResourceRoute(sheet: CharacterSheet) {
-  const rest = expectRight(startShortRest({ sheet }));
-  const completion = expectRight(
+  const rest = expectSuccess(startShortRest({ sheet }));
+  const completion = expectSuccess(
     finishShortRest({
       rest,
       restedTicks: elapsedTimeTicks(600),
@@ -1254,10 +1255,10 @@ function completeShortRestForFeatureResourceRoute(sheet: CharacterSheet) {
 }
 
 function completeLongRestForFeatureResourceRoute(sheet: CharacterSheet) {
-  const rest = expectRight(
+  const rest = expectSuccess(
     startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
   );
-  const completion = expectRight(
+  const completion = expectSuccess(
     finishLongRest({
       rest,
       restedTicks: elapsedTimeTicks(4800),
@@ -1279,7 +1280,7 @@ function fontOfMagicCreatedLevel3RouteSheet(): CharacterSheet {
     }),
     currentHp: 24,
   });
-  return expectRight(
+  return expectSuccess(
     convertFontOfMagicSorceryPointsToSpellSlot({
       sheet,
       unitLibrary,
@@ -1305,7 +1306,7 @@ function featureResourceSheetFixture(
     >
   >,
 ): CharacterSheet {
-  const fresh = expectRight(
+  const fresh = expectSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
@@ -1349,14 +1350,14 @@ function featureResourceSheetFixture(
   };
   if ("bookOfShadowsPresence" in fresh) {
     if (fresh.bookOfShadowsPresence === undefined) {
-      return expectRight(
+      return expectSuccess(
         rebuildCharacterSheet({
           ...rebuildInput,
           build: fresh.build,
         }),
       );
     }
-    return expectRight(
+    return expectSuccess(
       rebuildCharacterSheet({
         ...rebuildInput,
         build: fresh.build,
@@ -1364,7 +1365,7 @@ function featureResourceSheetFixture(
       }),
     );
   }
-  return expectRight(
+  return expectSuccess(
     rebuildCharacterSheet({
       ...rebuildInput,
       build: fresh.build,
@@ -1389,7 +1390,7 @@ function featureResourceBaseBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: expectRight(
+    abilityScores: expectSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -1470,14 +1471,14 @@ function featureResourceSorcererMetamagicBuild(): CharacterBuild {
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: expectRight(
+        optionId: expectSuccess(
           sorcererMetamagicOptionId("sorcerer_empowered_spell"),
         ),
       },
       {
         kind: "selectedSorcererMetamagicOption",
         selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-        optionId: expectRight(
+        optionId: expectSuccess(
           sorcererMetamagicOptionId("sorcerer_heightened_spell"),
         ),
       },
@@ -1496,10 +1497,10 @@ function originFeatSelectedReferenceRetentionRoute(): readonly CharacterBattleRo
     initiative: alertInitiativeScoreForBuild(build),
     ammunitionStocks: [],
   });
-  if (Either.isLeft(projection)) {
-    throw new Error(characterBattleRuntimeIssueMessage(projection.left));
+  if (Result.isFailure(projection)) {
+    throw new Error(characterBattleRuntimeIssueMessage(projection.failure));
   }
-  return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
+  return selectedReferenceRouteEvents(projection.success.routeEvents).filter(
     (event) => event.owner === "characterBattleBuildProjection",
   );
 }
@@ -1541,10 +1542,10 @@ function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly Character
       },
     ],
   });
-  if (Either.isLeft(entry)) {
-    throw new Error(characterBattleRuntimeIssueMessage(entry.left));
+  if (Result.isFailure(entry)) {
+    throw new Error(characterBattleRuntimeIssueMessage(entry.failure));
   }
-  return selectedReferenceRouteEvents(entry.right.initProjectionRouteEvents);
+  return selectedReferenceRouteEvents(entry.success.initProjectionRouteEvents);
 }
 
 function criminalAlertRouteBuild(): CharacterBuild {
@@ -1572,10 +1573,10 @@ function characterSheetForBuild(build: CharacterBuild) {
     conditions: [],
     unitLibrary,
   });
-  if (Either.isLeft(sheet)) {
-    throw new Error(JSON.stringify(sheet.left));
+  if (Result.isFailure(sheet)) {
+    throw new Error(JSON.stringify(sheet.failure));
   }
-  return sheet.right;
+  return sheet.success;
 }
 
 function alertInitiativeScoreForBuild(build: CharacterBuild) {
@@ -1585,10 +1586,10 @@ function alertInitiativeScoreForBuild(build: CharacterBuild) {
     rollTotal: 14,
     proficiencyBonusChoice: "add",
   });
-  if (Either.isLeft(score)) {
-    throw new Error(characterBattleRuntimeIssueMessage(score.left));
+  if (Result.isFailure(score)) {
+    throw new Error(characterBattleRuntimeIssueMessage(score.failure));
   }
-  return score.right;
+  return score.success;
 }
 
 function initProjectionRouteStep(
@@ -1729,7 +1730,7 @@ function completeFighterDraftForBackground(input: {
           kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
           method: "standardArray",
-          value: expectRight(
+          value: expectSuccess(
             abilityScoreAssignment({
               str: 15,
               dex: 14,
@@ -1853,12 +1854,12 @@ function unitChoiceHoleId(
   choiceKey: UnitChoiceKey,
 ): CreationHoleIdText {
   const parsedUnitId = unitChoiceSourceUnitId(authoredUnitId(unitId));
-  if (Either.isLeft(parsedUnitId)) {
+  if (Result.isFailure(parsedUnitId)) {
     throw new Error(`Invalid route Unit choice source Unit id ${unitId}.`);
   }
   return unitChoiceSourceHoleIdText({
     tag: "unitChoice",
-    unitId: parsedUnitId.right,
+    unitId: parsedUnitId.success,
     choiceKey,
   });
 }
@@ -1870,23 +1871,16 @@ function loadoutHoleId(
   const parsedEquipmentUnitId = loadoutEquipmentUnitId(
     authoredUnitId(equipmentUnitId),
   );
-  if (Either.isLeft(parsedEquipmentUnitId)) {
+  if (Result.isFailure(parsedEquipmentUnitId)) {
     throw new Error(
       `Invalid route loadout equipment Unit id ${equipmentUnitId}.`,
     );
   }
   return loadoutSourceHoleIdText({
     tag: "loadout",
-    equipmentUnitId: parsedEquipmentUnitId.right,
+    equipmentUnitId: parsedEquipmentUnitId.success,
     slot,
   });
-}
-
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
-    throw new Error(`Expected Right, received ${JSON.stringify(result.left)}`);
-  }
-  return result.right;
 }
 
 function indexedActionEntries<const Schema extends RouteDriverSchema>(

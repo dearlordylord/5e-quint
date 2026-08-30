@@ -1,5 +1,5 @@
 import { writeFileSync } from "node:fs";
-import { JSONSchema } from "effect";
+import { JsonSchema, Schema } from "effect";
 
 import { ReviewOutputSchema } from "./review-contract.ts";
 
@@ -9,6 +9,21 @@ if (outputPath === undefined) {
 }
 writeFileSync(
   outputPath,
-  `${JSON.stringify(JSONSchema.make(ReviewOutputSchema), null, 2)}\n`,
+  `${JSON.stringify(
+    (() => {
+      const document = JsonSchema.toDocumentDraft07(
+        Schema.toJsonSchemaDocument(ReviewOutputSchema),
+      );
+      return {
+        $schema: JsonSchema.META_SCHEMA_URI_DRAFT_07,
+        ...document.schema,
+        ...(Object.keys(document.definitions).length === 0
+          ? {}
+          : { definitions: document.definitions }),
+      };
+    })(),
+    null,
+    2,
+  )}\n`,
   "utf8",
 );

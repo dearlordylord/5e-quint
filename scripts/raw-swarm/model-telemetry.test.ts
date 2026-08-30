@@ -13,7 +13,7 @@ import { resolve } from "node:path";
 
 import { describe, expect, test } from "vitest";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   codexInvocationMetadataMatchesArgs,
@@ -140,9 +140,9 @@ describe("Raw Swarm model invocation telemetry", () => {
           path: output,
           decode: (contents: string) => {
             try {
-              return Either.right(JSON.parse(contents));
+              return Result.succeed(JSON.parse(contents));
             } catch {
-              return Either.left({
+              return Result.fail({
                 tag: "malformed",
                 message: "synthetic malformed JSON",
               });
@@ -163,16 +163,16 @@ describe("Raw Swarm model invocation telemetry", () => {
       JSON.parse(readFileSync(ledgerPath, "utf8")),
     );
     expect(events.tag).toBe("valid");
-    expect(ledger._tag).toBe("Right");
-    if (events.tag !== "valid" || Either.isLeft(ledger)) return;
+    expect(ledger._tag).toBe("Success");
+    if (events.tag !== "valid" || Result.isFailure(ledger)) return;
     const reread = modelInvocationEvidenceFromEvents(events.events);
     expect(reread.tag).toBe("valid");
     if (reread.tag !== "valid") return;
     const ledgerEntry = Object.fromEntries(
-      Object.entries(ledger.right).filter(([key]) => key !== "eventsSha256"),
+      Object.entries(ledger.success).filter(([key]) => key !== "eventsSha256"),
     );
     expect(reread.entry).toEqual(ledgerEntry);
-    expect(invocationEventsSha256(eventPath)).toBe(ledger.right.eventsSha256);
+    expect(invocationEventsSha256(eventPath)).toBe(ledger.success.eventsSha256);
   }
 
   test("completes canonical byte writes when the writer returns short chunks", () => {
@@ -230,8 +230,8 @@ describe("Raw Swarm model invocation telemetry", () => {
         JSON.parse(readFileSync(input.ledgerPath, "utf8")),
       );
       expect(ledger).toMatchObject({
-        _tag: "Right",
-        right: {
+        _tag: "Success",
+        success: {
           exit: {
             tag: "timedOut",
             timeoutMilliseconds: 25,
@@ -277,8 +277,8 @@ setTimeout(() => {}, 1000);
         JSON.parse(readFileSync(input.ledgerPath, "utf8")),
       );
       expect(ledger).toMatchObject({
-        _tag: "Right",
-        right: {
+        _tag: "Success",
+        success: {
           schemaVersion: 5,
           exit: { tag: "timedOut", timeoutMilliseconds: 25 },
           result: { tag: "failed", failureKind: "codexEvent" },
@@ -384,8 +384,8 @@ process.exit(7);
           JSON.parse(readFileSync(input.ledgerPath, "utf8")),
         ),
       ).toMatchObject({
-        _tag: "Right",
-        right: {
+        _tag: "Success",
+        success: {
           schemaVersion: 5,
           exit: { tag: "exited", status: 7 },
           result: { tag: "failed", failureKind: "codexEvent" },
@@ -609,8 +609,8 @@ process.exit(0);
         JSON.parse(readFileSync(input.ledgerPath, "utf8")),
       );
       expect(ledger).toMatchObject({
-        _tag: "Right",
-        right: {
+        _tag: "Success",
+        success: {
           exit: {
             tag: "cleanupUnreaped",
             leader: { tag: "exited", status: 0 },
@@ -675,8 +675,8 @@ process.exit(0);
         JSON.parse(readFileSync(input.ledgerPath, "utf8")),
       );
       expect(ledger).toMatchObject({
-        _tag: "Right",
-        right: {
+        _tag: "Success",
+        success: {
           exit: {
             tag: "timedOut",
             termination: { tag: "unreaped" },
@@ -742,22 +742,22 @@ process.exit(0);
         event: decoded.event,
       });
       expect(retained).toMatchObject({
-        _tag: "Right",
-        right: { path: rawPath, contents },
+        _tag: "Success",
+        success: { path: rawPath, contents },
       });
       writeFileSync(rawPath, "substituted\n");
       expect(
         readCodexRawRetentionArtifact({ eventPath, event: decoded.event }),
       ).toMatchObject({
-        _tag: "Left",
-        left: expect.stringContaining("does not match"),
+        _tag: "Failure",
+        failure: expect.stringContaining("does not match"),
       });
       rmSync(rawPath);
       expect(
         readCodexRawRetentionArtifact({ eventPath, event: decoded.event }),
       ).toMatchObject({
-        _tag: "Left",
-        left: expect.stringContaining("missing"),
+        _tag: "Failure",
+        failure: expect.stringContaining("missing"),
       });
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -785,8 +785,8 @@ process.exit(0);
         JSON.parse(readFileSync(input.ledgerPath, "utf8")),
       );
       expect(ledger).toMatchObject({
-        _tag: "Right",
-        right: {
+        _tag: "Success",
+        success: {
           exit: { tag: "exited", status: 0 },
           result: {
             tag: "failed",
@@ -841,8 +841,8 @@ process.exit(0);
           JSON.parse(readFileSync(input.ledgerPath, "utf8")),
         ),
       ).toMatchObject({
-        _tag: "Right",
-        right: {
+        _tag: "Success",
+        success: {
           schemaVersion: 5,
           exit: { tag: "exited", status: 0 },
           result: { tag: "failed", failureKind: "codexEvent" },
@@ -879,8 +879,8 @@ process.exit(0);
           JSON.parse(readFileSync(input.ledgerPath, "utf8")),
         ),
       ).toMatchObject({
-        _tag: "Right",
-        right: {
+        _tag: "Success",
+        success: {
           exit: { tag: "failedToStart" },
           result: { tag: "failed" },
         },
@@ -986,8 +986,8 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
         JSON.parse(readFileSync(input.ledgerPath, "utf8")),
       );
       expect(ledger).toMatchObject({
-        _tag: "Right",
-        right: {
+        _tag: "Success",
+        success: {
           exit: { tag: "exited", status: 0 },
           result: { tag: "succeeded" },
         },
@@ -1022,14 +1022,14 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
               parsed === null ||
               !("result" in parsed)
             ) {
-              return Either.left({
+              return Result.fail({
                 tag: "schemaInvalid",
                 message: "result is required",
               });
             }
-            return Either.right(parsed);
+            return Result.succeed(parsed);
           } catch (error: unknown) {
-            return Either.left({
+            return Result.fail({
               tag: "malformed",
               message: error instanceof Error ? error.message : String(error),
             });
@@ -1048,8 +1048,8 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
           JSON.parse(readFileSync(input.ledgerPath, "utf8")),
         );
         expect(ledger).toMatchObject({
-          _tag: "Right",
-          right: { result: { tag: "failed", failureKind } },
+          _tag: "Success",
+          success: { result: { tag: "failed", failureKind } },
         });
       } finally {
         rmSync(root, { recursive: true, force: true });
@@ -1074,7 +1074,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       usage: { tag: "unavailable" as const, reason: "synthetic" },
     };
     expect(
-      Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntrySchema, {
+      Schema.decodeUnknownResult(CurrentModelInvocationLedgerEntrySchema, {
         onExcessProperty: "error",
       })({
         ...common,
@@ -1085,9 +1085,9 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
           plannedScenarioId: "synthetic-scenario",
         },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
-      Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntrySchema, {
+      Schema.decodeUnknownResult(CurrentModelInvocationLedgerEntrySchema, {
         onExcessProperty: "error",
       })({
         ...common,
@@ -1100,7 +1100,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
           plannedScenarioId: "synthetic-scenario",
         },
       }),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
     const timedOut = {
       ...common,
       subject: {
@@ -1125,15 +1125,15 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       result: { tag: "failed" as const, reason: "Synthetic timeout." },
     };
     expect(
-      Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV4Schema, {
+      Schema.decodeUnknownResult(CurrentModelInvocationLedgerEntryV4Schema, {
         onExcessProperty: "error",
       })(timedOut),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
-      Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV5Schema, {
+      Schema.decodeUnknownResult(CurrentModelInvocationLedgerEntryV5Schema, {
         onExcessProperty: "error",
       })({ ...timedOut, schemaVersion: 5 }),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
   });
 
   test("requires canonical startedAt values for current v4 telemetry", () => {
@@ -1160,10 +1160,10 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       },
     };
     expect(
-      Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntrySchema, {
+      Schema.decodeUnknownResult(CurrentModelInvocationLedgerEntrySchema, {
         onExcessProperty: "error",
       })(common),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       modelInvocationStartedEvent({
         subject: common.subject,
@@ -1175,7 +1175,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
         reasoningEffort: common.reasoningEffort,
         startedAt,
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
   });
 
   test("rejects v5-only output failure detail in historical v2, v3, and v4 records", () => {
@@ -1202,7 +1202,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       usage: { tag: "unavailable" as const, reason: "synthetic" },
     };
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseModelInvocationLedgerEntry({
           schemaVersion: 2,
           ...historicalCommon,
@@ -1213,7 +1213,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseBenchmarkModelInvocationLedgerEntry({
           schemaVersion: 3,
           profile: "documentDeclarationSet",
@@ -1225,7 +1225,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         parseBenchmarkModelInvocationLedgerEntry({
           schemaVersion: 5,
           profile: "documentDeclarationSet",
@@ -1259,12 +1259,12 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       result: failure,
       usage: { tag: "unavailable" as const, reason: "synthetic" },
     };
-    expect(Either.isLeft(parseModelInvocationLedgerEntry(currentCommon))).toBe(
-      true,
-    );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV5Schema, {
+      Result.isFailure(parseModelInvocationLedgerEntry(currentCommon)),
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(CurrentModelInvocationLedgerEntryV5Schema, {
           onExcessProperty: "error",
         })({
           ...currentCommon,
@@ -1274,8 +1274,8 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV5Schema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(CurrentModelInvocationLedgerEntryV5Schema, {
           onExcessProperty: "error",
         })({
           ...currentCommon,
@@ -1285,8 +1285,8 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV5Schema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(CurrentModelInvocationLedgerEntryV5Schema, {
           onExcessProperty: "error",
         })({
           ...currentCommon,
@@ -1337,7 +1337,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       failureEvents,
     );
     expect(result).toEqual(
-      Either.right({
+      Result.succeed({
         tag: "failed",
         reason: "Synthetic service capacity is exhausted.",
       }),
@@ -1347,7 +1347,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
         { type: "turn.started" },
       ]),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         tag: "failed",
         reason: "Codex exited with status 7.",
       }),
@@ -1358,14 +1358,14 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
         failureEvents,
       ),
     ).toEqual(
-      Either.left(
+      Result.fail(
         "Codex emitted a first-party failure event but exited successfully.",
       ),
     );
     expect(
       modelInvocationResultFromCodexEvents({ tag: "exited", status: 0 }, []),
     ).toEqual(
-      Either.left(
+      Result.fail(
         "Codex exited successfully without a first-party turn.completed event.",
       ),
     );
@@ -1374,8 +1374,8 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
         { type: "turn.failed", error: { message: 17 } },
       ]),
     ).toMatchObject({
-      _tag: "Left",
-      left: expect.stringContaining("malformed turn.failed event"),
+      _tag: "Failure",
+      failure: expect.stringContaining("malformed turn.failed event"),
     });
 
     const started = modelInvocationStartedEvent({
@@ -1396,17 +1396,17 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
     const completed = modelInvocationCompletedEvent({
       elapsedMilliseconds: 10,
       exit: { tag: "exited", status: 1 },
-      result: Either.getOrThrow(result),
+      result: Result.getOrThrow(result),
     });
-    expect(Either.isRight(started)).toBe(true);
-    expect(Either.isRight(completed)).toBe(true);
-    if (Either.isLeft(started) || Either.isLeft(completed)) return;
+    expect(Result.isSuccess(started)).toBe(true);
+    expect(Result.isSuccess(completed)).toBe(true);
+    if (Result.isFailure(started) || Result.isFailure(completed)) return;
     expect(
       modelInvocationEvidenceFromEvents([
-        started.right,
+        started.success,
         { type: "thread.started", thread_id: "synthetic-thread" },
         ...failureEvents,
-        completed.right,
+        completed.success,
       ]),
     ).toMatchObject({
       tag: "valid",
@@ -1533,17 +1533,17 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       usage: { tag: "unavailable", reason: "event stream omitted usage" },
     };
     const parsed = parseModelInvocationLedgerEntry(entry);
-    expect(Either.isRight(parsed)).toBe(true);
-    if (Either.isLeft(parsed)) return;
-    expect(parsed.right.invocationId).toBe("invocation-1");
+    expect(Result.isSuccess(parsed)).toBe(true);
+    if (Result.isFailure(parsed)) return;
+    expect(parsed.success.invocationId).toBe("invocation-1");
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseModelInvocationLedgerEntry({ ...entry, unexpected: true }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseModelInvocationLedgerEntry({
           ...entry,
           exit: { tag: "exited", status: 1 },
@@ -1551,7 +1551,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         parseModelInvocationLedgerEntry({
           ...entry,
           exit: { tag: "shellStatus", status: 0 },
@@ -1559,7 +1559,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         parseModelInvocationLedgerEntry({
           ...entry,
           schemaVersion: 1,
@@ -1569,7 +1569,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(false);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         parseModelInvocationLedgerEntry({
           schemaVersion: 1,
           scenarioId: entry.subject.scenarioId,
@@ -1592,8 +1592,10 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
     const historicalScenarioId = decodeHistoricalScenarioId(
       "generated-battle-123",
     );
-    expect(Either.isRight(historicalScenarioId)).toBe(true);
-    expect(Either.isLeft(decodeScenarioId("generated-battle-123"))).toBe(true);
+    expect(Result.isSuccess(historicalScenarioId)).toBe(true);
+    expect(Result.isFailure(decodeScenarioId("generated-battle-123"))).toBe(
+      true,
+    );
     const common = {
       scenarioId: "generated-battle-123",
       gitSha: "a".repeat(40),
@@ -1607,7 +1609,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       usage: { tag: "unavailable" as const, reason: "historical fixture" },
     };
     expect(
-      Either.isRight(
+      Result.isSuccess(
         parseModelInvocationLedgerEntry({
           schemaVersion: 1,
           ...common,
@@ -1616,7 +1618,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         parseModelInvocationLedgerEntry({
           schemaVersion: 2,
           ...common,
@@ -1628,7 +1630,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseModelInvocationLedgerEntry({
           schemaVersion: 1,
           ...common,
@@ -1642,7 +1644,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         parseModelInvocationLedgerEntry({
           schemaVersion: 2,
           ...common,
@@ -1681,11 +1683,11 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       exit: { tag: "exited", status: 0 },
       result: { tag: "succeeded" },
     });
-    expect(Either.isRight(started)).toBe(true);
-    expect(Either.isRight(completed)).toBe(true);
-    if (Either.isLeft(started) || Either.isLeft(completed)) return;
+    expect(Result.isSuccess(started)).toBe(true);
+    expect(Result.isSuccess(completed)).toBe(true);
+    if (Result.isFailure(started) || Result.isFailure(completed)) return;
     const events = [
-      started.right,
+      started.success,
       { type: "thread.started", thread_id: "thread" },
       {
         type: "turn.completed",
@@ -1697,7 +1699,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
           reasoning_output_tokens: 1,
         },
       },
-      completed.right,
+      completed.success,
     ];
     expect(modelInvocationEvidenceFromEvents(events)).toMatchObject({
       tag: "valid",
@@ -1750,19 +1752,19 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       exit: { tag: "exited", status: 0 },
       result: { tag: "succeeded" },
     });
-    expect(Either.isRight(started)).toBe(true);
-    expect(Either.isRight(completed)).toBe(true);
-    if (Either.isLeft(started) || Either.isLeft(completed)) return;
+    expect(Result.isSuccess(started)).toBe(true);
+    expect(Result.isSuccess(completed)).toBe(true);
+    if (Result.isFailure(started) || Result.isFailure(completed)) return;
     const valid = modelInvocationEvidenceFromEvents([
-      started.right,
+      started.success,
       { type: "thread.started", thread_id: "thread" },
-      completed.right,
+      completed.success,
     ]);
     expect(valid.tag).toBe("valid");
 
     const malformedStarted = modelInvocationEvidenceFromEvents([
-      { ...started.right, stagePlanReason: "" },
-      completed.right,
+      { ...started.success, stagePlanReason: "" },
+      completed.success,
     ]);
     expect(malformedStarted).toMatchObject({
       tag: "invalid",
@@ -1772,9 +1774,9 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
     });
 
     const malformedCompleted = modelInvocationEvidenceFromEvents([
-      started.right,
+      started.success,
       {
-        ...completed.right,
+        ...completed.success,
         result: { tag: "succeeded" },
         exit: { tag: "exited", status: 1 },
       },
@@ -2072,9 +2074,9 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       exit: { tag: "exited", status: 0 },
       result: { tag: "succeeded" },
     } as const;
-    expect(Either.isRight(modelInvocationCompletedEvent(success))).toBe(true);
+    expect(Result.isSuccess(modelInvocationCompletedEvent(success))).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         modelInvocationCompletedEvent({
           elapsedMilliseconds: 1,
           exit: { tag: "shellStatus", status: 0 },
@@ -2083,7 +2085,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         modelInvocationCompletedEvent({
           ...success,
           exit: { tag: "exited", status: 1 },
@@ -2091,7 +2093,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         modelInvocationCompletedEvent({
           ...success,
           exit: { tag: "shellStatus", status: 1 },
@@ -2099,7 +2101,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         modelInvocationCompletedEvent({
           ...success,
           result: { tag: "failed", reason: "unexpected success" },
@@ -2148,8 +2150,8 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       startedAt: "2026-08-14T00:00:00.000Z",
     });
     expect(current).toMatchObject({
-      _tag: "Right",
-      right: { schemaVersion: 4, stagePlanReason: expect.any(String) },
+      _tag: "Success",
+      success: { schemaVersion: 4, stagePlanReason: expect.any(String) },
     });
     const historicalReadiness = modelInvocationEvidenceFromEvents([
       {
@@ -2185,7 +2187,7 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
         reasoningEffort: "medium",
         startedAt: "2026-08-14T00:00:00.000Z",
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
   });
 
   test("returns parse failures instead of throwing for invalid event primitives", () => {
@@ -2199,13 +2201,13 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
         reasoningEffort: "",
         startedAt: "not-a-date",
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       modelInvocationCompletedEvent({
         elapsedMilliseconds: -1,
         exit: { tag: "exited", status: "not-a-number" },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
   });
 
   test("keeps benchmark auxiliary responsibilities outside production v2", () => {
@@ -2227,13 +2229,13 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       result: { tag: "succeeded" },
       usage: { tag: "unavailable", reason: "historical event stream" },
     } as const;
-    expect(Either.isLeft(parseModelInvocationLedgerEntry(readiness))).toBe(
+    expect(Result.isFailure(parseModelInvocationLedgerEntry(readiness))).toBe(
       true,
     );
     const parsed = parseBenchmarkModelInvocationLedgerEntry(readiness);
-    expect(Either.isRight(parsed)).toBe(true);
-    if (Either.isLeft(parsed)) return;
-    expect(parsed.right).toMatchObject({
+    expect(Result.isSuccess(parsed)).toBe(true);
+    if (Result.isFailure(parsed)) return;
+    expect(parsed.success).toMatchObject({
       schemaVersion: 3,
       profile: "documentDeclarationSet",
       responsibility: "scenarioQuality",
@@ -2248,8 +2250,8 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       invocationId: "character-authoring-1",
     };
     expect(parseBenchmarkModelInvocationLedgerEntry(character)).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         responsibility: "redundantCharacterPreparation",
         phase: "scenarioCharacterAuthoring",
       },
@@ -2274,11 +2276,11 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
       exit: { tag: "exited", status: 0 },
       result: { tag: "succeeded" },
     });
-    expect(Either.isRight(started)).toBe(true);
-    expect(Either.isRight(completed)).toBe(true);
-    if (Either.isLeft(started) || Either.isLeft(completed)) return;
+    expect(Result.isSuccess(started)).toBe(true);
+    expect(Result.isSuccess(completed)).toBe(true);
+    if (Result.isFailure(started) || Result.isFailure(completed)) return;
     const evidence = benchmarkModelInvocationEvidenceFromEvents([
-      started.right,
+      started.success,
       { type: "thread.started", thread_id: "benchmark-thread" },
       {
         type: "turn.completed",
@@ -2290,10 +2292,10 @@ require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ r
           reasoning_output_tokens: 1,
         },
       },
-      completed.right,
+      completed.success,
     ]);
     expect(
-      modelInvocationEvidenceFromEvents([started.right, completed.right]),
+      modelInvocationEvidenceFromEvents([started.success, completed.success]),
     ).toMatchObject({ tag: "invalid" });
     expect(evidence).toMatchObject({
       tag: "valid",

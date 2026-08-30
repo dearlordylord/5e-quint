@@ -2,7 +2,7 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 
 import type { BattleState } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import { hideousLaughterEffects } from "./hideous-laughter-repeat-save.ts";
+import { saveGatedConditionWithRepeatEffects } from "./staged-condition-repeat-save.ts";
 import {
   battleMovementBudgetForActor,
   effectiveWalkSpeed,
@@ -16,7 +16,7 @@ export function standFromProneCostFeet(
   if (actor === undefined || !hasCondition(actor.conditions, "prone")) {
     return null;
   }
-  if (hideousLaughterEffects(actor).length > 0) {
+  if (saveGatedConditionWithRepeatEffects(state, actor).length > 0) {
     return null;
   }
   const speed = effectiveWalkSpeed(

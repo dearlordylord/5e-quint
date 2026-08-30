@@ -13,6 +13,7 @@
 //   - spatial adjudication for whether Blindsight or Truesight applies
 
 module battleRuntimeMirrorImageHitInterception {
+  import battleRuntimeDuplicateHitInterception.* from "./battle-runtime-duplicate-hit-interception"
   import battleRuntimeMirrorImageConstants.* from "./battle-runtime-mirror-image-constants"
 
   pure def mirrorImageHitInterceptionInitialDuplicates: int =
@@ -41,7 +42,7 @@ module battleRuntimeMirrorImageHitInterception {
       or fills.attackerHasTruesight
 
   pure def mirrorImageHitInterceptionDuplicateCountAfterDestroy(remainingDuplicates: int): int =
-    if (remainingDuplicates < 2) 0 else remainingDuplicates - 1
+    remainingDuplicatesAfterIntercept(remainingDuplicates)
 
   pure def resolveMirrorImageHitInterception(
     state: MirrorImageHitInterceptionInputState,

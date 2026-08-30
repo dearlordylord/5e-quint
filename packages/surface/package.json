@@ -27,15 +27,15 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+    "@types/node": "22.19.15",
     "@typescript/native": "npm:typescript@^7.0.2",
     "ajv": "^8.18.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.9.3",
+    "typescript": "5.9.3",
     "vitest": "4.1.11"
   },
   "dependencies": {
     "@dnd/shared": "workspace:*",
-    "effect": "^3.21.0"
+    "effect": "4.0.0-rc.112"
   }
 }

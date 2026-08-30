@@ -2,7 +2,7 @@ import type { BattleResolutionResult } from "../../battle-state-execution.ts";
 import { Match } from "effect";
 import { resolveStoredGlyphAreaOngoingSpellRelease } from "../spells-resolve-area-effects.ts";
 import {
-  resolveGreaseGroundHazardSpellAct,
+  resolvePersistentAreaSaveConditionSpellAct,
   resolveSaveGateConditionSpellAct,
   resolveSaveGateDamageSpellRelease,
 } from "../spells-resolve-save-gates.ts";
@@ -11,7 +11,7 @@ import {
   spellProcedureExecutionFor,
   type SpellProcedureExecutionRegistry,
 } from "./execution-registry.ts";
-import { resolveStoredGlyphAreaControlSpellRelease } from "./hypnotic-pattern.ts";
+import { resolveStoredGlyphAreaControlSpellRelease } from "./area-control-condition.ts";
 import type { StoredGlyphSpellProcedureResolution } from "./resolution-contract.ts";
 import { resolveStoredGlyphSelfTransformationModeSpellRelease } from "./self-transformation-mode.ts";
 
@@ -46,8 +46,8 @@ export function executeStoredGlyphSpellProcedure(
         selfOriginAreaAnchorId: release.anchorId,
       }),
     ),
-    byReleaseKind("greaseGroundHazard", (release) =>
-      resolveGreaseGroundHazardSpellAct({
+    byReleaseKind("persistentAreaSaveCondition", (release) =>
+      resolvePersistentAreaSaveConditionSpellAct({
         input: glyphInput,
         actorId,
         invocation: release.invocation,
@@ -106,7 +106,7 @@ export function executeStoredGlyphSpellProcedure(
             invocation.procedure,
           ).resolve({ ...releaseInput, invocation }),
         ),
-        byProcedure("levitatedCreature", (invocation) =>
+        byProcedure("controlledVerticalSuspension", (invocation) =>
           spellProcedureExecutionFor(
             executionRegistry,
             invocation.procedure,
@@ -118,7 +118,7 @@ export function executeStoredGlyphSpellProcedure(
             invocation.procedure,
           ).resolve({ ...releaseInput, invocation }),
         ),
-        byProcedure("hastePositive", (invocation) =>
+        byProcedure("compositeTargetBuffWithAftermath", (invocation) =>
           spellProcedureExecutionFor(
             executionRegistry,
             invocation.procedure,

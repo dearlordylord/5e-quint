@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-jump-movement-replacement
 
 module battleRuntimeJumpMovement {
+  import battleRuntimeFixedCostMovementReplacement.* from "./battle-runtime-fixed-cost-movement-replacement"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
@@ -10,19 +11,27 @@ module battleRuntimeJumpMovement {
   import battleRuntimeMovement.* from "./battle-runtime-movement"
 
   pure def jumpMovementReplacementMaxTargets(slotLevel: int): int =
-    if (slotLevel < 1) 0 else slotLevel
+    fixedCostMovementReplacementMaximumTargets(slotLevel, 1, 1, 1)
 
   pure def jumpMovementReplacementActiveEffect(): ActiveEffect =
     JumpMovementReplacement({ durationTicks: 10, usedThisTurn: false })
 
   pure def jumpMovementReplacementMaxDistanceFeet(state: BattleState): int =
-    30 * state.jumpDistanceMultiplier
+    fixedCostMovementReplacementMaximumDistanceFeet(30, state.jumpDistanceMultiplier)
 
   pure def jumpMovementReplacementLandingIsLegal(landing: JumpMovementLandingFact): bool =
-    landing != JumpIllegalLanding
+    fixedCostMovementReplacementLandingIsLegal(match landing {
+      | JumpLegalLanding => FixedCostMovementReplacementLegalLanding
+      | JumpLegalLandingAcrobaticsFailed => FixedCostMovementReplacementLegalLandingWithProne
+      | JumpIllegalLanding => FixedCostMovementReplacementIllegalLanding
+    })
 
   pure def jumpMovementReplacementLandingAppliesProne(landing: JumpMovementLandingFact): bool =
-    landing == JumpLegalLandingAcrobaticsFailed
+    fixedCostMovementReplacementLandingAppliesProne(match landing {
+      | JumpLegalLanding => FixedCostMovementReplacementLegalLanding
+      | JumpLegalLandingAcrobaticsFailed => FixedCostMovementReplacementLegalLandingWithProne
+      | JumpIllegalLanding => FixedCostMovementReplacementIllegalLanding
+    })
 
   pure def activeEffectsContainAvailableJumpMovementReplacement(effects: Set[ActiveEffect]): bool =
     effects.exists(effect => match effect {
@@ -73,12 +82,15 @@ module battleRuntimeJumpMovement {
   ): BattleState =
     if (
       currentActor(state) == Fighter and
-      movementCost == 10 and
-      jumpDistance > 0 and
-      jumpDistance <= jumpMovementReplacementMaxDistanceFeet(state) and
-      jumpMovementReplacementLandingIsLegal(landing) and
-      activeEffectsContainAvailableJumpMovementReplacement(state.fighter.activeEffects) and
-      fighterCanMoveWithSpeedKind(state, WalkSpeedKind, movementCost)
+      fixedCostMovementReplacementUseAdmitted(
+        movementCost,
+        10,
+        jumpDistance,
+        jumpMovementReplacementMaxDistanceFeet(state),
+        jumpMovementReplacementLandingIsLegal(landing),
+        activeEffectsContainAvailableJumpMovementReplacement(state.fighter.activeEffects),
+        fighterCanMoveWithSpeedKind(state, WalkSpeedKind, movementCost),
+      )
     ) {
       val moved = applyFighterMovementWithSpeedKind(state, WalkSpeedKind, movementCost)
       {

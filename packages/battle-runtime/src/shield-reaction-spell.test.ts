@@ -2,7 +2,7 @@
 
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 
@@ -140,7 +140,7 @@ describe("Shield Reaction spell", () => {
     expect(invocation).toMatchObject({
       tag: "spellAccessFreeCast",
       spellId: shieldUnitId,
-      procedure: "shieldReaction",
+      procedure: "triggeredArmorDefense",
     });
 
     const resolved = resolveBattleInterrupt({
@@ -770,11 +770,11 @@ function spellBattle(input: {
       }),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function battleWithShieldReactionSpell(
@@ -853,11 +853,11 @@ function battleWithShieldReactionSpell(
       }),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function battleWithAttackers(input: {
@@ -905,11 +905,11 @@ function battleWithAttackers(input: {
       }),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function battleWithSpellAttack(input: {
@@ -963,11 +963,11 @@ function battleWithSpellAttack(input: {
       }),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function battleWithMagicMissile(input: {
@@ -1021,11 +1021,11 @@ function battleWithMagicMissile(input: {
       }),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function characterCreature(input: {
@@ -1363,7 +1363,7 @@ function resolveShieldReactionChoice(
   ).toMatchObject({
     tag: "spellSlot",
     spellId: shieldUnitId,
-    procedure: "shieldReaction",
+    procedure: "triggeredArmorDefense",
   });
   return resolveBattleInterrupt({
     state: awaitingReaction.state,

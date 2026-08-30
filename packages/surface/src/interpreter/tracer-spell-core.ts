@@ -2,6 +2,7 @@ import type {
   CastingTime,
   Components,
   ModalActivationMechanics,
+  ModalOngoingEffectMechanics,
   SpellLevel,
   SpellMechanics,
   SpellRecord,
@@ -37,7 +38,7 @@ import {
 
 import { traceSpawnedCreature } from "./tracer-creature-actions.ts";
 
-import { traceActivation } from "./tracer-activation.ts";
+import { traceActivation, traceEffectModeChoice } from "./tracer-activation.ts";
 
 import { traceEffectAtom } from "./tracer-effect-atom.ts";
 
@@ -115,6 +116,9 @@ export function traceSpellMechanics(
     byFamily("ongoing_effect", (mechanics) =>
       traceOngoingEffect(mechanics, ctx, nodes, edges, ids),
     ),
+    byFamily("modal_ongoing_effect", (mechanics) =>
+      traceModalOngoingEffect(mechanics, ctx, nodes, edges, ids),
+    ),
     byFamily("activation", (mechanics) =>
       traceActivation(mechanics, ctx, nodes, edges, ids),
     ),
@@ -158,6 +162,46 @@ export function traceSpellMechanics(
   );
 
   return procId;
+}
+
+function traceModalOngoingEffect(
+  mechanics: ModalOngoingEffectMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const attachmentId = traceAttachment(
+    mechanics.attachment,
+    ctx.range,
+    nodes,
+    ids,
+  );
+  edges.push({
+    from: ctx.procId,
+    to: attachmentId,
+    relation: "attaches_to",
+  });
+  traceEffectModeChoice(
+    mechanics.mode,
+    ctx.procId,
+    attachmentId,
+    ctx.slotId,
+    nodes,
+    edges,
+    ids,
+  );
+
+  if (mechanics.concurrentEffectLimit !== undefined) {
+    const limitId = ids("limit");
+    nodes.push({
+      id: limitId,
+      category: "resource",
+      atomKind: "concurrent_effect_limit",
+      label: `concurrent_effect_limit\n${mechanics.concurrentEffectLimit.maximumActive} ${mechanics.concurrentEffectLimit.appliesTo.replaceAll("_", " ")}`,
+    });
+    edges.push({ from: ctx.procId, to: limitId, relation: "limited_by" });
+  }
 }
 
 function traceNamedSpellEffects(

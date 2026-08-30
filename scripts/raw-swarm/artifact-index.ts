@@ -19,7 +19,7 @@ import {
 } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
 import { ExecutionStartRecordSchema } from "./evidence-manifests.ts";
@@ -456,14 +456,14 @@ function requiredCurrentExecutionAuthorityPath(
 ): string {
   const candidate = resolve(evidenceSetDirectory, path);
   const canonical = canonicalRepositoryReadPath(repoRoot, candidate);
-  if (Either.isRight(canonical)) return canonical.right;
-  if (canonical.left.includes("ENOENT")) {
+  if (Result.isSuccess(canonical)) return canonical.success;
+  if (canonical.failure.includes("ENOENT")) {
     return fail(
       `Current SDK transcript requires its ${label}: ${relative(repoRoot, candidate)}`,
     );
   }
   return fail(
-    `Current SDK transcript ${label} is not repository-owned: ${relative(repoRoot, candidate)}: ${canonical.left}`,
+    `Current SDK transcript ${label} is not repository-owned: ${relative(repoRoot, candidate)}: ${canonical.failure}`,
   );
 }
 
@@ -487,13 +487,13 @@ function currentExecutionAuthorityPaths(
 
 export function repositoryArtifactPath(path: string): string {
   const canonical = canonicalRepositoryReadRelativePath(repoRoot, path);
-  if (Either.isLeft(canonical)) {
-    const prefix = canonical.left.includes("escapes")
+  if (Result.isFailure(canonical)) {
+    const prefix = canonical.failure.includes("escapes")
       ? "Artifact escapes the repository root"
       : "Artifact is unreadable or missing";
-    fail(`${prefix}: ${path}: ${canonical.left}`);
+    fail(`${prefix}: ${path}: ${canonical.failure}`);
   }
-  return canonical.right;
+  return canonical.success;
 }
 
 function jsonLines(path: string): readonly unknown[] {
@@ -913,12 +913,12 @@ function ingestArtifactRunWithDisposition(input: {
     repoRoot,
     input.transcriptPath,
   );
-  if (Either.isLeft(canonicalTranscriptPath)) {
+  if (Result.isFailure(canonicalTranscriptPath)) {
     fail(
-      `Artifact transcript is not repository-owned: ${input.transcriptPath}: ${canonicalTranscriptPath.left}`,
+      `Artifact transcript is not repository-owned: ${input.transcriptPath}: ${canonicalTranscriptPath.failure}`,
     );
   }
-  const absoluteTranscript = canonicalTranscriptPath.right;
+  const absoluteTranscript = canonicalTranscriptPath.success;
   const records = jsonLines(absoluteTranscript);
   const sdk = parseSdkTranscript(records);
   const mcp =
@@ -973,7 +973,7 @@ function ingestArtifactRunWithDisposition(input: {
       const executionIdentity =
         currentAuthorities !== undefined
           ? (() => {
-              const decoded = Schema.decodeUnknownEither(
+              const decoded = Schema.decodeUnknownResult(
                 IndexedExecutionRecordSchema,
                 { onExcessProperty: "error" },
               )(
@@ -984,17 +984,17 @@ function ingestArtifactRunWithDisposition(input: {
                   ),
                 ),
               );
-              if (Either.isLeft(decoded)) {
+              if (Result.isFailure(decoded)) {
                 return fail(
-                  `Invalid Execution manifest: ${decoded.left.message}`,
+                  `Invalid Execution manifest: ${decoded.failure.message}`,
                 );
               }
-              if (decoded.right.scenarioId !== identity.scenarioId) {
+              if (decoded.success.scenarioId !== identity.scenarioId) {
                 return fail(
                   "Execution manifest Scenario does not match its transcript.",
                 );
               }
-              const executionStart = Schema.decodeUnknownEither(
+              const executionStart = Schema.decodeUnknownResult(
                 ExecutionStartRecordSchema,
                 { onExcessProperty: "error" },
               )(
@@ -1002,33 +1002,33 @@ function ingestArtifactRunWithDisposition(input: {
                   readFileSync(currentAuthorities.executionStartPath, "utf8"),
                 ),
               );
-              if (Either.isLeft(executionStart)) {
+              if (Result.isFailure(executionStart)) {
                 return fail(
-                  `Invalid Execution start authority: ${executionStart.left.message}`,
+                  `Invalid Execution start authority: ${executionStart.failure.message}`,
                 );
               }
               if (
-                decoded.right.executionId !==
-                  executionStart.right.executionId ||
-                decoded.right.evidenceSetId !==
-                  executionStart.right.evidenceSetId ||
-                decoded.right.scenarioId !== executionStart.right.scenarioId
+                decoded.success.executionId !==
+                  executionStart.success.executionId ||
+                decoded.success.evidenceSetId !==
+                  executionStart.success.evidenceSetId ||
+                decoded.success.scenarioId !== executionStart.success.scenarioId
               ) {
                 return fail(
                   "Execution manifest does not match its Execution start authority.",
                 );
               }
               if (
-                decoded.right.scenarioId !== identity.scenarioId ||
-                executionStart.right.scenarioId !== identity.scenarioId ||
-                executionStart.right.gitSha !== identity.gitSha ||
-                executionStart.right.startedAt !== identity.startedAt
+                decoded.success.scenarioId !== identity.scenarioId ||
+                executionStart.success.scenarioId !== identity.scenarioId ||
+                executionStart.success.gitSha !== identity.gitSha ||
+                executionStart.success.startedAt !== identity.startedAt
               ) {
                 return fail(
                   "Execution identity authority does not match its transcript.",
                 );
               }
-              return decoded.right;
+              return decoded.success;
             })()
           : undefined;
       const run = db
@@ -1548,11 +1548,11 @@ function inventoryLegacyReview(
       ) {
         return false;
       }
-      const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
+      const decoded = Schema.decodeUnknownResult(ReviewOutputSchema, {
         onExcessProperty: "error",
       })(JSON.parse(readFileSync(path, "utf8")));
-      if (Either.isLeft(decoded)) return false;
-      const value = decoded.right;
+      if (Result.isFailure(decoded)) return false;
+      const value = decoded.success;
       return (
         value.scenarioId === identity.scenarioId &&
         value.gitSha === identity.gitSha &&
@@ -2188,12 +2188,12 @@ export function rebuildLegacyArtifactIndex(input: {
         if (artifact === undefined) continue;
         const recoveredPath = recoveredLegacyArtifactPath(artifact);
         if (recoveredPath === undefined) continue;
-        const decodedReview = Schema.decodeUnknownEither(ReviewOutputSchema, {
+        const decodedReview = Schema.decodeUnknownResult(ReviewOutputSchema, {
           onExcessProperty: "error",
         })(JSON.parse(readFileSync(resolve(repoRoot, recoveredPath), "utf8")));
-        if (Either.isLeft(decodedReview)) {
+        if (Result.isFailure(decodedReview)) {
           fail(
-            `Recovered legacy review ${String(row.id)} is invalid: ${decodedReview.left.message}`,
+            `Recovered legacy review ${String(row.id)} is invalid: ${decodedReview.failure.message}`,
           );
         }
         const retained = contentAddressedCopy({
@@ -2224,7 +2224,7 @@ export function rebuildLegacyArtifactIndex(input: {
             runId,
             typeof row.reviewer === "string"
               ? row.reviewer
-              : decodedReview.right.reviewer,
+              : decodedReview.success.reviewer,
             registered.sha256,
             createdAt,
           );
@@ -2372,21 +2372,25 @@ const PORTABLE_PATH_VALIDATION_ROOT = resolve(
   "__raw_swarm_portable_root__",
 );
 
-export const PortableRelativePathSchema = Schema.NonEmptyTrimmedString.pipe(
-  Schema.filter(
-    (path) => {
-      if (path.includes("\0") || isAbsolute(path)) return false;
-      const withinPortableRoot = relativePathWithinRoot(
-        PORTABLE_PATH_VALIDATION_ROOT,
-        resolve(PORTABLE_PATH_VALIDATION_ROOT, path),
-      );
-      return (
-        withinPortableRoot !== undefined &&
-        withinPortableRoot !== "" &&
-        withinPortableRoot === path
-      );
-    },
-    { message: () => "Portable artifact path must remain below its root." },
+export const PortableRelativePathSchema = Schema.Trimmed.check(
+  Schema.isNonEmpty(),
+).pipe(
+  Schema.check(
+    Schema.makeFilter(
+      (path) => {
+        if (path.includes("\0") || isAbsolute(path)) return false;
+        const withinPortableRoot = relativePathWithinRoot(
+          PORTABLE_PATH_VALIDATION_ROOT,
+          resolve(PORTABLE_PATH_VALIDATION_ROOT, path),
+        );
+        return (
+          withinPortableRoot !== undefined &&
+          withinPortableRoot !== "" &&
+          withinPortableRoot === path
+        );
+      },
+      { message: "Portable artifact path must remain below its root." },
+    ),
   ),
   Schema.brand("PortableRelativePath"),
 );
@@ -2408,10 +2412,10 @@ export type PortableControlledAttachment = Schema.Schema.Type<
   typeof PortableControlledAttachmentSchema
 >;
 
-const PortableControlledAttachmentsSchema = Schema.Union(
-  Schema.Tuple(),
-  Schema.Tuple(PortableControlledAttachmentSchema),
-);
+const PortableControlledAttachmentsSchema = Schema.Union([
+  Schema.Tuple([]),
+  Schema.Tuple([PortableControlledAttachmentSchema]),
+]);
 export type PortableControlledAttachments = Schema.Schema.Type<
   typeof PortableControlledAttachmentsSchema
 >;

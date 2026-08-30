@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   buildStatBlockCatalog,
@@ -59,7 +59,7 @@ const nonEmptyIssues = <Issue>(
 export function buildOracleEvaluationServices(input: {
   readonly unitCollection: SrdUnitCollection;
   readonly statBlockCollection: SrdStatBlockCollection;
-}): Either.Either<
+}): Result.Result<
   OracleEvaluationServices,
   OracleEvaluationServicesBuildIssues
 > {
@@ -95,7 +95,7 @@ export function buildOracleEvaluationServices(input: {
   if (units.tag === "invalid" || statBlocks.tag === "invalid") {
     const [firstIssue, ...remainingIssues] = issues;
     if (firstIssue === undefined) {
-      return Either.left([
+      return Result.fail([
         {
           tag: "catalogInvariant",
           catalog: "unit",
@@ -103,9 +103,9 @@ export function buildOracleEvaluationServices(input: {
         },
       ]);
     }
-    return Either.left([firstIssue, ...remainingIssues]);
+    return Result.fail([firstIssue, ...remainingIssues]);
   }
-  return Either.right({
+  return Result.succeed({
     unitLibrary: Object.freeze(units.catalog),
     statBlockCatalog: Object.freeze(statBlocks.catalog),
   });
@@ -114,7 +114,7 @@ export function buildOracleEvaluationServices(input: {
 /** Build the services directly from the exact records in a decoded Surface. */
 export function buildOracleEvaluationServicesFromSurface(
   surface: Pick<SrdSurface, "units" | "statBlocks">,
-): Either.Either<
+): Result.Result<
   OracleEvaluationServices,
   OracleEvaluationServicesBuildIssues
 > {

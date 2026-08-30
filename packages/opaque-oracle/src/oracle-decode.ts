@@ -1,4 +1,4 @@
-import { Either, Match, Option, ParseResult, Schema } from "effect";
+import { Result, Match, Schema, SchemaIssue } from "effect";
 import * as AST from "effect/SchemaAST";
 
 import { compareCodePoints } from "./oracle-canonical.ts";
@@ -37,7 +37,7 @@ type DecodeOptions = {
 };
 
 type PendingParseIssue = {
-  readonly issue: ParseResult.ParseIssue;
+  readonly issue: SchemaIssue.Issue;
   readonly path: string;
   readonly depth: number;
 };
@@ -52,33 +52,36 @@ type RefinementCode = Exclude<
   | "duplicateMember"
 >;
 
-export function decodeWithSchema<A, I>(
-  schema: Schema.Schema<A, I, never>,
+export function decodeWithSchema<
+  S extends Schema.ConstraintDecoder<unknown, never>,
+>(
+  schema: S,
   input: unknown,
   options: DecodeOptions = {},
-): Either.Either<A, OracleDecodeIssues> {
-  let decoded: Either.Either<A, ParseResult.ParseError>;
+): Result.Result<S["Type"], OracleDecodeIssues> {
+  let decoded: Result.Result<S["Type"], Schema.SchemaError>;
   try {
-    decoded = Schema.decodeUnknownEither(schema, {
+    decoded = Schema.decodeUnknownResult(schema, {
       errors: "all",
       onExcessProperty: "error",
+      reportInput: true,
     })(input);
   } catch {
-    return Either.left([{ path: "", code: "wrongType" }]);
+    return Result.fail([{ path: "", code: "wrongType" }]);
   }
-  if (Either.isRight(decoded)) return Either.right(decoded.right);
+  if (Result.isSuccess(decoded)) return Result.succeed(decoded.success);
 
   const issues: OracleDecodeIssue[] = [];
   try {
-    collectParseIssues(decoded.left.issue, "", issues, options);
+    collectParseIssues(decoded.failure.issue, "", issues, options);
   } catch {
-    return Either.left([{ path: "", code: "wrongType" }]);
+    return Result.fail([{ path: "", code: "wrongType" }]);
   }
-  return Either.left(toOracleDecodeIssues(sortIssues(uniqueIssues(issues))));
+  return Result.fail(toOracleDecodeIssues(sortIssues(uniqueIssues(issues))));
 }
 
 function collectParseIssues(
-  issue: ParseResult.ParseIssue,
+  issue: SchemaIssue.Issue,
   path: string,
   output: OracleDecodeIssue[],
   options: DecodeOptions,
@@ -109,31 +112,63 @@ function collectParseIssue(
         collectPointerParseIssue({ ...current, issue }, pending),
       Composite: (issue) =>
         collectCompositeParseIssue({ ...current, issue }, pending),
-      Unexpected: () => {
+      UnexpectedKey: () => {
         output.push({ path: current.path, code: "unknownMember" });
       },
-      Missing: () => {
+      MissingKey: () => {
         output.push({ path: current.path, code: "missingMember" });
       },
-      Refinement: (issue) =>
+      Filter: (issue) =>
         collectRefinementParseIssue(
           { ...current, issue },
           pending,
           output,
           options,
         ),
-      Transformation: (issue) => {
+      Encoding: (issue) => {
         pending.push({
           issue: issue.issue,
           path: current.path,
           depth: current.depth + 1,
         });
       },
-      Type: (issue) => {
+      InvalidType: (issue) => {
+        const unknownVariantPath = unknownVariantIssuePath(issue, current.path);
         output.push({
-          path: current.path,
-          code: isUnknownVariant(issue) ? "unknownVariant" : "wrongType",
+          path: unknownVariantPath ?? current.path,
+          code:
+            unknownVariantPath === undefined ? "wrongType" : "unknownVariant",
         });
+      },
+      InvalidValue: () => {
+        output.push({ path: current.path, code: "nonCanonicalDomainValue" });
+      },
+      AnyOf: (issue) => {
+        if (issue.issues.length === 0) {
+          const unknownVariantPath = unknownVariantIssuePath(
+            issue,
+            current.path,
+          );
+          output.push({
+            path: unknownVariantPath ?? current.path,
+            code:
+              unknownVariantPath === undefined ? "wrongType" : "unknownVariant",
+          });
+        } else {
+          for (let index = issue.issues.length - 1; index >= 0; index -= 1) {
+            const child = issue.issues[index];
+            if (child !== undefined) {
+              pending.push({
+                issue: child,
+                path: current.path,
+                depth: current.depth + 1,
+              });
+            }
+          }
+        }
+      },
+      OneOf: () => {
+        output.push({ path: current.path, code: "wrongType" });
       },
       Forbidden: () => undefined,
     }),
@@ -141,15 +176,10 @@ function collectParseIssue(
 }
 
 function collectPointerParseIssue(
-  current: PendingParseIssue & { readonly issue: ParseResult.Pointer },
+  current: PendingParseIssue & { readonly issue: SchemaIssue.Pointer },
   pending: PendingParseIssue[],
 ): void {
-  const pointerPath: readonly PropertyKey[] =
-    typeof current.issue.path === "string" ||
-    typeof current.issue.path === "number" ||
-    typeof current.issue.path === "symbol"
-      ? [current.issue.path]
-      : current.issue.path;
+  const pointerPath = current.issue.path;
   pending.push({
     issue: current.issue.issue,
     path: pointerPath.reduce<string>(
@@ -161,12 +191,10 @@ function collectPointerParseIssue(
 }
 
 function collectCompositeParseIssue(
-  current: PendingParseIssue & { readonly issue: ParseResult.Composite },
+  current: PendingParseIssue & { readonly issue: SchemaIssue.Composite },
   pending: PendingParseIssue[],
 ): void {
-  const children = Array.isArray(current.issue.issues)
-    ? current.issue.issues
-    : [current.issue.issues];
+  const children = current.issue.issues;
   for (let index = children.length - 1; index >= 0; index -= 1) {
     const child = children[index];
     if (child !== undefined) {
@@ -180,7 +208,7 @@ function collectCompositeParseIssue(
 }
 
 function collectRefinementParseIssue(
-  current: PendingParseIssue & { readonly issue: ParseResult.Refinement },
+  current: PendingParseIssue & { readonly issue: SchemaIssue.Filter },
   pending: PendingParseIssue[],
   output: OracleDecodeIssue[],
   options: DecodeOptions,
@@ -197,24 +225,76 @@ function collectRefinementParseIssue(
     return;
   }
   const classified = options.classifyRefinement?.(
-    current.issue.actual,
+    current.issue.input,
     current.path,
   );
   output.push({
     path: current.path,
-    code: classified ?? refinementCode(current.issue.actual, current.issue.ast),
+    code:
+      classified ?? refinementCode(current.issue.input, current.issue.filter),
   });
 }
 
-function isUnknownVariant(issue: ParseResult.Type): boolean {
-  return (
-    typeof issue.actual === "string" && literalStrings(issue.ast).length > 0
-  );
+function unknownVariantIssuePath(
+  issue: SchemaIssue.InvalidType | SchemaIssue.AnyOf,
+  path: string,
+): string | undefined {
+  if (typeof issue.input === "string" && literalStrings(issue.ast).length > 0) {
+    return path;
+  }
+  const discriminator = unknownObjectVariantDiscriminator(issue);
+  return discriminator === undefined
+    ? undefined
+    : appendPath(path, discriminator);
+}
+
+function unknownObjectVariantDiscriminator(
+  issue: SchemaIssue.InvalidType | SchemaIssue.AnyOf,
+): string | undefined {
+  if (
+    issue.ast._tag !== "Union" ||
+    typeof issue.input !== "object" ||
+    issue.input === null ||
+    Array.isArray(issue.input)
+  ) {
+    return undefined;
+  }
+  const members = issue.ast.types;
+  const firstMember = members[0];
+  if (firstMember?._tag !== "Objects") return undefined;
+  for (const property of firstMember.propertySignatures) {
+    if (typeof property.name !== "string") continue;
+    const actual = Reflect.get(issue.input, property.name);
+    if (typeof actual !== "string") continue;
+    const expected = commonLiteralPropertyValues(members, property.name);
+    if (expected !== undefined && !expected.includes(actual)) {
+      return property.name;
+    }
+  }
+  return undefined;
+}
+
+function commonLiteralPropertyValues(
+  members: readonly AST.AST[],
+  propertyName: string,
+): readonly string[] | undefined {
+  const valuesByMember = members.map((member) => {
+    if (member._tag !== "Objects") return undefined;
+    const property = member.propertySignatures.find(
+      ({ name }) => name === propertyName,
+    );
+    if (property === undefined) return undefined;
+    const values = literalStrings(property.type);
+    return values.length === 0 ? undefined : values;
+  });
+  return valuesByMember.some((values) => values === undefined)
+    ? undefined
+    : valuesByMember.flatMap((values) => values ?? []);
 }
 
 function refinementCode(
   actual: unknown,
-  ast: AST.Refinement,
+  filter: AST.Check<unknown>,
 ): Exclude<
   OracleDecodeIssueCode,
   | "invalidJson"
@@ -225,7 +305,7 @@ function refinementCode(
   | "duplicateMember"
 > {
   if (Array.isArray(actual) && actual.length === 0) return "emptyCollection";
-  if (hasUniqueItemsAnnotation(ast)) return "duplicateCollectionMember";
+  if (hasUniqueItemsAnnotation(filter)) return "duplicateCollectionMember";
   return (
     refinementStringCode(actual) ??
     refinementNumberCode(actual) ??
@@ -246,14 +326,8 @@ function refinementNumberCode(actual: unknown): RefinementCode | undefined {
     : undefined;
 }
 
-function hasUniqueItemsAnnotation(ast: AST.Refinement): boolean {
-  const annotation = Option.getOrUndefined(AST.getJSONSchemaAnnotation(ast));
-  return (
-    typeof annotation === "object" &&
-    annotation !== null &&
-    "uniqueItems" in annotation &&
-    annotation.uniqueItems === true
-  );
+function hasUniqueItemsAnnotation(filter: AST.Check<unknown>): boolean {
+  return filter.annotations?.oracleUniqueItems === true;
 }
 
 function literalStrings(ast: AST.AST): readonly string[] {
@@ -262,10 +336,6 @@ function literalStrings(ast: AST.AST): readonly string[] {
       return typeof ast.literal === "string" ? [ast.literal] : [];
     case "Union":
       return ast.types.flatMap(literalStrings);
-    case "Refinement":
-      return literalStrings(ast.from);
-    case "Transformation":
-      return literalStrings(ast.from);
     default:
       return [];
   }
@@ -286,11 +356,11 @@ function uniqueIssues(
 function sortIssues(
   issues: readonly OracleDecodeIssue[],
 ): readonly OracleDecodeIssue[] {
-  return [...issues].sort((left, right) =>
-    left.path === right.path
-      ? ORACLE_DECODE_ISSUE_CODES.indexOf(left.code) -
-        ORACLE_DECODE_ISSUE_CODES.indexOf(right.code)
-      : compareCodePoints(left.path, right.path),
+  return [...issues].sort((first, second) =>
+    first.path === second.path
+      ? ORACLE_DECODE_ISSUE_CODES.indexOf(first.code) -
+        ORACLE_DECODE_ISSUE_CODES.indexOf(second.code)
+      : compareCodePoints(first.path, second.path),
   );
 }
 
@@ -342,17 +412,17 @@ type JsonFramePreparation = "closed" | "ready" | "invalid";
 
 export function parseJsonWithDuplicateDetection(
   text: string,
-): Either.Either<unknown, OracleDecodeIssues> {
+): Result.Result<unknown, OracleDecodeIssues> {
   const duplicates: string[] = [];
   const parsed = scanJsonValue(text, skipWhitespace(text, 0), "", duplicates);
   if (
     parsed === undefined ||
     text.slice(skipWhitespace(text, parsed.end)).length > 0
   ) {
-    return Either.left([{ path: "", code: "invalidJson" }]);
+    return Result.fail([{ path: "", code: "invalidJson" }]);
   }
   if (duplicates.length > 0) {
-    return Either.left(
+    return Result.fail(
       toOracleDecodeIssues(
         sortIssues(
           duplicates.map((path) => ({
@@ -364,9 +434,9 @@ export function parseJsonWithDuplicateDetection(
     );
   }
   try {
-    return Either.right(JSON.parse(text));
+    return Result.succeed(JSON.parse(text));
   } catch {
-    return Either.left([{ path: "", code: "invalidJson" }]);
+    return Result.fail([{ path: "", code: "invalidJson" }]);
   }
 }
 

@@ -15,7 +15,7 @@ import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 
 import {
   attackDamageDispositionHole,
@@ -51,7 +51,7 @@ import {
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 
@@ -905,24 +905,24 @@ function resolveBonusActionAttack(
       );
     }
     /* v8 ignore stop -- @preserve */
-    const hideousLaughterSaveCheck =
-      damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+    const saveGatedConditionWithRepeatSaveCheck =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
         state: spellReducedState,
         target: spellReduction.target,
         damageAmount,
-        fills: fillSet.hideousLaughterDamageRepeatSaves,
+        fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       });
-    if (hideousLaughterSaveCheck.tag === "needsHoles") {
+    if (saveGatedConditionWithRepeatSaveCheck.tag === "needsHoles") {
       return needsHolesResult(spellReducedState, input.subject, [
-        ...hideousLaughterSaveCheck.holes,
+        ...saveGatedConditionWithRepeatSaveCheck.holes,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (hideousLaughterSaveCheck.tag === "invalid") {
+    if (saveGatedConditionWithRepeatSaveCheck.tag === "invalid") {
       return invalidResult(
         input.state,
         "invalidFill",
-        hideousLaughterSaveCheck.message,
+        saveGatedConditionWithRepeatSaveCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -936,9 +936,9 @@ function resolveBonusActionAttack(
       attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
       weaponDamageDiceRollChoice: selectedDamageDiceChoice ?? undefined,
       concentrationSavingThrow: primaryConcentrationSavingThrow,
-      hideousLaughterDamageRepeatSaves:
-        fillSet.hideousLaughterDamageRepeatSaves,
-      wardingBondDamageShareConcentrationSavingThrows:
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         fillSet.concentrationSavingThrows,
       spatialFacts: fillSet.targetSpatialFacts,
       relationshipDecisions: relationshipCheck.decisions,
@@ -1000,13 +1000,13 @@ export function spendOffHandBonusAction(
     kind: "bonusAction",
   });
   /* v8 ignore start -- @preserve -- Internal callers synchronously preflight the same turn resource, so failure requires bypassing the admitted resolver protocol. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return staleBonusActionResult(state);
   }
   /* v8 ignore stop -- @preserve */
   const nextState = normalizeBattleGrapples({
     ...state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   });
   return {
     tag: "resolved",
@@ -1016,7 +1016,7 @@ export function spendOffHandBonusAction(
 }
 
 function bonusActionCanBeSpent(state: BattleState): boolean {
-  return Either.isRight(
+  return Result.isSuccess(
     spendActivationResource(state.currentTurnResources, {
       kind: "bonusAction",
     }),

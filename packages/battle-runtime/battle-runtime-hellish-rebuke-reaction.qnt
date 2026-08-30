@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.reaction-hellish-rebuke
 
 module battleRuntimeHellishRebukeReaction {
+  import battleRuntimeAfterDamageSaveReaction.* from "./battle-runtime-after-damage-save-reaction"
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
@@ -14,13 +15,12 @@ module battleRuntimeHellishRebukeReaction {
     triggerFacts: HellishRebukeAfterDamageTrigger,
     availability: HellishRebukeAfterDamageAvailability,
   ): bool =
-    match triggerFacts {
-      | HellishRebukeDamageFromVisibleCreatureWithin60Feet =>
-          availability.hellishRebukeAvailable and
-            availability.reactionAvailable and
-            availability.spellSlotAvailable
-      | _ => false
-    }
+    afterDamageSaveReactionEligible(
+      triggerFacts == HellishRebukeDamageFromVisibleCreatureWithin60Feet,
+      availability.hellishRebukeAvailable,
+      availability.reactionAvailable,
+      availability.spellSlotAvailable,
+    )
 
   pure def openHellishRebukeAfterDamageReactionWindow(
     state: BattleState,
@@ -52,7 +52,7 @@ module battleRuntimeHellishRebukeReaction {
       state
 
   pure def hellishRebukeDamageDice(slotLevel: int): int =
-    if (slotLevel < 1) 0 else 2 + (slotLevel - 1)
+    afterDamageSaveReactionDamageDice(slotLevel, 2)
 
   pure def resolveHellishRebukeAfterDamage(
     state: BattleState,

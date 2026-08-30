@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 
 module battleRuntimeArmorClass {
+  import triggeredArmorDefense.* from "../shared-algebras/proofs/rule-core/triggered-armor-defense"
   import battleRuntimeModel.* from "./battle-runtime-model"
 
   pure def mageArmorDurationTicks: int = 8 * 60 * 10
@@ -135,7 +136,11 @@ module battleRuntimeArmorClass {
         | SpiritualWeapon(_) => false
         | SelfTransformationModeEffect(_) => false
       })) 13 + dexMod else baseAc
-      val shieldBonus = if (effects.contains(ShieldArmorClassBonus)) 5 else 0
+      val shieldBonus =
+        if (effects.contains(ShieldArmorClassBonus))
+          triggeredArmorDefenseArmorClassBonus
+        else
+          0
       val shieldOfFaithBonus = if (effects.contains(ShieldOfFaithArmorClassBonus)) 2 else 0
       val withBonuses = base + shieldBonus + shieldOfFaithBonus
       val barkskinFloor = if (effects.exists(effect => match effect {

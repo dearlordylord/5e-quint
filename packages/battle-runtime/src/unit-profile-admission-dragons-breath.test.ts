@@ -8,12 +8,17 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { spellExecutionFacts } from "./battle-reducer/spell-execution-facts.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { Schema } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import { Hp } from "@dnd/shared/types";
-import dragonsBreathInput from "../../surface/content/dragons_breath.json";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
+import grantedAreaSaveDamageActionInput from "../../surface/content/dragons_breath.json";
 import {
   dragonsBreathUnitId,
+  resistanceUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -27,10 +32,13 @@ import {
   statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   bonusSpellAct,
   damageTypeChoiceFill,
+  knownWillingSpellTargetFill,
   knownWillingSpellTargetListFill,
+  spellAct,
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
@@ -43,9 +51,7 @@ import {
   elapsedTimeTicks,
   endTurn,
   resolveBattleSubject,
-  spellSaveDcForCaster,
   spellSlotInvocationRef,
-  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
@@ -55,19 +61,21 @@ import {
   type SpellRecord,
 } from "./unit-profile-admission.test-support.ts";
 import {
+  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
-  battleActiveEffectExecutionRefForTest,
   requireCharacterUnitProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
   testCharacterD20Statistics,
   unitLibrary,
+  wizardSpellcasting,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 } from "./battle-runtime.test-support.ts";
-import { BattleSnapshotSchema } from "./index.ts";
+import { BattleCheckpointFrontierEnvelopeSchema } from "./index.ts";
 
 describe("Dragon's Breath initial cast admission", () => {
-  test("stores chosen damage type, original slot, and caster save DC on the willing target", () => {
-    const spell = dragonsBreathSpell();
+  test("stores only the chosen damage type on the willing target", () => {
+    const spell = grantedAreaSaveDamageActionSpell();
     const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [
@@ -90,10 +98,6 @@ describe("Dragon's Breath initial cast admission", () => {
     ).find(
       (candidate) => candidate.sourceProcedureRef === act.subject.procedureRef,
     );
-    const expectedSpellSaveDc = spellSaveDcForCaster(state, spellCasterId);
-    if (expectedSpellSaveDc === null) {
-      throw new Error("Expected fixture caster Spell Save DC.");
-    }
     if (invocation === undefined) {
       throw new Error("Expected Dragon's Breath runtime invocation.");
     }
@@ -107,7 +111,11 @@ describe("Dragon's Breath initial cast admission", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         session,
         spellCasterId,
-        spellSlotInvocationRef(dragonsBreathUnitId, 3, "dragonsBreathInitial"),
+        spellSlotInvocationRef(
+          dragonsBreathUnitId,
+          3,
+          "grantedAreaSaveDamageAction",
+        ),
       ),
       mode: { tag: "cast" },
     });
@@ -150,12 +158,10 @@ describe("Dragon's Breath initial cast admission", () => {
       requireCombatant(resolved.state, spellTargetId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "dragonsBreath",
+        kind: "grantedAreaSaveDamageAction",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
-        originalSlotLevel: 3,
         damageType: "fire",
-        spellSaveDc: expectedSpellSaveDc,
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
@@ -166,7 +172,7 @@ describe("Dragon's Breath initial cast admission", () => {
   });
 
   test("requires willing target evidence and removes the target-attached effect when concentration ends", () => {
-    const spell = dragonsBreathSpell();
+    const spell = grantedAreaSaveDamageActionSpell();
     const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -201,16 +207,20 @@ describe("Dragon's Breath initial cast admission", () => {
 
     expect(
       requireCombatant(afterConcentration, spellTargetId).activeEffects.some(
-        (effect) => effect.kind === "dragonsBreath",
+        (effect) => effect.kind === "grantedAreaSaveDamageAction",
       ),
     ).toBe(false);
   });
 
-  test("grants the target a Magic action that exhales the retained damage type and slot-scaled damage", () => {
+  test("grants the target an exhale and applies a low-level action-ended invisibility interaction", () => {
+    const renamedPresentationSpell = {
+      ...grantedAreaSaveDamageActionSpell(),
+      name: "Synthetic Breath Gift",
+    };
     const session = spellBattle({
       casterClassLevels: [{ className: "wizard", level: classLevel(3) }],
       casterD20Statistics: testCharacterD20Statistics({ int: 16 }),
-      preparedSpells: [dragonsBreathSpell()],
+      preparedSpells: [renamedPresentationSpell],
       spellSlots: [
         { spellLevel: 1, count: 4 },
         { spellLevel: 2, count: 2 },
@@ -221,7 +231,7 @@ describe("Dragon's Breath initial cast admission", () => {
     if (endedCasterTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const targetTurn = stateWithExhalingTargetActionEarlyEndCondition(
+    const targetTurn = stateWithSyntheticExhaleEndedInvisibilityInteraction(
       endedCasterTurn.state,
     );
     const exhaleAct = discoverBattleActs(
@@ -232,12 +242,12 @@ describe("Dragon's Breath initial cast admission", () => {
     ).find(
       (act) =>
         act.subject.tag === "runtimeCommand" &&
-        act.subject.command === "dragonsBreathExhale",
+        act.subject.command === "grantedAreaSaveDamageAction",
     );
-    expect(exhaleAct?.label).toBe("Exhale Dragon's Breath");
+    expect(exhaleAct?.label).toBe("Exhale Synthetic Breath Gift");
     if (
       exhaleAct?.subject.tag !== "runtimeCommand" ||
-      exhaleAct.subject.command !== "dragonsBreathExhale"
+      exhaleAct.subject.command !== "grantedAreaSaveDamageAction"
     ) {
       throw new Error("Expected Dragon's Breath exhale action.");
     }
@@ -246,13 +256,13 @@ describe("Dragon's Breath initial cast admission", () => {
     expect(saveHole).toMatchObject({
       kind: "savingThrowOutcome",
       ability: "dex",
-      dc: { kind: "fixed" },
+      dc: { kind: "caster_spell_save_dc" },
     });
     const needsDamage = resolveBattleSubject({
       state: targetTurn,
       subject: exhaleAct.subject,
       fills: [
-        dragonsBreathSavingThrowOutcomeFill(saveHole, {
+        grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
           outcomes: [{ targetId: spellCasterId, succeeded: false }],
@@ -267,29 +277,58 @@ describe("Dragon's Breath initial cast admission", () => {
       subject: exhaleAct.subject,
       holes: needsDamage.holes,
     });
-    const damageHole = requireResultHole(needsDamage, "rolledDice");
-    expect(damageHole).toMatchObject({
-      dragonsBreath: { sourceCombatantId: spellCasterId },
-    });
-    const wrongOwnerHoles = needsDamage.holes.map((hole) =>
-      hole.kind === "rolledDice" && "dragonsBreath" in hole
+    const wrongOccurrenceHoles = needsDamage.holes.map((hole) =>
+      hole.kind === "rolledDice" && "grantedAreaSaveDamageAction" in hole
         ? {
             ...hole,
-            dragonsBreath: {
-              ...hole.dragonsBreath,
+            holeId: holeId("battle:dragons-breath:another-occurrence:damage"),
+            holeInstanceKey: holeInstanceKey(
+              "battle:dragons-breath:another-occurrence:damage",
+            ),
+          }
+        : hole,
+    );
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
+          checkpoint: needsDamage.snapshot,
+          frontier: {
+            kind: "acts",
+            acts: [
+              {
+                subject: exhaleAct.subject,
+                initialHoles: wrongOccurrenceHoles,
+              },
+            ],
+          },
+        }),
+      ),
+    ).toBe(true);
+    const damageHole = requireResultHole(needsDamage, "rolledDice");
+    expect(damageHole).toMatchObject({
+      grantedAreaSaveDamageAction: { sourceCombatantId: spellCasterId },
+    });
+    const wrongOwnerHoles = needsDamage.holes.map((hole) =>
+      hole.kind === "rolledDice" && "grantedAreaSaveDamageAction" in hole
+        ? {
+            ...hole,
+            grantedAreaSaveDamageAction: {
+              ...hole.grantedAreaSaveDamageAction,
               sourceCombatantId: spellTargetId,
             },
           }
         : hole,
     );
-    const encodedSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
-      needsDamage.snapshot,
-    );
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)({
-          ...encodedSnapshot,
-          acts: [{ subject: exhaleAct.subject, initialHoles: wrongOwnerHoles }],
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
+          checkpoint: needsDamage.snapshot,
+          frontier: {
+            kind: "acts",
+            acts: [
+              { subject: exhaleAct.subject, initialHoles: wrongOwnerHoles },
+            ],
+          },
         }),
       ),
     ).toBe(true);
@@ -297,7 +336,7 @@ describe("Dragon's Breath initial cast admission", () => {
       state: targetTurn,
       subject: exhaleAct.subject,
       fills: [
-        dragonsBreathSavingThrowOutcomeFill(saveHole, {
+        grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
           outcomes: [{ targetId: spellCasterId, succeeded: false }],
@@ -314,7 +353,7 @@ describe("Dragon's Breath initial cast admission", () => {
       state: targetTurn,
       subject: exhaleAct.subject,
       fills: [
-        dragonsBreathSavingThrowOutcomeFill(saveHole, {
+        grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
           outcomes: [{ targetId: spellCasterId, succeeded: false }],
@@ -348,14 +387,14 @@ describe("Dragon's Breath initial cast admission", () => {
       discoverBattleActCandidates(resolved.state).some(
         (act) =>
           act.subject.tag === "runtimeCommand" &&
-          act.subject.command === "dragonsBreathExhale",
+          act.subject.command === "grantedAreaSaveDamageAction",
       ),
     ).toBe(false);
   });
 
   test("projects Dexterity save roll modes and flat bonuses on the granted exhale hole", () => {
     const session = spellBattle({
-      preparedSpells: [dragonsBreathSpell()],
+      preparedSpells: [grantedAreaSaveDamageActionSpell()],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const cast = castDragonsBreath(session, "acid");
@@ -363,33 +402,22 @@ describe("Dragon's Breath initial cast admission", () => {
     if (endedCasterTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const caster = requireCombatant(endedCasterTurn.state, spellCasterId);
-    const stateWithSaveModifiers = {
-      ...endedCasterTurn.state,
-      combatants: new Map(endedCasterTurn.state.combatants).set(spellCasterId, {
-        ...caster,
-        dodging: true,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "wardingBond",
-            effectRef: battleActiveEffectExecutionRefForTest("dragon-ward-one"),
-            sourceProcedureRef: dragonsBreathSourceProcedureRef(
-              endedCasterTurn.state,
-            ),
-            sourceCombatantId: spellTargetId,
-            expiresAt: {
-              kind: "duration",
-              durationTicks: elapsedTimeTicks(3_600),
-            },
-          } satisfies Extract<
-            BattleActiveEffect,
-            { readonly kind: "wardingBond" }
-          >,
-        ],
-      }),
+    const stateWithSaveModifiers = stateWithSyntheticWardingBondInteraction(
+      endedCasterTurn.state,
+      spellCasterId,
+      spellTargetId,
+    );
+    const caster = requireCombatant(stateWithSaveModifiers, spellCasterId);
+    const stateWithSaveModifiersAndDodge = {
+      ...stateWithSaveModifiers,
+      combatants: new Map(stateWithSaveModifiers.combatants).set(
+        spellCasterId,
+        { ...caster, dodging: true },
+      ),
     };
-    const exhaleAct = dragonsBreathExhaleAct(stateWithSaveModifiers);
+    const exhaleAct = grantedAreaSaveDamageActionAct(
+      stateWithSaveModifiersAndDodge,
+    );
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
 
     expect(saveHole.targetRollModes).toContainEqual({
@@ -404,9 +432,9 @@ describe("Dragon's Breath initial cast admission", () => {
     });
   });
 
-  test("applies Warding Bond shared-damage concentration fills from the exhale lifecycle", () => {
+  test("applies a low-level Warding Bond interaction before exhale concentration fills", () => {
     const session = spellBattle({
-      preparedSpells: [dragonsBreathSpell()],
+      preparedSpells: [grantedAreaSaveDamageActionSpell()],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const cast = castDragonsBreath(session, "fire");
@@ -417,13 +445,13 @@ describe("Dragon's Breath initial cast admission", () => {
     const targetTurn = stateWithWardingBondSharedCasterConcentration(
       endedCasterTurn.state,
     );
-    const exhaleAct = dragonsBreathExhaleAct(targetTurn);
+    const exhaleAct = grantedAreaSaveDamageActionAct(targetTurn);
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
     const needsDamage = resolveBattleSubject({
       state: targetTurn,
       subject: exhaleAct.subject,
       fills: [
-        dragonsBreathSavingThrowOutcomeFill(saveHole, {
+        grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
           outcomes: [{ targetId: spellCasterId, succeeded: false }],
@@ -435,7 +463,7 @@ describe("Dragon's Breath initial cast admission", () => {
       state: targetTurn,
       subject: exhaleAct.subject,
       fills: [
-        dragonsBreathSavingThrowOutcomeFill(saveHole, {
+        grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
           outcomes: [{ targetId: spellCasterId, succeeded: false }],
@@ -467,7 +495,7 @@ describe("Dragon's Breath initial cast admission", () => {
       state: targetTurn,
       subject: exhaleAct.subject,
       fills: [
-        dragonsBreathSavingThrowOutcomeFill(saveHole, {
+        grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
           outcomes: [{ targetId: spellCasterId, succeeded: false }],
@@ -501,12 +529,12 @@ describe("Dragon's Breath initial cast admission", () => {
     ).toBeNull();
   });
 
-  test("preserves Warding Bond shared damage before later same-Cone direct damage", () => {
+  test("preserves low-level Warding Bond shared damage before later same-Cone direct damage", () => {
     const laterTargetId = combatantId(
       "unit-profile-dragons-breath-warding-bond-later-target",
     );
     const session = spellBattle({
-      preparedSpells: [dragonsBreathSpell()],
+      preparedSpells: [grantedAreaSaveDamageActionSpell()],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       extraTargetIds: [laterTargetId],
     });
@@ -515,21 +543,24 @@ describe("Dragon's Breath initial cast admission", () => {
     if (endedCasterTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const targetTurn = stateWithWardingBondTarget(
+    const targetTurn = stateWithSyntheticWardingBondInteraction(
       endedCasterTurn.state,
       spellCasterId,
       laterTargetId,
     );
-    const exhaleAct = dragonsBreathExhaleAct(targetTurn);
+    const exhaleAct = grantedAreaSaveDamageActionAct(targetTurn);
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
-    const saveFill = dragonsBreathSavingThrowOutcomeFill(saveHole, {
-      originAnchorId: spellTargetId,
-      affectedTargetIds: [spellCasterId, laterTargetId],
-      outcomes: [
-        { targetId: spellCasterId, succeeded: false },
-        { targetId: laterTargetId, succeeded: false },
-      ],
-    });
+    const saveFill = grantedAreaSaveDamageActionSavingThrowOutcomeFill(
+      saveHole,
+      {
+        originAnchorId: spellTargetId,
+        affectedTargetIds: [spellCasterId, laterTargetId],
+        outcomes: [
+          { targetId: spellCasterId, succeeded: false },
+          { targetId: laterTargetId, succeeded: false },
+        ],
+      },
+    );
     const needsDamage = resolveBattleSubject({
       state: targetTurn,
       subject: exhaleAct.subject,
@@ -581,26 +612,74 @@ describe("Dragon's Breath initial cast admission", () => {
 
   test("requests and applies matching spell damage reduction before exhale damage", () => {
     const session = spellBattle({
-      preparedSpells: [dragonsBreathSpell()],
+      preparedSpells: [grantedAreaSaveDamageActionSpell()],
       spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetSpellcasting: wizardSpellcasting({
+        cantrips: [spellRecord(resistanceUnitId)],
+        preparedSpells: [],
+      }),
     });
     const cast = castDragonsBreath(session, "fire");
     const endedCasterTurn = endTurn({ state: cast, actorId: spellCasterId });
     if (endedCasterTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const targetTurn = stateWithSpellDamageReduction(
-      endedCasterTurn.state,
-      spellCasterId,
-      "fire",
+    const resistanceSession = battleRuntimeSessionForTest({
+      ...session,
+      state: endedCasterTurn.state,
+    });
+    const resistanceAct = spellAct({
+      session: resistanceSession,
+      spellId: resistanceUnitId,
+    });
+    const resistanceTarget = requireHole(
+      resistanceAct.initialHoles,
+      "targetChoice",
     );
-    const exhaleAct = dragonsBreathExhaleAct(targetTurn);
+    const resistanceDamageType = requireHole(
+      resistanceAct.initialHoles,
+      "damageTypeChoice",
+    );
+    const resistanceCast = resolveBattleSubject({
+      state: resistanceSession.state,
+      subject: resistanceAct.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          resistanceTarget,
+          resistanceUnitId,
+          spellTargetId,
+          spellCasterId,
+        ),
+        damageTypeChoiceFill(resistanceDamageType, "fire"),
+      ],
+    });
+    if (resistanceCast.tag !== "resolved") {
+      throw new Error(
+        `Expected admitted Resistance cast to resolve: ${JSON.stringify(resistanceCast)}`,
+      );
+    }
+    const nextCasterTurn = endTurn({
+      state: resistanceCast.state,
+      actorId: spellTargetId,
+    });
+    if (nextCasterTurn.tag !== "resolved") {
+      throw new Error("Expected Resistance caster turn to end.");
+    }
+    const nextTargetTurn = endTurn({
+      state: nextCasterTurn.state,
+      actorId: spellCasterId,
+    });
+    if (nextTargetTurn.tag !== "resolved") {
+      throw new Error("Expected Dragon's Breath source turn to end.");
+    }
+    const targetTurn = nextTargetTurn.state;
+    const exhaleAct = grantedAreaSaveDamageActionAct(targetTurn);
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
     const needsDamage = resolveBattleSubject({
       state: targetTurn,
       subject: exhaleAct.subject,
       fills: [
-        dragonsBreathSavingThrowOutcomeFill(saveHole, {
+        grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
           outcomes: [{ targetId: spellCasterId, succeeded: false }],
@@ -612,7 +691,7 @@ describe("Dragon's Breath initial cast admission", () => {
       state: targetTurn,
       subject: exhaleAct.subject,
       fills: [
-        dragonsBreathSavingThrowOutcomeFill(saveHole, {
+        grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
           outcomes: [{ targetId: spellCasterId, succeeded: false }],
@@ -631,7 +710,7 @@ describe("Dragon's Breath initial cast admission", () => {
       state: targetTurn,
       subject: exhaleAct.subject,
       fills: [
-        dragonsBreathSavingThrowOutcomeFill(saveHole, {
+        grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
           outcomes: [{ targetId: spellCasterId, succeeded: false }],
@@ -649,7 +728,7 @@ describe("Dragon's Breath initial cast admission", () => {
       state: targetTurn,
       subject: exhaleAct.subject,
       fills: [
-        dragonsBreathSavingThrowOutcomeFill(saveHole, {
+        grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [spellCasterId],
           outcomes: [{ targetId: spellCasterId, succeeded: false }],
@@ -684,7 +763,7 @@ describe("Dragon's Breath initial cast admission", () => {
 
   test("halves an odd damage roll after a successful Dexterity save", () => {
     const session = spellBattle({
-      preparedSpells: [dragonsBreathSpell()],
+      preparedSpells: [grantedAreaSaveDamageActionSpell()],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const cast = castDragonsBreath(session, "lightning");
@@ -693,13 +772,16 @@ describe("Dragon's Breath initial cast admission", () => {
       throw new Error("Expected caster End Turn to resolve.");
     }
     const targetTurn = endedCasterTurn.state;
-    const exhaleAct = dragonsBreathExhaleAct(targetTurn);
+    const exhaleAct = grantedAreaSaveDamageActionAct(targetTurn);
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
-    const saveFill = dragonsBreathSavingThrowOutcomeFill(saveHole, {
-      originAnchorId: spellTargetId,
-      affectedTargetIds: [spellCasterId],
-      outcomes: [{ targetId: spellCasterId, succeeded: true }],
-    });
+    const saveFill = grantedAreaSaveDamageActionSavingThrowOutcomeFill(
+      saveHole,
+      {
+        originAnchorId: spellTargetId,
+        affectedTargetIds: [spellCasterId],
+        outcomes: [{ targetId: spellCasterId, succeeded: true }],
+      },
+    );
     const needsDamage = resolveBattleSubject({
       state: targetTurn,
       subject: exhaleAct.subject,
@@ -744,7 +826,7 @@ describe("Dragon's Breath initial cast admission", () => {
   test("spends the Magic action without damaging an immune Cone target", () => {
     const immuneTargetId = combatantId("dragons-breath-fire-immune-target");
     const session = spellBattle({
-      preparedSpells: [dragonsBreathSpell()],
+      preparedSpells: [grantedAreaSaveDamageActionSpell()],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       statBlockTargets: [
         {
@@ -760,13 +842,16 @@ describe("Dragon's Breath initial cast admission", () => {
       throw new Error("Expected caster End Turn to resolve.");
     }
     const targetTurn = endedCasterTurn.state;
-    const exhaleAct = dragonsBreathExhaleAct(targetTurn);
+    const exhaleAct = grantedAreaSaveDamageActionAct(targetTurn);
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
-    const saveFill = dragonsBreathSavingThrowOutcomeFill(saveHole, {
-      originAnchorId: spellTargetId,
-      affectedTargetIds: [immuneTargetId],
-      outcomes: [{ targetId: immuneTargetId, succeeded: false }],
-    });
+    const saveFill = grantedAreaSaveDamageActionSavingThrowOutcomeFill(
+      saveHole,
+      {
+        originAnchorId: spellTargetId,
+        affectedTargetIds: [immuneTargetId],
+        outcomes: [{ targetId: immuneTargetId, succeeded: false }],
+      },
+    );
     const needsDamage = resolveBattleSubject({
       state: targetTurn,
       subject: exhaleAct.subject,
@@ -796,7 +881,7 @@ describe("Dragon's Breath initial cast admission", () => {
       "orc_relentless_endurance",
     );
     const session = spellBattle({
-      preparedSpells: [dragonsBreathSpell()],
+      preparedSpells: [grantedAreaSaveDamageActionSpell()],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterResources: [{ unit: relentlessEndurance }],
       casterUnitRefs: [
@@ -824,13 +909,16 @@ describe("Dragon's Breath initial cast admission", () => {
         hp: Hp(3),
       }),
     };
-    const exhaleAct = dragonsBreathExhaleAct(targetTurn);
+    const exhaleAct = grantedAreaSaveDamageActionAct(targetTurn);
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
-    const saveFill = dragonsBreathSavingThrowOutcomeFill(saveHole, {
-      originAnchorId: spellTargetId,
-      affectedTargetIds: [spellCasterId],
-      outcomes: [{ targetId: spellCasterId, succeeded: false }],
-    });
+    const saveFill = grantedAreaSaveDamageActionSavingThrowOutcomeFill(
+      saveHole,
+      {
+        originAnchorId: spellTargetId,
+        affectedTargetIds: [spellCasterId],
+        outcomes: [{ targetId: spellCasterId, succeeded: false }],
+      },
+    );
     const needsDamage = resolveBattleSubject({
       state: targetTurn,
       subject: exhaleAct.subject,
@@ -895,7 +983,7 @@ describe("Dragon's Breath initial cast admission", () => {
 
   test("rejects stale exhale state and spends the Magic action when the Cone affects no targets", () => {
     const session = spellBattle({
-      preparedSpells: [dragonsBreathSpell()],
+      preparedSpells: [grantedAreaSaveDamageActionSpell()],
       spellSlots: [{ spellLevel: 2, count: 1 }],
     });
     const cast = castDragonsBreath(session, "poison");
@@ -903,7 +991,7 @@ describe("Dragon's Breath initial cast admission", () => {
     if (endedCasterTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const exhaleAct = dragonsBreathExhaleAct(endedCasterTurn.state);
+    const exhaleAct = grantedAreaSaveDamageActionAct(endedCasterTurn.state);
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
     expect(
       resolveBattleSubject({
@@ -941,7 +1029,7 @@ describe("Dragon's Breath initial cast admission", () => {
             {
               ...exhalingTarget,
               activeEffects: exhalingTarget.activeEffects.filter(
-                (effect) => effect.kind !== "dragonsBreath",
+                (effect) => effect.kind !== "grantedAreaSaveDamageAction",
               ),
             },
           ),
@@ -955,7 +1043,7 @@ describe("Dragon's Breath initial cast admission", () => {
       state: endedCasterTurn.state,
       subject: exhaleAct.subject,
       fills: [
-        dragonsBreathSavingThrowOutcomeFill(saveHole, {
+        grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
           originAnchorId: spellTargetId,
           affectedTargetIds: [],
           outcomes: [],
@@ -972,7 +1060,7 @@ describe("Dragon's Breath initial cast admission", () => {
         state: endedCasterTurn.state,
         subject: exhaleAct.subject,
         fills: [
-          dragonsBreathSavingThrowOutcomeFill(saveHole, {
+          grantedAreaSaveDamageActionSavingThrowOutcomeFill(saveHole, {
             originAnchorId: spellTargetId,
             affectedTargetIds: [],
             outcomes: [],
@@ -1021,8 +1109,8 @@ function castDragonsBreath(
   return resolved.state;
 }
 
-function dragonsBreathSpell(): SpellRecord {
-  const unit = decodeUnitRecordSync(dragonsBreathInput);
+function grantedAreaSaveDamageActionSpell(): SpellRecord {
+  const unit = decodeUnitRecordSync(grantedAreaSaveDamageActionInput);
   if (unit.kind !== "spell") {
     throw new Error("Expected Dragon's Breath fixture to decode as a spell.");
   }
@@ -1040,31 +1128,34 @@ function fireImmuneHumanoidStatBlock() {
   };
 }
 
-function dragonsBreathExhaleAct(state: BattleState) {
+function grantedAreaSaveDamageActionAct(state: BattleState) {
   const exhaleAct = discoverBattleActCandidates(state).find(
     (act) =>
       act.subject.tag === "runtimeCommand" &&
-      act.subject.command === "dragonsBreathExhale",
+      act.subject.command === "grantedAreaSaveDamageAction",
   );
   if (
     exhaleAct?.subject.tag !== "runtimeCommand" ||
-    exhaleAct.subject.command !== "dragonsBreathExhale"
+    exhaleAct.subject.command !== "grantedAreaSaveDamageAction"
   ) {
     throw new Error("Expected Dragon's Breath exhale action.");
   }
   return exhaleAct;
 }
 
-function stateWithExhalingTargetActionEarlyEndCondition(
+function stateWithSyntheticExhaleEndedInvisibilityInteraction(
   state: BattleState,
 ): BattleState {
   const target = requireCombatant(state, spellTargetId);
   if (target.positiveHpUnconscious !== null) {
     throw new Error("Expected Dragon's Breath fixture target to be conscious.");
   }
+  const invisibilityProcedureRef = battleProcedureExecutionRefForTest(
+    "synthetic-dragons-breath-interaction-invisibility",
+  );
   const effect = {
     kind: "targetActionEndedSpellCondition",
-    sourceProcedureRef: dragonsBreathSourceProcedureRef(state),
+    sourceProcedureRef: invisibilityProcedureRef,
     sourceCombatantId: spellTargetId,
     condition: "invisible",
     conditionHadNonSpellSource: false,
@@ -1073,104 +1164,69 @@ function stateWithExhalingTargetActionEarlyEndCondition(
       combatantId: spellTargetId,
       durationTicks: elapsedTimeTicks(10),
     },
-  } satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "targetActionEndedSpellCondition" }
-  >;
-  return {
+  } as const;
+  const conditionedState: BattleState = {
     ...state,
     combatants: new Map(state.combatants).set(spellTargetId, {
       ...target,
+      concentration: {
+        sourceProcedureRef: invisibilityProcedureRef,
+        effectKind: "spellEffect",
+      },
       conditions: { ...target.conditions, invisible: true },
-      activeEffects: [...target.activeEffects, effect],
     }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: conditionedState,
+    ownerId: spellTargetId,
+    effect,
+  });
 }
 
 function stateWithWardingBondSharedCasterConcentration(
   state: BattleState,
 ): BattleState {
-  const stateWithBond = stateWithWardingBondTarget(
+  const stateWithBond = stateWithSyntheticWardingBondInteraction(
     state,
     spellCasterId,
     spellTargetId,
   );
-  const sharedDamageCaster = requireCombatant(state, spellTargetId);
+  const sharedDamageCaster = requireCombatant(stateWithBond, spellTargetId);
+  const concentrationProcedureRef = battleProcedureExecutionRefForTest(
+    "synthetic-dragons-breath-interaction-target-concentration",
+  );
   return {
     ...stateWithBond,
     combatants: new Map(stateWithBond.combatants).set(spellTargetId, {
       ...sharedDamageCaster,
       concentration: {
-        sourceProcedureRef: dragonsBreathSourceProcedureRef(state),
+        sourceProcedureRef: concentrationProcedureRef,
         effectKind: "spellEffect",
       },
     }),
   };
 }
 
-function stateWithWardingBondTarget(
+function stateWithSyntheticWardingBondInteraction(
   state: BattleState,
   targetId: CombatantId,
   sourceId: CombatantId,
 ): BattleState {
-  const target = requireCombatant(state, targetId);
-  const wardingBondEffect = {
-    kind: "wardingBond",
-    effectRef: battleActiveEffectExecutionRefForTest("dragon-ward-two"),
-    sourceProcedureRef: dragonsBreathSourceProcedureRef(state),
-    sourceCombatantId: sourceId,
-    expiresAt: {
-      kind: "duration",
-      durationTicks: elapsedTimeTicks(3_600),
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: targetId,
+    effect: {
+      kind: "linkedDefenseResistanceDamageShare",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-dragons-breath-interaction-warding-bond",
+      ),
+      sourceCombatantId: sourceId,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(3_600),
+      },
     },
-  } satisfies Extract<BattleActiveEffect, { readonly kind: "wardingBond" }>;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [...target.activeEffects, wardingBondEffect],
-    }),
-  };
-}
-
-function stateWithSpellDamageReduction(
-  state: BattleState,
-  targetId: CombatantId,
-  damageType: DamageType,
-): BattleState {
-  const target = requireCombatant(state, targetId);
-  const spellDamageReductionEffect = {
-    kind: "spellDamageReduction",
-    sourceProcedureRef: dragonsBreathSourceProcedureRef(state),
-    sourceCombatantId: spellTargetId,
-    damageType,
-    amount: { dice: 1, dieSize: 4 },
-    usedThisTurn: false,
-    expiresAt: {
-      kind: "duration",
-      durationTicks: elapsedTimeTicks(60),
-    },
-  } satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "spellDamageReduction" }
-  >;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [...target.activeEffects, spellDamageReductionEffect],
-    }),
-  };
-}
-
-function dragonsBreathSourceProcedureRef(state: BattleState) {
-  const effect = requireCombatant(state, spellTargetId).activeEffects.find(
-    (candidate) => candidate.kind === "dragonsBreath",
-  );
-  if (effect === undefined) {
-    throw new Error("Expected Dragon's Breath active effect.");
-  }
-  return effect.sourceProcedureRef;
+  });
 }
 
 function requireConcentrationHole(
@@ -1193,7 +1249,7 @@ function requireConcentrationHole(
   return hole;
 }
 
-function dragonsBreathSavingThrowOutcomeFill(
+function grantedAreaSaveDamageActionSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   value: {
     readonly originAnchorId: CombatantId;

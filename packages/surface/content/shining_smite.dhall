@@ -27,6 +27,7 @@ let Effect : Type =
       , damageType : Optional Text
       , amount : Optional DiceAmount
       , brightRadiusFeet : Optional Natural
+      , radiusFeet : Optional Natural
       , mode : Optional Text
       , on : Optional (List Text)
       , affects : Optional Text
@@ -46,6 +47,7 @@ let smiteDamage : Effect =
             , startingAtLevel = Some 2
             }
       , brightRadiusFeet = None Natural
+      , radiusFeet = None Natural
       , mode = None Text
       , on = None (List Text)
       , affects = None Text
@@ -53,10 +55,11 @@ let smiteDamage : Effect =
       }
 
 let brightLight : Effect =
-      { kind = "emit_light"
+      { kind = "emit_bright_illumination"
       , damageType = None Text
       , amount = None DiceAmount
-      , brightRadiusFeet = Some 5
+      , brightRadiusFeet = None Natural
+      , radiusFeet = Some 5
       , mode = None Text
       , on = None (List Text)
       , affects = None Text
@@ -68,6 +71,7 @@ let attackAdvantage : Effect =
       , damageType = None Text
       , amount = None DiceAmount
       , brightRadiusFeet = None Natural
+      , radiusFeet = None Natural
       , mode = Some "advantage"
       , on = Some [ "attack_roll" ]
       , affects = Some "rolls_against_self"
@@ -79,6 +83,7 @@ let suppressInvisible : Effect =
       , damageType = None Text
       , amount = None DiceAmount
       , brightRadiusFeet = None Natural
+      , radiusFeet = None Natural
       , mode = None Text
       , on = None (List Text)
       , affects = None Text

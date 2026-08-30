@@ -5,7 +5,7 @@ import {
   characterId as makeCharacterId,
 } from "@dnd/battle-runtime";
 import { Hp } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -66,10 +66,10 @@ function startCharacterBattle(input?: {
     companion: { tag: "none" },
     unitLibrary: root.unitLibrary,
   });
-  if (Either.isLeft(available)) {
-    throw new Error(available.left.message);
+  if (Result.isFailure(available)) {
+    throw new Error(available.failure.message);
   }
-  root.sessionStore.characters.set(available.right);
+  root.sessionStore.characters.set(available.success);
   const started = readToolPayload(
     handleToolCall(root, "start_battle", {
       battleId: battleIdValue,
@@ -97,7 +97,7 @@ function startCharacterBattle(input?: {
   expect(started).toMatchObject({
     envelope: { checkpoint: { battleId: battleIdValue } },
   });
-  return { root, characterId, available: available.right };
+  return { root, characterId, available: available.success };
 }
 
 function startInitialSetupBattle() {
@@ -381,7 +381,7 @@ describe("MCP Battle roster lifecycle boundaries", () => {
     const { root, characterId } = startCharacterBattle();
     const before = rootAndCharacterRegistrySnapshot(root);
     root.sessionStore.characters.setAll = () =>
-      Either.left({ tag: "unknownCharacterSession", characterId });
+      Result.fail({ tag: "unknownCharacterSession", characterId });
 
     expect(removeCharacter(root)).toMatchObject({
       details: {
@@ -409,7 +409,7 @@ describe("MCP Battle roster lifecycle boundaries", () => {
         combatantId: makeCombatantId("none-combatant"),
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "none",
         to: "activeBattle",
@@ -422,14 +422,14 @@ describe("MCP Battle roster lifecycle boundaries", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "none",
         to: "initialInitiativeSetup",
       }),
     );
     expect(none.sessionStore.finalizeInitialInitiativeSetup()).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "none",
         to: "activeBattle",
@@ -443,7 +443,7 @@ describe("MCP Battle roster lifecycle boundaries", () => {
       throw new Error("Expected the active phase fixture's session.");
     }
     expect(setup.root.sessionStore.storeActiveBattle(activeSession)).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "initialInitiativeSetup",
         to: "activeBattle",
@@ -452,7 +452,7 @@ describe("MCP Battle roster lifecycle boundaries", () => {
     expect(
       setup.root.sessionStore.storeInitialInitiativeSetup(setup.setup),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "initialInitiativeSetup",
         to: "initialInitiativeSetup",
@@ -461,7 +461,7 @@ describe("MCP Battle roster lifecycle boundaries", () => {
     expect(
       active.root.sessionStore.storeInitialInitiativeSetup(setup.setup),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "activeBattle",
         to: "initialInitiativeSetup",
@@ -474,14 +474,14 @@ describe("MCP Battle roster lifecycle boundaries", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "activeBattle",
         to: "initialInitiativeSetup",
       }),
     );
     expect(active.root.sessionStore.finalizeInitialInitiativeSetup()).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidBattleStateTransition",
         from: "activeBattle",
         to: "activeBattle",
@@ -562,13 +562,13 @@ describe("MCP Battle roster lifecycle boundaries", () => {
       companion: { tag: "none" },
       unitLibrary: root.unitLibrary,
     });
-    if (Either.isLeft(available)) {
-      throw new Error(available.left.message);
+    if (Result.isFailure(available)) {
+      throw new Error(available.failure.message);
     }
-    root.sessionStore.characters.set(available.right);
+    root.sessionStore.characters.set(available.success);
     const before = rootAndCharacterRegistrySnapshot(root);
     root.sessionStore.characters.setAll = () =>
-      Either.left({ tag: "unknownCharacterSession", characterId });
+      Result.fail({ tag: "unknownCharacterSession", characterId });
 
     expect(
       readToolPayload(
@@ -609,7 +609,7 @@ describe("MCP Battle roster lifecycle boundaries", () => {
     const { root, characterId } = startCharacterBattle();
     const before = rootAndCharacterRegistrySnapshot(root);
     root.sessionStore.characters.setAll = () =>
-      Either.left({ tag: "unknownCharacterSession", characterId });
+      Result.fail({ tag: "unknownCharacterSession", characterId });
 
     expect(
       readToolPayload(handleToolCall(root, "end_battle", {})),

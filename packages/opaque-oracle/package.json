@@ -32,19 +32,17 @@
     "@dnd/character-sheet-runtime": "workspace:*",
     "@dnd/shared": "workspace:*",
     "@dnd/surface": "workspace:*",
-    "@effect/cli": "^0.75.2",
-    "@effect/platform": "^0.96.3",
-    "@effect/platform-node": "^0.106.0",
+    "@effect/platform-node": "4.0.0-rc.112",
     "ajv": "^8.18.0",
-    "effect": "~3.21.5"
+    "effect": "4.0.0-rc.112"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+    "@types/node": "22.19.15",
     "@typescript/native": "npm:typescript@^7.0.2",
     "esbuild": "0.27.4",
     "fast-check": "3.23.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
+    "typescript": "5.9.3",
     "vitest": "4.1.11"
   }
 }

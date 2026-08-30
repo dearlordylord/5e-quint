@@ -7,7 +7,7 @@
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
-  counterspellUnitId,
+  spellCastInterruptionReactionUnitId,
   fireBoltUnitId,
   shieldUnitId,
   sorcerousBurstUnitId,
@@ -49,7 +49,7 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import type { SpellMarkedDamageRider } from "./unit-profile-admission.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -280,14 +280,14 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     if (
       unselectedSorcerousBurstInvocation.procedure !== "spellAttackDamage" ||
       unselectedSorcerousBurstInvocation.damage.kind !==
-        "sorcerousBurstDamageTypeChoice"
+        "spellAttackDamageTypeChoice"
     ) {
       throw new Error("Expected Sorcerous Burst spell attack damage choice.");
     }
     const selectedSorcerousBurstSource = {
       ...unselectedSorcerousBurstInvocation,
       damage: {
-        kind: "selectedSorcerousBurstDamage" as const,
+        kind: "selectedSpellAttackDamage" as const,
         expr: unselectedSorcerousBurstInvocation.damage.expr,
         damageType: "thunder" as const,
         maxDieAdditionalDiceLimit:
@@ -307,7 +307,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     }
     const markedDamageRider = {
       kind: "spellMarkedDamageRider" as const,
-      effectRef: battleActiveEffectExecutionRefForTest("candidate-mark"),
+      effectRef: battleEffectExecutionRefForTest("candidate-mark"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(spellId("hunters_mark")),
       ),
@@ -617,8 +617,8 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
     ).toBeUndefined();
   });
 
-  test("counterspell is admitted through catalog Spell Access and projected as a triggered Reaction spell", () => {
-    const spell = spellRecord(counterspellUnitId);
+  test("spellCastInterruptionReaction is admitted through catalog Spell Access and projected as a triggered Reaction spell", () => {
+    const spell = spellRecord(spellCastInterruptionReactionUnitId);
 
     expect(spell.mechanics.family).toBe("triggered_reaction");
     if (spell.mechanics.family !== "triggered_reaction") {
@@ -651,7 +651,7 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
           preparedSpells: [spell],
           spellSlots: [{ spellLevel: 3, count: 1 }],
         }),
-        spellId: counterspellUnitId,
+        spellId: spellCastInterruptionReactionUnitId,
       }),
     ).toBeUndefined();
   });

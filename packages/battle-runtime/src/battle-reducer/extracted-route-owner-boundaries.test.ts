@@ -28,18 +28,18 @@ import {
   zeroHitPointStabilizationRouteForDiscoveredAct,
 } from "./combatant-lifecycle-routes.ts";
 import {
-  commandRouteForDiscoveredAct,
-  commandRouteForResolution,
-} from "./command-routes.ts";
+  compelledBehaviorRouteForDiscoveredAct,
+  compelledBehaviorRouteForResolution,
+} from "./compelled-behavior-routes.ts";
 import {
   companionRouteForDiscoveredAct,
-  findFamiliarCompanionLifecycleRouteEvents,
+  spawnedCompanionLifecycleRouteEvents,
 } from "./companion-routes.ts";
 import {
   conditionImmunityTemporaryHitPointRouteForDiscoveredAct,
   conditionImmunityTemporaryHitPointRouteForResolution,
 } from "./condition-immunity-temporary-hit-point-routes.ts";
-import { sleepRepeatSaveRouteForDiscoveredAct } from "./effect-lifecycle-routes.ts";
+import { hitPointBudgetConditionRepeatSaveRouteForDiscoveredAct } from "./effect-lifecycle-routes.ts";
 import { unitFeatureBonusActionRouteForDiscoveredAct } from "./feature-action-routes.ts";
 import { markedDamageRiderRouteForDiscoveredAct } from "./marked-damage-routes.ts";
 import { protectionCharmRouteForDiscoveredAct } from "./protection-charm-routes.ts";
@@ -141,12 +141,15 @@ describe("extracted route owner boundaries", () => {
       ),
     ).toMatchObject({ subject: "spatialEffect" });
     expect(
-      sleepRepeatSaveRouteForDiscoveredAct(session.state, routedAct("sleep")),
+      hitPointBudgetConditionRepeatSaveRouteForDiscoveredAct(
+        session.state,
+        routedAct("sleep"),
+      ),
     ).toMatchObject({ subject: "repeatSaveConditionEffect" });
   });
 
   test("projects companion owner outputs", () => {
-    expect(findFamiliarCompanionLifecycleRouteEvents()).toHaveLength(2);
+    expect(spawnedCompanionLifecycleRouteEvents()).toHaveLength(2);
   });
 
   test("projects marked damage, feature, Command, and attack route events", () => {
@@ -244,9 +247,9 @@ describe("extracted route owner boundaries", () => {
       ],
     });
     const act = findAct(session, magicSubject("command"));
-    expect(commandRouteForDiscoveredAct(session.state, act)).toEqual([
+    expect(compelledBehaviorRouteForDiscoveredAct(session.state, act)).toEqual([
       expect.objectContaining({
-        subject: "commandEffect",
+        subject: "compelledBehaviorEffect",
         owner: "battleSpellSlotAndActionEconomy",
       }),
     ]);
@@ -261,15 +264,15 @@ describe("extracted route owner boundaries", () => {
     });
 
     expect(
-      commandRouteForResolution(
+      compelledBehaviorRouteForResolution(
         { state: session.state, subject: act.subject, fills },
         result,
       ),
     ).toEqual(
       expect.objectContaining({
-        subject: "commandEffect",
+        subject: "compelledBehaviorEffect",
         fill: "spellTargetList",
-        holes: ["commandOptionChoice"],
+        holes: ["compelledBehaviorOptionChoice"],
         owner: "battleHoleFrontier",
       }),
     );

@@ -51,7 +51,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   });
   if (sdk.isLeft(fighterInit)) {
     return obstructed(
-      `The canonical battle projection rejected the completed Fighter Character Sheet: ${sdk.characterBattleRuntimeIssueMessage(fighterInit.left)}`,
+      `The canonical battle projection rejected the completed Fighter Character Sheet: ${sdk.characterBattleRuntimeIssueMessage(fighterInit.failure)}`,
       { code: "fighter-battle-projection-rejected" },
     );
   }
@@ -67,7 +67,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   });
   if (sdk.isLeft(rogueInit)) {
     return obstructed(
-      `The canonical battle projection rejected the completed Rogue Character Sheet: ${sdk.characterBattleRuntimeIssueMessage(rogueInit.left)}`,
+      `The canonical battle projection rejected the completed Rogue Character Sheet: ${sdk.characterBattleRuntimeIssueMessage(rogueInit.failure)}`,
       { code: "rogue-battle-projection-rejected" },
     );
   }
@@ -87,7 +87,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   });
   if (sdk.isLeft(wolfAInit)) {
     return obstructed(
-      `The canonical battle projection rejected Wolf A: ${sdk.battleStateInitIssueMessage(wolfAInit.left)}`,
+      `The canonical battle projection rejected Wolf A: ${sdk.battleStateInitIssueMessage(wolfAInit.failure)}`,
       { code: "wolf-a-battle-projection-rejected" },
     );
   }
@@ -101,7 +101,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   });
   if (sdk.isLeft(wolfBInit)) {
     return obstructed(
-      `The canonical battle projection rejected Wolf B: ${sdk.battleStateInitIssueMessage(wolfBInit.left)}`,
+      `The canonical battle projection rejected Wolf B: ${sdk.battleStateInitIssueMessage(wolfBInit.failure)}`,
       { code: "wolf-b-battle-projection-rejected" },
     );
   }
@@ -115,7 +115,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   });
   if (sdk.isLeft(goblinInit)) {
     return obstructed(
-      `The canonical battle projection rejected Goblin Warrior A: ${sdk.battleStateInitIssueMessage(goblinInit.left)}`,
+      `The canonical battle projection rejected Goblin Warrior A: ${sdk.battleStateInitIssueMessage(goblinInit.failure)}`,
       { code: "goblin-battle-projection-rejected" },
     );
   }
@@ -123,16 +123,16 @@ export const setupScenario: ScenarioSetup = (context) => {
   const battle = sdk.startBattle({
     battleId: sdk.battleId("orc-fighter-rogue-close-interception"),
     combatants: [
-      fighterInit.right,
-      rogueInit.right,
-      wolfAInit.right,
-      wolfBInit.right,
-      goblinInit.right,
+      fighterInit.success,
+      rogueInit.success,
+      wolfAInit.success,
+      wolfBInit.success,
+      goblinInit.success,
     ],
   });
   if (sdk.isLeft(battle)) {
     return obstructed(
-      `The canonical battle could not start: ${sdk.battleStateInitIssueMessage(battle.left)}`,
+      `The canonical battle could not start: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
       { code: "battle-start-rejected" },
     );
   }
@@ -155,7 +155,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   });
 
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -223,14 +223,14 @@ export const setupScenario: ScenarioSetup = (context) => {
   });
   if (sdk.isLeft(session)) {
     return obstructed(
-      `The canonical scenario session rejected the fixed battlefield facts: ${sdk.scenarioSessionIssueMessage(session.left)}`,
+      `The canonical scenario session rejected the fixed battlefield facts: ${sdk.scenarioSessionIssueMessage(session.failure)}`,
       { code: "scenario-session-rejected" },
     );
   }
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: { code: "scenario-ready" },
   };
 };

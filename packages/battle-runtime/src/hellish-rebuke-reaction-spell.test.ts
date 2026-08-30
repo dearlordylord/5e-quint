@@ -2,7 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV69B hellish_rebuke
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import {
@@ -36,14 +36,15 @@ import { openAfterDamageSequenceInterruptWindow } from "./battle-reducer/interru
 import {
   battleProcedureExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
+  battleStateWithAllocatedEffectForTest,
   battleFrontierInterruptDecisionForState,
   characterSpellInvocationRefForProcedureRefForTest,
   concentrationSavingThrowFill,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
-import { hideousLaughterDurationTicks } from "./unit-profile-admission-catalog.test-support.ts";
 import type { BattleInterruptSubject } from "./battle-subjects.ts";
+import { saveGatedConditionWithRepeatDurationTicks } from "./unit-profile-admission-catalog.test-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   spellAct,
@@ -62,7 +63,6 @@ import {
   type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleCreatureState,
-  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleInterruptCheckpoint,
@@ -83,7 +83,7 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 const hellishRebukeUnitId = "hellish_rebuke";
-const hideousLaughterUnitId = "hideous_laughter";
+const saveGatedConditionWithRepeatUnitId = "hideous_laughter";
 const magicMissileUnitId = "magic_missile";
 const spellCasterId = combatantId("hellish-rebuke-caster");
 const laughterCasterId = combatantId("hideous-laughter-caster");
@@ -255,24 +255,11 @@ describe("Hellish Rebuke Reaction spell", () => {
     );
   });
 
-  test("applies a source damage penalty before the damaged creature's Concentration save", () => {
+  test("applies a low-level source damage penalty before the damaged creature's Concentration save", () => {
     const base = battleWithHellishRebuke(srdSpellRecord(hellishRebukeUnitId));
     const concentrationProcedureRef = battleProcedureExecutionRefForTest(
       "synthetic-hellish-rebuke-damager-concentration",
     );
-    const sourceDamageRollPenalty = {
-      kind: "sourceDamageRollPenalty",
-      sourceProcedureRef: concentrationProcedureRef,
-      sourceCombatantId: damagerId,
-      amount: { dice: 1, dieSize: 8 },
-      expiresAt: {
-        kind: "concentration",
-        combatantId: damagerId,
-      },
-    } satisfies Extract<
-      BattleActiveEffect,
-      { readonly kind: "sourceDamageRollPenalty" }
-    >;
     const concentratingState = withCombatant(
       base.state,
       damagerId,
@@ -284,14 +271,20 @@ describe("Hellish Rebuke Reaction spell", () => {
         },
       }),
     );
-    const enrichedState = withCombatant(
-      concentratingState,
-      spellCasterId,
-      (caster) => ({
-        ...caster,
-        activeEffects: [...caster.activeEffects, sourceDamageRollPenalty],
-      }),
-    );
+    const enrichedState = battleStateWithAllocatedEffectForTest({
+      state: concentratingState,
+      ownerId: spellCasterId,
+      effect: {
+        kind: "sourceDamageRollPenalty",
+        sourceProcedureRef: concentrationProcedureRef,
+        sourceCombatantId: damagerId,
+        amount: { dice: 1, dieSize: 8 },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: damagerId,
+        },
+      },
+    });
     const session = battleRuntimeSessionForTest({
       ...base,
       state: enrichedState,
@@ -402,17 +395,17 @@ describe("Hellish Rebuke Reaction spell", () => {
 
   test("Hellish Rebuke requests an advantaged Hideous Laughter save after the affected creature's delayed damage", () => {
     const hellishRebuke = srdSpellRecord(hellishRebukeUnitId);
-    const session = battleWithThirdPartyHideousLaughter(hellishRebuke);
+    const session = battleWithThirdPartyStagedCondition(hellishRebuke);
     const laughterAct = spellAct({
       session,
-      spellId: hideousLaughterUnitId,
+      spellId: saveGatedConditionWithRepeatUnitId,
       slotLevel: 1,
     });
     expect(laughterAct.subject.actorId).toBe(laughterCasterId);
     const targetList = spellTargetListFill(
       requireHole(laughterAct.initialHoles, "spellTargetList"),
       laughterCasterId,
-      hideousLaughterUnitId,
+      saveGatedConditionWithRepeatUnitId,
       [damagerId],
     );
     const awaitingInitialSave = resolveBattleSubject({
@@ -443,7 +436,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     const laughterCaster = requireCombatant(laughed.state, laughterCasterId);
     const laughingDamager = requireCombatant(laughed.state, damagerId);
     const laughterEffect = laughingDamager.activeEffects.find(
-      (effect) => effect.kind === "hideousLaughter",
+      (effect) => effect.kind === "saveGatedConditionWithRepeat",
     );
     expect(laughterCaster.concentration).toMatchObject({
       sourceProcedureRef: laughterAct.subject.procedureRef,
@@ -462,7 +455,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       expiresAt: {
         kind: "concentration",
         combatantId: laughterCasterId,
-        durationTicks: hideousLaughterDurationTicks,
+        durationTicks: saveGatedConditionWithRepeatDurationTicks,
       },
     });
 
@@ -567,7 +560,7 @@ describe("Hellish Rebuke Reaction spell", () => {
       holes: [
         {
           kind: "savingThrowOutcome",
-          hideousLaughterRepeatSave: {
+          saveGatedConditionRepeatSave: {
             targetId: damagerId,
             trigger: "damage",
           },
@@ -1223,11 +1216,11 @@ function battleWithHellishRebuke(
       }),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function battleWithHellishRebukeOnCasterTurn(
@@ -1263,7 +1256,7 @@ function battleWithHellishRebukeOnCasterTurn(
   ]);
 }
 
-function battleWithThirdPartyHideousLaughter(
+function battleWithThirdPartyStagedCondition(
   hellishRebuke: SpellRecord,
 ): BattleRuntimeSession {
   return startDirectSpellLaneBattle([
@@ -1280,7 +1273,7 @@ function battleWithThirdPartyHideousLaughter(
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
-        preparedSpells: [srdSpellRecord(hideousLaughterUnitId)],
+        preparedSpells: [srdSpellRecord(saveGatedConditionWithRepeatUnitId)],
         featurePreparedSpells: [],
         spellAccesses: [],
         spellbookRitualSpellAccesses: [],
@@ -1325,11 +1318,11 @@ function startDirectSpellLaneBattle(
     battleId: battleId("hellish-rebuke-direct-spell-lane"),
     combatants,
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function characterCreature(input: {

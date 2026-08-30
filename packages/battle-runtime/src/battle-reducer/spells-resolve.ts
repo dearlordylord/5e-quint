@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-emanation
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-duration-and-concentration
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
@@ -51,7 +51,7 @@ import {
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import {
   type AdmittedActionSpellBattleResolutionInput,
   type AdmittedBonusActionDashSpellBattleResolutionInput,
@@ -61,6 +61,7 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleResolutionResult,
+  type BattleSpatialMeleeSpellAttackProxyCommitCheckpoint,
   type BattleState,
   type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
@@ -105,7 +106,7 @@ import { isCharacterBattleCreatureState } from "./creature-state-queries.ts";
 import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
@@ -127,7 +128,7 @@ import {
 import { revealHidden } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception.ts";
+import { duplicateHitInterceptionCheck } from "./duplicate-hit-interception.ts";
 import {
   type RegisteredSpellProcedure,
   type RegisteredSpellProcedureExecution,
@@ -147,8 +148,8 @@ import {
 } from "./spell-execution-facts.ts";
 import { isTriggeredReactionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
 import {
-  applySpiritualWeaponAttackProxyEffect,
-  repositionSpiritualWeaponAttackProxyEffect,
+  applySpatialMeleeSpellAttackProxyEffect,
+  repositionSpatialMeleeSpellAttackProxyEffect,
 } from "./spells-active-effects.ts";
 import {
   isReadiedSpellInvocation,
@@ -181,13 +182,13 @@ import {
   selectedAttackRollMissToHitReplacement,
 } from "./statblock-attacks.ts";
 import {
-  spiritualWeaponForcePositionHole,
-  spiritualWeaponForcePositionInvalidReason,
+  spatialMeleeSpellAttackProxyPositionHole,
+  spatialMeleeSpellAttackProxyPositionInvalidReason,
 } from "./spells-targeting.ts";
 import {
-  antimagicFieldOngoingSpellEffectRefForActiveEffect,
-  ongoingSpellEffectSuppressedByAntimagicField,
-} from "./antimagic-field-suppression.ts";
+  magicSuppressionOngoingSpellEffectRefForActiveEffect,
+  ongoingSpellEffectSuppressedByMagicSuppressionEmanation,
+} from "./magic-suppression-ongoing-effect.ts";
 
 import {
   admitSpellMetamagicApplications,
@@ -212,13 +213,13 @@ import {
 
 import { chainedSpellFillSet as parseChainedSpellFillSet } from "./spells-resolve-chained.ts";
 export {
-  resolveFlamingSphereSpellAct,
-  resolveFogCloudObscurementSpellAct,
-  resolveGustOfWindLineSpellAct,
+  resolveAreaMovementDistanceDamageSpellAct,
+  resolveDirectionalPersistentAreaSpellAct,
   resolveMagicalDarknessPointOriginSpellAct,
-  resolveMoonbeamSpellAct,
-  resolveSpikeGrowthMovementHazardSpellAct,
-  resolveWebRestraintHazardSpellAct,
+  resolveMovablePersistentAreaSpellAct,
+  resolvePersistentAreaSaveConditionEscapeSpellAct,
+  resolvePersistentAreaTraitSpellAct,
+  resolveRamMovablePersistentAreaSpellAct,
 } from "./spells-resolve-area-effects.ts";
 export {
   resolveObjectContactDamageRepeatSpellAct,
@@ -252,15 +253,15 @@ export {
   startSpellEffectConcentration,
 } from "./spells-resolve-resources.ts";
 export {
-  resolveCommandSpellAct,
+  resolveCompelledNextTurnBehaviorSpellAct,
   resolveAbilityD20TestRollModeSaveGateSpellAct,
-  resolveGreaseGroundHazardSpellAct,
-  resolveHideousLaughterSpellAct,
+  resolvePersistentAreaSaveConditionSpellAct,
+  resolveSaveGatedConditionWithRepeatSpellAct,
   resolveSaveGateAttackRollAdvantageSpellAct,
   resolveSaveGateConditionSpellAct,
   resolveSaveGateConditionImmunitySpellAct,
   resolveSaveGateDamageSpellAct,
-  resolveSleepTargetAdmissionSpellAct,
+  resolveStagedSaveConditionSpellAct,
   validateSavingThrowOutcomes,
 } from "./spells-resolve-save-gates.ts";
 export {
@@ -279,17 +280,17 @@ export {
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import {
   battleStateAfterTargetActionEarlyEndForActor,
-  sanctuaryTargetingInterdictionCheck,
-  targetChoiceFillAfterSanctuaryAttackRollReplacement,
-} from "./sanctuary-targeting-interdiction.ts";
+  targetingSaveInterdictionCheck,
+  targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement,
+} from "./targeting-save-interdiction.ts";
 import {
   spellCastInterruptFrame,
   spellCastMetamagicApplicationsInput,
 } from "./spell-cast-interrupt-frame.ts";
 import {
-  fillsAfterSlowSomaticSpellFailureOutcome,
-  resolveSlowSomaticSpellFailure,
-} from "./slow-active-penalties-runtime.ts";
+  fillsAfterTurnConstraintSomaticSpellFailureOutcome,
+  resolveSaveGatedTurnConstraintSomaticSpellFailure,
+} from "./save-gated-turn-constraint-runtime.ts";
 import { parseWeaponAttackOverrideFillInput } from "./weapon-attack-override-fill-input.ts";
 
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
@@ -307,10 +308,9 @@ import { clearPendingAttackRollMissToHitReplacementSelection } from "./statblock
 // stay outside this set and enter this lane only through the Quickened rewrite.
 const NATIVE_BONUS_ACTION_SPELL_PROCEDURES = [
   "heldLight",
-  "dancingLightsReposition",
+  "movableLightManifestation",
   "objectContactDamageRepeat",
-  "spiritualWeaponAttackProxy",
-  "spiritualWeaponRepeatAttack",
+  "spatialMeleeSpellAttackProxy",
   "spellCreatedHeldObject",
   "spellCreatedHeldObjectReEvoke",
   "scalarBuff",
@@ -320,12 +320,12 @@ const NATIVE_BONUS_ACTION_SPELL_PROCEDURES = [
   "saveGatedConditionImmunity",
   "weaponDamageRider",
   "weaponAttackOverride",
-  "magicWeaponEnhancement",
+  "weaponAttackDamageEnhancement",
   "markedDamageRider",
-  "jumpMovementReplacement",
-  "dragonsBreathInitial",
+  "fixedCostMovementReplacement",
+  "grantedAreaSaveDamageAction",
   "selfTeleport",
-  "sanctuaryTargetingInterdiction",
+  "targetingSaveInterdiction",
   "directConditionRemoval",
   "directHitPointRestoration",
 ] as const satisfies ReadonlyArray<SupportedSpellInvocation["procedure"]>;
@@ -664,7 +664,7 @@ function actionSpellProcedureResolveDispatchInput(
           ),
           metamagicApplications: resolutionOptions.metamagicApplications,
         }),
-      thaumaturgyBoomingVoice: (value) =>
+      temporaryAbilityCheckRollMode: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -675,7 +675,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      blurAttackRollDefense: (value) =>
+      perceptionGatedAttackRollDefense: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -697,7 +697,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      mirrorImageHitInterception: (value) =>
+      duplicateHitInterception: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -719,7 +719,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      wardingBond: (value) =>
+      linkedDefenseResistanceDamageShare: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -763,7 +763,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      hastePositive: (value) =>
+      compositeTargetBuffWithAftermath: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -821,7 +821,7 @@ function actionSpellProcedureResolveDispatchInput(
           ),
           metamagicApplications: resolutionOptions.metamagicApplications,
         }),
-      levitatedCreature: (value) =>
+      controlledVerticalSuspension: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -937,7 +937,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      sleepTargetAdmission: (value) =>
+      saveGatedTurnConstraintBundle: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -948,19 +948,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      hideousLaughter: (value) =>
-        spellProcedureResolveDispatchInput(value.procedure, {
-          input: actionSpellProfileResolutionInput(input, castingState, value),
-          actorId,
-          invocation: value,
-          fillSet,
-          ...spellProcedureActionCostResolutionOption(
-            value.procedure,
-            resolutionOptions.actionCostOverride,
-          ),
-          metamagicApplications: resolutionOptions.metamagicApplications,
-        }),
-      hypnoticPattern: (value) =>
+      saveGatedConditionWithRepeat: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -972,7 +960,7 @@ function actionSpellProcedureResolveDispatchInput(
           ),
           metamagicApplications: resolutionOptions.metamagicApplications,
         }),
-      slowActivePenalties: (value) =>
+      saveGatedAreaControl: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -984,7 +972,7 @@ function actionSpellProcedureResolveDispatchInput(
           ),
           metamagicApplications: resolutionOptions.metamagicApplications,
         }),
-      greaseGroundHazard: (value) =>
+      stagedSaveCondition: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -996,7 +984,7 @@ function actionSpellProcedureResolveDispatchInput(
           ),
           metamagicApplications: resolutionOptions.metamagicApplications,
         }),
-      gustOfWindLine: (value) =>
+      persistentAreaSaveCondition: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -1008,7 +996,19 @@ function actionSpellProcedureResolveDispatchInput(
           ),
           metamagicApplications: resolutionOptions.metamagicApplications,
         }),
-      flamingSphere: (value) =>
+      directionalPersistentArea: (value) =>
+        spellProcedureResolveDispatchInput(value.procedure, {
+          input: actionSpellProfileResolutionInput(input, castingState, value),
+          actorId,
+          invocation: value,
+          fillSet,
+          ...spellProcedureActionCostResolutionOption(
+            value.procedure,
+            resolutionOptions.actionCostOverride,
+          ),
+          metamagicApplications: resolutionOptions.metamagicApplications,
+        }),
+      persistentAreaSaveDamage: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -1019,7 +1019,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      moonbeam: (value) =>
+      persistentAreaTrait: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -1030,7 +1030,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      fogCloudObscurement: (value) =>
+      areaMovementDistanceDamage: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -1041,7 +1041,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      spikeGrowthMovementHazard: (value) =>
+      persistentAreaSaveConditionEscape: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -1052,40 +1052,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      webRestraintHazard: (value) =>
-        spellProcedureResolveDispatchInput(value.procedure, {
-          input: actionSpellProfileResolutionInput(input, castingState, value),
-          actorId,
-          invocation: value,
-          fillSet,
-          ...spellProcedureActionCostResolutionOption(
-            value.procedure,
-            resolutionOptions.actionCostOverride,
-          ),
-        }),
-      sleetStormAreaHazard: (value) =>
-        spellProcedureResolveDispatchInput(value.procedure, {
-          input: actionSpellProfileResolutionInput(input, castingState, value),
-          actorId,
-          invocation: value,
-          fillSet,
-          ...spellProcedureActionCostResolutionOption(
-            value.procedure,
-            resolutionOptions.actionCostOverride,
-          ),
-        }),
-      insectPlagueAreaHazard: (value) =>
-        spellProcedureResolveDispatchInput(value.procedure, {
-          input: actionSpellProfileResolutionInput(input, castingState, value),
-          actorId,
-          invocation: value,
-          fillSet,
-          ...spellProcedureActionCostResolutionOption(
-            value.procedure,
-            resolutionOptions.actionCostOverride,
-          ),
-        }),
-      cloudkillAreaHazard: (value) =>
+      persistentAreaSaveComposite: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -1107,7 +1074,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      antimagicFieldOngoingSpellSuppression: (value) =>
+      magicSuppressionEmanation: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -1118,7 +1085,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      command: (value) =>
+      compelledNextTurnBehavior: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -1211,18 +1178,7 @@ function actionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      dancingLightsSeparateCast: (value) =>
-        spellProcedureResolveDispatchInput(value.procedure, {
-          input: actionSpellProfileResolutionInput(input, castingState, value),
-          actorId,
-          invocation: value,
-          fillSet,
-          ...spellProcedureActionCostResolutionOption(
-            value.procedure,
-            resolutionOptions.actionCostOverride,
-          ),
-        }),
-      dancingLightsCombinedCast: (value) =>
+      movableLightManifestation: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: actionSpellProfileResolutionInput(input, castingState, value),
           actorId,
@@ -1270,7 +1226,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      magicWeaponEnhancement: (value) =>
+      weaponAttackDamageEnhancement: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: { ...input, state: castingState },
           actorId,
@@ -1352,7 +1308,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
           ),
           metamagicApplications: resolutionOptions.metamagicApplications,
         }),
-      jumpMovementReplacement: (value) =>
+      fixedCostMovementReplacement: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: { ...input, state: castingState },
           actorId,
@@ -1374,7 +1330,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      dragonsBreathInitial: (value) =>
+      grantedAreaSaveDamageAction: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: { ...input, state: castingState },
           actorId,
@@ -1385,7 +1341,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      sanctuaryTargetingInterdiction: (value) =>
+      targetingSaveInterdiction: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: { ...input, state: castingState },
           actorId,
@@ -1500,18 +1456,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      spiritualWeaponAttackProxy: (value) =>
-        spellProcedureResolveDispatchInput(value.procedure, {
-          input: { ...input, state: castingState },
-          actorId,
-          invocation: value,
-          fillSet,
-          ...spellProcedureActionCostResolutionOption(
-            value.procedure,
-            resolutionOptions.actionCostOverride,
-          ),
-        }),
-      spiritualWeaponRepeatAttack: (value) =>
+      spatialMeleeSpellAttackProxy: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: { ...input, state: castingState },
           actorId,
@@ -1533,7 +1478,7 @@ function bonusActionSpellProcedureResolveDispatchInput(
             resolutionOptions.actionCostOverride,
           ),
         }),
-      dancingLightsReposition: (value) =>
+      movableLightManifestation: (value) =>
         spellProcedureResolveDispatchInput(value.procedure, {
           input: { ...input, state: castingState },
           actorId,
@@ -1613,7 +1558,7 @@ function potentCantripAppliesToMissedSpellAttack(input: {
   );
 }
 
-function spellAttackPostMirrorImageFillsArePresent(
+function spellAttackPostDuplicateHitInterceptionFillsArePresent(
   fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
 ): boolean {
   return (
@@ -1621,7 +1566,7 @@ function spellAttackPostMirrorImageFillsArePresent(
     fillSet.damageDispositions.length > 0 ||
     fillSet.spellDamageReductionRolls.length > 0 ||
     fillSet.concentrationSavingThrows.length > 0 ||
-    fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+    fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
     fillSet.attackBurstDamageRoll !== undefined ||
     fillSet.remarkableAthleteCriticalHitMovementDecision !== undefined ||
     fillSet.remarkableAthleteCriticalHitMovement !== undefined
@@ -1727,8 +1672,7 @@ function spellAttackRollHoleWithSeekingOption(
         | "attackBurstSaveDamage"
         | "heldLightHurl"
         | "spellCreatedHeldObjectAttack"
-        | "spiritualWeaponAttackProxy"
-        | "spiritualWeaponRepeatAttack"
+        | "spatialMeleeSpellAttackProxy"
         | "spellAttackDamage";
     }
   >,
@@ -1847,20 +1791,15 @@ function resolveSpellActInternal(
     );
   }
   const invocation = invocationAdmission.invocation;
-  const replayingSpiritualWeaponAttackHit =
-    input.handledInterruptTrigger === "attackHit" &&
-    (invocation.procedure === "spiritualWeaponAttackProxy" ||
-      invocation.procedure === "spiritualWeaponRepeatAttack");
-  const spiritualWeaponCommitAlreadyApplied =
-    spiritualWeaponResolutionCommitAlreadyApplied({
-      state: input.state,
+  const spatialProxyCommitAlreadyApplied =
+    spatialMeleeSpellAttackProxyResolutionCommitAlreadyApplied({
       actorId: subject.actorId,
       invocation,
-      fills: input.fills,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+      checkpoint: input.spatialMeleeSpellAttackProxyCommitCheckpoint,
     });
   if (
-    !replayingSpiritualWeaponAttackHit &&
-    !spiritualWeaponCommitAlreadyApplied &&
+    !spatialProxyCommitAlreadyApplied &&
     !spellHasAvailableSpend(actor, invocation)
   ) {
     return invalidResult(
@@ -1875,7 +1814,7 @@ function resolveSpellActInternal(
       lane.input.replayingInterruptedProcedure === true &&
       invocation.procedure === "heldLightHurl"
     ) &&
-    !spiritualWeaponCommitAlreadyApplied &&
+    !spatialProxyCommitAlreadyApplied &&
     !spellInvocationCasterPrerequisiteIsMet(actor, invocation)
   ) {
     return invalidResult(
@@ -1885,7 +1824,7 @@ function resolveSpellActInternal(
     );
   }
   if (
-    !spiritualWeaponCommitAlreadyApplied &&
+    !spatialProxyCommitAlreadyApplied &&
     spellInvocationIsSpellcasting(invocation) &&
     activeOngoingFeaturesPreventSpellInvocation(input.state, actor, invocation)
   ) {
@@ -1896,10 +1835,12 @@ function resolveSpellActInternal(
     );
   }
   if (
-    invocation.procedure === "spiritualWeaponRepeatAttack" &&
-    ongoingSpellEffectSuppressedByAntimagicField(
+    !spatialProxyCommitAlreadyApplied &&
+    invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+    invocation.operation === "repositionAndAttack" &&
+    ongoingSpellEffectSuppressedByMagicSuppressionEmanation(
       input.state,
-      antimagicFieldOngoingSpellEffectRefForActiveEffect(
+      magicSuppressionOngoingSpellEffectRefForActiveEffect(
         invocation.activeEffect,
       ),
     )
@@ -1907,7 +1848,7 @@ function resolveSpellActInternal(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Spiritual Weapon repeat attack is suppressed by Antimagic Field.",
+      "spatial melee spell-attack proxy repeat attack is suppressed by magic-suppression emanation.",
     );
   }
   if (
@@ -1923,13 +1864,13 @@ function resolveSpellActInternal(
       invocation.procedure === "rollModifier" ||
       invocation.procedure === "creatureSizeIncrease" ||
       invocation.procedure === "creatureSizeDecrease" ||
-      invocation.procedure === "levitatedCreature" ||
-      invocation.procedure === "wardingBond" ||
-      invocation.procedure === "thaumaturgyBoomingVoice" ||
+      invocation.procedure === "controlledVerticalSuspension" ||
+      invocation.procedure === "linkedDefenseResistanceDamageShare" ||
+      invocation.procedure === "temporaryAbilityCheckRollMode" ||
       invocation.procedure === "creatureTypeProtection" ||
-      invocation.procedure === "blurAttackRollDefense" ||
+      invocation.procedure === "perceptionGatedAttackRollDefense" ||
       invocation.procedure === "seeInvisibleObserverSight" ||
-      invocation.procedure === "mirrorImageHitInterception" ||
+      invocation.procedure === "duplicateHitInterception" ||
       invocation.procedure ===
         "conditionImmunityAndTurnStartTemporaryHitPoints" ||
       invocation.procedure === "afterHitDamage" ||
@@ -1939,24 +1880,23 @@ function resolveSpellActInternal(
       invocation.procedure === "saveGatedCondition" ||
       invocation.procedure === "saveGatedConditionImmunity" ||
       invocation.procedure === "saveGatedAttackRollAdvantage" ||
-      invocation.procedure === "hideousLaughter" ||
-      invocation.procedure === "command" ||
-      invocation.procedure === "fogCloudObscurement" ||
+      invocation.procedure === "saveGatedConditionWithRepeat" ||
+      invocation.procedure === "compelledNextTurnBehavior" ||
+      invocation.procedure === "persistentAreaTrait" ||
       invocation.procedure === "magicalDarknessPointOrigin" ||
-      invocation.procedure === "antimagicFieldOngoingSpellSuppression" ||
-      invocation.procedure === "webRestraintHazard" ||
-      invocation.procedure === "sleetStormAreaHazard" ||
-      invocation.procedure === "gustOfWindLine" ||
-      invocation.procedure === "flamingSphere" ||
-      invocation.procedure === "moonbeam" ||
+      invocation.procedure === "magicSuppressionEmanation" ||
+      invocation.procedure === "persistentAreaSaveConditionEscape" ||
+      invocation.procedure === "persistentAreaSaveComposite" ||
+      invocation.procedure === "directionalPersistentArea" ||
+      invocation.procedure === "persistentAreaSaveDamage" ||
       invocation.procedure === "objectContactDamage" ||
       invocation.procedure === "objectContactDamageRepeat" ||
       invocation.procedure === "spellCreatedHeldObject" ||
       invocation.procedure === "spellCreatedHeldObjectAttack" ||
       invocation.procedure === "spellCreatedHeldObjectReEvoke" ||
-      invocation.procedure === "sanctuaryTargetingInterdiction" ||
-      invocation.procedure === "dragonsBreathInitial" ||
-      invocation.procedure === "hastePositive" ||
+      invocation.procedure === "targetingSaveInterdiction" ||
+      invocation.procedure === "grantedAreaSaveDamageAction" ||
+      invocation.procedure === "compositeTargetBuffWithAftermath" ||
       invocation.procedure === "directConditionRemoval" ||
       invocation.procedure === "directCondition" ||
       invocation.procedure === "spellAttackSequence")
@@ -1974,7 +1914,7 @@ function resolveSpellActInternal(
     !(
       lane.tag === "action" &&
       lane.input.replayingInterruptedProcedure === true &&
-      replayingSpiritualWeaponAttackHit
+      spatialProxyCommitAlreadyApplied
     )
   ) {
     return invalidResult(
@@ -1991,8 +1931,7 @@ function resolveSpellActInternal(
     );
   }
   if (
-    !replayingSpiritualWeaponAttackHit &&
-    !spiritualWeaponCommitAlreadyApplied &&
+    !spatialProxyCommitAlreadyApplied &&
     !spellActTurnResourceAvailable(
       input.state.currentTurnResources,
       input.subject.actorId,
@@ -2014,18 +1953,19 @@ function resolveSpellActInternal(
     invocation.spellRuleFacts.components.verbal
       ? revealHidden(input.state, subject.actorId)
       : input.state;
-  const slowSomaticSpellFailure = resolveSlowSomaticSpellFailure({
-    state: input.state,
-    castingState,
-    subject,
-    actorId: subject.actorId,
-    invocation,
-    fills: input.fills,
-    ...optionalProperty("actionCostOverride", options.actionCostOverride),
-    metamagicApplications: invocationAdmission.applications,
-  });
-  if (slowSomaticSpellFailure.tag !== "continue") {
-    return slowSomaticSpellFailure;
+  const turnConstraintSomaticSpellFailure =
+    resolveSaveGatedTurnConstraintSomaticSpellFailure({
+      state: input.state,
+      castingState,
+      subject,
+      actorId: subject.actorId,
+      invocation,
+      fills: input.fills,
+      ...optionalProperty("actionCostOverride", options.actionCostOverride),
+      metamagicApplications: invocationAdmission.applications,
+    });
+  if (turnConstraintSomaticSpellFailure.tag !== "continue") {
+    return turnConstraintSomaticSpellFailure;
   }
   if (lane.tag === "action") {
     const actionSubject = lane.input.subject;
@@ -2186,35 +2126,32 @@ function resolveSpellActInternal(
       ? invocationAdmission.applications
       : options.metamagicApplications;
   if (
-    (invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
-      invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
-    fillSet.spiritualWeaponForcePosition === undefined
+    invocationForResolution.procedure === "spatialMeleeSpellAttackProxy" &&
+    fillSet.spatialMeleeSpellAttackProxyPosition === undefined
   ) {
     return needsHolesResult(castingState, input.subject, [
-      spiritualWeaponForcePositionHole(invocationForResolution),
+      spatialMeleeSpellAttackProxyPositionHole(invocationForResolution),
     ]);
   }
-  const spiritualWeaponForcePosition =
-    invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
-    invocationForResolution.procedure === "spiritualWeaponRepeatAttack"
-      ? fillSet.spiritualWeaponForcePosition
+  const spatialMeleeSpellAttackProxyPosition =
+    invocationForResolution.procedure === "spatialMeleeSpellAttackProxy"
+      ? fillSet.spatialMeleeSpellAttackProxyPosition
       : undefined;
-  const spiritualWeaponForcePositionError =
-    spiritualWeaponForcePosition === undefined ||
-    (invocationForResolution.procedure !== "spiritualWeaponAttackProxy" &&
-      invocationForResolution.procedure !== "spiritualWeaponRepeatAttack")
+  const spatialMeleeSpellAttackProxyPositionError =
+    spatialMeleeSpellAttackProxyPosition === undefined ||
+    invocationForResolution.procedure !== "spatialMeleeSpellAttackProxy"
       ? null
-      : spiritualWeaponForcePositionInvalidReason(
-          spiritualWeaponForcePosition,
+      : spatialMeleeSpellAttackProxyPositionInvalidReason(
+          spatialMeleeSpellAttackProxyPosition,
           invocationForResolution,
         );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (spiritualWeaponForcePositionError !== null) {
+  if (spatialMeleeSpellAttackProxyPositionError !== null) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
-      spiritualWeaponForcePositionError,
+      spatialMeleeSpellAttackProxyPositionError,
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2286,18 +2223,18 @@ function resolveSpellActInternal(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const spiritualWeaponRepeatTargetingError =
-    spiritualWeaponRepeatTargetingInvalidReason(
+  const spatialProxyRepeatTargetingError =
+    spatialMeleeSpellAttackProxyRepeatTargetingInvalidReason(
       invocationForResolution,
       target.combatantId,
     );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (spiritualWeaponRepeatTargetingError !== null) {
+  if (spatialProxyRepeatTargetingError !== null) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
-      spiritualWeaponRepeatTargetingError,
+      spatialProxyRepeatTargetingError,
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -2309,11 +2246,11 @@ function resolveSpellActInternal(
       target.combatantId,
       invocationForResolution,
       fillSet.targetSpatialFacts,
-      spiritualWeaponForcePosition === undefined
+      spatialMeleeSpellAttackProxyPosition === undefined
         ? {}
         : {
-            spiritualWeaponForcePositionId:
-              spiritualWeaponForcePosition.positionId,
+            spatialMeleeSpellAttackProxyPositionId:
+              spatialMeleeSpellAttackProxyPosition.positionId,
           },
     )
   ) {
@@ -2327,28 +2264,29 @@ function resolveSpellActInternal(
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    spiritualWeaponForcePosition !== undefined &&
+    spatialMeleeSpellAttackProxyPosition !== undefined &&
     !fillSet.targetSpatialFacts.some(
       (fact) =>
-        fact.kind === "spiritualWeaponTargetWithinForceReach" &&
+        fact.kind === "spatialMeleeSpellAttackProxyTargetWithinReach" &&
         fact.casterId === subject.actorId &&
         fact.targetId === target.combatantId &&
         fact.sourceProcedureRef ===
           invocationForResolution.sourceProcedureRef &&
-        fact.forcePositionId === spiritualWeaponForcePosition.positionId,
+        fact.forcePositionId ===
+          spatialMeleeSpellAttackProxyPosition.positionId,
     )
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
-      "Spiritual Weapon target adjacency must match the selected force position.",
+      "spatial melee spell-attack proxy target adjacency must match the selected force position.",
     );
   }
   /* v8 ignore stop -- @preserve */
 
   if (isSupportedDamageSpellInvocation(invocationForResolution)) {
-    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
+    const interdictionCheck = targetingSaveInterdictionCheck({
       state: castingState,
       triggeringProcedureRef: invocationForResolution.sourceProcedureRef,
       triggeringCombatantId: subject.actorId,
@@ -2357,18 +2295,22 @@ function resolveSpellActInternal(
       replacementTargetKind: "attackRoll",
       fills: input.fills,
     });
-    if (sanctuaryCheck.tag === "needsHoles") {
+    if (interdictionCheck.tag === "needsHoles") {
       return needsHolesResult(castingState, input.subject, [
-        sanctuaryCheck.hole,
+        interdictionCheck.hole,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (sanctuaryCheck.tag === "invalid") {
+    if (interdictionCheck.tag === "invalid") {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(input.state, "invalidFill", sanctuaryCheck.message);
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        interdictionCheck.message,
+      );
     }
     /* v8 ignore stop -- @preserve */
-    if (sanctuaryCheck.tag === "lost") {
+    if (interdictionCheck.tag === "lost") {
       return spendSpellActResolutionResources({
         state: stateAfterResolvedHeldLightHurl(
           castingState,
@@ -2384,14 +2326,14 @@ function resolveSpellActInternal(
           metamagicApplicationsForResolution,
         ),
         ...optionalProperty(
-          "spiritualWeaponForcePosition",
-          spiritualWeaponForcePosition,
+          "spatialMeleeSpellAttackProxyPosition",
+          spatialMeleeSpellAttackProxyPosition,
         ),
       });
     }
-    if (sanctuaryCheck.tag === "newTarget") {
+    if (interdictionCheck.tag === "newTarget") {
       const replacementTarget = input.state.combatants.get(
-        sanctuaryCheck.targetId,
+        interdictionCheck.targetId,
       );
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
@@ -2401,12 +2343,12 @@ function resolveSpellActInternal(
           subject.actorId,
           replacementTarget.combatantId,
           invocationForResolution,
-          sanctuaryCheck.spatialFacts,
-          spiritualWeaponForcePosition === undefined
+          interdictionCheck.spatialFacts,
+          spatialMeleeSpellAttackProxyPosition === undefined
             ? {}
             : {
-                spiritualWeaponForcePositionId:
-                  spiritualWeaponForcePosition.positionId,
+                spatialMeleeSpellAttackProxyPositionId:
+                  spatialMeleeSpellAttackProxyPosition.positionId,
               },
         )
       ) {
@@ -2414,7 +2356,7 @@ function resolveSpellActInternal(
         return invalidResult(
           input.state,
           "invalidFill",
-          "Sanctuary replacement spell target must be legal for the selected spell.",
+          "attack-redirection ward replacement spell target must be legal for the selected spell.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -2430,7 +2372,7 @@ function resolveSpellActInternal(
         return invalidResult(
           input.state,
           "invalidFill",
-          "Sanctuary replacement requires the original spell target fill.",
+          "attack-redirection ward replacement requires the original spell target fill.",
         );
       }
       /* v8 ignore stop -- @preserve */
@@ -2439,13 +2381,17 @@ function resolveSpellActInternal(
           ...input,
           fills: [
             ...input.fills
-              .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+              .filter(
+                (fill) => fill.kind !== "targetingSaveInterdictionOutcome",
+              )
               .map((fill) =>
                 fill === originalTargetFill
-                  ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
-                      fill,
-                      replacement: sanctuaryCheck,
-                    })
+                  ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
+                      {
+                        fill,
+                        replacement: interdictionCheck,
+                      },
+                    )
                   : fill,
               ),
           ],
@@ -2683,50 +2629,58 @@ function resolveSpellActInternal(
       subject.actorId,
       invocationForResolution,
     );
-    const attackRolledStateWithSpiritualWeaponCast = hit
-      ? stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack({
-          state: attackRolledStateAfterHurl,
-          actorId: subject.actorId,
-          invocation: invocationForResolution,
-          errorState: input.state,
-          ...optionalProperty("actionCostOverride", options.actionCostOverride),
-          ...(metamagicApplicationsForDamageAndSpend === undefined
-            ? {}
-            : {
-                metamagicApplications: metamagicApplicationsForDamageAndSpend,
-              }),
-          ...optionalProperty(
-            "spiritualWeaponForcePosition",
-            spiritualWeaponForcePosition,
-          ),
-        })
+    const attackRolledStateWithSpatialMeleeSpellAttackProxyCast = hit
+      ? stateAfterSpatialMeleeSpellAttackProxyCastProxyCreatedBeforeImmediateAttack(
+          {
+            state: attackRolledStateAfterHurl,
+            actorId: subject.actorId,
+            invocation: invocationForResolution,
+            errorState: input.state,
+            ...optionalProperty(
+              "actionCostOverride",
+              options.actionCostOverride,
+            ),
+            ...(metamagicApplicationsForDamageAndSpend === undefined
+              ? {}
+              : {
+                  metamagicApplications: metamagicApplicationsForDamageAndSpend,
+                }),
+            ...optionalProperty(
+              "spatialMeleeSpellAttackProxyPosition",
+              spatialMeleeSpellAttackProxyPosition,
+            ),
+            commitAlreadyApplied: spatialProxyCommitAlreadyApplied,
+          },
+        )
       : {
           tag: "resolved" as const,
           state: attackRolledStateAfterHurl,
           snapshot: snapshotBattle(attackRolledStateAfterHurl),
         };
     /* v8 ignore start -- @preserve -- Availability is checked before attack resolution; intervening attack-roll and held-hurl reducers do not spend or remove the slot or Bonus Action, so this defensive resource result is unreachable for an admitted replay. */
-    if (attackRolledStateWithSpiritualWeaponCast.tag !== "resolved") {
-      return attackRolledStateWithSpiritualWeaponCast;
+    if (
+      attackRolledStateWithSpatialMeleeSpellAttackProxyCast.tag !== "resolved"
+    ) {
+      return attackRolledStateWithSpatialMeleeSpellAttackProxyCast;
     }
     /* v8 ignore stop -- @preserve */
     const attackRolledStateBeforeHitContinuations =
-      attackRolledStateWithSpiritualWeaponCast.state;
+      attackRolledStateWithSpatialMeleeSpellAttackProxyCast.state;
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!hit && fillSet.mirrorImageDuplicateRoll !== undefined) {
+    if (!hit && fillSet.duplicateHitInterceptionRoll !== undefined) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
-        "Mirror Image duplicate roll is only valid after an attack-roll hit.",
+        "duplicate-hit interception duplicate roll is only valid after an attack-roll hit.",
       );
     }
     /* v8 ignore stop -- @preserve */
     if (hit) {
-      const mirrorImageAttacker =
+      const duplicateInterceptionAttacker =
         attackRolledStateBeforeHitContinuations.combatants.get(subject.actorId);
       /* v8 ignore start -- @preserve -- Attack-roll state reducers preserve the admitted caster combatant; removal would require a reducer contract change. */
-      if (mirrorImageAttacker === undefined) {
+      if (duplicateInterceptionAttacker === undefined) {
         return invalidResult(
           input.state,
           "missingCombatant",
@@ -2734,56 +2688,56 @@ function resolveSpellActInternal(
         );
       }
       /* v8 ignore stop -- @preserve */
-      const mirrorImageCheck = mirrorImageHitInterceptionCheck({
+      const duplicateInterceptionCheck = duplicateHitInterceptionCheck({
         state: attackRolledStateBeforeHitContinuations,
-        attacker: mirrorImageAttacker,
+        attacker: duplicateInterceptionAttacker,
         target:
           attackRolledStateBeforeHitContinuations.combatants.get(
             target.combatantId,
           ) ?? target,
         targetSpatialFacts: fillSet.targetSpatialFacts,
         triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
-        fill: fillSet.mirrorImageDuplicateRoll,
+        fill: fillSet.duplicateHitInterceptionRoll,
       });
-      if (mirrorImageCheck.tag === "needsHoles") {
+      if (duplicateInterceptionCheck.tag === "needsHoles") {
         return needsHolesResult(
           attackRolledStateBeforeHitContinuations,
           input.subject,
-          [mirrorImageCheck.hole],
+          [duplicateInterceptionCheck.hole],
         );
       }
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (mirrorImageCheck.tag === "invalid") {
+      if (duplicateInterceptionCheck.tag === "invalid") {
         /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
           input.state,
           "invalidFill",
-          mirrorImageCheck.message,
+          duplicateInterceptionCheck.message,
         );
       }
       /* v8 ignore stop -- @preserve */
-      if (mirrorImageCheck.tag === "hitDuplicate") {
+      if (duplicateInterceptionCheck.tag === "hitDuplicate") {
         /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-        if (spellAttackPostMirrorImageFillsArePresent(fillSet)) {
+        if (spellAttackPostDuplicateHitInterceptionFillsArePresent(fillSet)) {
           /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
           return invalidResult(
             input.state,
             "invalidFill",
-            "Spell attack damage and after-hit fills are not valid when Mirror Image redirects the hit to a duplicate.",
+            "Spell attack damage and after-hit fills are not valid when duplicate-hit interception redirects the hit to a duplicate.",
           );
         }
         /* v8 ignore stop -- @preserve */
         if (
-          invocationForResolution.procedure === "spiritualWeaponAttackProxy"
+          invocationForResolution.procedure === "spatialMeleeSpellAttackProxy"
         ) {
           return {
             tag: "resolved",
-            state: mirrorImageCheck.state,
-            snapshot: snapshotBattle(mirrorImageCheck.state),
+            state: duplicateInterceptionCheck.state,
+            snapshot: snapshotBattle(duplicateInterceptionCheck.state),
           };
         }
         return spendSpellActResolutionResources({
-          state: mirrorImageCheck.state,
+          state: duplicateInterceptionCheck.state,
           actorId: subject.actorId,
           invocation: invocationForResolution,
           errorState: input.state,
@@ -2794,8 +2748,8 @@ function resolveSpellActInternal(
                 metamagicApplications: metamagicApplicationsForDamageAndSpend,
               }),
           ...optionalProperty(
-            "spiritualWeaponForcePosition",
-            spiritualWeaponForcePosition,
+            "spatialMeleeSpellAttackProxyPosition",
+            spatialMeleeSpellAttackProxyPosition,
           ),
         });
       }
@@ -2838,7 +2792,20 @@ function resolveSpellActInternal(
               ),
             ]),
           ],
-          continuation: spellReplayContinuation(input),
+          continuation:
+            "glyphStoredSpellReleaseReplay" in input &&
+            input.glyphStoredSpellReleaseReplay !== undefined
+              ? spellReplayContinuation(input)
+              : spellReplayContinuation({
+                  ...input,
+                  ...optionalProperty(
+                    "spatialMeleeSpellAttackProxyCommitCheckpoint",
+                    spatialMeleeSpellAttackProxyCommitCheckpointFor(
+                      subject.actorId,
+                      invocationForResolution,
+                    ),
+                  ),
+                }),
         },
         input.handledInterruptTrigger,
       );
@@ -2895,22 +2862,50 @@ function resolveSpellActInternal(
         );
       }
       /* v8 ignore stop -- @preserve */
-      return spendSpellActResolutionResources({
-        state: attackRolledStateAfterHurl,
-        actorId: subject.actorId,
-        invocation: invocationForResolution,
-        errorState: input.state,
-        ...optionalProperty("actionCostOverride", options.actionCostOverride),
-        ...(metamagicApplicationsForDamageAndSpend === undefined
-          ? {}
-          : {
-              metamagicApplications: metamagicApplicationsForDamageAndSpend,
-            }),
-        ...optionalProperty(
-          "spiritualWeaponForcePosition",
-          spiritualWeaponForcePosition,
-        ),
-      });
+      return invocationForResolution.procedure ===
+        "spatialMeleeSpellAttackProxy"
+        ? stateAfterSpatialMeleeSpellAttackProxyCastProxyCreatedBeforeImmediateAttack(
+            {
+              state: attackRolledStateAfterHurl,
+              actorId: subject.actorId,
+              invocation: invocationForResolution,
+              errorState: input.state,
+              ...optionalProperty(
+                "actionCostOverride",
+                options.actionCostOverride,
+              ),
+              ...(metamagicApplicationsForDamageAndSpend === undefined
+                ? {}
+                : {
+                    metamagicApplications:
+                      metamagicApplicationsForDamageAndSpend,
+                  }),
+              ...optionalProperty(
+                "spatialMeleeSpellAttackProxyPosition",
+                spatialMeleeSpellAttackProxyPosition,
+              ),
+              commitAlreadyApplied: spatialProxyCommitAlreadyApplied,
+            },
+          )
+        : spendSpellActResolutionResources({
+            state: attackRolledStateAfterHurl,
+            actorId: subject.actorId,
+            invocation: invocationForResolution,
+            errorState: input.state,
+            ...optionalProperty(
+              "actionCostOverride",
+              options.actionCostOverride,
+            ),
+            ...(metamagicApplicationsForDamageAndSpend === undefined
+              ? {}
+              : {
+                  metamagicApplications: metamagicApplicationsForDamageAndSpend,
+                }),
+            ...optionalProperty(
+              "spatialMeleeSpellAttackProxyPosition",
+              spatialMeleeSpellAttackProxyPosition,
+            ),
+          });
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!hit && !potentCantripMiss && !spellAttackHalfInitialMiss) {
@@ -2956,17 +2951,24 @@ function resolveSpellActInternal(
     invocationForResolution,
     metamagicApplicationsForDamageAndSpend,
   );
-  const spellDamageBaseStateResult =
-    stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack({
-      state: spellResolutionState,
-      actorId: subject.actorId,
-      invocation: invocationForResolution,
-      errorState: input.state,
-      ...optionalProperty(
-        "spiritualWeaponForcePosition",
-        spiritualWeaponForcePosition,
-      ),
-    });
+  const spellDamageBaseStateResult = spellAttackHit
+    ? {
+        tag: "resolved" as const,
+        state: spellResolutionState,
+        snapshot: snapshotBattle(spellResolutionState),
+      }
+    : stateAfterSpatialMeleeSpellAttackProxyCastProxyCreatedBeforeImmediateAttack(
+        {
+          state: spellResolutionState,
+          actorId: subject.actorId,
+          invocation: invocationForResolution,
+          errorState: input.state,
+          ...optionalProperty(
+            "spatialMeleeSpellAttackProxyPosition",
+            spatialMeleeSpellAttackProxyPosition,
+          ),
+        },
+      );
   /* v8 ignore start -- @preserve -- A hit path has already committed this exact force position and the reducer is idempotent; a miss path reaches this reducer exactly once after the admission resource proof. */
   if (spellDamageBaseStateResult.tag !== "resolved") {
     return spellDamageBaseStateResult;
@@ -3193,25 +3195,25 @@ function resolveSpellActInternal(
       damageDispositionHole,
     ]);
   }
-  const hideousLaughterSaveCheck =
-    damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+  const stagedConditionSaveCheck =
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
       state: spellDamageBaseState,
       target: spellReduction.target,
       damageAmount: spellDamageAmount,
-      fills: fillSet.hideousLaughterDamageRepeatSaves,
+      fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
     });
-  if (hideousLaughterSaveCheck.tag === "needsHoles") {
+  if (stagedConditionSaveCheck.tag === "needsHoles") {
     return needsHolesResult(spellDamageBaseState, input.subject, [
-      ...hideousLaughterSaveCheck.holes,
+      ...stagedConditionSaveCheck.holes,
     ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (hideousLaughterSaveCheck.tag === "invalid") {
+  if (stagedConditionSaveCheck.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
-      hideousLaughterSaveCheck.message,
+      stagedConditionSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -3258,14 +3260,14 @@ function resolveSpellActInternal(
     spellAttackHit && critical,
     {
       concentrationSavingThrow: concentrationFill,
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         fillSet.concentrationSavingThrows,
       damageDisposition,
       spellMarkedDamageRiders,
       sourceDamageRollPenaltyRoll,
       spellDamageReductionRoll: spellReductionRoll,
-      hideousLaughterDamageRepeatSaves:
-        fillSet.hideousLaughterDamageRepeatSaves,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       damageSourceId: subject.actorId,
       saveDamageResult: spellDamageResult,
       spatialFacts: fillSet.targetSpatialFacts,
@@ -3297,7 +3299,7 @@ function resolveSpellActInternal(
     invocationForResolution,
   );
   const spentResources =
-    invocationForResolution.procedure === "spiritualWeaponAttackProxy"
+    invocationForResolution.procedure === "spatialMeleeSpellAttackProxy"
       ? {
           tag: "resolved" as const,
           state: stateAfterDamageAndHurl,
@@ -3315,8 +3317,8 @@ function resolveSpellActInternal(
                 metamagicApplications: metamagicApplicationsAfterEmpowered,
               }),
           ...optionalProperty(
-            "spiritualWeaponForcePosition",
-            spiritualWeaponForcePosition,
+            "spatialMeleeSpellAttackProxyPosition",
+            spatialMeleeSpellAttackProxyPosition,
           ),
         });
   if (spentResources.tag !== "resolved") {
@@ -3363,17 +3365,25 @@ function stateAfterSpellAttackRollMadeForInvocation(
     : state;
 }
 
-function stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack(input: {
+function stateAfterSpatialMeleeSpellAttackProxyCastProxyCreatedBeforeImmediateAttack(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
   readonly errorState: BattleState;
-  readonly spiritualWeaponForcePosition?: Extract<
+  readonly spatialMeleeSpellAttackProxyPosition?: Extract<
     BattleFill,
-    { readonly kind: "spiritualWeaponForcePosition" }
+    { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
   >["value"];
+  readonly commitAlreadyApplied?: boolean;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  if (input.invocation.procedure !== "spiritualWeaponAttackProxy") {
+  if (input.invocation.procedure !== "spatialMeleeSpellAttackProxy") {
+    return {
+      tag: "resolved",
+      state: input.state,
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+  if (input.commitAlreadyApplied === true) {
     return {
       tag: "resolved",
       state: input.state,
@@ -3383,96 +3393,48 @@ function stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack(input: {
   return spendSpellActResolutionResources(input);
 }
 
-function spiritualWeaponProxyEffectMatches(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly invocation:
-    | Extract<
-        BattleExecutableSpellInvocation,
-        { readonly procedure: "spiritualWeaponAttackProxy" }
-      >
-    | Extract<
-        BattleExecutableSpellInvocation,
-        { readonly procedure: "spiritualWeaponRepeatAttack" }
-      >;
-  readonly forcePositionId: Extract<
-    BattleFill,
-    { readonly kind: "spiritualWeaponForcePosition" }
-  >["value"]["positionId"];
-}): boolean {
-  const actor = input.state.combatants.get(input.actorId);
-  return (
-    actor?.activeEffects.some(
-      (effect) =>
-        effect.kind === "spiritualWeapon" &&
-        effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-        effect.sourceCombatantId === input.actorId &&
-        effect.forcePositionId === input.forcePositionId,
-    ) === true
-  );
+function spatialMeleeSpellAttackProxyCommitCheckpointFor(
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation,
+): BattleSpatialMeleeSpellAttackProxyCommitCheckpoint | undefined {
+  return invocation.procedure === "spatialMeleeSpellAttackProxy"
+    ? {
+        kind: "spatialMeleeSpellAttackProxyCommitApplied",
+        actorId,
+        sourceProcedureRef: invocation.sourceProcedureRef,
+        operation: invocation.operation,
+      }
+    : undefined;
 }
 
-function spiritualWeaponCastCommitAlreadyApplied(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "spiritualWeaponAttackProxy" }
-  >;
-  readonly forcePositionId: Extract<
-    BattleFill,
-    { readonly kind: "spiritualWeaponForcePosition" }
-  >["value"]["positionId"];
-}): boolean {
-  const actor = input.state.combatants.get(input.actorId);
-  return (
-    input.state.currentTurnResources.currentHasBonusAction === false &&
-    input.state.currentTurnResources.spellSlotUsesThisTurn.some(
-      (use) => use.kind === "committed" && use.combatantId === input.actorId,
-    ) &&
-    actor?.concentration?.effectKind === "spellEffect" &&
-    actor.concentration.sourceProcedureRef ===
-      input.invocation.sourceProcedureRef &&
-    spiritualWeaponProxyEffectMatches(input)
-  );
-}
-
-function spiritualWeaponResolutionCommitAlreadyApplied(input: {
-  readonly state: BattleState;
+function spatialMeleeSpellAttackProxyResolutionCommitAlreadyApplied(input: {
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
-  readonly fills: readonly BattleFill[];
+  readonly handledInterruptTrigger: string | undefined;
+  readonly checkpoint:
+    | BattleSpatialMeleeSpellAttackProxyCommitCheckpoint
+    | undefined;
 }): boolean {
-  if (input.invocation.procedure !== "spiritualWeaponAttackProxy") {
-    return false;
-  }
-  const fillSet = spellFillSet(
-    input.fills,
-    input.invocation,
-    input.invocation.sourceProcedureRef,
-    input.actorId,
-    input.state,
+  return (
+    input.handledInterruptTrigger === "attackHit" &&
+    input.invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+    input.checkpoint?.kind === "spatialMeleeSpellAttackProxyCommitApplied" &&
+    input.checkpoint.actorId === input.actorId &&
+    input.checkpoint.sourceProcedureRef ===
+      input.invocation.sourceProcedureRef &&
+    input.checkpoint.operation === input.invocation.operation
   );
-  if (
-    fillSet.tag !== "ok" ||
-    fillSet.spiritualWeaponForcePosition === undefined
-  ) {
-    return false;
-  }
-  return spiritualWeaponCastCommitAlreadyApplied({
-    state: input.state,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    forcePositionId: fillSet.spiritualWeaponForcePosition.positionId,
-  });
 }
 
-function spiritualWeaponRepeatIsLaterTurn(input: {
+function spatialMeleeSpellAttackProxyRepeatIsLaterTurn(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: Extract<
     BattleExecutableSpellInvocation,
-    { readonly procedure: "spiritualWeaponRepeatAttack" }
+    {
+      readonly procedure: "spatialMeleeSpellAttackProxy";
+      readonly operation: "repositionAndAttack";
+    }
   >;
 }): boolean {
   return (
@@ -3482,20 +3444,23 @@ function spiritualWeaponRepeatIsLaterTurn(input: {
   );
 }
 
-function spiritualWeaponRepeatTargetingInvalidReason(
+function spatialMeleeSpellAttackProxyRepeatTargetingInvalidReason(
   invocation: BattleExecutableSpellInvocation,
   targetId: CombatantId,
 ): string | null {
-  if (invocation.procedure !== "spiritualWeaponRepeatAttack") {
+  if (
+    invocation.procedure !== "spatialMeleeSpellAttackProxy" ||
+    invocation.operation !== "repositionAndAttack"
+  ) {
     return null;
   }
-  const repeatTargeting = invocation.activeEffect.repeatTargeting;
+  const repeatTargeting = invocation.repeatTargeting;
   if (repeatTargeting.kind === "unrestricted") {
     return null;
   }
   return repeatTargeting.combatantId === targetId
     ? null
-    : "Glyph-stored Spiritual Weapon repeat attacks must target the triggering creature.";
+    : "Glyph-stored spatial melee spell-attack proxy repeat attacks must target the triggering creature.";
 }
 
 function spendSpellActResolutionResources(input: {
@@ -3505,39 +3470,28 @@ function spendSpellActResolutionResources(input: {
   readonly errorState: BattleState;
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
-  readonly spiritualWeaponForcePosition?: Extract<
+  readonly spatialMeleeSpellAttackProxyPosition?: Extract<
     BattleFill,
-    { readonly kind: "spiritualWeaponForcePosition" }
+    { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
   >["value"];
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  if (input.invocation.procedure === "spiritualWeaponAttackProxy") {
+  if (
+    input.invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+    input.invocation.operation === "createAndAttack"
+  ) {
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
-      input.spiritualWeaponForcePosition === undefined ||
-      input.spiritualWeaponForcePosition.mode !== "cast"
+      input.spatialMeleeSpellAttackProxyPosition === undefined ||
+      input.spatialMeleeSpellAttackProxyPosition.mode !== "cast"
     ) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.errorState,
         "invalidFill",
-        "Spiritual Weapon cast requires a table-supplied force position.",
+        "spatial melee spell-attack proxy cast requires a table-supplied force position.",
       );
     }
     /* v8 ignore stop -- @preserve */
-    if (
-      spiritualWeaponCastCommitAlreadyApplied({
-        state: input.state,
-        actorId: input.actorId,
-        invocation: input.invocation,
-        forcePositionId: input.spiritualWeaponForcePosition.positionId,
-      })
-    ) {
-      return {
-        tag: "resolved",
-        state: input.state,
-        snapshot: snapshotBattle(input.state),
-      };
-    }
     const spent = spendSpellCastResources({
       state: input.state,
       actorId: input.actorId,
@@ -3549,10 +3503,10 @@ function spendSpellActResolutionResources(input: {
     if (spent.tag !== "resolved") {
       return spent;
     }
-    const nextState = applySpiritualWeaponAttackProxyEffect({
+    const nextState = applySpatialMeleeSpellAttackProxyEffect({
       state: spent.state,
       actorId: input.actorId,
-      forcePositionId: input.spiritualWeaponForcePosition.positionId,
+      forcePositionId: input.spatialMeleeSpellAttackProxyPosition.positionId,
       repeatTargeting: { kind: "unrestricted" },
       invocation: input.invocation,
     });
@@ -3562,9 +3516,12 @@ function spendSpellActResolutionResources(input: {
       snapshot: snapshotBattle(nextState),
     };
   }
-  if (input.invocation.procedure === "spiritualWeaponRepeatAttack") {
+  if (
+    input.invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+    input.invocation.operation === "repositionAndAttack"
+  ) {
     if (
-      !spiritualWeaponRepeatIsLaterTurn({
+      !spatialMeleeSpellAttackProxyRepeatIsLaterTurn({
         state: input.state,
         actorId: input.actorId,
         invocation: input.invocation,
@@ -3573,19 +3530,19 @@ function spendSpellActResolutionResources(input: {
       return invalidResult(
         input.errorState,
         "staleSubject",
-        "Spiritual Weapon repeat attack is only available on later turns.",
+        "spatial melee spell-attack proxy repeat attack is only available on later turns.",
       );
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
-      input.spiritualWeaponForcePosition === undefined ||
-      input.spiritualWeaponForcePosition.mode !== "reposition"
+      input.spatialMeleeSpellAttackProxyPosition === undefined ||
+      input.spatialMeleeSpellAttackProxyPosition.mode !== "reposition"
     ) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.errorState,
         "invalidFill",
-        "Spiritual Weapon repeat attack requires a table-supplied reposition.",
+        "spatial melee spell-attack proxy repeat attack requires a table-supplied reposition.",
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -3597,24 +3554,24 @@ function spendSpellActResolutionResources(input: {
       spellAttackState.currentTurnResources,
       { kind: "bonusAction" },
     );
-    if (Either.isLeft(spent)) {
+    if (Result.isFailure(spent)) {
       return invalidResult(
         input.errorState,
         "staleSubject",
-        "Bonus Action spell is no longer available for the current actor.",
+        "spatial melee spell-attack proxy repeat attack requires an available Bonus Action.",
       );
     }
-    const repositioned = repositionSpiritualWeaponAttackProxyEffect({
+    const repositioned = repositionSpatialMeleeSpellAttackProxyEffect({
       state: {
         ...spellAttackState,
         currentTurnResources:
           clearPendingAttackRollMissToHitReplacementSelection(
-            spent.right,
+            spent.success,
             input.actorId,
           ),
       },
       invocation: input.invocation,
-      forcePositionId: input.spiritualWeaponForcePosition.positionId,
+      forcePositionId: input.spatialMeleeSpellAttackProxyPosition.positionId,
     });
     return {
       tag: "resolved",
@@ -3630,7 +3587,7 @@ function spendSpellActResolutionResources(input: {
     input.actorId,
   );
   const spent = spendAction(spellAttackState.currentTurnResources, "magic");
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.errorState,
       "staleSubject",
@@ -3640,7 +3597,7 @@ function spendSpellActResolutionResources(input: {
   const nextState = {
     ...spellAttackState,
     currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
-      spent.right,
+      spent.success,
       input.actorId,
     ),
   };
@@ -3708,15 +3665,15 @@ export function resolveBonusActionSpellAct(
       "Bonus Action spell subject requires a supported Bonus Action spell act.",
     );
   }
-  const spiritualWeaponCommitAlreadyApplied =
-    spiritualWeaponResolutionCommitAlreadyApplied({
-      state: input.state,
+  const spatialProxyCommitAlreadyApplied =
+    spatialMeleeSpellAttackProxyResolutionCommitAlreadyApplied({
       actorId: subject.actorId,
       invocation,
-      fills: input.fills,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+      checkpoint: input.spatialMeleeSpellAttackProxyCommitCheckpoint,
     });
   if (
-    !spiritualWeaponCommitAlreadyApplied &&
+    !spatialProxyCommitAlreadyApplied &&
     !spellHasAvailableSpend(actor, invocation)
   ) {
     return invalidResult(
@@ -3726,7 +3683,7 @@ export function resolveBonusActionSpellAct(
     );
   }
   if (
-    !spiritualWeaponCommitAlreadyApplied &&
+    !spatialProxyCommitAlreadyApplied &&
     !spellActTurnResourceAvailable(
       input.state.currentTurnResources,
       input.subject.actorId,
@@ -3744,7 +3701,7 @@ export function resolveBonusActionSpellAct(
     );
   }
   if (
-    !spiritualWeaponCommitAlreadyApplied &&
+    !spatialProxyCommitAlreadyApplied &&
     spellInvocationIsSpellcasting(invocation) &&
     activeOngoingFeaturesPreventSpellInvocation(input.state, actor, invocation)
   ) {
@@ -3760,8 +3717,8 @@ export function resolveBonusActionSpellAct(
     invocation.spellRuleFacts.components.verbal
       ? revealHidden(input.state, subject.actorId)
       : input.state;
-  const resolveSlowSomaticFailurePhase = () =>
-    resolveSlowSomaticSpellFailure({
+  const resolveTurnConstraintSomaticFailurePhase = () =>
+    resolveSaveGatedTurnConstraintSomaticSpellFailure({
       state: input.state,
       castingState,
       subject,
@@ -3773,7 +3730,7 @@ export function resolveBonusActionSpellAct(
     });
   if (invocation.procedure === "weaponAttackOverride") {
     const parsedFillInput = parseWeaponAttackOverrideFillInput(
-      fillsAfterSlowSomaticSpellFailureOutcome(input.fills),
+      fillsAfterTurnConstraintSomaticSpellFailureOutcome(input.fills),
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (parsedFillInput.tag === "invalid") {
@@ -3781,9 +3738,10 @@ export function resolveBonusActionSpellAct(
       return invalidResult(input.state, "invalidFill", parsedFillInput.message);
     }
     /* v8 ignore stop -- @preserve */
-    const slowSomaticSpellFailure = resolveSlowSomaticFailurePhase();
-    if (slowSomaticSpellFailure.tag !== "continue") {
-      return slowSomaticSpellFailure;
+    const turnConstraintSomaticSpellFailure =
+      resolveTurnConstraintSomaticFailurePhase();
+    if (turnConstraintSomaticSpellFailure.tag !== "continue") {
+      return turnConstraintSomaticSpellFailure;
     }
     return resolveRegisteredSpellProcedureExecution(
       executionRegistry,
@@ -3795,9 +3753,10 @@ export function resolveBonusActionSpellAct(
       }),
     );
   }
-  const slowSomaticSpellFailure = resolveSlowSomaticFailurePhase();
-  if (slowSomaticSpellFailure.tag !== "continue") {
-    return slowSomaticSpellFailure;
+  const turnConstraintSomaticSpellFailure =
+    resolveTurnConstraintSomaticFailurePhase();
+  if (turnConstraintSomaticSpellFailure.tag !== "continue") {
+    return turnConstraintSomaticSpellFailure;
   }
   const fillSet = spellFillSet(
     input.fills,
@@ -3930,7 +3889,7 @@ function invocationRefHasAntimagicSuppressedRepeatResolverGuard(
 ): boolean {
   return (
     procedure === "objectContactDamageRepeat" ||
-    procedure === "spiritualWeaponRepeatAttack"
+    procedure === "spatialMeleeSpellAttackProxy"
   );
 }
 /* v8 ignore stop -- @preserve */
@@ -3952,12 +3911,12 @@ export function resolveBonusActionDashSpellAct(
   /* v8 ignore start -- @preserve -- Bonus Action Dash admission carries a character actor and Expeditious Retreat procedure; this guard preserves a typed invalid result if that admission proof is ever bypassed. */
   if (
     actor?.origin.kind !== "character" ||
-    invocation?.procedure !== "expeditiousRetreatDash"
+    invocation?.procedure !== "grantedAlternateActionCost"
   ) {
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Bonus Action Dash spell act requires a supported Expeditious Retreat spell.",
+      "Bonus Action Dash spell act requires a supported bonus-action Dash effect spell.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -3966,16 +3925,17 @@ export function resolveBonusActionDashSpellAct(
     invocation.spellRuleFacts.components.verbal
       ? revealHidden(input.state, subject.actorId)
       : input.state;
-  const slowSomaticSpellFailure = resolveSlowSomaticSpellFailure({
-    state: input.state,
-    castingState,
-    subject,
-    actorId: subject.actorId,
-    invocation,
-    fills: input.fills,
-  });
-  if (slowSomaticSpellFailure.tag !== "continue") {
-    return slowSomaticSpellFailure;
+  const turnConstraintSomaticSpellFailure =
+    resolveSaveGatedTurnConstraintSomaticSpellFailure({
+      state: input.state,
+      castingState,
+      subject,
+      actorId: subject.actorId,
+      invocation,
+      fills: input.fills,
+    });
+  if (turnConstraintSomaticSpellFailure.tag !== "continue") {
+    return turnConstraintSomaticSpellFailure;
   }
   const fillSet = spellFillSet(
     input.fills,

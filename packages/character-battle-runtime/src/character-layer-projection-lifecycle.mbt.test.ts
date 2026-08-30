@@ -57,7 +57,6 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -66,6 +65,7 @@ import {
 } from "./index.ts";
 
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+import { requireResultSuccess as requireSuccess } from "./result.test-support.ts";
 
 function battleCreatureInitFromStatBlock(
   input: Omit<
@@ -73,7 +73,7 @@ function battleCreatureInitFromStatBlock(
     "ammunitionStocks" | "conditions"
   >,
 ) {
-  return requireRight(
+  return requireSuccess(
     parseBattleCreatureInitFromStatBlock({
       ...input,
       ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
@@ -231,7 +231,7 @@ function createLifecycleDriver() {
           if (maximumHp !== lifecycleSheetMaximumHp) {
             throw new Error("Expected lifecycle Fighter build to have 12 HP.");
           }
-          const sheet = requireRight(
+          const sheet = requireSuccess(
             createFreshCharacterSheet({
               characterId: lifecycleCharacterId,
               build,
@@ -250,7 +250,7 @@ function createLifecycleDriver() {
             sheetOwnsHitPoints: true,
             sheetCurrentHp: Number(characterSheetCurrentHp(sheet)),
             sheetMaxHp: Number(
-              requireRight(
+              requireSuccess(
                 characterSheetHitPointMaximum({ sheet, unitLibrary }),
               ),
             ),
@@ -307,7 +307,7 @@ function createLifecycleDriver() {
           const sheet = requireSessionSheet(session);
           const combatant = requireSessionCombatant(session);
           const battleSession = requireSessionBattle(session);
-          const settled = requireRight(
+          const settled = requireSuccess(
             settleCharacterSheetFromBattle({
               sheet,
               state: battleSession.state,
@@ -501,7 +501,7 @@ function startLifecycleBattle(sheet: CharacterSheet): {
   readonly session: BattleRuntimeSession;
   readonly combatant: CharacterBattleCombatant;
 } {
-  const characterInit = requireRight(
+  const characterInit = requireSuccess(
     characterSheetBattleInit({
       sheet,
       unitLibrary,
@@ -512,7 +512,7 @@ function startLifecycleBattle(sheet: CharacterSheet): {
       ammunitionStocks: [],
     }),
   );
-  const session = requireRight(
+  const session = requireSuccess(
     startBattle({
       battleId: battleId("battle:layer-projection-lifecycle"),
       combatants: [
@@ -692,14 +692,14 @@ function rolledDiceGroup(
 }
 
 function lifecycleBuildMaximumHp(build: CharacterBuild): number {
-  const hitPoints = requireRight(characterBuildHitPoints(build, unitLibrary));
+  const hitPoints = requireSuccess(characterBuildHitPoints(build, unitLibrary));
   return Number(hitPoints.maximum);
 }
 
 function abilityScores(
   scores: Parameters<typeof abilityScoreAssignment>[0],
 ): AbilityScoreAssignment {
-  return requireRight(abilityScoreAssignment(scores));
+  return requireSuccess(abilityScoreAssignment(scores));
 }
 
 function choiceFill(
@@ -726,15 +726,15 @@ function draftHoleId(
 function unitChoiceHoleId(unitId: string, choiceKey: string): string {
   return unitChoiceSourceHoleIdText({
     tag: "unitChoice",
-    unitId: requireRight(unitChoiceSourceUnitId(authoredUnitId(unitId))),
-    choiceKey: requireRight(unitChoiceKey(choiceKey)),
+    unitId: requireSuccess(unitChoiceSourceUnitId(authoredUnitId(unitId))),
+    choiceKey: requireSuccess(unitChoiceKey(choiceKey)),
   });
 }
 
 function loadoutHoleId(equipmentUnitId: string, slot: LoadoutSlot): string {
   return loadoutSourceHoleIdText({
     tag: "loadout",
-    equipmentUnitId: requireRight(
+    equipmentUnitId: requireSuccess(
       loadoutEquipmentUnitId(authoredUnitId(equipmentUnitId)),
     ),
     slot,
@@ -934,9 +934,4 @@ function numberFromQuintInt(raw: unknown, field: string): number {
 function booleanField(raw: unknown, field: string): boolean {
   if (typeof raw === "boolean") return raw;
   throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
 }

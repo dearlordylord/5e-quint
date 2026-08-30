@@ -1,6 +1,6 @@
 import Ajv2020 from "ajv/dist/2020.js";
 import type { ValidateFunction } from "ajv";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
 import {
@@ -83,21 +83,21 @@ export function validateOraclePublicationSchemaBytes(
     Buffer.from(bytes).toString("utf8"),
   );
 
-  if (Either.isLeft(parsed)) {
+  if (Result.isFailure(parsed)) {
     return invalidValidation(
       member,
-      appendPublicationIssue(byteIssues, parsed.left),
+      appendPublicationIssue(byteIssues, parsed.failure),
       undefined,
     );
   }
 
-  const metadataIssues = publicationMetadataIssues(member, parsed.right);
+  const metadataIssues = publicationMetadataIssues(member, parsed.success);
   const schemaIssues = [...byteIssues, ...metadataIssues];
-  const compiled = compilePublicationSchema(artifact.fileName, parsed.right);
-  if (Either.isLeft(compiled)) {
+  const compiled = compilePublicationSchema(artifact.fileName, parsed.success);
+  if (Result.isFailure(compiled)) {
     return invalidValidation(
       member,
-      appendPublicationIssue(schemaIssues, compiled.left),
+      appendPublicationIssue(schemaIssues, compiled.failure),
       undefined,
     );
   }
@@ -108,9 +108,9 @@ export function validateOraclePublicationSchemaBytes(
         tag: "valid",
         member,
         issues: [],
-        validate: compiled.right,
+        validate: compiled.success,
       }
-    : invalidValidation(member, nonEmptyIssues, compiled.right);
+    : invalidValidation(member, nonEmptyIssues, compiled.success);
 }
 
 export function formatOraclePublicationValidation(
@@ -128,14 +128,14 @@ export function formatOraclePublicationValidation(
 function parsePublicationSchema(
   fileName: string,
   text: string,
-): Either.Either<JsonRecord, OraclePublicationSchemaIssue> {
+): Result.Result<JsonRecord, OraclePublicationSchemaIssue> {
   try {
     const parsed = JSON.parse(text);
     return isJsonRecord(parsed)
-      ? Either.right(parsed)
-      : Either.left({ tag: "rootNotObject", fileName });
+      ? Result.succeed(parsed)
+      : Result.fail({ tag: "rootNotObject", fileName });
   } catch (cause) {
-    return Either.left({ tag: "invalidJson", fileName, cause });
+    return Result.fail({ tag: "invalidJson", fileName, cause });
   }
 }
 
@@ -173,9 +173,9 @@ function publicationMetadataIssues(
 function compilePublicationSchema(
   fileName: string,
   parsed: JsonRecord,
-): Either.Either<ValidateFunction<unknown>, OraclePublicationSchemaIssue> {
+): Result.Result<ValidateFunction<unknown>, OraclePublicationSchemaIssue> {
   try {
-    return Either.right(
+    return Result.succeed(
       new Ajv2020({
         strict: false,
         inlineRefs: false,
@@ -183,7 +183,7 @@ function compilePublicationSchema(
       }).compile(parsed),
     );
   } catch (cause) {
-    return Either.left({ tag: "compileFailed", fileName, cause });
+    return Result.fail({ tag: "compileFailed", fileName, cause });
   }
 }
 

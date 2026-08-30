@@ -29,9 +29,9 @@ import {
   zeroHitPointStabilizationRouteForResolution,
 } from "./combatant-lifecycle-routes.ts";
 import {
-  commandRouteForDiscoveredAct,
-  commandRouteForResolution,
-} from "./command-routes.ts";
+  compelledBehaviorRouteForDiscoveredAct,
+  compelledBehaviorRouteForResolution,
+} from "./compelled-behavior-routes.ts";
 import {
   companionRouteForDiscoveredAct,
   companionRouteForResolution,
@@ -48,8 +48,8 @@ import {
   rollModifierRouteForResolution,
   scalarBuffRouteForDiscoveredAct,
   scalarBuffRouteForResolution,
-  sleepRepeatSaveRouteForDiscoveredAct,
-  sleepRepeatSaveRouteForResolution,
+  hitPointBudgetConditionRepeatSaveRouteForDiscoveredAct,
+  hitPointBudgetConditionRepeatSaveRouteForResolution,
   spellBaseArmorClassEffectTurnBoundaryRouteForResolution,
   spellDamageReductionAdjustmentDiscoveryRouteForResolution,
   spellDamageReductionAdjustmentRouteForResolution,
@@ -113,7 +113,7 @@ import {
   spatialEffectCompositionRouteForDiscoveredAct,
   spatialEffectCompositionRouteForResolution,
   spatialEffectCompositionRuntimeRouteForDiscoveredAct,
-  thunderwavePresentationRouteForDiscoveredAct,
+  forcedMovementCubeBurstPresentationRouteForDiscoveredAct,
 } from "./spatial-effect-routes.ts";
 import {
   spellAttackProcedureRouteForResolution,
@@ -191,7 +191,9 @@ export function battleReducerRouteEventsForDiscoveredAct(
       eventRoute(scalarBuffRouteForDiscoveredAct(state, act)),
     ),
     terminalRouteCandidate(() =>
-      eventRoute(sleepRepeatSaveRouteForDiscoveredAct(state, act)),
+      eventRoute(
+        hitPointBudgetConditionRepeatSaveRouteForDiscoveredAct(state, act),
+      ),
     ),
     terminalRouteCandidate(() =>
       eventRoute(
@@ -211,7 +213,9 @@ export function battleReducerRouteEventsForDiscoveredAct(
     terminalRouteCandidate(() =>
       metamagicSpellDurationProjectionRouteForDiscoveredAct(state, act),
     ),
-    terminalRouteCandidate(() => commandRouteForDiscoveredAct(state, act)),
+    terminalRouteCandidate(() =>
+      compelledBehaviorRouteForDiscoveredAct(state, act),
+    ),
     terminalRouteCandidate(() => movementRouteForDiscoveredAct(state, act)),
     terminalRouteCandidate(() =>
       metamagicCastingOptionRouteForDiscoveredAct(state, act),
@@ -237,10 +241,8 @@ export function battleReducerRouteEventsForDiscoveredAct(
         state,
         act,
       );
-      const presentationRoute = thunderwavePresentationRouteForDiscoveredAct(
-        state,
-        act,
-      );
+      const presentationRoute =
+        forcedMovementCubeBurstPresentationRouteForDiscoveredAct(state, act);
       if (
         spatialRoute === undefined &&
         runtimeRoute === undefined &&
@@ -288,7 +290,8 @@ export function battleReducerRouteForResolution(
   input: AdmittedBattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
-  const sleepRepeatSaveRoute = sleepRepeatSaveRouteForResolution(input, result);
+  const hitPointBudgetConditionRepeatSaveRoute =
+    hitPointBudgetConditionRepeatSaveRouteForResolution(input, result);
   const firstExclusiveRoute = composeReducerRouteCandidates([
     terminalRouteCandidate(() =>
       passiveProjectionRouteForResolution(input, result),
@@ -323,8 +326,9 @@ export function battleReducerRouteForResolution(
       rollModifierConcentrationBreakRouteForResolution(input, result),
     ),
     terminalRouteCandidate(() =>
-      sleepRepeatSaveRoute !== undefined && !isEndTurnSubject(input.subject)
-        ? sleepRepeatSaveRoute
+      hitPointBudgetConditionRepeatSaveRoute !== undefined &&
+      !isEndTurnSubject(input.subject)
+        ? hitPointBudgetConditionRepeatSaveRoute
         : undefined,
     ),
     terminalRouteCandidate(() =>
@@ -358,7 +362,7 @@ export function battleReducerRouteForResolution(
   const spellBaseArmorClassTurnBoundaryRoute =
     spellBaseArmorClassEffectTurnBoundaryRouteForResolution(input, result);
   const turnBoundaryRoutes = composeReducerRouteCandidates([
-    composableRouteCandidate(() => sleepRepeatSaveRoute),
+    composableRouteCandidate(() => hitPointBudgetConditionRepeatSaveRoute),
     composableRouteCandidate(() => repeatSaveConditionEffectRoute),
     composableRouteCandidate(() => deathSavingThrowRoute),
     composableRouteCandidate(() => turnBoundaryEffectLifecycleRoute),
@@ -387,7 +391,7 @@ export function battleReducerRouteForResolution(
       withWildShapeTerminal(concentrationRouteForResolution(input, result)),
     ),
     terminalRouteCandidate(() => {
-      const commandRoute = commandRouteForResolution(input, result);
+      const commandRoute = compelledBehaviorRouteForResolution(input, result);
       const movementRoute = movementRouteForResolution(input, result);
       if (movementRoute !== undefined) {
         return withWildShapeTerminal(

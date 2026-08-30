@@ -76,7 +76,7 @@ export const fireballSelectedIdentityReplay = {
                 },
                 successDamage: "half",
                 rangeFeet: 150,
-                postSaveAreaEffect: { kind: "fireballObjectIgnition" },
+                postSaveAreaEffect: { kind: "areaObjectIgnition" },
               }),
             );
             return { lastResult: "fireballSaveGatedDamage" };

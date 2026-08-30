@@ -25,8 +25,8 @@ import type {
   SpellConditionRepeatSave,
 } from "../active-effect/execution-vocabulary.ts";
 import type {
-  EldritchBlastBeamCount,
-  ScorchingRayRayCount,
+  MultiBeamSpellAttackBeamCount,
+  MultiRaySpellAttackRayCount,
 } from "../battle-reducer/domain-constants.ts";
 import type { SpellTargeting } from "./spell-invocation-vocabulary.ts";
 
@@ -36,14 +36,60 @@ export type BattleLightEmission =
       readonly radiusFeet: MovementFeet;
     }
   | {
+      readonly kind: "bright";
+      readonly radiusFeet: MovementFeet;
+    }
+  | {
       readonly kind: "brightAndDim";
       readonly brightRadiusFeet: MovementFeet;
       readonly dimAdditionalFeet: MovementFeet;
     };
 
+export type BattleLightEmitterOpaqueCoverInteraction =
+  | { readonly kind: "blocksEmission" }
+  | { readonly kind: "doesNotBlockEmission" };
+
+export type BattleIlluminationEmissionFacts = {
+  readonly emission: BattleLightEmission;
+  readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
+};
+
+export type DimIlluminationEmissionFacts = Omit<
+  BattleIlluminationEmissionFacts,
+  "emission"
+> & {
+  readonly emission: Extract<BattleLightEmission, { readonly kind: "dim" }>;
+};
+
+export type BrightAndDimIlluminationEmissionFacts = Omit<
+  BattleIlluminationEmissionFacts,
+  "emission"
+> & {
+  readonly emission: Extract<
+    BattleLightEmission,
+    { readonly kind: "brightAndDim" }
+  >;
+};
+
+export type BrightIlluminationEmissionFacts = Omit<
+  BattleIlluminationEmissionFacts,
+  "emission"
+> & {
+  readonly emission: Extract<BattleLightEmission, { readonly kind: "bright" }>;
+};
+
+export type BrightRadiusIlluminationEmissionFacts = Omit<
+  BattleIlluminationEmissionFacts,
+  "emission"
+> & {
+  readonly emission:
+    | BrightIlluminationEmissionFacts["emission"]
+    | BrightAndDimIlluminationEmissionFacts["emission"];
+};
+
 export type SpellComponent = "V" | "S" | "M";
 
-export type BattleThunderwaveAudibleBoom = {
+export type BattleImmediateAreaAudibleBoom = {
   readonly sound: "thunderous boom";
   readonly audibleRadiusFeet: MovementFeet;
 };
@@ -103,13 +149,13 @@ export type SpellFailedSavePostDamageRider =
 
 export type SpellPostSaveAreaEffect =
   | {
-      readonly kind: "fireballObjectIgnition";
+      readonly kind: "areaObjectIgnition";
     }
   | {
-      readonly kind: "shatterObjectDamage";
+      readonly kind: "areaObjectDamage";
     }
   | {
-      readonly kind: "thunderwave";
+      readonly kind: "selfOriginCubePush";
       readonly creaturePush: {
         readonly distanceFeet: MovementFeet;
         readonly originDirection: "away_from_caster";
@@ -119,7 +165,7 @@ export type SpellPostSaveAreaEffect =
         readonly originDirection: "away_from_caster";
         readonly objectLocation: "entirely_within_area";
       };
-      readonly audibleBoom: BattleThunderwaveAudibleBoom;
+      readonly audibleBoom: BattleImmediateAreaAudibleBoom;
     };
 
 export type SpellFailedSaveConditionExpiration =
@@ -293,13 +339,13 @@ export type SpellAttackDamageTargeting = Extract<
 export type CantripSpellAttackSequenceTargeting = {
   readonly kind: "spellAttackSequenceCreatureOrObject";
   readonly countSource: "characterLevel";
-  readonly attackCount: EldritchBlastBeamCount;
+  readonly attackCount: MultiBeamSpellAttackBeamCount;
 };
 
 export type PreparedSpellAttackSequenceTargeting = {
   readonly kind: "spellAttackSequenceCreatureOrObject";
   readonly countSource: "spellSlotLevel";
-  readonly attackCount: ScorchingRayRayCount;
+  readonly attackCount: MultiRaySpellAttackRayCount;
 };
 
 export type SpellAttackDamagePayload =
@@ -309,13 +355,13 @@ export type SpellAttackDamagePayload =
       readonly damageType: DamageType;
     }
   | {
-      readonly kind: "sorcerousBurstDamageTypeChoice";
+      readonly kind: "spellAttackDamageTypeChoice";
       readonly expr: DiceExpr;
       readonly damageTypeChoices: readonly [DamageType, ...DamageType[]];
       readonly maxDieAdditionalDiceLimit: number;
     }
   | {
-      readonly kind: "selectedSorcerousBurstDamage";
+      readonly kind: "selectedSpellAttackDamage";
       readonly expr: DiceExpr;
       readonly damageType: DamageType;
       readonly maxDieAdditionalDiceLimit: number;

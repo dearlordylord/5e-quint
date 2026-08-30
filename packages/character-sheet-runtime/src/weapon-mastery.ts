@@ -5,7 +5,7 @@ import {
   weaponMasteryChoiceProfileForProgression,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import {
@@ -33,7 +33,7 @@ export function characterSheetWeaponMasterySelectedReferenceProjection(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly featureUnitId: UnitRecord["id"];
-}): Either.Either<
+}): Result.Result<
   CharacterSheetWeaponMasterySelectedReferenceProjection,
   CharacterSheetIssue
 > {
@@ -55,7 +55,7 @@ export function characterSheetWeaponMasterySelectedReferenceProjection(input: {
       "Weapon Mastery selected-reference projection requires the Character Build to own the feature class.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     featureUnitId: levelProfile.value.feature.id,
     classUnitId: levelProfile.value.classRecord.id,
     selectedWeaponUnitIds: weaponMasterySelectedWeaponUnitIds(

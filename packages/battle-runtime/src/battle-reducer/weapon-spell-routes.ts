@@ -31,7 +31,7 @@ const WEAPON_SPELL_ROUTE_SUBJECT_BY_PROCEDURE = {
   spellHostedWeaponAttack: "spellHostedWeaponAttack",
   weaponDamageRider: "weaponDamageRider",
   weaponAttackOverride: "heldWeaponActiveEffect",
-  magicWeaponEnhancement: "weaponEnhancementItemTarget",
+  weaponAttackDamageEnhancement: "weaponEnhancementItemTarget",
 } as const satisfies Partial<
   Record<SupportedSpellInvocation["procedure"], BattleReducerRouteSubjectFamily>
 >;
@@ -111,7 +111,7 @@ function weaponSpellProcedureRouteForResolution(
   if (routeFill === undefined) return undefined;
   if (
     subject === "weaponEnhancementItemTarget" &&
-    routeFill === "magicWeaponTargetItem" &&
+    routeFill === "weaponAttackDamageEnhancementTargetItem" &&
     result.tag === "resolved"
   ) {
     return [
@@ -253,14 +253,15 @@ function weaponSpellActiveEffectWasRemoved(
   return (
     afterCounts.weaponAttackOverride < beforeCounts.weaponAttackOverride ||
     afterCounts.weaponDamageRider < beforeCounts.weaponDamageRider ||
-    afterCounts.magicWeaponEnhancement < beforeCounts.magicWeaponEnhancement
+    afterCounts.weaponAttackDamageEnhancement <
+      beforeCounts.weaponAttackDamageEnhancement
   );
 }
 
 function weaponSpellActiveEffectCounts(state: BattleState): {
   readonly weaponAttackOverride: number;
   readonly weaponDamageRider: number;
-  readonly magicWeaponEnhancement: number;
+  readonly weaponAttackDamageEnhancement: number;
 } {
   return battleActiveEffects(state).reduce(
     (counts, effect) => {
@@ -276,10 +277,11 @@ function weaponSpellActiveEffectCounts(state: BattleState): {
           weaponDamageRider: counts.weaponDamageRider + 1,
         };
       }
-      if (effect.kind === "spellMagicWeaponEnhancement") {
+      if (effect.kind === "weaponAttackDamageEnhancement") {
         return {
           ...counts,
-          magicWeaponEnhancement: counts.magicWeaponEnhancement + 1,
+          weaponAttackDamageEnhancement:
+            counts.weaponAttackDamageEnhancement + 1,
         };
       }
       return counts;
@@ -287,7 +289,7 @@ function weaponSpellActiveEffectCounts(state: BattleState): {
     {
       weaponAttackOverride: 0,
       weaponDamageRider: 0,
-      magicWeaponEnhancement: 0,
+      weaponAttackDamageEnhancement: 0,
     },
   );
 }

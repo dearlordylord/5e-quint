@@ -3,6 +3,7 @@ import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
+import type { BattleSourcedEffectOccurrenceTemplate } from "../../effect-execution-ref.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-chosen-damage-resistance
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { CombatantId } from "../../identity.ts";
@@ -15,11 +16,10 @@ import { CombatantId } from "../../identity.ts";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
-  type BattleActiveEffect,
   type BattleResolutionResult,
   type BattleState,
   type BattleExecutableSpellInvocation,
@@ -109,7 +109,7 @@ function chosenDamageResistanceSpellProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.upTo,
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return null;
   }
 
@@ -166,7 +166,7 @@ function chosenDamageResistanceSpellProjection(
     expiresAt: {
       kind: "concentration",
       combatantId: actorId,
-      durationTicks: durationTicks.right,
+      durationTicks: durationTicks.success,
     },
     rangeFeet: movementFeet(5),
   };
@@ -249,10 +249,7 @@ function applyChosenDamageResistanceEffect(input: {
     sourceCombatantId: input.actorId,
     damageType: input.damageType,
     expiresAt: input.invocation.expiresAt,
-  } satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "damageResistance" }
-  >;
+  } satisfies BattleSourcedEffectOccurrenceTemplate;
   return replaceTargetActiveEffect(
     input.state,
     input.targetId,

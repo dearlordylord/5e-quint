@@ -8,7 +8,7 @@ import {
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   SCRYING_MATERIAL_COMPONENTS,
@@ -41,7 +41,7 @@ export function castScrying(input: {
   readonly unitLibrary: UnitCatalog;
   readonly casting: CharacterSheetScryingCasting;
   readonly target: CharacterSheetScryingTarget;
-}): Either.Either<CharacterSheetScryingResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetScryingResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -101,7 +101,7 @@ function scryingInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly casting: CharacterSheetScryingCasting;
   readonly target: CharacterSheetScryingTarget;
-}): Either.Either<CharacterSheetScryingInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetScryingInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Scrying support profile required by this projector. */
   if (
@@ -152,7 +152,7 @@ function scryingInvocationFromSpell(input: {
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The exact ten-minute duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Scrying requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
@@ -161,12 +161,12 @@ function scryingInvocationFromSpell(input: {
     amount: SCRYING_RETRY_LOCKOUT_HOURS,
   });
   /* v8 ignore start -- @preserve -- The fixed one-day retry lockout is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(retryLockoutDuration)) {
+  if (Result.isFailure(retryLockoutDuration)) {
     return characterSheetIssue("Scrying requires a supported retry lockout.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "scrying",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,
@@ -178,13 +178,13 @@ function scryingInvocationFromSpell(input: {
     requiredSpellAccess: "class_prepared",
     castingTime: { kind: "minutes", amount: SCRYING_CASTING_TIME_MINUTES },
     materialComponents: input.casting.materialComponents,
-    duration: duration.right,
+    duration: duration.success,
     concentrationRequired: true,
     target: input.target,
     savingThrow: scryingSavingThrowContract(input.target),
     outcome: scryingOutcome({
       target: input.target,
-      retryLockoutDuration: retryLockoutDuration.right,
+      retryLockoutDuration: retryLockoutDuration.success,
     }),
   });
 }

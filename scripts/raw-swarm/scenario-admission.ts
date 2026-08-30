@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   finalScenarioDisposition,
@@ -16,8 +16,8 @@ import { canonicalRepositoryReadPath } from "./repository-path.ts";
 
 const AdmittedScenarioRecordCommonFields = {
   scenarioId: ScenarioIdSchema,
-  title: Schema.NonEmptyTrimmedString,
-  purpose: Schema.NonEmptyTrimmedString,
+  title: Schema.Trimmed.check(Schema.isNonEmpty()),
+  purpose: Schema.Trimmed.check(Schema.isNonEmpty()),
   authoredSource: ArtifactAuthoritySchema,
   admissionReview: ArtifactAuthoritySchema,
   stageFacts: ArtifactAuthoritySchema,
@@ -32,20 +32,22 @@ const CurrentAdmittedScenarioRecordSchema = Schema.Struct({
   schemaVersion: Schema.Literal(2),
   ...AdmittedScenarioRecordCommonFields,
   predecessorScenarioIds: Schema.Array(ScenarioIdSchema).pipe(
-    Schema.filter(
-      (scenarioIds) => new Set(scenarioIds).size === scenarioIds.length,
-      {
-        message: () =>
-          "an admitted Scenario record cannot repeat a predecessor Scenario",
-      },
+    Schema.check(
+      Schema.makeFilter(
+        (scenarioIds) => new Set(scenarioIds).size === scenarioIds.length,
+        {
+          message:
+            "an admitted Scenario record cannot repeat a predecessor Scenario",
+        },
+      ),
     ),
   ),
 });
 
-export const AdmittedScenarioRecordSchema = Schema.Union(
+export const AdmittedScenarioRecordSchema = Schema.Union([
   CurrentAdmittedScenarioRecordSchema,
   HistoricalAdmittedScenarioRecordSchema,
-);
+]);
 export type CurrentAdmittedScenarioRecord = Schema.Schema.Type<
   typeof CurrentAdmittedScenarioRecordSchema
 >;
@@ -82,9 +84,9 @@ function authorityMatches(
     expectedPath,
   );
   return (
-    Either.isRight(authorityPath) &&
-    Either.isRight(expectedCanonicalPath) &&
-    authorityPath.right === expectedCanonicalPath.right &&
+    Result.isSuccess(authorityPath) &&
+    Result.isSuccess(expectedCanonicalPath) &&
+    authorityPath.success === expectedCanonicalPath.success &&
     authority.byteLength === Buffer.byteLength(bytes) &&
     authority.sha256 === sha256Text(bytes)
   );
@@ -95,7 +97,7 @@ export function admittedScenarioIdentity(input: {
   readonly scenarioPath: string;
   readonly reviewPath: string;
   readonly recordPath: string;
-}): Either.Either<AdmittedScenarioIdentity, string> {
+}): Result.Result<AdmittedScenarioIdentity, string> {
   const scenarioPath = canonicalRepositoryReadPath(
     repoRoot,
     input.scenarioPath,
@@ -103,93 +105,94 @@ export function admittedScenarioIdentity(input: {
   const reviewPath = canonicalRepositoryReadPath(repoRoot, input.reviewPath);
   const recordPath = canonicalRepositoryReadPath(repoRoot, input.recordPath);
   if (
-    Either.isLeft(scenarioPath) ||
-    Either.isLeft(reviewPath) ||
-    Either.isLeft(recordPath)
+    Result.isFailure(scenarioPath) ||
+    Result.isFailure(reviewPath) ||
+    Result.isFailure(recordPath)
   ) {
-    return Either.left(
+    return Result.fail(
       "Scenario authorities must remain inside the repository.",
     );
   }
-  const files = Either.try({
+  const files = Result.try({
     try: () => ({
-      scenarioBytes: readFileSync(scenarioPath.right, "utf8"),
-      reviewBytes: readFileSync(reviewPath.right, "utf8"),
-      recordBytes: readFileSync(recordPath.right, "utf8"),
+      scenarioBytes: readFileSync(scenarioPath.success, "utf8"),
+      reviewBytes: readFileSync(reviewPath.success, "utf8"),
+      recordBytes: readFileSync(recordPath.success, "utf8"),
     }),
     catch: () =>
       "Scenario, admitted-scenario record, and admission review must be readable.",
   });
-  if (Either.isLeft(files)) return Either.left(files.left);
-  const { scenarioBytes, reviewBytes, recordBytes } = files.right;
-  const decoded = Schema.decodeUnknownEither(
-    Schema.parseJson(FinalScenarioReviewSchema),
+  if (Result.isFailure(files)) return Result.fail(files.failure);
+  const { scenarioBytes, reviewBytes, recordBytes } = files.success;
+  const decoded = Schema.decodeUnknownResult(
+    Schema.fromJsonString(FinalScenarioReviewSchema),
     { onExcessProperty: "error" },
   )(reviewBytes);
-  const record = Schema.decodeUnknownEither(
-    Schema.parseJson(AdmittedScenarioRecordSchema),
+  const record = Schema.decodeUnknownResult(
+    Schema.fromJsonString(AdmittedScenarioRecordSchema),
     { onExcessProperty: "error" },
   )(recordBytes);
   if (
-    Either.isLeft(decoded) ||
-    Either.isLeft(record) ||
-    finalScenarioDisposition(decoded.right) !== "admitted" ||
-    decoded.right.scenarioId !== input.scenarioId ||
-    decoded.right.scenarioSha256 !== sha256Text(scenarioBytes) ||
-    record.right.scenarioId !== input.scenarioId ||
+    Result.isFailure(decoded) ||
+    Result.isFailure(record) ||
+    finalScenarioDisposition(decoded.success) !== "admitted" ||
+    decoded.success.scenarioId !== input.scenarioId ||
+    decoded.success.scenarioSha256 !== sha256Text(scenarioBytes) ||
+    record.success.scenarioId !== input.scenarioId ||
     !authorityMatches(
       repoRoot,
-      record.right.authoredSource,
-      scenarioPath.right,
+      record.success.authoredSource,
+      scenarioPath.success,
       scenarioBytes,
     ) ||
     !authorityMatches(
       repoRoot,
-      record.right.admissionReview,
-      reviewPath.right,
+      record.success.admissionReview,
+      reviewPath.success,
       reviewBytes,
     )
   ) {
-    return Either.left(
+    return Result.fail(
       "Scenario requires the matching admitted scenario review and prose hash.",
     );
   }
   const stageFactsPathResult = canonicalRepositoryReadPath(
     repoRoot,
-    record.right.stageFacts.path,
+    record.success.stageFacts.path,
   );
-  if (Either.isLeft(stageFactsPathResult)) {
-    return Either.left(
+  if (Result.isFailure(stageFactsPathResult)) {
+    return Result.fail(
       "Scenario stage-facts authority must remain inside the repository.",
     );
   }
-  const stageFactsPath = stageFactsPathResult.right;
-  const stageFactsBytes = Either.try({
+  const stageFactsPath = stageFactsPathResult.success;
+  const stageFactsBytes = Result.try({
     try: () => readFileSync(stageFactsPath, "utf8"),
     catch: () => "Scenario stage-facts authority must be readable.",
   });
-  if (Either.isLeft(stageFactsBytes)) return Either.left(stageFactsBytes.left);
-  const stageFacts = Schema.decodeUnknownEither(
-    Schema.parseJson(ScenarioStageFactsAuthoritySchema),
+  if (Result.isFailure(stageFactsBytes))
+    return Result.fail(stageFactsBytes.failure);
+  const stageFacts = Schema.decodeUnknownResult(
+    Schema.fromJsonString(ScenarioStageFactsAuthoritySchema),
     { onExcessProperty: "error" },
-  )(stageFactsBytes.right);
+  )(stageFactsBytes.success);
   if (
-    Either.isLeft(stageFacts) ||
+    Result.isFailure(stageFacts) ||
     !authorityMatches(
       repoRoot,
-      record.right.stageFacts,
+      record.success.stageFacts,
       stageFactsPath,
-      stageFactsBytes.right,
+      stageFactsBytes.success,
     ) ||
-    stageFacts.right.scenarioId !== input.scenarioId ||
-    stageFacts.right.scenarioSha256 !== sha256Text(scenarioBytes)
+    stageFacts.success.scenarioId !== input.scenarioId ||
+    stageFacts.success.scenarioSha256 !== sha256Text(scenarioBytes)
   ) {
-    return Either.left(
+    return Result.fail(
       "Scenario requires matching retained stage-facts identity and authority.",
     );
   }
-  return Either.right({
-    scenarioSha256: decoded.right.scenarioSha256,
+  return Result.succeed({
+    scenarioSha256: decoded.success.scenarioSha256,
     scenarioReviewSha256: sha256Text(reviewBytes),
   });
 }

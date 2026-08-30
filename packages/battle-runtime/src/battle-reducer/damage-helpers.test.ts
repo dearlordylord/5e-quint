@@ -11,6 +11,7 @@ import {
   battleProcedureExecutionRefForTest,
   testLongswordAttack,
 } from "../battle-runtime.test-support.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../effect-execution-ref.ts";
 import {
   damageRollFillWithGroups,
   requireCombatant,
@@ -47,6 +48,7 @@ function availableSlashingReduction() {
     throw new Error("Expected the Resistance effect fixture.");
   }
   const neighboringReductionEffect = (
+    effectRef: typeof eligibleEffect.effectRef,
     source: string,
     damageType: DamageType,
     usedThisTurn: boolean,
@@ -54,6 +56,7 @@ function availableSlashingReduction() {
     const sourceCombatantId = combatantId(source);
     return {
       ...eligibleEffect,
+      effectRef,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         `${source}:resistance`,
       ),
@@ -66,12 +69,28 @@ function availableSlashingReduction() {
       { readonly kind: "spellDamageReduction" }
     >;
   };
+  const fireAllocation = allocateBattleEffectExecutionRefForCreature({
+    owner: targetWithEligibleEffect,
+  });
+  const spentAllocation = allocateBattleEffectExecutionRefForCreature({
+    owner: fireAllocation.owner,
+  });
   const target = {
-    ...targetWithEligibleEffect,
+    ...spentAllocation.owner,
     activeEffects: [
-      neighboringReductionEffect("fire-resistance-caster", "fire", false),
+      neighboringReductionEffect(
+        fireAllocation.effectRef,
+        "fire-resistance-caster",
+        "fire",
+        false,
+      ),
       eligibleEffect,
-      neighboringReductionEffect("spent-resistance-caster", "slashing", true),
+      neighboringReductionEffect(
+        spentAllocation.effectRef,
+        "spent-resistance-caster",
+        "slashing",
+        true,
+      ),
     ],
   };
   const damageByType = new Map<DamageType, number>([["slashing", 6]]);
@@ -93,12 +112,16 @@ function availableSlashingReduction() {
 function availableSourceDamageRollPenalty() {
   const session = spellBattle({ spellSlots: [] });
   const sourceWithoutPenalty = requireCombatant(session.state, spellTargetId);
+  const effectAllocation = allocateBattleEffectExecutionRefForCreature({
+    owner: sourceWithoutPenalty,
+  });
   const source = {
-    ...sourceWithoutPenalty,
+    ...effectAllocation.owner,
     activeEffects: [
       ...sourceWithoutPenalty.activeEffects,
       {
         kind: "sourceDamageRollPenalty",
+        effectRef: effectAllocation.effectRef,
         sourceProcedureRef: battleProcedureExecutionRefForTest(
           "source-damage-roll-penalty",
         ),
@@ -133,6 +156,66 @@ function availableSourceDamageRollPenalty() {
 }
 
 describe("damage reduction helper boundaries", () => {
+  test("a stale reduction roll cannot bind a mechanically identical replacement occurrence", () => {
+    const first = availableSlashingReduction();
+    const staleRoll = damageRollFillWithGroups(first.hole, [[3]]);
+    const selected = first.target.activeEffects.find(
+      (effect) =>
+        effect.kind === "spellDamageReduction" &&
+        effect.damageType === "slashing" &&
+        !effect.usedThisTurn,
+    );
+    if (selected?.kind !== "spellDamageReduction") {
+      throw new Error("Expected an available spell damage reduction.");
+    }
+    const replacementAllocation = allocateBattleEffectExecutionRefForCreature({
+      owner: first.target,
+    });
+    const replacementTarget = {
+      ...replacementAllocation.owner,
+      activeEffects: first.target.activeEffects.map((effect) =>
+        effect.effectRef === selected.effectRef
+          ? { ...selected, effectRef: replacementAllocation.effectRef }
+          : effect,
+      ),
+    };
+    const replacementRequest = applyAvailableSpellDamageReduction(
+      replacementTarget,
+      first.damageByType,
+      undefined,
+    );
+    if (replacementRequest.tag !== "needsHoles") {
+      throw new Error("Expected the replacement reduction roll hole.");
+    }
+
+    expect(Number(replacementTarget.nextEffectOrdinal)).toBe(
+      Number(first.target.nextEffectOrdinal) + 1,
+    );
+    expect(replacementRequest.holes[0]?.holeId).not.toBe(first.hole.holeId);
+    expect(
+      applyAvailableSpellDamageReduction(
+        replacementTarget,
+        first.damageByType,
+        staleRoll,
+      ),
+    ).toEqual({ tag: "invalid" });
+
+    const firstApplied = applyAvailableSpellDamageReduction(
+      first.target,
+      first.damageByType,
+      staleRoll,
+    );
+    if (firstApplied.tag !== "ok") {
+      throw new Error("Expected the selected reduction roll to apply.");
+    }
+    expect(
+      applySpellDamageReductionConsumption(
+        replacementTarget,
+        firstApplied.consumption,
+      ),
+    ).toEqual(replacementTarget);
+  });
+
   test("selects a target reduction roll by exact protocol identity", () => {
     const first = availableSlashingReduction();
     const eligibleEffect = first.target.activeEffects.find(
@@ -145,23 +228,40 @@ describe("damage reduction helper boundaries", () => {
       throw new Error("Expected the first target's available reduction.");
     }
     const secondTargetId = combatantId("second-reduction-target");
+    const secondSession = spellBattle({
+      spellSlots: [],
+      extraTargetIds: [secondTargetId],
+    });
+    const secondTargetBeforeAllocation = requireCombatant(
+      secondSession.state,
+      secondTargetId,
+    );
+    const secondAllocation = allocateBattleEffectExecutionRefForCreature({
+      owner: secondTargetBeforeAllocation,
+    });
+    const secondEffect = {
+      ...eligibleEffect,
+      effectRef: secondAllocation.effectRef,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "first-target-sourced-reduction",
+      ),
+      sourceCombatantId: first.target.combatantId,
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: first.target.combatantId,
+      },
+    };
     const secondTarget = {
-      ...first.target,
-      combatantId: secondTargetId,
+      ...secondAllocation.owner,
       activeEffects: [
-        {
-          ...eligibleEffect,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            "first-target-sourced-reduction",
-          ),
-          sourceCombatantId: first.target.combatantId,
-          expiresAt: {
-            kind: "concentration" as const,
-            combatantId: first.target.combatantId,
-          },
-        },
+        ...secondTargetBeforeAllocation.activeEffects,
+        secondEffect,
       ],
     };
+    expect(Number(secondTarget.nextEffectOrdinal)).toBe(
+      Number(secondTargetBeforeAllocation.nextEffectOrdinal) + 1,
+    );
+    expect(secondEffect.effectRef).not.toBe(eligibleEffect.effectRef);
     const secondRequest = applyAvailableSpellDamageReduction(
       secondTarget,
       first.damageByType,
@@ -171,6 +271,12 @@ describe("damage reduction helper boundaries", () => {
       throw new Error("Expected the second target's reduction roll hole.");
     }
     const secondHole = requireHole(secondRequest.holes, "rolledDice");
+    if (!("spellDamageReduction" in secondHole)) {
+      throw new Error("Expected the second target's reduction protocol.");
+    }
+    expect(secondHole.spellDamageReduction.effectRef).toBe(
+      secondEffect.effectRef,
+    );
     const firstRoll = damageRollFillWithGroups(first.hole, [[3]]);
     const secondRoll = damageRollFillWithGroups(secondHole, [[2]]);
 
@@ -268,6 +374,61 @@ describe("damage reduction helper boundaries", () => {
 });
 
 describe("source damage roll penalty helper boundaries", () => {
+  test("a stale penalty roll cannot bind a mechanically identical replacement occurrence", () => {
+    const first = availableSourceDamageRollPenalty();
+    const staleRoll = damageRollFillWithGroups(first.hole, [[4]]);
+    const selected = first.source.activeEffects.find(
+      (effect) => effect.kind === "sourceDamageRollPenalty",
+    );
+    if (selected?.kind !== "sourceDamageRollPenalty") {
+      throw new Error("Expected an available source damage roll penalty.");
+    }
+    const replacementAllocation = allocateBattleEffectExecutionRefForCreature({
+      owner: first.source,
+    });
+    const replacementSource = {
+      ...replacementAllocation.owner,
+      activeEffects: first.source.activeEffects.map((effect) =>
+        effect.effectRef === selected.effectRef
+          ? {
+              ...selected,
+              effectRef: replacementAllocation.effectRef,
+            }
+          : effect,
+      ),
+    };
+    const replacementRequest = applyAvailableSourceDamageRollPenalty(
+      replacementSource,
+      first.damageByType,
+      first.damageRollHoleId,
+      undefined,
+    );
+    if (replacementRequest.tag !== "needsHoles") {
+      throw new Error("Expected the replacement penalty roll hole.");
+    }
+
+    expect(Number(replacementSource.nextEffectOrdinal)).toBe(
+      Number(first.source.nextEffectOrdinal) + 1,
+    );
+    expect(replacementRequest.holes[0]?.holeId).not.toBe(first.hole.holeId);
+    expect(
+      applyAvailableSourceDamageRollPenalty(
+        replacementSource,
+        first.damageByType,
+        first.damageRollHoleId,
+        staleRoll,
+      ),
+    ).toEqual({ tag: "invalid" });
+    expect(
+      applyAvailableSourceDamageRollPenalty(
+        first.source,
+        first.damageByType,
+        first.damageRollHoleId,
+        staleRoll,
+      ),
+    ).toMatchObject({ tag: "ok" });
+  });
+
   test("applies the requested roll and rejects stale, mismatched, or invalid fills", () => {
     const { source, damageByType, damageRollHoleId, hole } =
       availableSourceDamageRollPenalty();

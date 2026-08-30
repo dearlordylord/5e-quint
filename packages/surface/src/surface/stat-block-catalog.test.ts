@@ -1,13 +1,13 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
-import findFamiliarInput from "../../content/find_familiar.json";
-import findFamiliarStatBlocksInput from "../../content/stat_block_find_familiar_forms.json";
+import spawnedCompanionInput from "../../content/find_familiar.json";
+import spawnedCompanionStatBlocksInput from "../../content/stat_block_find_familiar_forms.json";
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import skeletonInput from "../../content/stat_block_skeleton.json";
 import sphinxOfWonderInput from "../../content/stat_block_sphinx_of_wonder.json";
 import {
-  decodeStatBlockRecordEither,
+  decodeStatBlockRecordResult,
   decodeStatBlockRecordSync,
 } from "./schema.ts";
 import {
@@ -23,14 +23,14 @@ import type {
 
 const goblinWarrior = decodeStatBlockRecordSync(goblinWarriorInput);
 const skeleton = decodeStatBlockRecordSync(skeletonInput);
-const pseudodragonInput = findFamiliarStatBlocksInput.find(
+const pseudodragonInput = spawnedCompanionStatBlocksInput.find(
   (input) => input.id === "stat_block_pseudodragon",
 );
 if (pseudodragonInput === undefined) {
   throw new Error("Expected authored Pseudodragon Stat Block input.");
 }
 
-const findFamiliarNormalFormSkillModifiers: Record<
+const spawnedCompanionNormalFormSkillModifiers: Record<
   string,
   ReadonlyArray<{ readonly modifier: number; readonly skill: string }>
 > = {
@@ -107,18 +107,18 @@ describe("Stat Block catalog boundary", () => {
 
   test("rejects empty Stat Block ids and names", () => {
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({ ...goblinWarriorInput, id: "" }),
+      Result.isFailure(
+        decodeStatBlockRecordResult({ ...goblinWarriorInput, id: "" }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({ ...goblinWarriorInput, id: "   " }),
+      Result.isFailure(
+        decodeStatBlockRecordResult({ ...goblinWarriorInput, id: "   " }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({ ...goblinWarriorInput, name: "   " }),
+      Result.isFailure(
+        decodeStatBlockRecordResult({ ...goblinWarriorInput, name: "   " }),
       ),
     ).toBe(true);
   });
@@ -131,16 +131,16 @@ describe("Stat Block catalog boundary", () => {
       }).challengeRating,
     ).toBe(0.125);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({
+      Result.isFailure(
+        decodeStatBlockRecordResult({
           ...goblinWarriorInput,
           challengeRating: 0.13,
         }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({
+      Result.isFailure(
+        decodeStatBlockRecordResult({
           ...goblinWarriorInput,
           challengeRating: 31,
         }),
@@ -157,8 +157,8 @@ describe("Stat Block catalog boundary", () => {
 
     const { target: _target, ...targetlessSting } = sting;
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({
+      Result.isFailure(
+        decodeStatBlockRecordResult({
           ...pseudodragonInput,
           id: "stat_block_reject_targetless_save_gate",
           statBlock: {
@@ -172,8 +172,8 @@ describe("Stat Block catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({
+      Result.isFailure(
+        decodeStatBlockRecordResult({
           ...pseudodragonInput,
           id: "stat_block_reject_ambiguous_save_gate",
           statBlock: {
@@ -285,7 +285,7 @@ describe("Stat Block catalog boundary", () => {
         },
       },
     };
-    expect(Either.isLeft(decodeStatBlockRecordEither(malformed))).toBe(true);
+    expect(Result.isFailure(decodeStatBlockRecordResult(malformed))).toBe(true);
   });
 
   test("exports Skeleton's SRD Stat Block vulnerabilities and immunities", () => {
@@ -324,9 +324,9 @@ describe("Stat Block catalog boundary", () => {
   });
 
   test("exports SRD Stat Blocks for Find Familiar normal forms", () => {
-    const findFamiliarCreature = findFamiliarInput.mechanics.creature;
-    expect(findFamiliarCreature.kind).toBe("familiar_form_catalog");
-    if (findFamiliarCreature.kind !== "familiar_form_catalog") {
+    const spawnedCompanionCreature = spawnedCompanionInput.mechanics.creature;
+    expect(spawnedCompanionCreature.kind).toBe("familiar_form_catalog");
+    if (spawnedCompanionCreature.kind !== "familiar_form_catalog") {
       throw new Error("Expected Find Familiar form catalog input.");
     }
     const valid = buildStatBlockCatalog({
@@ -335,16 +335,19 @@ describe("Stat Block catalog boundary", () => {
 
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
-      for (const form of findFamiliarCreature.normalForms) {
+      for (const form of spawnedCompanionCreature.normalForms) {
         const statBlock = valid.catalog.requireStatBlock(form.statBlockId);
         expect(statBlock.statBlock.displayName).toBe(form.displayName);
         expect(statBlock.statBlock.creatureType).toBe("beast");
         expect(statBlock.challengeRating).toBe(0);
         expect(
-          Object.hasOwn(findFamiliarNormalFormSkillModifiers, form.statBlockId),
+          Object.hasOwn(
+            spawnedCompanionNormalFormSkillModifiers,
+            form.statBlockId,
+          ),
         ).toBe(true);
         expect(statBlock.statBlock.skillModifiers ?? []).toEqual(
-          findFamiliarNormalFormSkillModifiers[form.statBlockId],
+          spawnedCompanionNormalFormSkillModifiers[form.statBlockId],
         );
       }
     }

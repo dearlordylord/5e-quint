@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import * as fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
@@ -7,15 +7,15 @@ import { ORACLE_CLI_USAGE, parseOracleCliCommand } from "./oracle-bootstrap.ts";
 describe("Opaque Oracle command parser", () => {
   test("accepts the exhaustive command set", () => {
     expect(parseOracleCliCommand(["identity"])).toEqual(
-      Either.right({ tag: "identity" }),
+      Result.succeed({ tag: "identity" }),
     );
     expect(parseOracleCliCommand(["stream"])).toEqual(
-      Either.right({ tag: "stream" }),
+      Result.succeed({ tag: "stream" }),
     );
     expect(
       parseOracleCliCommand(["serve", "--port", "0", "--host", "127.0.0.1"]),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         tag: "serve",
         host: "127.0.0.1",
         port: 0,
@@ -47,10 +47,10 @@ describe("Opaque Oracle command parser", () => {
 
     for (const args of invalidArguments) {
       const result = parseOracleCliCommand(args);
-      expect(Either.isLeft(result), args.join(" ")).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left.tag).toBe("invalidArguments");
-        expect(result.left.message).toBe(ORACLE_CLI_USAGE);
+      expect(Result.isFailure(result), args.join(" ")).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure.tag).toBe("invalidArguments");
+        expect(result.failure.message).toBe(ORACLE_CLI_USAGE);
       }
     }
   });
@@ -81,9 +81,9 @@ describe("Opaque Oracle command parser", () => {
           "--host",
           "127.0.0.1",
         ]);
-        expect(Either.isRight(hostFirst)).toBe(true);
-        if (Either.isLeft(hostFirst)) return;
-        expect(hostFirst.right).toMatchObject({ tag: "serve", port });
+        expect(Result.isSuccess(hostFirst)).toBe(true);
+        if (Result.isFailure(hostFirst)) return;
+        expect(hostFirst.success).toMatchObject({ tag: "serve", port });
         expect(portFirst).toEqual(hostFirst);
       }),
       { numRuns: 200 },

@@ -1779,7 +1779,7 @@ function afterHitProjection(state: AfterHitRuntimeState): AfterHitSpellsState {
     shiningIlluminated: hasActiveEffectForSpell(
       state.battle,
       target.activeEffects,
-      "shiningSmiteIllumination",
+      "afterHitDamageAndIllumination",
       shiningSmiteUnitId,
     ),
     holes: battleHolesToAfterHitHoles(state.holes, state.pending),

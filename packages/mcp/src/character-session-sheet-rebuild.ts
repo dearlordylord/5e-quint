@@ -5,7 +5,7 @@ import {
 } from "@dnd/character-sheet-runtime";
 import type { StatBlockId } from "@dnd/shared/game-facts";
 import { Hp } from "@dnd/shared/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { AvailableCharacterSession } from "./session-store.ts";
@@ -17,7 +17,7 @@ export function rebuildCharacterSheetForOperation(
     readonly build: AvailableCharacterSession["build"];
     readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
   },
-): Either.Either<CharacterSheet, string> {
+): Result.Result<CharacterSheet, string> {
   const hitPointState = Match.value(input.sheet.hitPoints).pipe(
     Match.when({ tag: "positive" }, (hitPoints) => ({
       currentHp: hitPoints.currentHp,
@@ -88,5 +88,5 @@ export function rebuildCharacterSheetForOperation(
     },
     characterSheetSpellSlotSourceState(input.sheet),
   );
-  return Either.mapLeft(rebuilt, (issue) => issue.message);
+  return Result.mapError(rebuilt, (issue) => issue.message);
 }

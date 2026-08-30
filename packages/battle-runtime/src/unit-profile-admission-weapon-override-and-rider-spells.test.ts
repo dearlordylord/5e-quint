@@ -1,6 +1,10 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+  wizardSpellcasting,
+} from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import {
   battleActSpellPresentation,
@@ -20,7 +24,7 @@ import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-appl
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-weapon-attack-override spell.invocation-weapon-damage-rider spell.invocation-magic-weapon-enhancement
 import { describe, expect, test } from "vitest";
 import {
-  counterspellUnitId,
+  spellCastInterruptionReactionUnitId,
   divineFavorDurationTicks,
   divineFavorUnitId,
   magicWeaponDurationTicks,
@@ -48,7 +52,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   bonusSpellAct,
   bonusSpellActForItem,
-  magicWeaponTargetItemFill,
+  weaponAttackDamageEnhancementTargetItemFill,
   maybeBonusSpellAct,
   spellAct,
   spellTargetFill,
@@ -57,8 +61,8 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import {
   abilityModifier,
   attackBonus,
-  battleWeaponItemHasMagicWeaponEnhancement,
-  battleWeaponItemMagicWeaponEnhancementBonus,
+  battleWeaponItemHasWeaponAttackDamageEnhancement,
+  battleWeaponItemWeaponAttackDamageEnhancementBonus,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
@@ -249,7 +253,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
-        preparedSpells: [spellRecord(counterspellUnitId)],
+        preparedSpells: [spellRecord(spellCastInterruptionReactionUnitId)],
         featurePreparedSpells: [],
         spellAccesses: [],
         spellbookRitualSpellAccesses: [],
@@ -271,13 +275,17 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
           holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
           spatialFacts: [
             {
-              kind: "counterspellTriggerCasterVisibleWithinRange",
+              kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
               reactorId: spellTargetId,
               casterId: spellCasterId,
               sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
                 session,
                 spellTargetId,
-                spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
+                spellSlotInvocationRef(
+                  spellCastInterruptionReactionUnitId,
+                  3,
+                  "spellCastInterruptionReaction",
+                ),
               ),
               rangeFeet: movementFeet(60),
             },
@@ -597,38 +605,29 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       attack: zeroAbilityWeaponAttack("weapon_quarterstaff"),
       casterClassLevels: [{ className: "druid", level: 5 }],
     });
-    const initialCaster = session.state.combatants.get(spellCasterId);
-    if (initialCaster === undefined) {
-      throw new Error("Expected Shillelagh caster.");
-    }
     const sessionWithPriorCasting = battleRuntimeSessionForTest({
       ...session,
-      state: {
-        ...session.state,
-        combatants: new Map(session.state.combatants).set(spellCasterId, {
-          ...initialCaster,
-          activeEffects: [
-            ...initialCaster.activeEffects,
-            {
-              kind: "spellWeaponAttackOverride",
-              sourceProcedureRef: bonusSpellAct({
-                session,
-                spellId: shillelaghUnitId,
-              }).subject.procedureRef,
-              sourceCombatantId: spellCasterId,
-              weaponItemId: battleObjectId("main:weapon_quarterstaff"),
-              spellcastingAbilityModifier: abilityModifier(1),
-              attackBonus: attackBonus(3),
-              damage: { expr: { dice: 1, dieSize: 8 } },
-              damageTypeChoices: ["force", "bludgeoning"],
-              expiresAt: {
-                kind: "duration",
-                durationTicks: elapsedTimeTicks(1),
-              },
-            },
-          ],
-        }),
-      },
+      state: battleStateWithAllocatedEffectForTest({
+        state: session.state,
+        ownerId: spellCasterId,
+        effect: {
+          kind: "spellWeaponAttackOverride",
+          sourceProcedureRef: bonusSpellAct({
+            session,
+            spellId: shillelaghUnitId,
+          }).subject.procedureRef,
+          sourceCombatantId: spellCasterId,
+          weaponItemId: battleObjectId("main:weapon_quarterstaff"),
+          spellcastingAbilityModifier: abilityModifier(1),
+          attackBonus: attackBonus(3),
+          damage: { expr: { dice: 1, dieSize: 8 } },
+          damageTypeChoices: ["force", "bludgeoning"],
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(1),
+          },
+        },
+      }),
     });
     const second = resolveBattleSubject({
       state: sessionWithPriorCasting.state,
@@ -1124,11 +1123,18 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       procedureRef: requireCharacterSpellProcedureRefForTest(
         session,
         spellCasterId,
-        spellSlotInvocationRef(magicWeaponUnitId, 2, "magicWeaponEnhancement"),
+        spellSlotInvocationRef(
+          magicWeaponUnitId,
+          2,
+          "weaponAttackDamageEnhancement",
+        ),
       ),
       mode: { tag: "cast" },
     });
-    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const targetHole = requireHole(
+      act.initialHoles,
+      "weaponAttackDamageEnhancementTargetItem",
+    );
     expect(targetHole).toEqual(
       expect.objectContaining({
         label: "Spell target item",
@@ -1140,7 +1146,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       state: session.state,
       subject: act.subject,
       fills: [
-        magicWeaponTargetItemFill(targetHole, {
+        weaponAttackDamageEnhancementTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1165,12 +1171,11 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       cast.state.combatants.get(spellCasterId)?.activeEffects,
     ).toContainEqual(
       expect.objectContaining({
-        kind: "spellMagicWeaponEnhancement",
+        kind: "weaponAttackDamageEnhancement",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         holderCombatantId: spellCasterId,
         weaponItemId: battleObjectId("main:weapon_longsword"),
-        bonus: 1,
         expiresAt: {
           kind: "duration",
           durationTicks: magicWeaponDurationTicks,
@@ -1178,14 +1183,14 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       }),
     );
     expect(
-      battleWeaponItemHasMagicWeaponEnhancement(
+      battleWeaponItemHasWeaponAttackDamageEnhancement(
         cast.state,
         spellCasterId,
         battleObjectId("main:weapon_longsword"),
       ),
     ).toBe(true);
     expect(
-      battleWeaponItemMagicWeaponEnhancementBonus(
+      battleWeaponItemWeaponAttackDamageEnhancementBonus(
         cast.state,
         spellCasterId,
         battleObjectId("main:weapon_longsword"),
@@ -1215,12 +1220,15 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       spellId: magicWeaponUnitId,
       slotLevel: 6,
     });
-    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const targetHole = requireHole(
+      act.initialHoles,
+      "weaponAttackDamageEnhancementTargetItem",
+    );
     const cast = resolveBattleSubject({
       state: session.state,
       subject: act.subject,
       fills: [
-        magicWeaponTargetItemFill(targetHole, {
+        weaponAttackDamageEnhancementTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1288,28 +1296,21 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       },
     });
 
-    const caster = requireCombatant(session.state, spellCasterId);
-    const otherItemState = {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "spellMagicWeaponEnhancement",
-            sourceProcedureRef: act.subject.procedureRef,
-            sourceCombatantId: spellCasterId,
-            holderCombatantId: spellCasterId,
-            weaponItemId: battleObjectId("other:weapon_longsword"),
-            bonus: 3,
-            expiresAt: {
-              kind: "duration",
-              durationTicks: magicWeaponDurationTicks,
-            },
-          },
-        ],
-      }),
-    };
+    const otherItemState = battleStateWithAllocatedEffectForTest({
+      state: session.state,
+      ownerId: spellCasterId,
+      effect: {
+        kind: "weaponAttackDamageEnhancement",
+        sourceProcedureRef: act.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        holderCombatantId: spellCasterId,
+        weaponItemId: battleObjectId("other:weapon_longsword"),
+        expiresAt: {
+          kind: "duration",
+          durationTicks: magicWeaponDurationTicks,
+        },
+      },
+    });
     const otherTarget = requireResultHole(
       resolveBattleSubject({ state: otherItemState, subject, fills: [] }),
       "targetChoice",
@@ -1343,12 +1344,15 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       spellId: magicWeaponUnitId,
       slotLevel: 2,
     });
-    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const targetHole = requireHole(
+      act.initialHoles,
+      "weaponAttackDamageEnhancementTargetItem",
+    );
     const cast = resolveBattleSubject({
       state: session.state,
       subject: act.subject,
       fills: [
-        magicWeaponTargetItemFill(targetHole, {
+        weaponAttackDamageEnhancementTargetItemFill(targetHole, {
           holderCombatantId: spellTargetId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1398,46 +1402,42 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       spellSlots: [{ spellLevel: 3, count: 1 }],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const caster = requireCombatant(session.state, spellCasterId);
     const priorSession = battleRuntimeSessionForTest({
       ...session,
-      state: {
-        ...session.state,
-        combatants: new Map(session.state.combatants).set(spellCasterId, {
-          ...caster,
-          activeEffects: [
-            ...caster.activeEffects,
-            {
-              kind: "spellMagicWeaponEnhancement",
-              sourceProcedureRef: bonusSpellAct({
-                session,
-                spellId: magicWeaponUnitId,
-                slotLevel: 3,
-              }).subject.procedureRef,
-              sourceCombatantId: spellCasterId,
-              holderCombatantId: spellCasterId,
-              weaponItemId: battleObjectId("main:weapon_longsword"),
-              bonus: 1,
-              expiresAt: {
-                kind: "duration",
-                durationTicks: elapsedTimeTicks(1),
-              },
-            },
-          ],
-        }),
-      },
+      state: battleStateWithAllocatedEffectForTest({
+        state: session.state,
+        ownerId: spellCasterId,
+        effect: {
+          kind: "weaponAttackDamageEnhancement",
+          sourceProcedureRef: bonusSpellAct({
+            session,
+            spellId: magicWeaponUnitId,
+            slotLevel: 3,
+          }).subject.procedureRef,
+          sourceCombatantId: spellCasterId,
+          holderCombatantId: spellCasterId,
+          weaponItemId: battleObjectId("main:weapon_longsword"),
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(1),
+          },
+        },
+      }),
     });
     const act = bonusSpellAct({
       session: priorSession,
       spellId: magicWeaponUnitId,
       slotLevel: 3,
     });
-    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const targetHole = requireHole(
+      act.initialHoles,
+      "weaponAttackDamageEnhancementTargetItem",
+    );
     const recast = resolveBattleSubject({
       state: priorSession.state,
       subject: act.subject,
       fills: [
-        magicWeaponTargetItemFill(targetHole, {
+        weaponAttackDamageEnhancementTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1450,15 +1450,21 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       recast.state,
       spellCasterId,
     ).activeEffects.filter(
-      (effect) => effect.kind === "spellMagicWeaponEnhancement",
+      (effect) => effect.kind === "weaponAttackDamageEnhancement",
     );
     expect(effects).toEqual([
       expect.objectContaining({
         holderCombatantId: spellCasterId,
         weaponItemId: battleObjectId("main:weapon_longsword"),
-        bonus: 2,
       }),
     ]);
+    expect(
+      battleWeaponItemWeaponAttackDamageEnhancementBonus(
+        recast.state,
+        spellCasterId,
+        battleObjectId("main:weapon_longsword"),
+      ),
+    ).toBe(2);
   });
 
   test("magic_weapon rejects an item already made magical by another caster and expires on duration", () => {
@@ -1467,33 +1473,37 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       preparedSpells: [magicWeapon],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      targetSpellcasting: wizardSpellcasting({
+        preparedSpells: [magicWeapon],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
     });
-    const target = requireCombatant(session.state, spellTargetId);
+    const otherCasterProcedureRef = requireCharacterSpellProcedureRefForTest(
+      session,
+      spellTargetId,
+      spellSlotInvocationRef(
+        magicWeaponUnitId,
+        2,
+        "weaponAttackDamageEnhancement",
+      ),
+    );
     const alreadyMagicalSession = battleRuntimeSessionForTest({
       ...session,
-      state: {
-        ...session.state,
-        combatants: new Map(session.state.combatants).set(spellTargetId, {
-          ...target,
-          activeEffects: [
-            ...target.activeEffects,
-            {
-              kind: "spellMagicWeaponEnhancement",
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                "other-magic-weapon-caster",
-              ),
-              sourceCombatantId: spellTargetId,
-              holderCombatantId: spellCasterId,
-              weaponItemId: battleObjectId("main:weapon_longsword"),
-              bonus: 1,
-              expiresAt: {
-                kind: "duration",
-                durationTicks: magicWeaponDurationTicks,
-              },
-            },
-          ],
-        }),
-      },
+      state: battleStateWithAllocatedEffectForTest({
+        state: session.state,
+        ownerId: spellTargetId,
+        effect: {
+          kind: "weaponAttackDamageEnhancement",
+          sourceProcedureRef: otherCasterProcedureRef,
+          sourceCombatantId: spellTargetId,
+          holderCombatantId: spellCasterId,
+          weaponItemId: battleObjectId("main:weapon_longsword"),
+          expiresAt: {
+            kind: "duration",
+            durationTicks: magicWeaponDurationTicks,
+          },
+        },
+      }),
     });
     const rejectedAct = bonusSpellAct({
       session: alreadyMagicalSession,
@@ -1502,14 +1512,14 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
     });
     const rejectedHole = requireHole(
       rejectedAct.initialHoles,
-      "magicWeaponTargetItem",
+      "weaponAttackDamageEnhancementTargetItem",
     );
     expect(
       resolveBattleSubject({
         state: alreadyMagicalSession.state,
         subject: rejectedAct.subject,
         fills: [
-          magicWeaponTargetItemFill(rejectedHole, {
+          weaponAttackDamageEnhancementTargetItemFill(rejectedHole, {
             holderCombatantId: spellCasterId,
             itemId: battleObjectId("main:weapon_longsword"),
           }),
@@ -1525,12 +1535,15 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       spellId: magicWeaponUnitId,
       slotLevel: 2,
     });
-    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const targetHole = requireHole(
+      act.initialHoles,
+      "weaponAttackDamageEnhancementTargetItem",
+    );
     const cast = resolveBattleSubject({
       state: session.state,
       subject: act.subject,
       fills: [
-        magicWeaponTargetItemFill(targetHole, {
+        weaponAttackDamageEnhancementTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1545,7 +1558,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       combatants: new Map(cast.state.combatants).set(spellCasterId, {
         ...caster,
         activeEffects: caster.activeEffects.map((effect) =>
-          effect.kind === "spellMagicWeaponEnhancement"
+          effect.kind === "weaponAttackDamageEnhancement"
             ? {
                 ...effect,
                 expiresAt: {
@@ -1572,7 +1585,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       throw new Error("Expected Magic Weapon duration tick to resolve.");
     }
     expect(
-      battleWeaponItemHasMagicWeaponEnhancement(
+      battleWeaponItemHasWeaponAttackDamageEnhancement(
         expired.state,
         spellCasterId,
         battleObjectId("main:weapon_longsword"),
@@ -1587,7 +1600,6 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       spellSlots: [{ spellLevel: 3, count: 1 }],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
-    const caster = requireCombatant(session.state, spellCasterId);
     const act = bonusSpellAct({
       session,
       spellId: magicWeaponUnitId,
@@ -1596,31 +1608,29 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-magic-weapon-unrelated-resistance",
     );
-    const state = {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "damageResistance" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            damageType: "cold" as const,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
-      }),
-    };
-    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const state = battleStateWithAllocatedEffectForTest({
+      state: session.state,
+      ownerId: spellCasterId,
+      effect: {
+        kind: "damageResistance",
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellCasterId,
+        damageType: "cold",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
+    const targetHole = requireHole(
+      act.initialHoles,
+      "weaponAttackDamageEnhancementTargetItem",
+    );
     const cast = resolveBattleSubject({
       state,
       subject: act.subject,
       fills: [
-        magicWeaponTargetItemFill(targetHole, {
+        weaponAttackDamageEnhancementTargetItemFill(targetHole, {
           holderCombatantId: spellCasterId,
           itemId: battleObjectId("main:weapon_longsword"),
         }),
@@ -1639,7 +1649,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       }),
     );
     expect(
-      battleWeaponItemHasMagicWeaponEnhancement(
+      battleWeaponItemHasWeaponAttackDamageEnhancement(
         cast.state,
         spellCasterId,
         battleObjectId("main:weapon_longsword"),

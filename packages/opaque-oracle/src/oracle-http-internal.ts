@@ -5,7 +5,7 @@ import {
   type ServerResponse,
 } from "node:http";
 
-import { Either, Effect, Exit, Match } from "effect";
+import { Result, Effect, Exit, Match } from "effect";
 
 import type { OracleApplication } from "./oracle-distribution.ts";
 import { decodeOracleUtf8 } from "./oracle-utf8.ts";
@@ -93,9 +93,9 @@ export type OracleHttpServiceInternalOptions = OracleHttpServerOptions & {
 export type OracleListeningHttpServer = {
   readonly readiness: OracleHttpReadiness;
   readonly listenerFailure: Promise<
-    Either.Either<void, OracleHttpLifecycleIssue>
+    Result.Result<void, OracleHttpLifecycleIssue>
   >;
-  readonly close: () => Promise<Either.Either<void, OracleHttpLifecycleIssue>>;
+  readonly close: () => Promise<Result.Result<void, OracleHttpLifecycleIssue>>;
 };
 
 /**
@@ -112,11 +112,11 @@ export function listenOracleHttpServerInternal(input: {
   readonly encodeBatchResponse?: OracleHttpBatchResponseEncoder;
   readonly serverFactory?: OracleHttpServerFactory;
 }): Promise<
-  Either.Either<OracleListeningHttpServer, OracleHttpLifecycleIssue>
+  Result.Result<OracleListeningHttpServer, OracleHttpLifecycleIssue>
 > {
   if (input.host !== ORACLE_LOOPBACK_HOST) {
     return Promise.resolve(
-      Either.left({ tag: "invalidHost", host: input.host }),
+      Result.fail({ tag: "invalidHost", host: input.host }),
     );
   }
 
@@ -127,7 +127,7 @@ export function listenOracleHttpServerInternal(input: {
       server = createOracleHttpNodeServer(input);
     } catch (cause) {
       resolve(
-        Either.left({
+        Result.fail({
           tag: "listenFailed",
           message: String(cause),
         }),
@@ -135,16 +135,16 @@ export function listenOracleHttpServerInternal(input: {
       return;
     }
     let listenerFailure: (
-      result: Either.Either<void, OracleHttpLifecycleIssue>,
+      result: Result.Result<void, OracleHttpLifecycleIssue>,
     ) => void = () => undefined;
     const listenerFailurePromise = new Promise<
-      Either.Either<void, OracleHttpLifecycleIssue>
+      Result.Result<void, OracleHttpLifecycleIssue>
     >((resolveFailure) => {
       listenerFailure = resolveFailure;
     });
     let listenerFailureSettled = false;
     const settleListenerFailure = (
-      result: Either.Either<void, OracleHttpLifecycleIssue>,
+      result: Result.Result<void, OracleHttpLifecycleIssue>,
     ): void => {
       if (listenerFailureSettled) return;
       listenerFailureSettled = true;
@@ -155,7 +155,7 @@ export function listenOracleHttpServerInternal(input: {
       settled = true;
       server.off("error", onListenError);
       resolve(
-        Either.left({
+        Result.fail({
           tag: "listenFailed",
           message: String(cause),
         }),
@@ -180,26 +180,26 @@ export function listenOracleHttpServerInternal(input: {
         server.off("error", onListenError);
         server.on("error", (cause: Error) => {
           settleListenerFailure(
-            Either.left({
+            Result.fail({
               tag: "listenerFailed",
               message: String(cause),
             }),
           );
         });
         const decodedPort = decodeOracleListeningPort(address.port);
-        if (Either.isLeft(decodedPort)) {
+        if (Result.isFailure(decodedPort)) {
           resolveInvalidAddressAfterClose(
             "Oracle HTTP server returned an invalid TCP port.",
           );
           return;
         }
         resolve(
-          Either.right(
+          Result.succeed(
             makeListeningHttpServer({
               server,
               readiness: {
                 host: ORACLE_LOOPBACK_HOST,
-                port: decodedPort.right,
+                port: decodedPort.success,
               },
               listenerFailure: listenerFailurePromise,
               settleListenerFailure,
@@ -209,11 +209,11 @@ export function listenOracleHttpServerInternal(input: {
 
         function resolveInvalidAddressAfterClose(message: string): void {
           void closeOracleHttpNodeServer(server).then((closed) => {
-            if (Either.isLeft(closed)) {
-              resolve(Either.left(closed.left));
+            if (Result.isFailure(closed)) {
+              resolve(Result.fail(closed.failure));
               return;
             }
-            resolve(Either.left({ tag: "invalidAddress", message }));
+            resolve(Result.fail({ tag: "invalidAddress", message }));
           });
         }
       });
@@ -230,11 +230,11 @@ export function listenOracleHttpServerInternal(input: {
  */
 export async function runOracleHttpServiceInternal(
   input: OracleHttpServiceInternalOptions,
-): Promise<Either.Either<void, OracleHttpLifecycleIssue>> {
+): Promise<Result.Result<void, OracleHttpLifecycleIssue>> {
   const listened = await listenOracleHttpServerInternal(input);
-  if (Either.isLeft(listened)) return listened;
+  if (Result.isFailure(listened)) return Result.fail(listened.failure);
 
-  const server = listened.right;
+  const server = listened.success;
   const termination = waitForTerminationSignal();
   const readiness = Promise.resolve().then(() =>
     input.writeReady(`${encodeOracleHttpReadinessJson(server.readiness)}\n`),
@@ -275,7 +275,7 @@ export async function runOracleHttpServiceInternal(
 async function awaitOracleHttpLifecycle(
   server: OracleListeningHttpServer,
   termination: OracleTerminationSignalWait,
-): Promise<Either.Either<void, OracleHttpLifecycleIssue>> {
+): Promise<Result.Result<void, OracleHttpLifecycleIssue>> {
   const lifecycle = await Promise.race([
     server.listenerFailure.then((result) => ({
       tag: "listenerFailure" as const,
@@ -300,11 +300,11 @@ async function closeAfterReadinessFailure(
   server: OracleListeningHttpServer,
   termination: OracleTerminationSignalWait,
   cause: unknown,
-): Promise<Either.Either<void, OracleHttpLifecycleIssue>> {
+): Promise<Result.Result<void, OracleHttpLifecycleIssue>> {
   termination.cancel();
   const closed = await server.close();
-  if (Either.isLeft(closed)) return closed;
-  return Either.left({
+  if (Result.isFailure(closed)) return closed;
+  return Result.fail({
     tag: "readinessWriteFailed",
     message: String(cause),
   });
@@ -312,11 +312,11 @@ async function closeAfterReadinessFailure(
 
 async function handleListenerFailure(
   server: OracleListeningHttpServer,
-  result: Either.Either<void, OracleHttpLifecycleIssue>,
-): Promise<Either.Either<void, OracleHttpLifecycleIssue>> {
-  if (Either.isRight(result)) return result;
+  result: Result.Result<void, OracleHttpLifecycleIssue>,
+): Promise<Result.Result<void, OracleHttpLifecycleIssue>> {
+  if (Result.isSuccess(result)) return result;
   const closed = await server.close();
-  return Either.isLeft(closed) ? closed : result;
+  return Result.isFailure(closed) ? closed : result;
 }
 
 function createOracleHttpNodeServer(input: {
@@ -401,8 +401,8 @@ async function handleOracleEvaluationRequest(input: {
   readonly outgoing: ServerResponse;
 }): Promise<void> {
   const body = await readBoundedRequestBody(input.incoming);
-  if (Either.isLeft(body)) {
-    await Match.value(body.left).pipe(
+  if (Result.isFailure(body)) {
+    await Match.value(body.failure).pipe(
       Match.when({ tag: "requestTooLarge" }, () =>
         writeTransportResponse(input.outgoing, 413),
       ),
@@ -415,8 +415,8 @@ async function handleOracleEvaluationRequest(input: {
     return;
   }
 
-  const decoded = decodeOracleUtf8(body.right);
-  if (Either.isLeft(decoded)) {
+  const decoded = decodeOracleUtf8(body.success);
+  if (Result.isFailure(decoded)) {
     const response = encodeOracleBatchHttpResponse({
       application: input.application,
       ...(input.encodeBatchResponse === undefined
@@ -436,7 +436,7 @@ async function handleOracleEvaluationRequest(input: {
     ...(input.encodeBatchResponse === undefined
       ? {}
       : { encodeBatchResponse: input.encodeBatchResponse }),
-    rawJson: decoded.right,
+    rawJson: decoded.success,
   });
   await writeJsonResponse(input.outgoing, response.status, response.body);
 }
@@ -528,14 +528,14 @@ function makeListeningHttpServer(input: {
   readonly server: Server;
   readonly readiness: OracleHttpReadiness;
   readonly listenerFailure: Promise<
-    Either.Either<void, OracleHttpLifecycleIssue>
+    Result.Result<void, OracleHttpLifecycleIssue>
   >;
   readonly settleListenerFailure: (
-    result: Either.Either<void, OracleHttpLifecycleIssue>,
+    result: Result.Result<void, OracleHttpLifecycleIssue>,
   ) => void;
 }): OracleListeningHttpServer {
   let closeResult:
-    | Promise<Either.Either<void, OracleHttpLifecycleIssue>>
+    | Promise<Result.Result<void, OracleHttpLifecycleIssue>>
     | undefined;
   return {
     readiness: input.readiness,
@@ -543,7 +543,7 @@ function makeListeningHttpServer(input: {
     close: () => {
       closeResult ??= closeOracleHttpNodeServer(input.server).then((result) => {
         input.settleListenerFailure(
-          Either.isLeft(result) ? result : Either.right(undefined),
+          Result.isFailure(result) ? result : Result.succeed(undefined),
         );
         return result;
       });
@@ -554,15 +554,15 @@ function makeListeningHttpServer(input: {
 
 function closeOracleHttpNodeServer(
   server: Server,
-): Promise<Either.Either<void, OracleHttpLifecycleIssue>> {
+): Promise<Result.Result<void, OracleHttpLifecycleIssue>> {
   return new Promise((resolve) => {
     try {
       server.close((cause) => {
         if (cause === undefined) {
-          resolve(Either.right(undefined));
+          resolve(Result.succeed(undefined));
         } else {
           resolve(
-            Either.left({
+            Result.fail({
               tag: "closeFailed",
               message: String(cause),
             }),
@@ -571,7 +571,7 @@ function closeOracleHttpNodeServer(
       });
     } catch (cause) {
       resolve(
-        Either.left({
+        Result.fail({
           tag: "closeFailed",
           message: String(cause),
         }),
@@ -611,30 +611,30 @@ function isSupportedJsonContentTypeParameter(parameter: string): boolean {
 
 async function readBoundedRequestBody(
   incoming: IncomingMessage,
-): Promise<Either.Either<Uint8Array, OracleHttpRequestFailure>> {
+): Promise<Result.Result<Uint8Array, OracleHttpRequestFailure>> {
   const declaredLength = parseContentLength(incoming.headers["content-length"]);
   if (
     declaredLength !== undefined &&
     declaredLength > ORACLE_HTTP_MAX_REQUEST_BYTES
   ) {
     incoming.resume();
-    return Either.left({ tag: "requestTooLarge" });
+    return Result.fail({ tag: "requestTooLarge" });
   }
 
   const collected = await collectBoundedRequestBodyChunks(incoming);
-  if (Either.isLeft(collected)) return Either.left(collected.left);
+  if (Result.isFailure(collected)) return Result.fail(collected.failure);
   if (incoming.aborted || !incoming.complete) {
-    return Either.left({
+    return Result.fail({
       tag: "requestStreamFailed",
       message: "Oracle HTTP request stream ended before completion.",
     });
   }
-  return Either.right(collected.right);
+  return Result.succeed(collected.success);
 }
 
 async function collectBoundedRequestBodyChunks(
   incoming: IncomingMessage,
-): Promise<Either.Either<Buffer, OracleHttpRequestFailure>> {
+): Promise<Result.Result<Buffer, OracleHttpRequestFailure>> {
   const chunks: Buffer[] = [];
   let byteLength = 0;
   try {
@@ -643,17 +643,17 @@ async function collectBoundedRequestBodyChunks(
       byteLength += bytes.byteLength;
       if (byteLength > ORACLE_HTTP_MAX_REQUEST_BYTES) {
         incoming.resume();
-        return Either.left({ tag: "requestTooLarge" });
+        return Result.fail({ tag: "requestTooLarge" });
       }
       chunks.push(bytes);
     }
   } catch (cause) {
-    return Either.left({
+    return Result.fail({
       tag: "requestStreamFailed",
       message: String(cause),
     });
   }
-  return Either.right(Buffer.concat(chunks, byteLength));
+  return Result.succeed(Buffer.concat(chunks, byteLength));
 }
 
 function parseContentLength(

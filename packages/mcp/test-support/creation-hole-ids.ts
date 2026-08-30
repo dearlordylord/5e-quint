@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
@@ -14,13 +14,13 @@ export function unitHoleId(
   choiceKey: UnitChoiceKey,
 ): CreationHoleIdText {
   const sourceUnitId = unitChoiceSourceUnitId(unitId);
-  if (Either.isLeft(sourceUnitId)) {
+  if (Result.isFailure(sourceUnitId)) {
     throw new Error("Unit choice sources require a non-empty Unit id.");
   }
 
   return unitChoiceSourceHoleIdText({
     tag: "unitChoice",
-    unitId: sourceUnitId.right,
+    unitId: sourceUnitId.success,
     choiceKey,
   });
 }
@@ -30,13 +30,13 @@ export function loadoutHoleId(
   slot: LoadoutSlot,
 ): CreationHoleIdText {
   const sourceEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId);
-  if (Either.isLeft(sourceEquipmentUnitId)) {
+  if (Result.isFailure(sourceEquipmentUnitId)) {
     throw new Error("Loadout sources require a non-empty equipment Unit id.");
   }
 
   return loadoutSourceHoleIdText({
     tag: "loadout",
-    equipmentUnitId: sourceEquipmentUnitId.right,
+    equipmentUnitId: sourceEquipmentUnitId.success,
     slot,
   });
 }

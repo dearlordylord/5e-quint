@@ -1,7 +1,4 @@
-import {
-  battleProcedureExecutionRefForTest,
-  characterBattleFeatureInitForTest,
-} from "./battle-runtime.test-support.ts";
+import { characterBattleFeatureInitForTest } from "./battle-runtime.test-support.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
@@ -30,7 +27,7 @@ import {
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
 import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
@@ -42,7 +39,6 @@ import {
   discoverBattleActCandidates,
   endTurn,
   startBattle,
-  type BattleActiveEffect,
   type BattleState,
   type BattleSubject,
 } from "./index.ts";
@@ -72,6 +68,8 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { difficultyClass } from "@dnd/shared/types";
+import { battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest } from "./low-level-effect-occurrence.test-support.ts";
 
 const speciesGoliathPowerfulBuildUnitId = "species_goliath_powerful_build";
 const speciesHalflingNimblenessUnitId = "species_halfling_nimbleness";
@@ -239,8 +237,8 @@ function dragonbornDamageResistanceBattle(): BattleState {
     unit,
     sourceFacts: draconicAncestrySourceFacts,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const result = startBattle({
     battleId: battleId("species-passive-dragonborn-resistance"),
@@ -249,7 +247,7 @@ function dragonbornDamageResistanceBattle(): BattleState {
         combatantId: dragonbornDamageResistanceTargetId,
         displayName: "Dragonborn Target",
         initiative: 10,
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
       }),
       characterCreature({
         combatantId: combatantId("species-passive-dragonborn-attacker"),
@@ -258,10 +256,10 @@ function dragonbornDamageResistanceBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function projectDragonbornDamageResistance(
@@ -294,8 +292,8 @@ function dwarvenResilienceBattle(): BattleState {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const result = startBattle({
     battleId: battleId("species-passive-dwarven-resilience"),
@@ -305,7 +303,7 @@ function dwarvenResilienceBattle(): BattleState {
         displayName: "Dwarf Target",
         initiative: 10,
         unitFeatures: [characterBattleFeatureInitForTest(unit)],
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
       }),
       characterSeed({
         combatantId: wizardId,
@@ -319,10 +317,10 @@ function dwarvenResilienceBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
@@ -331,8 +329,8 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const result = startBattle({
     battleId: battleId("species-passive-dwarven-resilience-poisoned-save"),
@@ -342,52 +340,57 @@ function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
         displayName: "Poisoned Dwarf Target",
         initiative: 20,
         unitFeatures: [characterBattleFeatureInitForTest(unit)],
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
       }),
       characterSeed({
         combatantId: wizardId,
         displayName: "Poison Source",
         initiative: 10,
+        attack: null,
+        spellcasting: wizardSpellcasting(),
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  const target = result.right.state.combatants.get(
+  // This fixture exercises the lower-level repeat-save interaction, not spell
+  // admission. Give that synthetic boundary its own source-owned procedure and
+  // fixed DC so it cannot be mistaken for an admitted spell lifecycle.
+  const allocated = battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
+    state: result.success.state,
+    sourceCombatantId: wizardId,
+    ownerId: poisonedDwarvenResilienceTargetId,
+    effect: {
+      kind: "spellConditionEndTurnSave",
+      condition: "poisoned",
+      conditionHadNonSpellSource: false,
+      heightenedSpellTargetDisadvantage: null,
+      save: {
+        ability: "con",
+        dc: { kind: "fixed", dc: difficultyClass(10) },
+      },
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(10),
+      },
+    },
+  });
+  const target = allocated.state.combatants.get(
     poisonedDwarvenResilienceTargetId,
   );
   if (target === undefined) {
     throw new Error("Expected poisoned Dwarven Resilience target.");
   }
-  const poisonedEffect = {
-    kind: "spellConditionEndTurnSave",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String("synthetic_poison_condition_save"),
-    ),
-    sourceCombatantId: wizardId,
-    condition: "poisoned",
-    conditionHadNonSpellSource: false,
-    heightenedSpellTargetDisadvantage: null,
-    save: {
-      ability: "con",
-      dc: { kind: "caster_spell_save_dc" },
-    },
-    expiresAt: {
-      kind: "duration",
-      durationTicks: elapsedTimeTicks(10),
-    },
-  } satisfies BattleActiveEffect;
   const poisonedTarget = {
     ...testBattleCreatureStateWithConditions(
       target,
       applyCondition(target.conditions, "poisoned"),
     ),
-    activeEffects: [...target.activeEffects, poisonedEffect],
   };
   return {
-    ...result.right.state,
-    combatants: new Map(result.right.state.combatants).set(
+    ...allocated.state,
+    combatants: new Map(allocated.state.combatants).set(
       poisonedDwarvenResilienceTargetId,
       poisonedTarget,
     ),
@@ -436,8 +439,8 @@ function halflingBraveBattle(): BattleState {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const targetId = combatantId("species-passive-halfling-target");
   const result = startBattle({
@@ -448,7 +451,7 @@ function halflingBraveBattle(): BattleState {
         displayName: "Halfling Target",
         initiative: 10,
         unitFeatures: [characterBattleFeatureInitForTest(unit)],
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
       }),
       characterCreature({
         combatantId: combatantId("species-passive-halfling-attacker"),
@@ -457,10 +460,10 @@ function halflingBraveBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function projectHalflingBrave(
@@ -503,8 +506,8 @@ function escapeGrappleRollMode(input: {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const actorId = combatantId(
     input.poisoned === true
@@ -532,7 +535,7 @@ function escapeGrappleRollMode(input: {
         combatantId: actorId,
         displayName: "Goliath Target",
         initiative: 10,
-        characterUnitRefs: input.selected ? [unitRef.right] : [],
+        characterUnitRefs: input.selected ? [unitRef.success] : [],
         unitFeatures: input.selected
           ? [characterBattleFeatureInitForTest(unit)]
           : [],
@@ -540,8 +543,8 @@ function escapeGrappleRollMode(input: {
       }),
     ],
   });
-  if (Either.isLeft(state)) {
-    throw new Error(battleStateInitIssueMessage(state.left));
+  if (Result.isFailure(state)) {
+    throw new Error(battleStateInitIssueMessage(state.failure));
   }
   const grappleSubject = {
     tag: "action",
@@ -550,7 +553,7 @@ function escapeGrappleRollMode(input: {
   } as const;
   const target = requireHole(
     resolveBattleSubject({
-      state: state.right.state,
+      state: state.success.state,
       subject: grappleSubject,
       fills: [],
     }),
@@ -561,7 +564,7 @@ function escapeGrappleRollMode(input: {
   ]);
   const outcome = requireHole(
     resolveBattleSubject({
-      state: state.right.state,
+      state: state.success.state,
       subject: grappleSubject,
       fills: [targetChoice],
     }),
@@ -569,7 +572,7 @@ function escapeGrappleRollMode(input: {
   );
   const grappled = requireResolved(
     resolveBattleSubject({
-      state: state.right.state,
+      state: state.success.state,
       subject: grappleSubject,
       fills: [targetChoice, grappleOutcomeFill(outcome, false)],
     }),
@@ -988,8 +991,8 @@ function goliathPowerfulBuildBattle(): BattleState {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const result = startBattle({
     battleId: battleId("species-passive-substrate-goliath-powerful-build"),
@@ -1003,15 +1006,15 @@ function goliathPowerfulBuildBattle(): BattleState {
         combatantId: combatantId("species-passive-substrate-goliath"),
         displayName: "Goliath Target",
         initiative: 10,
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
         unitFeatures: [characterBattleFeatureInitForTest(unit)],
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function halflingNimblenessSubstrateBattle(input: {
@@ -1023,8 +1026,8 @@ function halflingNimblenessSubstrateBattle(input: {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const result = startBattle({
     battleId: battleId(
@@ -1043,7 +1046,7 @@ function halflingNimblenessSubstrateBattle(input: {
         unitFeatures: input.selected
           ? [characterBattleFeatureInitForTest(unit)]
           : [],
-        characterUnitRefs: input.selected ? [unitRef.right] : [],
+        characterUnitRefs: input.selected ? [unitRef.success] : [],
       }),
       characterSeed({
         combatantId: substrateBlockerId,
@@ -1053,10 +1056,10 @@ function halflingNimblenessSubstrateBattle(input: {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function observeAcceptedCreatureSpaceMovementRoute(

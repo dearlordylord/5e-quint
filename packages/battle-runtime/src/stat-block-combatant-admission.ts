@@ -2,8 +2,7 @@ import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { Condition } from "@dnd/shared/game-facts";
 import { Hp, type Size } from "@dnd/shared/types";
 import type { StatBlockMechanics } from "@dnd/surface/surface/types";
-import { Brand } from "effect";
-import * as Either from "effect/Either";
+import { Brand, Result } from "effect";
 
 import type {
   BattleInitializationIssueFacts,
@@ -65,16 +64,16 @@ export function admitBattleStatBlockCombatant(input: {
   readonly combatantId: CombatantId;
   readonly statBlock: BattleStatBlockExecutionSource;
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
-}): Either.Either<
+}): Result.Result<
   AdmittedBattleStatBlockCombatant,
   BattleStatBlockInitializationIssue
 > {
   const source = battleStatBlockCombatantSource(input.statBlock);
-  if (Either.isLeft(source)) return Either.left(source.left);
+  if (Result.isFailure(source)) return Result.fail(source.failure);
   return admitBattleStatBlockCombatantSource({
     battleId: input.battleId,
     combatantId: input.combatantId,
-    source: source.right,
+    source: source.success,
     startingScopeOrdinal: input.startingScopeOrdinal,
   });
 }
@@ -84,7 +83,7 @@ export function admitBattleStatBlockCombatantSource(input: {
   readonly combatantId: CombatantId;
   readonly source: BattleStatBlockCombatantSource;
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
-}): Either.Either<
+}): Result.Result<
   AdmittedBattleStatBlockCombatant,
   BattleStatBlockInitializationIssue
 > {
@@ -115,7 +114,7 @@ export function admitBattleStatBlockCombatantSource(input: {
     from,
   );
   const allocation = cohort.admissions[0];
-  return Either.right(
+  return Result.succeed(
     AdmittedBattleStatBlockCombatant({
       battleId: input.battleId,
       combatantId: input.combatantId,
@@ -153,7 +152,7 @@ export function admitBattleStatBlockCombatantSource(input: {
 
 export function battleStatBlockCombatantSource(
   statBlock: BattleStatBlockExecutionSource,
-): Either.Either<
+): Result.Result<
   BattleStatBlockCombatantSource,
   BattleStatBlockInitializationIssue
 > {
@@ -191,7 +190,7 @@ export function battleStatBlockCombatantSource(
       constraint: "concreteSizeRequired",
     });
   }
-  return Either.right(
+  return Result.succeed(
     BattleStatBlockCombatantSource({
       ...statBlock,
       statBlock: {
@@ -207,8 +206,8 @@ export function battleStatBlockCombatantSource(
 function issue(
   message: string,
   facts: BattleInitializationIssueFacts,
-): Either.Either<never, BattleStatBlockInitializationIssue> {
-  return Either.left({
+): Result.Result<never, BattleStatBlockInitializationIssue> {
+  return Result.fail({
     tag: "battleStateInitIssue",
     message,
     ...facts,

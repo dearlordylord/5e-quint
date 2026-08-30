@@ -7,7 +7,7 @@ import {
   type BattleFill,
 } from "@dnd/battle-runtime";
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
-import { Either, Option, Schema } from "effect";
+import { Result, Option, Schema } from "effect";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
@@ -138,9 +138,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
       battle: statBlockBattle,
     });
 
-    expect(Either.isRight(decoded)).toBe(true);
-    if (Either.isRight(decoded)) {
-      expect(decoded.right.creation.fillBatches).toEqual([]);
+    expect(Result.isSuccess(decoded)).toBe(true);
+    if (Result.isSuccess(decoded)) {
+      expect(decoded.success.creation.fillBatches).toEqual([]);
     }
     expect(oracleTraceSchema).toBeDefined();
   });
@@ -152,9 +152,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
       battle: statBlockBattle,
       extra: true,
     });
-    expect(Either.isLeft(unknownMember)).toBe(true);
-    if (Either.isLeft(unknownMember)) {
-      expect(unknownMember.left).toContainEqual({
+    expect(Result.isFailure(unknownMember)).toBe(true);
+    if (Result.isFailure(unknownMember)) {
+      expect(unknownMember.failure).toContainEqual({
         path: "/extra",
         code: "unknownMember",
       });
@@ -167,9 +167,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
       sheet: { tag: "ordinary" },
       battle: statBlockBattle,
     });
-    expect(Either.isLeft(unknownFillVariant)).toBe(true);
-    if (Either.isLeft(unknownFillVariant)) {
-      expect(unknownFillVariant.left).toContainEqual({
+    expect(Result.isFailure(unknownFillVariant)).toBe(true);
+    if (Result.isFailure(unknownFillVariant)) {
+      expect(unknownFillVariant.failure).toContainEqual({
         path: "/creation/fillBatches/0/0/kind",
         code: "unknownVariant",
       });
@@ -186,9 +186,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
       },
       battle: statBlockBattle,
     });
-    expect(Either.isLeft(duplicateSetMember)).toBe(true);
-    if (Either.isLeft(duplicateSetMember)) {
-      expect(duplicateSetMember.left).toContainEqual({
+    expect(Result.isFailure(duplicateSetMember)).toBe(true);
+    if (Result.isFailure(duplicateSetMember)) {
+      expect(duplicateSetMember.failure).toContainEqual({
         path: "/sheet/statBlockIds",
         code: "duplicateCollectionMember",
       });
@@ -197,9 +197,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
     const duplicateJsonMember = decodeOracleCaseJson(
       '{"creation":{"fillBatches":[]},"creation":{"fillBatches":[]},"sheet":{"tag":"ordinary"},"battle":{"roster":[{"origin":"statBlock","combatantId":"oracle:stat-block","statBlockId":"stat_block_skeleton","initiative":0,"ammunitionStocks":[],"conditions":[]}]}}',
     );
-    expect(Either.isLeft(duplicateJsonMember)).toBe(true);
-    if (Either.isLeft(duplicateJsonMember)) {
-      expect(duplicateJsonMember.left).toEqual([
+    expect(Result.isFailure(duplicateJsonMember)).toBe(true);
+    if (Result.isFailure(duplicateJsonMember)) {
+      expect(duplicateJsonMember.failure).toEqual([
         { path: "/creation", code: "duplicateMember" },
       ]);
     }
@@ -209,9 +209,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
       sheet: { tag: "ordinary" },
       battle: { roster: statBlockBattle.roster },
     });
-    expect(Either.isLeft(missingAttempts)).toBe(true);
-    if (Either.isLeft(missingAttempts)) {
-      expect(missingAttempts.left).toContainEqual({
+    expect(Result.isFailure(missingAttempts)).toBe(true);
+    if (Result.isFailure(missingAttempts)) {
+      expect(missingAttempts.failure).toContainEqual({
         path: "/battle/attempts",
         code: "missingMember",
       });
@@ -235,9 +235,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
       battle: statBlockBattle,
     });
 
-    expect(Either.isLeft(decoded)).toBe(true);
-    if (Either.isLeft(decoded)) {
-      expect(decoded.left).toContainEqual({
+    expect(Result.isFailure(decoded)).toBe(true);
+    if (Result.isFailure(decoded)) {
+      expect(decoded.failure).toContainEqual({
         path: "/creation/fillBatches/0/0/optionIds/0",
         code: "wrongType",
       });
@@ -256,9 +256,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
       },
       battle: statBlockBattle,
     });
-    expect(Either.isRight(reversedKnownForms)).toBe(true);
-    if (Either.isRight(reversedKnownForms)) {
-      expect(reversedKnownForms.right.sheet).toEqual({
+    expect(Result.isSuccess(reversedKnownForms)).toBe(true);
+    if (Result.isSuccess(reversedKnownForms)) {
+      expect(reversedKnownForms.success.sheet).toEqual({
         tag: "wildShapeKnownForms",
         statBlockIds: [
           statBlockId("stat_block_rat"),
@@ -278,7 +278,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       },
       battle: statBlockBattle,
     });
-    expect(Either.isLeft(duplicatedKnownForms)).toBe(true);
+    expect(Result.isFailure(duplicatedKnownForms)).toBe(true);
 
     const ordered = decodeOracleCase({
       creation: { fillBatches: [] },
@@ -320,11 +320,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
         attempts: [],
       },
     });
-    expect(Either.isRight(ordered)).toBe(true);
-    expect(Either.isRight(reversed)).toBe(true);
-    if (Either.isRight(ordered) && Either.isRight(reversed)) {
-      expect(ordered.right.battle.roster).not.toEqual(
-        reversed.right.battle.roster,
+    expect(Result.isSuccess(ordered)).toBe(true);
+    expect(Result.isSuccess(reversed)).toBe(true);
+    if (Result.isSuccess(ordered) && Result.isSuccess(reversed)) {
+      expect(ordered.success.battle.roster).not.toEqual(
+        reversed.success.battle.roster,
       );
     }
   });
@@ -345,7 +345,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(canonicalStructuralKey([1])).not.toBe(canonicalStructuralKey(["1"]));
     expect(canonicalStructuralKey(cyclic)).toContain("object:cycle");
     expect(() => decodeOracleCase(cyclic)).not.toThrow();
-    expect(Either.isLeft(decodeOracleCase(cyclic))).toBe(true);
+    expect(Result.isFailure(decodeOracleCase(cyclic))).toBe(true);
 
     const hostile = new Proxy(
       {
@@ -360,11 +360,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
       },
     );
     expect(() => decodeOracleCase(hostile)).not.toThrow();
-    expect(Either.isLeft(decodeOracleCase(hostile))).toBe(true);
+    expect(Result.isFailure(decodeOracleCase(hostile))).toBe(true);
   });
 
   it("uses a concrete interrupt-decision fill member at the Case boundary", () => {
-    const decline = Schema.decodeUnknownEither(
+    const decline = Schema.decodeUnknownResult(
       OracleBattleInterruptDecisionFillSchema,
     )({
       kind: "interruptDecision",
@@ -374,9 +374,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
         responderId: combatantId("oracle:stat-block"),
       },
     });
-    expect(Either.isRight(decline)).toBe(true);
+    expect(Result.isSuccess(decline)).toBe(true);
 
-    const ordinary = Schema.decodeUnknownEither(
+    const ordinary = Schema.decodeUnknownResult(
       OracleBattleInterruptDecisionFillSchema,
     )({
       kind: "movement",
@@ -387,7 +387,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         provokedOpportunityAttacks: [],
       },
     });
-    expect(Either.isLeft(ordinary)).toBe(true);
+    expect(Result.isFailure(ordinary)).toBe(true);
   });
 
   it("admits empty or all-Stat-Block rosters but rejects legacy multi-Sheet input, duplicate conditions, and omitted temp HP", () => {
@@ -396,7 +396,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       sheet: { tag: "ordinary" },
       battle: { roster: { tag: "statBlocks", entries: [] }, attempts: [] },
     });
-    expect(Either.isRight(empty)).toBe(true);
+    expect(Result.isSuccess(empty)).toBe(true);
 
     const duplicateSheet = decodeOracleCase({
       creation: { fillBatches: [] },
@@ -417,7 +417,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         attempts: [],
       },
     });
-    expect(Either.isLeft(duplicateSheet)).toBe(true);
+    expect(Result.isFailure(duplicateSheet)).toBe(true);
 
     const duplicateConditions = decodeOracleCase({
       creation: { fillBatches: [] },
@@ -435,9 +435,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
         attempts: [],
       },
     });
-    expect(Either.isLeft(duplicateConditions)).toBe(true);
-    if (Either.isLeft(duplicateConditions)) {
-      expect(duplicateConditions.left).toContainEqual({
+    expect(Result.isFailure(duplicateConditions)).toBe(true);
+    if (Result.isFailure(duplicateConditions)) {
+      expect(duplicateConditions.failure).toContainEqual({
         path: "/battle/roster/entries/0/conditions",
         code: "duplicateCollectionMember",
       });
@@ -462,11 +462,50 @@ describe("Opaque Oracle Case and Trace contract", () => {
         attempts: [],
       },
     });
-    expect(Either.isLeft(omittedTempHp)).toBe(true);
-    if (Either.isLeft(omittedTempHp)) {
-      expect(omittedTempHp.left).toContainEqual({
+    expect(Result.isFailure(omittedTempHp)).toBe(true);
+    if (Result.isFailure(omittedTempHp)) {
+      expect(omittedTempHp.failure).toContainEqual({
         path: "/battle/roster/entries/0/tempHp",
         code: "missingMember",
+      });
+    }
+  });
+
+  it("admits omitted current HP and rejects an explicitly undefined current HP", () => {
+    const rosterEntry = {
+      combatantId: combatantId("oracle:optional-current-hp"),
+      statBlockId: statBlockId("stat_block_skeleton"),
+      initiative: initiativeScore(0),
+      ammunitionStocks: {},
+      conditions: [],
+      tempHp: 0,
+    };
+    const omittedCurrentHp = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" },
+      battle: {
+        roster: { tag: "statBlocks", entries: [rosterEntry] },
+        attempts: [],
+      },
+    });
+    expect(Result.isSuccess(omittedCurrentHp)).toBe(true);
+
+    const explicitUndefinedCurrentHp = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" },
+      battle: {
+        roster: {
+          tag: "statBlocks",
+          entries: [{ ...rosterEntry, currentHp: undefined }],
+        },
+        attempts: [],
+      },
+    });
+    expect(Result.isFailure(explicitUndefinedCurrentHp)).toBe(true);
+    if (Result.isFailure(explicitUndefinedCurrentHp)) {
+      expect(explicitUndefinedCurrentHp.failure).toContainEqual({
+        path: "/battle/roster/entries/0/currentHp",
+        code: "wrongType",
       });
     }
   });
@@ -475,9 +514,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
     const incomplete = decodeOracleTrace({
       creation: { started: { holes: [] }, progression: [] },
     });
-    expect(Either.isLeft(incomplete)).toBe(true);
-    if (Either.isLeft(incomplete)) {
-      expect(incomplete.left).toContainEqual({
+    expect(Result.isFailure(incomplete)).toBe(true);
+    if (Result.isFailure(incomplete)) {
+      expect(incomplete.failure).toContainEqual({
         path: "/creation/outcome",
         code: "missingMember",
       });
@@ -490,7 +529,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         outcome: { tag: "inputExhausted" },
       },
     });
-    expect(Either.isRight(exhausted)).toBe(true);
+    expect(Result.isSuccess(exhausted)).toBe(true);
   });
 
   it("evaluates identical Cases deterministically with a call-local identity", () => {
@@ -530,7 +569,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(built.tag).toBe("built");
     if (built.tag !== "built") return;
     expect(built.sheet.tag).toBe("constructed");
-    expect(Either.isRight(decodeOracleTrace(trace))).toBe(true);
+    expect(Result.isSuccess(decodeOracleTrace(trace))).toBe(true);
     if (built.sheet.tag === "constructed") {
       expect(built.sheet.sheet).not.toHaveProperty("characterId");
       expect(built.sheet.sheet).not.toHaveProperty("build");
@@ -600,7 +639,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         (subject) => !Object.prototype.hasOwnProperty.call(subject, "label"),
       ),
     ).toBe(true);
-    expect(Either.isRight(decodeOracleTraceJson(JSON.stringify(trace)))).toBe(
+    expect(Result.isSuccess(decodeOracleTraceJson(JSON.stringify(trace)))).toBe(
       true,
     );
   });
@@ -643,7 +682,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         });
       }
     }
-    expect(Either.isRight(decodeOracleTrace(empty))).toBe(true);
+    expect(Result.isSuccess(decodeOracleTrace(empty))).toBe(true);
   });
 
   it("drives an ordinary Act attempt through the mechanical Hole frontier", () => {
@@ -683,7 +722,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       expect(progressed.frontier.holes.length).toBeGreaterThan(0);
       expect(progressed.frontier.acceptedFills).toEqual([]);
     }
-    expect(Either.isRight(decodeOracleTrace(trace))).toBe(true);
+    expect(Result.isSuccess(decodeOracleTrace(trace))).toBe(true);
   });
 
   it("keeps an invalid Act attempt's checkpoint/frontier stable for retry", () => {
@@ -729,7 +768,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(traceEntered.checkpoint).toEqual(entered.checkpoint);
     expect(traceEntered.frontier).toEqual(entered.frontier);
     expect(progressed.frontier.kind).toBe("ordinaryHoles");
-    expect(Either.isRight(decodeOracleTrace(trace))).toBe(true);
+    expect(Result.isSuccess(decodeOracleTrace(trace))).toBe(true);
   });
 
   it(
@@ -843,7 +882,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       );
       expect(opportunityAttack.initialHoles).toEqual([]);
 
-      const interruptFill = Schema.decodeUnknownEither(
+      const interruptFill = Schema.decodeUnknownResult(
         OracleBattleInterruptDecisionFillSchema,
       )({
         kind: "interruptDecision",
@@ -860,11 +899,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
           },
         },
       });
-      expect(Either.isRight(interruptFill)).toBe(true);
-      if (Either.isLeft(interruptFill)) return;
+      expect(Result.isSuccess(interruptFill)).toBe(true);
+      if (Result.isFailure(interruptFill)) return;
       const interruptAttempt = {
         kind: "interruptDecision" as const,
-        fill: interruptFill.right,
+        fill: interruptFill.success,
       } satisfies OracleBattleAttempt;
       const afterInterrupt = evaluateDecodedCase({
         case: {
@@ -1018,7 +1057,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
             subject.command === "endTurn",
         ),
       ).toBe(true);
-      expect(Either.isRight(decodeOracleTrace(resolved))).toBe(true);
+      expect(Result.isSuccess(decodeOracleTrace(resolved))).toBe(true);
 
       const retry = evaluateDecodedCase({
         case: {
@@ -1048,8 +1087,8 @@ describe("Opaque Oracle Case and Trace contract", () => {
       expect(retryEntered.checkpoint).toEqual(entered.checkpoint);
       expect(retryEntered.frontier).toEqual(entered.frontier);
       expect(retriedFrontierStep.frontier).toEqual(validFrontierStep.frontier);
-      expect(Either.isRight(decodeOracleTrace(valid))).toBe(true);
-      expect(Either.isRight(decodeOracleTrace(retry))).toBe(true);
+      expect(Result.isSuccess(decodeOracleTrace(valid))).toBe(true);
+      expect(Result.isSuccess(decodeOracleTrace(retry))).toBe(true);
     },
     ORACLE_LONG_TEST_TIMEOUT_MS,
   );
@@ -1135,7 +1174,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       ) {
         return;
       }
-      const readyFill = Schema.decodeUnknownEither(BattleFillSchema)({
+      const readyFill = Schema.decodeUnknownResult(BattleFillSchema)({
         kind: "readyDeclaration",
         holeId: readyHole.holeId,
         value: {
@@ -1143,12 +1182,12 @@ describe("Opaque Oracle Case and Trace contract", () => {
           response: { kind: "action", subject: dodgeResponse.subject },
         },
       });
-      expect(Either.isRight(readyFill)).toBe(true);
-      if (Either.isLeft(readyFill)) return;
+      expect(Result.isSuccess(readyFill)).toBe(true);
+      if (Result.isFailure(readyFill)) return;
       const readyAttempt = {
         kind: "ordinarySubject" as const,
         subject: readySubject,
-        fills: [readyFill.right],
+        fills: [readyFill.success],
       } satisfies OracleBattleAttempt;
 
       const afterReady = evaluateDecodedCase({
@@ -1244,7 +1283,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       );
       expect(movementHole).toBeDefined();
       if (movementHole?.kind !== "movement") return;
-      const movementFill = Schema.decodeUnknownEither(BattleFillSchema)({
+      const movementFill = Schema.decodeUnknownResult(BattleFillSchema)({
         kind: "movement",
         holeId: movementHole.holeId,
         value: {
@@ -1259,12 +1298,12 @@ describe("Opaque Oracle Case and Trace contract", () => {
           ],
         },
       });
-      expect(Either.isRight(movementFill)).toBe(true);
-      if (Either.isLeft(movementFill)) return;
+      expect(Result.isSuccess(movementFill)).toBe(true);
+      if (Result.isFailure(movementFill)) return;
       const moveAttempt = {
         kind: "ordinarySubject" as const,
         subject: moveSubject,
-        fills: [movementFill.right],
+        fills: [movementFill.success],
       } satisfies OracleBattleAttempt;
 
       const afterMove = evaluateDecodedCase({
@@ -1289,7 +1328,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         "opportunityAttack",
       );
 
-      const reportSubjectResult = Schema.decodeUnknownEither(
+      const reportSubjectResult = Schema.decodeUnknownResult(
         BattleSubjectSchema,
       )({
         tag: "runtimeCommand",
@@ -1297,11 +1336,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
         command: "reportReadyTrigger",
         readiedActorId: readySubject.actorId,
       });
-      expect(Either.isRight(reportSubjectResult)).toBe(true);
-      if (Either.isLeft(reportSubjectResult)) return;
+      expect(Result.isSuccess(reportSubjectResult)).toBe(true);
+      if (Result.isFailure(reportSubjectResult)) return;
       const reportAttempt = {
         kind: "ordinarySubject" as const,
-        subject: reportSubjectResult.right,
+        subject: reportSubjectResult.success,
         fills: [],
       } satisfies OracleBattleAttempt;
       const afterReport = evaluateDecodedCase({
@@ -1365,7 +1404,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       ) {
         return;
       }
-      const releaseFill = Schema.decodeUnknownEither(
+      const releaseFill = Schema.decodeUnknownResult(
         OracleBattleInterruptDecisionFillSchema,
       )({
         kind: "interruptDecision",
@@ -1376,11 +1415,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
           choice: { kind: "releaseReadiedAction", fills: [] },
         },
       });
-      expect(Either.isRight(releaseFill)).toBe(true);
-      if (Either.isLeft(releaseFill)) return;
+      expect(Result.isSuccess(releaseFill)).toBe(true);
+      if (Result.isFailure(releaseFill)) return;
       const releaseAttempt = {
         kind: "interruptDecision" as const,
-        fill: releaseFill.right,
+        fill: releaseFill.success,
       } satisfies OracleBattleAttempt;
 
       const afterRelease = evaluateDecodedCase({
@@ -1413,7 +1452,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         );
       }
       expect(afterReleaseEntered.segment.outcome.tag).toBe("next");
-      expect(Either.isRight(decodeOracleTrace(afterRelease))).toBe(true);
+      expect(Result.isSuccess(decodeOracleTrace(afterRelease))).toBe(true);
       expect(afterRelease).toEqual(
         evaluateDecodedCase({
           case: {
@@ -1459,8 +1498,8 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(laterActor).toBeDefined();
     if (laterEntry !== undefined && laterActor !== undefined) {
       expect(
-        Either.isRight(
-          Schema.decodeUnknownEither(OracleBattleCheckpointSchema)({
+        Result.isSuccess(
+          Schema.decodeUnknownResult(OracleBattleCheckpointSchema)({
             ...entered.checkpoint,
             alreadyActed: [enteredStack[0]],
             stillToAct: enteredStack.slice(1),
@@ -1486,7 +1525,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       },
     }));
     const decoded = decodeOracleTrace(invalid);
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isFailure(decoded)).toBe(true);
 
     const crossReference = replaceBattleEntered(trace, (battle) => ({
       ...battle,
@@ -1495,7 +1534,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         targetId: combatantId("oracle:not-a-checkpoint-field"),
       },
     }));
-    expect(Either.isLeft(decodeOracleTrace(crossReference))).toBe(true);
+    expect(Result.isFailure(decodeOracleTrace(crossReference))).toBe(true);
 
     const unreachableFrontier = replaceBattleEntered(trace, (battle) => ({
       ...battle,
@@ -1509,7 +1548,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         ],
       },
     }));
-    expect(Either.isLeft(decodeOracleTrace(unreachableFrontier))).toBe(true);
+    expect(Result.isFailure(decodeOracleTrace(unreachableFrontier))).toBe(true);
 
     type SubjectWithProcedureRef = {
       readonly actorId: string;
@@ -1545,7 +1584,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
           ),
         },
       }));
-      expect(Either.isLeft(decodeOracleTrace(crossOwnerProcedure))).toBe(true);
+      expect(Result.isFailure(decodeOracleTrace(crossOwnerProcedure))).toBe(
+        true,
+      );
 
       const wrongInitialActor = replaceBattleEntered(trace, (battle) => ({
         ...battle,
@@ -1562,14 +1603,14 @@ describe("Opaque Oracle Case and Trace contract", () => {
           ),
         },
       }));
-      expect(Either.isLeft(decodeOracleTrace(wrongInitialActor))).toBe(true);
+      expect(Result.isFailure(decodeOracleTrace(wrongInitialActor))).toBe(true);
     }
 
     const emptyFrontier = replaceBattleEntered(trace, (battle) => ({
       ...battle,
       frontier: { kind: "acts", acts: [] },
     }));
-    expect(Either.isLeft(decodeOracleTrace(emptyFrontier))).toBe(true);
+    expect(Result.isFailure(decodeOracleTrace(emptyFrontier))).toBe(true);
   });
 
   it("requires initial admission to start at the first initiative actor but permits progressed turns to advance", () => {
@@ -1591,7 +1632,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(laterActor).toBeDefined();
     if (laterActor === undefined) return;
 
-    const progressed = Schema.decodeUnknownEither(
+    const progressed = Schema.decodeUnknownResult(
       OracleBattleContinuationSchema,
     )({
       checkpoint: {
@@ -1614,9 +1655,9 @@ describe("Opaque Oracle Case and Trace contract", () => {
         outcome: { tag: "awaitingInput" },
       },
     });
-    expect(Either.isRight(progressed)).toBe(true);
+    expect(Result.isSuccess(progressed)).toBe(true);
 
-    const invalidAdmission = Schema.decodeUnknownEither(
+    const invalidAdmission = Schema.decodeUnknownResult(
       OracleBattleEnteredSchema,
     )({
       ...entered,
@@ -1636,7 +1677,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         ],
       },
     });
-    expect(Either.isLeft(invalidAdmission)).toBe(true);
+    expect(Result.isFailure(invalidAdmission)).toBe(true);
   });
 
   it(
@@ -1776,21 +1817,21 @@ describe("Opaque Oracle Case and Trace contract", () => {
         expect(JSON.stringify(second)).toBe(JSON.stringify(first));
 
         const decodedCase = decodeOracleCase(oracleCase);
-        expect(Either.isRight(decodedCase)).toBe(true);
-        if (Either.isLeft(decodedCase)) return;
+        expect(Result.isSuccess(decodedCase)).toBe(true);
+        if (Result.isFailure(decodedCase)) return;
         const encodedCase = Schema.encodeSync(OracleCaseSchema)(
-          decodedCase.right,
+          decodedCase.success,
         );
         const caseRoundTrip = decodeOracleCase(encodedCase);
-        expect(Either.isRight(caseRoundTrip)).toBe(true);
-        if (Either.isLeft(caseRoundTrip)) return;
-        expect(caseRoundTrip.right).toEqual(decodedCase.right);
+        expect(Result.isSuccess(caseRoundTrip)).toBe(true);
+        if (Result.isFailure(caseRoundTrip)) return;
+        expect(caseRoundTrip.success).toEqual(decodedCase.success);
 
         const encodedTrace = Schema.encodeSync(OracleTraceSchema)(first);
         const traceRoundTrip = decodeOracleTrace(encodedTrace);
-        expect(Either.isRight(traceRoundTrip)).toBe(true);
-        if (Either.isLeft(traceRoundTrip)) return;
-        expect(traceRoundTrip.right).toEqual(first);
+        expect(Result.isSuccess(traceRoundTrip)).toBe(true);
+        if (Result.isFailure(traceRoundTrip)) return;
+        expect(traceRoundTrip.success).toEqual(first);
 
         const validMoveAttempt = oracleCase.battle.attempts[0];
         if (
@@ -1867,7 +1908,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       unitLibrary,
       statBlockCatalog: projectionFailureStatBlockCatalog,
     });
-    expect(Either.isRight(decodeOracleTrace(rejected))).toBe(true);
+    expect(Result.isSuccess(decodeOracleTrace(rejected))).toBe(true);
     const rejectedOutcome = rejected.creation.outcome;
     expect(rejectedOutcome.tag).toBe("built");
     if (rejectedOutcome.tag !== "built") return;
@@ -1938,7 +1979,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
   it("keeps one branded Effect Trace authority", () => {
     expect(oracleTraceSchema).toBeDefined();
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeOracleTrace({
           creation: { started: { holes: [] }, progression: [] },
         }),
@@ -2041,10 +2082,10 @@ function replaceBattleEntered(
 
 function completeCreationFillBatches() {
   const result = buildCompleteCreationFillBatches(unitLibrary);
-  if (Either.isLeft(result)) {
-    throw new Error(`test creation source failed: ${result.left.message}`);
+  if (Result.isFailure(result)) {
+    throw new Error(`test creation source failed: ${result.failure.message}`);
   }
-  return result.right;
+  return result.success;
 }
 
 type EvaluationServices = Omit<
@@ -2056,8 +2097,8 @@ function evaluateDecodedCase(
   input: EvaluationServices & { readonly case: unknown },
 ) {
   const decoded = decodeOracleCase(input.case);
-  if (Either.isLeft(decoded)) throw new Error("test Case must decode");
-  return evaluateOracleCase({ ...input, case: decoded.right });
+  if (Result.isFailure(decoded)) throw new Error("test Case must decode");
+  return evaluateOracleCase({ ...input, case: decoded.success });
 }
 
 function evaluateDecodedBatch(input: {
@@ -2066,8 +2107,8 @@ function evaluateDecodedBatch(input: {
 }) {
   const cases = input.batch.cases.map((candidate) => {
     const decoded = decodeOracleCase(candidate);
-    if (Either.isLeft(decoded)) throw new Error("test Case must decode");
-    return decoded.right;
+    if (Result.isFailure(decoded)) throw new Error("test Case must decode");
+    return decoded.success;
   });
   if (cases.length === 0) throw new Error("test batch must be non-empty");
   return evaluateOracleBatch({
@@ -2231,17 +2272,19 @@ function statBlockAttackProcedureRef(
     { unitLibrary, statBlockCatalog },
     placements,
   );
-  if (Either.isLeft(started)) {
-    throw new Error(`test stat-block battle failed: ${started.left.message}`);
-  }
-  const procedureRef = discoverStatBlockAttackProcedureRef(
-    started.right,
-    firstCombatantId,
-  );
-  if (Either.isLeft(procedureRef)) {
+  if (Result.isFailure(started)) {
     throw new Error(
-      `test stat-block attack failed: ${procedureRef.left.message}`,
+      `test stat-block battle failed: ${started.failure.message}`,
     );
   }
-  return procedureRef.right;
+  const procedureRef = discoverStatBlockAttackProcedureRef(
+    started.success,
+    firstCombatantId,
+  );
+  if (Result.isFailure(procedureRef)) {
+    throw new Error(
+      `test stat-block attack failed: ${procedureRef.failure.message}`,
+    );
+  }
+  return procedureRef.success;
 }

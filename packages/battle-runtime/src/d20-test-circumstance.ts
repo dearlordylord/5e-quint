@@ -6,8 +6,7 @@ import type {
   BattleFill,
   BattleHole,
 } from "./battle-state-execution.ts";
-import * as Either from "effect/Either";
-import { Brand } from "effect";
+import { Brand, Result } from "effect";
 import { PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET } from "./battle-reducer/domain-constants.ts";
 import type { MovementFeet } from "@dnd/shared/types";
 
@@ -153,9 +152,11 @@ function savingThrowHoleTargetsA(
       : []),
     ...("objectContactSave" in hole ? hole.objectContactSave.targetIds : []),
     ...("spellTurnStartSave" in hole ? [hole.spellTurnStartSave.targetId] : []),
-    ...("sleepRepeatSave" in hole ? [hole.sleepRepeatSave.targetId] : []),
-    ...("hideousLaughterRepeatSave" in hole
-      ? [hole.hideousLaughterRepeatSave.targetId]
+    ...("stagedConditionRepeatSave" in hole
+      ? [hole.stagedConditionRepeatSave.targetId]
+      : []),
+    ...("saveGatedConditionRepeatSave" in hole
+      ? [hole.saveGatedConditionRepeatSave.targetId]
       : []),
   ];
 }
@@ -167,18 +168,21 @@ function savingThrowHoleTargetsB(
     ...("spellConditionCountedEndTurnSave" in hole
       ? [hole.spellConditionCountedEndTurnSave.targetId]
       : []),
-    ...("greaseGroundHazard" in hole ? [hole.greaseGroundHazard.targetId] : []),
-    ...("webRestraint" in hole ? [hole.webRestraint.targetId] : []),
-    ...("sleetStormAreaHazard" in hole
-      ? [hole.sleetStormAreaHazard.targetId]
+    ...("persistentAreaSaveCondition" in hole
+      ? [hole.persistentAreaSaveCondition.targetId]
       : []),
-    ...("insectPlagueAreaHazard" in hole
-      ? [hole.insectPlagueAreaHazard.targetId]
+    ...("persistentAreaSaveConditionEscape" in hole
+      ? [hole.persistentAreaSaveConditionEscape.targetId]
       : []),
-    ...("cloudkillAreaHazard" in hole
-      ? [hole.cloudkillAreaHazard.targetId]
+    ...("persistentAreaSaveComposite" in hole
+      ? [hole.persistentAreaSaveComposite.targetId]
       : []),
-    ...("gustOfWindLine" in hole ? [hole.gustOfWindLine.targetId] : []),
+    ...("persistentAreaSaveDamage" in hole
+      ? [hole.persistentAreaSaveDamage.targetId]
+      : []),
+    ...("directionalPersistentArea" in hole
+      ? [hole.directionalPersistentArea.targetId]
+      : []),
   ];
 }
 
@@ -192,8 +196,8 @@ function savingThrowHoleTargetsC(
     ...("unitFeatureConditionEndTurnSave" in hole
       ? [hole.unitFeatureConditionEndTurnSave.targetId]
       : []),
-    ...("slowActivePenaltiesEndTurnSave" in hole
-      ? [hole.slowActivePenaltiesEndTurnSave.targetId]
+    ...("turnConstraintEndTurnSave" in hole
+      ? [hole.turnConstraintEndTurnSave.targetId]
       : []),
     ...("abilityD20TestRollModeEndTurnSave" in hole
       ? [hole.abilityD20TestRollModeEndTurnSave.targetId]
@@ -444,7 +448,7 @@ export function battleD20TestCircumstanceRequests(input: {
 export function admitTableD20TestCircumstanceDecisions(input: {
   readonly requests: readonly BattleD20TestCircumstanceRequest[];
   readonly decisions: readonly TableD20TestCircumstanceDecision[];
-}): Either.Either<
+}): Result.Result<
   ReadonlyMap<BattleD20TestRequestRef, TableD20TestCircumstanceDecision>,
   TableD20TestCircumstanceDecisionAdmissionIssue
 > {
@@ -492,12 +496,12 @@ export function admitTableD20TestCircumstanceDecisions(input: {
   }
   const firstIssue = issues[0];
   if (firstIssue !== undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "invalid-table-d20-test-circumstance-decisions",
       issues: [firstIssue, ...issues.slice(1)],
     });
   }
-  return Either.right(admitted);
+  return Result.succeed(admitted);
 }
 
 export function effectiveD20TestRollMode(input: {

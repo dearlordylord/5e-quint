@@ -15,7 +15,7 @@ import {
 import { type CharacterSheet, characterSheetDruidWildShapeKnownForms } from "@dnd/character-sheet-runtime"
 import { statBlockId, unitId } from "@dnd/shared/game-facts"
 import { Hp } from "@dnd/shared/types"
-import { Either } from "effect"
+import { Result } from "effect"
 import { describe, expect, test } from "vitest"
 
 import {
@@ -38,28 +38,27 @@ const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
 
 describe("character creation runtime", () => {
   test("rejects a draft that is not ready for a Character Sheet", () => {
-    expect(createCharacterSheetFromDraft(createCharacterDraft({}))).toMatchObject({
-      _tag: "Left",
-      left: { tag: "draftNotReady" }
-    })
+    const result = createCharacterSheetFromDraft(createCharacterDraft({}))
+    expect(Result.isFailure(result)).toBe(true)
+    if (Result.isFailure(result)) expect(result.failure.tag).toBe("draftNotReady")
   })
 
   test("requires explicit Wild Shape known forms before creating a Druid sheet", () => {
     const draft = completeSupportedDruidTwoDraft()
 
     const missingKnownForms = createCharacterSheetFromDraft(draft)
-    expect(missingKnownForms).toMatchObject({
-      _tag: "Left",
-      left: { tag: "wildShapeKnownFormsRequired" }
-    })
+    expect(Result.isFailure(missingKnownForms)).toBe(true)
+    if (Result.isFailure(missingKnownForms)) expect(missingKnownForms.failure.tag).toBe("wildShapeKnownFormsRequired")
 
     const sheet = createCharacterSheetFromDraft(draft, {
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS
     })
 
-    expect(Either.isRight(sheet)).toBe(true)
-    if (Either.isRight(sheet)) {
-      expect(characterSheetDruidWildShapeKnownForms(sheet.right)?.statBlockIds).toEqual(DRUID_WILD_SHAPE_KNOWN_FORM_IDS)
+    expect(Result.isSuccess(sheet)).toBe(true)
+    if (Result.isSuccess(sheet)) {
+      expect(characterSheetDruidWildShapeKnownForms(sheet.success)?.statBlockIds).toEqual(
+        DRUID_WILD_SHAPE_KNOWN_FORM_IDS
+      )
     }
   })
 
@@ -67,30 +66,30 @@ describe("character creation runtime", () => {
     const sheet = createCharacterSheetFromDraft(completeSupportedDruidTwoDraft(), {
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS
     })
-    expect(Either.isRight(sheet)).toBe(true)
-    if (Either.isLeft(sheet)) return
-    const summary = characterSheetSummary(sheet.right)
-    expect(Either.isRight(summary)).toBe(true)
-    if (Either.isLeft(summary)) return
+    expect(Result.isSuccess(sheet)).toBe(true)
+    if (Result.isFailure(sheet)) return
+    const summary = characterSheetSummary(sheet.success)
+    expect(Result.isSuccess(summary)).toBe(true)
+    if (Result.isFailure(summary)) return
 
     const reduced = {
-      ...sheet.right,
+      ...sheet.success,
       hitPointMaximumReduction: Hp(3),
       hitPoints: {
         tag: "positive",
-        currentHp: Hp(summary.right.maximumHp - 3),
+        currentHp: Hp(summary.success.maximumHp - 3),
         tempHp: Hp(0)
       }
     } satisfies CharacterSheet
 
     const reducedSummary = characterSheetSummary(reduced)
-    expect(Either.isRight(reducedSummary)).toBe(true)
-    if (Either.isLeft(reducedSummary)) return
-    expect(reducedSummary.right.maximumHp).toBe(summary.right.maximumHp - 3)
-    expect(reducedSummary.right.hitDice).toEqual([{ classUnitId: "class_druid", dieSize: 8, total: 2, spent: 0 }])
-    expect(reducedSummary.right.spellSlots).toEqual([{ spellLevel: 1, count: 3, expended: 0 }])
-    expect(reducedSummary.right.pactSlots).toBeUndefined()
-    expect(reducedSummary.right.resources).toEqual([
+    expect(Result.isSuccess(reducedSummary)).toBe(true)
+    if (Result.isFailure(reducedSummary)) return
+    expect(reducedSummary.success.maximumHp).toBe(summary.success.maximumHp - 3)
+    expect(reducedSummary.success.hitDice).toEqual([{ classUnitId: "class_druid", dieSize: 8, total: 2, spent: 0 }])
+    expect(reducedSummary.success.spellSlots).toEqual([{ spellLevel: 1, count: 3, expended: 0 }])
+    expect(reducedSummary.success.pactSlots).toBeUndefined()
+    expect(reducedSummary.success.resources).toEqual([
       {
         tag: "spellAccessFreeCast",
         sourceUnitId: "feat_magic_initiate_cleric",
@@ -109,39 +108,31 @@ describe("character creation runtime", () => {
 
   test("includes Pact Slot capacity in a Warlock Character Sheet summary", () => {
     const sheet = createCharacterSheetFromDraft(completeSupportedWarlockOneDraft())
-    expect(Either.isRight(sheet)).toBe(true)
-    if (Either.isLeft(sheet)) return
+    expect(Result.isSuccess(sheet)).toBe(true)
+    if (Result.isFailure(sheet)) return
 
-    expect(characterSheetSummary(sheet.right)).toMatchObject({
-      _tag: "Right",
-      right: {
-        pactSlots: {
-          slotLevel: 1,
-          count: 1,
-          expended: 0
-        }
-      }
-    })
+    const summary = characterSheetSummary(sheet.success)
+    expect(Result.isSuccess(summary)).toBe(true)
+    if (Result.isSuccess(summary)) {
+      expect(summary.success.pactSlots).toEqual({ slotLevel: 1, count: 1, expended: 0 })
+    }
   })
 
   test("returns a typed issue for an invalid ability-score assignment", () => {
-    expect(
-      abilityScoresFill({
-        holeId: draftHoleId("cc:draft:draft.abilityScoreGeneration"),
-        method: "standardArray",
-        scores: {
-          cha: 10,
-          con: 10,
-          dex: 10,
-          int: 10,
-          str: Number.NaN,
-          wis: 10
-        }
-      })
-    ).toMatchObject({
-      _tag: "Left",
-      left: { tag: "invalidAbilityScoreAssignment" }
+    const result = abilityScoresFill({
+      holeId: draftHoleId("cc:draft:draft.abilityScoreGeneration"),
+      method: "standardArray",
+      scores: {
+        cha: 10,
+        con: 10,
+        dex: 10,
+        int: 10,
+        str: Number.NaN,
+        wis: 10
+      }
     })
+    expect(Result.isFailure(result)).toBe(true)
+    if (Result.isFailure(result)) expect(result.failure.tag).toBe("invalidAbilityScoreAssignment")
   })
 })
 
@@ -208,10 +199,10 @@ function completeSupportedSingleClassDraft(input: {
             method: "standardArray",
             scores: input.abilityScores
           })
-          if (Either.isLeft(fill)) {
-            throw new Error(fill.left.message)
+          if (Result.isFailure(fill)) {
+            throw new Error(fill.failure.message)
           }
-          return fill.right
+          return fill.success
         }
 
         return {

@@ -1,6 +1,6 @@
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleFrontierInterruptDecisionForState,
@@ -48,6 +48,7 @@ import {
   fighterId,
   goblinId,
   battleId,
+  battleStateWithAllocatedEffectForTest,
   combatantId,
   difficultyClass,
   discoverBattleActs,
@@ -942,7 +943,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       ],
     });
     const penalty = requireHole(penaltyRequest, "rolledDice");
+    if (!("sourceDamageRollPenalty" in penalty)) {
+      throw new Error("Expected source damage roll penalty hole.");
+    }
     const stalePenalty = sourceDamageRollPenaltyRollHole({
+      effectRef: penalty.sourceDamageRollPenalty.effectRef,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("ray_of_enfeeblement"),
       ),
@@ -1877,8 +1882,8 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       unitRef: { unitId: halflingLuck.id },
       unit: halflingLuck,
     });
-    if (Either.isLeft(halflingLuckRef)) {
-      throw new Error(halflingLuckRef.left.message);
+    if (Result.isFailure(halflingLuckRef)) {
+      throw new Error(halflingLuckRef.failure.message);
     }
     const state = requireResolved(
       endTurn({
@@ -1887,7 +1892,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           combatants: [
             characterSeed({
               initiative: 20,
-              characterUnitRefs: [halflingLuckRef.right],
+              characterUnitRefs: [halflingLuckRef.success],
               unitFeatures: [characterBattleFeatureInitForTest(halflingLuck)],
             }),
             statBlockCreatureInit({ initiative: 10 }),
@@ -2195,7 +2200,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       ],
     });
     const penalty = requireHole(penaltyRequest, "rolledDice");
+    if (!("sourceDamageRollPenalty" in penalty)) {
+      throw new Error("Expected source damage roll penalty hole.");
+    }
     const stalePenalty = sourceDamageRollPenaltyRollHole({
+      effectRef: penalty.sourceDamageRollPenalty.effectRef,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("ray_of_enfeeblement"),
       ),
@@ -2848,30 +2857,21 @@ function combatantWithSourceDamagePenalty(
   affectedId: typeof fighterId | typeof goblinId,
   sourceId: typeof fighterId | typeof goblinId,
 ): BattleState {
-  const affected = state.combatants.get(affectedId);
-  if (affected === undefined) {
-    throw new Error("Expected affected combatant.");
-  }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(affectedId, {
-      ...affected,
-      activeEffects: [
-        ...affected.activeEffects,
-        {
-          kind: "sourceDamageRollPenalty" as const,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("ray_of_enfeeblement"),
-          ),
-          sourceCombatantId: sourceId,
-          amount: { dice: 1 as const, dieSize: 8 as const },
-          expiresAt: {
-            kind: "concentration" as const,
-            combatantId: sourceId,
-          },
-        },
-      ],
-    }),
-  };
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: affectedId,
+    effect: {
+      kind: "sourceDamageRollPenalty",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        String("ray_of_enfeeblement"),
+      ),
+      sourceCombatantId: sourceId,
+      amount: { dice: 1, dieSize: 8 },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: sourceId,
+      },
+    },
+  });
 }
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE

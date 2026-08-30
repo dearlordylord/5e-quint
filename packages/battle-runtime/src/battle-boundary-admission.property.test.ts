@@ -1,12 +1,16 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import fc from "fast-check";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { classLevel, resourceCount } from "@dnd/shared/types";
 import { unitId } from "@dnd/shared/game-facts";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import {
+  castFlyAndAdvanceToCasterTurnForTest,
+  requireActorAdmittedSpellActForTest,
+} from "./spell-effect-fixture.test-support.ts";
+import { spellTargetListFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 
 import {
   BattleCheckpointFrontierEnvelopeSchema,
@@ -137,22 +141,25 @@ import type {
   BattleFill,
   BattleHole,
   BattleState,
-  BattleActiveEffect,
 } from "./battle-state-execution.ts";
 import {
   damageRollFill,
   damageRollFillWithGroups,
+  attackRollFill,
+  cantripSpellInvocationRef,
   characterSeed,
   fighterId,
   fighterAttackSubject,
   attackInitialTargetHole,
   fighterVsGoblinBattle,
   findAct,
+  findHole,
   goblinId,
   magicSubject,
   movementFill,
   movementFeet,
   requireHole,
+  requireResolved,
   resolveBattleSubject,
   snapshotBattle,
   startBattleSessionRight,
@@ -170,7 +177,7 @@ import {
   wizardId,
   wizardSpellcasting,
   spellRecord,
-  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   battleCheckpointFrontierEnvelope,
   battleFrontierInterruptDecisionForState,
   unitLibrary,
@@ -186,9 +193,10 @@ import {
   endTurn,
   testBattleCreatureStateWithConditions,
 } from "./battle-runtime.test-support.ts";
+import { parseBattleSpellEffectLevel } from "./procedure-execution/spell-effect-level.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { castResolvedFindFamiliar } from "./find-familiar-lifecycle.ts";
+import { castResolvedSpawnedCompanion } from "./companion-lifecycle.ts";
 
 const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x5eed18 } as const;
 
@@ -215,7 +223,7 @@ function simpleMovementFill(
 }
 
 describe("battle boundary admission owners", () => {
-  test("codec round trips discovered snapshots and rejects forged hole owners", () => {
+  test("codec round trips boundary snapshots and rejects forged hole owners", () => {
     const state = fighterVsGoblinBattle();
     const snapshot = snapshotBattle(state);
     const encoded = Schema.encodeSync(BattleSnapshotSchema)(snapshot);
@@ -478,27 +486,272 @@ describe("battle boundary admission owners", () => {
           combatantId: wizardId,
           initiative: 20,
           attack: null,
-          spellcasting: wizardSpellcasting(),
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("acid_splash")],
+            preparedSpells: [
+              spellRecord("insect_plague"),
+              spellRecord("cloudkill"),
+            ],
+            spellSlots: [{ spellLevel: 5, count: 2 }],
+          }),
         }),
+        statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const codecAct = findAct(codecSession, magicSubject("acid_splash"));
-    if (codecAct.subject.tag !== "actionSpell") {
-      throw new Error("Expected action-spell codec act.");
+    // This block exercises the hole codec union as a low-level boundary. The
+    // admitted procedure supplies only a battle-owned execution scope anchor;
+    // these synthetic union members make no cast or lifecycle claim.
+    const codecScopeAnchor = findAct(codecSession, magicSubject("acid_splash"));
+    if (codecScopeAnchor.subject.tag !== "actionSpell") {
+      throw new Error("Expected the codec boundary scope anchor.");
     }
+    const codecProcedureRef = codecScopeAnchor.subject.procedureRef;
+    const stationaryAreaScope = findAct(
+      codecSession,
+      magicSubject("insect_plague"),
+    );
+    const translatingAreaScope = findAct(
+      codecSession,
+      magicSubject("cloudkill"),
+    );
+    if (
+      stationaryAreaScope.subject.tag !== "actionSpell" ||
+      translatingAreaScope.subject.tag !== "actionSpell"
+    ) {
+      throw new Error("Expected persistent-area codec boundary scope anchors.");
+    }
+    const glyphSpellLevel = parseBattleSpellEffectLevel(3);
+    if (glyphSpellLevel === null) {
+      throw new Error("Expected the boundary Glyph spell level to be valid.");
+    }
+    const allocatedCodecState =
+      battleStateWithAllocatedEffectOccurrencesForTest({
+        state: codecSession.state,
+        occurrences: [
+          {
+            kind: "activeEffect",
+            ownerId: goblinId,
+            effect: {
+              kind: "spellTurnStartDamageAndSave",
+              source: "turnBoundaryEffectLifecycle",
+              sourceProcedureRef: codecProcedureRef,
+              sourceCombatantId: wizardId,
+              damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
+              save: {
+                ability: "dex",
+                dc: { kind: "fixed", dc: 12 },
+                successEnds: "spell",
+              },
+              expiresAt: {
+                kind: "duration",
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: goblinId,
+            effect: {
+              kind: "saveGatedConditionWithRepeat",
+              sourceProcedureRef: codecProcedureRef,
+              sourceCombatantId: wizardId,
+              conditionHadNonSpellProneSource: false,
+              conditionHadNonSpellIncapacitatedSource: false,
+              repeatSaveRollMode: null,
+              expiresAt: {
+                kind: "concentration",
+                combatantId: wizardId,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: wizardId,
+            effect: {
+              kind: "glyphDurableOccurrence",
+              sourceProcedureRef: codecProcedureRef,
+              sourceCombatantId: wizardId,
+              sourceEffectId: battleSpellEffectOccurrenceId("boundary-glyph"),
+              sourceSpellLevel: glyphSpellLevel,
+              release: { kind: "explosiveRune", damageType: "fire" },
+              anchor: {
+                kind: "surface",
+                areaId: battleAreaId("boundary-glyph-anchor"),
+              },
+              coveredAreaId: battleAreaId("boundary-glyph-covered"),
+              castLocationId: battleTablePositionId("boundary-glyph-position"),
+              maxCoveredDiameterFeet: movementFeet(10),
+              notice: {
+                ability: "wis",
+                skill: "perception",
+                dc: { kind: "caster_spell_save_dc" },
+                owner: "table_witnessed_glyph_notice",
+              },
+              trigger: {
+                occurrence: "table_witnessed_trigger_occurrence",
+                activationFilter: "creature_type",
+                nonTriggerExclusion: "password_or_other_condition",
+                onTriggered: "spell_ends",
+              },
+              movementInvalidation: {
+                movedSubject: "inscribed_surface_or_object",
+                distanceFrom: "cast_location",
+                moreThanFeet: movementFeet(10),
+                outcome: "glyph_breaks_spell_ends_without_triggering",
+              },
+              expiresAt: { kind: "untilDispelled" },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: goblinId,
+            effect: {
+              kind: "spellDamageReduction",
+              sourceProcedureRef: codecProcedureRef,
+              sourceCombatantId: wizardId,
+              damageType: "cold",
+              amount: { dice: 1, dieSize: 4 },
+              usedThisTurn: false,
+              expiresAt: { kind: "untilDispelled" },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: goblinId,
+            effect: {
+              kind: "sourceDamageRollPenalty",
+              sourceProcedureRef: codecProcedureRef,
+              sourceCombatantId: wizardId,
+              amount: { dice: 1, dieSize: 8 },
+              expiresAt: { kind: "untilDispelled" },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: goblinId,
+            effect: {
+              kind: "spellTurnEndDamage",
+              sourceProcedureRef: codecProcedureRef,
+              sourceCombatantId: wizardId,
+              damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
+              expiresAt: {
+                kind: "endOfTurn",
+                combatantId: goblinId,
+                round: codecSession.state.initiative.round,
+              },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: wizardId,
+            effect: {
+              kind: "persistentAreaSaveDamage",
+              lifecycle: "collisionReposition",
+              sourceProcedureRef: codecProcedureRef,
+              sourceCombatantId: wizardId,
+              areaId: battleAreaId("boundary-movable"),
+              expiresAt: {
+                kind: "duration",
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: wizardId,
+            effect: {
+              kind: "areaMovementDistanceDamage",
+              sourceProcedureRef: codecProcedureRef,
+              sourceCombatantId: wizardId,
+              areaId: battleAreaId("boundary-spike"),
+              expiresAt: {
+                kind: "duration",
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: wizardId,
+            effect: {
+              kind: "persistentAreaSaveDamage",
+              lifecycle: "stationary",
+              sourceProcedureRef: stationaryAreaScope.subject.procedureRef,
+              sourceCombatantId: wizardId,
+              appearanceOccurrence: {
+                actorId: wizardId,
+                round: codecSession.state.initiative.round,
+              },
+              areaId: battleAreaId("boundary-insect"),
+              savedThisTurn: [],
+              expiresAt: {
+                kind: "concentration",
+                combatantId: wizardId,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          },
+          {
+            kind: "activeEffect",
+            ownerId: wizardId,
+            effect: {
+              kind: "persistentAreaSaveDamage",
+              lifecycle: "sourceTurnTranslation",
+              sourceProcedureRef: translatingAreaScope.subject.procedureRef,
+              sourceCombatantId: wizardId,
+              appearanceOccurrence: {
+                actorId: wizardId,
+                round: codecSession.state.initiative.round,
+              },
+              areaId: battleAreaId("boundary-cloudkill"),
+              savedThisTurn: [],
+              expiresAt: {
+                kind: "concentration",
+                combatantId: wizardId,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          },
+        ],
+      });
+    const occurrenceRef = (activeEffectKind: string) => {
+      const occurrence = allocatedCodecState.occurrences.find(
+        (candidate) =>
+          candidate.kind === "activeEffect" &&
+          candidate.effect.kind === activeEffectKind,
+      );
+      if (occurrence?.kind !== "activeEffect") {
+        throw new Error(`Expected boundary ${activeEffectKind} occurrence.`);
+      }
+      return occurrence.effect.effectRef;
+    };
+    const occurrenceRefForArea = (areaName: string) => {
+      const areaId = battleAreaId(areaName);
+      const occurrence = allocatedCodecState.occurrences.find(
+        (candidate) =>
+          candidate.kind === "activeEffect" &&
+          candidate.effect.kind === "persistentAreaSaveDamage" &&
+          candidate.effect.areaId === areaId,
+      );
+      if (occurrence?.kind !== "activeEffect") {
+        throw new Error(`Expected boundary area occurrence ${areaName}.`);
+      }
+      return occurrence.effect.effectRef;
+    };
     const codecSnapshot = Schema.encodeSync(
       BattleCheckpointFrontierEnvelopeSchema,
     )({
-      checkpoint: snapshotBattle(codecSession.state),
-      frontier: { kind: "acts", acts: [codecAct] },
+      checkpoint: snapshotBattle(allocatedCodecState.state),
+      frontier: { kind: "acts", acts: [codecScopeAnchor] },
     });
-    type EncodedCodecHole = Schema.Schema.Encoded<typeof BattleHoleSchema>;
+    type EncodedCodecHole = Schema.Codec.Encoded<typeof BattleHoleSchema>;
     const encodedCodecHole = (value: unknown): EncodedCodecHole =>
       Schema.encodeSync(BattleHoleSchema)(
         Schema.decodeUnknownSync(BattleHoleSchema)(value),
       );
     const codecSource = {
-      sourceProcedureRef: codecAct.subject.procedureRef,
+      sourceProcedureRef: codecProcedureRef,
       sourceCombatantId: wizardId,
       targetId: goblinId,
     };
@@ -507,12 +760,17 @@ describe("battle boundary admission owners", () => {
       holeInstanceKey: `battle:boundary-codec:${name}` as never,
       label: `boundary ${name}`,
     });
-    const codecSaving = (name: string, variant: string, value: object) =>
+    const codecSaving = (
+      name: string,
+      variant: string,
+      value: object,
+      ability: "dex" | "con" | "wis" = "dex",
+    ) =>
       encodedCodecHole({
         ...codecBase(name),
         kind: "savingThrowOutcome",
         [variant]: value,
-        ability: "dex",
+        ability,
         dc: { kind: "fixed", dc: 12 },
         areaChoices: [],
         targetRollModes: [],
@@ -528,6 +786,7 @@ describe("battle boundary admission owners", () => {
     const codecHoles = [
       codecSaving("turnStart", "spellTurnStartSave", {
         ...codecSource,
+        effectRef: occurrenceRef("spellTurnStartDamageAndSave"),
         save: {
           ability: "dex",
           dc: { kind: "fixed", dc: 12 },
@@ -537,11 +796,13 @@ describe("battle boundary admission owners", () => {
       encodedCodecHole({
         ...codecBase("laughter"),
         kind: "savingThrowOutcome",
-        hideousLaughterRepeatSave: {
+        saveGatedConditionRepeatSave: {
           ...codecSource,
+          effectRef: occurrenceRef("saveGatedConditionWithRepeat"),
           trigger: "endTurn",
           save: { ability: "wis", dc: { kind: "fixed", dc: 12 } },
         },
+        damageOccurrence: { kind: "untrackedDamage" },
         ability: "wis",
         dc: { kind: "fixed", dc: 12 },
         areaChoices: [],
@@ -558,8 +819,8 @@ describe("battle boundary admission owners", () => {
         kind: "savingThrowOutcome",
         glyphExplosiveRune: {
           sourceCombatantId: wizardId,
-          sourceProcedureRef: codecAct.subject.procedureRef,
-          sourceEffectId: battleSpellEffectOccurrenceId("boundary-glyph"),
+          sourceProcedureRef: codecProcedureRef,
+          effectRef: occurrenceRef("glyphDurableOccurrence"),
           radiusFeet: 20,
         },
         ability: "dex",
@@ -569,22 +830,21 @@ describe("battle boundary admission owners", () => {
         targetFlatBonuses: [],
       }),
       codecRolled("sourceRider", {
-        sourceProcedureRef: codecAct.subject.procedureRef,
+        sourceProcedureRef: codecProcedureRef,
         spellMarkedDamageRiders: [],
       }),
       codecRolled("glyphDamage", {
         glyphExplosiveRune: {
           sourceCombatantId: wizardId,
-          sourceProcedureRef: codecAct.subject.procedureRef,
-          sourceEffectId: battleSpellEffectOccurrenceId(
-            "boundary-glyph-damage",
-          ),
+          sourceProcedureRef: codecProcedureRef,
+          effectRef: occurrenceRef("glyphDurableOccurrence"),
           damage: { expr: { dice: 1, dieSize: 6 }, damageType: "fire" },
         },
       }),
       codecRolled("spellReduction", {
         spellDamageReduction: {
-          sourceProcedureRef: codecAct.subject.procedureRef,
+          effectRef: occurrenceRef("spellDamageReduction"),
+          sourceProcedureRef: codecProcedureRef,
           sourceCombatantId: wizardId,
           targetId: goblinId,
           damageType: "cold",
@@ -593,7 +853,8 @@ describe("battle boundary admission owners", () => {
       }),
       codecRolled("damagePenalty", {
         sourceDamageRollPenalty: {
-          sourceProcedureRef: codecAct.subject.procedureRef,
+          effectRef: occurrenceRef("sourceDamageRollPenalty"),
+          sourceProcedureRef: codecProcedureRef,
           sourceCombatantId: wizardId,
           affectedCombatantId: goblinId,
           damageRollHoleId: `battle:boundary-codec:damage` as never,
@@ -603,7 +864,7 @@ describe("battle boundary admission owners", () => {
       codecRolled("mirrorImage", {
         mirrorImageDuplicateRoll: {
           targetId: goblinId,
-          sourceProcedureRef: codecAct.subject.procedureRef,
+          sourceProcedureRef: codecProcedureRef,
           sourceCombatantId: wizardId,
           remainingDuplicates: 1,
           dieSize: 6,
@@ -613,6 +874,7 @@ describe("battle boundary admission owners", () => {
       codecRolled("turnStartDamage", {
         spellTurnStartDamage: {
           ...codecSource,
+          effectRef: occurrenceRef("spellTurnStartDamageAndSave"),
           trigger: { kind: "condition", condition: "poisoned" },
           damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
         },
@@ -620,12 +882,14 @@ describe("battle boundary admission owners", () => {
       codecRolled("turnEndDamage", {
         spellTurnEndDamage: {
           ...codecSource,
+          effectRef: occurrenceRef("spellTurnEndDamage"),
           damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
         },
       }),
       codecRolled("movableZone", {
         movableZone: {
           ...codecSource,
+          effectRef: occurrenceRef("persistentAreaSaveDamage"),
           areaId: battleAreaId("boundary-movable"),
           trigger: "endsTurnWithinFiveFeetOfSphere",
           save: { ability: "dex", dc: { kind: "fixed", dc: 12 } },
@@ -634,25 +898,10 @@ describe("battle boundary admission owners", () => {
       codecRolled("spikeGrowth", {
         spikeGrowthMovement: {
           ...codecSource,
+          effectRef: occurrenceRef("areaMovementDistanceDamage"),
           areaId: battleAreaId("boundary-spike"),
           distanceFeet: 10,
           damage: { expr: { dice: 1, dieSize: 4 }, damageType: "piercing" },
-        },
-      }),
-      codecRolled("insectPlague", {
-        insectPlagueAreaHazard: {
-          ...codecSource,
-          areaId: battleAreaId("boundary-insect"),
-          trigger: "entersArea",
-          damage: { expr: { dice: 1, dieSize: 6 }, damageType: "piercing" },
-        },
-      }),
-      codecRolled("cloudkill", {
-        cloudkillAreaHazard: {
-          ...codecSource,
-          areaId: battleAreaId("boundary-cloudkill"),
-          trigger: "entersArea",
-          damage: { expr: { dice: 1, dieSize: 6 }, damageType: "poison" },
         },
       }),
     ];
@@ -671,11 +920,128 @@ describe("battle boundary admission owners", () => {
             : codecSnapshot.frontier,
       };
       expect(
-        Either.isRight(
-          Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+        Result.isSuccess(
+          Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
             candidate,
           ),
         ),
+      ).toBe(true);
+    }
+    const persistentAreaCases = [
+      {
+        name: "stationary save",
+        procedureRef: stationaryAreaScope.subject.procedureRef,
+        effectRef: occurrenceRefForArea("boundary-insect"),
+        areaId: battleAreaId("boundary-insect"),
+        hole: codecSaving(
+          "stationarySave",
+          "persistentAreaSaveDamage",
+          {
+            sourceProcedureRef: stationaryAreaScope.subject.procedureRef,
+            sourceCombatantId: wizardId,
+            targetId: goblinId,
+            topology: "stationary",
+            effectRef: occurrenceRefForArea("boundary-insect"),
+            areaId: battleAreaId("boundary-insect"),
+            trigger: "entersArea",
+            save: { ability: "con", dc: { kind: "fixed", dc: 12 } },
+          },
+          "con",
+        ),
+      },
+      {
+        name: "stationary damage",
+        procedureRef: stationaryAreaScope.subject.procedureRef,
+        effectRef: occurrenceRefForArea("boundary-insect"),
+        areaId: battleAreaId("boundary-insect"),
+        hole: codecRolled("stationaryDamage", {
+          persistentAreaSaveDamage: {
+            sourceProcedureRef: stationaryAreaScope.subject.procedureRef,
+            sourceCombatantId: wizardId,
+            targetId: goblinId,
+            topology: "stationary",
+            effectRef: occurrenceRefForArea("boundary-insect"),
+            areaId: battleAreaId("boundary-insect"),
+            trigger: "entersArea",
+            damage: {
+              expr: { dice: 1, dieSize: 6 },
+              damageType: "piercing",
+            },
+          },
+        }),
+      },
+      {
+        name: "translating save",
+        procedureRef: translatingAreaScope.subject.procedureRef,
+        effectRef: occurrenceRefForArea("boundary-cloudkill"),
+        areaId: battleAreaId("boundary-cloudkill"),
+        hole: codecSaving(
+          "translatingSave",
+          "persistentAreaSaveDamage",
+          {
+            sourceProcedureRef: translatingAreaScope.subject.procedureRef,
+            sourceCombatantId: wizardId,
+            targetId: goblinId,
+            topology: "translating",
+            effectRef: occurrenceRefForArea("boundary-cloudkill"),
+            areaId: battleAreaId("boundary-cloudkill"),
+            trigger: "entersArea",
+            save: { ability: "con", dc: { kind: "fixed", dc: 12 } },
+          },
+          "con",
+        ),
+      },
+      {
+        name: "translating damage",
+        procedureRef: translatingAreaScope.subject.procedureRef,
+        effectRef: occurrenceRefForArea("boundary-cloudkill"),
+        areaId: battleAreaId("boundary-cloudkill"),
+        hole: codecRolled("translatingDamage", {
+          persistentAreaSaveDamage: {
+            sourceProcedureRef: translatingAreaScope.subject.procedureRef,
+            sourceCombatantId: wizardId,
+            targetId: goblinId,
+            topology: "translating",
+            effectRef: occurrenceRefForArea("boundary-cloudkill"),
+            areaId: battleAreaId("boundary-cloudkill"),
+            trigger: "entersArea",
+            damage: {
+              expr: { dice: 1, dieSize: 6 },
+              damageType: "poison",
+            },
+          },
+        }),
+      },
+    ];
+    for (const persistentAreaCase of persistentAreaCases) {
+      const candidate = {
+        ...codecSnapshot,
+        frontier: {
+          kind: "acts" as const,
+          acts: [
+            {
+              ...codecScopeAnchor,
+              subject: {
+                tag: "runtimeCommand" as const,
+                actorId: goblinId,
+                command: "persistentAreaSaveDamageSave" as const,
+                areaMembershipTrigger: {
+                  kind: "firstEntryOnTurn" as const,
+                  areaId: persistentAreaCase.areaId,
+                  effectRef: persistentAreaCase.effectRef,
+                },
+              },
+              initialHoles: [persistentAreaCase.hole],
+            },
+          ],
+        },
+      };
+      const decoded = Schema.decodeUnknownResult(
+        BattleCheckpointFrontierEnvelopeSchema,
+      )(candidate);
+      expect(
+        Result.isSuccess(decoded),
+        `${persistentAreaCase.name}: ${Result.isFailure(decoded) ? String(decoded.failure) : ""}`,
       ).toBe(true);
     }
   });
@@ -941,25 +1307,27 @@ describe("battle boundary admission owners", () => {
         },
       ),
     ).toBeUndefined();
-    const specialState = {
-      ...state,
-      combatants: new Map(state.combatants).set(fighterId, {
-        ...fighterCombatant,
-        activeEffects: [
-          ...fighterCombatant.activeEffects,
-          {
-            kind: "specialSpeedGrant" as const,
-            sourceProcedureRef:
-              battleProcedureExecutionRefForTest("boundary-fly"),
-            sourceCombatantId: fighterId,
-            speedKind: "fly" as const,
-            speed: { kind: "fixed" as const, speedFeet: movementFeet(40) },
-            hover: true,
-            expiresAt: { kind: "untilDispelled" as const },
-          },
-        ],
-      }),
-    } as BattleState;
+    const projectionSession = startBattleSessionRight({
+      battleId: battleId("boundary-movement-effect-producers"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 5 }],
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("shocking_grasp")],
+            preparedSpells: [spellRecord("fly")],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const specialState = castFlyAndAdvanceToCasterTurnForTest({
+      session: projectionSession,
+      casterId: fighterId,
+      targetId: fighterId,
+    }).state;
     const specialSubject = {
       tag: "runtimeCommand",
       actorId: fighterId,
@@ -1021,22 +1389,55 @@ describe("battle boundary admission owners", () => {
         owner: "battleMovementResource",
       },
     ]);
-    const deniedState = {
-      ...state,
-      combatants: new Map(state.combatants).set(goblinId, {
-        ...goblinCombatant,
-        activeEffects: [
-          ...goblinCombatant.activeEffects,
-          {
-            kind: "opportunityAttackDenied" as const,
-            sourceCombatantId: goblinId,
-            sourceProcedureRef:
-              battleProcedureExecutionRefForTest("boundary-denied"),
-            expiresAt: { kind: "startOfTurn" as const, combatantId: goblinId },
-          },
+    const shockingGraspSession = battleRuntimeSessionForTest({
+      ...projectionSession,
+      state: specialState,
+    });
+    const shockingGraspAct = requireActorAdmittedSpellActForTest({
+      session: shockingGraspSession,
+      actorId: fighterId,
+      subjectTag: "actionSpell",
+      invocationRef: cantripSpellInvocationRef(
+        "shocking_grasp",
+        "spellAttackDamage",
+      ),
+    });
+    const shockingTarget = findHole(
+      shockingGraspAct.initialHoles,
+      "targetChoice",
+    );
+    const shockingTargetFill = targetFill(shockingTarget, goblinId);
+    const shockingAttack = requireHole(
+      resolveBattleSubject({
+        state: specialState,
+        subject: shockingGraspAct.subject,
+        fills: [shockingTargetFill],
+      }),
+      "attackRoll",
+    );
+    const shockingAttackFill = attackRollFill(shockingAttack, {
+      total: 20,
+      naturalD20: 12,
+    });
+    const shockingDamage = requireHole(
+      resolveBattleSubject({
+        state: specialState,
+        subject: shockingGraspAct.subject,
+        fills: [shockingTargetFill, shockingAttackFill],
+      }),
+      "rolledDice",
+    );
+    const deniedState = requireResolved(
+      resolveBattleSubject({
+        state: specialState,
+        subject: shockingGraspAct.subject,
+        fills: [
+          shockingTargetFill,
+          shockingAttackFill,
+          damageRollFillWithGroups(shockingDamage, [[1, 1]]),
         ],
       }),
-    } as BattleState;
+    ).state;
     const candidateKinds = (
       reactorId: typeof fighterId | typeof goblinId,
       moverId: typeof fighterId | typeof goblinId,
@@ -1668,13 +2069,13 @@ describe("battle boundary admission owners", () => {
   test("stat-block and character execution admission reject malformed boundaries and round-trip valid snapshots", () => {
     const source = statBlockRecord();
     const valid = battleStatBlockCombatantSource(source);
-    expect(Either.isRight(valid)).toBe(true);
+    expect(Result.isSuccess(valid)).toBe(true);
     expect(
       battleStatBlockCombatantSource({
         ...source,
         statBlock: { ...source.statBlock, hp: { kind: "literal", value: 0 } },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       battleStatBlockCombatantSource({
         ...source,
@@ -1683,7 +2084,7 @@ describe("battle boundary admission owners", () => {
           ac: { kind: "caster_derived", source: "spell_save_dc" },
         },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       admitBattleStatBlockCombatant({
         battleId: battleId("boundary-stat-block-creature-type"),
@@ -1694,7 +2095,7 @@ describe("battle boundary admission owners", () => {
         },
         startingScopeOrdinal: battleExecutionScopeOrdinal(0),
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       admitBattleStatBlockCombatant({
         battleId: battleId("boundary-stat-block-resistance-choice"),
@@ -1708,13 +2109,13 @@ describe("battle boundary admission owners", () => {
         },
         startingScopeOrdinal: battleExecutionScopeOrdinal(0),
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       battleStatBlockCombatantSource({
         ...source,
         statBlock: { ...source.statBlock, size: 17 as never },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       battleStatBlockCombatantSource({
         ...source,
@@ -1723,7 +2124,7 @@ describe("battle boundary admission owners", () => {
           hp: { kind: "literal", value: 1.25 },
         },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       admitBattleStatBlockCombatant({
         battleId: battleId("boundary-stat-block"),
@@ -1731,7 +2132,7 @@ describe("battle boundary admission owners", () => {
         statBlock: source,
         startingScopeOrdinal: battleExecutionScopeOrdinal(0),
       }),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
 
     const executionSource = monsterResourceStatBlock();
     const cohort = statBlockExecutionAdmissionCohort(
@@ -1751,7 +2152,7 @@ describe("battle boundary admission owners", () => {
         executionSource,
         snapshot,
       ),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
     expect(
       restoreStatBlockExecutionAdmissions(
         battleId("boundary-stat-execution"),
@@ -1766,7 +2167,7 @@ describe("battle boundary admission owners", () => {
           },
         ],
       ),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
 
     const sectionAdmissions = statBlockExecutionAdmissionCohort(
       battleId("boundary-stat-sections"),
@@ -1815,7 +2216,7 @@ describe("battle boundary admission owners", () => {
           ],
         },
       ),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       restoreStatBlockExecutionAdmission(
         battleId("boundary-stat-execution"),
@@ -1826,7 +2227,7 @@ describe("battle boundary admission owners", () => {
           resourcePools: snapshot.resourcePools.slice(1),
         },
       ),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       restoreStatBlockExecutionAdmission(
         battleId("boundary-stat-other-battle"),
@@ -1834,7 +2235,7 @@ describe("battle boundary admission owners", () => {
         executionSource,
         snapshot,
       ),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       restoreStatBlockExecutionAdmission(
         battleId("boundary-stat-execution"),
@@ -1855,7 +2256,7 @@ describe("battle boundary admission owners", () => {
           ),
         },
       ),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
 
     expect(
       characterExecutionFromUnits({
@@ -1868,7 +2269,7 @@ describe("battle boundary admission owners", () => {
         unitRefs: [],
         classLevels: [],
       }),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
     const tacticalMind = unitLibrary.requireUnit("fighter_tactical_mind");
     const fighterLevels = [
       { className: "fighter" as const, level: classLevel(2) },
@@ -1895,15 +2296,15 @@ describe("battle boundary admission owners", () => {
         unitRefs: [],
         classLevels: fighterLevels,
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     const supportProfiles = battleUnitSupportProfilesForUnit({
       unit: tacticalMind,
       classLevels: fighterLevels,
     });
-    if (Either.isLeft(supportProfiles)) {
+    if (Result.isFailure(supportProfiles)) {
       throw new Error("Expected Tactical Mind support profile admission.");
     }
-    const supportProfile = supportProfiles.right[0];
+    const supportProfile = supportProfiles.success[0];
     if (supportProfile === undefined) {
       throw new Error("Expected Tactical Mind support profile.");
     }
@@ -2038,7 +2439,7 @@ describe("battle boundary admission owners", () => {
     const shieldBinding = shieldWizard.origin.execution.procedureBindings.find(
       (binding) =>
         binding.procedure.kind === "spellInvocation" &&
-        binding.procedure.execution.procedure === "shieldReaction",
+        binding.procedure.execution.procedure === "triggeredArmorDefense",
     );
     if (shieldBinding?.procedure.kind !== "spellInvocation") {
       throw new Error("Expected Shield reaction procedure fixture.");
@@ -2558,37 +2959,43 @@ describe("battle boundary admission owners", () => {
           combatantId: wizardId,
           initiative: 20,
           attack: null,
-          spellcasting: wizardSpellcasting({
-            cantrips: [acidSplashWithRadius(5)],
-            preparedSpells: [],
-          }),
+          classLevels: [{ className: "cleric", level: 3 }],
+          spellcasting: {
+            ...wizardSpellcasting({
+              cantrips: [acidSplashWithRadius(5)],
+              preparedSpells: [spellRecord("sanctuary")],
+            }),
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "cleric",
+              abilityModifier: 3,
+            },
+          },
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const warded = areaBaseSession.state.combatants.get(goblinId);
-    if (warded === undefined) {
-      throw new Error("Expected area-route ward target.");
+    const areaSanctuaryAct = discoverBattleActCandidates(
+      areaBaseSession.state,
+    ).find((act) => act.subject.tag === "bonusActionSpell");
+    if (areaSanctuaryAct?.subject.tag !== "bonusActionSpell") {
+      throw new Error("Expected admitted area-route Sanctuary procedure.");
     }
-    const sanctuaryWard: BattleActiveEffect = {
-      kind: "sanctuaryWard",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "boundary-area-sanctuary-source",
-      ),
-      sourceCombatantId: wizardId,
-      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-      expiresAt: {
-        kind: "duration",
-        durationTicks: elapsedTimeTicks(10),
-      },
-    };
-    const areaState = {
-      ...areaBaseSession.state,
-      combatants: new Map(areaBaseSession.state.combatants).set(goblinId, {
-        ...warded,
-        activeEffects: [sanctuaryWard],
+    const sanctuaryTarget = findHole(
+      areaSanctuaryAct.initialHoles,
+      "spellTargetList",
+    );
+    const areaState = requireResolved(
+      resolveBattleSubject({
+        state: areaBaseSession.state,
+        subject: areaSanctuaryAct.subject,
+        fills: [
+          spellTargetListFill(sanctuaryTarget, wizardId, "sanctuary", [
+            goblinId,
+          ]),
+        ],
       }),
-    };
+    ).state;
     const areaSession = battleRuntimeSessionForTest({
       state: areaState,
       context: areaBaseSession.context,
@@ -2660,7 +3067,7 @@ describe("battle boundary admission owners", () => {
             },
             invocationSpellAccesses: [
               {
-                tag: "pactOfTheChainFindFamiliar",
+                tag: "pactOfTheChainSpawnedCompanion",
                 spell: spellRecord("find_familiar"),
               },
             ],
@@ -2669,7 +3076,7 @@ describe("battle boundary admission owners", () => {
       ],
     });
     const familiarId = combatantId("boundary-familiar");
-    const cast = castResolvedFindFamiliar({
+    const cast = castResolvedSpawnedCompanion({
       state: ownerSession.state,
       casterId: wizardId,
       familiarId,
@@ -2691,7 +3098,7 @@ describe("battle boundary admission owners", () => {
     });
     const candidates = discoverBattleActCandidates(session.state);
     const pactCandidates = candidates.filter(
-      (act) => act.subject.tag === "pactOfTheChainFamiliarAttack",
+      (act) => act.subject.tag === "companionAttack",
     );
     expect(pactCandidates).toHaveLength(5);
     const familiar = session.state.combatants.get(familiarId);
@@ -2701,7 +3108,7 @@ describe("battle boundary admission owners", () => {
     expect(
       pactCandidates.every((act) => {
         const subject = act.subject;
-        if (subject.tag !== "pactOfTheChainFamiliarAttack") return false;
+        if (subject.tag !== "companionAttack") return false;
         const binding = familiar.origin.execution.procedureBindings.find(
           (candidate) => candidate.procedureRef === subject.procedureRef,
         );
@@ -2714,7 +3121,7 @@ describe("battle boundary admission owners", () => {
 
     const available = discoverBattleActs(session);
     const familiarTouchSpellIds = available.flatMap((act) => {
-      if (act.subject.tag !== "findFamiliarTouchSpell") return [];
+      if (act.subject.tag !== "spawnedCompanionTouchSpellProxy") return [];
       const presentation = battleActSpellPresentation(act);
       return presentation === undefined
         ? []
@@ -2748,8 +3155,8 @@ describe("battle boundary admission owners", () => {
         }),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Knocked Out Unconscious initialization requires exactly 1 current HP.",
       },

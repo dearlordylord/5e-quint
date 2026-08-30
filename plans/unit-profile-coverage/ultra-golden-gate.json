@@ -103,7 +103,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 5,
               "focused-mbt": 56,
-              "runtime-test": 14
+              "runtime-test": 18
             }
           },
           "id": "mbt-parity-evidence",
@@ -483,7 +483,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 8,
               "focused-mbt": 56,
-              "runtime-test": 14
+              "runtime-test": 18
             }
           },
           "id": "mbt-parity-evidence",
@@ -866,7 +866,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 78,
-              "runtime-test": 23
+              "runtime-test": 27
             }
           },
           "id": "mbt-parity-evidence",
@@ -1110,7 +1110,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 78,
-              "runtime-test": 23
+              "runtime-test": 27
             }
           },
           "id": "mbt-parity-evidence",
@@ -1330,8 +1330,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 77,
@@ -1354,7 +1354,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 80,
-              "runtime-test": 26
+              "runtime-test": 30
             }
           },
           "id": "mbt-parity-evidence",
@@ -1577,8 +1577,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 77,
@@ -1601,7 +1601,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 80,
-              "runtime-test": 26
+              "runtime-test": 30
             }
           },
           "id": "mbt-parity-evidence",
@@ -1824,8 +1824,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 77,
@@ -1848,7 +1848,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 80,
-              "runtime-test": 26
+              "runtime-test": 30
             }
           },
           "id": "mbt-parity-evidence",
@@ -2071,8 +2071,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 77,
@@ -2095,7 +2095,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 80,
-              "runtime-test": 26
+              "runtime-test": 30
             }
           },
           "id": "mbt-parity-evidence",
@@ -2318,8 +2318,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 77,
@@ -2342,7 +2342,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 80,
-              "runtime-test": 26
+              "runtime-test": 30
             }
           },
           "id": "mbt-parity-evidence",
@@ -2553,8 +2553,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 77,
@@ -2577,7 +2577,7 @@
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
               "focused-mbt": 80,
-              "runtime-test": 26
+              "runtime-test": 30
             }
           },
           "id": "mbt-parity-evidence",

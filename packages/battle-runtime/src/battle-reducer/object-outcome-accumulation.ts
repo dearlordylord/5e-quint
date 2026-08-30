@@ -3,6 +3,7 @@ import type {
   BattleObjectOutcomeAccumulation,
   BattleResolutionResult,
 } from "../battle-state-execution.ts";
+import { optionalProperty } from "../optional-property.ts";
 
 type ResolvedBattleResult = Extract<
   BattleResolutionResult,
@@ -11,7 +12,7 @@ type ResolvedBattleResult = Extract<
 
 type ObjectOutcomeSource = Pick<
   ResolvedBattleResult,
-  "objectDamages" | "objectIgnitions"
+  "objectDamages" | "objectIgnitions" | "droppedObjects"
 >;
 
 function appendNonEmpty<T>(
@@ -26,6 +27,16 @@ function appendNonEmpty<T>(
   return current === undefined ? [first, ...rest] : [...current, ...candidates];
 }
 
+function appendKnownCollection<T>(
+  current: readonly T[] | undefined,
+  additions: readonly T[] | undefined,
+): readonly T[] | undefined {
+  if (additions === undefined || additions.length === 0) {
+    return current ?? additions;
+  }
+  return current === undefined ? additions : [...current, ...additions];
+}
+
 export function appendObjectOutcomeAccumulation(
   current: BattleObjectOutcomeAccumulation | undefined,
   source: ObjectOutcomeSource,
@@ -38,16 +49,30 @@ export function appendObjectOutcomeAccumulation(
     current?.objectIgnitions,
     source.objectIgnitions,
   );
-  if (objectDamages !== undefined && objectIgnitions !== undefined) {
-    return { objectDamages, objectIgnitions };
-  }
+  const droppedObjects = appendKnownCollection(
+    current?.droppedObjects,
+    source.droppedObjects,
+  );
   if (objectDamages !== undefined) {
-    return { objectDamages };
+    return {
+      objectDamages,
+      ...optionalProperty("objectIgnitions", objectIgnitions),
+      ...optionalProperty("droppedObjects", droppedObjects),
+    };
   }
   if (objectIgnitions !== undefined) {
-    return { objectIgnitions };
+    return {
+      objectIgnitions,
+      ...optionalProperty("droppedObjects", droppedObjects),
+    };
   }
-  return undefined;
+  return droppedObjectAccumulation(droppedObjects);
+}
+
+function droppedObjectAccumulation(
+  droppedObjects: BattleObjectOutcomeAccumulation["droppedObjects"],
+): BattleObjectOutcomeAccumulation | undefined {
+  return droppedObjects === undefined ? undefined : { droppedObjects };
 }
 
 export function mergeObjectOutcomeResult(
@@ -65,5 +90,8 @@ export function mergeObjectOutcomeResult(
         ...(outcomes.objectIgnitions === undefined
           ? {}
           : { objectIgnitions: outcomes.objectIgnitions }),
+        ...(outcomes.droppedObjects === undefined
+          ? {}
+          : { droppedObjects: outcomes.droppedObjects }),
       };
 }

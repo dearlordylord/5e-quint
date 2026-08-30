@@ -138,12 +138,10 @@ function movementSubstrateRouteForResolution(
   input: AdmittedBattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
-  const commandFleeDiscoveryRoute = commandFleeCompelledMovementDiscoveryRoute(
-    input,
-    result,
-  );
-  if (commandFleeDiscoveryRoute !== undefined) {
-    return commandFleeDiscoveryRoute;
+  const compelledFleeDiscoveryRoute =
+    compelledFleeCompelledMovementDiscoveryRoute(input, result);
+  if (compelledFleeDiscoveryRoute !== undefined) {
+    return compelledFleeDiscoveryRoute;
   }
   if (result.tag !== "resolved") {
     return undefined;
@@ -158,9 +156,9 @@ function movementSubstrateRouteForResolution(
       "battleInterruptStack",
     );
   }
-  const commandFleeRoute = commandFleeCompelledMovementRoute(input);
-  if (commandFleeRoute !== undefined) {
-    return commandFleeRoute;
+  const compelledFleeRoute = compelledFleeCompelledMovementRoute(input);
+  if (compelledFleeRoute !== undefined) {
+    return compelledFleeRoute;
   }
   if (isSpellGrantedDashSubject(input.subject)) {
     return [
@@ -211,7 +209,7 @@ function movementSubstrateRouteForResolution(
   return undefined;
 }
 
-function commandFleeCompelledMovementDiscoveryRoute(
+function compelledFleeCompelledMovementDiscoveryRoute(
   input: AdmittedBattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
@@ -219,8 +217,8 @@ function commandFleeCompelledMovementDiscoveryRoute(
   if (
     input.subject.tag !== "actionSpell" ||
     spellInvocationForRouteSubject(input.state, input.subject)?.procedure !==
-      "command" ||
-    fill?.kind !== "commandOptionChoice" ||
+      "compelledNextTurnBehavior" ||
+    fill?.kind !== "compelledBehaviorOptionChoice" ||
     fill.value !== "flee" ||
     result.tag !== "needsHoles"
   ) {
@@ -230,7 +228,7 @@ function commandFleeCompelledMovementDiscoveryRoute(
     discoverBattleActsRoute(
       "compelledMovement",
       [
-        "commandOptionChoice",
+        "compelledBehaviorOptionChoice",
         "movement",
         "savingThrowOutcome",
         "spellTargetList",
@@ -240,12 +238,12 @@ function commandFleeCompelledMovementDiscoveryRoute(
   ];
 }
 
-function commandFleeCompelledMovementRoute(
+function compelledFleeCompelledMovementRoute(
   input: AdmittedBattleResolutionInput,
 ): BattleReducerRouteEvents | undefined {
   if (
     input.subject.tag !== "runtimeCommand" ||
-    input.subject.command !== "commandFlee" ||
+    input.subject.command !== "executeCompelledFlee" ||
     input.fills.at(-1)?.kind !== "movement"
   ) {
     return undefined;

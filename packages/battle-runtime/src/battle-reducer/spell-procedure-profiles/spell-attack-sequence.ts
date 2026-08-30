@@ -108,7 +108,7 @@ function resolveSpellAttackSequence(
 }
 
 const SpellAttackSequenceInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
@@ -137,7 +137,7 @@ const SpellAttackSequenceInvocationSchema = spellProcedureExecutionSchema(
       attackKind: Schema.Literal("ranged_spell_attack"),
       attackBonus: AttackBonus,
     }),
-  ),
+  ]),
 );
 export const spellAttackSequenceProfile: SpellProcedureDeclaration<
   "spellAttackSequence",

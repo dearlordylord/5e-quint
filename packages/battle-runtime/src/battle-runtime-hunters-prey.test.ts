@@ -23,7 +23,7 @@ import {
   damageRollFillWithGroups,
   discoverBattleActs,
   endTurn,
-  Either,
+  Result,
   fighterAttackSubject,
   fighterId,
   findHole,
@@ -117,10 +117,10 @@ function selectedDarkOnesBlessingUnit() {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(admitted)) {
-    throw new Error(admitted.left.message);
+  if (Result.isFailure(admitted)) {
+    throw new Error(admitted.failure.message);
   }
-  return { unit, unitRef: admitted.right };
+  return { unit, unitRef: admitted.success };
 }
 
 function darkOnesBlessingRangeFact(
@@ -484,9 +484,9 @@ describe("battle runtime: Hunter's Prey", () => {
       unit,
     });
 
-    expect(Either.isLeft(admitted)).toBe(true);
-    if (Either.isRight(admitted)) return;
-    expect(admitted.left.message).toBe(
+    expect(Result.isFailure(admitted)).toBe(true);
+    if (Result.isSuccess(admitted)) return;
+    expect(admitted.failure.message).toBe(
       "Battle Unit ref ranger_hunters_prey requires a retained Hunter's Prey selection before battle initialization.",
     );
   });
@@ -498,9 +498,9 @@ describe("battle runtime: Hunter's Prey", () => {
       unit: malformedUnit,
     });
 
-    expect(Either.isLeft(admitted)).toBe(true);
-    if (Either.isRight(admitted)) return;
-    expect(admitted.left.message).toBe(
+    expect(Result.isFailure(admitted)).toBe(true);
+    if (Result.isSuccess(admitted)) return;
+    expect(admitted.failure.message).toBe(
       `Unsupported battle Hunter's Prey Unit hook: ${malformedUnit.id}.`,
     );
   });

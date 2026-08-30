@@ -102,6 +102,10 @@ type LightEmissionMbtProjection =
       readonly radiusFeet: number;
     }
   | {
+      readonly kind: "bright";
+      readonly radiusFeet: number;
+    }
+  | {
       readonly kind: "brightAndDim";
       readonly brightRadiusFeet: number;
       readonly dimAdditionalFeet: number;
@@ -137,7 +141,7 @@ type LightEmitterAttachmentMbtProjection =
       readonly objectId: string;
     }
   | {
-      readonly kind: "dancingLight";
+      readonly kind: "movableLight";
       readonly lightId: string;
       readonly positionId: string;
       readonly form: string;
@@ -978,8 +982,8 @@ function projectLightEmitterAttachment(
       kind: "object" as const,
       objectId: object.objectId,
     })),
-    Match.when({ kind: "dancingLight" }, (light) => ({
-      kind: "dancingLight" as const,
+    Match.when({ kind: "movableLight" }, (light) => ({
+      kind: "movableLight" as const,
       lightId: light.lightId,
       positionId: light.positionId,
       form: light.form,
@@ -995,6 +999,10 @@ function projectLightEmission(
     Match.when({ kind: "dim" }, (dim) => ({
       kind: "dim" as const,
       radiusFeet: Number(dim.radiusFeet),
+    })),
+    Match.when({ kind: "bright" }, (bright) => ({
+      kind: "bright" as const,
+      radiusFeet: Number(bright.radiusFeet),
     })),
     Match.when({ kind: "brightAndDim" }, (brightAndDim) => ({
       kind: "brightAndDim" as const,
@@ -1195,7 +1203,7 @@ function lightEmitterAttachmentFromQuint(
   if (tag === "DancingLightEmitter") {
     const fields = quintVariantRecordValue(raw, "DancingLightEmitter");
     return {
-      kind: "dancingLight",
+      kind: "movableLight",
       lightId: String(numberFromQuintInt(fields["light"], "light")),
       positionId: String(numberFromQuintInt(fields["position"], "position")),
       form: booleanValue(fields["combined"], "combined")

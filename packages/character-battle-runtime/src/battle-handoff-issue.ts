@@ -11,11 +11,11 @@ import type { CharacterSheetIssue } from "@dnd/character-sheet-runtime";
 import type { ReadonlyNonEmptyArray, SpellSlotLevel } from "@dnd/shared/types";
 import type { StatBlockId } from "@dnd/shared/game-facts";
 import type {
-  FindFamiliarNormalFormRef,
+  SpawnedCompanionNormalFormRef,
   PactOfTheChainSpecialFormRef,
 } from "@dnd/surface/surface/find-familiar-forms";
 import { Match } from "effect";
-import { Either } from "effect";
+import { Result } from "effect";
 
 /** A named validation rule is the machine-readable handoff cause. */
 export type CharacterSheetBattleHandoffValidationCheck =
@@ -125,7 +125,7 @@ export type CharacterSheetBattleHandoffFact =
   | {
       readonly handoffReason: "companionFormProof";
       readonly check: "normalFormNotEligible" | "normalFormSelectionMismatch";
-      readonly formId: FindFamiliarNormalFormRef["formId"];
+      readonly formId: SpawnedCompanionNormalFormRef["formId"];
       readonly resolvedStatBlockId: StatBlockId;
     }
   | {
@@ -149,8 +149,8 @@ export type CharacterSheetBattleHandoffIssue =
 export function characterSheetBattleHandoffIssue(
   fact: CharacterSheetBattleHandoffFact,
   message: string,
-): Either.Either<never, CharacterSheetBattleHandoffIssue> {
-  return Either.left(characterSheetBattleHandoffIssueValue(fact, message));
+): Result.Result<never, CharacterSheetBattleHandoffIssue> {
+  return Result.fail(characterSheetBattleHandoffIssueValue(fact, message));
 }
 
 export function characterSheetBattleHandoffIssueValue(

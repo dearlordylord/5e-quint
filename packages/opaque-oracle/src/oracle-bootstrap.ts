@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 
-import { Effect, Either, Exit, Match, Stream } from "effect";
+import { Effect, Result, Exit, Match, Stream } from "effect";
 
 import {
   loadOracleApplicationFromExecutable,
@@ -81,20 +81,20 @@ export type OracleProcessDependencies = {
 /** Parse the one root command and its serve-only options. */
 export function parseOracleCliCommand(
   args: readonly string[],
-): Either.Either<OracleCliCommand, OracleCliArgumentIssue> {
+): Result.Result<OracleCliCommand, OracleCliArgumentIssue> {
   const [mode, ...remaining] = args;
   const definition = ORACLE_CLI_COMMAND_DEFINITIONS.find(
     (candidate) => candidate.tag === mode,
   );
-  if (definition === undefined) return Either.left(invalidArguments());
+  if (definition === undefined) return Result.fail(invalidArguments());
   return Match.value(definition).pipe(
     Match.when({ arguments: "serve" }, (serveDefinition) =>
       parseOracleServeCommand(serveDefinition, remaining),
     ),
     Match.when({ arguments: "none" }, ({ tag }) =>
       remaining.length === 0
-        ? Either.right({ tag })
-        : Either.left(invalidArguments()),
+        ? Result.succeed({ tag })
+        : Result.fail(invalidArguments()),
     ),
     Match.exhaustive,
   );
@@ -112,8 +112,8 @@ export async function runOracleProcess(
   const writeStdout = dependencies.writeStdout ?? defaultWriteStdout;
   const writeStderr = dependencies.writeStderr ?? defaultWriteStderr;
   const mode = parseOracleCliCommand(args);
-  if (Either.isLeft(mode)) {
-    await report(writeStderr, mode.left.message);
+  if (Result.isFailure(mode)) {
+    await report(writeStderr, mode.failure.message);
     return 2;
   }
 
@@ -122,13 +122,13 @@ export async function runOracleProcess(
   const loadApplication =
     dependencies.loadApplication ?? loadOracleApplicationFromExecutable;
   const loaded = loadOracleApplicationSafely(executablePath, loadApplication);
-  if (Either.isLeft(loaded)) {
-    await report(writeStderr, loaded.left);
+  if (Result.isFailure(loaded)) {
+    await report(writeStderr, loaded.failure);
     return 1;
   }
 
-  const application = loaded.right;
-  return Match.value(mode.right).pipe(
+  const application = loaded.success;
+  return Match.value(mode.success).pipe(
     Match.when({ tag: "identity" }, () =>
       runIdentityMode(application, writeStdout, writeStderr),
     ),
@@ -187,35 +187,35 @@ async function runStreamMode(
 function parseOracleServeCommand(
   definition: Extract<OracleCliCommandDefinition, { arguments: "serve" }>,
   args: readonly string[],
-): Either.Either<OracleCliCommand, OracleCliArgumentIssue> {
+): Result.Result<OracleCliCommand, OracleCliArgumentIssue> {
   const values = parseOracleServeFlags(definition, args);
-  if (values === undefined) return Either.left(invalidArguments());
+  if (values === undefined) return Result.fail(invalidArguments());
 
   const host = values.get(definition.hostFlag);
   const portToken = values.get(definition.portFlag);
   if (!isValidOracleServeAddress(host, portToken)) {
-    return Either.left(invalidArguments());
+    return Result.fail(invalidArguments());
   }
   const decodedPort = decodeOracleBindPort(Number(portToken));
-  if (Either.isLeft(decodedPort)) return Either.left(invalidArguments());
-  return Either.right({
+  if (Result.isFailure(decodedPort)) return Result.fail(invalidArguments());
+  return Result.succeed({
     tag: "serve",
     host: ORACLE_LOOPBACK_HOST,
-    port: decodedPort.right,
+    port: decodedPort.success,
   });
 }
 
 function loadOracleApplicationSafely(
   executablePath: string,
   loadApplication: NonNullable<OracleProcessDependencies["loadApplication"]>,
-): Either.Either<OracleApplication, string> {
+): Result.Result<OracleApplication, string> {
   try {
     const loaded = loadApplication(executablePath);
-    return Either.isLeft(loaded)
-      ? Either.left(formatDistributionIssue(loaded.left))
-      : Either.right(loaded.right);
+    return Result.isFailure(loaded)
+      ? Result.fail(formatDistributionIssue(loaded.failure))
+      : Result.succeed(loaded.success);
   } catch (cause) {
-    return Either.left(`failed to load distribution: ${String(cause)}`);
+    return Result.fail(`failed to load distribution: ${String(cause)}`);
   }
 }
 
@@ -278,8 +278,8 @@ async function runServeMode(
     port,
     writeReady: writeStdout,
   });
-  if (Either.isRight(result)) return 0;
-  await report(writeStderr, `serve failed: ${result.left.tag}`);
+  if (Result.isSuccess(result)) return 0;
+  await report(writeStderr, `serve failed: ${result.failure.tag}`);
   return 1;
 }
 

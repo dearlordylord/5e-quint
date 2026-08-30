@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
 import {
@@ -75,28 +75,28 @@ export function handleCreatePlaySession(
       ? { tag: "authenticated", principalId: identity.principalId }
       : { tag: "anonymous" },
   );
-  if (Either.isLeft(created)) {
+  if (Result.isFailure(created)) {
     return errorContent("Unable to create a Play Session.", {
       code: "PLAY_SESSION_CREATION_FAILED",
-      ...(created.left.reason === "guestCapacityExceeded" ||
-      created.left.reason === "savedSessionQuotaExceeded"
-        ? { reason: created.left.reason }
+      ...(created.failure.reason === "guestCapacityExceeded" ||
+      created.failure.reason === "savedSessionQuotaExceeded"
+        ? { reason: created.failure.reason }
         : {}),
     });
   }
   return availablePlaySessionEnvelope({
-    playSessionId: created.right.playSessionId,
+    playSessionId: created.success.playSessionId,
     operationName: playSessionToolNames.create,
     operationResult: {
       tag: "playSessionCreated",
-      playSessionId: created.right.playSessionId,
-      access: created.right.access,
-      ...(created.right.tenure.tag === "guest"
+      playSessionId: created.success.playSessionId,
+      access: created.success.access,
+      ...(created.success.tenure.tag === "guest"
         ? { guidance: guestPlaySessionGuidance(identity) }
         : {}),
     },
-    projection: created.right.projection,
-    tenure: created.right.tenure,
+    projection: created.success.projection,
+    tenure: created.success.tenure,
     identity,
   });
 }
@@ -111,21 +111,21 @@ export async function handleReadPlaySession(
     playSessionToolNames.read,
     identity,
   );
-  if (Either.isLeft(routed)) return routed.left;
+  if (Result.isFailure(routed)) return routed.failure;
   const invalidArgs = noArgumentsError(
-    routed.right.operationArgs,
+    routed.success.operationArgs,
     playSessionToolNames.read,
   );
   if (invalidArgs !== null) return invalidArgs;
 
   const result = await registry.run(
-    routed.right.playSessionId,
-    routed.right.caller,
+    routed.success.playSessionId,
+    routed.success.caller,
     (root) => {
       const battleEnvelope = readBattleEnvelopeForRoot(root);
-      if (Either.isLeft(battleEnvelope)) {
+      if (Result.isFailure(battleEnvelope)) {
         const operationContent = battlePresentationIssueContent(
-          battleEnvelope.left,
+          battleEnvelope.failure,
         );
         return {
           operationResult: jsonContentPayload(operationContent),
@@ -139,8 +139,8 @@ export async function handleReadPlaySession(
       return {
         operationResult: {
           tag: "playSessionResumed" as const,
-          playSessionId: routed.right.playSessionId,
-          battleEnvelope: battleEnvelope.right,
+          playSessionId: routed.success.playSessionId,
+          battleEnvelope: battleEnvelope.success,
         },
         isError: false as const,
         projection: root.sessionStore.snapshot(),
@@ -150,23 +150,23 @@ export async function handleReadPlaySession(
       };
     },
   );
-  if (Either.isLeft(result)) {
-    return result.left.tag === "playSessionUnavailable"
+  if (Result.isFailure(result)) {
+    return result.failure.tag === "playSessionUnavailable"
       ? unavailablePlaySessionEnvelope(
-          routed.right.playSessionId,
+          routed.success.playSessionId,
           playSessionToolNames.read,
         )
-      : playSessionAccessFailureContent(result.left);
+      : playSessionAccessFailureContent(result.failure);
   }
   return availablePlaySessionEnvelope({
-    playSessionId: routed.right.playSessionId,
+    playSessionId: routed.success.playSessionId,
     operationName: playSessionToolNames.read,
-    operationResult: result.right.value.operationResult,
-    projection: result.right.value.projection,
+    operationResult: result.success.value.operationResult,
+    projection: result.success.value.projection,
     hasAvailableCharacterSession:
-      result.right.value.hasAvailableCharacterSession,
-    isError: result.right.value.isError,
-    tenure: result.right.tenure,
+      result.success.value.hasAvailableCharacterSession,
+    isError: result.success.value.isError,
+    tenure: result.success.tenure,
     identity,
   });
 }
@@ -187,15 +187,15 @@ export async function handlePlaySessionOperation(input: {
     input.operationName,
     input.identity ?? GUEST_ONLY_REQUEST_IDENTITY,
   );
-  if (Either.isLeft(routed)) return routed.left;
+  if (Result.isFailure(routed)) return routed.failure;
 
   const result = await input.registry.run(
-    routed.right.playSessionId,
-    routed.right.caller,
+    routed.success.playSessionId,
+    routed.success.caller,
     async (root) => {
       const operationContent = await input.handle(
         root,
-        routed.right.operationArgs,
+        routed.success.operationArgs,
       );
       const operationResult = isToolContent(operationContent)
         ? "structuredContent" in operationContent
@@ -219,7 +219,7 @@ export async function handlePlaySessionOperation(input: {
       commandFor: (operation) =>
         retainedPlaySessionCommand(
           input.operationName,
-          routed.right.operationArgs,
+          routed.success.operationArgs,
           operation.operationContent,
         ),
       retain: (operation) =>
@@ -235,16 +235,16 @@ export async function handlePlaySessionOperation(input: {
         operation.operationContent.isError !== true,
     },
   );
-  if (Either.isLeft(result)) {
-    return result.left.tag === "playSessionUnavailable"
+  if (Result.isFailure(result)) {
+    return result.failure.tag === "playSessionUnavailable"
       ? unavailablePlaySessionEnvelope(
-          routed.right.playSessionId,
+          routed.success.playSessionId,
           input.operationName,
         )
-      : playSessionAccessFailureContent(result.left);
+      : playSessionAccessFailureContent(result.failure);
   }
 
-  const operationContent = result.right.value.operationContent;
+  const operationContent = result.success.value.operationContent;
   if (!isToolContent(operationContent)) {
     return errorContent("MCP operation returned invalid tool content.", {
       code: "INVALID_OPERATION_CONTENT",
@@ -252,22 +252,22 @@ export async function handlePlaySessionOperation(input: {
     });
   }
   return availablePlaySessionEnvelope({
-    playSessionId: routed.right.playSessionId,
+    playSessionId: routed.success.playSessionId,
     operationName: input.operationName,
-    operationResult: result.right.value.operationResult,
-    projection: result.right.value.projection,
+    operationResult: result.success.value.operationResult,
+    projection: result.success.value.projection,
     hasAvailableCharacterSession:
-      result.right.value.hasAvailableCharacterSession,
+      result.success.value.hasAvailableCharacterSession,
     isError: operationContent.isError === true,
-    tenure: result.right.tenure,
+    tenure: result.success.tenure,
     identity: input.identity ?? GUEST_ONLY_REQUEST_IDENTITY,
   });
 }
 
 function readBattleEnvelopeForRoot(root: McpPlaySessionRoot) {
   const battleState = root.sessionStore.battleState;
-  if (battleState.tag !== "activeBattle") return Either.right(null);
-  return Either.map(
+  if (battleState.tag !== "activeBattle") return Result.succeed(null);
+  return Result.map(
     battleSessionPayload(root, battleState.session),
     (payload) => payload.envelope,
   );
@@ -285,7 +285,7 @@ function operationShouldBeRetained(
   const payload =
     "structuredContent" in content ? content.structuredContent : undefined;
   const decoded = decodeRollDiceResult(payload);
-  return Either.isRight(decoded) && decoded.right.disposition === "sampled";
+  return Result.isSuccess(decoded) && decoded.success.disposition === "sampled";
 }
 
 function retainedPlaySessionCommand(
@@ -299,12 +299,12 @@ function retainedPlaySessionCommand(
   }
   if (operationName === diceToolNames.rollDice) {
     const decoded = decodeDiceToolCall({ name: operationName, args });
-    if (Either.isLeft(decoded)) {
+    if (Result.isFailure(decoded)) {
       throw new Error(
         "A retained successful dice operation no longer decodes as its command.",
       );
     }
-    return { name: operationName, args: decoded.right.args };
+    return { name: operationName, args: decoded.success.args };
   }
   return { name: operationName, args };
 }
@@ -336,9 +336,9 @@ function decodePlaySessionRoutedArgs(
   args: unknown,
   operationName: PlaySessionOperationName,
   identity: PlaySessionRequestIdentity,
-): Either.Either<RoutedArgs, ReturnType<typeof errorContent>> {
+): Result.Result<RoutedArgs, ReturnType<typeof errorContent>> {
   if (!isJsonObject(args)) {
-    return Either.left(
+    return Result.fail(
       errorContent(`${operationName} expects valid arguments.`, {
         code: "INVALID_ARGUMENTS",
         message: "Expected an object containing playSessionId.",
@@ -346,24 +346,24 @@ function decodePlaySessionRoutedArgs(
     );
   }
   const decodedId = decodePlaySessionId(args.playSessionId);
-  if (Either.isLeft(decodedId)) {
-    return Either.left(
+  if (Result.isFailure(decodedId)) {
+    return Result.fail(
       errorContent(`${operationName} expects valid arguments.`, {
         code: "INVALID_ARGUMENTS",
-        message: decodedId.left,
+        message: decodedId.failure,
       }),
     );
   }
   const caller = callerFrom(identity, args.guestAccessGrant, operationName);
-  if (Either.isLeft(caller)) return Either.left(caller.left);
+  if (Result.isFailure(caller)) return Result.fail(caller.failure);
   const operationArgs = Object.fromEntries(
     Object.entries(args).filter(
       ([key]) => key !== "playSessionId" && key !== "guestAccessGrant",
     ),
   );
-  return Either.right({
-    playSessionId: decodedId.right,
-    caller: caller.right,
+  return Result.succeed({
+    playSessionId: decodedId.success,
+    caller: caller.success,
     operationArgs,
   });
 }
@@ -372,24 +372,24 @@ function callerFrom(
   identity: PlaySessionRequestIdentity,
   guestAccessGrant: unknown,
   operationName: PlaySessionOperationName,
-): Either.Either<
+): Result.Result<
   Exclude<PlaySessionCaller, { tag: "anonymous" }>,
   ReturnType<typeof errorContent>
 > {
   if (identity.tag === "authenticated") {
-    return Either.right({
+    return Result.succeed({
       tag: "authenticated",
       principalId: identity.principalId,
     });
   }
   const decodedGrant = decodeGuestAccessGrant(guestAccessGrant);
-  return Either.mapLeft(decodedGrant, (message) =>
+  return Result.mapError(decodedGrant, (message) =>
     errorContent(`${operationName} expects Guest Play Session access.`, {
       code: "INVALID_GUEST_ACCESS",
       message,
     }),
   ).pipe(
-    Either.map((decodedGuestAccessGrant) => ({
+    Result.map((decodedGuestAccessGrant) => ({
       tag: "guest" as const,
       guestAccessGrant: decodedGuestAccessGrant,
     })),

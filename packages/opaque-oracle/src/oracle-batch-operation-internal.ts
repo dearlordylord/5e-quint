@@ -1,4 +1,4 @@
-import { Either, Effect } from "effect";
+import { Result, Effect } from "effect";
 
 import {
   decodeOracleEvaluationBatchJson,
@@ -27,15 +27,15 @@ export function makeOracleBatchOperationInternal(
     (input: OracleBatchOperationInput) =>
       Effect.sync(() => {
         const decoded = decodeOracleEvaluationBatchJson(input.rawJson);
-        if (Either.isLeft(decoded)) {
+        if (Result.isFailure(decoded)) {
           return oracleDecodeRejectedResponse({
             distributionId: input.application.identity.distributionId,
-            issues: decoded.left,
+            issues: decoded.failure,
           });
         }
 
         const traces = evaluator({
-          batch: decoded.right,
+          batch: decoded.success,
           services: input.application.services,
         });
         return oracleEvaluatedResponse({

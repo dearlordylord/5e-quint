@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 
@@ -14,8 +14,8 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
-import { Either } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../active-effect/execution-ref.ts";
+import { Result } from "effect";
+import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 import { characterExecutionWithObjectContactDamageRepeat } from "../character-execution-queries.ts";
 import type { ObjectContactDamageRepeatSpellProcedureExecution } from "../character-execution.ts";
 import {
@@ -43,7 +43,7 @@ import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
-  type BattleActiveEffectExecutionRef,
+  type BattleEffectExecutionRef,
   type BattleObjectId,
   type BattleProcedureExecutionRef,
   type CombatantId,
@@ -57,8 +57,8 @@ import {
 import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowHoles,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveHoles,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 import {
@@ -70,7 +70,7 @@ import { deduplicateBattleHolesById } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
-import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./targeting-save-interdiction.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import {
   applyAvailableSourceDamageRollPenalty,
@@ -98,14 +98,14 @@ import {
   spellObjectTargetHole,
 } from "./spells-targeting.ts";
 import {
-  antimagicFieldOngoingSpellEffectRefForActiveEffect,
-  ongoingSpellEffectSuppressedByAntimagicField,
-} from "./antimagic-field-suppression.ts";
+  magicSuppressionOngoingSpellEffectRefForActiveEffect,
+  ongoingSpellEffectSuppressedByMagicSuppressionEmanation,
+} from "./magic-suppression-ongoing-effect.ts";
 import {
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
-} from "./antimagic-field-magical-effect-interdiction.ts";
-import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+} from "./magic-suppression-magical-effect-interdiction.ts";
+import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
 
 type ObjectContactDamageInvocation = Extract<
   SupportedSpellInvocation,
@@ -327,9 +327,9 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
   }
   /* v8 ignore stop -- @preserve */
   if (
-    ongoingSpellEffectSuppressedByAntimagicField(
+    ongoingSpellEffectSuppressedByMagicSuppressionEmanation(
       input.input.state,
-      antimagicFieldOngoingSpellEffectRefForActiveEffect(
+      magicSuppressionOngoingSpellEffectRefForActiveEffect(
         input.invocation.activeEffect,
       ),
     )
@@ -337,7 +337,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
     return invalidResult(
       input.input.state,
       "staleSubject",
-      "Object-contact damage is suppressed by Antimagic Field.",
+      "Object-contact damage is suppressed by magic-suppression emanation.",
     );
   }
   const contactSelection = validateObjectContactTargets({
@@ -387,7 +387,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
     { kind: "bonusAction" },
   );
   /* v8 ignore start -- @preserve -- Repeat admission proves this spend; damage lifecycle cannot consume the caster's Bonus Action, and interruptions redispatch. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.input.state,
       "staleSubject",
@@ -396,7 +396,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
   }
   /* v8 ignore stop -- @preserve */
   return finishObjectContactDamageResolution({
-    state: { ...damageResolution.state, currentTurnResources: spent.right },
+    state: { ...damageResolution.state, currentTurnResources: spent.success },
     subject: input.input.subject,
     events: damageResolution.events,
     droppedObjects: damageResolution.droppedObjects,
@@ -642,7 +642,7 @@ function resolveObjectContactDamage(input: {
       input.fillSet.damageRoll !== undefined ||
       input.fillSet.concentrationSavingThrows.length > 0 ||
       input.fillSet.damageDispositions.length > 0 ||
-      input.fillSet.hideousLaughterDamageRepeatSaves.length > 0 ||
+      input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.length > 0 ||
       input.fillSet.objectContactSavingThrowOutcome !== undefined ||
       input.fillSet.objectDropResolution !== undefined ||
       input.fillSet.sourceDamageRollPenaltyRolls.length > 0
@@ -831,61 +831,64 @@ function resolveObjectContactDamage(input: {
       ...missingDamageDispositionHoles,
     ]);
   }
-  const hideousLaughterSaveChecks = resolvedDamageTargets.map(
+  const stagedConditionSaveChecks = resolvedDamageTargets.map(
     ({ target, damage }) => {
-      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-        state: input.state,
-        target,
-        damageAmount: damage,
-      });
-      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: input.state,
-        target,
-        damageAmount: damage,
-        fills: fillsMatchingHoleIds(
-          input.fillSet.hideousLaughterDamageRepeatSaves,
-          holes,
-        ),
-      });
+      const holes =
+        damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
+          state: input.state,
+          target,
+          damageAmount: damage,
+        });
+      return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
+        {
+          state: input.state,
+          target,
+          damageAmount: damage,
+          fills: fillsMatchingHoleIds(
+            input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+            holes,
+          ),
+        },
+      );
     },
   );
-  const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
+  const invalidStagedConditionSaveCheck = stagedConditionSaveChecks.find(
     (check) => check.tag === "invalid",
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (invalidHideousLaughterSaveCheck?.tag === "invalid") {
+  if (invalidStagedConditionSaveCheck?.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.errorState,
       "invalidFill",
-      invalidHideousLaughterSaveCheck.message,
+      invalidStagedConditionSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingHideousLaughterSaveHoles = hideousLaughterSaveChecks.flatMap(
+  const missingStagedConditionSaveHoles = stagedConditionSaveChecks.flatMap(
     (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
   );
-  if (missingHideousLaughterSaveHoles.length > 0) {
+  if (missingStagedConditionSaveHoles.length > 0) {
     return needsHolesResult(needsHolesState, input.subject, [
-      ...missingHideousLaughterSaveHoles,
+      ...missingStagedConditionSaveHoles,
     ]);
   }
-  const hideousLaughterSaveHoleIds = new Set<BattleHoleId>(
-    hideousLaughterSaveChecks.flatMap((check) =>
+  const stagedConditionSaveHoleIds = new Set<BattleHoleId>(
+    stagedConditionSaveChecks.flatMap((check) =>
       check.tag === "invalid" ? [] : check.holes.map((hole) => hole.holeId),
     ),
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    input.fillSet.hideousLaughterDamageRepeatSaves.some(
-      (fill) => !hideousLaughterSaveHoleIds.has(fill.holeId),
+    input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.some(
+      (fill) => !stagedConditionSaveHoleIds.has(fill.holeId),
     )
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.errorState,
       "invalidFill",
-      "Hideous Laughter damage repeat save fill must match a requested damaged target.",
+      "damage-triggered repeat-save condition damage repeat save fill must match a requested damaged target.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1081,15 +1084,15 @@ function resolveObjectContactDamage(input: {
       input.fillSet.concentrationSavingThrows,
       concentrationLifecycleHoles,
     );
-    const hideousLaughterLifecycleHoles =
-      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+    const stagedConditionLifecycleHoles =
+      damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state,
         target,
         damageAmount,
       });
-    const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
-      input.fillSet.hideousLaughterDamageRepeatSaves,
-      hideousLaughterLifecycleHoles,
+    const stagedConditionLifecycleFills = fillsMatchingHoleIds(
+      input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      stagedConditionLifecycleHoles,
     );
     return applyPreparedSlotSpellDamage(state, targetId, damageAmount, {
       concentrationSavingThrow:
@@ -1099,10 +1102,11 @@ function resolveObjectContactDamage(input: {
               concentrationLifecycleFills,
               concentrationSave,
             ),
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         concentrationLifecycleFills,
       damageDisposition: damageDispositionByTargetId.get(targetId),
-      hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
+      saveGatedConditionWithRepeatDamageRepeatSaves:
+        stagedConditionLifecycleFills,
       damageSourceId: input.actorId,
       spatialFacts: input.fillSet.targetSpatialFacts,
       ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
@@ -1182,7 +1186,7 @@ function objectContactSavingThrowOutcomeHole(input: {
     areaChoices: [],
     targetRollModes: savingThrowRollModeProjections(input.state, "con"),
     targetFlatBonuses: input.targets.flatMap(
-      wardingBondSavingThrowFlatBonusProjectionsForTarget,
+      linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget,
     ),
   };
 }
@@ -1332,7 +1336,9 @@ function applyObjectContactPenalties(input: {
     if (target === undefined) {
       continue;
     }
-    const effect: ObjectContactPenaltyActiveEffect = {
+    const effect: Omit<ObjectContactPenaltyActiveEffect, "effectRef"> & {
+      readonly effectRef?: never;
+    } = {
       kind: "selfAttackRollAndAbilityCheckRollMode",
       sourceEffectRef,
       sourceProcedureRef: objectContactDamageSourceProcedureRef(
@@ -1345,17 +1351,21 @@ function applyObjectContactPenalties(input: {
         combatantId: input.actorId,
       },
     };
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect,
+    });
     combatants = new Map(combatants).set(targetId, {
-      ...target,
+      ...allocation.owner,
       activeEffects: [
-        ...target.activeEffects.filter(
+        ...allocation.owner.activeEffects.filter(
           (candidate) =>
             !(
               candidate.kind === "selfAttackRollAndAbilityCheckRollMode" &&
               candidate.sourceEffectRef === effect.sourceEffectRef
             ),
         ),
-        effect,
+        allocation.effect,
       ],
     });
   }
@@ -1365,7 +1375,7 @@ function applyObjectContactPenalties(input: {
 function objectContactDamageEffectIsActive(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly effectRef: BattleActiveEffectExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
 }): boolean {
   const actor = input.state.combatants.get(input.actorId);
   return (
@@ -1389,31 +1399,28 @@ function applyObjectContactDamageActiveEffect(input: {
     return input.state;
   }
   /* v8 ignore stop -- @preserve */
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: actor,
+    effect: {
+      kind: "spellObjectContactDamage",
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
+      sourceCombatantId: input.actorId,
+      sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
+      objectId: input.objectId,
+      rangeFeet: input.invocation.rangeFeet,
+      damage: input.invocation.damage,
+      startedOn: {
+        actorId: input.actorId,
+        round: input.state.initiative.round,
+      },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
   });
-  const effect = {
-    kind: "spellObjectContactDamage" as const,
-    effectRef: allocation.effectRef,
-    sourceProcedureRef: input.invocation.sourceProcedureRef,
-    sourceCombatantId: input.actorId,
-    sourceSpellLevel: spellInvocationEffectiveSpellLevel(input.invocation),
-    objectId: input.objectId,
-    rangeFeet: input.invocation.rangeFeet,
-    damage: input.invocation.damage,
-    startedOn: {
-      actorId: input.actorId,
-      round: input.state.initiative.round,
-    },
-    expiresAt: {
-      kind: "concentration" as const,
-      combatantId: input.actorId,
-      durationTicks: input.invocation.durationTicks,
-    },
-  } satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "spellObjectContactDamage" }
-  >;
+  const effect = allocation.effect;
   const owner = allocation.owner;
   if (owner.origin.kind !== "character") return input.state;
   const repeatExecution = {
@@ -1495,17 +1502,17 @@ function objectContactDamageUnrelatedFillsMessage(
     fillSet.skillChoice !== undefined ||
     fillSet.targetAbilityChoices !== undefined ||
     fillSet.abilityChoice !== undefined ||
-    fillSet.thaumaturgyActiveOneMinuteEffectCount !== undefined ||
-    fillSet.commandOptionChoice !== undefined ||
+    fillSet.temporaryAbilityCheckRollModeActiveEffectCount !== undefined ||
+    fillSet.compelledBehaviorOptionChoice !== undefined ||
     fillSet.selfTransformationModeChoice !== undefined ||
     fillSet.conditionChoice !== undefined ||
     fillSet.areaChoice !== undefined ||
     fillSet.teleportDestination !== undefined ||
-    fillSet.dancingLightsPlacement !== undefined ||
+    fillSet.movableLightPlacement !== undefined ||
     fillSet.damageTypeChoice !== undefined ||
     (!options.allowSpellCastReactionFacts &&
       fillSet.reactionSpellTargetFacts.length > 0) ||
-    fillSet.mirrorImageDuplicateRoll !== undefined ||
+    fillSet.duplicateHitInterceptionRoll !== undefined ||
     fillSet.movement !== undefined ||
     fillSet.spellDamageReductionRolls.length > 0 ||
     fillSet.attackBurstDamageRoll !== undefined ||

@@ -1,4 +1,4 @@
-import { Effect, Either, Stream } from "effect";
+import { Effect, Result, Stream } from "effect";
 
 import type { OracleApplication } from "./oracle-distribution.ts";
 import { decodeOracleUtf8 } from "./oracle-utf8.ts";
@@ -54,14 +54,14 @@ export function runOracleStream<
       bytes: readonly number[],
     ): Effect.Effect<void, WriteError, WriteRequirements> => {
       const decoded = decodeOracleUtf8(Uint8Array.from(bytes));
-      const responseEffect = Either.isLeft(decoded)
+      const responseEffect = Result.isFailure(decoded)
         ? Effect.succeed(
             oracleDecodeRejectedResponse({
               distributionId: options.application.identity.distributionId,
               issues: ORACLE_INVALID_JSON_ISSUES,
             }),
           )
-        : options.application.evaluateJson(decoded.right);
+        : options.application.evaluateJson(decoded.success);
 
       return responseEffect.pipe(
         Effect.map(

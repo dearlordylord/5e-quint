@@ -429,7 +429,7 @@ const AfterHitSaveGatedConditionInvocationSchema =
       targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),
       effect: Schema.Struct({
         kind: Schema.Literal("fixed"),
-        condition: Schema.Literal(...ALL_CONDITIONS),
+        condition: Schema.Literals(ALL_CONDITIONS),
         expiresAt: Schema.Literal("concentration"),
         escape: Schema.Struct({
           kind: Schema.Literal("abilityCheck"),

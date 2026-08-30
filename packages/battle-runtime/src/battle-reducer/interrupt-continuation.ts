@@ -12,6 +12,7 @@ import type {
   BattleConcentrationSavingThrowHole,
   BattleCunningStrikeContinuationFill,
   BattleFill,
+  BattleHandledInterruptOccurrence,
   BattleInterruptedProcedure,
   BattleInterruptFrame,
   BattleResolutionResult,
@@ -201,7 +202,7 @@ export function resumeInterruptedProcedure(
         state,
         continuation,
       ),
-      wardingBondDamageShareConcentrationSavingThrows:
+      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         continuationConcentrationSavingThrows,
       spatialFacts: attackDamageContinuationTargetSpatialFacts(continuation),
       relationshipDecisions: continuation.continuation.relationshipDecisions,
@@ -279,20 +280,20 @@ export class InterruptContinuationExecution {
   execute(input: {
     readonly state: BattleState;
     readonly continuation: BattleInterruptedProcedure;
-    readonly handledInterruptTrigger: BattleInterruptTrigger;
+    readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
   }): BattleResolutionResult {
     return input.continuation.kind === "replay"
       ? resolveReplayContinuationFromState({
           state: input.state,
           continuation: input.continuation,
-          handledInterruptTrigger: input.handledInterruptTrigger,
+          handledInterruptOccurrence: input.handledInterruptOccurrence,
           fills: input.continuation.fills,
           execution: this.replayExecution,
         })
       : resumeInterruptedProcedure(
           input.state,
           input.continuation,
-          input.handledInterruptTrigger,
+          input.handledInterruptOccurrence.trigger,
           this.attackResolvers,
         );
   }
@@ -412,7 +413,7 @@ export function resolveActiveInterruptContinuation(input: {
     byInterruptFrameKind("interruptCheckpoint", (frame) =>
       notActiveContinuation(frame),
     ),
-    byInterruptFrameKind("flySpeedGrantEndFallCleanup", (frame) =>
+    byInterruptFrameKind("grantedFlightEndFallCleanup", (frame) =>
       notActiveContinuation(frame),
     ),
     byInterruptFrameKind("fallDamageLandingMitigation", (frame) =>
@@ -434,7 +435,7 @@ function notActiveContinuation(
     {
       readonly kind:
         | "interruptCheckpoint"
-        | "flySpeedGrantEndFallCleanup"
+        | "grantedFlightEndFallCleanup"
         | "fallDamageLandingMitigation";
     }
   >,
@@ -445,7 +446,7 @@ function notActiveContinuation(
 export function resolveInterruptContinuation(input: {
   readonly state: BattleState;
   readonly continuation: BattleInterruptedProcedure;
-  readonly handledInterruptTrigger: BattleInterruptTrigger;
+  readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
   readonly execution: InterruptContinuationExecution;
 }): BattleResolutionResult {
   return input.execution.execute(input);

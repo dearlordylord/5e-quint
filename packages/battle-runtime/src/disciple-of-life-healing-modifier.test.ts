@@ -3,6 +3,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 
 import { Hp } from "@dnd/shared/types";
+import { Result } from "effect";
 
 import {
   characterBattleFeatureInitForTest,
@@ -307,8 +308,8 @@ function requireDiscipleOfLifeUnitRef(): BattleUnitRef {
     unitRef: { unitId: parseSharedUnitId(clericDiscipleOfLifeUnitId) },
     unit: discipleOfLifeUnit,
   });
-  if (unitRef._tag === "Left") {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return { ...unitRef.right, supportProfiles: [support] };
+  return { ...unitRef.success, supportProfiles: [support] };
 }

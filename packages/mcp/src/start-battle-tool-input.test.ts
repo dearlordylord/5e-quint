@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { decodeStartBattleArgs } from "./start-battle-tool-input.ts";
@@ -6,7 +6,7 @@ import { decodeStartBattleArgs } from "./start-battle-tool-input.ts";
 describe("start battle tool input", () => {
   test("requires explicit Initiative mode and companion admissions", () => {
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeStartBattleArgs({
           battleId: "battle-with-implicit-empty-state",
           initialCombatants: [
@@ -40,7 +40,7 @@ describe("start battle tool input", () => {
       ],
     });
 
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 
   test("decodes a battle roster without encounter-wide relationship partitions", () => {
@@ -60,9 +60,9 @@ describe("start battle tool input", () => {
       ],
     });
 
-    expect(Either.isRight(decoded)).toBe(true);
-    if (Either.isLeft(decoded)) return;
-    expect(decoded.right.initialCombatants[0]).not.toHaveProperty("side");
+    expect(Result.isSuccess(decoded)).toBe(true);
+    if (Result.isFailure(decoded)) return;
+    expect(decoded.success.initialCombatants[0]).not.toHaveProperty("side");
   });
 
   test.each([
@@ -97,6 +97,6 @@ describe("start battle tool input", () => {
       initialCombatants: [combatant],
     });
 
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 });

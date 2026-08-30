@@ -1,35 +1,39 @@
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-  classLevel,
-  difficultyClass,
-  movementDeltaFeet,
-  movementFeet,
-} from "@dnd/shared/types";
+import { classLevel, movementDeltaFeet, movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
-  battleActiveEffectExecutionRefForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
+  battleEffectExecutionRefForTest,
   battleId,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   characterSeed,
   damageRollFillWithGroups,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   fighterId,
   fighterVsGoblinBattle,
-  goblinTurnBattle,
   goblinId,
   KNOCKED_OUT_UNCONSCIOUS,
   savingThrowOutcomeFill,
+  Result,
+  Schema,
   startBattleRight,
   wizardId,
 } from "../battle-runtime.test-support.ts";
 import {
+  BattleCheckpointFrontierEnvelopeSchema,
+  BattleSnapshotSchema,
+} from "../index.ts";
+import {
   acidArrowUnitId,
   orcRelentlessEnduranceUnitId,
+  sleepUnitId,
   spellCasterId,
   spellTargetId,
   unitLibrary,
 } from "../unit-profile-admission-catalog.test-support.ts";
 import {
+  attackDamageDispositionFill,
   attackRollFill,
   requireHole,
   requireResultHole,
@@ -44,10 +48,7 @@ import {
   endTurn,
   resolveBattleSubject,
 } from "../unit-profile-admission.test-support.ts";
-import type {
-  BattleActiveEffect,
-  BattleState,
-} from "../battle-state-execution.ts";
+import type { BattleState } from "../battle-state-execution.ts";
 import {
   afterActiveEffectOccurrenceUpdate,
   isEndTurnFillKind,
@@ -71,10 +72,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
       sourceProcedureRef,
       effectKind: "spellEffect" as const,
     };
-    const ownedEffect: Extract<
-      BattleActiveEffect,
-      { readonly kind: "nextAttackRollBySelf" }
-    > = {
+    const ownedEffectTemplate = {
       kind: "nextAttackRollBySelf",
       sourceProcedureRef,
       sourceCombatantId: fighterId,
@@ -83,11 +81,37 @@ describe("turn-boundary active-effect occurrence updates", () => {
         kind: "duration",
         durationTicks: elapsedTimeTicks(1),
       },
+    } as const;
+    const stateWithConcentration: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...source,
+        concentration,
+      }),
     };
-    const combatants = new Map(state.combatants)
-      .set(fighterId, { ...source, concentration })
-      .set(goblinId, { ...target, activeEffects: [ownedEffect] });
-    const staleOccurrence = { ...ownedEffect };
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: stateWithConcentration,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: goblinId,
+          effect: ownedEffectTemplate,
+        },
+      ],
+    });
+    const allocatedOccurrence = allocated.occurrences[0];
+    if (
+      allocatedOccurrence?.kind !== "activeEffect" ||
+      allocatedOccurrence.effect.kind !== "nextAttackRollBySelf"
+    ) {
+      throw new Error("Expected the owned active-effect occurrence.");
+    }
+    const ownedEffect = allocatedOccurrence.effect;
+    const combatants = allocated.state.combatants;
+    const staleOccurrence = {
+      ...ownedEffect,
+      effectRef: battleEffectExecutionRefForTest("stale-occurrence"),
+    };
 
     const update = updateCombatantWithActiveEffectOccurrence(
       combatants,
@@ -109,6 +133,65 @@ describe("turn-boundary active-effect occurrence updates", () => {
     expect(update.tag).toBe("unchanged");
     expect(afterTeardown.get(fighterId)?.concentration).toEqual(concentration);
     expect(afterTeardown.get(goblinId)?.activeEffects).toEqual([ownedEffect]);
+  });
+
+  test("a same-reference clone can update its active effect occurrence", () => {
+    const state = fighterVsGoblinBattle();
+    const target = state.combatants.get(goblinId);
+    if (target === undefined) {
+      throw new Error("Expected the goblin combatant.");
+    }
+    const ownedEffectTemplate = {
+      kind: "nextAttackRollBySelf" as const,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "same-reference-occurrence",
+      ),
+      sourceCombatantId: fighterId,
+      mode: "advantage" as const,
+      expiresAt: {
+        kind: "duration" as const,
+        durationTicks: elapsedTimeTicks(1),
+      },
+    } as const;
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: goblinId,
+          effect: ownedEffectTemplate,
+        },
+      ],
+    });
+    const allocatedOccurrence = allocated.occurrences[0];
+    if (
+      allocatedOccurrence?.kind !== "activeEffect" ||
+      allocatedOccurrence.effect.kind !== "nextAttackRollBySelf"
+    ) {
+      throw new Error("Expected the cloned active-effect occurrence.");
+    }
+    const ownedEffect = allocatedOccurrence.effect;
+    const combatants = allocated.state.combatants;
+    const clonedOccurrence = { ...ownedEffect };
+
+    const update = updateCombatantWithActiveEffectOccurrence(
+      combatants,
+      goblinId,
+      clonedOccurrence,
+      (current) => ({
+        ...current,
+        activeEffects: current.activeEffects.map((effect) =>
+          effect.effectRef === clonedOccurrence.effectRef
+            ? { ...clonedOccurrence, mode: "disadvantage" }
+            : effect,
+        ),
+      }),
+    );
+
+    expect(update).toMatchObject({ tag: "updated" });
+    expect(update.combatants.get(goblinId)?.activeEffects).toEqual([
+      { ...ownedEffect, mode: "disadvantage" },
+    ]);
   });
 
   test("ticks duration effects and tears down an expired concentration source", () => {
@@ -133,7 +216,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
         kind: "duration" as const,
         durationTicks: elapsedTimeTicks(2),
       },
-    } as const satisfies BattleActiveEffect;
+    } as const;
     const expiringConcentrationEffect = {
       kind: "speedDelta" as const,
       sourceProcedureRef: concentrationSourceProcedureRef,
@@ -144,26 +227,35 @@ describe("turn-boundary active-effect occurrence updates", () => {
         combatantId: fighterId,
         durationTicks: elapsedTimeTicks(1),
       },
-    } as const satisfies BattleActiveEffect;
-    const stateWithEffects: BattleState = {
+    } as const;
+    const stateWithConcentration: BattleState = {
       ...state,
-      combatants: new Map(state.combatants)
-        .set(fighterId, {
-          ...fighter,
-          concentration: {
-            sourceProcedureRef: concentrationSourceProcedureRef,
-            effectKind: "spellEffect",
-          },
-        })
-        .set(goblinId, {
-          ...goblin,
-          activeEffects: [tickingEffect, expiringConcentrationEffect],
-        }),
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...fighter,
+        concentration: {
+          sourceProcedureRef: concentrationSourceProcedureRef,
+          effectKind: "spellEffect",
+        },
+      }),
     };
-    const ticked = tickDurationEffects(stateWithEffects.combatants);
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: stateWithConcentration,
+      occurrences: [tickingEffect, expiringConcentrationEffect].map(
+        (effect) => ({
+          kind: "activeEffect" as const,
+          ownerId: goblinId,
+          effect,
+        }),
+      ),
+    });
+    const [allocatedTicking] = allocated.occurrences;
+    if (allocatedTicking?.kind !== "activeEffect") {
+      throw new Error("Expected the allocated ticking occurrence.");
+    }
+    const ticked = tickDurationEffects(allocated.state.combatants);
     expect(ticked.value.get(goblinId)?.activeEffects).toEqual([
       {
-        ...tickingEffect,
+        ...allocatedTicking.effect,
         expiresAt: {
           kind: "duration",
           durationTicks: elapsedTimeTicks(1),
@@ -171,7 +263,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
       },
     ]);
     expect(ticked.value.get(fighterId)?.concentration).toBeNull();
-    expect(ticked.flySpeedGrantEndFallCleanupFrames).toEqual([]);
+    expect(ticked.grantedFlightEndFallCleanupFrames).toEqual([]);
   });
 
   test("duration expiry preserves a knocked-out target while ending its caster's concentration", () => {
@@ -213,15 +305,20 @@ describe("turn-boundary active-effect occurrence updates", () => {
         combatantId: wizardId,
         durationTicks: elapsedTimeTicks(1),
       },
-    } as const satisfies BattleActiveEffect;
-    const combatants = new Map(state.combatants)
-      .set(wizardId, {
+    } as const;
+    const stateWithConcentration: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(wizardId, {
         ...caster,
         concentration: { sourceProcedureRef, effectKind: "spellEffect" },
-      })
-      .set(fighterId, { ...target, activeEffects: [effect] });
+      }),
+    };
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: stateWithConcentration,
+      occurrences: [{ kind: "activeEffect", ownerId: fighterId, effect }],
+    });
 
-    const expired = tickDurationEffects(combatants).value;
+    const expired = tickDurationEffects(allocated.state.combatants).value;
 
     expect(expired.get(wizardId)?.concentration).toBeNull();
     expect(expired.get(fighterId)).toMatchObject({
@@ -275,10 +372,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
         },
       },
       {
-        kind: "jumpMovementReplacement" as const,
-        effectRef: battleActiveEffectExecutionRefForTest(
-          "turn-start-jump-refresh",
-        ),
+        kind: "fixedCostMovementReplacement" as const,
         sourceProcedureRef: jumpProcedureRef,
         sourceCombatantId: wizardId,
         movementCostFeet: movementFeet(10),
@@ -289,22 +383,31 @@ describe("turn-boundary active-effect occurrence updates", () => {
           durationTicks: elapsedTimeTicks(10),
         },
       },
-    ] as const satisfies readonly BattleActiveEffect[];
-    const stateWithUsedMarkers: BattleState = {
+    ] as const;
+    const stateWithConcentration: BattleState = {
       ...state,
-      combatants: new Map(state.combatants)
-        .set(wizardId, {
-          ...caster,
-          concentration: {
-            sourceProcedureRef: resistanceProcedureRef,
-            effectKind: "spellEffect",
-          },
-        })
-        .set(fighterId, { ...target, activeEffects }),
+      combatants: new Map(state.combatants).set(wizardId, {
+        ...caster,
+        concentration: {
+          sourceProcedureRef: resistanceProcedureRef,
+          effectKind: "spellEffect",
+        },
+      }),
     };
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: stateWithConcentration,
+      occurrences: activeEffects.map((effect) => ({
+        kind: "activeEffect" as const,
+        ownerId: fighterId,
+        effect,
+      })),
+    });
+    const allocatedEffects = allocated.occurrences.flatMap((occurrence) =>
+      occurrence.kind === "activeEffect" ? [occurrence.effect] : [],
+    );
 
     const result = resolveEndTurnCommand({
-      state: stateWithUsedMarkers,
+      state: allocated.state,
       subject: {
         tag: "runtimeCommand",
         actorId: wizardId,
@@ -316,55 +419,64 @@ describe("turn-boundary active-effect occurrence updates", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag !== "resolved") return;
     expect(result.state.combatants.get(fighterId)?.activeEffects).toEqual([
-      { ...activeEffects[0], usedThisTurn: false },
-      { ...activeEffects[1], usedThisTurn: false },
+      { ...allocatedEffects[0], usedThisTurn: false },
+      { ...allocatedEffects[1], usedThisTurn: false },
     ]);
   });
 
   test("resolves a reachable sleep repeat-save frontier at turn end", () => {
-    const state = goblinTurnBattle();
-    const fighter = state.combatants.get(fighterId);
-    const goblin = state.combatants.get(goblinId);
-    if (fighter === undefined || goblin === undefined) {
-      throw new Error("Expected the source and current goblin actor.");
+    const spell = spellRecord(sleepUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: sleepUnitId,
+      slotLevel: 1,
+    });
+    const initialSaveHole = requireHole(act.initialHoles, "savingThrowOutcome");
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        {
+          kind: "savingThrowOutcome",
+          holeId: initialSaveHole.holeId,
+          value: {
+            area: {
+              originAnchorId: spellCasterId,
+              affectedTargetIds: [spellTargetId],
+            },
+            outcomes: [{ targetId: spellTargetId, succeeded: false }],
+          },
+        },
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error(
+        `Expected the admitted Sleep cast: ${cast.tag === "invalid" ? cast.message : cast.tag}`,
+      );
     }
-    const sourceProcedureRef = battleProcedureExecutionRefForTest(
-      "sleep-repeat-source",
-    );
-    const pendingSleep = {
-      kind: "sleepPendingRepeatSave" as const,
-      sourceProcedureRef,
-      sourceCombatantId: fighterId,
-      conditionHadNonSpellSource: false,
-      save: {
-        ability: "wis" as const,
-        dc: { kind: "fixed" as const, dc: difficultyClass(12) },
-      },
-      repeatAt: {
-        kind: "endOfTurn" as const,
-        combatantId: goblinId,
-        round: state.initiative.round,
-      },
-      expiresAt: {
-        kind: "concentration" as const,
-        combatantId: fighterId,
-      },
-    } as const satisfies BattleActiveEffect;
-    const sleepingState: BattleState = {
-      ...state,
-      combatants: new Map(state.combatants)
-        .set(fighterId, {
-          ...fighter,
-          concentration: { sourceProcedureRef, effectKind: "spellEffect" },
-        })
-        .set(goblinId, {
-          ...goblin,
-          activeEffects: [pendingSleep],
-        }),
-    };
+    expect(cast.tag).toBe("resolved");
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn.tag).toBe("resolved");
+    if (targetTurn.tag !== "resolved") return;
+    const sleepingState = targetTurn.state;
+    const pendingSleepOccurrence = sleepingState.combatants
+      .get(spellTargetId)
+      ?.activeEffects.find(
+        (effect) => effect.kind === "stagedSaveConditionPendingRepeat",
+      );
+    if (pendingSleepOccurrence === undefined) {
+      throw new Error("Expected the admitted pending Sleep occurrence.");
+    }
     const subject = {
       tag: "runtimeCommand" as const,
-      actorId: goblinId,
+      actorId: spellTargetId,
       command: "endTurn" as const,
     };
     const frontier = resolveEndTurnCommand({
@@ -375,7 +487,9 @@ describe("turn-boundary active-effect occurrence updates", () => {
     expect(frontier.tag).toBe("needsHoles");
     if (frontier.tag !== "needsHoles") return;
     const saveHole = frontier.holes.find(
-      (hole) => hole.kind === "savingThrowOutcome" && "sleepRepeatSave" in hole,
+      (hole) =>
+        hole.kind === "savingThrowOutcome" &&
+        "stagedConditionRepeatSave" in hole,
     );
     if (saveHole === undefined) {
       throw new Error("Expected the sleep repeat-save hole.");
@@ -385,27 +499,32 @@ describe("turn-boundary active-effect occurrence updates", () => {
       subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
-          { targetId: goblinId, succeeded: true },
+          { targetId: spellTargetId, succeeded: true },
         ]),
       ],
     });
     expect(succeeded.tag).toBe("resolved");
     if (succeeded.tag !== "resolved") return;
-    expect(succeeded.state.combatants.get(goblinId)?.activeEffects).toEqual([]);
+    expect(
+      succeeded.state.combatants.get(spellTargetId)?.activeEffects,
+    ).toEqual([]);
 
     const failed = resolveEndTurnCommand({
       state: sleepingState,
       subject,
       fills: [
         savingThrowOutcomeFill(saveHole, [
-          { targetId: goblinId, succeeded: false },
+          { targetId: spellTargetId, succeeded: false },
         ]),
       ],
     });
     expect(failed.tag).toBe("resolved");
     if (failed.tag !== "resolved") return;
-    expect(failed.state.combatants.get(goblinId)?.activeEffects).toEqual([
-      expect.objectContaining({ kind: "sleepUnconscious" }),
+    expect(failed.state.combatants.get(spellTargetId)?.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "stagedSaveConditionApplied",
+        effectRef: pendingSleepOccurrence.effectRef,
+      }),
     ]);
   });
 
@@ -492,8 +611,77 @@ describe("turn-boundary active-effect occurrence updates", () => {
     });
     const laterDamageFill = damageRollFillWithGroups(laterDamageHole, [[1, 1]]);
 
+    const target = casterTurn.state.combatants.get(spellTargetId);
+    const checkpointEffect = target?.activeEffects.find(
+      (effect) => effect.kind === "spellTurnEndDamage",
+    );
+    if (
+      target === undefined ||
+      checkpointEffect?.kind !== "spellTurnEndDamage"
+    ) {
+      throw new Error("Expected the exact turn-end damage occurrence.");
+    }
+    const { effectRef: checkpointEffectRef, ...replacementTemplate } =
+      checkpointEffect;
+    const withoutCheckpoint: BattleState = {
+      ...casterTurn.state,
+      combatants: new Map(casterTurn.state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: target.activeEffects.filter(
+          (effect) => effect.effectRef !== checkpointEffectRef,
+        ),
+      }),
+    };
+    const replacement = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: withoutCheckpoint,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: replacementTemplate,
+        },
+      ],
+    });
+    const replacementEffect = replacement.occurrences[0];
+    if (replacementEffect?.kind !== "activeEffect") {
+      throw new Error("Expected a replacement turn-end damage occurrence.");
+    }
+    const staleFillResult = endTurn({
+      state: replacement.state,
+      actorId: spellTargetId,
+      fills: [laterDamageFill],
+    });
+    expect(staleFillResult).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "rolledDice",
+          spellTurnEndDamage: {
+            effectRef: replacementEffect.effect.effectRef,
+          },
+        },
+      ],
+    });
+    if (staleFillResult.tag !== "needsHoles") {
+      throw new Error("Expected the replacement occurrence's exact roll hole.");
+    }
+    expect(replacementEffect.effect.effectRef).not.toBe(checkpointEffectRef);
+    expect(staleFillResult.state.combatants.get(spellTargetId)?.hp).toBe(
+      target.hp,
+    );
+
+    const sameReferenceCloneState: BattleState = {
+      ...casterTurn.state,
+      combatants: new Map(casterTurn.state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: target.activeEffects.map((effect) =>
+          effect.effectRef === checkpointEffectRef ? { ...effect } : effect,
+        ),
+      }),
+    };
+
     const awaitingDisposition = endTurn({
-      state: casterTurn.state,
+      state: sameReferenceCloneState,
       actorId: spellTargetId,
       fills: [laterDamageFill],
     });
@@ -510,6 +698,131 @@ describe("turn-boundary active-effect occurrence updates", () => {
         ]),
       }),
     ]);
+    const checkpointDispositionHole = requireResultHole(
+      awaitingDisposition,
+      "attackDamageDisposition",
+    );
+    expect(checkpointDispositionHole.damageOccurrence).toEqual({
+      kind: "spellTurnEndDamage",
+      effectRef: checkpointEffectRef,
+    });
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
+      snapshot: awaitingDisposition.snapshot,
+      subject: awaitingDisposition.subject,
+      holes: awaitingDisposition.holes,
+    });
+    const otherOwnerAllocation =
+      battleStateWithAllocatedEffectOccurrencesForTest({
+        state: sameReferenceCloneState,
+        occurrences: [
+          {
+            kind: "activeEffect",
+            ownerId: spellCasterId,
+            effect: replacementTemplate,
+          },
+        ],
+      });
+    const otherOwnerOccurrence = otherOwnerAllocation.occurrences[0];
+    if (otherOwnerOccurrence?.kind !== "activeEffect") {
+      throw new Error("Expected another owner's live occurrence.");
+    }
+    const twoOwnerAwaitingDisposition = endTurn({
+      state: otherOwnerAllocation.state,
+      actorId: spellTargetId,
+      fills: [laterDamageFill],
+    });
+    if (twoOwnerAwaitingDisposition.tag !== "needsHoles") {
+      throw new Error("Expected the exact downstream disposition hole.");
+    }
+    const encodedDownstreamSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
+      twoOwnerAwaitingDisposition.snapshot,
+    );
+    const deferredDownstreamEnvelope = {
+      checkpoint: encodedDownstreamSnapshot,
+      frontier: {
+        kind: "acts" as const,
+        acts: [
+          {
+            subject: twoOwnerAwaitingDisposition.subject,
+            initialHoles: twoOwnerAwaitingDisposition.holes,
+          },
+        ],
+      },
+    };
+    const mutateDownstreamOccurrence = (
+      mutation: "missing" | "forged" | "wrongOwner",
+    ) => ({
+      ...deferredDownstreamEnvelope,
+      frontier: {
+        ...deferredDownstreamEnvelope.frontier,
+        acts: deferredDownstreamEnvelope.frontier.acts.map((candidate) => ({
+          ...candidate,
+          initialHoles: candidate.initialHoles.map((hole) => {
+            if (hole.kind !== "attackDamageDisposition") return hole;
+            if (mutation === "missing") {
+              const { damageOccurrence: _damageOccurrence, ...withoutSource } =
+                hole;
+              return withoutSource;
+            }
+            return {
+              ...hole,
+              damageOccurrence: {
+                kind: "spellTurnEndDamage" as const,
+                effectRef:
+                  mutation === "forged"
+                    ? battleEffectExecutionRefForTest(
+                        "forged-turn-end-downstream",
+                      )
+                    : otherOwnerOccurrence.effect.effectRef,
+              },
+            };
+          }),
+        })),
+      },
+    });
+    for (const mutation of ["missing", "forged", "wrongOwner"] as const) {
+      expect(
+        Result.isFailure(
+          Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+            mutateDownstreamOccurrence(mutation),
+          ),
+        ),
+      ).toBe(true);
+    }
+    const replacementDamageHole = requireResultHole(
+      staleFillResult,
+      "rolledDice",
+    );
+    const replacementDamageFill = damageRollFillWithGroups(
+      replacementDamageHole,
+      [[1, 1]],
+    );
+    const replacementAwaitingDisposition = endTurn({
+      state: replacement.state,
+      actorId: spellTargetId,
+      fills: [replacementDamageFill],
+    });
+    const replacementDispositionHole = requireResultHole(
+      replacementAwaitingDisposition,
+      "attackDamageDisposition",
+    );
+    expect(replacementDispositionHole.holeId).not.toBe(
+      checkpointDispositionHole.holeId,
+    );
+    const staleDownstreamFillResult = endTurn({
+      state: replacement.state,
+      actorId: spellTargetId,
+      fills: [
+        replacementDamageFill,
+        attackDamageDispositionFill(checkpointDispositionHole, {
+          kind: "ordinaryDamage",
+        }),
+      ],
+    });
+    expect(staleDownstreamFillResult).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ holeId: replacementDispositionHole.holeId }],
+    });
   });
 
   test("recognizes the turn-boundary fill vocabulary", () => {

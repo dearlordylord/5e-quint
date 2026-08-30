@@ -39,7 +39,7 @@ import {
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY
 } from "@dnd/character-creation-runtime"
 import type { UnitRecord } from "@dnd/surface/surface/types"
-import { Either } from "effect"
+import { Result } from "effect"
 
 import {
   abilityScoresFill,
@@ -165,8 +165,8 @@ function abilityScorePresetFill(): CreationFill {
     }
   })
   /* v8 ignore next -- @preserve -- the checked-in standard-array assignment is parsed while constructing every preset */
-  if (Either.isLeft(fill)) throw new Error("Expected character creation preset ability scores to parse.")
-  return fill.right
+  if (Result.isFailure(fill)) throw new Error("Expected character creation preset ability scores to parse.")
+  return fill.success
 }
 
 function completeFighterPreset(draftId: string, initialProgressionOptionId: CreationChoiceOptionId): CharacterDraft {

@@ -13,8 +13,7 @@ import {
   missingRequiredAmmunitionKinds,
 } from "../battle-ammunition.ts";
 import { statBlockAttackActionOptions } from "../stat-block-execution.ts";
-import { isNonEmptyReadonlyArray } from "effect/Array";
-import { Either, Match } from "effect";
+import { Match, Result } from "effect";
 import {
   Hp,
   movementFeet,
@@ -40,7 +39,7 @@ import type { UnitId } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
-  battleActiveEffectExecutionOrdinal,
+  battleEffectExecutionOrdinal,
   battleExecutionScopeOrdinal,
   type BattleId,
   type BattleExecutionScopeOrdinal,
@@ -142,6 +141,12 @@ import {
   statBlockProcedurePresentations,
 } from "../stat-block-presentation.ts";
 
+function isNonEmptyReadonlyArray<T>(
+  values: readonly T[],
+): values is ReadonlyNonEmptyArray<T> {
+  return values.length > 0;
+}
+
 function characterInitWeaponAttackExecutionRefs(
   slot: "main-hand" | "off-hand",
   attack: CharacterBattleCreatureInitWeaponAttack,
@@ -149,7 +154,7 @@ function characterInitWeaponAttackExecutionRefs(
     | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
     | undefined,
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
-): Either.Either<
+): Result.Result<
   {
     readonly weaponObjectId: BattleObjectId;
     readonly hasWeaponMastery: boolean;
@@ -162,7 +167,7 @@ function characterInitWeaponAttackExecutionRefs(
   ) {
     return weaponLoadoutMismatchIssue(slot);
   }
-  return Either.right({
+  return Result.succeed({
     weaponObjectId: loadoutWeapon.itemId,
     hasWeaponMastery: weaponMasteryIsSelectedForWeapon(
       attack.weapon.weaponUnitId,
@@ -178,20 +183,20 @@ function characterInitWeaponAttackWithExecutionRefs(
     | { readonly itemId: BattleObjectId; readonly unitId: UnitId }
     | undefined,
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
-): Either.Either<CharacterWeaponAttackActionOption, BattleStateInitLeafIssue> {
+): Result.Result<CharacterWeaponAttackActionOption, BattleStateInitLeafIssue> {
   const refs = characterInitWeaponAttackExecutionRefs(
     slot,
     attack,
     loadoutWeapon,
     weaponMasteries,
   );
-  if (Either.isLeft(refs)) {
-    return Either.left(refs.left);
+  if (Result.isFailure(refs)) {
+    return Result.fail(refs.failure);
   }
-  return Either.right({
+  return Result.succeed({
     ...attack,
-    weaponObjectId: refs.right.weaponObjectId,
-    hasWeaponMastery: refs.right.hasWeaponMastery,
+    weaponObjectId: refs.success.weaponObjectId,
+    hasWeaponMastery: refs.success.hasWeaponMastery,
   });
 }
 
@@ -280,13 +285,13 @@ export function battleCreatureStateAdmissionFromInit(
     creatureInit,
     input.combatantId,
   );
-  if (Either.isLeft(zeroHpLifecycleResult)) {
+  if (Result.isFailure(zeroHpLifecycleResult)) {
     return {
       tag: "invalid",
-      issues: [zeroHpLifecycleResult.left],
+      issues: [zeroHpLifecycleResult.failure],
     };
   }
-  const zeroHpLifecycle = zeroHpLifecycleResult.right;
+  const zeroHpLifecycle = zeroHpLifecycleResult.success;
   const initialConditionImmunityIssue =
     initialConditionImmunityIssueForCreatureInit(
       creatureInit,
@@ -310,7 +315,7 @@ export function battleCreatureStateAdmissionFromInit(
     tempHp: creatureInit.tempHp,
     ...initialKnockOutLifecycleFields(creatureInit, initialConditions),
     activeEffects: [],
-    nextActiveEffectOrdinal: battleActiveEffectExecutionOrdinal(0),
+    nextEffectOrdinal: battleEffectExecutionOrdinal(0),
     activeOngoingFeatureOccurrences: new Map(),
     attackRollMissToHitReplacementsUsedSinceTurnStart: [],
     concentration: null,
@@ -327,18 +332,18 @@ export function battleCreatureStateAdmissionFromInit(
     const attackScopeOrdinal = battleExecutionScopeOrdinal(
       Number(characterScopeOrdinal) + 1,
     );
-    const initAttackEither =
+    const initAttackResult =
       creatureInit.attack === null
-        ? Either.right(null)
+        ? Result.succeed(null)
         : characterInitWeaponAttackWithExecutionRefs(
             "main-hand",
             creatureInit.attack,
             creatureInit.selectedLoadout.weapon,
             creatureInit.weaponMasteries,
           );
-    const initOffHandAttackEither =
+    const initOffHandAttackResult =
       creatureInit.offHandAttack === undefined
-        ? Either.right(undefined)
+        ? Result.succeed(undefined)
         : characterInitWeaponAttackWithExecutionRefs(
             "off-hand",
             creatureInit.offHandAttack,
@@ -346,13 +351,15 @@ export function battleCreatureStateAdmissionFromInit(
             creatureInit.weaponMasteries,
           );
     if (
-      Either.isLeft(initAttackEither) ||
-      Either.isLeft(initOffHandAttackEither)
+      Result.isFailure(initAttackResult) ||
+      Result.isFailure(initOffHandAttackResult)
     ) {
       const issues = [
-        ...(Either.isLeft(initAttackEither) ? [initAttackEither.left] : []),
-        ...(Either.isLeft(initOffHandAttackEither)
-          ? [initOffHandAttackEither.left]
+        ...(Result.isFailure(initAttackResult)
+          ? [initAttackResult.failure]
+          : []),
+        ...(Result.isFailure(initOffHandAttackResult)
+          ? [initOffHandAttackResult.failure]
           : []),
       ];
       const [firstIssue, ...remainingIssues] = issues;
@@ -361,8 +368,8 @@ export function battleCreatureStateAdmissionFromInit(
         issues: [firstIssue, ...remainingIssues],
       };
     }
-    const initAttack = initAttackEither.right;
-    const initOffHandAttack = initOffHandAttackEither.right;
+    const initAttack = initAttackResult.success;
+    const initOffHandAttack = initOffHandAttackResult.success;
     const attackExecution = admitCharacterAttackExecution({
       battleId,
       combatantId: input.combatantId,
@@ -380,9 +387,9 @@ export function battleCreatureStateAdmissionFromInit(
     const parsedClassLevels = parseCharacterBattleClassLevels(
       creatureInit.classLevels,
     );
-    if (Either.isLeft(parsedClassLevels)) {
+    if (Result.isFailure(parsedClassLevels)) {
       const [firstMessage, ...remainingMessages] =
-        parsedClassLevels.left.messages;
+        parsedClassLevels.failure.messages;
       return {
         tag: "invalid",
         issues: [
@@ -394,7 +401,7 @@ export function battleCreatureStateAdmissionFromInit(
         ],
       };
     }
-    const classLevels = parsedClassLevels.right;
+    const classLevels = parsedClassLevels.success;
     const spellAccessUnits = [
       ...(creatureInit.resources ?? []),
       ...(creatureInit.unitFeatures ?? []),
@@ -409,7 +416,7 @@ export function battleCreatureStateAdmissionFromInit(
       characterResourceInitIssue(creatureInit, classLevels),
       characterDruidWildShapeAvailableFormsInitIssue(creatureInit, classLevels),
     ].flatMap((issue) =>
-      issue !== null && Either.isLeft(issue) ? [issue.left] : [],
+      issue !== null && Result.isFailure(issue) ? [issue.failure] : [],
     );
     const initInvariantIssues = characterBattleInitInvariantIssues(
       input.combatantId,
@@ -465,13 +472,13 @@ export function battleCreatureStateAdmissionFromInit(
       unitRefs: creatureInit.characterUnitRefs,
       classLevels,
     });
-    if (Either.isLeft(execution)) {
-      return { tag: "invalid", issues: execution.left };
+    if (Result.isFailure(execution)) {
+      return { tag: "invalid", issues: execution.failure };
     }
     const resourceAdmission = admitCharacterBattleResources(
       creatureInit.resources ?? [],
       classLevels,
-      execution.right.execution.scopeRef,
+      execution.success.execution.scopeRef,
     );
     const resources = resourceAdmission.states;
     const resourceOwnership: readonly CharacterBattleResourceOwnership[] =
@@ -491,7 +498,7 @@ export function battleCreatureStateAdmissionFromInit(
           classLevels,
           resources,
           resourceOwnership,
-          execution.right.execution.scopeRef,
+          execution.success.execution.scopeRef,
         ),
       ),
       Match.exhaustive,
@@ -503,7 +510,8 @@ export function battleCreatureStateAdmissionFromInit(
       origin: {
         kind: "character",
         characterId: creatureInit.characterId,
-        execution: execution.right.execution,
+        displayName: input.displayName,
+        execution: execution.success.execution,
         classLevels,
         knownLanguages: creatureInit.knownLanguages,
         d20Statistics: creatureInit.d20Statistics,
@@ -553,7 +561,7 @@ export function battleCreatureStateAdmissionFromInit(
           spellcastingPresentationSource,
         ),
         spellPresentationSources: [],
-        unitProcedureOwnership: execution.right.unitProcedureOwnership,
+        unitProcedureOwnership: execution.success.unitProcedureOwnership,
         unitPresentationSources: creatureInit.characterUnitRefs,
       },
     };
@@ -565,14 +573,14 @@ export function battleCreatureStateAdmissionFromInit(
     source: creatureInit.source,
     startingScopeOrdinal,
   });
-  if (Either.isLeft(admission)) {
+  if (Result.isFailure(admission)) {
     return {
       tag: "invalid",
-      issues: [admission.left],
+      issues: [admission.failure],
     };
   }
   const missingAmmunitionKinds = missingRequiredAmmunitionKinds(
-    statBlockAttackActionOptions(admission.right.origin.execution).map(
+    statBlockAttackActionOptions(admission.success.origin.execution).map(
       (option) => option.attack,
     ),
     creatureInit.ammunitionStocks,
@@ -597,24 +605,24 @@ export function battleCreatureStateAdmissionFromInit(
   const admittedCreature = applyInitialZeroHpLifecycle({
     ...base,
     armorClass: statBlockArmorClassState(
-      admission.right.initialization.armorClass,
+      admission.success.initialization.armorClass,
     ),
-    size: admission.right.initialization.size,
+    size: admission.success.initialization.size,
     origin: {
       kind: "statBlock",
-      ...admission.right.origin,
+      ...admission.success.origin,
     },
   });
   return {
     tag: "admitted",
     creature: admittedCreature,
-    nextScopeOrdinal: admission.right.cursorTransition.to,
+    nextScopeOrdinal: admission.success.cursorTransition.to,
     statBlockPresentation: {
       displayName: input.displayName,
       languages: statBlockLanguagePresentation(creatureInit.source),
       procedures: statBlockProcedurePresentations({
         statBlock: creatureInit.source,
-        execution: admission.right.origin.execution,
+        execution: admission.success.origin.execution,
       }),
     },
   };
@@ -679,6 +687,17 @@ export function hidePrerequisitesReferenceCombatantsIssues(
     }
   }
   return issues;
+}
+
+export function hidePrerequisitesReferenceCombatantsIssue(
+  hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>,
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+): Result.Result<never, BattleStateInitIssue> | null {
+  const [firstIssue] = hidePrerequisitesReferenceCombatantsIssues(
+    hidePrerequisites,
+    combatants,
+  );
+  return firstIssue === undefined ? null : Result.fail(firstIssue.issue);
 }
 
 export function hidePrerequisiteReferencedCombatantIds(
@@ -902,10 +921,10 @@ export function combatantInitiativeInsertionIndex(
 function initialZeroHpLifecycleForCreatureOrigin(
   creatureInit: BattleCreatureInit["creatureInit"],
   combatantId: CombatantId,
-): Either.Either<ZeroHpLifecycle, BattleStateInitLeafIssue> {
+): Result.Result<ZeroHpLifecycle, BattleStateInitLeafIssue> {
   return Match.value(creatureInit).pipe(
     Match.when({ kind: "statBlock" }, () =>
-      Either.right({ policy: "diesAtZeroHp" as const }),
+      Result.succeed({ policy: "diesAtZeroHp" as const }),
     ),
     Match.when({ kind: "character" }, (characterInit) => {
       const zeroHpLifecycle = characterInit.zeroHpLifecycle ?? {
@@ -914,7 +933,7 @@ function initialZeroHpLifecycleForCreatureOrigin(
       };
       if (Number(characterInit.currentHp) > 0) {
         if (characterInit.zeroHpLifecycle !== undefined) {
-          return Either.left({
+          return Result.fail({
             tag: "battleStateInitIssue" as const,
             message:
               "Positive-HP character battle initialization cannot carry zero-HP lifecycle state.",
@@ -923,10 +942,10 @@ function initialZeroHpLifecycleForCreatureOrigin(
             requirement: "absentAtPositiveHp" as const,
           });
         }
-        return Either.right(zeroHpLifecycle);
+        return Result.succeed(zeroHpLifecycle);
       }
       if (!validDeathSaveRuntimeState(zeroHpLifecycle.deathSaves)) {
-        return Either.left({
+        return Result.fail({
           tag: "battleStateInitIssue" as const,
           message:
             "Character battle initialization zero-HP lifecycle is invalid.",
@@ -935,7 +954,7 @@ function initialZeroHpLifecycleForCreatureOrigin(
           requirement: "validDeathSaves" as const,
         });
       }
-      return Either.right(zeroHpLifecycle);
+      return Result.succeed(zeroHpLifecycle);
     }),
     Match.exhaustive,
   );
@@ -943,7 +962,7 @@ function initialZeroHpLifecycleForCreatureOrigin(
 
 export function positiveHpUnconsciousInitIssue(
   input: BattleCreatureInit,
-): Either.Either<never, BattleStateInitIssue> | null {
+): Result.Result<never, BattleStateInitIssue> | null {
   const creatureInit = input.creatureInit;
   if (
     creatureInit.kind !== "character" ||
@@ -952,7 +971,7 @@ export function positiveHpUnconsciousInitIssue(
     return null;
   }
   if (Number(creatureInit.currentHp) !== 1) {
-    return Either.left({
+    return Result.fail({
       tag: "battleStateInitIssue" as const,
       message:
         "Knocked Out Unconscious initialization requires exactly 1 current HP.",
@@ -962,7 +981,7 @@ export function positiveHpUnconsciousInitIssue(
     });
   }
   if (!(creatureInit.conditions ?? []).includes("unconscious")) {
-    return Either.left({
+    return Result.fail({
       tag: "battleStateInitIssue" as const,
       message:
         "Knocked Out Unconscious initialization requires the Unconscious condition.",
@@ -977,7 +996,7 @@ export function positiveHpUnconsciousInitIssue(
 export function characterResourceInitIssue(
   creatureInit: CharacterBattleCreatureInit,
   classLevels: CharacterBattleClassLevels,
-): Either.Either<never, BattleStateInitLeafIssue> | null {
+): Result.Result<never, BattleStateInitLeafIssue> | null {
   for (const resource of creatureInit.resources ?? []) {
     const issue = characterBattleResourceInitIssue(resource, classLevels);
     if (issue !== null) {
@@ -998,7 +1017,7 @@ export function characterResourceInitIssue(
 export function characterDruidWildShapeAvailableFormsInitIssue(
   creatureInit: CharacterBattleCreatureInit,
   classLevels: CharacterBattleClassLevels,
-): Either.Either<never, BattleStateInitLeafIssue> | null {
+): Result.Result<never, BattleStateInitLeafIssue> | null {
   const wildShapeProfiles = (creatureInit.resources ?? []).flatMap(
     (resource) => {
       const profile = parseSupportedUnitFeatureProfile(
@@ -1180,8 +1199,8 @@ export function initialKnockOutLifecycleFields(
 
 export function combatantKnockedOutUnconscious(
   combatant: BattleCreatureState,
-): Either.Either<BattlePositiveHpUnconscious | null, BattleStateInitIssue> {
-  if (combatant.positiveHpUnconscious === null) return Either.right(null);
+): Result.Result<BattlePositiveHpUnconscious | null, BattleStateInitIssue> {
+  if (combatant.positiveHpUnconscious === null) return Result.succeed(null);
   /* v8 ignore start -- @preserve -- Forged-state defense: the BattleCreatureState union couples Knocked Out metadata to branded 1 HP and KnockedOutConditionState, so parsed/constructed states cannot violate this relationship. */
   if (
     Number(combatant.hp) !== 1 ||
@@ -1192,5 +1211,5 @@ export function combatantKnockedOutUnconscious(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right(combatant.positiveHpUnconscious);
+  return Result.succeed(combatant.positiveHpUnconscious);
 }

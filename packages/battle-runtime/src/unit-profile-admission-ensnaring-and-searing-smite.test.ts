@@ -1,8 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleFrontierInterruptDecisionForState,
+  battleProcedureExecutionRefForTest,
   readyDeclarationFillForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -533,7 +533,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
                 "unrelated-escapable-condition",
               ),
               sourceCombatantId: spellCasterId,
-              effectRef: battleActiveEffectExecutionRefForTest(
+              effectRef: battleEffectExecutionRefForTest(
                 "unrelated-escapable-condition",
               ),
               condition: "restrained" as const,
@@ -560,7 +560,16 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       actorId: spellCasterId,
     });
     const mixedDamage = requireResultHole(mixedTurnStart, "rolledDice");
-    const mixedSave = requireResultHole(mixedTurnStart, "savingThrowOutcome");
+    const mixedDamageFill = damageRollFillWithGroups(mixedDamage, [[1, 1, 1]]);
+    const mixedSaveFrontier = endTurn({
+      state: mixedEscapeState,
+      actorId: spellCasterId,
+      fills: [mixedDamageFill],
+    });
+    const mixedSave = requireResultHole(
+      mixedSaveFrontier,
+      "savingThrowOutcome",
+    );
     const mixedResolved = endTurn({
       state: mixedEscapeState,
       actorId: spellCasterId,
@@ -568,7 +577,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
         savingThrowOutcomeFill(mixedSave, [
           { targetId: spellTargetId, succeeded: false },
         ]),
-        damageRollFillWithGroups(mixedDamage, [[1, 1, 1]]),
+        mixedDamageFill,
       ],
     });
     if (mixedResolved.tag !== "resolved") {
@@ -609,8 +618,16 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
         damage: { expr: { dice: 3, dieSize: 6 }, damageType: "fire" },
       },
     });
+    const turnStartDamageFill = damageRollFillWithGroups(turnStartDamage, [
+      [2, 3, 4],
+    ]);
+    const awaitingTurnStartSave = endTurn({
+      state: afterWeaponDamage.state,
+      actorId: spellCasterId,
+      fills: [turnStartDamageFill],
+    });
     const turnStartSave = requireResultHole(
-      awaitingTurnStart,
+      awaitingTurnStartSave,
       "savingThrowOutcome",
     );
     expect(turnStartSave).toMatchObject({
@@ -625,7 +642,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       state: afterWeaponDamage.state,
       actorId: spellCasterId,
       fills: [
-        damageRollFillWithGroups(turnStartDamage, [[2, 3, 4]]),
+        turnStartDamageFill,
         savingThrowOutcomeFill(turnStartSave, [
           { targetId: spellTargetId, succeeded: true },
         ]),
@@ -673,15 +690,23 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       actorId: spellCasterId,
     });
     const expiringDamage = requireResultHole(expiringTurnStart, "rolledDice");
+    const expiringDamageFill = damageRollFillWithGroups(expiringDamage, [
+      [1, 1, 1],
+    ]);
+    const expiringSaveFrontier = endTurn({
+      state: oneRoundBurning,
+      actorId: spellCasterId,
+      fills: [expiringDamageFill],
+    });
     const expiringSave = requireResultHole(
-      expiringTurnStart,
+      expiringSaveFrontier,
       "savingThrowOutcome",
     );
     const failedSaveTargetTurn = endTurn({
       state: oneRoundBurning,
       actorId: spellCasterId,
       fills: [
-        damageRollFillWithGroups(expiringDamage, [[1, 1, 1]]),
+        expiringDamageFill,
         savingThrowOutcomeFill(expiringSave, [
           { targetId: spellTargetId, succeeded: false },
         ]),

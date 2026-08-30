@@ -1,10 +1,10 @@
 import { createRequire } from "node:module";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 
-import { decodeSrdSurfaceEither } from "./schema.ts";
+import { decodeSrdSurfaceResult } from "./schema.ts";
 import { surfaceSchemaRole } from "./schema-base.ts";
 import {
   closeSrdSurface,
@@ -169,12 +169,12 @@ describe("canonical Surface authored relations", () => {
   it("collects relation metadata from decoded records without source scans", () => {
     const result = collectSurfaceAuthoredRelations(srdSurface);
 
-    expect(Either.isLeft(result)).toBe(false);
-    if (Either.isLeft(result)) return;
+    expect(Result.isFailure(result)).toBe(false);
+    if (Result.isFailure(result)) return;
 
-    expect(result.right.length).toBeGreaterThan(0);
+    expect(result.success.length).toBeGreaterThan(0);
     expect(
-      result.right.some(
+      result.success.some(
         (relation) =>
           relation.sourceRecordId === "class_fighter" &&
           relation.targetRecordId === "fighter_action_surge" &&
@@ -182,7 +182,7 @@ describe("canonical Surface authored relations", () => {
       ),
     ).toBe(true);
     expect(
-      result.right.some(
+      result.success.some(
         (relation) =>
           relation.sourceRecordId === "druid_wild_shape" &&
           relation.targetKind === "statBlock" &&
@@ -202,13 +202,13 @@ describe("canonical Surface authored relations", () => {
         .filter((record) => record.kind === "statBlock")
         .map((record) => record.value),
     };
-    const decoded = decodeSrdSurfaceEither(expanded);
+    const decoded = decodeSrdSurfaceResult(expanded);
 
-    expect(Either.isRight(decoded)).toBe(true);
-    if (Either.isLeft(decoded)) return;
-    const actual = collectSurfaceAuthoredRelations(decoded.right);
-    expect(Either.isRight(actual)).toBe(true);
-    if (Either.isLeft(actual)) return;
+    expect(Result.isSuccess(decoded)).toBe(true);
+    if (Result.isFailure(decoded)) return;
+    const actual = collectSurfaceAuthoredRelations(decoded.success);
+    expect(Result.isSuccess(actual)).toBe(true);
+    if (Result.isFailure(actual)) return;
 
     // The corpus audit is a test-only independent oracle. Production traversal
     // receives this already-decoded aggregate and never scans content files.
@@ -216,7 +216,7 @@ describe("canonical Surface authored relations", () => {
       .collectAuthoredRelations(sourceRecords)
       .map(relationKey)
       .sort();
-    expect(actual.right.map(relationKey).sort()).toEqual(expected);
+    expect(actual.success.map(relationKey).sort()).toEqual(expected);
 
     // Keep the distinction explicit: these records are schema-decodable but
     // not all are currently in the generated startup publication.
@@ -230,9 +230,9 @@ describe("canonical Surface authored relations", () => {
       .map(relationKey)
       .sort();
     const publishedActual = collectSurfaceAuthoredRelations(srdSurface);
-    expect(Either.isRight(publishedActual)).toBe(true);
-    if (Either.isLeft(publishedActual)) return;
-    expect(publishedActual.right.map(relationKey).sort()).toEqual(
+    expect(Result.isSuccess(publishedActual)).toBe(true);
+    if (Result.isFailure(publishedActual)) return;
+    expect(publishedActual.success.map(relationKey).sort()).toEqual(
       publishedExpected,
     );
   });
@@ -298,15 +298,17 @@ describe("canonical Surface authored relations", () => {
         .filter((record) => record.kind === "statBlock")
         .map((record) => record.value),
     };
-    const decoded = decodeSrdSurfaceEither(malformedSurface);
-    expect(Either.isRight(decoded)).toBe(true);
-    if (Either.isLeft(decoded)) return;
+    const decoded = decodeSrdSurfaceResult(malformedSurface);
+    expect(Result.isSuccess(decoded)).toBe(true);
+    if (Result.isFailure(decoded)) return;
 
-    expect(() => collectSurfaceAuthoredRelations(decoded.right)).not.toThrow();
-    const result = collectSurfaceAuthoredRelations(decoded.right);
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    const invalidIssues = result.left.filter(
+    expect(() =>
+      collectSurfaceAuthoredRelations(decoded.success),
+    ).not.toThrow();
+    const result = collectSurfaceAuthoredRelations(decoded.success);
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    const invalidIssues = result.failure.filter(
       (issue) => issue.code === "invalidRecord",
     );
     expect(invalidIssues).toHaveLength(3);
@@ -354,9 +356,9 @@ describe("canonical Surface authored relations", () => {
 
     const result = collectSurfaceAuthoredRelations(malformedSurface);
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toEqual(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           code: "invalidRecord",
@@ -377,12 +379,14 @@ describe("canonical Surface authored relations", () => {
       rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
     });
 
-    expect(Either.isLeft(result)).toBe(false);
-    if (Either.isLeft(result)) return;
+    expect(Result.isFailure(result)).toBe(false);
+    if (Result.isFailure(result)) return;
 
-    const unitIds = new Set(result.right.units.map((unit) => String(unit.id)));
+    const unitIds = new Set(
+      result.success.units.map((unit) => String(unit.id)),
+    );
     const statBlockIds = new Set(
-      result.right.statBlocks.map((statBlock) => String(statBlock.id)),
+      result.success.statBlocks.map((statBlock) => String(statBlock.id)),
     );
     expect(unitIds.has("class_fighter")).toBe(true);
     expect(unitIds.has("fighter_action_surge")).toBe(true);
@@ -400,9 +404,9 @@ describe("canonical Surface authored relations", () => {
       },
     });
 
-    expect(Either.isLeft(result)).toBe(false);
-    if (Either.isLeft(result)) return;
-    expect(result.right.units.some((unit) => unit.kind === "subclass")).toBe(
+    expect(Result.isFailure(result)).toBe(false);
+    if (Result.isFailure(result)) return;
+    expect(result.success.units.some((unit) => unit.kind === "subclass")).toBe(
       true,
     );
   });
@@ -417,9 +421,9 @@ describe("canonical Surface authored relations", () => {
       },
     });
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) return;
-    expect(result.right.units.map((record) => String(record.id))).toEqual([
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) return;
+    expect(result.success.units.map((record) => String(record.id))).toEqual([
       "class_fighter",
     ]);
   });
@@ -447,9 +451,9 @@ describe("canonical Surface authored relations", () => {
       rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toEqual(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           code: "missingTarget",
@@ -472,9 +476,9 @@ describe("canonical Surface authored relations", () => {
       rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left[0]).toMatchObject({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure[0]).toMatchObject({
       tag: "surfaceRelationClosureIssue",
       code: "missingRoot",
       fieldPath: "<root>",
@@ -488,9 +492,9 @@ describe("canonical Surface authored relations", () => {
       rootStatBlockIds: [StatBlockId.make("synthetic_missing_stat_block")],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left[0]).toMatchObject({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure[0]).toMatchObject({
       tag: "surfaceRelationClosureIssue",
       code: "missingRoot",
       rootKind: "statBlock",
@@ -511,14 +515,15 @@ describe("canonical Surface authored relations", () => {
       rootStatBlockIds: [],
     });
 
-    expect(Either.isLeft(withoutUnit)).toBe(true);
-    expect(Either.isLeft(withoutStatBlock)).toBe(true);
-    if (Either.isRight(withoutUnit) || Either.isRight(withoutStatBlock)) return;
-    expect(withoutUnit.left[0]).toMatchObject({
+    expect(Result.isFailure(withoutUnit)).toBe(true);
+    expect(Result.isFailure(withoutStatBlock)).toBe(true);
+    if (Result.isSuccess(withoutUnit) || Result.isSuccess(withoutStatBlock))
+      return;
+    expect(withoutUnit.failure[0]).toMatchObject({
       code: "emptyProjection",
       missingFamily: "unit",
     });
-    expect(withoutStatBlock.left[0]).toMatchObject({
+    expect(withoutStatBlock.failure[0]).toMatchObject({
       code: "emptyProjection",
       missingFamily: "statBlock",
     });
@@ -534,10 +539,10 @@ describe("canonical Surface authored relations", () => {
       ],
     });
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) return;
-    expect(result.right.statBlocks).toHaveLength(1);
-    expect(result.right.statBlocks[0]?.id).toBe("stat_block_skeleton");
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) return;
+    expect(result.success.statBlocks).toHaveLength(1);
+    expect(result.success.statBlocks[0]?.id).toBe("stat_block_skeleton");
   });
 
   it("passes traversal issues through the closure boundary", () => {
@@ -561,9 +566,9 @@ describe("canonical Surface authored relations", () => {
       rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left[0]).toMatchObject({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure[0]).toMatchObject({
       tag: "surfaceRelationTraversalIssue",
       code: "invalidRecord",
     });

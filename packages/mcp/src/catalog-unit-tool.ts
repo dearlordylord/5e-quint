@@ -22,7 +22,7 @@ export const InspectCatalogUnitInputSchema = Schema.Struct({
 });
 
 const InspectCatalogUnitOutputSchema = Schema.Struct({
-  unitRecordJson: Schema.parseJson(SrdUnitRecordSchema),
+  unitRecordJson: Schema.fromJsonString(SrdUnitRecordSchema),
 });
 
 export const inspectCatalogUnitToolDefinition = {

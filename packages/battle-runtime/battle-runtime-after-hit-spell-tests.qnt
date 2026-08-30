@@ -93,6 +93,8 @@ module battleRuntimeAfterHitSpellTests {
       assert(spellAttackRollModeFromActiveEffects(Set(), shone.goblin.activeEffects, true) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(), shone.goblin.activeEffects, false) == AdvantageSpellAttackRoll),
       assert(battleRuntimeLightEmitters(shone).contains(shiningSmiteBrightLightEmitter(Goblin))),
+      assert(illuminationFromEmissionAtDistance(BrightIlluminationEmission({ radiusFeet: 5 }), 5) == BrightLightIllumination),
+      assert(illuminationFromEmissionAtDistance(BrightIlluminationEmission({ radiusFeet: 5 }), 6) == DarknessIllumination),
       assert(not(activeEffectsContainShiningSmite(broken.goblin.activeEffects))),
       assert(not(battleRuntimeLightEmitters(broken).contains(shiningSmiteBrightLightEmitter(Goblin)))),
     }

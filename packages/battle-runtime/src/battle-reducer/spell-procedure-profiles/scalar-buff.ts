@@ -59,14 +59,15 @@ import {
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../../effect-execution-ref.ts";
 import {
   applyHitPointMaximumIncrease,
   applyTemporaryHitPoints,
 } from "../damage-apply.ts";
 import {
   battleStateWithFlySpeedGrantEndFallCleanupFrames,
-  flySpeedGrantEndFallCleanupFramesForExpiredEffects,
-} from "../fly-speed-grant-end-fall-cleanup.ts";
+  grantedFlightEndFallCleanupFramesForExpiredEffects,
+} from "../granted-flight-end-fall-cleanup.ts";
 import {
   needsHolesResult,
   spellSelectionResolution,
@@ -103,6 +104,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -120,23 +122,25 @@ type ScalarBuffInvocation = Extract<
   { readonly procedure: "scalarBuff" }
 >;
 
-const ScalarBuffActiveEffectTemplateSchema = Schema.Union(
+const ScalarBuffActiveEffectTemplateSchema = Schema.Union([
   Schema.Struct({
     sourceCombatantId: CombatantId,
     kind: Schema.Literal("speedDelta"),
     deltaFeet: MovementDeltaFeet,
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
   Schema.Struct({
     sourceCombatantId: CombatantId,
     kind: Schema.Literal("specialSpeedGrant"),
-    speedKind: Schema.Literal(
+    speedKind: Schema.Literals([
       BATTLE_SPECIAL_SPEED_KINDS[0],
       BATTLE_SPECIAL_SPEED_KINDS[1],
-    ),
+    ]),
     speed: Schema.Struct({ kind: Schema.Literal("equalToSpeed") }),
     hover: Schema.Literal(false),
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
   Schema.Struct({
     sourceCombatantId: CombatantId,
@@ -148,6 +152,7 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union(
     }),
     hover: Schema.Literal(true),
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
   Schema.Struct({
     sourceCombatantId: CombatantId,
@@ -155,20 +160,23 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union(
     bonus: Schema.Number,
     negatesRepeatedDamageAllocation: Schema.Boolean,
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
   Schema.Struct({
     sourceCombatantId: CombatantId,
     kind: Schema.Literal("spellArmorClassFloor"),
     floor: ArmorClassSchema,
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
-);
+]);
 
 const HitPointMaximumIncreaseTemplateSchema = Schema.Struct({
   sourceCombatantId: CombatantId,
   kind: Schema.Literal("hitPointMaximumIncrease"),
   amount: Schema.Number,
   expiresAt: BattleActiveEffectExpirationSchema,
+  ...BattleEffectOccurrenceTemplateSchemaFields,
 });
 type ScalarBuffResolveInput =
   SpellProcedureProfileResolveInput<ScalarBuffInvocation>;
@@ -381,12 +389,19 @@ function applyScalarBuffEffect(
         combatants: new Map(nextState.combatants).set(targetId, nextTarget),
       };
     }
-    if (scalarEffect.kind === "hitPointMaximumIncrease") {
-      const nextTarget = applyHitPointMaximumIncrease(target, {
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
         ...scalarEffect.activeEffect,
         sourceProcedureRef: invocation.sourceProcedureRef,
         sourceCombatantId: actorId,
-      });
+      },
+    });
+    if (allocation.effect.kind === "hitPointMaximumIncrease") {
+      const nextTarget = applyHitPointMaximumIncrease(
+        allocation.owner,
+        allocation.effect,
+      );
       return {
         ...nextState,
         combatants: new Map(nextState.combatants).set(targetId, nextTarget),
@@ -397,13 +412,11 @@ function applyScalarBuffEffect(
         effect.kind === scalarEffect.activeEffect.kind &&
         effect.sourceProcedureRef === invocation.sourceProcedureRef,
     );
-    const nextTarget = battleCreatureWithSpellActiveEffects(target, [
-      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
-      {
-        ...scalarEffect.activeEffect,
-        sourceProcedureRef: invocation.sourceProcedureRef,
-        sourceCombatantId: actorId,
-      },
+    const nextTarget = battleCreatureWithSpellActiveEffects(allocation.owner, [
+      ...allocation.owner.activeEffects.filter(
+        (effect) => !replacing.includes(effect),
+      ),
+      allocation.effect,
     ]);
     const applied = {
       ...nextState,
@@ -411,7 +424,7 @@ function applyScalarBuffEffect(
     };
     return battleStateWithFlySpeedGrantEndFallCleanupFrames(
       applied,
-      flySpeedGrantEndFallCleanupFramesForExpiredEffects(targetId, replacing),
+      grantedFlightEndFallCleanupFramesForExpiredEffects(targetId, replacing),
     );
   }, state);
 }
@@ -495,8 +508,8 @@ const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("scalarBuff"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
-    actionCost: Schema.Literal("magicAction", "bonusAction"),
-    targeting: Schema.Union(
+    actionCost: Schema.Literals(["magicAction", "bonusAction"]),
+    targeting: Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("self"),
       }),
@@ -504,10 +517,10 @@ const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
         kind: Schema.Literal("targetList"),
         minTargets: Schema.Literal(1),
         maxTargets: Schema.Number,
-        requiredTargetDisposition: Schema.Literal("unrestricted", "willing"),
+        requiredTargetDisposition: Schema.Literals(["unrestricted", "willing"]),
       }),
-    ),
-    effect: Schema.Union(
+    ]),
+    effect: Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("temporaryHitPoints"),
         amount: Schema.Struct({
@@ -522,7 +535,7 @@ const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
         kind: Schema.Literal("hitPointMaximumIncrease"),
         activeEffect: HitPointMaximumIncreaseTemplateSchema,
       }),
-    ),
+    ]),
     rangeFeet: MovementFeet,
   }),
 );

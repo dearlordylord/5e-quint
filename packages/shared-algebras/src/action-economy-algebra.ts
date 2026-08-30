@@ -2,7 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
-import { Either, Match } from "effect";
+import { Match, Result } from "effect";
 import type {
   ActionRestriction,
   ActionRestrictionAllowedAction,
@@ -13,7 +13,7 @@ import {
 } from "@dnd/shared/game-facts";
 import type {
   BattleProcedureExecutionRef,
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleStatBlockProcedureExecutionRef,
   CreatureId,
 } from "@dnd/shared/types";
@@ -35,7 +35,7 @@ export type RuntimeActionResource =
       readonly kind: "action";
       readonly source: "spellEffect";
       readonly sourceOwnerId: CreatureId;
-      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+      readonly sourceEffectRef: BattleEffectExecutionRef;
       readonly restriction: ActionRestriction;
     }
   | {
@@ -148,35 +148,35 @@ export function activationResourceCostFromSurfaceKind(
 
 export function activationResourceCost(
   unit: SurfaceActivationResourceCarrier,
-): Either.Either<ActivationResourceCost, ActionEconomySpendError> {
+): Result.Result<ActivationResourceCost, ActionEconomySpendError> {
   const mechanics = unit.mechanics;
 
   if ("activationCost" in mechanics) {
     if (mechanics.activationCost.kind === "free") {
-      return Either.right({ kind: "free" });
+      return Result.succeed({ kind: "free" });
     }
 
     if (mechanics.activationCost.kind === "bonus_action") {
-      return Either.right({ kind: "bonusAction" });
+      return Result.succeed({ kind: "bonusAction" });
     }
 
     if (mechanics.activationCost.kind === "standard_action") {
       const action = mechanics.activationCost.action;
       if (action !== undefined && isStandardActionKind(action)) {
-        return Either.right({ kind: "action", action });
+        return Result.succeed({ kind: "action", action });
       }
     }
 
-    return Either.left("unsupported unit activation cost");
+    return Result.fail("unsupported unit activation cost");
   }
 
   if (isSupportedSurfaceCastingTimeKind(mechanics.castingTime.kind)) {
-    return Either.right(
+    return Result.succeed(
       activationResourceCostFromSurfaceKind(mechanics.castingTime.kind),
     );
   }
 
-  return Either.left("unsupported unit casting time");
+  return Result.fail("unsupported unit casting time");
 }
 
 export function actionRestrictionAllows(
@@ -574,19 +574,19 @@ export function resetTurnActionEconomy<T extends ActionEconomyState>(
 export function spendAction<T extends ActionEconomyState>(
   state: T,
   action: StandardActionKind,
-): Either.Either<T, ActionEconomySpendError> {
+): Result.Result<T, ActionEconomySpendError> {
   const actionResourceIndex = compatibleActionResourceIndex(
     state.actionResources,
     action,
   );
   if (actionResourceIndex === null) {
-    return Either.left("no action resource available");
+    return Result.fail("no action resource available");
   }
 
   // TODO: If multiple compatible action resources are available and spending
   // one versus another can change later legality, expose resource choice as a
   // runtime hole instead of choosing deterministically here.
-  return Either.right(
+  return Result.succeed(
     actionEconomyStateAfterSpendingActionResourceAtIndex(
       state,
       actionResourceIndex,
@@ -596,15 +596,15 @@ export function spendAction<T extends ActionEconomyState>(
 
 export function spendUnarmedStrikeActionResource<T extends ActionEconomyState>(
   state: T,
-): Either.Either<T, ActionEconomySpendError> {
+): Result.Result<T, ActionEconomySpendError> {
   const actionResourceIndex = compatibleUnarmedStrikeActionResourceIndex(
     state.actionResources,
   );
   if (actionResourceIndex === null) {
-    return Either.left("no action resource available");
+    return Result.fail("no action resource available");
   }
 
-  return Either.right(
+  return Result.succeed(
     actionEconomyStateAfterSpendingActionResourceAtIndex(
       state,
       actionResourceIndex,
@@ -616,17 +616,17 @@ export function spendMatchingActionResource<T extends ActionEconomyState>(
   state: T,
   action: StandardActionKind,
   resourceMatches: (resource: RuntimeActionResource) => boolean,
-): Either.Either<T, ActionEconomySpendError> {
+): Result.Result<T, ActionEconomySpendError> {
   const actionResourceIndex = matchingActionResourceIndex(
     state.actionResources,
     action,
     resourceMatches,
   );
   if (actionResourceIndex === null) {
-    return Either.left("no action resource available");
+    return Result.fail("no action resource available");
   }
 
-  return Either.right(
+  return Result.succeed(
     actionEconomyStateAfterSpendingActionResourceAtIndex(
       state,
       actionResourceIndex,
@@ -637,9 +637,9 @@ export function spendMatchingActionResource<T extends ActionEconomyState>(
 export function spendActivationResource<T extends ActionEconomyState>(
   state: T,
   cost: ActivationResourceCost,
-): Either.Either<T, ActionEconomySpendError> {
+): Result.Result<T, ActionEconomySpendError> {
   if (cost.kind === "free") {
-    return Either.right(state);
+    return Result.succeed(state);
   }
 
   if (cost.kind === "action") {
@@ -647,10 +647,10 @@ export function spendActivationResource<T extends ActionEconomyState>(
   }
 
   if (!canSpendBonusAction(state)) {
-    return Either.left("no bonus action available");
+    return Result.fail("no bonus action available");
   }
 
-  return Either.right(actionEconomyStateAfterSpendingBonusAction(state));
+  return Result.succeed(actionEconomyStateAfterSpendingBonusAction(state));
 }
 
 export function hasUnitActionResource(
@@ -669,7 +669,7 @@ export function hasUnitActionResource(
 export function hasSpellEffectActionResource(
   state: ActionEconomyState,
   sourceOwnerId: CreatureId,
-  sourceEffectRef: BattleActiveEffectExecutionRef,
+  sourceEffectRef: BattleEffectExecutionRef,
 ): boolean {
   return state.actionResources.some(
     (resource) =>
@@ -684,18 +684,18 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
   sourceOwnerId: CreatureId,
   sourceProcedureRef: BattleProcedureExecutionRef,
   restriction: ActionRestriction,
-): Either.Either<T, ActionEconomySpendError> {
+): Result.Result<T, ActionEconomySpendError> {
   if (
     !actionOrBonusActionExclusionAllowsAction(state) ||
     !movementActionBonusActionExclusionAllowsAction(state)
   ) {
-    return Either.left("no action resource available");
+    return Result.fail("no action resource available");
   }
   if (hasUnitActionResource(state, sourceOwnerId, sourceProcedureRef)) {
-    return Either.left("unit-granted action resource already granted");
+    return Result.fail("unit-granted action resource already granted");
   }
 
-  return Either.right({
+  return Result.succeed({
     ...state,
     actionResources: [
       ...state.actionResources,
@@ -713,14 +713,14 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
 export function grantSpellEffectActionResource<T extends ActionEconomyState>(
   state: T,
   sourceOwnerId: CreatureId,
-  sourceEffectRef: BattleActiveEffectExecutionRef,
+  sourceEffectRef: BattleEffectExecutionRef,
   restriction: ActionRestriction,
-): Either.Either<T, ActionEconomySpendError> {
+): Result.Result<T, ActionEconomySpendError> {
   if (hasSpellEffectActionResource(state, sourceOwnerId, sourceEffectRef)) {
-    return Either.left("spell-effect action resource already granted");
+    return Result.fail("spell-effect action resource already granted");
   }
 
-  return Either.right({
+  return Result.succeed({
     ...state,
     actionResources: [
       ...state.actionResources,

@@ -415,8 +415,8 @@ const DirectHitPointRestorationInvocationSchema = spellProcedureExecutionSchema(
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("directHitPointRestoration"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
-    actionCost: Schema.Literal("magicAction", "bonusAction"),
-    targeting: Schema.Union(
+    actionCost: Schema.Literals(["magicAction", "bonusAction"]),
+    targeting: Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("targetList"),
         minTargets: Schema.Literal(1),
@@ -431,7 +431,7 @@ const DirectHitPointRestorationInvocationSchema = spellProcedureExecutionSchema(
           radiusFeet: MovementFeetSchema,
         }),
       }),
-    ),
+    ]),
     healing: Schema.Struct({ expr: DiceExprSchema }),
     rangeFeet: MovementFeetSchema,
   }),

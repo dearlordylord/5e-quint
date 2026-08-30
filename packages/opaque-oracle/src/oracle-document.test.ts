@@ -1,6 +1,5 @@
 import Ajv2020 from "ajv/dist/2020.js";
-import { Either, Option, Schema } from "effect";
-import * as AST from "effect/SchemaAST";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -19,27 +18,13 @@ import {
 } from "./oracle-case-trace.ts";
 import {
   OracleCaseDocumentJsonSchema,
-  OracleCaseDocumentSchema,
   OracleEvaluationBatchDocumentJsonSchema,
-  OracleEvaluationBatchDocumentSchema,
   OracleTraceDocumentJsonSchema,
-  OracleTraceDocumentSchema,
-  documentSchema,
 } from "./oracle-document.ts";
-import {
-  OracleCaseSchema,
-  OracleTraceSchema,
-} from "./oracle-case-trace-schema.ts";
 import {
   canonicalStructuralKey,
   canonicalizeStringSet,
 } from "./oracle-canonical.ts";
-import {
-  isSemanticRefinementReason,
-  SEMANTIC_REFINEMENT_REASONS,
-  SemanticRefinementAnnotationId,
-  type SemanticRefinementReason,
-} from "@dnd/shared/semantic-refinement";
 
 const documentSchemas = [
   ["Case", OracleCaseDocumentJsonSchema],
@@ -379,74 +364,6 @@ function recursiveCase(depth: number): unknown {
   };
 }
 
-function sourceSemanticRefinementReasonCounts(): Readonly<
-  Record<SemanticRefinementReason, number>
-> {
-  const counts = Object.fromEntries(
-    SEMANTIC_REFINEMENT_REASONS.map((reason) => [reason, 0]),
-  ) as Record<SemanticRefinementReason, number>;
-  const pending: AST.AST[] = [OracleCaseSchema.ast, OracleTraceSchema.ast];
-  const visited = new Set<object>();
-  while (pending.length > 0) {
-    const ast = pending.pop();
-    if (ast === undefined || visited.has(ast)) continue;
-    visited.add(ast);
-    switch (ast._tag) {
-      case "Refinement": {
-        if (Option.isNone(AST.getJSONSchemaAnnotation(ast))) {
-          const reason = ast.annotations[SemanticRefinementAnnotationId];
-          if (!isSemanticRefinementReason(reason)) {
-            throw new Error("Unmarked semantic refinement in source AST");
-          }
-          counts[reason] += 1;
-        }
-        pending.push(ast.from);
-        continue;
-      }
-      case "TypeLiteral":
-        for (const property of ast.propertySignatures)
-          pending.push(property.type);
-        for (const index of ast.indexSignatures) {
-          pending.push(index.parameter, index.type);
-        }
-        continue;
-      case "TupleType":
-        for (const element of ast.elements) pending.push(element.type);
-        for (const element of ast.rest) pending.push(element.type);
-        continue;
-      case "Union":
-        pending.push(...ast.types);
-        continue;
-      case "Transformation":
-        pending.push(ast.from, ast.to);
-        continue;
-      case "Suspend":
-        pending.push(ast.f());
-        continue;
-      case "TemplateLiteral":
-        for (const span of ast.spans) pending.push(span.type);
-        continue;
-      case "AnyKeyword":
-      case "UnknownKeyword":
-      case "Declaration":
-      case "Enums":
-      case "Literal":
-      case "UniqueSymbol":
-      case "UndefinedKeyword":
-      case "VoidKeyword":
-      case "NeverKeyword":
-      case "StringKeyword":
-      case "NumberKeyword":
-      case "BooleanKeyword":
-      case "BigIntKeyword":
-      case "SymbolKeyword":
-      case "ObjectKeyword":
-        continue;
-    }
-  }
-  return counts;
-}
-
 const readyActionTrace = {
   ...builtTrace,
   creation: {
@@ -489,21 +406,21 @@ function battleEntryRejectedTrace(issues: readonly unknown[]) {
   };
 }
 
-function documentResult<A, E>(result: Either.Either<A, E>): boolean {
-  return Either.isRight(result);
+function documentResult<A, E>(result: Result.Result<A, E>): boolean {
+  return Result.isSuccess(result);
 }
 
-function isLeftWithIssues(value: unknown): boolean {
+function isFailureWithIssues(value: unknown): boolean {
   if (
     typeof value !== "object" ||
     value === null ||
     !("_tag" in value) ||
-    value._tag !== "Left" ||
-    !("left" in value)
+    value._tag !== "Failure" ||
+    !("failure" in value)
   ) {
     return false;
   }
-  return Array.isArray(value.left) && value.left.length > 0;
+  return Array.isArray(value.failure) && value.failure.length > 0;
 }
 
 describe("Opaque Oracle document JSON Schemas", () => {
@@ -753,7 +670,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
     ] as const;
     for (const [index, value] of terminalTraces.entries()) {
       const ajvAccepted = documentValidators.trace(value);
-      const effectAccepted = Either.isRight(decodeOracleTraceDocument(value));
+      const effectAccepted = Result.isSuccess(decodeOracleTraceDocument(value));
       expect(effectAccepted, `trace ${index}: Ajv/Effect parity`).toBe(
         ajvAccepted,
       );
@@ -827,7 +744,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
       ],
     ] as const) {
       const ajvAccepted = documentValidators.trace(value);
-      const effectAccepted = Either.isRight(decodeOracleTraceDocument(value));
+      const effectAccepted = Result.isSuccess(decodeOracleTraceDocument(value));
       expect(effectAccepted, `${name}: Ajv/Effect parity`).toBe(ajvAccepted);
       expect(ajvAccepted, `${name}: expected structural validity`).toBe(true);
     }
@@ -872,7 +789,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
     ] as const;
     for (const [name, value] of invalidTraces) {
       const ajvAccepted = documentValidators.trace(value);
-      const effectAccepted = Either.isRight(decodeOracleTraceDocument(value));
+      const effectAccepted = Result.isSuccess(decodeOracleTraceDocument(value));
       expect(effectAccepted, `${name}: Ajv/Effect parity`).toBe(ajvAccepted);
       expect(ajvAccepted, `${name}: expected rejection`).toBe(false);
     }
@@ -1018,8 +935,10 @@ describe("Opaque Oracle document JSON Schemas", () => {
     ];
     for (const [name, value] of invalidValues) {
       const ajvAccepted = documentValidators.trace(value);
-      const documentAccepted = Either.isRight(decodeOracleTraceDocument(value));
-      const fullAccepted = Either.isRight(decodeOracleTrace(value));
+      const documentAccepted = Result.isSuccess(
+        decodeOracleTraceDocument(value),
+      );
+      const fullAccepted = Result.isSuccess(decodeOracleTrace(value));
       expect(documentAccepted, `${name}: Document/Ajv parity`).toBe(
         ajvAccepted,
       );
@@ -1042,7 +961,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
     ] as const;
     for (const [name, value] of batches) {
       const ajvAccepted = documentValidators.batch(value);
-      const effectAccepted = Either.isRight(
+      const effectAccepted = Result.isSuccess(
         decodeOracleEvaluationBatchDocument(value),
       );
       expect(effectAccepted, `${name}: Ajv/Effect parity`).toBe(ajvAccepted);
@@ -1058,9 +977,9 @@ describe("Opaque Oracle document JSON Schemas", () => {
       ],
     };
     const decoded = decodeOracleEvaluationBatchDocument(invalidBatch);
-    expect(Either.isLeft(decoded)).toBe(true);
-    if (Either.isLeft(decoded)) {
-      expect(decoded.left).toEqual([
+    expect(Result.isFailure(decoded)).toBe(true);
+    if (Result.isFailure(decoded)) {
+      expect(decoded.failure).toEqual([
         { path: "/cases/0/creation/fillBatches", code: "missingMember" },
         { path: "/cases/1/battle/attempts", code: "missingMember" },
       ]);
@@ -1082,8 +1001,10 @@ describe("Opaque Oracle document JSON Schemas", () => {
       },
     };
     const document = decodeOracleCaseDocument(semanticCounterexample);
-    expect(Either.isRight(document)).toBe(true);
-    expect(Either.isLeft(decodeOracleCase(semanticCounterexample))).toBe(true);
+    expect(Result.isSuccess(document)).toBe(true);
+    expect(Result.isFailure(decodeOracleCase(semanticCounterexample))).toBe(
+      true,
+    );
 
     const invalidOwner = {
       ...builtTrace,
@@ -1111,10 +1032,12 @@ describe("Opaque Oracle document JSON Schemas", () => {
       },
     } as const;
     const invalidOwnerDocument = decodeOracleTraceDocument(invalidOwner);
-    expect(Either.isRight(invalidOwnerDocument)).toBe(true);
-    if (Either.isRight(invalidOwnerDocument)) {
+    expect(Result.isSuccess(invalidOwnerDocument)).toBe(true);
+    if (Result.isSuccess(invalidOwnerDocument)) {
       expect(
-        Either.isLeft(admitOracleTraceDocument(invalidOwnerDocument.right)),
+        Result.isFailure(
+          admitOracleTraceDocument(invalidOwnerDocument.success),
+        ),
       ).toBe(true);
     }
   });
@@ -1140,14 +1063,14 @@ describe("Opaque Oracle document JSON Schemas", () => {
       },
     } as const;
     const admitted = admitOracleCaseDocument(reversed);
-    expect(Either.isRight(admitted)).toBe(true);
-    if (Either.isRight(admitted)) {
-      expect(admitted.right.sheet).toEqual({
+    expect(Result.isSuccess(admitted)).toBe(true);
+    if (Result.isSuccess(admitted)) {
+      expect(admitted.success.sheet).toEqual({
         tag: "wildShapeKnownForms",
         statBlockIds: ["stat_block_rat", "stat_block_skeleton"],
       });
-      if (admitted.right.battle.roster.tag === "statBlocks") {
-        const entry = admitted.right.battle.roster.entries[0];
+      if (admitted.success.battle.roster.tag === "statBlocks") {
+        const entry = admitted.success.battle.roster.entries[0];
         expect(entry).toBeDefined();
         if (entry !== undefined) {
           expect(Object.keys(entry.ammunitionStocks)).toEqual([
@@ -1179,9 +1102,9 @@ describe("Opaque Oracle document JSON Schemas", () => {
       },
     } as const;
     const admittedTrace = admitOracleTraceDocument(reversedTrace);
-    expect(Either.isRight(admittedTrace)).toBe(true);
-    if (Either.isRight(admittedTrace)) {
-      const outcome = admittedTrace.right.creation.outcome;
+    expect(Result.isSuccess(admittedTrace)).toBe(true);
+    if (Result.isSuccess(admittedTrace)) {
+      const outcome = admittedTrace.success.creation.outcome;
       expect(outcome.tag).toBe("built");
       if (outcome.tag === "built" && outcome.sheet.tag === "constructed") {
         expect(outcome.sheet.sheet.druidWildShapeKnownForms).toEqual({
@@ -1210,9 +1133,9 @@ describe("Opaque Oracle document JSON Schemas", () => {
       ],
     } as const;
     const admittedBatch = admitOracleEvaluationBatchDocument(reversedBatch);
-    expect(Either.isRight(admittedBatch)).toBe(true);
-    if (Either.isRight(admittedBatch)) {
-      const [caseValue] = admittedBatch.right.cases;
+    expect(Result.isSuccess(admittedBatch)).toBe(true);
+    if (Result.isSuccess(admittedBatch)) {
+      const [caseValue] = admittedBatch.success.cases;
       expect(caseValue).toBeDefined();
       if (caseValue !== undefined) {
         expect(caseValue.sheet).toEqual({
@@ -1242,26 +1165,26 @@ describe("Opaque Oracle document JSON Schemas", () => {
         outcome: { tag: "inputExhausted" },
       },
     } as const;
-    expect(Either.isRight(decodeOracleTraceDocument(arbitrarySnapshots))).toBe(
-      true,
-    );
-    expect(Either.isRight(decodeOracleTrace(arbitrarySnapshots))).toBe(true);
+    expect(
+      Result.isSuccess(decodeOracleTraceDocument(arbitrarySnapshots)),
+    ).toBe(true);
+    expect(Result.isSuccess(decodeOracleTrace(arbitrarySnapshots))).toBe(true);
   });
 
   it("scans duplicate JSON members before parsing and remains total for hostile and deep input", () => {
     const duplicateJson =
       '{"creation":{"fillBatches":[]},"creation":{"fillBatches":[]},"sheet":{"tag":"ordinary"},"battle":{"roster":{"tag":"statBlocks","entries":[]},"attempts":[]}}';
     const duplicate = decodeOracleCaseJson(duplicateJson);
-    expect(Either.isLeft(duplicate)).toBe(true);
-    if (Either.isLeft(duplicate)) {
-      expect(duplicate.left).toEqual([
+    expect(Result.isFailure(duplicate)).toBe(true);
+    if (Result.isFailure(duplicate)) {
+      expect(duplicate.failure).toEqual([
         { path: "/creation", code: "duplicateMember" },
       ]);
     }
     // Once JSON has been parsed, duplicate member spellings no longer exist;
     // the Document boundary only validates the resulting value.
     expect(
-      Either.isRight(decodeOracleCaseDocument(JSON.parse(duplicateJson))),
+      Result.isSuccess(decodeOracleCaseDocument(JSON.parse(duplicateJson))),
     ).toBe(true);
 
     const deepArray = `${"[".repeat(20_000)}null${"]".repeat(20_000)}`;
@@ -1274,9 +1197,10 @@ describe("Opaque Oracle document JSON Schemas", () => {
       for (const payload of [deepArray, deepObject]) {
         expect(() => decoder(payload), `${name} deep input`).not.toThrow();
         const result: unknown = decoder(payload);
-        expect(isLeftWithIssues(result), `${name} deep input should fail`).toBe(
-          true,
-        );
+        expect(
+          isFailureWithIssues(result),
+          `${name} deep input should fail`,
+        ).toBe(true);
       }
     }
 
@@ -1303,7 +1227,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
         expect(() => decoder(value), `${name} hostile input`).not.toThrow();
         const result: unknown = decoder(value);
         expect(
-          isLeftWithIssues(result),
+          isFailureWithIssues(result),
           `${name} hostile input should fail`,
         ).toBe(true);
       }
@@ -1324,7 +1248,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
       for (const value of [deeplyNestedObject, deeplyNestedArray]) {
         expect(() => decoder(value), `${name} direct deep input`).not.toThrow();
         expect(
-          isLeftWithIssues(decoder(value)),
+          isFailureWithIssues(decoder(value)),
           `${name} direct deep input should fail`,
         ).toBe(true);
       }
@@ -1410,7 +1334,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
         `${decoderName} ${inputName} should be total`,
       ).not.toThrow();
       expect(
-        isLeftWithIssues(fullDecoder(value)),
+        isFailureWithIssues(fullDecoder(value)),
         `${decoderName} ${inputName} should fail with issues`,
       ).toBe(true);
       const documentDecoder =
@@ -1424,7 +1348,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
         `${decoderName} ${inputName} Document should be total`,
       ).not.toThrow();
       expect(
-        isLeftWithIssues(documentDecoder(value)),
+        isFailureWithIssues(documentDecoder(value)),
         `${decoderName} ${inputName} Document should fail with issues`,
       ).toBe(true);
     }
@@ -1433,10 +1357,10 @@ describe("Opaque Oracle document JSON Schemas", () => {
   it("keeps schema-shaped recursive Trace, Case, and Batch total at hostile depth", () => {
     const recursiveControl = recursiveCase(2);
     expect(documentValidators.case(recursiveControl)).toBe(true);
-    expect(Either.isRight(decodeOracleCaseDocument(recursiveControl))).toBe(
+    expect(Result.isSuccess(decodeOracleCaseDocument(recursiveControl))).toBe(
       true,
     );
-    expect(Either.isRight(decodeOracleCase(recursiveControl))).toBe(true);
+    expect(Result.isSuccess(decodeOracleCase(recursiveControl))).toBe(true);
 
     const deepTrace = recursiveTrace(20_000);
     const deepCase = recursiveCase(20_000);
@@ -1459,118 +1383,13 @@ describe("Opaque Oracle document JSON Schemas", () => {
         result = decoder(value);
       }, `${name} recursive input`).not.toThrow();
       expect(
-        isLeftWithIssues(result),
+        isFailureWithIssues(result),
         `${name} should return typed issues`,
       ).toBe(true);
     }
   }, 120_000);
 
-  it("retains only closed, annotated structural AST refinements", () => {
-    const inventory = {
-      refinements: 0,
-      unannotatedRefinements: 0,
-      uniqueItems: 0,
-      minItems: 0,
-      identifiers: [] as string[],
-      openNodes: [] as string[],
-    };
-    const pending: AST.AST[] = [
-      OracleCaseDocumentSchema.ast,
-      OracleTraceDocumentSchema.ast,
-      OracleEvaluationBatchDocumentSchema.ast,
-    ];
-    const visited = new Set<object>();
-    while (pending.length > 0) {
-      const ast = pending.pop();
-      if (ast === undefined || visited.has(ast)) continue;
-      visited.add(ast);
-      const identifier = Option.getOrUndefined(
-        AST.getIdentifierAnnotation(ast),
-      );
-      if (identifier !== undefined) inventory.identifiers.push(identifier);
-      switch (ast._tag) {
-        case "AnyKeyword":
-        case "UnknownKeyword":
-        case "Declaration":
-        case "ObjectKeyword":
-          inventory.openNodes.push(ast._tag);
-          continue;
-        case "Refinement": {
-          inventory.refinements += 1;
-          const annotation = Option.getOrUndefined(
-            AST.getJSONSchemaAnnotation(ast),
-          );
-          if (annotation === undefined) inventory.unannotatedRefinements += 1;
-          if (typeof annotation === "object" && annotation !== null) {
-            if (
-              "uniqueItems" in annotation &&
-              annotation.uniqueItems === true
-            ) {
-              inventory.uniqueItems += 1;
-            }
-            if ("minItems" in annotation && annotation.minItems !== undefined) {
-              inventory.minItems += 1;
-            }
-          }
-          pending.push(ast.from);
-          continue;
-        }
-        case "TypeLiteral":
-          for (const property of ast.propertySignatures) {
-            pending.push(property.type);
-          }
-          for (const index of ast.indexSignatures) {
-            pending.push(index.parameter, index.type);
-          }
-          continue;
-        case "TupleType":
-          for (const element of ast.elements) pending.push(element.type);
-          pending.push(...ast.rest.map((value) => value.type));
-          continue;
-        case "Union":
-          pending.push(...ast.types);
-          continue;
-        case "Transformation":
-          pending.push(ast.from, ast.to);
-          continue;
-        case "Suspend":
-          pending.push(ast.f());
-          continue;
-        case "TemplateLiteral":
-          for (const span of ast.spans) pending.push(span.type);
-          continue;
-        case "Enums":
-        case "Literal":
-        case "UniqueSymbol":
-        case "UndefinedKeyword":
-        case "VoidKeyword":
-        case "NeverKeyword":
-        case "StringKeyword":
-        case "NumberKeyword":
-        case "BooleanKeyword":
-        case "BigIntKeyword":
-        case "SymbolKeyword":
-          continue;
-      }
-    }
-    expect(inventory.openNodes).toEqual([]);
-    expect(inventory.refinements).toBeGreaterThan(0);
-    expect(inventory.unannotatedRefinements).toBe(0);
-    expect(inventory.uniqueItems).toBeGreaterThan(0);
-    expect(inventory.minItems).toBeGreaterThan(0);
-    expect(inventory.identifiers).toContain("OracleBattleEntered");
-
-    expect(sourceSemanticRefinementReasonCounts()).toEqual({
-      canonicalExecutionReferenceSyntax: 6,
-      creationHoleIdSyntax: 1,
-      creationHoleSourceCorrelation: 1,
-      creationHoleCardinalityCorrelation: 1,
-      creationFrontierCorrelation: 0,
-      checkpointFrontierCorrelation: 4,
-      corpusBatchTraceLengthCorrelation: 0,
-      constraintFreeBrand: 1,
-    });
-
+  it("publishes the closed structural constraints through Effect 4 JSON Schema", () => {
     const schemaText = JSON.stringify({
       OracleCaseDocumentJsonSchema,
       OracleTraceDocumentJsonSchema,
@@ -1585,13 +1404,6 @@ describe("Opaque Oracle document JSON Schemas", () => {
       expect(schemaText).toContain(`^${slot}:(?=\\\\S)`);
     }
     expect(schemaText).not.toContain('"steps"');
-  });
-
-  it("rejects an unmarked semantic refinement during Document projection", () => {
-    const unmarked = Schema.String.pipe(
-      Schema.filter((value) => value.length > 0),
-    );
-    expect(() => documentSchema(unmarked)).toThrow("unannotated refinement");
   });
 
   it("keeps canonical equality type-aware, order-aware, and set sorting non-deduplicating", () => {

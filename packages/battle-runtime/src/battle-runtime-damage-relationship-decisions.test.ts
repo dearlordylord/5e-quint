@@ -6,7 +6,7 @@ import type {
   BattleState,
 } from "./battle-state-execution.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   combatantId,
   fighterId,
@@ -81,7 +81,7 @@ describe("damage relationship decision protocol", () => {
     }
     const conditionEffect = {
       kind: "spellCondition",
-      effectRef: battleActiveEffectExecutionRefForTest(
+      effectRef: battleEffectExecutionRefForTest(
         "synthetic-relationship-condition-1",
       ),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -99,7 +99,7 @@ describe("damage relationship decision protocol", () => {
     } as const satisfies BattleActiveEffect;
     const duplicateConditionEffect = {
       ...conditionEffect,
-      effectRef: battleActiveEffectExecutionRefForTest(
+      effectRef: battleEffectExecutionRefForTest(
         "synthetic-relationship-condition-2",
       ),
     } as const satisfies BattleActiveEffect;

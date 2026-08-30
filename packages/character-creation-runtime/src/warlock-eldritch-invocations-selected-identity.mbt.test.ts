@@ -11,7 +11,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
@@ -1069,22 +1069,22 @@ function warlockProgression(): CharacterProgression {
     unitLibrary,
     classUnitId: authoredUnitId(WARLOCK_CLASS_UNIT_ID),
   });
-  if (Either.isLeft(parsedClassUnitId)) {
+  if (Result.isFailure(parsedClassUnitId)) {
     throw new Error(
-      `Invalid Warlock class Unit id: ${JSON.stringify(parsedClassUnitId.left)}`,
+      `Invalid Warlock class Unit id: ${JSON.stringify(parsedClassUnitId.failure)}`,
     );
   }
   const parsedProgression = parseCharacterProgressionShape({
-    startingClass: parsedClassUnitId.right,
+    startingClass: parsedClassUnitId.success,
     advancements: [],
   });
-  if (Either.isLeft(parsedProgression)) {
+  if (Result.isFailure(parsedProgression)) {
     throw new Error(
-      `Invalid Warlock Eldritch Invocations selected identity progression: ${JSON.stringify(parsedProgression.left)}`,
+      `Invalid Warlock Eldritch Invocations selected identity progression: ${JSON.stringify(parsedProgression.failure)}`,
     );
   }
 
-  return parsedProgression.right;
+  return parsedProgression.success;
 }
 
 function warlockClassUnitId() {
@@ -1319,35 +1319,35 @@ function testAbilityScoreAssignment(
   scores: RawAbilityScoreAssignment,
 ): AbilityScoreAssignment {
   const parsed = abilityScoreAssignment(scores);
-  if (Either.isLeft(parsed)) {
+  if (Result.isFailure(parsed)) {
     throw new Error(
       "Warlock Eldritch Invocations selected identity Standard Array fixture must parse.",
     );
   }
 
-  return parsed.right;
+  return parsed.success;
 }
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Expected Either.right, received ${JSON.stringify(result.left)}.`,
+      `Expected Result.succeed, received ${JSON.stringify(result.failure)}.`,
     );
   }
 
-  return result.right;
+  return result.success;
 }
 
 function expectLeftCode<T, E extends { readonly code: string }>(
-  result: Either.Either<T, E>,
+  result: Result.Result<T, E>,
   code: E["code"],
 ): void {
-  if (Either.isRight(result)) {
-    throw new Error(`Expected Either.left(${code}), received Either.right.`);
+  if (Result.isSuccess(result)) {
+    throw new Error(`Expected Result.fail(${code}), received Result.succeed.`);
   }
-  if (result.left.code !== code) {
+  if (result.failure.code !== code) {
     throw new Error(
-      `Expected Either.left(${code}), received ${JSON.stringify(result.left)}.`,
+      `Expected Result.fail(${code}), received ${JSON.stringify(result.failure)}.`,
     );
   }
 }

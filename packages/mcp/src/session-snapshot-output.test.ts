@@ -7,7 +7,7 @@ import {
   presentBattleCheckpointFrontierEnvelope,
   resolveBattleRuntimeSubject,
 } from "@dnd/battle-runtime";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { AdminSessionProjectionSchema } from "./admin-mirror-contract.ts";
@@ -67,13 +67,13 @@ describe("MCP session wire projections", () => {
       expect(properties).not.toHaveProperty("presentedInterruptChoices");
     }
     expect(
-      Schema.decodeUnknownEither(McpSessionSnapshotSchema, {
+      Schema.decodeUnknownResult(McpSessionSnapshotSchema, {
         onExcessProperty: "error",
       })({
         ...sessionForProjectionState({ tag: "none" }),
         transientBattleFills: null,
       }),
-    ).toEqual(Either.left(expect.anything()));
+    ).toEqual(Result.fail(expect.anything()));
   });
 
   test("does not accept legacy duplicate battle projections", () => {
@@ -85,15 +85,15 @@ describe("MCP session wire projections", () => {
       session: sessionForProjectionState(setupState),
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(StartBattleOutputSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(StartBattleOutputSchema, {
           onExcessProperty: "error",
         })(legacy),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSessionOutputSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSessionOutputSchema, {
           onExcessProperty: "error",
         })({
           envelope: null,
@@ -106,8 +106,8 @@ describe("MCP session wire projections", () => {
 
   test("start battle cannot report an empty battle session", () => {
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(StartBattleOutputSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(StartBattleOutputSchema)({
           envelope: null,
           session: sessionForProjectionState({ tag: "none" }),
         }),
@@ -123,8 +123,8 @@ describe("MCP session wire projections", () => {
     expect(serialized).not.toContain('"availableActs"');
     expect(serialized).not.toContain('"presentedInterruptChoices"');
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleResolutionOutputSchema)({
           result: { tag: "needsHoles" },
           snapshot: {},
           session: {
@@ -188,11 +188,11 @@ describe("MCP session wire projections", () => {
     const session = root.sessionStore.battleSession;
     if (session === null) throw new Error("Expected active battle.");
     const envelope = battlePresentedCheckpointFrontierEnvelope(session);
-    if (Either.isLeft(envelope)) throw new Error("Expected presentation.");
+    if (Result.isFailure(envelope)) throw new Error("Expected presentation.");
     expect(
-      Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+      Schema.decodeUnknownResult(BattleResolutionOutputSchema)({
         result: { tag: "resolved" },
-        envelope: envelope.right,
+        envelope: envelope.success,
         session: {
           ...mcpSessionSummary(root.sessionStore.snapshot()),
           battleState: {
@@ -202,7 +202,7 @@ describe("MCP session wire projections", () => {
           },
         },
       }),
-    ).toSatisfy((result) => Either.isRight(result));
+    ).toSatisfy((result) => Result.isSuccess(result));
   });
 
   test("rejects forged session and result/frontier correlations", () => {
@@ -237,7 +237,7 @@ describe("MCP session wire projections", () => {
     const session = root.sessionStore.battleSession;
     if (session === null) throw new Error("Expected active battle.");
     const presented = battlePresentedCheckpointFrontierEnvelope(session);
-    if (Either.isLeft(presented)) throw new Error("Expected presentation.");
+    if (Result.isFailure(presented)) throw new Error("Expected presentation.");
     const activeSession = {
       ...mcpSessionSummary(root.sessionStore.snapshot()),
       battleState: {
@@ -248,24 +248,24 @@ describe("MCP session wire projections", () => {
     };
 
     expect(
-      Schema.decodeUnknownEither(BattleSessionOutputSchema)({
-        envelope: presented.right,
+      Schema.decodeUnknownResult(BattleSessionOutputSchema)({
+        envelope: presented.success,
         session: sessionForProjectionState({ tag: "none" }),
       }),
-    ).toEqual(Either.left(expect.anything()));
+    ).toEqual(Result.fail(expect.anything()));
     expect(
-      Schema.decodeUnknownEither(BattleSessionOutputSchema)({
+      Schema.decodeUnknownResult(BattleSessionOutputSchema)({
         envelope: null,
         session: activeSession,
       }),
-    ).toEqual(Either.left(expect.anything()));
+    ).toEqual(Result.fail(expect.anything()));
     expect(
-      Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+      Schema.decodeUnknownResult(BattleResolutionOutputSchema)({
         result: { tag: "needsHoles" },
-        envelope: presented.right,
+        envelope: presented.success,
         session: activeSession,
       }),
-    ).toEqual(Either.left(expect.anything()));
+    ).toEqual(Result.fail(expect.anything()));
 
     const act = discoverBattleActs(session).find(
       (candidate) => candidate.initialHoles.length > 0,
@@ -284,74 +284,74 @@ describe("MCP session wire projections", () => {
       mechanics.session,
       mechanics.envelope,
     );
-    if (Either.isLeft(presentedHoles)) {
+    if (Result.isFailure(presentedHoles)) {
       throw new Error("Expected holes presentation.");
     }
     expect(
-      Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+      Schema.decodeUnknownResult(BattleResolutionOutputSchema)({
         result: { tag: "resolved" },
-        envelope: presentedHoles.right,
+        envelope: presentedHoles.success,
         session: activeSession,
       }),
-    ).toEqual(Either.left(expect.anything()));
+    ).toEqual(Result.fail(expect.anything()));
     expect(
-      Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+      Schema.decodeUnknownResult(BattleResolutionOutputSchema)({
         result: {
           tag: "invalid",
           reason: "invalidFill",
           message: "Retry the current frontier.",
         },
-        envelope: presented.right,
+        envelope: presented.success,
         session: activeSession,
       }),
-    ).toSatisfy((result) => Either.isRight(result));
+    ).toSatisfy((result) => Result.isSuccess(result));
     expect(
-      Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+      Schema.decodeUnknownResult(BattleResolutionOutputSchema)({
         result: {
           tag: "invalid",
           reason: "inventedReason",
           message: "Retry the current frontier.",
         },
-        envelope: presented.right,
+        envelope: presented.success,
         session: activeSession,
       }),
-    ).toEqual(Either.left(expect.anything()));
+    ).toEqual(Result.fail(expect.anything()));
 
     const forgedBattleIdEnvelope = {
-      ...presented.right,
+      ...presented.success,
       checkpoint: {
-        ...presented.right.checkpoint,
+        ...presented.success.checkpoint,
         battleId: battleId("battle:other-correlation"),
       },
     };
     expect(
-      Schema.decodeUnknownEither(BattleSessionOutputSchema)({
+      Schema.decodeUnknownResult(BattleSessionOutputSchema)({
         envelope: forgedBattleIdEnvelope,
         session: activeSession,
       }),
-    ).toEqual(Either.left(expect.anything()));
+    ).toEqual(Result.fail(expect.anything()));
     expect(
-      Schema.decodeUnknownEither(AdminSessionProjectionSchema)({
+      Schema.decodeUnknownResult(AdminSessionProjectionSchema)({
         battle: forgedBattleIdEnvelope,
         characters: [],
         session: activeSession,
       }),
-    ).toEqual(Either.left(expect.anything()));
+    ).toEqual(Result.fail(expect.anything()));
 
     const forgedActorEnvelope = {
-      ...presented.right,
+      ...presented.success,
       checkpoint: {
-        ...presented.right.checkpoint,
+        ...presented.success.checkpoint,
         currentActorId: combatantId("combatant:other-correlation"),
       },
     };
     expect(
-      Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+      Schema.decodeUnknownResult(BattleResolutionOutputSchema)({
         result: { tag: "resolved" },
         envelope: forgedActorEnvelope,
         session: activeSession,
       }),
-    ).toEqual(Either.left(expect.anything()));
+    ).toEqual(Result.fail(expect.anything()));
   });
 
   test("admin projections use the same presented envelope owner", () => {

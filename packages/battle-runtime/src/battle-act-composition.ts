@@ -7,20 +7,21 @@ import type {
 } from "./battle-state-execution.ts";
 import type { AuthoredSelectedSpellInvocation } from "./character-execution-admission.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
-import { Either, Match } from "effect";
+import { Match, Result } from "effect";
 import { isCharacterProcedureBattleSubject } from "./battle-subjects.ts";
 import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
-import { spellActiveEffectForExecutionRef } from "./active-effect/execution-ref.ts";
+import { spellActiveEffectForExecutionRef } from "./effect-execution-ref.ts";
 import { boundAttackExecutionSelectionMatchesOption } from "./battle-action-options.ts";
 import {
   attackActionOptionsForActor,
   offHandAttackActionOptionsForActor,
 } from "./battle-reducer/attack-damage-apply.ts";
 import { attackActionOptionPresentationName } from "./stat-block-presentation.ts";
-import { maxJumpMovementReplacementDistanceFeet } from "./battle-reducer/jump-movement-replacement.ts";
+import { maxFixedCostMovementReplacementDistanceFeet } from "./battle-reducer/fixed-cost-movement-replacement.ts";
+import { boundFixedCostMovementReplacementEffect } from "./battle-reducer/spell-modifier-binding.ts";
 import { statBlockProcedurePresentationsForActor } from "./stat-block-presentation.ts";
 import type {
   BattleSubject,
@@ -38,11 +39,17 @@ import {
   MONK_FOCUS_PROCEDURE_QUERY,
   characterSpellProcedure,
   characterSpellProcedureExecution,
+  characterRetainedSpellProcedureExecution,
   spellInvocationMatchesExecution,
   type BattleSpellProcedureExecution,
 } from "./character-execution-admission.ts";
 import { characterUnitProcedureRefsForAuthoredSelection } from "./battle-composition-admission.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
+import type { BattleActiveEffect } from "./active-effect/types.ts";
+import type {
+  RepositionMovableLightManifestationSpellProcedureExecution,
+  RepeatSpatialMeleeSpellAttackProxyLiveSpellProcedureExecution,
+} from "./procedure-execution/spell-procedure-execution.ts";
 
 const byTag = Match.discriminator("tag");
 
@@ -137,6 +144,9 @@ export function battleAdmittedSpellPresentations(
         source.procedureRef,
       );
       if (correlated === undefined) return [];
+      if (correlated.invocation.procedure === "spawnedCompanionLifecycle") {
+        return [];
+      }
       const presentation: Extract<
         BattleActPresentation,
         { readonly kind: "spell" }
@@ -214,6 +224,9 @@ function intrinsicActPresentation(
       subject.procedureRef,
     );
     if (source === undefined) return undefined;
+    if (source.invocation.procedure === "spawnedCompanionLifecycle") {
+      return undefined;
+    }
     const release = subject.command === "releaseReadiedSpell";
     return {
       label: `${release ? "Release " : "Cast "}${source.invocation.spell.name}`,
@@ -267,12 +280,12 @@ function intrinsicSubjectPresentation(
       subject.reactorId,
       attack,
     );
-    return Either.isLeft(name)
-      ? { kind: "presentationIssue", issue: name.left }
+    return Result.isFailure(name)
+      ? { kind: "presentationIssue", issue: name.failure }
       : {
           kind: "attack",
           procedureRef: subject.procedureRef,
-          name: name.right,
+          name: name.success,
         };
   }
   const attackSubject =
@@ -295,13 +308,13 @@ function intrinsicSubjectPresentation(
         attackSubject.actorId,
         attack,
       );
-      if (Either.isLeft(name)) {
-        return { kind: "presentationIssue", issue: name.left };
+      if (Result.isFailure(name)) {
+        return { kind: "presentationIssue", issue: name.failure };
       }
       return {
         kind: "attack",
         procedureRef: attackSubject.procedureRef,
-        name: name.right,
+        name: name.success,
       };
     }
     return undefined;
@@ -342,20 +355,36 @@ function intrinsicActPresentationText(
       }
     }
   }
+  if (subject.tag === "runtimeCommand") {
+    const spellCommandPresentation = runtimeSpellCommandPresentationText(
+      state,
+      context,
+      subject,
+    );
+    if (spellCommandPresentation !== undefined) {
+      return spellCommandPresentation;
+    }
+  }
   if (
     subject.tag === "runtimeCommand" &&
-    subject.command === "jumpMovementReplacement"
+    subject.command === "fixedCostMovementReplacement"
   ) {
     const actor = state.combatants.get(subject.actorId);
     const effect = spellActiveEffectForExecutionRef(
       actor?.activeEffects ?? [],
       subject.effectRef,
     );
-    if (effect?.kind === "jumpMovementReplacement") {
-      return {
-        label: "Jump",
-        summary: `Spend ${effect.movementCostFeet} feet of Movement to jump up to ${maxJumpMovementReplacementDistanceFeet(state, subject.actorId, effect)} feet using table-supplied landing facts.`,
-      };
+    if (effect?.kind === "fixedCostMovementReplacement") {
+      const boundEffect = boundFixedCostMovementReplacementEffect(
+        state,
+        effect,
+      );
+      if (boundEffect !== undefined) {
+        return {
+          label: "Jump",
+          summary: `Spend ${boundEffect.movementCostFeet} feet of Movement to jump up to ${maxFixedCostMovementReplacementDistanceFeet(state, subject.actorId, boundEffect)} feet using table-supplied landing facts.`,
+        };
+      }
     }
   }
   if (
@@ -382,6 +411,149 @@ function intrinsicActPresentationText(
   return { label, summary: `Use ${label}.` };
 }
 
+type RuntimeCommandSubject = Extract<
+  IntrinsicBattleSubject,
+  { readonly tag: "runtimeCommand" }
+>;
+
+type RuntimeSpellCommandPresentation =
+  | { readonly kind: "savingThrow" }
+  | { readonly kind: "disperse" }
+  | { readonly kind: "leaveArea" }
+  | { readonly kind: "removeArea" }
+  | { readonly kind: "changeDirection" }
+  | { readonly kind: "moveArea" }
+  | { readonly kind: "ram" }
+  | { readonly kind: "endEffect" }
+  | { readonly kind: "prefixOperation"; readonly operation: string }
+  | { readonly kind: "suffixOperation"; readonly operation: string };
+
+const RUNTIME_SPELL_COMMAND_PRESENTATIONS = new Map<
+  RuntimeCommandSubject["command"],
+  RuntimeSpellCommandPresentation
+>([
+  ["persistentAreaSaveConditionSave", { kind: "savingThrow" }],
+  ["persistentAreaSaveConditionEscapeSave", { kind: "savingThrow" }],
+  ["persistentAreaSaveCompositeSave", { kind: "savingThrow" }],
+  ["persistentAreaSaveDamageSave", { kind: "savingThrow" }],
+  ["directionalPersistentAreaSave", { kind: "savingThrow" }],
+  ["movableZoneSave", { kind: "savingThrow" }],
+  ["endPersistentAreaSaveDamageForEnvironment", { kind: "disperse" }],
+  ["endPersistentAreaTraitForEnvironment", { kind: "disperse" }],
+  ["endPersistentAreaSaveConditionEscapeForDeparture", { kind: "leaveArea" }],
+  ["persistentAreaSaveDamageExit", { kind: "leaveArea" }],
+  [
+    "endPersistentAreaSaveConditionEscapeForAreaRemoval",
+    { kind: "removeArea" },
+  ],
+  ["directionalPersistentAreaDirectionChange", { kind: "changeDirection" }],
+  ["movableZoneReposition", { kind: "moveArea" }],
+  ["movableZoneRam", { kind: "ram" }],
+  ["linkedDefenseResistanceDamageShareSeparation", { kind: "endEffect" }],
+  [
+    "grantedAreaSaveDamageAction",
+    { kind: "prefixOperation", operation: "Exhale" },
+  ],
+  ["executeCompelledGrovel", { kind: "suffixOperation", operation: "Grovel" }],
+  ["executeCompelledDrop", { kind: "suffixOperation", operation: "Drop" }],
+  [
+    "executeCompelledApproach",
+    { kind: "suffixOperation", operation: "Approach" },
+  ],
+  ["executeCompelledFlee", { kind: "suffixOperation", operation: "Flee" }],
+  [
+    "controlledVerticalSuspensionAltitudeControl",
+    { kind: "suffixOperation", operation: "Altitude Control" },
+  ],
+]);
+
+function runtimeSpellCommandPresentationText(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: RuntimeCommandSubject,
+): { readonly label: string; readonly summary: string } | undefined {
+  const presentation = RUNTIME_SPELL_COMMAND_PRESENTATIONS.get(subject.command);
+  if (presentation === undefined) return undefined;
+  const source = spellPresentationSourceForRuntimeCommand(
+    state,
+    context,
+    subject,
+  );
+  if (source === undefined) return undefined;
+  const spellName = source.invocation.spell.name;
+  const label = Match.value(presentation).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      savingThrow: () => `${spellName} Saving Throw`,
+      disperse: () => `Disperse ${spellName}`,
+      leaveArea: () => `Leave ${spellName} Area`,
+      removeArea: () => `Remove ${spellName} Area`,
+      changeDirection: () => `Change ${spellName} Direction`,
+      moveArea: () => `Move ${spellName}`,
+      ram: () => `Ram with ${spellName}`,
+      endEffect: () => `End ${spellName}`,
+      prefixOperation: ({ operation }) => `${operation} ${spellName}`,
+      suffixOperation: ({ operation }) => `${spellName}: ${operation}`,
+    }),
+  );
+  return { label, summary: `Use ${label}.` };
+}
+
+function spellPresentationSourceForRuntimeCommand(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: RuntimeCommandSubject,
+) {
+  const effect = activeSpellEffectForRuntimeCommand(state, subject);
+  if (
+    effect === undefined ||
+    !("sourceCombatantId" in effect) ||
+    !("sourceProcedureRef" in effect)
+  ) {
+    return undefined;
+  }
+  return spellPresentationSourceForProcedure(
+    state,
+    context,
+    effect.sourceCombatantId,
+    effect.sourceProcedureRef,
+  );
+}
+
+function activeSpellEffectForRuntimeCommand(
+  state: BattleState,
+  subject: RuntimeCommandSubject,
+): BattleActiveEffect | undefined {
+  const effectRef =
+    "effectRef" in subject
+      ? subject.effectRef
+      : "areaMembershipTrigger" in subject
+        ? subject.areaMembershipTrigger.effectRef
+        : undefined;
+  if (effectRef !== undefined) {
+    for (const combatant of state.combatants.values()) {
+      const effect = spellActiveEffectForExecutionRef(
+        combatant.activeEffects,
+        effectRef,
+      );
+      if (effect !== undefined) return effect;
+    }
+  }
+  const areaId =
+    "areaId" in subject
+      ? subject.areaId
+      : "areaMembershipTrigger" in subject
+        ? subject.areaMembershipTrigger.areaId
+        : undefined;
+  if (areaId === undefined) return undefined;
+  for (const combatant of state.combatants.values()) {
+    const effect = combatant.activeEffects.find(
+      (candidate) => "areaId" in candidate && candidate.areaId === areaId,
+    );
+    if (effect !== undefined) return effect;
+  }
+  return undefined;
+}
+
 const INTRINSIC_ACTION_LABELS = {
   attack: "Attack",
   dash: "Dash",
@@ -396,8 +568,8 @@ const INTRINSIC_ACTION_LABELS = {
   shove: "Unarmed Strike (Shove)",
   escapeGrapple: "Escape Grapple",
   escapeSpellRestraint: "Escape Spell Restraint",
-  shakeAwakeFromSleep: "Shake Awake",
-  shakeAwakeFromHypnoticPattern: "Shake Awake",
+  shakeAwakeFromStagedCondition: "Shake Awake",
+  shakeAwakeFromAreaControl: "Shake Awake",
 } as const satisfies Record<
   Extract<BattleSubject, { readonly tag: "action" }>["action"],
   string
@@ -418,34 +590,33 @@ const INTRINSIC_RUNTIME_COMMAND_LABELS = {
   releaseGrapple: "Release Grapple",
   opportunityAttack: "Opportunity Attack",
   retaliationAttack: "Retaliation Attack",
-  greaseGroundHazardSave: "Grease Saving Throw",
-  webRestraintSave: "Web Saving Throw",
-  sleetStormAreaHazardSave: "Sleet Storm Saving Throw",
-  insectPlagueAreaHazardSave: "Insect Plague Saving Throw",
-  cloudkillAreaHazardSave: "Cloudkill Saving Throw",
-  disperseCloudkill: "Disperse Cloudkill",
-  webRestrainedNoLongerInArea: "Leave Web",
-  webAreaRemoved: "Remove Web Area",
-  gustOfWindLineSave: "Gust of Wind Saving Throw",
-  gustOfWindLineDirectionChange: "Change Gust of Wind Direction",
+  persistentAreaSaveConditionSave: "Area Saving Throw",
+  persistentAreaSaveConditionEscapeSave: "Area Saving Throw",
+  persistentAreaSaveCompositeSave: "Area Saving Throw",
+  persistentAreaSaveDamageSave: "Area Saving Throw",
+  endPersistentAreaSaveDamageForEnvironment: "Disperse Area",
+  endPersistentAreaSaveConditionEscapeForDeparture: "Leave Area",
+  endPersistentAreaSaveConditionEscapeForAreaRemoval: "Remove Area",
+  directionalPersistentAreaSave: "Area Saving Throw",
+  directionalPersistentAreaDirectionChange: "Change Area Direction",
   movableZoneSave: "Movable Zone Saving Throw",
-  moonbeamCylinderExit: "Leave Moonbeam Cylinder",
+  persistentAreaSaveDamageExit: "Leave Area",
   movableZoneReposition: "Move Movable Zone",
   movableZoneRam: "Ram with Movable Zone",
   releaseSpellCreatedHeldObject: "Release spell-created held object",
   protectionRelevantEffectSave: "Protection Saving Throw",
   creatureTypeProtectionConditionAttempt: "Protected Condition Attempt",
   creatureTypeProtectionPossessionAttempt: "Protected Possession Attempt",
-  disperseFogCloud: "Disperse Fog Cloud",
-  wardingBondSeparation: "End Warding Bond",
-  jumpMovementReplacement: "Jump",
-  dragonsBreathExhale: "Exhale Dragon's Breath",
+  endPersistentAreaTraitForEnvironment: "Disperse Area",
+  linkedDefenseResistanceDamageShareSeparation: "End Linked Effect",
+  fixedCostMovementReplacement: "Jump",
+  grantedAreaSaveDamageAction: "Use Granted Area Effect",
   replaceSelfTransformationMode: "Replace Self Transformation Mode",
-  commandGrovel: "Command: Grovel",
-  commandDrop: "Command: Drop",
-  commandApproach: "Command: Approach",
-  commandFlee: "Command: Flee",
-  levitateAltitudeControl: "Levitate altitude control",
+  executeCompelledGrovel: "Grovel",
+  executeCompelledDrop: "Drop",
+  executeCompelledApproach: "Approach",
+  executeCompelledFlee: "Flee",
+  controlledVerticalSuspensionAltitudeControl: "Altitude Control",
   creatureFalls: "Fall",
 } as const satisfies Record<
   Extract<BattleSubject, { readonly tag: "runtimeCommand" }>["command"],
@@ -475,8 +646,8 @@ function intrinsicActPresentationLabel(
           ? "Dismiss Familiar"
           : "Dismiss Familiar Forever",
     ),
-    byTag("findFamiliarSharedSenses", () => "Share Familiar Senses"),
-    byTag("pactOfTheChainFamiliarAttack", () => "Pact Familiar Attack"),
+    byTag("spawnedCompanionSharedSenses", () => "Share Familiar Senses"),
+    byTag("companionAttack", () => "Pact Familiar Attack"),
     byTag(
       "monkFocusFlurryOfBlowsStrike",
       () => "Flurry of Blows Unarmed Strike",
@@ -497,7 +668,7 @@ function characterProcedurePresentationJoin(
     subject.tag === "actionSpell" ||
     subject.tag === "bonusActionSpell" ||
     subject.tag === "bonusActionDashSpell" ||
-    subject.tag === "findFamiliarTouchSpell"
+    subject.tag === "spawnedCompanionTouchSpellProxy"
   ) {
     const invocation = spellPresentationInvocationForProcedure(
       state,
@@ -506,6 +677,7 @@ function characterProcedurePresentationJoin(
       procedureRef,
     );
     if (invocation === undefined) return undefined;
+    if (invocation.procedure === "spawnedCompanionLifecycle") return undefined;
     const presentationText = spellProcedurePresentationText(
       state,
       context,
@@ -560,6 +732,7 @@ function characterProcedurePresentationJoin(
     );
     if (source === undefined) return undefined;
     const invocation = source.invocation;
+    if (invocation.procedure === "spawnedCompanionLifecycle") return undefined;
     const actionName = alternateActionPresentationName(subject.action);
     return {
       label: invocation.spell.name,
@@ -648,11 +821,11 @@ function spellProcedurePresentationText(
         | "actionSpell"
         | "bonusActionSpell"
         | "bonusActionDashSpell"
-        | "findFamiliarTouchSpell";
+        | "spawnedCompanionTouchSpellProxy";
     }
   >,
 ): { readonly label: string; readonly summary: string } | undefined {
-  if (subject.tag === "findFamiliarTouchSpell") {
+  if (subject.tag === "spawnedCompanionTouchSpellProxy") {
     const label = `Familiar Delivery: ${invocation.spell.name}`;
     return {
       label,
@@ -667,7 +840,8 @@ function spellProcedurePresentationText(
     };
   }
   if (
-    invocation.procedure === "spiritualWeaponRepeatAttack" ||
+    (invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+      invocation.operation === "repositionAndAttack") ||
     invocation.procedure === "spellCreatedHeldObjectAttack"
   ) {
     const label = `${invocation.spell.name} attack`;
@@ -680,10 +854,10 @@ function spellProcedurePresentationText(
       subject.actorId,
       invocation.componentWeapon.attack,
     );
-    if (Either.isLeft(weaponName)) return undefined;
+    if (Result.isFailure(weaponName)) return undefined;
     return {
-      label: `${invocation.spell.name} (${weaponName.right})`,
-      summary: `Cast ${invocation.spell.name} as a cantrip using ${weaponName.right}.`,
+      label: `${invocation.spell.name} (${weaponName.success})`,
+      summary: `Cast ${invocation.spell.name} as a cantrip using ${weaponName.success}.`,
     };
   }
   if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {
@@ -884,10 +1058,9 @@ type DynamicSpellPresentationExecution =
       BattleSpellProcedureExecution,
       { readonly procedure: "heldLightHurl" }
     >
-  | Extract<
-      BattleSpellProcedureExecution,
-      { readonly procedure: "dancingLightsReposition" }
-    >
+  | (RepositionMovableLightManifestationSpellProcedureExecution & {
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    })
   | Extract<
       BattleSpellProcedureExecution,
       {
@@ -896,10 +1069,9 @@ type DynamicSpellPresentationExecution =
           | "spellCreatedHeldObjectReEvoke";
       }
     >
-  | Extract<
-      BattleSpellProcedureExecution,
-      { readonly procedure: "spiritualWeaponRepeatAttack" }
-    >
+  | (RepeatSpatialMeleeSpellAttackProxyLiveSpellProcedureExecution & {
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    })
   | Extract<
       BattleSpellProcedureExecution,
       { readonly procedure: "objectContactDamageRepeat" }
@@ -914,10 +1086,12 @@ function isDynamicSpellPresentationExecution(
 ): execution is DynamicSpellPresentationExecution {
   return (
     execution.procedure === "heldLightHurl" ||
-    execution.procedure === "dancingLightsReposition" ||
+    (execution.procedure === "movableLightManifestation" &&
+      execution.operation === "reposition") ||
     execution.procedure === "spellCreatedHeldObjectAttack" ||
     execution.procedure === "spellCreatedHeldObjectReEvoke" ||
-    execution.procedure === "spiritualWeaponRepeatAttack" ||
+    (execution.procedure === "spatialMeleeSpellAttackProxy" &&
+      execution.operation === "repositionAndAttack") ||
     execution.procedure === "objectContactDamageRepeat" ||
     (execution.procedure === "markedDamageRider" &&
       execution.action === "transfer")
@@ -950,14 +1124,14 @@ function dynamicSpellPresentationSourceSpell(
           value.sourceHeldLightProcedureRef,
           (source) => source.procedure === "heldLight",
         ),
-      dancingLightsReposition: (value) =>
+      movableLightManifestation: (value) =>
         spellPresentationSourceSpell(
           actor,
           context,
-          value.sourceDancingLightsProcedureRef,
+          value.sourceManifestationProcedureRef,
           (source) =>
-            source.procedure === "dancingLightsCombinedCast" ||
-            source.procedure === "dancingLightsSeparateCast",
+            source.procedure === "movableLightManifestation" &&
+            source.operation === "create",
         ),
       spellCreatedHeldObjectAttack: (value) =>
         spellPresentationSourceSpell(
@@ -973,12 +1147,14 @@ function dynamicSpellPresentationSourceSpell(
           value.sourceHeldObjectProcedureRef,
           (source) => source.procedure === "spellCreatedHeldObject",
         ),
-      spiritualWeaponRepeatAttack: (value) =>
+      spatialMeleeSpellAttackProxy: (value) =>
         spellPresentationSourceSpell(
           actor,
           context,
           value.activeEffect.sourceProcedureRef,
-          (source) => source.procedure === "spiritualWeaponAttackProxy",
+          (source) =>
+            source.procedure === "spatialMeleeSpellAttackProxy" &&
+            source.operation === "createAndAttack",
         ),
       objectContactDamageRepeat: (value) =>
         spellPresentationSourceSpell(
@@ -1006,15 +1182,23 @@ function spellPresentationSourceSpell(
   sourceProcedureRef: BattleProcedureExecutionRef,
   sourceMatches: (source: AuthoredSelectedSpellInvocation) => boolean,
 ): AuthoredSelectedSpellInvocation["spell"] | undefined {
-  const source = spellPresentationSourceForCharacter(
-    actor,
-    context,
+  const execution = characterRetainedSpellProcedureExecution(
+    actor.origin.execution,
     sourceProcedureRef,
   );
-  if (source === undefined || !sourceMatches(source.invocation)) {
+  if (execution === undefined) return undefined;
+  const matches = context.characters
+    .get(actor.combatantId)
+    ?.spellPresentationSources.filter(
+      (source) =>
+        source.procedureRef === sourceProcedureRef &&
+        spellInvocationMatchesExecution(source.invocation, execution) &&
+        sourceMatches(source.invocation),
+    );
+  if (matches?.length !== 1) {
     return undefined;
   }
-  return source.invocation.spell;
+  return matches[0]?.invocation.spell;
 }
 
 function unitForProcedureRef(

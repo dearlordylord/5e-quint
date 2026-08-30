@@ -71,7 +71,7 @@ export function traceEffectAtom(
     case "suppress_condition_self_end":
     case "restrict_action_usage":
     case "target_effect_escape_action":
-    case "command_target_next_turn":
+    case "compelled_target_next_turn":
     case "forced_reaction_movement":
     case "jump_movement_replacement":
     case "feather_fall_mitigation":
@@ -175,7 +175,7 @@ export function traceEffectAtom(
     case "substitute_ability_for_rolls":
     case "offer_ability_substitution_for_ability_checks":
     case "offer_ability_substitution_for_jump_distance":
-    case "grant_magic_weapon_enhancement":
+    case "grant_weapon_attack_enhancement":
     case "grant_condition_immunity":
     case "suppress_condition_benefit":
     case "grant_damage_immunity":
@@ -195,8 +195,10 @@ export function traceEffectAtom(
     case "remote_perception":
     case "set_speed":
     case "set_speed_ratio":
-    case "emit_light":
-    case "emit_dim_light":
+    case "emit_bright_and_dim_illumination":
+    case "emit_bright_illumination":
+    case "emit_dim_illumination":
+    case "emit_dim_illumination_until_end_of_caster_next_turn":
     case "block_reanimation":
     case "ignite_objects":
     case "create_object":

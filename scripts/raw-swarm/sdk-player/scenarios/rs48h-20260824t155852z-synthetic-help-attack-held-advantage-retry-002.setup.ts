@@ -57,7 +57,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(goblin)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblin.left),
+      obstruction: sdk.battleStateInitIssueMessage(goblin.failure),
       observation: { stage: "goblin-warrior-initialization" },
     };
   }
@@ -72,7 +72,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeleton)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeleton.left),
+      obstruction: sdk.battleStateInitIssueMessage(skeleton.failure),
       observation: { stage: "skeleton-initialization" },
     };
   }
@@ -87,19 +87,19 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(wolf)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(wolf.left),
+      obstruction: sdk.battleStateInitIssueMessage(wolf.failure),
       observation: { stage: "wolf-initialization" },
     };
   }
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId(scenarioId),
-    combatants: [goblin.right, skeleton.right, wolf.right],
+    combatants: [goblin.success, skeleton.success, wolf.success],
   });
   if (sdk.isLeft(battle)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battle.left),
+      obstruction: sdk.battleStateInitIssueMessage(battle.failure),
       observation: { stage: "battle-start" },
     };
   }
@@ -113,7 +113,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   ).flat();
 
   const session = sdk.createScenarioSession({
-    battle: battle.right,
+    battle: battle.success,
     spatial: {
       kind: "geometryDerived",
       arena: { cells, boundaries: [] },
@@ -140,14 +140,14 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(session)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(session.left),
+      obstruction: sdk.scenarioSessionIssueMessage(session.failure),
       observation: { stage: "scenario-session-composition" },
     };
   }
 
   return {
     kind: "ready",
-    session: session.right,
+    session: session.success,
     observation: {
       setup: "geometry-derived-help-attack",
       delegatedChoices: [

@@ -26,7 +26,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleResolutionResult,
@@ -67,25 +67,25 @@ type MagicalDarknessPointOriginProfileShape = {
   readonly dispelledSpellCreatedLightMaxSpellLevel: BattleSpellEffectLevel;
 };
 
-const DARKNESS_LEVEL = 2;
-const DARKNESS_RANGE_FEET = 60;
-const DARKNESS_DURATION_MINUTES = 10;
-const DARKNESS_OPERATION_COUNT = 2;
-const DARKNESS_RADIUS_FEET = 15;
-const DARKNESS_DISPELLED_LIGHT_MAX_SPELL_LEVEL = 2;
+const MAGICAL_OBSCUREMENT_AREA_STARTING_LEVEL = 2;
+const MAGICAL_OBSCUREMENT_AREA_RANGE_FEET = 60;
+const MAGICAL_OBSCUREMENT_AREA_DURATION_MINUTES = 10;
+const MAGICAL_OBSCUREMENT_AREA_OPERATION_COUNT = 2;
+const MAGICAL_OBSCUREMENT_AREA_RADIUS_FEET = 15;
+const MAGICAL_OBSCUREMENT_AREA_DISPELLED_ILLUMINATION_MAX_SPELL_LEVEL = 2;
 
 function admitMagicalDarknessPointOrigin(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly MagicalDarknessPointOriginSpellInvocation[] {
-  const darkness = magicalDarknessPointOriginSpell(spell);
-  if (darkness === null) {
+  const magicalObscurement = magicalDarknessPointOriginSpell(spell);
+  if (magicalObscurement === null) {
     return [];
   }
 
   return ctx.spellCastOptions.flatMap(
     (slot): readonly MagicalDarknessPointOriginSpellInvocation[] => {
-      if (Number(slot.spellLevel) < DARKNESS_LEVEL) {
+      if (Number(slot.spellLevel) < MAGICAL_OBSCUREMENT_AREA_STARTING_LEVEL) {
         return [];
       }
       return [
@@ -96,12 +96,12 @@ function admitMagicalDarknessPointOrigin(
           spell,
           targeting: {
             kind: "pointOriginSphere",
-            radiusFeet: movementFeet(darkness.radiusFeet),
+            radiusFeet: movementFeet(magicalObscurement.radiusFeet),
           },
-          durationTicks: darkness.durationTicks,
-          rangeFeet: movementFeet(darkness.rangeFeet),
+          durationTicks: magicalObscurement.durationTicks,
+          rangeFeet: movementFeet(magicalObscurement.rangeFeet),
           dispelledSpellCreatedLightMaxSpellLevel:
-            darkness.dispelledSpellCreatedLightMaxSpellLevel,
+            magicalObscurement.dispelledSpellCreatedLightMaxSpellLevel,
         },
       ];
     },
@@ -115,7 +115,7 @@ function magicalDarknessPointOriginSpell(
     return null;
   }
   const attachment = spell.mechanics.attachment;
-  const darknessOperation = spell.mechanics.operations[0];
+  const obscuringOperation = spell.mechanics.operations[0];
   const overlapOperation = spell.mechanics.operations[1];
   const maxSpellLevel =
     overlapOperation?.effect.kind ===
@@ -141,28 +141,31 @@ function magicalDarknessPointOriginSpell(
   const radius = area?.shape.kind === "sphere" ? area.shape.radiusFeet : null;
 
   if (
-    spell.mechanics.level !== DARKNESS_LEVEL ||
+    spell.mechanics.level !== MAGICAL_OBSCUREMENT_AREA_STARTING_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
-    rangeFeet !== DARKNESS_RANGE_FEET ||
+    rangeFeet !== MAGICAL_OBSCUREMENT_AREA_RANGE_FEET ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== DARKNESS_DURATION_MINUTES ||
+    spell.mechanics.duration.upTo.amount !==
+      MAGICAL_OBSCUREMENT_AREA_DURATION_MINUTES ||
     earlyEnd.length !== 0 ||
-    spell.mechanics.operations.length !== DARKNESS_OPERATION_COUNT ||
-    darknessOperation?.trigger.kind !== "passive" ||
-    darknessOperation.effect.kind !== "area_is_magical_darkness" ||
+    spell.mechanics.operations.length !==
+      MAGICAL_OBSCUREMENT_AREA_OPERATION_COUNT ||
+    obscuringOperation?.trigger.kind !== "passive" ||
+    obscuringOperation.effect.kind !== "area_is_magical_darkness" ||
     overlapOperation?.trigger.kind !== "passive" ||
-    maxSpellLevel !== DARKNESS_DISPELLED_LIGHT_MAX_SPELL_LEVEL ||
+    maxSpellLevel !==
+      MAGICAL_OBSCUREMENT_AREA_DISPELLED_ILLUMINATION_MAX_SPELL_LEVEL ||
     area?.origin.kind !== "point_within_range" ||
-    radius !== DARKNESS_RADIUS_FEET ||
+    radius !== MAGICAL_OBSCUREMENT_AREA_RADIUS_FEET ||
     durationTicks === null ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
 
   return {
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     rangeFeet,
     radiusFeet: radius,
     dispelledSpellCreatedLightMaxSpellLevel: maxSpellLevel,

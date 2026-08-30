@@ -328,7 +328,7 @@ let plain =
 
 let lightEffect : Effect =
       none
-        //  { kind = "emit_light"
+        //  { kind = "emit_bright_and_dim_illumination"
             , onFail = None Simple
             , brightRadiusFeet = Some 100
             , dimAdditionalFeet = Some 100

@@ -10,7 +10,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -585,9 +585,9 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isRight(result)) return result.right;
-  const left = result.left;
+function requireRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isSuccess(result)) return result.success;
+  const left = result.failure;
   if (
     left !== null &&
     typeof left === "object" &&

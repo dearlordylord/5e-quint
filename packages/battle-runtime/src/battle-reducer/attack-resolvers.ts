@@ -46,7 +46,7 @@ export type BattleAttackRouteResolvers = BattleAttackResolvers & {
     input: BattleResolutionInputForSubject<
       Extract<
         import("../battle-subjects.ts").BattleSubject,
-        { readonly tag: "pactOfTheChainFamiliarAttack" }
+        { readonly tag: "companionAttack" }
       >
     > &
       BattleInterruptRouteOptions,

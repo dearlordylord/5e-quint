@@ -26,7 +26,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   type CombatantId,
 } from "../../identity.ts";
@@ -91,7 +91,7 @@ const HeldLightHurlInvocationSchema = spellProcedureExecutionSchema(
     access: CantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("heldLightHurl"),
-    sourceEffectRef: BattleActiveEffectExecutionRef,
+    sourceEffectRef: BattleEffectExecutionRef,
     sourceHeldLightProcedureRef: BattleProcedureExecutionRef,
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     targeting: SingleCreatureOrObjectSpellTargetingSchema,

@@ -13,7 +13,7 @@ import {
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -39,9 +39,9 @@ import {
 } from "./scenario-catalogue.ts";
 import { repoRoot } from "./transcript.ts";
 
-const decodeRight = <A>(decoded: Either.Either<A, string>): A => {
-  if (Either.isLeft(decoded)) throw new Error(decoded.left);
-  return decoded.right;
+const decodeRight = <A>(decoded: Result.Result<A, string>): A => {
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure);
+  return decoded.success;
 };
 
 const ids = {
@@ -110,7 +110,7 @@ describe("Raw Swarm scenario catalogue", () => {
         scenarioDirectory: resolve(repositoryRoot, "scenarios"),
         evidenceDirectory: resolve(repositoryRoot, "out"),
       });
-      expect(Either.isLeft(result)).toBe(true);
+      expect(Result.isFailure(result)).toBe(true);
     } finally {
       rmSync(repositoryRoot, { recursive: true, force: true });
       rmSync(outside, { recursive: true, force: true });
@@ -133,7 +133,7 @@ describe("Raw Swarm scenario catalogue", () => {
         scenarioDirectory: scenarios,
         evidenceDirectory: resolve(repositoryRoot, "out"),
       });
-      expect(Either.isLeft(result)).toBe(true);
+      expect(Result.isFailure(result)).toBe(true);
     } finally {
       rmSync(repositoryRoot, { recursive: true, force: true });
       rmSync(outside, { recursive: true, force: true });
@@ -158,8 +158,8 @@ describe("Raw Swarm scenario catalogue", () => {
         evidenceDirectory,
       });
       expect(result).toMatchObject({
-        _tag: "Left",
-        left: [
+        _tag: "Failure",
+        failure: [
           expect.objectContaining({
             tag: "unreadableEvidenceDirectory",
             path: evidenceDirectory,
@@ -296,17 +296,17 @@ describe("Raw Swarm scenario catalogue", () => {
         scenarioDirectory: scenarios,
         evidenceDirectory: resolve(repositoryRoot, "out"),
       });
-      expect(Either.isRight(result)).toBe(true);
-      if (Either.isRight(result)) {
+      expect(Result.isSuccess(result)).toBe(true);
+      if (Result.isSuccess(result)) {
         expect(
-          result.right.scenarios.map(({ scenarioId }) => scenarioId),
+          result.success.scenarios.map(({ scenarioId }) => scenarioId),
         ).toEqual(["first-synthetic", "second-synthetic"]);
         expect(
           findAuthorableScenarioInCatalogue({
-            catalogue: result.right,
+            catalogue: result.success,
             scenarioId: decodeRight(decodeScenarioId("second-synthetic")),
           }),
-        ).toMatchObject({ _tag: "Right" });
+        ).toMatchObject({ _tag: "Success" });
       }
 
       writeScenario(
@@ -321,8 +321,8 @@ describe("Raw Swarm scenario catalogue", () => {
           evidenceDirectory: resolve(repositoryRoot, "out"),
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: expect.arrayContaining([
+        _tag: "Failure",
+        failure: expect.arrayContaining([
           expect.objectContaining({
             message: expect.stringContaining("predecessor absent"),
           }),
@@ -341,8 +341,8 @@ describe("Raw Swarm scenario catalogue", () => {
           evidenceDirectory: resolve(repositoryRoot, "out"),
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: expect.arrayContaining([
+        _tag: "Failure",
+        failure: expect.arrayContaining([
           expect.objectContaining({
             message: expect.stringContaining("cannot include the Scenario"),
           }),
@@ -357,8 +357,8 @@ describe("Raw Swarm scenario catalogue", () => {
           evidenceDirectory: resolve(repositoryRoot, "out"),
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: expect.arrayContaining([
+        _tag: "Failure",
+        failure: expect.arrayContaining([
           expect.objectContaining({
             message: expect.stringContaining("comparison is incomplete"),
           }),
@@ -411,9 +411,9 @@ describe("Raw Swarm scenario catalogue", () => {
       ],
       rejectedCandidates: [],
     });
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left).toContainEqual(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure).toContainEqual(
         expect.objectContaining({
           tag: "benchmarkExecutionKindMismatch",
           executionId: ids.executionId,
@@ -481,7 +481,7 @@ describe("Raw Swarm scenario catalogue", () => {
     });
 
     expect(projected).toEqual(
-      Either.right({
+      Result.succeed({
         scenarios: [
           {
             ...record,
@@ -518,7 +518,7 @@ describe("Raw Swarm scenario catalogue", () => {
       rejectedCandidates: [],
     });
     expect(renamedExecution).toMatchObject({
-      right: {
+      success: {
         scenarios: [
           {
             scenarioId: "open-grid-wolf-skeleton-pursuit",
@@ -557,7 +557,7 @@ describe("Raw Swarm scenario catalogue", () => {
         rejectedCandidates: [],
       }),
     ).toMatchObject({
-      left: expect.arrayContaining([
+      failure: expect.arrayContaining([
         expect.objectContaining({ tag: "duplicateScenarioId" }),
       ]),
     });
@@ -577,7 +577,7 @@ describe("Raw Swarm scenario catalogue", () => {
         rejectedCandidates: [],
       }),
     ).toMatchObject({
-      left: expect.arrayContaining([
+      failure: expect.arrayContaining([
         expect.objectContaining({ tag: "duplicateScenarioId" }),
         expect.objectContaining({ tag: "danglingExecutionScenario" }),
       ]),
@@ -598,7 +598,7 @@ describe("Raw Swarm scenario catalogue", () => {
         rejectedCandidates: [],
       }),
     ).toMatchObject({
-      left: expect.arrayContaining([
+      failure: expect.arrayContaining([
         expect.objectContaining({ tag: "danglingExecutionScenario" }),
       ]),
     });
@@ -621,7 +621,7 @@ describe("Raw Swarm scenario catalogue", () => {
         rejectedCandidates: [],
       }),
     ).toMatchObject({
-      left: expect.arrayContaining([
+      failure: expect.arrayContaining([
         expect.objectContaining({ tag: "danglingBenchmarkExecution" }),
       ]),
     });
@@ -641,7 +641,7 @@ describe("Raw Swarm scenario catalogue", () => {
         rejectedCandidates: [rejection, rejection],
       }),
     ).toMatchObject({
-      left: expect.arrayContaining([
+      failure: expect.arrayContaining([
         expect.objectContaining({ tag: "duplicateCandidateId" }),
       ]),
     });
@@ -663,7 +663,7 @@ describe("Raw Swarm scenario catalogue", () => {
         ],
       }),
     ).toMatchObject({
-      left: expect.arrayContaining([
+      failure: expect.arrayContaining([
         expect.objectContaining({ tag: "duplicateEvidenceSetId" }),
       ]),
     });
@@ -704,7 +704,7 @@ describe("Raw Swarm scenario catalogue", () => {
         rejectedCandidates: [],
       }),
     ).toMatchObject({
-      left: expect.arrayContaining([
+      failure: expect.arrayContaining([
         expect.objectContaining({ tag: "benchmarkScenarioMismatch" }),
       ]),
     });
@@ -734,7 +734,7 @@ describe("Raw Swarm scenario catalogue", () => {
         rejectedCandidates: [],
       }),
     ).toMatchObject({
-      left: expect.arrayContaining([
+      failure: expect.arrayContaining([
         expect.objectContaining({ tag: "duplicateBenchmarkExecution" }),
       ]),
     });
@@ -780,7 +780,7 @@ describe("Raw Swarm scenario catalogue", () => {
             rejectedCandidates: [],
           });
           expect(result).toMatchObject({
-            right: {
+            success: {
               scenarios: [{ scenarioId: "alpha" }, { scenarioId: "bravo" }],
             },
           });
@@ -865,7 +865,7 @@ describe("Raw Swarm scenario catalogue", () => {
               ],
             }),
           ).toMatchObject({
-            right: {
+            success: {
               scenarios: [
                 {
                   scenarioId: ids.scenarioId,
@@ -896,7 +896,7 @@ describe("Raw Swarm scenario catalogue", () => {
               ],
             }),
           ).toMatchObject({
-            left: expect.arrayContaining([
+            failure: expect.arrayContaining([
               expect.objectContaining({ tag: "duplicateBenchmarkExecution" }),
             ]),
           });
@@ -1132,9 +1132,9 @@ describe("Raw Swarm scenario catalogue", () => {
         scenarioDirectory: scenarios,
         evidenceDirectory: resolve(repositoryRoot, "out"),
       });
-      expect(Either.isRight(initialCatalogue)).toBe(true);
-      if (Either.isRight(initialCatalogue)) {
-        const firstScenario = initialCatalogue.right.scenarios.find(
+      expect(Result.isSuccess(initialCatalogue)).toBe(true);
+      if (Result.isSuccess(initialCatalogue)) {
+        const firstScenario = initialCatalogue.success.scenarios.find(
           ({ scenarioId }) => scenarioId === "open-grid-wolf-skeleton-pursuit",
         );
         expect(firstScenario).toMatchObject({
@@ -1162,7 +1162,7 @@ describe("Raw Swarm scenario catalogue", () => {
             "profile-benchmark",
           ]),
         });
-        expect(initialCatalogue.right.rejectedCandidates).toEqual([
+        expect(initialCatalogue.success.rejectedCandidates).toEqual([
           expect.objectContaining({ candidateId: "rejected-candidate" }),
         ]);
       }
@@ -1189,7 +1189,7 @@ describe("Raw Swarm scenario catalogue", () => {
           evidenceDirectory: resolve(repositoryRoot, "out"),
         }),
       ).toMatchObject({
-        left: [
+        failure: [
           expect.objectContaining({
             tag: "duplicateBenchmarkExecution",
             benchmarkId: "context-profile-comparison",
@@ -1245,7 +1245,7 @@ describe("Raw Swarm scenario catalogue", () => {
           scenarioDirectory: scenarios,
           evidenceDirectory: resolve(repositoryRoot, "out"),
         }),
-      ).toMatchObject({ right: expect.anything() });
+      ).toMatchObject({ success: expect.anything() });
       writeFileSync(rejectionPath, `${JSON.stringify(rejectionRecord)}\n`);
       const incompleteReview = write(
         "scenarios/open-grid-wolf-skeleton-pursuit.md.scenario-review.json",
@@ -1293,7 +1293,7 @@ describe("Raw Swarm scenario catalogue", () => {
           evidenceDirectory: resolve(repositoryRoot, "out"),
         }),
       ).toMatchObject({
-        left: expect.arrayContaining([
+        failure: expect.arrayContaining([
           expect.objectContaining({
             tag: "invalidCatalogueRecord",
             message: expect.stringContaining(
@@ -1317,7 +1317,7 @@ describe("Raw Swarm scenario catalogue", () => {
           evidenceDirectory: resolve(repositoryRoot, "out"),
         }),
       ).toMatchObject({
-        left: expect.arrayContaining([
+        failure: expect.arrayContaining([
           expect.objectContaining({ tag: "unreadableCatalogueAuthority" }),
         ]),
       });
@@ -1340,7 +1340,7 @@ describe("Raw Swarm scenario catalogue", () => {
           evidenceDirectory: resolve(repositoryRoot, "out"),
         }),
       ).toMatchObject({
-        left: expect.arrayContaining([
+        failure: expect.arrayContaining([
           expect.objectContaining({ tag: "catalogueScenarioIdentityMismatch" }),
         ]),
       });
@@ -1375,10 +1375,10 @@ describe("Raw Swarm scenario catalogue", () => {
         scenarioDirectory: scenarios,
         evidenceDirectory: resolve(repositoryRoot, "out"),
       });
-      expect(Either.isRight(restoredCatalogue)).toBe(true);
-      if (Either.isRight(restoredCatalogue)) {
+      expect(Result.isSuccess(restoredCatalogue)).toBe(true);
+      if (Result.isSuccess(restoredCatalogue)) {
         expect(
-          restoredCatalogue.right.scenarios.find(
+          restoredCatalogue.success.scenarios.find(
             ({ scenarioId }) =>
               scenarioId === "open-grid-wolf-skeleton-pursuit",
           )?.spatialRequirement,
@@ -1393,7 +1393,7 @@ describe("Raw Swarm scenario catalogue", () => {
           evidenceDirectory: resolve(repositoryRoot, "out"),
         }),
       ).toMatchObject({
-        left: expect.arrayContaining([
+        failure: expect.arrayContaining([
           expect.objectContaining({ tag: "invalidRelationshipRecord" }),
         ]),
       });
@@ -1442,13 +1442,13 @@ describe("Raw Swarm scenario catalogue", () => {
       scenarioDirectory,
       evidenceDirectory: resolve(repoRoot, "scripts/raw-swarm/out"),
     });
-    expect(Either.isRight(catalogue)).toBe(true);
-    if (Either.isLeft(catalogue)) return;
+    expect(Result.isSuccess(catalogue)).toBe(true);
+    if (Result.isFailure(catalogue)) return;
     const liveScenarioIds = new Set(
-      catalogue.right.scenarios.map(({ scenarioId }) => scenarioId),
+      catalogue.success.scenarios.map(({ scenarioId }) => scenarioId),
     );
 
-    for (const record of catalogue.right.scenarios) {
+    for (const record of catalogue.success.scenarios) {
       if (!isCurrentAdmittedScenarioRecord(record)) continue;
       expect(
         record.predecessorScenarioIds.every((scenarioId: string) =>
@@ -1468,23 +1468,25 @@ describe("Raw Swarm scenario catalogue", () => {
       scenarioDirectory,
       evidenceDirectory: resolve(repoRoot, "scripts/raw-swarm/out"),
     });
-    expect(Either.isRight(catalogue)).toBe(true);
-    if (Either.isLeft(catalogue)) return;
+    expect(Result.isSuccess(catalogue)).toBe(true);
+    if (Result.isFailure(catalogue)) return;
 
-    expect(catalogue.right.scenarios).toHaveLength(14);
-    expect(catalogue.right.containedScenarios).toHaveLength(
+    expect(catalogue.success.scenarios).toHaveLength(14);
+    expect(catalogue.success.containedScenarios).toHaveLength(
       CONTAINED_SCENARIO_IDS.length,
     );
     expect(
-      catalogue.right.containedScenarios.map(({ scenarioId }) => scenarioId),
+      catalogue.success.containedScenarios.map(({ scenarioId }) => scenarioId),
     ).toEqual([...CONTAINED_SCENARIO_IDS].sort());
 
     const liveScenarioIds = new Set(
-      catalogue.right.scenarios.map(({ scenarioId }) => scenarioId),
+      catalogue.success.scenarios.map(({ scenarioId }) => scenarioId),
     );
     const allScenarioIds = new Set([
       ...liveScenarioIds,
-      ...catalogue.right.containedScenarios.map(({ scenarioId }) => scenarioId),
+      ...catalogue.success.containedScenarios.map(
+        ({ scenarioId }) => scenarioId,
+      ),
     ]);
     expect(
       liveScenarioIds.has(
@@ -1492,14 +1494,14 @@ describe("Raw Swarm scenario catalogue", () => {
       ),
     ).toBe(false);
     expect(
-      projectScenarioCatalogueForAuthoring(catalogue.right).map(
+      projectScenarioCatalogueForAuthoring(catalogue.success).map(
         ({ scenarioId }) => scenarioId,
       ),
     ).not.toContain(
       "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
     );
 
-    for (const record of catalogue.right.scenarios) {
+    for (const record of catalogue.success.scenarios) {
       if (!isCurrentAdmittedScenarioRecord(record)) continue;
       expect(
         record.predecessorScenarioIds.every((scenarioId) =>
@@ -1507,7 +1509,7 @@ describe("Raw Swarm scenario catalogue", () => {
         ),
       ).toBe(true);
     }
-    for (const record of catalogue.right.containedScenarios) {
+    for (const record of catalogue.success.containedScenarios) {
       if (!isCurrentAdmittedScenarioRecord(record)) continue;
       expect(
         record.predecessorScenarioIds.every((scenarioId) =>
@@ -1518,7 +1520,7 @@ describe("Raw Swarm scenario catalogue", () => {
 
     const totalCoverId =
       "rs48h-20260824t155852z-synthetic-total-cover-transition-001";
-    const totalCover = catalogue.right.containedScenarios.find(
+    const totalCover = catalogue.success.containedScenarios.find(
       ({ scenarioId }) => scenarioId === totalCoverId,
     );
     expect(totalCover?.authoredSource).toMatchObject({
@@ -1673,22 +1675,22 @@ describe("Raw Swarm scenario catalogue", () => {
         scenarioDirectory: scenarios,
         evidenceDirectory,
       });
-      expect(Either.isRight(result)).toBe(true);
-      if (Either.isLeft(result)) return;
+      expect(Result.isSuccess(result)).toBe(true);
+      if (Result.isFailure(result)) return;
       expect(
-        result.right.scenarios.map(({ scenarioId }) => scenarioId),
+        result.success.scenarios.map(({ scenarioId }) => scenarioId),
       ).toEqual([liveScenarioId]);
-      expect(result.right.containedScenarios).toMatchObject([
+      expect(result.success.containedScenarios).toMatchObject([
         {
           scenarioId: containedScenarioId,
           executionIds: ["execution-contained-history"],
         },
       ]);
-      expect(result.right.rejectedCandidates).toMatchObject([
+      expect(result.success.rejectedCandidates).toMatchObject([
         { candidateId: "contained-rejection-candidate" },
       ]);
       expect(
-        projectScenarioCatalogueForAuthoring(result.right).map(
+        projectScenarioCatalogueForAuthoring(result.success).map(
           ({ scenarioId }) => scenarioId,
         ),
       ).toEqual([liveScenarioId]);
@@ -1706,7 +1708,7 @@ describe("Raw Swarm scenario catalogue", () => {
       decodeBenchmarkId,
       decodeEvidenceSetId,
     ]) {
-      expect(Either.isLeft(decode("../outside"))).toBe(true);
+      expect(Result.isFailure(decode("../outside"))).toBe(true);
     }
     for (const generatedBattleId of [
       "generated-battle",
@@ -1714,19 +1716,19 @@ describe("Raw Swarm scenario catalogue", () => {
       "generated-battle-123-suffix",
       "generated-battleground",
     ]) {
-      expect(Either.isLeft(decodeScenarioId(generatedBattleId))).toBe(true);
+      expect(Result.isFailure(decodeScenarioId(generatedBattleId))).toBe(true);
       expect(
-        Either.isRight(decodeHistoricalScenarioId(generatedBattleId)),
+        Result.isSuccess(decodeHistoricalScenarioId(generatedBattleId)),
       ).toBe(true);
     }
     expect(
-      Either.isRight(decodeScenarioId("prefix-generated-battle-123")),
+      Result.isSuccess(decodeScenarioId("prefix-generated-battle-123")),
     ).toBe(true);
     expect(
-      Either.isRight(decodePlannedScenarioId("generated-battle-123")),
+      Result.isSuccess(decodePlannedScenarioId("generated-battle-123")),
     ).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decodeEvidenceSetId("generated-battle-009-equivalent-023"),
       ),
     ).toBe(true);
@@ -1740,7 +1742,7 @@ describe("Raw Swarm scenario catalogue", () => {
           decodeBenchmarkId,
           decodeEvidenceSetId,
         ]) {
-          expect(Either.isLeft(decode(`../${suffix}`))).toBe(true);
+          expect(Result.isFailure(decode(`../${suffix}`))).toBe(true);
         }
       }),
     );
@@ -1758,7 +1760,7 @@ describe("Raw Swarm scenario catalogue", () => {
             decodeEvidenceSetDirectory(
               evidenceSetDirectory("/tmp/raw-swarm-evidence", evidenceSetId),
             ),
-          ).toEqual(Either.right(evidenceSetId));
+          ).toEqual(Result.succeed(evidenceSetId));
         },
       ),
     );

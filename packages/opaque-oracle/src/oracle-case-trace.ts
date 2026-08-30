@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   OracleCaseSchema,
   OracleEvaluationBatchSchema,
@@ -96,37 +96,37 @@ export type OracleFreshSheetInput = FreshSheetInput;
 
 export function decodeOracleCase(
   input: unknown,
-): Either.Either<OracleCase, OracleDecodeIssues> {
+): Result.Result<OracleCase, OracleDecodeIssues> {
   const document = decodeOracleCaseDocument(input);
-  if (Either.isLeft(document)) return Either.left(document.left);
-  return admitOracleCaseDocument(document.right);
+  if (Result.isFailure(document)) return Result.fail(document.failure);
+  return admitOracleCaseDocument(document.success);
 }
 
 export function decodeOracleEvaluationBatch(
   input: unknown,
-): Either.Either<OracleEvaluationBatch, OracleDecodeIssues> {
+): Result.Result<OracleEvaluationBatch, OracleDecodeIssues> {
   const document = decodeOracleEvaluationBatchDocument(input);
-  if (Either.isLeft(document)) return Either.left(document.left);
-  return admitOracleEvaluationBatchDocument(document.right);
+  if (Result.isFailure(document)) return Result.fail(document.failure);
+  return admitOracleEvaluationBatchDocument(document.success);
 }
 
 export function decodeOracleTrace(
   input: unknown,
-): Either.Either<OracleTrace, OracleDecodeIssues> {
+): Result.Result<OracleTrace, OracleDecodeIssues> {
   const document = decodeOracleTraceDocument(input);
-  if (Either.isLeft(document)) return Either.left(document.left);
-  return admitOracleTraceDocument(document.right);
+  if (Result.isFailure(document)) return Result.fail(document.failure);
+  return admitOracleTraceDocument(document.success);
 }
 
 export function admitOracleCaseDocument(
   document: OracleCaseDocument,
-): Either.Either<OracleCase, OracleDecodeIssues> {
+): Result.Result<OracleCase, OracleDecodeIssues> {
   return decodeWithSchema(OracleCaseSchema, canonicalizeCaseInput(document));
 }
 
 export function admitOracleEvaluationBatchDocument(
   document: OracleEvaluationBatchDocument,
-): Either.Either<OracleEvaluationBatch, OracleDecodeIssues> {
+): Result.Result<OracleEvaluationBatch, OracleDecodeIssues> {
   return decodeWithSchema(
     OracleEvaluationBatchSchema,
     canonicalizeBatchInput(document),
@@ -135,35 +135,35 @@ export function admitOracleEvaluationBatchDocument(
 
 export function admitOracleTraceDocument(
   document: OracleTraceDocument,
-): Either.Either<OracleTrace, OracleDecodeIssues> {
+): Result.Result<OracleTrace, OracleDecodeIssues> {
   return decodeWithSchema(OracleTraceSchema, canonicalizeTraceInput(document));
 }
 
 export function decodeOracleCaseJson(
   input: string,
-): Either.Either<OracleCase, OracleDecodeIssues> {
+): Result.Result<OracleCase, OracleDecodeIssues> {
   const parsed = parseJsonWithDuplicateDetection(input);
-  return Either.isLeft(parsed)
-    ? Either.left(parsed.left)
-    : decodeOracleCase(parsed.right);
+  return Result.isFailure(parsed)
+    ? Result.fail(parsed.failure)
+    : decodeOracleCase(parsed.success);
 }
 
 export function decodeOracleEvaluationBatchJson(
   input: string,
-): Either.Either<OracleEvaluationBatch, OracleDecodeIssues> {
+): Result.Result<OracleEvaluationBatch, OracleDecodeIssues> {
   const parsed = parseJsonWithDuplicateDetection(input);
-  return Either.isLeft(parsed)
-    ? Either.left(parsed.left)
-    : decodeOracleEvaluationBatch(parsed.right);
+  return Result.isFailure(parsed)
+    ? Result.fail(parsed.failure)
+    : decodeOracleEvaluationBatch(parsed.success);
 }
 
 export function decodeOracleTraceJson(
   input: string,
-): Either.Either<OracleTrace, OracleDecodeIssues> {
+): Result.Result<OracleTrace, OracleDecodeIssues> {
   const parsed = parseJsonWithDuplicateDetection(input);
-  return Either.isLeft(parsed)
-    ? Either.left(parsed.left)
-    : decodeOracleTrace(parsed.right);
+  return Result.isFailure(parsed)
+    ? Result.fail(parsed.failure)
+    : decodeOracleTrace(parsed.success);
 }
 
 export type OracleTraceIssueCode = OracleDecodeIssueCode;

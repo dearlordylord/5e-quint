@@ -7,6 +7,7 @@ import { describe, expect, test } from "vitest";
 import {
   blurUnitId,
   spellCasterId,
+  spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackTargetFill,
@@ -34,7 +35,7 @@ import type {
 
 type BlurBypassSense = Extract<
   BattleTargetSpatialFact,
-  { readonly kind: "attackAttackerPerceivesBlurredTargetWithSense" }
+  { readonly kind: "attackerPerceivesObscuredTargetWithSense" }
 >["sense"];
 
 describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
@@ -50,7 +51,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
       },
       activeEffects: [
         expect.objectContaining({
-          kind: "blurred",
+          kind: "perceptionGatedAttackRollDefense",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: spellCasterId,
           expiresAt: {
@@ -119,7 +120,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
       requireCombatant(concentrationBroken, spellCasterId).activeEffects,
     ).toEqual(
       expect.not.arrayContaining([
-        expect.objectContaining({ kind: "blurred" }),
+        expect.objectContaining({ kind: "perceptionGatedAttackRollDefense" }),
       ]),
     );
 
@@ -136,33 +137,60 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
 
   test("blur recast replaces only its own defense effect", () => {
     const attackerId = combatantId("unit-profile-blur-recast-attacker");
-    const base = blurBattle(attackerId);
-    const act = spellAct({ session: base, spellId: blurUnitId, slotLevel: 2 });
-    const caster = requireCombatant(base.state, spellCasterId);
-    const state = {
-      ...base.state,
-      combatants: new Map(base.state.combatants).set(spellCasterId, {
-        ...caster,
-        concentration: {
-          sourceProcedureRef: act.subject.procedureRef,
-          effectKind: "spellEffect",
+    const base = spellBattle({
+      preparedSpells: [spellRecord(blurUnitId)],
+      spellSlots: [{ spellLevel: 2, count: 2 }],
+      statBlockTargets: [
+        {
+          combatantId: attackerId,
+          statBlock: statBlockWithCreatureType("humanoid"),
+          initiative: 19,
         },
-        activeEffects: [
-          {
-            kind: "blurred" as const,
-            sourceProcedureRef: act.subject.procedureRef,
-            sourceCombatantId: spellCasterId,
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: spellCasterId,
-            },
-          },
-        ],
-      }),
-    };
+      ],
+    });
+    const firstCast = castBlur(base);
+    const firstEffect = requireCombatant(
+      firstCast.state,
+      spellCasterId,
+    ).activeEffects.find(
+      (effect) => effect.kind === "perceptionGatedAttackRollDefense",
+    );
+    if (firstEffect?.kind !== "perceptionGatedAttackRollDefense") {
+      throw new Error("Expected the first admitted Blur occurrence.");
+    }
+    const attackerTurn = endTurn({
+      state: firstCast.state,
+      actorId: spellCasterId,
+    });
+    if (attackerTurn.tag !== "resolved") {
+      throw new Error("Expected Blur caster turn to end.");
+    }
+    const casterTurn = endTurn({
+      state: attackerTurn.state,
+      actorId: attackerId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected Blur attacker turn to end.");
+    }
+    const nextCasterTurn = endTurn({
+      state: casterTurn.state,
+      actorId: spellTargetId,
+    });
+    if (nextCasterTurn.tag !== "resolved") {
+      throw new Error("Expected remaining Blur target turn to end.");
+    }
+    const recastSession = battleRuntimeSessionForTest({
+      ...base,
+      state: nextCasterTurn.state,
+    });
+    const act = spellAct({
+      session: recastSession,
+      spellId: blurUnitId,
+      slotLevel: 2,
+    });
 
     const cast = resolveBattleSubject({
-      state,
+      state: recastSession.state,
       subject: act.subject,
       fills: [],
     });
@@ -172,9 +200,10 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
     }
     const effects = requireCombatant(cast.state, spellCasterId).activeEffects;
     expect(effects).toHaveLength(1);
+    expect(effects[0]?.effectRef).not.toBe(firstEffect.effectRef);
     expect(effects).toContainEqual(
       expect.objectContaining({
-        kind: "blurred",
+        kind: "perceptionGatedAttackRollDefense",
         sourceProcedureRef: act.subject.procedureRef,
         expiresAt: {
           kind: "concentration",
@@ -211,7 +240,7 @@ function castBlur(
     tag: "spellSlot",
     spellId: blurUnitId,
     slotLevel: 2,
-    procedure: "blurAttackRollDefense",
+    procedure: "perceptionGatedAttackRollDefense",
   });
   const result = resolveBattleSubject({
     state: session.state,
@@ -293,7 +322,7 @@ function blurBypassFact(
   sense: BlurBypassSense,
 ): BattleTargetSpatialFact {
   return {
-    kind: "attackAttackerPerceivesBlurredTargetWithSense",
+    kind: "attackerPerceivesObscuredTargetWithSense",
     attackerId,
     targetId,
     sense,

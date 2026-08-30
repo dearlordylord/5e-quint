@@ -13,7 +13,7 @@ import {
 } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 
-import { Either, Match, Option, ParseResult, Schema } from "effect";
+import { Result, Match, Option, Schema } from "effect";
 
 import {
   ArtifactSha256Schema,
@@ -91,21 +91,21 @@ export type HistoricalModelInvocationPhase =
   (typeof HISTORICAL_MODEL_INVOCATION_PHASES)[number];
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThanOrEqualTo(0)),
 );
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThan(0),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThan(0)),
 );
-const TokenCountSchema = Schema.Union(
+const TokenCountSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("available"),
     count: NonNegativeIntegerSchema,
   }),
   Schema.Struct({ tag: Schema.Literal("unavailable") }),
-);
-const ModelUsageSchema = Schema.Union(
+]);
+const ModelUsageSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("available"),
     input: TokenCountSchema,
@@ -118,7 +118,7 @@ const ModelUsageSchema = Schema.Union(
     tag: Schema.Literal("unavailable"),
     reason: Schema.NonEmptyString,
   }),
-);
+]);
 export const MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS = [
   "lastMessageMissing",
   "lastMessageUnreadable",
@@ -137,13 +137,13 @@ type ModelInvocationFailureKind =
  * discriminator was introduced with v5 and must not be backfilled into v2-v4
  * or benchmark v3 records when they are decoded.
  */
-const HistoricalModelInvocationResultSchema = Schema.Union(
+const HistoricalModelInvocationResultSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("succeeded") }),
   Schema.Struct({
     tag: Schema.Literal("failed"),
-    reason: Schema.NonEmptyTrimmedString,
+    reason: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
-);
+]);
 
 /**
  * Current v5 output failures retain their operation in durable evidence.  A
@@ -151,20 +151,20 @@ const HistoricalModelInvocationResultSchema = Schema.Union(
  * retained last message; keeping that fact in the record prevents a
  * no-output row from being interpreted as an output failure later.
  */
-const CurrentModelInvocationResultSchema = Schema.Union(
+const CurrentModelInvocationResultSchema = Schema.Union([
   HistoricalModelInvocationResultSchema,
   Schema.Struct({
     tag: Schema.Literal("failed"),
-    reason: Schema.NonEmptyTrimmedString,
-    failureKind: Schema.Literal(...MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS),
+    reason: Schema.Trimmed.check(Schema.isNonEmpty()),
+    failureKind: Schema.Literals(MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS),
     operation: Schema.Literal("expectedLastMessage"),
   }),
   Schema.Struct({
     tag: Schema.Literal("failed"),
-    reason: Schema.NonEmptyTrimmedString,
-    failureKind: Schema.Literal(...MODEL_INVOCATION_CODEX_FAILURE_KINDS),
+    reason: Schema.Trimmed.check(Schema.isNonEmpty()),
+    failureKind: Schema.Literals(MODEL_INVOCATION_CODEX_FAILURE_KINDS),
   }),
-);
+]);
 
 function invocationResultMatchesExit(input: {
   readonly exit: { readonly tag: string; readonly status?: number };
@@ -201,10 +201,10 @@ function currentInvocationResultMatchesExit(input: {
   );
 }
 
-const HistoricalModelInvocationExitSchema = Schema.Union(
+const HistoricalModelInvocationExitSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("exited"),
-    status: Schema.Number.pipe(Schema.int()),
+    status: Schema.Number.pipe(Schema.check(Schema.isInt())),
   }),
   Schema.Struct({
     tag: Schema.Literal("signaled"),
@@ -216,28 +216,28 @@ const HistoricalModelInvocationExitSchema = Schema.Union(
   }),
   Schema.Struct({
     tag: Schema.Literal("shellStatus"),
-    status: Schema.Number.pipe(Schema.int()),
+    status: Schema.Number.pipe(Schema.check(Schema.isInt())),
   }),
-);
+]);
 
 /** Signal delivery is distinct from the later process-settlement fact. */
 const DeliveredModelInvocationSignalSchema = Schema.Struct({
   tag: Schema.Literal("confirmed"),
-  signal: Schema.Literal("SIGTERM", "SIGKILL"),
+  signal: Schema.Literals(["SIGTERM", "SIGKILL"]),
 });
-const ModelInvocationSignalDeliverySchema = Schema.Union(
+const ModelInvocationSignalDeliverySchema = Schema.Union([
   DeliveredModelInvocationSignalSchema,
   Schema.Struct({
     tag: Schema.Literal("notDelivered"),
-    signal: Schema.Literal("SIGTERM", "SIGKILL"),
-    reason: Schema.NonEmptyTrimmedString,
+    signal: Schema.Literals(["SIGTERM", "SIGKILL"]),
+    reason: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
-);
+]);
 
-const OwnedLeaderProcessOutcomeSchema = Schema.Union(
+const OwnedLeaderProcessOutcomeSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("exited"),
-    status: Schema.Number.pipe(Schema.int()),
+    status: Schema.Number.pipe(Schema.check(Schema.isInt())),
   }),
   Schema.Struct({
     tag: Schema.Literal("signaled"),
@@ -247,20 +247,20 @@ const OwnedLeaderProcessOutcomeSchema = Schema.Union(
     tag: Schema.Literal("failedToStart"),
     message: Schema.NonEmptyString,
   }),
-);
+]);
 
 const CurrentModelInvocationCleanupUnreapedExitSchema = Schema.Struct({
   tag: Schema.Literal("cleanupUnreaped"),
   leader: OwnedLeaderProcessOutcomeSchema,
   signalDelivery: ModelInvocationSignalDeliverySchema,
-  reason: Schema.NonEmptyTrimmedString,
+  reason: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 
 /**
  * Timeout evidence records whether the child was actually reaped.  A
  * successful signal delivery alone is not process-settlement evidence.
  */
-const ModelInvocationTimeoutTerminationSchema = Schema.Union(
+const ModelInvocationTimeoutTerminationSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("reaped"),
     signalDelivery: ModelInvocationSignalDeliverySchema,
@@ -268,15 +268,15 @@ const ModelInvocationTimeoutTerminationSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("unreaped"),
     signalDelivery: ModelInvocationSignalDeliverySchema,
-    reason: Schema.NonEmptyTrimmedString,
+    reason: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
-);
+]);
 
 /**
  * Timeout telemetry was added after the retained v1-v4 envelopes.  Keep that
  * state out of their decoders; a timeout in a new run is a v5 record.
  */
-const CurrentModelInvocationExitSchema = Schema.Union(
+const CurrentModelInvocationExitSchema = Schema.Union([
   HistoricalModelInvocationExitSchema,
   CurrentModelInvocationCleanupUnreapedExitSchema,
   Schema.Struct({
@@ -284,7 +284,7 @@ const CurrentModelInvocationExitSchema = Schema.Union(
     timeoutMilliseconds: PositiveIntegerSchema,
     termination: ModelInvocationTimeoutTerminationSchema,
   }),
-);
+]);
 
 /** Identity fields shared by every retained model invocation envelope. */
 const HistoricalModelInvocationIdentityFields = {
@@ -325,7 +325,7 @@ export type CurrentModelInvocationSubject =
       readonly scenarioId: ScenarioId;
     }>;
 
-const CurrentModelInvocationSubjectSchema = Schema.Union(
+const CurrentModelInvocationSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("scenarioCampaign"),
     campaignId: ScenarioCampaignIdSchema,
@@ -338,7 +338,7 @@ const CurrentModelInvocationSubjectSchema = Schema.Union(
     evidenceSetId: EvidenceSetIdSchema,
     candidateId: ScenarioCandidateIdSchema,
     candidateScenarioSha256: Schema.String.pipe(
-      Schema.pattern(/^[0-9a-f]{64}$/),
+      Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
     ),
     plannedScenarioId: PlannedScenarioIdSchema,
   }),
@@ -355,13 +355,13 @@ const CurrentModelInvocationSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("benchmark"),
     benchmarkId: BenchmarkIdSchema,
-    profile: Schema.Literal(
+    profile: Schema.Literals([
       "documentDeclarationSet",
       "boundedCapabilityProjection",
-    ),
+    ]),
     scenarioId: ScenarioIdSchema,
   }),
-);
+]);
 
 function invocationSubjectMatchesPhase(input: {
   readonly subject: CurrentModelInvocationSubject;
@@ -409,7 +409,7 @@ const ModelInvocationLedgerEntryV1Schema = Schema.Struct({
   ...HistoricalModelInvocationIdentityFields,
   gitSha: GitShaSchema,
   eventsSha256: ArtifactSha256Schema,
-  phase: Schema.Literal(...HISTORICAL_MODEL_INVOCATION_PHASES),
+  phase: Schema.Literals(HISTORICAL_MODEL_INVOCATION_PHASES),
   startedAt: Schema.NonEmptyString,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: HistoricalModelInvocationExitSchema,
@@ -422,17 +422,19 @@ const ModelInvocationLedgerEntryV2Schema = Schema.Struct({
   ...HistoricalModelInvocationIdentityFields,
   gitSha: GitShaSchema,
   eventsSha256: ArtifactSha256Schema,
-  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
-  stagePlanReason: Schema.NonEmptyTrimmedString,
+  phase: Schema.Literals(MODEL_INVOCATION_PHASES),
+  stagePlanReason: Schema.Trimmed.check(Schema.isNonEmpty()),
   startedAt: Schema.NonEmptyString,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: HistoricalModelInvocationExitSchema,
   result: HistoricalModelInvocationResultSchema,
   usage: ModelUsageSchema,
 }).pipe(
-  Schema.filter(invocationResultMatchesExit, {
-    message: () => "Invocation result must agree with its exit status.",
-  }),
+  Schema.check(
+    Schema.makeFilter(invocationResultMatchesExit, {
+      message: "Invocation result must agree with its exit status.",
+    }),
+  ),
 );
 
 const CurrentModelInvocationLedgerEntryV4SchemaInternal = Schema.Struct({
@@ -441,20 +443,24 @@ const CurrentModelInvocationLedgerEntryV4SchemaInternal = Schema.Struct({
   ...ModelInvocationOperationFields,
   gitSha: GitShaSchema,
   eventsSha256: ArtifactSha256Schema,
-  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
-  stagePlanReason: Schema.NonEmptyTrimmedString,
+  phase: Schema.Literals(MODEL_INVOCATION_PHASES),
+  stagePlanReason: Schema.Trimmed.check(Schema.isNonEmpty()),
   startedAt: StartedAtSchema,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: HistoricalModelInvocationExitSchema,
   result: HistoricalModelInvocationResultSchema,
   usage: ModelUsageSchema,
 }).pipe(
-  Schema.filter(invocationSubjectMatchesPhase, {
-    message: () => "Invocation subject must match its lifecycle phase.",
-  }),
-  Schema.filter(invocationResultMatchesExit, {
-    message: () => "Invocation result must agree with its exit status.",
-  }),
+  Schema.check(
+    Schema.makeFilter(invocationSubjectMatchesPhase, {
+      message: "Invocation subject must match its lifecycle phase.",
+    }),
+  ),
+  Schema.check(
+    Schema.makeFilter(invocationResultMatchesExit, {
+      message: "Invocation result must agree with its exit status.",
+    }),
+  ),
 );
 
 const CurrentModelInvocationLedgerEntryV5SchemaInternal = Schema.Struct({
@@ -463,20 +469,24 @@ const CurrentModelInvocationLedgerEntryV5SchemaInternal = Schema.Struct({
   ...ModelInvocationOperationFields,
   gitSha: GitShaSchema,
   eventsSha256: ArtifactSha256Schema,
-  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
-  stagePlanReason: Schema.NonEmptyTrimmedString,
+  phase: Schema.Literals(MODEL_INVOCATION_PHASES),
+  stagePlanReason: Schema.Trimmed.check(Schema.isNonEmpty()),
   startedAt: StartedAtSchema,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: CurrentModelInvocationExitSchema,
   result: CurrentModelInvocationResultSchema,
   usage: ModelUsageSchema,
 }).pipe(
-  Schema.filter(invocationSubjectMatchesPhase, {
-    message: () => "Invocation subject must match its lifecycle phase.",
-  }),
-  Schema.filter(currentInvocationResultMatchesExit, {
-    message: () => "Invocation result must agree with its exit status.",
-  }),
+  Schema.check(
+    Schema.makeFilter(invocationSubjectMatchesPhase, {
+      message: "Invocation subject must match its lifecycle phase.",
+    }),
+  ),
+  Schema.check(
+    Schema.makeFilter(currentInvocationResultMatchesExit, {
+      message: "Invocation result must agree with its exit status.",
+    }),
+  ),
 );
 
 /** Exact v4 decoder retained for historical/current evidence readers. */
@@ -488,17 +498,17 @@ export const CurrentModelInvocationLedgerEntryV5Schema =
   CurrentModelInvocationLedgerEntryV5SchemaInternal;
 
 /** Decoder for either exact current schema version. */
-export const CurrentModelInvocationLedgerEntrySchema = Schema.Union(
+export const CurrentModelInvocationLedgerEntrySchema = Schema.Union([
   CurrentModelInvocationLedgerEntryV4Schema,
   CurrentModelInvocationLedgerEntryV5Schema,
-);
+]);
 
-export const ModelInvocationLedgerEntrySchema = Schema.Union(
+export const ModelInvocationLedgerEntrySchema = Schema.Union([
   ModelInvocationLedgerEntryV1Schema,
   ModelInvocationLedgerEntryV2Schema,
   CurrentModelInvocationLedgerEntryV4Schema,
   CurrentModelInvocationLedgerEntryV5Schema,
-);
+]);
 
 export type TokenCount = Schema.Schema.Type<typeof TokenCountSchema>;
 export type ModelUsage = Schema.Schema.Type<typeof ModelUsageSchema>;
@@ -534,7 +544,7 @@ const ModelInvocationStartedEventV1Schema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   scenarioId: HistoricalScenarioIdSchema,
   gitSha: GitShaSchema,
-  phase: Schema.Literal(...HISTORICAL_MODEL_INVOCATION_PHASES),
+  phase: Schema.Literals(HISTORICAL_MODEL_INVOCATION_PHASES),
   fallbackInvocationId: Schema.NonEmptyString,
   model: Schema.NonEmptyString,
   reasoningEffort: Schema.NonEmptyString,
@@ -546,8 +556,8 @@ const ModelInvocationStartedEventV2Schema = Schema.Struct({
   schemaVersion: Schema.Literal(2),
   scenarioId: HistoricalScenarioIdSchema,
   gitSha: GitShaSchema,
-  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
-  stagePlanReason: Schema.NonEmptyTrimmedString,
+  phase: Schema.Literals(MODEL_INVOCATION_PHASES),
+  stagePlanReason: Schema.Trimmed.check(Schema.isNonEmpty()),
   fallbackInvocationId: Schema.NonEmptyString,
   model: Schema.NonEmptyString,
   reasoningEffort: Schema.NonEmptyString,
@@ -559,16 +569,18 @@ const CurrentModelInvocationStartedEventV4Schema = Schema.Struct({
   schemaVersion: Schema.Literal(4),
   subject: CurrentModelInvocationSubjectSchema,
   gitSha: GitShaSchema,
-  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
-  stagePlanReason: Schema.NonEmptyTrimmedString,
+  phase: Schema.Literals(MODEL_INVOCATION_PHASES),
+  stagePlanReason: Schema.Trimmed.check(Schema.isNonEmpty()),
   fallbackInvocationId: Schema.NonEmptyString,
   model: Schema.NonEmptyString,
   reasoningEffort: Schema.NonEmptyString,
   startedAt: StartedAtSchema,
 }).pipe(
-  Schema.filter(invocationSubjectMatchesPhase, {
-    message: () => "Invocation subject must match its lifecycle phase.",
-  }),
+  Schema.check(
+    Schema.makeFilter(invocationSubjectMatchesPhase, {
+      message: "Invocation subject must match its lifecycle phase.",
+    }),
+  ),
 );
 
 const CurrentModelInvocationStartedEventV5Schema = Schema.Struct({
@@ -576,24 +588,26 @@ const CurrentModelInvocationStartedEventV5Schema = Schema.Struct({
   schemaVersion: Schema.Literal(5),
   subject: CurrentModelInvocationSubjectSchema,
   gitSha: GitShaSchema,
-  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
-  stagePlanReason: Schema.NonEmptyTrimmedString,
+  phase: Schema.Literals(MODEL_INVOCATION_PHASES),
+  stagePlanReason: Schema.Trimmed.check(Schema.isNonEmpty()),
   fallbackInvocationId: Schema.NonEmptyString,
   model: Schema.NonEmptyString,
   reasoningEffort: Schema.NonEmptyString,
   startedAt: StartedAtSchema,
 }).pipe(
-  Schema.filter(invocationSubjectMatchesPhase, {
-    message: () => "Invocation subject must match its lifecycle phase.",
-  }),
+  Schema.check(
+    Schema.makeFilter(invocationSubjectMatchesPhase, {
+      message: "Invocation subject must match its lifecycle phase.",
+    }),
+  ),
 );
 
-export const ModelInvocationStartedEventSchema = Schema.Union(
+export const ModelInvocationStartedEventSchema = Schema.Union([
   ModelInvocationStartedEventV1Schema,
   ModelInvocationStartedEventV2Schema,
   CurrentModelInvocationStartedEventV4Schema,
   CurrentModelInvocationStartedEventV5Schema,
-);
+]);
 
 const ModelInvocationCompletedEventV1Schema = Schema.Struct({
   type: Schema.Literal("raw-swarm.invocation.completed"),
@@ -609,9 +623,11 @@ const ModelInvocationCompletedEventV2Schema = Schema.Struct({
   exit: HistoricalModelInvocationExitSchema,
   result: HistoricalModelInvocationResultSchema,
 }).pipe(
-  Schema.filter(invocationResultMatchesExit, {
-    message: () => "Invocation result must agree with its exit status.",
-  }),
+  Schema.check(
+    Schema.makeFilter(invocationResultMatchesExit, {
+      message: "Invocation result must agree with its exit status.",
+    }),
+  ),
 );
 
 const CurrentModelInvocationCompletedEventV4Schema = Schema.Struct({
@@ -621,9 +637,11 @@ const CurrentModelInvocationCompletedEventV4Schema = Schema.Struct({
   exit: HistoricalModelInvocationExitSchema,
   result: HistoricalModelInvocationResultSchema,
 }).pipe(
-  Schema.filter(invocationResultMatchesExit, {
-    message: () => "Invocation result must agree with its exit status.",
-  }),
+  Schema.check(
+    Schema.makeFilter(invocationResultMatchesExit, {
+      message: "Invocation result must agree with its exit status.",
+    }),
+  ),
 );
 
 const CurrentModelInvocationCompletedEventV5Schema = Schema.Struct({
@@ -633,17 +651,19 @@ const CurrentModelInvocationCompletedEventV5Schema = Schema.Struct({
   exit: CurrentModelInvocationExitSchema,
   result: CurrentModelInvocationResultSchema,
 }).pipe(
-  Schema.filter(currentInvocationResultMatchesExit, {
-    message: () => "Invocation result must agree with its exit status.",
-  }),
+  Schema.check(
+    Schema.makeFilter(currentInvocationResultMatchesExit, {
+      message: "Invocation result must agree with its exit status.",
+    }),
+  ),
 );
 
-export const ModelInvocationCompletedEventSchema = Schema.Union(
+export const ModelInvocationCompletedEventSchema = Schema.Union([
   ModelInvocationCompletedEventV1Schema,
   ModelInvocationCompletedEventV2Schema,
   CurrentModelInvocationCompletedEventV4Schema,
   CurrentModelInvocationCompletedEventV5Schema,
-);
+]);
 
 const BenchmarkAuxiliaryInvocationCommonFields = {
   schemaVersion: Schema.Literal(3),
@@ -651,7 +671,7 @@ const BenchmarkAuxiliaryInvocationCommonFields = {
   ...HistoricalModelInvocationIdentityFields,
   gitSha: GitShaSchema,
   eventsSha256: ArtifactSha256Schema,
-  stagePlanReason: Schema.NonEmptyTrimmedString,
+  stagePlanReason: Schema.Trimmed.check(Schema.isNonEmpty()),
   startedAt: Schema.NonEmptyString,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: HistoricalModelInvocationExitSchema,
@@ -665,7 +685,7 @@ const BenchmarkAuxiliaryInvocationCurrentCommonFields = {
   ...HistoricalModelInvocationIdentityFields,
   gitSha: GitShaSchema,
   eventsSha256: ArtifactSha256Schema,
-  stagePlanReason: Schema.NonEmptyTrimmedString,
+  stagePlanReason: Schema.Trimmed.check(Schema.isNonEmpty()),
   startedAt: StartedAtSchema,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: CurrentModelInvocationExitSchema,
@@ -680,7 +700,7 @@ const BenchmarkAuxiliaryInvocationCurrentCommonFields = {
  * canonical Character Sheet stage.
  */
 export const BenchmarkAuxiliaryModelInvocationLedgerEntryV3Schema =
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       ...BenchmarkAuxiliaryInvocationCommonFields,
       responsibility: Schema.Literal("scenarioQuality"),
@@ -691,14 +711,16 @@ export const BenchmarkAuxiliaryModelInvocationLedgerEntryV3Schema =
       responsibility: Schema.Literal("redundantCharacterPreparation"),
       phase: Schema.Literal("scenarioCharacterAuthoring"),
     }),
-  ).pipe(
-    Schema.filter(invocationResultMatchesExit, {
-      message: () => "Invocation result must agree with its exit status.",
-    }),
+  ]).pipe(
+    Schema.check(
+      Schema.makeFilter(invocationResultMatchesExit, {
+        message: "Invocation result must agree with its exit status.",
+      }),
+    ),
   );
 
 export const BenchmarkAuxiliaryModelInvocationLedgerEntryV5Schema =
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       ...BenchmarkAuxiliaryInvocationCurrentCommonFields,
       responsibility: Schema.Literal("scenarioQuality"),
@@ -709,16 +731,18 @@ export const BenchmarkAuxiliaryModelInvocationLedgerEntryV5Schema =
       responsibility: Schema.Literal("redundantCharacterPreparation"),
       phase: Schema.Literal("scenarioCharacterAuthoring"),
     }),
-  ).pipe(
-    Schema.filter(currentInvocationResultMatchesExit, {
-      message: () => "Invocation result must agree with its exit status.",
-    }),
+  ]).pipe(
+    Schema.check(
+      Schema.makeFilter(currentInvocationResultMatchesExit, {
+        message: "Invocation result must agree with its exit status.",
+      }),
+    ),
   );
 
-export const BenchmarkAuxiliaryModelInvocationLedgerEntrySchema = Schema.Union(
+export const BenchmarkAuxiliaryModelInvocationLedgerEntrySchema = Schema.Union([
   BenchmarkAuxiliaryModelInvocationLedgerEntryV3Schema,
   BenchmarkAuxiliaryModelInvocationLedgerEntryV5Schema,
-);
+]);
 export type BenchmarkAuxiliaryModelInvocationLedgerEntry = Schema.Schema.Type<
   typeof BenchmarkAuxiliaryModelInvocationLedgerEntrySchema
 >;
@@ -729,14 +753,14 @@ const BenchmarkAuxiliaryInvocationStartedEventCommonFields = {
   profile: Schema.Literal("documentDeclarationSet"),
   scenarioId: HistoricalScenarioIdSchema,
   gitSha: GitShaSchema,
-  stagePlanReason: Schema.NonEmptyTrimmedString,
+  stagePlanReason: Schema.Trimmed.check(Schema.isNonEmpty()),
   fallbackInvocationId: Schema.NonEmptyString,
   model: Schema.NonEmptyString,
   reasoningEffort: Schema.NonEmptyString,
   startedAt: Schema.NonEmptyString,
 } as const;
 
-const BenchmarkAuxiliaryInvocationStartedEventSchema = Schema.Union(
+const BenchmarkAuxiliaryInvocationStartedEventSchema = Schema.Union([
   Schema.Struct({
     ...BenchmarkAuxiliaryInvocationStartedEventCommonFields,
     responsibility: Schema.Literal("scenarioQuality"),
@@ -747,16 +771,16 @@ const BenchmarkAuxiliaryInvocationStartedEventSchema = Schema.Union(
     responsibility: Schema.Literal("redundantCharacterPreparation"),
     phase: Schema.Literal("scenarioCharacterAuthoring"),
   }),
-);
+]);
 
-const BenchmarkAuxiliaryInvocationStartedEventV5Schema = Schema.Union(
+const BenchmarkAuxiliaryInvocationStartedEventV5Schema = Schema.Union([
   Schema.Struct({
     type: Schema.Literal("raw-swarm.invocation.started"),
     schemaVersion: Schema.Literal(5),
     profile: Schema.Literal("documentDeclarationSet"),
     scenarioId: HistoricalScenarioIdSchema,
     gitSha: GitShaSchema,
-    stagePlanReason: Schema.NonEmptyTrimmedString,
+    stagePlanReason: Schema.Trimmed.check(Schema.isNonEmpty()),
     fallbackInvocationId: Schema.NonEmptyString,
     model: Schema.NonEmptyString,
     reasoningEffort: Schema.NonEmptyString,
@@ -770,7 +794,7 @@ const BenchmarkAuxiliaryInvocationStartedEventV5Schema = Schema.Union(
     profile: Schema.Literal("documentDeclarationSet"),
     scenarioId: HistoricalScenarioIdSchema,
     gitSha: GitShaSchema,
-    stagePlanReason: Schema.NonEmptyTrimmedString,
+    stagePlanReason: Schema.Trimmed.check(Schema.isNonEmpty()),
     fallbackInvocationId: Schema.NonEmptyString,
     model: Schema.NonEmptyString,
     reasoningEffort: Schema.NonEmptyString,
@@ -778,7 +802,7 @@ const BenchmarkAuxiliaryInvocationStartedEventV5Schema = Schema.Union(
     responsibility: Schema.Literal("redundantCharacterPreparation"),
     phase: Schema.Literal("scenarioCharacterAuthoring"),
   }),
-);
+]);
 
 const BenchmarkAuxiliaryInvocationCompletedEventSchema = Schema.Struct({
   type: Schema.Literal("raw-swarm.invocation.completed"),
@@ -787,9 +811,11 @@ const BenchmarkAuxiliaryInvocationCompletedEventSchema = Schema.Struct({
   exit: HistoricalModelInvocationExitSchema,
   result: HistoricalModelInvocationResultSchema,
 }).pipe(
-  Schema.filter(invocationResultMatchesExit, {
-    message: () => "Invocation result must agree with its exit status.",
-  }),
+  Schema.check(
+    Schema.makeFilter(invocationResultMatchesExit, {
+      message: "Invocation result must agree with its exit status.",
+    }),
+  ),
 );
 
 type BenchmarkAuxiliaryInvocationStartedEvent =
@@ -828,8 +854,8 @@ export type ModelInvocationEventEvidence =
 
 export function parseModelInvocationLedgerEntry(
   value: unknown,
-): Either.Either<ModelInvocationLedgerEntry, ParseResult.ParseError> {
-  return Schema.decodeUnknownEither(ModelInvocationLedgerEntrySchema, {
+): Result.Result<ModelInvocationLedgerEntry, Schema.SchemaError> {
+  return Schema.decodeUnknownResult(ModelInvocationLedgerEntrySchema, {
     onExcessProperty: "error",
   })(value);
 }
@@ -849,11 +875,11 @@ export function modelInvocationScenarioReference(
 
 export function parseBenchmarkModelInvocationLedgerEntry(
   value: unknown,
-): Either.Either<
+): Result.Result<
   BenchmarkAuxiliaryModelInvocationLedgerEntry,
-  ParseResult.ParseError
+  Schema.SchemaError
 > {
-  return Schema.decodeUnknownEither(
+  return Schema.decodeUnknownResult(
     BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
     { onExcessProperty: "error" },
   )(value);
@@ -920,7 +946,7 @@ function nonEmptyTrimmedString(value: unknown): Option.Option<string> {
 
 const FirstPartyCodexErrorEventSchema = Schema.Struct({
   type: Schema.Literal("error"),
-  message: Schema.NonEmptyTrimmedString,
+  message: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 
 const BenchmarkAuxiliaryInvocationCompletedEventV5Schema = Schema.Struct({
@@ -930,47 +956,49 @@ const BenchmarkAuxiliaryInvocationCompletedEventV5Schema = Schema.Struct({
   exit: CurrentModelInvocationExitSchema,
   result: CurrentModelInvocationResultSchema,
 }).pipe(
-  Schema.filter(currentInvocationResultMatchesExit, {
-    message: () => "Invocation result must agree with its exit status.",
-  }),
+  Schema.check(
+    Schema.makeFilter(currentInvocationResultMatchesExit, {
+      message: "Invocation result must agree with its exit status.",
+    }),
+  ),
 );
 const FirstPartyCodexTurnFailedEventSchema = Schema.Struct({
   type: Schema.Literal("turn.failed"),
-  error: Schema.Struct({ message: Schema.NonEmptyTrimmedString }),
+  error: Schema.Struct({ message: Schema.Trimmed.check(Schema.isNonEmpty()) }),
 });
 
 /** Decode the most authoritative failure message emitted by Codex itself. */
 export function firstPartyCodexFailureReason(
   events: readonly unknown[],
-): Either.Either<Option.Option<string>, string> {
+): Result.Result<Option.Option<string>, string> {
   let wrapperFailure = Option.none<string>();
   let terminalFailure = Option.none<string>();
   for (const [index, event] of events.entries()) {
     if (!isJsonRecord(event)) continue;
     if (event.type === "error") {
-      const decoded = Schema.decodeUnknownEither(
+      const decoded = Schema.decodeUnknownResult(
         FirstPartyCodexErrorEventSchema,
       )(event);
-      if (Either.isLeft(decoded)) {
-        return Either.left(
-          `First-party Codex event line ${String(index + 1)} has a malformed error event: ${decoded.left.message}`,
+      if (Result.isFailure(decoded)) {
+        return Result.fail(
+          `First-party Codex event line ${String(index + 1)} has a malformed error event: ${decoded.failure.message}`,
         );
       }
-      wrapperFailure = nonEmptyTrimmedString(decoded.right.message);
+      wrapperFailure = nonEmptyTrimmedString(decoded.success.message);
     }
     if (event.type === "turn.failed") {
-      const decoded = Schema.decodeUnknownEither(
+      const decoded = Schema.decodeUnknownResult(
         FirstPartyCodexTurnFailedEventSchema,
       )(event);
-      if (Either.isLeft(decoded)) {
-        return Either.left(
-          `First-party Codex event line ${String(index + 1)} has a malformed turn.failed event: ${decoded.left.message}`,
+      if (Result.isFailure(decoded)) {
+        return Result.fail(
+          `First-party Codex event line ${String(index + 1)} has a malformed turn.failed event: ${decoded.failure.message}`,
         );
       }
-      terminalFailure = nonEmptyTrimmedString(decoded.right.error.message);
+      terminalFailure = nonEmptyTrimmedString(decoded.success.error.message);
     }
   }
-  return Either.right(
+  return Result.succeed(
     Option.isSome(terminalFailure) ? terminalFailure : wrapperFailure,
   );
 }
@@ -990,25 +1018,26 @@ function hasCodexCompletedEvent(events: readonly unknown[]): boolean {
 function analyzeCodexEvents(
   exit: Schema.Schema.Type<typeof CurrentModelInvocationExitSchema>,
   events: readonly unknown[],
-): Either.Either<CodexEventAnalysis, string> {
+): Result.Result<CodexEventAnalysis, string> {
   const failureReason = firstPartyCodexFailureReason(events);
-  if (Either.isLeft(failureReason)) return Either.left(failureReason.left);
+  if (Result.isFailure(failureReason))
+    return Result.fail(failureReason.failure);
   const processResult = resultFromExit(exit);
   if (processResult.tag === "succeeded") {
-    if (Option.isSome(failureReason.right)) {
-      return Either.left(
+    if (Option.isSome(failureReason.success)) {
+      return Result.fail(
         "Codex emitted a first-party failure event but exited successfully.",
       );
     }
     if (!hasCodexCompletedEvent(events)) {
-      return Either.left(
+      return Result.fail(
         "Codex exited successfully without a first-party turn.completed event.",
       );
     }
   }
-  return Either.right({
-    failureReason: failureReason.right,
-    result: Option.match(failureReason.right, {
+  return Result.succeed({
+    failureReason: failureReason.success,
+    result: Option.match(failureReason.success, {
       onNone: () => processResult,
       onSome: (reason) => ({ tag: "failed" as const, reason }),
     }),
@@ -1030,9 +1059,9 @@ function codexEventDecodeFailure(message: string): CodexEventAnalysis {
 export function modelInvocationResultFromCodexEvents(
   exit: Schema.Schema.Type<typeof CurrentModelInvocationExitSchema>,
   events: readonly unknown[],
-): Either.Either<ModelInvocationResult, string> {
+): Result.Result<ModelInvocationResult, string> {
   return analyzeCodexEvents(exit, events).pipe(
-    Either.map(({ result }) => result),
+    Result.map(({ result }) => result),
   );
 }
 
@@ -1144,15 +1173,17 @@ const CODEX_RAW_RETENTION_REASONS = [
 ] as const;
 type CodexRawRetentionReason = (typeof CODEX_RAW_RETENTION_REASONS)[number];
 
-const CodexRawRetentionEventSchema = Schema.Union(
+const CodexRawRetentionEventSchema = Schema.Union([
   Schema.Struct({
     type: Schema.Literal(CODEX_RAW_RETENTION_EVENT_TYPE),
     source: Schema.Literal("settledSidecar"),
-    reason: Schema.Literal(
+    reason: Schema.Literals([
       CODEX_RAW_RETENTION_REASONS[0],
       CODEX_RAW_RETENTION_REASONS[1],
+    ]),
+    rawContentsSha256: Schema.String.pipe(
+      Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
     ),
-    rawContentsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
     rawContentsByteLength: NonNegativeIntegerSchema,
   }),
   Schema.Struct({
@@ -1162,10 +1193,12 @@ const CodexRawRetentionEventSchema = Schema.Union(
     snapshotPathSuffix: Schema.Literal(
       `${CODEX_RAW_SIDECAR_SUFFIX}${CODEX_RAW_SNAPSHOT_SUFFIX}`,
     ),
-    snapshotSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+    snapshotSha256: Schema.String.pipe(
+      Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+    ),
     snapshotByteLength: NonNegativeIntegerSchema,
   }),
-);
+]);
 export type CodexRawRetentionEvent = Schema.Schema.Type<
   typeof CodexRawRetentionEventSchema
 >;
@@ -1270,23 +1303,23 @@ type DecodedInvocationEvents<A> =
  * ignored.
  */
 function decodedInvocationEvents<A, I>(
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
   eventType: string,
   events: readonly unknown[],
 ): DecodedInvocationEvents<A> {
   const decoded: { readonly index: number; readonly value: A }[] = [];
   for (const [index, event] of events.entries()) {
     if (!isJsonRecord(event) || event.type !== eventType) continue;
-    const parsed = Schema.decodeUnknownEither(schema, {
+    const parsed = Schema.decodeUnknownResult(schema, {
       onExcessProperty: "error",
     })(event);
-    if (Either.isLeft(parsed)) {
+    if (Result.isFailure(parsed)) {
       return {
         tag: "invalid",
-        message: `Recognized ${eventType} event at line ${String(index + 1)} is malformed: ${parsed.left.message}`,
+        message: `Recognized ${eventType} event at line ${String(index + 1)} is malformed: ${parsed.failure.message}`,
       };
     }
-    decoded.push({ index, value: parsed.right });
+    decoded.push({ index, value: parsed.success });
   }
   return { tag: "valid", events: decoded };
 }
@@ -1320,16 +1353,16 @@ export function codexRawRetentionEventFromEvents(
   }
   const candidate = reserved[0];
   if (candidate === undefined) return { tag: "valid", event: undefined };
-  const parsed = Schema.decodeUnknownEither(CodexRawRetentionEventSchema, {
+  const parsed = Schema.decodeUnknownResult(CodexRawRetentionEventSchema, {
     onExcessProperty: "error",
   })(candidate.event);
-  if (Either.isLeft(parsed)) {
+  if (Result.isFailure(parsed)) {
     return {
       tag: "invalid",
-      message: `Runner raw-retention event at line ${String(candidate.index + 1)} is malformed: ${parsed.left.message}`,
+      message: `Runner raw-retention event at line ${String(candidate.index + 1)} is malformed: ${parsed.failure.message}`,
     };
   }
-  return { tag: "valid", event: parsed.right };
+  return { tag: "valid", event: parsed.success };
 }
 
 export type CodexRawRetentionArtifact = Readonly<{
@@ -1365,16 +1398,16 @@ export function codexRawRetentionArtifactPath(
 export function readCodexRawRetentionArtifact(input: {
   readonly eventPath: string;
   readonly event: CodexRawRetentionEvent;
-}): Either.Either<CodexRawRetentionArtifact, string> {
+}): Result.Result<CodexRawRetentionArtifact, string> {
   const path = codexRawRetentionArtifactPath(input.eventPath, input.event);
   const contents = (() => {
     try {
-      return Either.right(readFileSync(path));
+      return Result.succeed(readFileSync(path));
     } catch {
-      return Either.left(`Raw retention artifact is missing: ${path}.`);
+      return Result.fail(`Raw retention artifact is missing: ${path}.`);
     }
   })();
-  if (Either.isLeft(contents)) return Either.left(contents.left);
+  if (Result.isFailure(contents)) return Result.fail(contents.failure);
   const expected =
     input.event.source === "settledSidecar"
       ? {
@@ -1386,18 +1419,22 @@ export function readCodexRawRetentionArtifact(input: {
           byteLength: input.event.snapshotByteLength,
         };
   const observed = {
-    sha256: sha256Bytes(contents.right),
-    byteLength: contents.right.byteLength,
+    sha256: sha256Bytes(contents.success),
+    byteLength: contents.success.byteLength,
   };
   if (
     observed.sha256 !== expected.sha256 ||
     observed.byteLength !== expected.byteLength
   ) {
-    return Either.left(
+    return Result.fail(
       `Raw retention artifact does not match its canonical event: ${path}.`,
     );
   }
-  return Either.right({ path, contents: contents.right, event: input.event });
+  return Result.succeed({
+    path,
+    contents: contents.success,
+    event: input.event,
+  });
 }
 
 function runnerRawRetentionEventFromChild(
@@ -1606,10 +1643,10 @@ export function modelInvocationEvidenceFromEvents(
   }
   if (completion.result.tag === "succeeded") {
     const failureReason = firstPartyCodexFailureReason(events);
-    if (Either.isLeft(failureReason)) {
-      return { tag: "invalid", message: failureReason.left };
+    if (Result.isFailure(failureReason)) {
+      return { tag: "invalid", message: failureReason.failure };
     }
-    if (Option.isSome(failureReason.right)) {
+    if (Option.isSome(failureReason.success)) {
       return {
         tag: "invalid",
         message:
@@ -1654,19 +1691,19 @@ export function benchmarkModelInvocationEvidenceFromEvents(
   const rawRetention = codexRawRetentionEventFromEvents(events);
   if (rawRetention.tag === "invalid") return rawRetention;
   const started = decodedInvocationEvents(
-    Schema.Union(
+    Schema.Union([
       BenchmarkAuxiliaryInvocationStartedEventSchema,
       BenchmarkAuxiliaryInvocationStartedEventV5Schema,
-    ),
+    ]),
     "raw-swarm.invocation.started",
     events,
   );
   if (started.tag === "invalid") return started;
   const completed = decodedInvocationEvents(
-    Schema.Union(
+    Schema.Union([
       BenchmarkAuxiliaryInvocationCompletedEventSchema,
       BenchmarkAuxiliaryInvocationCompletedEventV5Schema,
-    ),
+    ]),
     "raw-swarm.invocation.completed",
     events,
   );
@@ -1709,10 +1746,10 @@ export function benchmarkModelInvocationEvidenceFromEvents(
   }
   if (completion.schemaVersion === 5 && completion.result.tag === "succeeded") {
     const failureReason = firstPartyCodexFailureReason(events);
-    if (Either.isLeft(failureReason)) {
-      return { tag: "invalid", message: failureReason.left };
+    if (Result.isFailure(failureReason)) {
+      return { tag: "invalid", message: failureReason.failure };
     }
-    if (Option.isSome(failureReason.right)) {
+    if (Option.isSome(failureReason.success)) {
       return {
         tag: "invalid",
         message:
@@ -1755,8 +1792,8 @@ export function benchmarkModelInvocationEvidenceFromEvents(
 /** Construct the exact retained v4 event used by historical fixtures and CLI. */
 export function modelInvocationStartedEvent(
   input: ModelInvocationEventInput,
-): Either.Either<ModelInvocationStartedEvent, ParseResult.ParseError> {
-  return Schema.decodeUnknownEither(
+): Result.Result<ModelInvocationStartedEvent, Schema.SchemaError> {
+  return Schema.decodeUnknownResult(
     CurrentModelInvocationStartedEventV4Schema,
     {
       onExcessProperty: "error",
@@ -1770,8 +1807,8 @@ export function modelInvocationStartedEvent(
 
 function currentModelInvocationStartedEvent(
   input: ModelInvocationEventInput,
-): Either.Either<ModelInvocationStartedEvent, ParseResult.ParseError> {
-  return Schema.decodeUnknownEither(
+): Result.Result<ModelInvocationStartedEvent, Schema.SchemaError> {
+  return Schema.decodeUnknownResult(
     CurrentModelInvocationStartedEventV5Schema,
     {
       onExcessProperty: "error",
@@ -1794,11 +1831,11 @@ export function benchmarkModelInvocationStartedEvent(input: {
   readonly model: unknown;
   readonly reasoningEffort: unknown;
   readonly startedAt: unknown;
-}): Either.Either<
+}): Result.Result<
   BenchmarkAuxiliaryInvocationStartedEvent,
-  ParseResult.ParseError
+  Schema.SchemaError
 > {
-  return Schema.decodeUnknownEither(
+  return Schema.decodeUnknownResult(
     BenchmarkAuxiliaryInvocationStartedEventSchema,
     { onExcessProperty: "error" },
   )({
@@ -1813,8 +1850,8 @@ export function modelInvocationCompletedEvent(input: {
   readonly elapsedMilliseconds: unknown;
   readonly exit: unknown;
   readonly result: unknown;
-}): Either.Either<ModelInvocationCompletedEvent, ParseResult.ParseError> {
-  return Schema.decodeUnknownEither(
+}): Result.Result<ModelInvocationCompletedEvent, Schema.SchemaError> {
+  return Schema.decodeUnknownResult(
     CurrentModelInvocationCompletedEventV4Schema,
     {
       onExcessProperty: "error",
@@ -1830,8 +1867,8 @@ function currentModelInvocationCompletedEvent(input: {
   readonly elapsedMilliseconds: unknown;
   readonly exit: unknown;
   readonly result: unknown;
-}): Either.Either<ModelInvocationCompletedEvent, ParseResult.ParseError> {
-  return Schema.decodeUnknownEither(
+}): Result.Result<ModelInvocationCompletedEvent, Schema.SchemaError> {
+  return Schema.decodeUnknownResult(
     CurrentModelInvocationCompletedEventV5Schema,
     {
       onExcessProperty: "error",
@@ -1847,11 +1884,11 @@ export function benchmarkModelInvocationCompletedEvent(input: {
   readonly elapsedMilliseconds: unknown;
   readonly exit: unknown;
   readonly result: unknown;
-}): Either.Either<
+}): Result.Result<
   BenchmarkAuxiliaryInvocationCompletedEvent,
-  ParseResult.ParseError
+  Schema.SchemaError
 > {
-  return Schema.decodeUnknownEither(
+  return Schema.decodeUnknownResult(
     BenchmarkAuxiliaryInvocationCompletedEventSchema,
     { onExcessProperty: "error" },
   )({
@@ -1872,11 +1909,11 @@ function currentBenchmarkModelInvocationStartedEvent(input: {
   readonly model: unknown;
   readonly reasoningEffort: unknown;
   readonly startedAt: unknown;
-}): Either.Either<
+}): Result.Result<
   BenchmarkAuxiliaryInvocationStartedEvent,
-  ParseResult.ParseError
+  Schema.SchemaError
 > {
-  return Schema.decodeUnknownEither(
+  return Schema.decodeUnknownResult(
     BenchmarkAuxiliaryInvocationStartedEventV5Schema,
     { onExcessProperty: "error" },
   )({
@@ -1890,11 +1927,11 @@ function currentBenchmarkModelInvocationCompletedEvent(input: {
   readonly elapsedMilliseconds: unknown;
   readonly exit: unknown;
   readonly result: unknown;
-}): Either.Either<
+}): Result.Result<
   BenchmarkAuxiliaryInvocationCompletedEvent,
-  ParseResult.ParseError
+  Schema.SchemaError
 > {
-  return Schema.decodeUnknownEither(
+  return Schema.decodeUnknownResult(
     BenchmarkAuxiliaryInvocationCompletedEventV5Schema,
     { onExcessProperty: "error" },
   )({
@@ -2079,16 +2116,16 @@ export type ModelInvocationLastMessageDecodeFailure = Readonly<{
 
 export type ModelInvocationLastMessageDecoder<A> = (
   contents: string,
-) => Either.Either<A, ModelInvocationLastMessageDecodeFailure>;
+) => Result.Result<A, ModelInvocationLastMessageDecodeFailure>;
 
 function parseJsonLastMessage(
   contents: string,
-): Either.Either<unknown, ModelInvocationLastMessageDecodeFailure> {
+): Result.Result<unknown, ModelInvocationLastMessageDecodeFailure> {
   try {
     const parsed: unknown = JSON.parse(contents);
-    return Either.right(parsed);
+    return Result.succeed(parsed);
   } catch (error: unknown) {
-    return Either.left({
+    return Result.fail({
       tag: "malformed",
       message:
         error instanceof Error
@@ -2099,17 +2136,17 @@ function parseJsonLastMessage(
 }
 
 export function jsonModelInvocationLastMessageDecoder<A, I>(
-  schema: Schema.Schema<A, I>,
+  schema: Schema.Codec<A, I>,
 ): ModelInvocationLastMessageDecoder<A> {
   return (contents) => {
     const parsed = parseJsonLastMessage(contents);
-    if (Either.isLeft(parsed)) return Either.left(parsed.left);
-    const decoded = Schema.decodeUnknownEither(schema, {
+    if (Result.isFailure(parsed)) return Result.fail(parsed.failure);
+    const decoded = Schema.decodeUnknownResult(schema, {
       onExcessProperty: "error",
-    })(parsed.right);
-    return Either.isLeft(decoded)
-      ? Either.left({ tag: "schemaInvalid", message: decoded.left.message })
-      : Either.right(decoded.right);
+    })(parsed.success);
+    return Result.isFailure(decoded)
+      ? Result.fail({ tag: "schemaInvalid", message: decoded.failure.message })
+      : Result.succeed(decoded.success);
   };
 }
 
@@ -2170,27 +2207,27 @@ function decodeExpectedModelInvocationLastMessage<A>(input: {
   }
   const contents = (() => {
     try {
-      return Either.right(readFileSync(input.expected.path, "utf8"));
+      return Result.succeed(readFileSync(input.expected.path, "utf8"));
     } catch (error: unknown) {
-      return Either.left(error);
+      return Result.fail(error);
     }
   })();
-  if (Either.isLeft(contents)) {
-    const error = contents.left;
+  if (Result.isFailure(contents)) {
+    const error = contents.failure;
     return {
       tag: "invalid",
       reason: `Expected Codex last-message output file could not be read: ${error instanceof Error ? error.message : String(error)}.`,
       failureKind: "lastMessageUnreadable",
     };
   }
-  if (input.claimToken !== undefined && contents.right === input.claimToken) {
+  if (input.claimToken !== undefined && contents.success === input.claimToken) {
     return {
       tag: "invalid",
       reason: `Expected Codex last-message output file does not exist as an invocation result: ${input.expected.path}.`,
       failureKind: "lastMessageMissing",
     };
   }
-  if (contents.right.trim().length === 0) {
+  if (contents.success.trim().length === 0) {
     return {
       tag: "invalid",
       reason: `Expected Codex last-message output file is empty: ${input.expected.path}.`,
@@ -2198,17 +2235,17 @@ function decodeExpectedModelInvocationLastMessage<A>(input: {
     };
   }
   try {
-    const decoded = input.expected.decode(contents.right);
-    return Either.isLeft(decoded)
+    const decoded = input.expected.decode(contents.success);
+    return Result.isFailure(decoded)
       ? {
           tag: "invalid",
-          reason: `Expected Codex last-message output is ${decoded.left.tag}: ${decoded.left.message}.`,
+          reason: `Expected Codex last-message output is ${decoded.failure.tag}: ${decoded.failure.message}.`,
           failureKind:
-            decoded.left.tag === "malformed"
+            decoded.failure.tag === "malformed"
               ? "lastMessageMalformed"
               : "lastMessageSchemaInvalid",
         }
-      : { tag: "valid", value: decoded.right };
+      : { tag: "valid", value: decoded.success };
   } catch (error: unknown) {
     return {
       tag: "invalid",
@@ -2258,8 +2295,8 @@ type SuccessfulModelInvocationProcess = Readonly<{
   readonly status: 0;
 }>;
 export const ModelInvocationNonZeroExitStatusSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.filter((status) => status !== 0),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.makeFilter((status) => status !== 0)),
   Schema.brand("NonZeroExitStatus"),
 );
 type NonZeroExitStatus = Schema.Schema.Type<
@@ -2287,15 +2324,15 @@ function unsuccessfulModelInvocationProcess(
   process: ModelInvocationProcess,
 ): UnsuccessfulModelInvocationProcess {
   if (process.tag !== "exited") return process;
-  const status = Schema.decodeUnknownEither(
+  const status = Schema.decodeUnknownResult(
     ModelInvocationNonZeroExitStatusSchema,
   )(process.status);
-  if (Either.isLeft(status)) {
+  if (Result.isFailure(status)) {
     throw new Error(
       "The process lifecycle marked an exited process unsuccessful without a nonzero status.",
     );
   }
-  return { tag: "exited", status: status.right };
+  return { tag: "exited", status: status.success };
 }
 
 type ProcessFailureRun = Readonly<{
@@ -2492,15 +2529,15 @@ function modelInvocationResultFromLifecycle(
 }
 
 function modelInvocationTimeoutMilliseconds(value: number | undefined): number {
-  const decoded = Schema.decodeUnknownEither(PositiveIntegerSchema)(
+  const decoded = Schema.decodeUnknownResult(PositiveIntegerSchema)(
     value === undefined ? MODEL_INVOCATION_TIMEOUT_MILLISECONDS : value,
   );
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     throw new Error(
-      `Model invocation timeout must be a positive integer: ${decoded.left.message}`,
+      `Model invocation timeout must be a positive integer: ${decoded.failure.message}`,
     );
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 export const MODEL_INVOCATION_TERMINATION_GRACE_MILLISECONDS = 250;
@@ -2982,7 +3019,7 @@ async function runCodexProcess<A, E extends object>(input: {
   readonly metadataErrorMessage: string;
   readonly completionEvent: (
     input: InvocationCompletionInput,
-  ) => Either.Either<object, ParseResult.ParseError>;
+  ) => Result.Result<object, Schema.SchemaError>;
   readonly completionErrorPrefix: string;
   readonly evidenceFromEvents: InvocationEvidenceFromEvents<E>;
   readonly spawnProcess?: SpawnOwnedCodexProcess | undefined;
@@ -3049,13 +3086,13 @@ async function runCodexProcess<A, E extends object>(input: {
             : withoutRunnerRawRetentionEvents(events);
         const codexEventAnalysis =
           childReservedEventMessage !== undefined
-            ? Either.right(codexEventDecodeFailure(childReservedEventMessage))
+            ? Result.succeed(codexEventDecodeFailure(childReservedEventMessage))
             : retainedEvents.tag === "invalid"
-              ? Either.right(codexEventDecodeFailure(retainedEvents.message))
+              ? Result.succeed(codexEventDecodeFailure(retainedEvents.message))
               : analyzeCodexEvents(exit, events);
-        const analysis = Either.isLeft(codexEventAnalysis)
-          ? codexEventDecodeFailure(codexEventAnalysis.left)
-          : codexEventAnalysis.right;
+        const analysis = Result.isFailure(codexEventAnalysis)
+          ? codexEventDecodeFailure(codexEventAnalysis.failure)
+          : codexEventAnalysis.success;
         const expectedOutputClaimToken =
           outputClaim === undefined || typeof outputClaim === "string"
             ? undefined
@@ -3080,12 +3117,12 @@ async function runCodexProcess<A, E extends object>(input: {
             exit,
             result,
           });
-          if (Either.isLeft(completedEvent)) {
+          if (Result.isFailure(completedEvent)) {
             throw new Error(
-              `${input.completionErrorPrefix}: ${completedEvent.left.message}`,
+              `${input.completionErrorPrefix}: ${completedEvent.failure.message}`,
             );
           }
-          return { lifecycle, completed: completedEvent.right };
+          return { lifecycle, completed: completedEvent.success };
         };
         const initialCompletion = completedForAnalysis(analysis);
         const finalized = (() => {
@@ -3265,9 +3302,9 @@ export async function runCodexInvocation<A = unknown>(
     reasoningEffort: input.reasoningEffort,
     startedAt,
   });
-  if (Either.isLeft(startedEvent)) {
+  if (Result.isFailure(startedEvent)) {
     throw new Error(
-      `Cannot create invocation start event: ${startedEvent.left.message}`,
+      `Cannot create invocation start event: ${startedEvent.failure.message}`,
     );
   }
   const processResult = await runCodexProcess({
@@ -3277,7 +3314,7 @@ export async function runCodexInvocation<A = unknown>(
     stdinFd: input.stdinFd,
     eventPath: input.eventPath,
     logPath: input.logPath,
-    startedEvent: startedEvent.right,
+    startedEvent: startedEvent.success,
     startedMilliseconds,
     model: input.model,
     reasoningEffort: input.reasoningEffort,
@@ -3347,16 +3384,16 @@ type RunBenchmarkAuxiliaryInvocationInput<
 
 export function runBenchmarkAuxiliaryInvocation<A = unknown>(
   input: RunBenchmarkAuxiliaryInvocationInput<A, NoOutputOperation>,
-): Promise<Either.Either<ModelInvocationRun<A, "noOutput">, string>>;
+): Promise<Result.Result<ModelInvocationRun<A, "noOutput">, string>>;
 export function runBenchmarkAuxiliaryInvocation<A>(
   input: RunBenchmarkAuxiliaryInvocationInput<
     A,
     ExpectedLastMessageOperation<A>
   >,
-): Promise<Either.Either<ModelInvocationRun<A, "expectedLastMessage">, string>>;
+): Promise<Result.Result<ModelInvocationRun<A, "expectedLastMessage">, string>>;
 export async function runBenchmarkAuxiliaryInvocation<A = unknown>(
   input: RunBenchmarkAuxiliaryInvocationInput<A>,
-): Promise<Either.Either<ModelInvocationRun<A>, string>> {
+): Promise<Result.Result<ModelInvocationRun<A>, string>> {
   try {
     const startedAt = new Date().toISOString();
     const startedMilliseconds = Date.now();
@@ -3372,9 +3409,9 @@ export async function runBenchmarkAuxiliaryInvocation<A = unknown>(
       reasoningEffort: input.reasoningEffort,
       startedAt,
     });
-    if (Either.isLeft(startedEvent)) {
+    if (Result.isFailure(startedEvent)) {
       throw new Error(
-        `Cannot create benchmark invocation start event: ${startedEvent.left.message}`,
+        `Cannot create benchmark invocation start event: ${startedEvent.failure.message}`,
       );
     }
     const processResult = await runCodexProcess({
@@ -3384,7 +3421,7 @@ export async function runBenchmarkAuxiliaryInvocation<A = unknown>(
       stdinFd: input.stdinFd,
       eventPath: input.eventPath,
       logPath: input.logPath,
-      startedEvent: startedEvent.right,
+      startedEvent: startedEvent.success,
       startedMilliseconds,
       model: input.model,
       reasoningEffort: input.reasoningEffort,
@@ -3406,9 +3443,9 @@ export async function runBenchmarkAuxiliaryInvocation<A = unknown>(
       entry: processResult.evidence,
       eventsSha256: processResult.eventsSha256,
     });
-    return Either.right(processResult.lifecycle);
+    return Result.succeed(processResult.lifecycle);
   } catch (error: unknown) {
-    return Either.left(
+    return Result.fail(
       error instanceof Error
         ? error.message
         : `Benchmark auxiliary invocation failed: ${String(error)}`,

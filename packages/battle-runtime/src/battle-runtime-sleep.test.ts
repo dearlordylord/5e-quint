@@ -14,6 +14,7 @@ import {
   battleAfterGoblinFailedSleepRepeatSave,
   battleId,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   breakBattleConcentration,
   characterSeed,
   damageRollFill,
@@ -115,10 +116,9 @@ describe("battle runtime: Sleep", () => {
       conditions: expect.objectContaining({ directIncapacitated: true }),
       activeEffects: [
         expect.objectContaining({
-          kind: "sleepPendingRepeatSave",
+          kind: "stagedSaveConditionPendingRepeat",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
-          save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
           repeatAt: { kind: "endOfTurn", combatantId: goblinId, round: 1 },
           expiresAt: { kind: "concentration", combatantId: wizardId },
         }),
@@ -151,7 +151,7 @@ describe("battle runtime: Sleep", () => {
     });
     const base = session.state;
     const goblin = base.combatants.get(goblinId)!;
-    const state = {
+    const concentratingState = {
       ...base,
       combatants: new Map(base.combatants).set(goblinId, {
         ...goblin,
@@ -161,25 +161,27 @@ describe("battle runtime: Sleep", () => {
           ),
           effectKind: "spellEffect",
         },
-        activeEffects: [
-          {
-            kind: "spellBaseArmorClass",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("mage_armor"),
-            ),
-            sourceCombatantId: goblinId,
-            base: armorClass(13),
-            ability: "dex",
-            expiresAt: {
-              kind: "concentration",
-              combatantId: goblinId,
-              durationTicks: requireElapsedHours(8),
-            },
-            earlyEnds: [{ kind: "concentrationBroken" }],
-          },
-        ],
       }),
     } satisfies BattleState;
+    const state = battleStateWithAllocatedEffectForTest({
+      state: concentratingState,
+      ownerId: goblinId,
+      effect: {
+        kind: "spellBaseArmorClass",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("mage_armor"),
+        ),
+        sourceCombatantId: goblinId,
+        base: armorClass(13),
+        ability: "dex",
+        expiresAt: {
+          kind: "concentration",
+          combatantId: goblinId,
+          durationTicks: requireElapsedHours(8),
+        },
+        earlyEnds: [{ kind: "concentrationBroken" }],
+      },
+    });
     const subject = findAct(session, magicSubject("sleep")).subject;
     const savingThrows = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
@@ -203,7 +205,7 @@ describe("battle runtime: Sleep", () => {
       conditions: expect.objectContaining({ directIncapacitated: true }),
       activeEffects: [
         expect.objectContaining({
-          kind: "sleepPendingRepeatSave",
+          kind: "stagedSaveConditionPendingRepeat",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
         }),
@@ -443,7 +445,7 @@ describe("battle runtime: Sleep", () => {
     expect(repeatSave).toMatchObject({
       label: "Repeat WIS save",
       ability: "wis",
-      sleepRepeatSave: {
+      stagedConditionRepeatSave: {
         targetId: goblinId,
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: wizardId,
@@ -540,7 +542,7 @@ describe("battle runtime: Sleep", () => {
       }),
       activeEffects: [
         expect.objectContaining({
-          kind: "sleepUnconscious",
+          kind: "stagedSaveConditionApplied",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
           expiresAt: { kind: "concentration", combatantId: wizardId },
@@ -669,7 +671,7 @@ describe("battle runtime: Sleep", () => {
       endTurn({ state: slept, actorId: wizardId }),
     ).state;
     const goblin = goblinTurnBase.combatants.get(goblinId)!;
-    const goblinTurn = {
+    const concentratingGoblinTurn = {
       ...goblinTurnBase,
       combatants: new Map(goblinTurnBase.combatants).set(goblinId, {
         ...goblin,
@@ -679,26 +681,27 @@ describe("battle runtime: Sleep", () => {
           ),
           effectKind: "spellEffect",
         },
-        activeEffects: [
-          ...goblin.activeEffects,
-          {
-            kind: "spellBaseArmorClass",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("mage_armor"),
-            ),
-            sourceCombatantId: goblinId,
-            base: armorClass(13),
-            ability: "dex",
-            expiresAt: {
-              kind: "concentration",
-              combatantId: goblinId,
-              durationTicks: requireElapsedHours(8),
-            },
-            earlyEnds: [{ kind: "concentrationBroken" }],
-          },
-        ],
       }),
     } satisfies BattleState;
+    const goblinTurn = battleStateWithAllocatedEffectForTest({
+      state: concentratingGoblinTurn,
+      ownerId: goblinId,
+      effect: {
+        kind: "spellBaseArmorClass",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("mage_armor"),
+        ),
+        sourceCombatantId: goblinId,
+        base: armorClass(13),
+        ability: "dex",
+        expiresAt: {
+          kind: "concentration",
+          combatantId: goblinId,
+          durationTicks: requireElapsedHours(8),
+        },
+        earlyEnds: [{ kind: "concentrationBroken" }],
+      },
+    });
     const repeatSave = requireHole(
       endTurn({ state: goblinTurn, actorId: goblinId }),
       "savingThrowOutcome",
@@ -721,7 +724,7 @@ describe("battle runtime: Sleep", () => {
       conditions: expect.objectContaining({ unconscious: true }),
       activeEffects: [
         expect.objectContaining({
-          kind: "sleepUnconscious",
+          kind: "stagedSaveConditionApplied",
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: wizardId,
         }),
@@ -1113,7 +1116,9 @@ describe("battle runtime: Sleep", () => {
     expect(noDamage.combatants.get(goblinId)).toMatchObject({
       conditions: expect.objectContaining({ directIncapacitated: true }),
       activeEffects: [
-        expect.objectContaining({ kind: "sleepPendingRepeatSave" }),
+        expect.objectContaining({
+          kind: "stagedSaveConditionPendingRepeat",
+        }),
       ],
     });
 
@@ -1336,8 +1341,15 @@ describe("battle runtime: Sleep", () => {
     ).state;
     const subject: Extract<
       BattleSubject,
-      { readonly tag: "action"; readonly action: "shakeAwakeFromSleep" }
-    > = { tag: "action", actorId: fighterId, action: "shakeAwakeFromSleep" };
+      {
+        readonly tag: "action";
+        readonly action: "shakeAwakeFromStagedCondition";
+      }
+    > = {
+      tag: "action",
+      actorId: fighterId,
+      action: "shakeAwakeFromStagedCondition",
+    };
     const act = findAct(fighterTurn, subject);
     const target = findHole(act.initialHoles, "targetChoice");
     const replayTarget = requireHole(
@@ -1355,7 +1367,7 @@ describe("battle runtime: Sleep", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Sleep shake-awake target must be within 5 feet of the actor by table-supplied fact.",
+        "Hit-point-budget condition shake-awake target must be within 5 feet of the actor by table-supplied fact.",
     });
 
     const shaken = requireResolved(
@@ -1365,7 +1377,7 @@ describe("battle runtime: Sleep", () => {
         fills: [
           targetFill(target, goblinId, [
             {
-              kind: "sleepShakeAwakeActorWithin5Feet",
+              kind: "stagedConditionShakeAwakeActorWithin5Feet",
               actorId: fighterId,
               targetId: goblinId,
             },
@@ -1439,7 +1451,7 @@ describe("battle runtime: Sleep", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Sleep shake-awake is no longer available.",
+      message: "Hit-point-budget condition shake-awake is no longer available.",
     });
   });
 
@@ -1471,7 +1483,7 @@ describe("battle runtime: Sleep", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Sleep shake-awake target must be within 5 feet of the actor by table-supplied fact.",
+        "Hit-point-budget condition shake-awake target must be within 5 feet of the actor by table-supplied fact.",
     });
   });
 
@@ -1670,7 +1682,7 @@ describe("battle runtime: Sleep", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Sleep targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
+        "hit-point-budget condition targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
     });
   });
 
@@ -1716,7 +1728,7 @@ describe("battle runtime: Sleep", () => {
               area: {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId],
-                sleepNonSleeperFacts: [
+                stagedConditionAutomaticSuccessFacts: [
                   { kind: "doesNotSleep", targetId: goblinId },
                 ],
               },
@@ -1728,7 +1740,7 @@ describe("battle runtime: Sleep", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Sleep targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
+        "hit-point-budget condition targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
     });
 
     const resolved = requireResolved(
@@ -1743,7 +1755,7 @@ describe("battle runtime: Sleep", () => {
               area: {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId],
-                sleepNonSleeperFacts: [
+                stagedConditionAutomaticSuccessFacts: [
                   { kind: "doesNotSleep", targetId: goblinId },
                 ],
               },
@@ -1811,7 +1823,7 @@ describe("battle runtime: Sleep", () => {
               area: {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId],
-                sleepNonSleeperFacts: [
+                stagedConditionAutomaticSuccessFacts: [
                   { kind: "doesNotSleep", targetId: fighterId },
                 ],
               },
@@ -1822,7 +1834,8 @@ describe("battle runtime: Sleep", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: "Sleep non-sleeper facts must match selected Sphere targets.",
+      message:
+        "hit-point-budget condition non-sleeper facts must match selected Sphere targets.",
     });
 
     expect(
@@ -1837,7 +1850,7 @@ describe("battle runtime: Sleep", () => {
               area: {
                 originAnchorId: wizardId,
                 affectedTargetIds: [goblinId],
-                sleepNonSleeperFacts: [
+                stagedConditionAutomaticSuccessFacts: [
                   { kind: "doesNotSleep", targetId: goblinId },
                   { kind: "doesNotSleep", targetId: goblinId },
                 ],
@@ -1849,7 +1862,8 @@ describe("battle runtime: Sleep", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: "Sleep non-sleeper facts must not duplicate targets.",
+      message:
+        "hit-point-budget condition non-sleeper facts must not duplicate targets.",
     });
   });
 

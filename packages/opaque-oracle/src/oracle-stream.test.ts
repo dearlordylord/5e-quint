@@ -1,4 +1,4 @@
-import { Either, Effect, Exit, Stream } from "effect";
+import { Result, Effect, Exit, Stream } from "effect";
 import { afterAll, describe, expect, test } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -23,12 +23,12 @@ import {
 
 function testCorpus(services: OracleEvaluationServices): OracleCorpus {
   const result = buildOracleEvaluationCorpus(services);
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Oracle test corpus failed: ${JSON.stringify(result.left)}`,
+      `Oracle test corpus failed: ${JSON.stringify(result.failure)}`,
     );
   }
-  return result.right;
+  return result.success;
 }
 
 const temporaryRoot = mkdtempSync(join(tmpdir(), "opaque-oracle-stream-"));
@@ -38,10 +38,12 @@ const build = buildOracleDistribution({
 const loaded = loadOracleApplicationFromDirectory({
   directory: build.destination,
 });
-if (Either.isLeft(loaded)) {
-  throw new Error(`Oracle test application failed to load: ${loaded.left.tag}`);
+if (Result.isFailure(loaded)) {
+  throw new Error(
+    `Oracle test application failed to load: ${loaded.failure.tag}`,
+  );
 }
-const application = loaded.right;
+const application = loaded.success;
 const corpus = testCorpus(application.services);
 const distributionId = application.identity.distributionId;
 

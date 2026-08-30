@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 import type {
   McpBattleState,
@@ -8,14 +8,14 @@ import type {
 export function invalidBattleStateTransition(
   from: McpBattleState["tag"],
   to: McpBattleState["tag"],
-): Either.Either<
+): Result.Result<
   never,
   Extract<
     McpBattleStateTransitionIssue,
     { readonly tag: "invalidBattleStateTransition" }
   >
 > {
-  return Either.left({
+  return Result.fail({
     tag: "invalidBattleStateTransition",
     from,
     to,

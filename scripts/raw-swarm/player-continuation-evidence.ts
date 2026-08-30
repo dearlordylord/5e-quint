@@ -1,41 +1,46 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 export const PLAYER_CONTINUATION_LIMIT = 128;
 
 export const PlayerExecutionObstructionSchema = Schema.Struct({
   kind: Schema.Literal("continuationLimit"),
   limit: Schema.Literal(PLAYER_CONTINUATION_LIMIT),
-  message: Schema.NonEmptyTrimmedString,
+  message: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
 export type PlayerExecutionObstruction = Schema.Schema.Type<
   typeof PlayerExecutionObstructionSchema
 >;
 
-export const PlayerExecutionStateSchema = Schema.Union(
+export const PlayerExecutionStateSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("active") }),
   Schema.Struct({
     kind: Schema.Literal("playerConcluded"),
-    conclusion: Schema.NonEmptyTrimmedString,
+    conclusion: Schema.Trimmed.check(Schema.isNonEmpty()),
   }),
   Schema.Struct({
     kind: Schema.Literal("playerObstructed"),
     obstruction: PlayerExecutionObstructionSchema,
   }),
-);
+]);
 export type PlayerExecutionState = Schema.Schema.Type<
   typeof PlayerExecutionStateSchema
 >;
 
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
+const HashSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+);
 
 const PlayerContinuationObservationSchema = Schema.Struct({
   transcriptHeaderSha256: HashSchema,
-  continuation: Schema.Number.pipe(Schema.int(), Schema.greaterThan(0)),
-  kind: Schema.Union(
+  continuation: Schema.Number.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0)),
+  ),
+  kind: Schema.Union([
     Schema.Literal("continue"),
     Schema.Literal("playerConcluded"),
     Schema.Literal("executionError"),
-  ),
+  ]),
 });
 
 export type PlayerContinuationEvidence =
@@ -51,18 +56,18 @@ export function playerContinuationEvidence(input: {
   readonly observations: readonly unknown[];
   readonly callContinuations: readonly number[];
 }): PlayerContinuationEvidence {
-  const observations = Schema.decodeUnknownEither(
+  const observations = Schema.decodeUnknownResult(
     Schema.Array(PlayerContinuationObservationSchema),
   )(input.observations);
-  if (Either.isLeft(observations)) {
-    return { tag: "invalid", message: observations.left.message };
+  if (Result.isFailure(observations)) {
+    return { tag: "invalid", message: observations.failure.message };
   }
-  const continuationNumbers = observations.right.map(
+  const continuationNumbers = observations.success.map(
     ({ continuation }) => continuation,
   );
   const continuationsWithCalls = new Set(input.callContinuations);
   if (
-    observations.right.some(
+    observations.success.some(
       ({ transcriptHeaderSha256 }) =>
         transcriptHeaderSha256 !== input.transcriptHeaderSha256,
     ) ||
@@ -72,7 +77,7 @@ export function playerContinuationEvidence(input: {
     input.callContinuations.some(
       (continuation) => !continuationNumbers.includes(continuation),
     ) ||
-    observations.right.some(
+    observations.success.some(
       ({ continuation, kind }) =>
         kind !== "executionError" && !continuationsWithCalls.has(continuation),
     )

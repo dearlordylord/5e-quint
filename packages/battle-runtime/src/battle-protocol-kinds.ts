@@ -17,14 +17,15 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
     .pipe(
       byBattleFillKind("abilityCheck", () => "abilityCheck" as const),
       byBattleFillKind("abilityChoice", () => "abilityChoice" as const),
+      byBattleFillKind("areaWindStrength", () => "areaWindStrength" as const),
       byBattleFillKind(
         "attackDamageDisposition",
         () => "attackDamageDisposition" as const,
       ),
       byBattleFillKind("attackRoll", () => "attackRoll" as const),
       byBattleFillKind(
-        "commandOptionChoice",
-        () => "commandOptionChoice" as const,
+        "compelledBehaviorOptionChoice",
+        () => "compelledBehaviorOptionChoice" as const,
       ),
       byBattleFillKind(
         "companionReappearanceInitiative",
@@ -45,18 +46,18 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       ),
       byBattleFillKind("damageTypeChoice", () => "damageTypeChoice" as const),
       byBattleFillKind(
-        "dancingLightsPlacement",
-        () => "dancingLightsPlacement" as const,
+        "movableLightPlacement",
+        () => "movableLightPlacement" as const,
       ),
       byBattleFillKind("deathSavingThrow", () => "deathSavingThrow" as const),
       byBattleFillKind(
-        "findFamiliarConnection",
-        () => "findFamiliarConnection" as const,
+        "spawnedCompanionConnection",
+        () => "spawnedCompanionConnection" as const,
       ),
       byBattleFillKind("grappleOutcome", () => "grappleOutcome" as const),
       byBattleFillKind(
-        "gustOfWindLineDirectionChoice",
-        () => "gustOfWindLineDirectionChoice" as const,
+        "directionalPersistentAreaDirectionChoice",
+        () => "directionalPersistentAreaDirectionChoice" as const,
       ),
       byBattleFillKind("heldObjectFacts", () => "heldObjectFacts" as const),
       byBattleFillKind(
@@ -75,16 +76,16 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       ),
       byBattleFillKind("interruptDecision", () => "interruptDecision" as const),
       byBattleFillKind(
-        "levitateAltitudeChange",
-        () => "levitateAltitudeChange" as const,
+        "controlledVerticalSuspensionAltitudeChange",
+        () => "controlledVerticalSuspensionAltitudeChange" as const,
       ),
       byBattleFillKind(
-        "levitateInitialRise",
-        () => "levitateInitialRise" as const,
+        "controlledVerticalSuspensionInitialRise",
+        () => "controlledVerticalSuspensionInitialRise" as const,
       ),
       byBattleFillKind(
-        "magicWeaponTargetItem",
-        () => "magicWeaponTargetItem" as const,
+        "weaponAttackDamageEnhancementTargetItem",
+        () => "weaponAttackDamageEnhancementTargetItem" as const,
       ),
       byBattleFillKind(
         "movableZoneRamMovement",
@@ -93,6 +94,14 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       byBattleFillKind(
         "movableZoneRepositionMovement",
         () => "movableZoneRepositionMovement" as const,
+      ),
+      byBattleFillKind(
+        "persistentAreaSourceTurnTranslation",
+        () => "persistentAreaSourceTurnTranslation" as const,
+      ),
+      byBattleFillKind(
+        "startTurnOccurrenceOrder",
+        () => "startTurnOccurrenceOrder" as const,
       ),
       byBattleFillKind("readyDeclaration", () => "readyDeclaration" as const),
       byBattleFillKind("movement", () => "movement" as const),
@@ -114,8 +123,8 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       ),
       byBattleFillKind("rolledDice", () => "rolledDice" as const),
       byBattleFillKind(
-        "sanctuaryInterdictionOutcome",
-        () => "sanctuaryInterdictionOutcome" as const,
+        "targetingSaveInterdictionOutcome",
+        () => "targetingSaveInterdictionOutcome" as const,
       ),
       byBattleFillKind(
         "savingThrowOutcome",
@@ -126,8 +135,8 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         () => "selfTransformationModeChoice" as const,
       ),
       byBattleFillKind(
-        "slowSomaticSpellFailureOutcome",
-        () => "slowSomaticSpellFailureOutcome" as const,
+        "turnConstraintSomaticSpellFailureOutcome",
+        () => "turnConstraintSomaticSpellFailureOutcome" as const,
       ),
     )
     .pipe(
@@ -140,8 +149,8 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       ),
       byBattleFillKind("spellTargetList", () => "spellTargetList" as const),
       byBattleFillKind(
-        "spiritualWeaponForcePosition",
-        () => "spiritualWeaponForcePosition" as const,
+        "spatialMeleeSpellAttackProxyPosition",
+        () => "spatialMeleeSpellAttackProxyPosition" as const,
       ),
       byBattleFillKind(
         "statBlockRechargeRoll",
@@ -165,12 +174,16 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         () => "teleportDestination" as const,
       ),
       byBattleFillKind(
-        "thaumaturgyActiveOneMinuteEffectCount",
-        () => "thaumaturgyActiveOneMinuteEffectCount" as const,
+        "temporaryAbilityCheckRollModeActiveEffectCount",
+        () => "temporaryAbilityCheckRollModeActiveEffectCount" as const,
       ),
       byBattleFillKind(
         "toolPossessionFacts",
         () => "toolPossessionFacts" as const,
+      ),
+      byBattleFillKind(
+        "temporaryHitPointChoice",
+        () => "temporaryHitPointChoice" as const,
       ),
       byBattleFillKind(
         "unitFeatureDecision",
@@ -188,10 +201,7 @@ export function battleSubjectKind(subject: BattleSubject) {
   return Match.value(subject)
     .pipe(
       byBattleSubjectTag("action", actionSubjectKind),
-      byBattleSubjectTag(
-        "pactOfTheChainFamiliarAttack",
-        () => "companionAttack" as const,
-      ),
+      byBattleSubjectTag("companionAttack", () => "companionAttack" as const),
       byBattleSubjectTag("bonusAction", bonusActionSubjectKind),
       byBattleSubjectTag(
         "bonusActionStandardAction",
@@ -216,12 +226,12 @@ export function battleSubjectKind(subject: BattleSubject) {
       byBattleSubjectTag("druidWildShape", druidWildShapeSubjectKind),
       byBattleSubjectTag("companionLifecycle", companionLifecycleSubjectKind),
       byBattleSubjectTag(
-        "findFamiliarSharedSenses",
+        "spawnedCompanionSharedSenses",
         () => "companionSenses" as const,
       ),
       byBattleSubjectTag(
-        "findFamiliarTouchSpell",
-        findFamiliarTouchSpellSubjectKind,
+        "spawnedCompanionTouchSpellProxy",
+        spawnedCompanionTouchSpellProxySubjectKind,
       ),
     )
     .pipe(
@@ -249,11 +259,11 @@ function actionSubjectKind(
     byAction("escapeGrapple", () => "actionContest" as const),
     byAction("escapeSpellRestraint", () => "actionContest" as const),
     byAction(
-      "shakeAwakeFromSleep",
+      "shakeAwakeFromStagedCondition",
       () => "actionConditionIntervention" as const,
     ),
     byAction(
-      "shakeAwakeFromHypnoticPattern",
+      "shakeAwakeFromAreaControl",
       () => "actionConditionIntervention" as const,
     ),
     Match.exhaustive,
@@ -317,8 +327,11 @@ function companionLifecycleSubjectKind(
   );
 }
 
-function findFamiliarTouchSpellSubjectKind(
-  subject: Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>,
+function spawnedCompanionTouchSpellProxySubjectKind(
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "spawnedCompanionTouchSpellProxy" }
+  >,
 ) {
   return Match.value(subject.spellAction).pipe(
     Match.when("action", () => "companionDeliveredMagic" as const),
@@ -351,31 +364,45 @@ function runtimeCommandSubjectKind(
         "retaliationAttack",
         () => "runtimeCommandRetaliationAttack" as const,
       ),
-      byCommand("greaseGroundHazardSave", () => "runtimeSavingThrow" as const),
-      byCommand("webRestraintSave", () => "runtimeSavingThrow" as const),
       byCommand(
-        "sleetStormAreaHazardSave",
+        "persistentAreaSaveConditionSave",
         () => "runtimeSavingThrow" as const,
       ),
       byCommand(
-        "insectPlagueAreaHazardSave",
+        "persistentAreaSaveConditionEscapeSave",
         () => "runtimeSavingThrow" as const,
       ),
-      byCommand("cloudkillAreaHazardSave", () => "runtimeSavingThrow" as const),
       byCommand(
-        "webRestrainedNoLongerInArea",
+        "persistentAreaSaveCompositeSave",
+        () => "runtimeSavingThrow" as const,
+      ),
+      byCommand(
+        "persistentAreaSaveDamageSave",
+        () => "runtimeSavingThrow" as const,
+      ),
+      byCommand(
+        "endPersistentAreaSaveConditionEscapeForDeparture",
         () => "runtimeEffectCleanup" as const,
       ),
-      byCommand("webAreaRemoved", () => "runtimeEffectCleanup" as const),
-      byCommand("gustOfWindLineSave", () => "runtimeSavingThrow" as const),
       byCommand(
-        "gustOfWindLineDirectionChange",
+        "endPersistentAreaSaveConditionEscapeForAreaRemoval",
+        () => "runtimeEffectCleanup" as const,
+      ),
+      byCommand(
+        "directionalPersistentAreaSave",
+        () => "runtimeSavingThrow" as const,
+      ),
+      byCommand(
+        "directionalPersistentAreaDirectionChange",
         () => "runtimeEffectControl" as const,
       ),
     )
     .pipe(
       byCommand("movableZoneSave", () => "runtimeSavingThrow" as const),
-      byCommand("moonbeamCylinderExit", () => "runtimeSavingThrow" as const),
+      byCommand(
+        "persistentAreaSaveDamageExit",
+        () => "runtimeSavingThrow" as const,
+      ),
       byCommand("movableZoneReposition", () => "runtimeEffectControl" as const),
       byCommand("movableZoneRam", () => "runtimeEffectControl" as const),
       byCommand(
@@ -394,19 +421,46 @@ function runtimeCommandSubjectKind(
         "creatureTypeProtectionPossessionAttempt",
         () => "runtimeProtectionPrevention" as const,
       ),
-      byCommand("disperseFogCloud", () => "runtimeEffectCleanup" as const),
-      byCommand("disperseCloudkill", () => "runtimeEffectCleanup" as const),
-      byCommand("wardingBondSeparation", () => "runtimeEffectCleanup" as const),
-      byCommand("jumpMovementReplacement", () => "runtimeMovement" as const),
-      byCommand("dragonsBreathExhale", () => "runtimeAreaEffect" as const),
+      byCommand(
+        "endPersistentAreaTraitForEnvironment",
+        () => "runtimeEffectCleanup" as const,
+      ),
+      byCommand(
+        "endPersistentAreaSaveDamageForEnvironment",
+        () => "runtimeEffectCleanup" as const,
+      ),
+      byCommand(
+        "linkedDefenseResistanceDamageShareSeparation",
+        () => "runtimeEffectCleanup" as const,
+      ),
+      byCommand(
+        "fixedCostMovementReplacement",
+        () => "runtimeMovement" as const,
+      ),
+      byCommand(
+        "grantedAreaSaveDamageAction",
+        () => "runtimeAreaEffect" as const,
+      ),
       byCommand(
         "replaceSelfTransformationMode",
         () => "runtimeTransformationMode" as const,
       ),
-      byCommand("commandGrovel", () => "runtimeCompelledAction" as const),
-      byCommand("commandDrop", () => "runtimeCompelledAction" as const),
-      byCommand("commandApproach", () => "runtimeCompelledAction" as const),
-      byCommand("commandFlee", () => "runtimeCompelledAction" as const),
+      byCommand(
+        "executeCompelledGrovel",
+        () => "runtimeCompelledAction" as const,
+      ),
+      byCommand(
+        "executeCompelledDrop",
+        () => "runtimeCompelledAction" as const,
+      ),
+      byCommand(
+        "executeCompelledApproach",
+        () => "runtimeCompelledAction" as const,
+      ),
+      byCommand(
+        "executeCompelledFlee",
+        () => "runtimeCompelledAction" as const,
+      ),
       byCommand("endConcentration", () => "runtimeEffectCleanup" as const),
     )
     .pipe(
@@ -414,7 +468,7 @@ function runtimeCommandSubjectKind(
       byCommand("releaseReadiedAction", () => "runtimeReaction" as const),
       byCommand("releaseReadiedAttack", () => "runtimeReaction" as const),
       byCommand(
-        "levitateAltitudeControl",
+        "controlledVerticalSuspensionAltitudeControl",
         () => "runtimeAltitudeControl" as const,
       ),
       byCommand("creatureFalls", () => "runtimeMovement" as const),

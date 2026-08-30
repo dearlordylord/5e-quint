@@ -1,4 +1,4 @@
-import { Either, Match, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import type { McpApplicationServices } from "./composition-root.ts";
@@ -25,8 +25,8 @@ const EmptyArgsSchema = Schema.Struct({});
 const StringArraySchema = Schema.Array(Schema.String);
 const WorkflowGuideOutputSchema = Schema.Struct({
   lifecycle: StringArraySchema,
-  resultPaths: Schema.Record({ key: Schema.String, value: Schema.String }),
-  acceptedInputs: Schema.Record({ key: Schema.String, value: Schema.String }),
+  resultPaths: Schema.Record(Schema.String, Schema.String),
+  acceptedInputs: Schema.Record(Schema.String, Schema.String),
   naturalLanguagePolicy: Schema.String,
   recovery: StringArraySchema,
   limits: StringArraySchema,
@@ -36,29 +36,26 @@ const UnitSummarySchema = Schema.Struct({
   name: Schema.String,
 });
 const ListCatalogUnitsOutputSchema = Schema.Struct({
-  unitsByKind: Schema.Record({
-    key: Schema.String,
-    value: Schema.Array(UnitSummarySchema),
-  }),
+  unitsByKind: Schema.Record(Schema.String, Schema.Array(UnitSummarySchema)),
   naturalLanguagePolicy: Schema.String,
   next: Schema.String,
 });
 const StatBlockAttackSummarySchema = Schema.Struct({
   attackName: Schema.String,
   attackType: Schema.String,
-  attackBonus: Schema.Union(Schema.Number, Schema.Null),
-  reachFeet: Schema.optionalWith(Schema.Number, { exact: true }),
-  normalRangeFeet: Schema.optionalWith(Schema.Number, { exact: true }),
-  longRangeFeet: Schema.optionalWith(Schema.Number, { exact: true }),
+  attackBonus: Schema.Union([Schema.Number, Schema.Null]),
+  reachFeet: Schema.optionalKey(Schema.Number),
+  normalRangeFeet: Schema.optionalKey(Schema.Number),
+  longRangeFeet: Schema.optionalKey(Schema.Number),
   onHit: StringArraySchema,
 });
 const StatBlockSummarySchema = Schema.Struct({
   statBlockId: Schema.String,
   displayName: Schema.String,
   creatureType: Schema.String,
-  armorClass: Schema.Union(Schema.Number, Schema.Null),
-  hitPoints: Schema.Union(Schema.Number, Schema.Null),
-  initiativeModifier: Schema.optionalWith(Schema.Number, { exact: true }),
+  armorClass: Schema.Union([Schema.Number, Schema.Null]),
+  hitPoints: Schema.Union([Schema.Number, Schema.Null]),
+  initiativeModifier: Schema.optionalKey(Schema.Number),
   attacks: Schema.Array(StatBlockAttackSummarySchema),
   damageVulnerabilities: StringArraySchema,
   damageResistances: StringArraySchema,
@@ -156,10 +153,10 @@ export function isContentToolName(name: string): name is ContentToolName {
 export function decodeContentToolCall(input: {
   readonly name: ContentToolName;
   readonly args: unknown;
-}): Either.Either<ContentToolCall, ReturnType<typeof errorContent>> {
+}): Result.Result<ContentToolCall, ReturnType<typeof errorContent>> {
   return Match.value(input.name).pipe(
     Match.when(contentToolNames.describeMcpWorkflow, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           EmptyArgsSchema,
           input.args,
@@ -172,7 +169,7 @@ export function decodeContentToolCall(input: {
       ),
     ),
     Match.when(contentToolNames.listStatBlocks, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           EmptyArgsSchema,
           input.args,
@@ -185,7 +182,7 @@ export function decodeContentToolCall(input: {
       ),
     ),
     Match.when(contentToolNames.listCatalogUnits, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           EmptyArgsSchema,
           input.args,
@@ -198,7 +195,7 @@ export function decodeContentToolCall(input: {
       ),
     ),
     Match.when(contentToolNames.inspectCatalogUnit, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           InspectCatalogUnitInputSchema,
           input.args,

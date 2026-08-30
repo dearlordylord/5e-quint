@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -7,11 +7,11 @@ import { errorContent } from "./tool-content.ts";
 
 export function completeBattleStateTransition<A>(input: {
   readonly root: McpPlaySessionRoot;
-  readonly transition: Either.Either<void, McpBattleStateTransitionIssue>;
+  readonly transition: Result.Result<void, McpBattleStateTransitionIssue>;
   readonly output: () => A;
 }): A | ReturnType<typeof errorContent> {
-  if (Either.isLeft(input.transition)) {
-    return battleStateTransitionErrorContent(input.transition.left);
+  if (Result.isFailure(input.transition)) {
+    return battleStateTransitionErrorContent(input.transition.failure);
   }
   publishAdminProjectionBestEffort(input.root);
   return input.output();

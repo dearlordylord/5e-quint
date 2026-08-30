@@ -11,7 +11,7 @@ import {
   randomSeed,
   type GeneratorState,
 } from "@drdice/prng";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 
 import type { DiceRollGroup, DiceRollRequestId } from "./dice-tool-input.ts";
 
@@ -22,18 +22,22 @@ export const DICE_RANDOM_SOURCE = {
 } as const;
 export const MAX_RETAINED_DICE_SAMPLINGS_PER_PLAY_SESSION = 10_000;
 
-const DiceSeedWordSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{8}$/u));
-export const DiceSeedSchema = Schema.Tuple(
+const DiceSeedWordSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{8}$/u)),
+);
+export const DiceSeedSchema = Schema.Tuple([
   DiceSeedWordSchema,
   DiceSeedWordSchema,
   DiceSeedWordSchema,
   DiceSeedWordSchema,
-).pipe(
-  Schema.filter((words) => words.some((word) => word !== "00000000")),
+]).pipe(
+  Schema.check(
+    Schema.makeFilter((words) => words.some((word) => word !== "00000000")),
+  ),
   Schema.brand("DiceSeed"),
 );
 export type DiceSeed = typeof DiceSeedSchema.Type;
-export const decodeDiceSeed = Schema.decodeUnknownEither(DiceSeedSchema);
+export const decodeDiceSeed = Schema.decodeUnknownResult(DiceSeedSchema);
 
 export type DiceSamplingFailure =
   | {
@@ -73,10 +77,10 @@ type RetainedSampling = {
 
 export function generatedDiceSeed(): DiceSeed {
   const decoded = decodeDiceSeed(randomSeed());
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     throw new Error("@drdice/prng randomSeed violated its Seed contract.");
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 export function createDiceSamplingService(seed: DiceSeed): DiceSamplingService {

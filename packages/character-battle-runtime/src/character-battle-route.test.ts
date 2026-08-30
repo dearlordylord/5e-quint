@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -75,7 +75,7 @@ describe("character battle route ownership", () => {
     ] as const satisfies readonly CharacterBattleFeatureResourceRouteObservation["tag"][];
 
     for (const tag of tags) {
-      for (const result of [Either.right(null), Either.left(null)]) {
+      for (const result of [Result.succeed(null), Result.fail(null)]) {
         const route = appendCharacterBattleFeatureResourceHandoffRoute(
           initialCharacterBattleFeatureResourceHandoffRoute(),
           { tag, result },

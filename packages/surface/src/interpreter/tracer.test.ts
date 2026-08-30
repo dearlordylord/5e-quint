@@ -606,8 +606,8 @@ describe("Surface trace interpreter", () => {
           label: "ongoing_predicate\nspell-created held object active",
         }),
         expect.objectContaining({
-          atomKind: "emit_light",
-          label: "emit_light\nbright: 10 ft\ndim: +10 ft",
+          atomKind: "emit_bright_and_dim_illumination",
+          label: "emit_bright_and_dim_illumination\nbright: 10 ft\ndim: +10 ft",
         }),
         expect.objectContaining({
           atomKind: "attack_roll",
@@ -736,9 +736,9 @@ describe("Surface trace interpreter", () => {
           label: expect.stringContaining("filter: weapon, nonmagical"),
         }),
         expect.objectContaining({
-          atomKind: "grant_magic_weapon_enhancement",
+          atomKind: "grant_weapon_attack_enhancement",
           label: [
-            "grant_magic_weapon_enhancement",
+            "grant_weapon_attack_enhancement",
             "magic weapon status",
             "+1 (slot tiers L3:2, L6:3) to attack rolls and damage rolls with attached weapon",
           ].join("\n"),

@@ -17,6 +17,8 @@ import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra
 import { describe, expect, test } from "vitest";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   battleFrontierInterruptDecisionForState,
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
@@ -69,17 +71,17 @@ import {
   movementFeet,
   resolveBattleInterrupt,
   resolveBattleSubject,
-  resolveFeatherFallLanding,
+  resolveFallingCreatureMitigationLanding,
   resolveFlySpeedGrantEndFallCleanup,
   snapshotBattle,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
 import type {
   BattleFill,
+  BattleFallingCreatureMitigationTriggerFact,
   BattleFlySpeedGrantEndFallCleanupFrame,
   BattleHole,
   BattleState,
-  BattleTargetSpatialFact,
   CombatantId,
   EndedFlySpeedGrant,
 } from "./unit-profile-admission.test-support.ts";
@@ -342,25 +344,20 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       spellId: longstriderUnitId,
       slotLevel: 1,
     });
-    const stateWithPriorCasting: BattleState = {
-      ...state,
-      combatants: new Map(state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "speedDelta",
-            sourceProcedureRef: act.subject.procedureRef,
-            sourceCombatantId: spellCasterId,
-            deltaFeet: movementDeltaFeet(10),
-            expiresAt: {
-              kind: "duration",
-              durationTicks: elapsedTimeTicks(600),
-            },
-          },
-        ],
-      }),
-    };
+    const stateWithPriorCasting = battleStateWithAllocatedEffectForTest({
+      state,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "speedDelta",
+        sourceProcedureRef: act.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        deltaFeet: movementDeltaFeet(10),
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(600),
+        },
+      },
+    });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
 
     const resolved = resolveBattleSubject({
@@ -1148,7 +1145,11 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const featherFallProcedureRef = requireCharacterSpellProcedureRefForTest(
       battleRuntimeSessionForTest({ ...session, state: broken }),
       spellCasterId,
-      spellSlotInvocationRef(featherFallUnitId, 1, "featherFallMitigation"),
+      spellSlotInvocationRef(
+        featherFallUnitId,
+        1,
+        "fallingCreatureMitigationReaction",
+      ),
     );
     const fallWitness = resolveFlySpeedGrantEndFallCleanup({
       state: broken,
@@ -1207,7 +1208,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       return (
         invocation.tag === "spellSlot" &&
         invocation.spellId === featherFallUnitId &&
-        invocation.procedure === "featherFallMitigation"
+        invocation.procedure === "fallingCreatureMitigationReaction"
       );
     });
     if (
@@ -1247,7 +1248,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     if (mitigated.tag !== "resolved") {
       throw new Error("Expected Feather Fall to resolve.");
     }
-    const landing = resolveFeatherFallLanding({
+    const landing = resolveFallingCreatureMitigationLanding({
       state: mitigated.state,
       targetId: spellCasterId,
     });
@@ -1386,7 +1387,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "missingCombatant",
-      message: "Fly Speed end-fall witness target is not in this battle.",
+      message: "Granted-flight end-fall witness target is not in this battle.",
     });
     const groundedState = breakBattleConcentration(cast.state, spellCasterId);
     expect(
@@ -1886,25 +1887,30 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       spellId: aidUnitId,
       slotLevel: 2,
     });
+    const allocatedStrongerAid = battleStateWithAllocatedEffectForTest({
+      state,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "hitPointMaximumIncrease",
+        sourceProcedureRef: act.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        amount: 10,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(1),
+        },
+      },
+    });
+    const allocatedTarget = requireCombatant(
+      allocatedStrongerAid,
+      spellTargetId,
+    );
     const stateWithStrongerAid: BattleState = {
-      ...state,
-      combatants: new Map(state.combatants).set(spellTargetId, {
-        ...target,
+      ...allocatedStrongerAid,
+      combatants: new Map(allocatedStrongerAid.combatants).set(spellTargetId, {
+        ...allocatedTarget,
         hp: Hp(17),
         positiveHpUnconscious: null,
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "hitPointMaximumIncrease",
-            sourceProcedureRef: act.subject.procedureRef,
-            sourceCombatantId: spellCasterId,
-            amount: 10,
-            expiresAt: {
-              kind: "duration",
-              durationTicks: elapsedTimeTicks(1),
-            },
-          },
-        ],
       }),
     };
     const targetListHole = requireHole(act.initialHoles, "spellTargetList");
@@ -1997,45 +2003,46 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-other-ac-bonus",
     );
-    const stateWithPriorEffects: BattleState = {
+    const concentratingState: BattleState = {
       ...session.state,
-      combatants: new Map(session.state.combatants)
-        .set(spellCasterId, {
-          ...requireCombatant(session.state, spellCasterId),
-          concentration: {
-            sourceProcedureRef: act.subject.procedureRef,
-            effectKind: "spellEffect",
-          },
-        })
-        .set(spellTargetId, {
-          ...target,
-          activeEffects: [
-            ...target.activeEffects,
-            {
-              kind: "spellArmorClassBonus" as const,
-              sourceProcedureRef: act.subject.procedureRef,
-              sourceCombatantId: spellCasterId,
-              bonus: 2,
-              negatesRepeatedDamageAllocation: false,
-              expiresAt: {
-                kind: "concentration" as const,
-                combatantId: spellCasterId,
-              },
-            },
-            {
-              kind: "spellArmorClassBonus" as const,
-              sourceProcedureRef: unrelatedSource,
-              sourceCombatantId: spellCasterId,
-              bonus: 1,
-              negatesRepeatedDamageAllocation: false,
-              expiresAt: {
-                kind: "duration" as const,
-                durationTicks: elapsedTimeTicks(10),
-              },
-            },
-          ],
-        }),
+      combatants: new Map(session.state.combatants).set(spellCasterId, {
+        ...requireCombatant(session.state, spellCasterId),
+        concentration: {
+          sourceProcedureRef: act.subject.procedureRef,
+          effectKind: "spellEffect",
+        },
+      }),
     };
+    const withReplacedEffect = battleStateWithAllocatedEffectForTest({
+      state: concentratingState,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "spellArmorClassBonus",
+        sourceProcedureRef: act.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        bonus: 2,
+        negatesRepeatedDamageAllocation: false,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+        },
+      },
+    });
+    const stateWithPriorEffects = battleStateWithAllocatedEffectForTest({
+      state: withReplacedEffect,
+      ownerId: spellTargetId,
+      effect: {
+        kind: "spellArmorClassBonus",
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellCasterId,
+        bonus: 1,
+        negatesRepeatedDamageAllocation: false,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
     const resolved = resolveBattleSubject({
       state: stateWithPriorEffects,
       subject: act.subject,
@@ -2090,21 +2097,24 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-other-climb-grant",
     );
-    const stateWithPriorEffects: BattleState = {
+    const stateWithConcentration: BattleState = {
       ...session.state,
-      combatants: new Map(session.state.combatants)
-        .set(spellCasterId, {
-          ...requireCombatant(session.state, spellCasterId),
-          concentration: {
-            sourceProcedureRef: act.subject.procedureRef,
-            effectKind: "spellEffect",
-          },
-        })
-        .set(spellTargetId, {
-          ...target,
-          activeEffects: [
-            ...target.activeEffects,
-            {
+      combatants: new Map(session.state.combatants).set(spellCasterId, {
+        ...requireCombatant(session.state, spellCasterId),
+        concentration: {
+          sourceProcedureRef: act.subject.procedureRef,
+          effectKind: "spellEffect",
+        },
+      }),
+    };
+    const stateWithPriorEffects =
+      battleStateWithAllocatedEffectOccurrencesForTest({
+        state: stateWithConcentration,
+        occurrences: [
+          {
+            kind: "activeEffect",
+            ownerId: spellTargetId,
+            effect: {
               kind: "specialSpeedGrant" as const,
               sourceProcedureRef: act.subject.procedureRef,
               sourceCombatantId: spellCasterId,
@@ -2116,7 +2126,11 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
                 combatantId: spellCasterId,
               },
             },
-            {
+          },
+          {
+            kind: "activeEffect",
+            ownerId: spellTargetId,
+            effect: {
               kind: "specialSpeedGrant" as const,
               sourceProcedureRef: unrelatedSource,
               sourceCombatantId: spellCasterId,
@@ -2128,9 +2142,9 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
                 durationTicks: elapsedTimeTicks(10),
               },
             },
-          ],
-        }),
-    };
+          },
+        ],
+      }).state;
     const resolved = resolveBattleSubject({
       state: stateWithPriorEffects,
       subject: act.subject,
@@ -2257,7 +2271,7 @@ function requirePendingFlySpeedGrantCleanup(
 ): EndedFlySpeedGrant {
   const frame = state.interruptStack.find(
     (candidate): candidate is BattleFlySpeedGrantEndFallCleanupFrame =>
-      candidate.kind === "flySpeedGrantEndFallCleanup" &&
+      candidate.kind === "grantedFlightEndFallCleanup" &&
       candidate.targetId === targetId,
   );
   if (frame === undefined) {
@@ -2269,14 +2283,17 @@ function requirePendingFlySpeedGrantCleanup(
 function featherFallTriggerFacts(
   fallingCreatureId: CombatantId,
   sourceProcedureRef: BattleProcedureExecutionRef,
-): readonly BattleTargetSpatialFact[] {
+): readonly BattleFallingCreatureMitigationTriggerFact[] {
   return [
     {
-      kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+      kind: "fallingCreatureMitigationTrigger",
       reactorId: spellCasterId,
-      fallingCreatureId,
       sourceProcedureRef,
-      rangeFeet: movementFeet(60),
+      witness: {
+        kind: "visibleCreatureFalls",
+        fallingCreatureId,
+        distanceFeet: movementFeet(60),
+      },
     },
   ];
 }
@@ -2292,7 +2309,7 @@ function featherFallTargetListFill(
     holeId: hole.holeId,
     value: { targetIds },
     spatialFacts: targetIds.map((targetId) => ({
-      kind: "featherFallTargetFallingWithinRange",
+      kind: "fallingCreatureTargetWithinRange",
       casterId: casterIdValue,
       targetId,
       sourceProcedureRef,
@@ -2405,23 +2422,31 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Heroism to resolve.");
     }
-    expect(resolved.state.combatants.get(spellCasterId)?.activeEffects).toEqual(
-      [
-        expect.objectContaining({
-          kind: "conditionImmunity",
-          sourceProcedureRef: act.subject.procedureRef,
-          sourceCombatantId: spellCasterId,
-          condition: "frightened",
-          expiresAt: { kind: "concentration", combatantId: spellCasterId },
-        }),
-        expect.objectContaining({
-          kind: "turnStartTemporaryHitPoints",
-          sourceProcedureRef: act.subject.procedureRef,
-          sourceCombatantId: spellCasterId,
-          amount: 3,
-          expiresAt: { kind: "concentration", combatantId: spellCasterId },
-        }),
-      ],
+    const casterBefore = state.combatants.get(spellCasterId);
+    const casterAfter = resolved.state.combatants.get(spellCasterId);
+    expect(casterAfter?.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "conditionImmunity",
+        sourceProcedureRef: act.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        condition: "frightened",
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      }),
+      expect.objectContaining({
+        kind: "turnStartTemporaryHitPoints",
+        sourceProcedureRef: act.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        amount: 3,
+        expiresAt: { kind: "concentration", combatantId: spellCasterId },
+      }),
+    ]);
+    const heroismEffectRefs =
+      casterAfter?.activeEffects.flatMap((effect) =>
+        "effectRef" in effect ? [effect.effectRef] : [],
+      ) ?? [];
+    expect(new Set(heroismEffectRefs).size).toBe(2);
+    expect(Number(casterAfter?.nextEffectOrdinal)).toBe(
+      Number(casterBefore?.nextEffectOrdinal) + 2,
     );
     const ended = resolveBattleSubject({
       state: resolved.state,
@@ -2626,30 +2651,24 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
   test("Heroism concentration cleanup preserves an unrelated condition immunity", () => {
     const spell = spellRecord(heroismUnitId);
     const base = spellBattle({ preparedSpells: [spell] });
-    const caster = requireCombatant(base.state, spellCasterId);
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-heroism-unrelated-immunity",
     );
-    const state: BattleState = {
-      ...base.state,
-      combatants: new Map(base.state.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "conditionImmunity" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            condition: "frightened" as const,
-            conditionHadNonSpellSource: false,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
-      }),
-    };
+    const state = battleStateWithAllocatedEffectForTest({
+      state: base.state,
+      ownerId: spellCasterId,
+      effect: {
+        kind: "conditionImmunity" as const,
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellCasterId,
+        condition: "frightened" as const,
+        conditionHadNonSpellSource: false,
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
     const session = battleRuntimeSessionForTest({ ...base, state });
     const act = spellAct({ session, spellId: heroismUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");

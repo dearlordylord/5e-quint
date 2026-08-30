@@ -119,7 +119,7 @@ export function buildStatBlockCatalog(input: {
     tag: "ok",
     catalog: {
       getStatBlock: (id) =>
-        Option.fromNullable(records.get(StatBlockIdSchema.make(id))),
+        Option.fromNullishOr(records.get(StatBlockIdSchema.make(id))),
       listStatBlocks: () => Array.from(records.values()),
       requireStatBlock: (id) => records.get(StatBlockIdSchema.make(id))!,
     },

@@ -1,6 +1,6 @@
 import { lstatSync, realpathSync } from "node:fs";
 import { relative, resolve, sep } from "node:path";
-import { Either } from "effect";
+import { Result } from "effect";
 
 export function relativePathWithinRoot(
   root: string,
@@ -27,15 +27,15 @@ function canonicalOwnedReadPath(
     readonly role: string;
     readonly boundary: string;
   },
-): Either.Either<string, string> {
+): Result.Result<string, string> {
   if (candidatePath.includes("\0")) {
-    return Either.left(`${authority.role} path contains a NUL byte.`);
+    return Result.fail(`${authority.role} path contains a NUL byte.`);
   }
   try {
     const canonicalRoot = realpathSync(ownerRoot);
     const lexicalCandidate = resolve(ownerRoot, candidatePath);
     if (relativePathWithinRoot(canonicalRoot, lexicalCandidate) === undefined) {
-      return Either.left(
+      return Result.fail(
         `${authority.role} path escapes ${authority.boundary}.`,
       );
     }
@@ -43,13 +43,13 @@ function canonicalOwnedReadPath(
     if (
       relativePathWithinRoot(canonicalRoot, canonicalCandidate) === undefined
     ) {
-      return Either.left(
+      return Result.fail(
         `${authority.role} symlink escapes ${authority.boundary}.`,
       );
     }
-    return Either.right(canonicalCandidate);
+    return Result.succeed(canonicalCandidate);
   } catch (error) {
-    return Either.left(
+    return Result.fail(
       `${authority.role} path is unreadable: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
@@ -58,7 +58,7 @@ function canonicalOwnedReadPath(
 export function canonicalRepositoryReadPath(
   repositoryRoot: string,
   candidatePath: string,
-): Either.Either<string, string> {
+): Result.Result<string, string> {
   return canonicalOwnedReadPath(repositoryRoot, candidatePath, {
     role: "Repository authority",
     boundary: "the repository",
@@ -73,7 +73,7 @@ export function canonicalRepositoryReadPath(
 export function canonicalRunnerOwnedReadPath(
   runnerRoot: string,
   candidatePath: string,
-): Either.Either<string, string> {
+): Result.Result<string, string> {
   return canonicalOwnedReadPath(runnerRoot, candidatePath, {
     role: "Runner-owned authority",
     boundary: "its owner root",
@@ -88,15 +88,15 @@ export function canonicalRunnerOwnedReadPath(
 export function canonicalRepositoryReadRelativePath(
   repositoryRoot: string,
   candidatePath: string,
-): Either.Either<string, string> {
+): Result.Result<string, string> {
   const canonical = canonicalRepositoryReadPath(repositoryRoot, candidatePath);
-  if (Either.isLeft(canonical)) return canonical;
+  if (Result.isFailure(canonical)) return canonical;
   try {
-    return Either.right(
-      relative(realpathSync(repositoryRoot), canonical.right),
+    return Result.succeed(
+      relative(realpathSync(repositoryRoot), canonical.success),
     );
   } catch (error) {
-    return Either.left(
+    return Result.fail(
       `Repository authority path is unreadable: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
@@ -110,15 +110,15 @@ export function canonicalRepositoryReadRelativePath(
 export function canonicalRepositoryOutputPath(
   repositoryRoot: string,
   candidatePath: string,
-): Either.Either<string, string> {
+): Result.Result<string, string> {
   if (candidatePath.includes("\0")) {
-    return Either.left("Repository authority path contains a NUL byte.");
+    return Result.fail("Repository authority path contains a NUL byte.");
   }
   try {
     const canonicalRoot = realpathSync(repositoryRoot);
     const lexicalCandidate = resolve(repositoryRoot, candidatePath);
     if (relativePathWithinRoot(canonicalRoot, lexicalCandidate) === undefined) {
-      return Either.left("Repository authority path escapes the repository.");
+      return Result.fail("Repository authority path escapes the repository.");
     }
     let nearestExisting = lexicalCandidate;
     while (true) {
@@ -136,7 +136,7 @@ export function canonicalRepositoryOutputPath(
         }
         const parent = resolve(nearestExisting, "..");
         if (parent === nearestExisting) {
-          return Either.left(
+          return Result.fail(
             "Repository authority destination has no existing ancestor.",
           );
         }
@@ -145,7 +145,7 @@ export function canonicalRepositoryOutputPath(
     }
     const canonicalNearest = realpathSync(nearestExisting);
     if (relativePathWithinRoot(canonicalRoot, canonicalNearest) === undefined) {
-      return Either.left(
+      return Result.fail(
         "Repository authority symlink escapes the repository.",
       );
     }
@@ -155,7 +155,7 @@ export function canonicalRepositoryOutputPath(
       if (
         relativePathWithinRoot(canonicalRoot, canonicalCandidate) === undefined
       ) {
-        return Either.left(
+        return Result.fail(
           "Repository authority symlink escapes the repository.",
         );
       }
@@ -171,9 +171,9 @@ export function canonicalRepositoryOutputPath(
         throw error;
       }
     }
-    return Either.right(lexicalCandidate);
+    return Result.succeed(lexicalCandidate);
   } catch (error) {
-    return Either.left(
+    return Result.fail(
       `Repository authority path is unreadable: ${error instanceof Error ? error.message : String(error)}`,
     );
   }

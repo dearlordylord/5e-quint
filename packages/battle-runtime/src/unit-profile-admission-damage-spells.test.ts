@@ -27,6 +27,7 @@ import {
   fireballUnitId,
   flameStrikeUnitId,
   guidingBoltUnitId,
+  saveGatedConditionWithRepeatUnitId,
   inflictWoundsUnitId,
   lightningBoltUnitId,
   magicMissileUnitId,
@@ -83,7 +84,6 @@ import type {
   CombatantId,
   EffectAtom,
 } from "./unit-profile-admission.test-support.ts";
-import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   repeatedDamageAllocationActionKind,
@@ -92,6 +92,7 @@ import {
 } from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   requireCharacterSpellProcedureRefForTest,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
@@ -1546,8 +1547,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toEqual([
-      {
+      expect.objectContaining({
         kind: "spellConcentrationDuration",
+        effectRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: act.subject.procedureRef,
         expiresAt: {
@@ -1555,7 +1557,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
           combatantId: spellCasterId,
           durationTicks: mindSpikeDurationTicks,
         },
-      },
+      }),
     ]);
     expect(
       snapshotBattle(resolved.state).combatants.find(
@@ -1729,8 +1731,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     expect(
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toEqual([
-      {
+      expect.objectContaining({
         kind: "spellConcentrationDuration",
+        effectRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: act.subject.procedureRef,
         expiresAt: {
@@ -1738,7 +1741,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
           combatantId: spellCasterId,
           durationTicks: mindSpikeDurationTicks,
         },
-      },
+      }),
     ]);
   });
   test("mind_spike successful save applies half damage and breaks prior Concentration without starting Mind Spike", () => {
@@ -2211,27 +2214,36 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         successDamage: "half",
         rangeFeet: 150,
         failedSavePostDamageRiders: [],
-        postSaveAreaEffect: { kind: "fireballObjectIgnition" },
+        postSaveAreaEffect: { kind: "areaObjectIgnition" },
       }),
     );
   });
   test("save-gated damage replays a missing Hideous Laughter damage repeat save", () => {
     const spell = spellRecord(fireballUnitId);
     const baseSession = spellBattle({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 3, count: 1 }],
+      preparedSpells: [spell, spellRecord(saveGatedConditionWithRepeatUnitId)],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 3, count: 1 },
+      ],
       casterClassLevels: [{ className: "wizard", level: 5 }],
       targetHp: 50,
       targetMaxHp: 50,
     });
     const baseCaster = requireCombatant(baseSession.state, spellCasterId);
-    const baseTarget = requireCombatant(baseSession.state, spellTargetId);
-    const hideousLaughterProcedureRef = battleProcedureExecutionRefForTest(
-      "synthetic-save-gated-damage-hideous-laughter",
-    );
-    const hideousLaughter = {
-      kind: "hideousLaughter" as const,
-      sourceProcedureRef: hideousLaughterProcedureRef,
+    const saveGatedConditionWithRepeatProcedureRef =
+      requireCharacterSpellProcedureRefForTest(
+        baseSession,
+        spellCasterId,
+        spellSlotInvocationRef(
+          saveGatedConditionWithRepeatUnitId,
+          1,
+          "saveGatedConditionWithRepeat",
+        ),
+      );
+    const saveGatedConditionWithRepeat = {
+      kind: "saveGatedConditionWithRepeat" as const,
+      sourceProcedureRef: saveGatedConditionWithRepeatProcedureRef,
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
@@ -2244,25 +2256,22 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         kind: "concentration" as const,
         combatantId: spellCasterId,
       },
-    } satisfies Extract<
-      BattleActiveEffect,
-      { readonly kind: "hideousLaughter" }
-    >;
-    const enrichedState = {
+    } as const;
+    const concentratingState: BattleState = {
       ...baseSession.state,
-      combatants: new Map(baseSession.state.combatants)
-        .set(spellCasterId, {
-          ...baseCaster,
-          concentration: {
-            sourceProcedureRef: hideousLaughterProcedureRef,
-            effectKind: "spellEffect" as const,
-          },
-        })
-        .set(spellTargetId, {
-          ...baseTarget,
-          activeEffects: [...baseTarget.activeEffects, hideousLaughter],
-        }),
+      combatants: new Map(baseSession.state.combatants).set(spellCasterId, {
+        ...baseCaster,
+        concentration: {
+          sourceProcedureRef: saveGatedConditionWithRepeatProcedureRef,
+          effectKind: "spellEffect" as const,
+        },
+      }),
     };
+    const enrichedState = battleStateWithAllocatedEffectForTest({
+      state: concentratingState,
+      ownerId: spellTargetId,
+      effect: saveGatedConditionWithRepeat,
+    });
     const session = battleRuntimeSessionForTest({
       ...baseSession,
       state: enrichedState,
@@ -2300,12 +2309,12 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       throw new Error("Expected a Hideous Laughter repeat-save hole.");
     }
     const repeatSaveHole = awaitingRepeatSave.holes.find(
-      (hole) => "hideousLaughterRepeatSave" in hole,
+      (hole) => "saveGatedConditionRepeatSave" in hole,
     );
     expect(repeatSaveHole).toBeDefined();
     expect(repeatSaveHole).toMatchObject({
       kind: "savingThrowOutcome",
-      hideousLaughterRepeatSave: expect.objectContaining({
+      saveGatedConditionRepeatSave: expect.objectContaining({
         targetId: spellTargetId,
         trigger: "damage",
       }),
@@ -2525,7 +2534,8 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: "Fireball requires caller-supplied object ignition area facts.",
+      message:
+        "object-igniting spherical burst requires caller-supplied object ignition area facts.",
     });
   });
   test("shatter is admitted as point-origin Sphere save damage", () => {
@@ -2575,7 +2585,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
           creatureType: "construct",
           mode: "disadvantage",
         },
-        postSaveAreaEffect: { kind: "shatterObjectDamage" },
+        postSaveAreaEffect: { kind: "areaObjectDamage" },
       }),
     );
   });
@@ -2731,7 +2741,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Shatter requires caller-supplied nonmagical unattended object damage area facts.",
+        "object-affecting thunder burst requires caller-supplied nonmagical unattended object damage area facts.",
     });
   });
 });
@@ -2763,7 +2773,7 @@ function fireballSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "fireballArea",
+        kind: "pointOriginSphereSaveDamageArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts,
@@ -2789,7 +2799,7 @@ function shatterSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "shatterArea",
+        kind: "pointOriginSphereObjectDamageArea",
         originAnchorId: spellCasterId,
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         nonmagicalUnattendedObjectDamageFacts,

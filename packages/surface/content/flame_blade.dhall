@@ -107,7 +107,7 @@ let OngoingEffect : Type =
       }
 
 let bladeLight : OngoingEffect =
-      { kind = "emit_light"
+      { kind = "emit_bright_and_dim_illumination"
       , brightRadiusFeet = Some 10
       , dimAdditionalFeet = Some 10
       , attackKind = None Text

@@ -803,7 +803,7 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
   });
 
   test("a Hideous Laughter target repeats its save after an Opportunity Attack", () => {
-    const hideousLaughter = spellRecord("hideous_laughter");
+    const saveGatedConditionWithRepeat = spellRecord("hideous_laughter");
     const baseTarget = statBlockWithCreatureType("humanoid");
     const incapacitatedImmuneTarget = {
       ...baseTarget,
@@ -822,7 +822,7 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
           initiative: 30,
           attack: null,
           spellcasting: wizardSpellcasting({
-            preparedSpells: [hideousLaughter],
+            preparedSpells: [saveGatedConditionWithRepeat],
             spellSlots: [{ spellLevel: 1, count: 1 }],
           }),
         }),
@@ -901,7 +901,7 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
       holes: [
         {
           kind: "savingThrowOutcome",
-          hideousLaughterRepeatSave: {
+          saveGatedConditionRepeatSave: {
             targetId: goblinId,
             trigger: "damage",
           },

@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-action-interdiction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
@@ -31,13 +31,17 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { MovementFeet, type DifficultyClass } from "@dnd/shared/types";
 import type { DiceExpr } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
   type CharacterBattleResourceState,
 } from "../character-battle-resource-execution.ts";
 import { CombatantId, type BattleProcedureExecutionRef } from "../identity.ts";
+import {
+  allocateBattleEffectOccurrenceForCreature,
+  allocateBattleEffectOccurrencesForCreature,
+} from "../effect-execution-ref.ts";
 import {
   combatantCanSee,
   currentActorId,
@@ -68,7 +72,7 @@ import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-f
 import {
   OTHER_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
-} from "./antimagic-field-magical-effect-interdiction.ts";
+} from "./magic-suppression-magical-effect-interdiction.ts";
 import { spendReaction } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import {
@@ -346,18 +350,26 @@ export function resolveUnitFeatureHeldWeaponActivation(
       "Sacred Weapon has no Channel Divinity uses remaining.",
     );
   }
-  const spentAction = Either.getOrThrow(
-    spendActivationResource(input.state.currentTurnResources, {
+  const spentAction = spendActivationResource(
+    input.state.currentTurnResources,
+    {
       kind: "action",
       action: unitFeature.sacredWeapon.activationCost.action,
-    }),
+    },
   );
+  if (Result.isFailure(spentAction)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sacred Weapon requires an available action.",
+    );
+  }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration({
     unit: unitFeature.sacredWeapon.duration.unit,
     amount: unitFeature.sacredWeapon.duration.amount,
   });
   /* v8 ignore start -- @preserve -- Admitted Sacred Weapon invariant: the support-profile parser accepts the SRD one-minute duration before producing execution facts. */
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -365,10 +377,23 @@ export function resolveUnitFeatureHeldWeaponActivation(
     );
   }
   /* v8 ignore stop -- @preserve */
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: actor,
+    effect: {
+      kind: "paladinSacredWeapon",
+      sourceProcedureRef: input.subject.procedureRef,
+      sourceCombatantId: actor.combatantId,
+      weaponItemId: input.subject.weaponItemId,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: durationTicks.success,
+      },
+    },
+  });
   const nextActor: CharacterBattleCreatureState = {
-    ...actor,
+    ...allocation.owner,
     activeEffects: [
-      ...actor.activeEffects.filter(
+      ...allocation.owner.activeEffects.filter(
         (effect) =>
           !(
             effect.kind === "paladinSacredWeapon" &&
@@ -376,16 +401,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
             effect.sourceCombatantId === actor.combatantId
           ),
       ),
-      {
-        kind: "paladinSacredWeapon",
-        sourceProcedureRef: input.subject.procedureRef,
-        sourceCombatantId: actor.combatantId,
-        weaponItemId: input.subject.weaponItemId,
-        expiresAt: {
-          kind: "duration",
-          durationTicks: durationTicks.right,
-        },
-      },
+      allocation.effect,
     ],
     origin: {
       ...actor.origin,
@@ -399,7 +415,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
   };
   const nextState = {
     ...input.state,
-    currentTurnResources: spentAction,
+    currentTurnResources: spentAction.success,
     combatants: new Map(input.state.combatants).set(
       actor.combatantId,
       nextActor,
@@ -480,15 +496,41 @@ function resolveRogueSteadyAimUnitFeature(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
       "Steady Aim Bonus Action is no longer available.",
     );
   }
+  const allocation = allocateBattleEffectOccurrencesForCreature({
+    owner: actor,
+    effects: [
+      {
+        kind: "nextAttackRollBySelf",
+        sourceProcedureRef: input.subject.procedureRef,
+        sourceCombatantId: actor.combatantId,
+        mode: unitFeature.steadyAim.attackRoll.mode,
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: actor.combatantId,
+          round: input.state.initiative.round,
+        },
+      },
+      {
+        kind: "selfSpeedZero",
+        sourceProcedureRef: input.subject.procedureRef,
+        sourceCombatantId: actor.combatantId,
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: actor.combatantId,
+          round: input.state.initiative.round,
+        },
+      },
+    ],
+  });
   const activeEffects = [
-    ...actor.activeEffects.filter(
+    ...allocation.owner.activeEffects.filter(
       (effect) =>
         !(
           "sourceProcedureRef" in effect &&
@@ -498,33 +540,13 @@ function resolveRogueSteadyAimUnitFeature(
             effect.kind === "selfSpeedZero")
         ),
     ),
-    {
-      kind: "nextAttackRollBySelf",
-      sourceProcedureRef: input.subject.procedureRef,
-      sourceCombatantId: actor.combatantId,
-      mode: unitFeature.steadyAim.attackRoll.mode,
-      expiresAt: {
-        kind: "endOfTurn",
-        combatantId: actor.combatantId,
-        round: input.state.initiative.round,
-      },
-    } as const,
-    {
-      kind: "selfSpeedZero",
-      sourceProcedureRef: input.subject.procedureRef,
-      sourceCombatantId: actor.combatantId,
-      expiresAt: {
-        kind: "endOfTurn",
-        combatantId: actor.combatantId,
-        round: input.state.initiative.round,
-      },
-    } as const,
+    ...allocation.effects,
   ];
   const nextState = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
     combatants: new Map(input.state.combatants).set(actor.combatantId, {
-      ...actor,
+      ...allocation.owner,
       activeEffects,
     }),
   };
@@ -557,7 +579,7 @@ function resolveMagicActionHealingPoolUnitFeature(
     kind: "action",
     action: "magic",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -628,7 +650,7 @@ function resolveMagicActionHealingPoolUnitFeature(
   }
   const nextState = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
     combatants,
   };
   return {
@@ -679,7 +701,7 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
     kind: "action",
     action: "magic",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -758,7 +780,7 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   const stateAfterSpend = extendSavingThrowOngoingFeatures(
     {
       ...input.state,
-      currentTurnResources: spent.right,
+      currentTurnResources: spent.success,
       combatants: new Map(input.state.combatants).set(
         actor.combatantId,
         actorAfterResourceSpend,
@@ -922,7 +944,7 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
     kind: "action",
     action: "magic",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -945,7 +967,7 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
   const stateAfterSpend = extendSavingThrowOngoingFeatures(
     {
       ...input.state,
-      currentTurnResources: spent.right,
+      currentTurnResources: spent.success,
       combatants: new Map(input.state.combatants).set(
         actor.combatantId,
         actorAfterResourceSpend,
@@ -1009,7 +1031,7 @@ export function resolveDruidWildShapeUnitFeature(
       kind: "bonusAction",
     });
     /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
-    if (Either.isLeft(spent)) {
+    if (Result.isFailure(spent)) {
       return invalidResult(
         input.state,
         "staleSubject",
@@ -1018,7 +1040,7 @@ export function resolveDruidWildShapeUnitFeature(
     }
     /* v8 ignore stop -- @preserve */
     const nextState = dismissDruidWildShapeForm({
-      state: { ...input.state, currentTurnResources: spent.right },
+      state: { ...input.state, currentTurnResources: spent.success },
       actorId: actor.combatantId,
     });
     return {
@@ -1036,7 +1058,7 @@ export function resolveDruidWildShapeUnitFeature(
     return invalidResult(
       input.state,
       "staleSubject",
-      "Druid Wild Shape is suppressed while the creature remains in the Moonbeam Cylinder.",
+      "Druid Wild Shape is suppressed while the creature remains in the movable radiant cylinder Cylinder.",
     );
   }
   if (!resourceHasUsesRemaining(resource)) {
@@ -1129,7 +1151,7 @@ export function resolveDruidWildShapeUnitFeature(
     kind: "bonusAction",
   });
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1151,7 +1173,7 @@ export function resolveDruidWildShapeUnitFeature(
   };
   const stateWithResourceSpend = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
     combatants: new Map(input.state.combatants).set(
       actor.combatantId,
       nextActor,
@@ -1243,7 +1265,7 @@ export function resolveBardicInspirationGrantUnitFeature(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (!resourceHasUsesRemaining(resource) || Either.isLeft(spent)) {
+  if (!resourceHasUsesRemaining(resource) || Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1380,20 +1402,24 @@ export function resolveBardicInspirationGrantUnitFeature(
       ),
     },
   };
-  const nextTarget: BattleCreatureState = {
-    ...target,
-    activeEffects: [
-      ...target.activeEffects,
-      {
-        kind: "bardicInspirationDie",
-        sourceProcedureRef: input.subject.procedureRef,
-        sourceCombatantId: input.subject.actorId,
-        dieSize: unitFeature.dieSize,
-        expiresAt: {
-          kind: "duration",
-          durationTicks: unitFeature.durationTicks,
-        },
+  const targetAllocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "bardicInspirationDie",
+      sourceProcedureRef: input.subject.procedureRef,
+      sourceCombatantId: input.subject.actorId,
+      dieSize: unitFeature.dieSize,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: unitFeature.durationTicks,
       },
+    },
+  });
+  const nextTarget: BattleCreatureState = {
+    ...targetAllocation.owner,
+    activeEffects: [
+      ...targetAllocation.owner.activeEffects,
+      targetAllocation.effect,
     ],
   };
   const combatants = new Map(input.state.combatants)
@@ -1402,7 +1428,7 @@ export function resolveBardicInspirationGrantUnitFeature(
   const nextState = {
     ...input.state,
     combatants,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   };
   return {
     tag: "resolved",
@@ -1910,7 +1936,7 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
   }
 
   const spent = spendAttackActionResource(input.state.currentTurnResources);
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1935,10 +1961,10 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
       currentTurnResources: openClassFeatureExtraAttackResource({
         state: {
           ...input.state,
-          currentTurnResources: spent.right.state,
+          currentTurnResources: spent.success.state,
         },
         actorId: actor.combatantId,
-        spentResource: spent.right.spentResource,
+        spentResource: spent.success.spentResource,
       }),
       combatants: new Map(input.state.combatants).set(
         actor.combatantId,
@@ -2494,32 +2520,35 @@ function applyMagicActionSaveGatedConditionFailures(
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
     if (target === undefined) continue;
-    const activeEffect = {
-      kind: "unitFeatureCondition" as const,
-      sourceProcedureRef,
-      sourceCombatantId: actorId,
-      condition: unitFeature.condition.onFail.condition,
-      conditionHadNonSpellSource: hasCondition(
-        target.conditions,
-        unitFeature.condition.onFail.condition,
-      ),
-      earlyEnd: { kind: "targetTakesAnyDamage" as const },
-      turnRestriction: { kind: "moveActionOrBonusAction" as const },
-      expiresAt: {
-        kind: "duration" as const,
-        durationTicks: unitFeature.condition.onFail.durationTicks,
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
+        kind: "unitFeatureCondition",
+        sourceProcedureRef,
+        sourceCombatantId: actorId,
+        condition: unitFeature.condition.onFail.condition,
+        conditionHadNonSpellSource: hasCondition(
+          target.conditions,
+          unitFeature.condition.onFail.condition,
+        ),
+        earlyEnd: { kind: "targetTakesAnyDamage" },
+        turnRestriction: { kind: "moveActionOrBonusAction" },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: unitFeature.condition.onFail.durationTicks,
+        },
       },
-    };
+    });
     const nextTarget = {
       ...battleCreatureStateWithKnockOutPreservedConditions(
-        target,
+        allocation.owner,
         applyCondition(
           target.conditions,
           unitFeature.condition.onFail.condition,
         ),
       ),
       activeEffects: [
-        ...target.activeEffects.filter(
+        ...allocation.owner.activeEffects.filter(
           (candidate) =>
             !(
               candidate.kind === "unitFeatureCondition" &&
@@ -2528,7 +2557,7 @@ function applyMagicActionSaveGatedConditionFailures(
               candidate.condition === unitFeature.condition.onFail.condition
             ),
         ),
-        activeEffect,
+        allocation.effect,
       ],
     };
     combatants.set(targetId, nextTarget);
@@ -3131,11 +3160,11 @@ export function resolveExtraActionGrantUnitFeature(
     input.subject.procedureRef,
     unitFeature.restriction,
   );
-  if (Either.isLeft(granted)) {
+  if (Result.isFailure(granted)) {
     return invalidResult(
       input.state,
       "staleSubject",
-      granted.left === "unit-granted action resource already granted"
+      granted.failure === "unit-granted action resource already granted"
         ? "This Unit feature has already granted an action this turn."
         : "This Unit feature cannot grant an action for the current turn.",
     );
@@ -3162,7 +3191,7 @@ export function resolveExtraActionGrantUnitFeature(
       input.subject.actorId,
       nextActor,
     ),
-    currentTurnResources: granted.right,
+    currentTurnResources: granted.success,
   };
   return {
     tag: "resolved",
@@ -3180,7 +3209,7 @@ export function resolveSelfBonusActionHealingUnitFeature(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (!resourceHasUsesRemaining(resource) || Either.isLeft(spent)) {
+  if (!resourceHasUsesRemaining(resource) || Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3222,7 +3251,7 @@ export function resolveSelfBonusActionHealingUnitFeature(
       input.subject.actorId,
       nextActor,
     ),
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   };
   return {
     tag: "resolved",
@@ -3265,7 +3294,7 @@ export function resolveOngoingFeatureUnitFeature(
 
   const currentTurnResources =
     unitFeature.activationTrigger === "bonusAction"
-      ? Either.getOrThrow(
+      ? Result.getOrThrow(
           spendActivationResource(input.state.currentTurnResources, {
             kind: "bonusAction",
           }),

@@ -4,7 +4,7 @@ import type {
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import { revealHidden } from "./hole-helpers.ts";
-import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
+import { battleStateAfterTargetActionEarlyEndForActor } from "./targeting-save-interdiction.ts";
 
 export function stateAfterSpellCastDeclared(input: {
   readonly state: BattleState;

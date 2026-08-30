@@ -1,8 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 import { optionalProperty } from "./optional-property.ts";
-import { Match } from "effect";
-import * as Either from "effect/Either";
+import { Match, Result } from "effect";
 import type { BattleInterruptTrigger } from "./battle-interrupt-triggers.ts";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
 import { battleReducerRouteForResolution } from "./battle-reducer/reducer-route.ts";
@@ -11,7 +10,7 @@ import {
   endTurn,
   openCreatureFallsInterruptWindow,
   resolveAdmittedBattleSubject,
-  resolveAdmittedFindFamiliarReappearanceSubject,
+  resolveAdmittedCompanionReappearanceSubject,
   resolveBattleInterrupt,
   snapshotBattle,
 } from "./battle-execution-composition.ts";
@@ -36,16 +35,17 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   BattleActDiscoveryCandidate,
   BattleFill,
+  BattleFallingCreatureMitigationTriggerFact,
   BattleHole,
   BattleInterruptDecisionFrontier,
+  BattleInterruptRouteOptions,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleSnapshot,
   BattleState,
-  BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
-import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
+import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
 import {
   admitTableD20TestCircumstanceDecisions,
   battleD20TestCircumstanceRequests,
@@ -289,7 +289,7 @@ function battleCurrentContinuation(state: BattleRuntimeSession["state"]): {
       { kind: "attackDamageContinuationCunningStrike" },
       attackDamageContinuation,
     ),
-    Match.when({ kind: "flySpeedGrantEndFallCleanup" }, () => null),
+    Match.when({ kind: "grantedFlightEndFallCleanup" }, () => null),
     Match.when({ kind: "fallDamageLandingMitigation" }, () => null),
     Match.exhaustive,
   );
@@ -426,27 +426,27 @@ function resolveBattleRuntimeSubjectWithHandledInterruptTrigger(
         "Familiar reappearance requires a Stat Block catalog.",
       );
     }
-    const admission = admitFindFamiliarReappearance({
+    const admission = admitSpawnedCompanionReappearance({
       state: input.session.state,
       casterId: input.subject.actorId,
       catalog: input.statBlockCatalog,
     });
-    if (Either.isLeft(admission)) {
+    if (Result.isFailure(admission)) {
       return invalidBattleRuntimeResult(
         input,
         "invalidFill",
-        admission.left.message,
+        admission.failure.message,
       );
     }
-    const result = resolveAdmittedFindFamiliarReappearanceSubject({
+    const result = resolveAdmittedCompanionReappearanceSubject({
       fills: input.fills,
-      admission: admission.right.mechanics,
+      admission: admission.success.mechanics,
     });
     return battleRuntimeResolutionWithFamiliarPresentation(
       input.session,
       result,
-      admission.right.mechanics.combatantAdmission.combatantId,
-      admission.right.presentation,
+      admission.success.mechanics.combatantAdmission.combatantId,
+      admission.success.presentation,
       input,
     );
   }
@@ -571,14 +571,14 @@ export function resolveBattleRuntimeSubjectWithTableD20TestCircumstances(
     requests,
     decisions: input.tableD20TestCircumstanceDecisions,
   });
-  if (Either.isLeft(admission)) {
+  if (Result.isFailure(admission)) {
     return {
       ...invalidBattleRuntimeResult(
         input,
         "invalidFill",
-        admission.left.issues.map(({ message }) => message).join(" "),
+        admission.failure.issues.map(({ message }) => message).join(" "),
       ),
-      tableD20TestCircumstanceDecisionIssue: admission.left,
+      tableD20TestCircumstanceDecisionIssue: admission.failure,
     };
   }
   const result = resolveBattleRuntimeSubject({
@@ -809,7 +809,7 @@ export function endBattleRuntimeTurnWithTableD20TestCircumstances(
     requests,
     decisions: input.tableD20TestCircumstanceDecisions,
   });
-  if (Either.isLeft(admission)) {
+  if (Result.isFailure(admission)) {
     const retry = endBattleRuntimeTurn({
       session: input.session,
       actorId: input.actorId,
@@ -829,9 +829,12 @@ export function endBattleRuntimeTurnWithTableD20TestCircumstances(
       tag: "invalid",
       session: retryFrontier.session,
       reason: "invalidFill",
-      message: admission.left.issues.map(({ message }) => message).join(" "),
-      envelope: retryFrontier.envelope,
-      tableD20TestCircumstanceDecisionIssue: admission.left,
+      message: admission.failure.issues.map(({ message }) => message).join(" "),
+      envelope:
+        retry.tag === "resolved"
+          ? battleResolvedFrontierEnvelope(input.session.state)
+          : retry.envelope,
+      tableD20TestCircumstanceDecisionIssue: admission.failure,
     };
   }
   const result = endBattleRuntimeTurn(input);
@@ -853,7 +856,7 @@ export function endBattleRuntimeTurnWithTableD20TestCircumstances(
 export function openCreatureFallsRuntimeInterruptWindow(input: {
   readonly session: BattleRuntimeSession;
   readonly fallingCreatureId: CombatantId;
-  readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+  readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerFact[];
 }): BattleRuntimeResolutionResult {
   return battleRuntimeResolutionFromMechanical(
     input.session,
@@ -921,10 +924,7 @@ function interruptRouteOptionsForSubjectResolution(input: {
   readonly phase: BattleResolutionInput["state"]["subjectResolutionPhase"];
   readonly reportsReadyTrigger: boolean;
   readonly handledInterruptTrigger?: BattleInterruptTrigger;
-}): {
-  readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  readonly replayingInterruptedProcedure?: true;
-} {
+}): BattleInterruptRouteOptions {
   const effectiveHandledInterruptTrigger =
     input.handledInterruptTrigger ??
     (input.phase.kind === "subjectContinuation" && !input.reportsReadyTrigger
@@ -934,7 +934,6 @@ function interruptRouteOptionsForSubjectResolution(input: {
     ? {}
     : {
         handledInterruptTrigger: effectiveHandledInterruptTrigger,
-        replayingInterruptedProcedure: true,
       };
 }
 

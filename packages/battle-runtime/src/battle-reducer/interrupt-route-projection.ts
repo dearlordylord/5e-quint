@@ -2,7 +2,7 @@
 
 import type {
   BattleActiveEffect,
-  BattleFeatherFallLandingResult,
+  BattleFallingCreatureMitigationLandingResult,
   BattleFill,
   BattleResolutionResult,
   BattleState,
@@ -94,8 +94,8 @@ export function battleReducerRouteForCreatureFallsInterruptWindow(
   ];
 }
 
-export function battleReducerRouteForFeatherFallLanding(
-  result: BattleFeatherFallLandingResult,
+export function battleReducerRouteForFallingCreatureMitigationLanding(
+  result: BattleFallingCreatureMitigationLandingResult,
 ): BattleReducerRouteEvents | undefined {
   if (result.tag !== "mitigated") {
     return undefined;

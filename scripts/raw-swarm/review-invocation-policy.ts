@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import {
   parseStrictReadCommand,
@@ -73,8 +73,8 @@ function parseContextRead(
   contextPath: string,
 ): ParseResult<ContextRead> {
   const parsed = parseStrictReadCommand(command);
-  if (Either.isLeft(parsed)) return invalid(parsed.left);
-  const { executable, args } = parsed.right;
+  if (Result.isFailure(parsed)) return invalid(parsed.failure);
+  const { executable, args } = parsed.success;
   const valid = (): ParseResult<ContextRead> => ({
     tag: "valid",
     value: { executable },
@@ -293,25 +293,25 @@ export type ReviewInvocationPolicyCliArguments = Readonly<{
 /** Parse the public CLI without silently accepting duplicate or unknown flags. */
 export function parseReviewInvocationPolicyArgs(
   args: readonly string[],
-): Either.Either<ReviewInvocationPolicyCliArguments, string> {
+): Result.Result<ReviewInvocationPolicyCliArguments, string> {
   const eventsPath = args[0];
   if (eventsPath === undefined || eventsPath.startsWith("--")) {
-    return Either.left(REVIEW_POLICY_USAGE);
+    return Result.fail(REVIEW_POLICY_USAGE);
   }
   const values = new Map<string, string>();
   for (let index = 1; index < args.length; index += 1) {
     const option = args[index];
     if (option === undefined || !REVIEW_POLICY_OPTIONS.has(option)) {
-      return Either.left(
+      return Result.fail(
         `Unknown review policy option: ${option ?? "<missing>"}`,
       );
     }
     if (values.has(option)) {
-      return Either.left(`Duplicate review policy option: ${option}`);
+      return Result.fail(`Duplicate review policy option: ${option}`);
     }
     const value = args[index + 1];
     if (value === undefined || value.startsWith("--")) {
-      return Either.left(`Missing value for review policy option: ${option}`);
+      return Result.fail(`Missing value for review policy option: ${option}`);
     }
     values.set(option, value);
     index += 1;
@@ -325,16 +325,16 @@ export function parseReviewInvocationPolicyArgs(
   const hasContextOptions = contextOptions.some((option) => values.has(option));
   if (profile === "boundedCapabilityProjection") {
     return hasContextOptions
-      ? Either.left(
+      ? Result.fail(
           "Context options require the documentDeclarationSet profile.",
         )
-      : Either.right({
+      : Result.succeed({
           eventsPath,
           context: { profile: "boundedCapabilityProjection" },
         });
   }
   if (profile !== "documentDeclarationSet") {
-    return Either.left(`Unsupported review invocation profile: ${profile}`);
+    return Result.fail(`Unsupported review invocation profile: ${profile}`);
   }
   const contextPath = values.get("--context-path");
   const contextByteLengthText = values.get("--context-byte-length");
@@ -344,20 +344,20 @@ export function parseReviewInvocationPolicyArgs(
     contextByteLengthText === undefined ||
     contextSha256 === undefined
   ) {
-    return Either.left(
+    return Result.fail(
       "The documentDeclarationSet profile requires all context options.",
     );
   }
   if (!canonicalUnsignedDecimal(contextByteLengthText)) {
-    return Either.left("Context byte length must be a canonical decimal.");
+    return Result.fail("Context byte length must be a canonical decimal.");
   }
   const contextByteLength = Number(contextByteLengthText);
   if (!Number.isSafeInteger(contextByteLength)) {
-    return Either.left(
+    return Result.fail(
       "Context byte length is outside the safe integer range.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     eventsPath,
     context: {
       profile: "documentDeclarationSet",
@@ -389,13 +389,13 @@ function fail(message: string): never {
 
 function main(args: readonly string[]): void {
   const parsed = parseReviewInvocationPolicyArgs(args);
-  if (Either.isLeft(parsed)) fail(parsed.left);
-  const eventsPath = parsed.right.eventsPath;
+  if (Result.isFailure(parsed)) fail(parsed.failure);
+  const eventsPath = parsed.success.eventsPath;
   const events = readFileSync(eventsPath, "utf8")
     .split("\n")
     .filter((line) => line.trim().length > 0)
     .map((line): unknown => JSON.parse(line));
-  const result = reviewInvocationPolicy(events, parsed.right.context);
+  const result = reviewInvocationPolicy(events, parsed.success.context);
   if (result.tag === "invalid") fail(result.message);
   console.log(JSON.stringify(result));
 }

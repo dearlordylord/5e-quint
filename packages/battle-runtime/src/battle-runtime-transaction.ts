@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
-import { Either, Match, Option } from "effect";
+import { Match, Option, Result } from "effect";
 
 import {
   battleMechanicalFrontier,
@@ -48,7 +48,7 @@ import type {
   BattleHole,
   BattleInterruptedProcedure,
   BattleStatBlockExecutionCatalog,
-  BattleTargetSpatialFact,
+  BattleFallingCreatureMitigationTriggerFact,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
@@ -146,7 +146,7 @@ type BattlePendingTransactionCompletion =
       readonly parent: BattlePendingTransactionData;
     };
 
-type BattlePendingTransactionCreation = Either.Either<
+type BattlePendingTransactionInitialization = Result.Result<
   {
     readonly transaction: BattlePendingTransaction;
     readonly data: BattlePendingTransactionData;
@@ -472,7 +472,7 @@ export function battlePendingTransactionEnvelopeForSession(
 function lookupBattleRuntimeTransaction(
   transaction: BattlePendingTransaction,
 ): Option.Option<BattlePendingTransactionData> {
-  return Option.fromNullable(battlePendingTransactionData.get(transaction));
+  return Option.fromNullishOr(battlePendingTransactionData.get(transaction));
 }
 
 function createBattlePendingTransaction(input: {
@@ -482,12 +482,12 @@ function createBattlePendingTransaction(input: {
   readonly fills: readonly BattleFill[];
   readonly holes: ReadonlyNonEmptyArray<BattleHole>;
   readonly completion: BattlePendingTransactionCompletion;
-}): BattlePendingTransactionCreation {
+}): BattlePendingTransactionInitialization {
   const checkpointOwnership = checkpointOwnershipFor({
     session: input.currentSession,
     holes: input.holes,
   });
-  return Either.map(checkpointOwnership, (checkpointOwnership) => {
+  return Result.map(checkpointOwnership, (checkpointOwnership) => {
     // The private brand is intentionally created only here; the WeakMap is the
     // runtime check that rejects tokens from another transaction owner.
     const transaction = BattlePendingTransactionToken.create();
@@ -509,21 +509,21 @@ function createBattlePendingTransaction(input: {
 function checkpointOwnershipFor(input: {
   readonly session: BattleRuntimeSession;
   readonly holes: readonly BattleHole[];
-}): Either.Either<
+}): Result.Result<
   BattlePendingTransactionCheckpointOwnership,
   BattleRuntimeTransactionDefect
 > {
   if (!isInterruptFrontier(input.holes)) {
-    return Either.right({ tag: "ordinaryFrontier" });
+    return Result.succeed({ tag: "ordinaryFrontier" });
   }
   const owner = currentInterruptCheckpoint(input.session.state);
   if (owner === null) {
-    return Either.left({ tag: "interruptFrontierMissingCheckpoint" });
+    return Result.fail({ tag: "interruptFrontierMissingCheckpoint" });
   }
   const checkpoints = input.session.state.interruptStack.flatMap((frame) =>
     frame.kind === "interruptCheckpoint" ? [frame.frame] : [],
   );
-  return Either.right({
+  return Result.succeed({
     tag: "interruptFrontier",
     checkpoint: interruptCheckpointIdentity(owner),
     ancestors: Object.freeze(
@@ -593,13 +593,13 @@ export function settleBattleRuntimeTransaction(input: {
   readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): BattleRuntimeTransactionResult {
   const transactionValidation = validateTransaction(input);
-  if (Either.isLeft(transactionValidation)) {
+  if (Result.isFailure(transactionValidation)) {
     return transactionDefectResult(
       invalidTransactionResolution(
         input.session,
         "The pending battle transaction does not belong to this runtime session.",
       ),
-      transactionValidation.left,
+      transactionValidation.failure,
     );
   }
   const operationAdmission = admitBattleRuntimeTransactionOperation(input);
@@ -616,14 +616,14 @@ export function settleBattleRuntimeTransaction(input: {
     resolveOperation({
       ...input,
       operation: operationAdmission.operation,
-      pendingData: transactionValidation.right,
+      pendingData: transactionValidation.success,
     }),
     input.session,
   );
   return settleValidatedBattleRuntimeResolution({
     ...input,
     resolution,
-    pendingData: transactionValidation.right,
+    pendingData: transactionValidation.success,
   });
 }
 
@@ -632,7 +632,7 @@ export function settleCreatureFallsRuntimeTransaction(input: {
   readonly session: BattleRuntimeSession;
   readonly transaction: BattlePendingTransaction | null;
   readonly fallingCreatureId: CombatantId;
-  readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+  readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerFact[];
   readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): BattleRuntimeTransactionResult {
   const subject: Extract<
@@ -665,15 +665,15 @@ function settleBoundBattleRuntimeResolution(input: {
   readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
 }): BattleRuntimeTransactionResult {
   const transactionValidation = validateTransaction(input);
-  if (Either.isLeft(transactionValidation)) {
+  if (Result.isFailure(transactionValidation)) {
     return transactionDefectResult(
       input.resolution,
-      transactionValidation.left,
+      transactionValidation.failure,
     );
   }
   return settleValidatedBattleRuntimeResolution({
     ...input,
-    pendingData: transactionValidation.right,
+    pendingData: transactionValidation.success,
   });
 }
 
@@ -739,7 +739,7 @@ function resolveOperation(input: {
       // Operation admission proves that a non-null transaction is owned by
       // this runtime. Keep the data refinement typed anyway so a forged token
       // cannot turn a caller-visible domain failure into an exception.
-      return Option.match(Option.fromNullable(input.pendingData), {
+      return Option.match(Option.fromNullishOr(input.pendingData), {
         onNone: () =>
           invalidTransactionResolution(
             input.session,
@@ -782,16 +782,16 @@ function battleTransactionReplaySession(
 function validateTransaction(input: {
   readonly session: BattleRuntimeSession;
   readonly transaction: BattlePendingTransaction | null;
-}): Either.Either<
+}): Result.Result<
   BattlePendingTransactionData | null,
   BattleRuntimeTransactionDefect
 > {
-  if (input.transaction === null) return Either.right(null);
+  if (input.transaction === null) return Result.succeed(null);
   const data = lookupBattleRuntimeTransaction(input.transaction);
-  if (Option.isNone(data)) return Either.left({ tag: "foreignTransaction" });
+  if (Option.isNone(data)) return Result.fail({ tag: "foreignTransaction" });
   return data.value.currentSession === input.session
-    ? Either.right(data.value)
-    : Either.left({ tag: "transactionSessionMismatch" });
+    ? Result.succeed(data.value)
+    : Result.fail({ tag: "transactionSessionMismatch" });
 }
 
 function rebaseResolutionToSession(
@@ -839,9 +839,9 @@ function transactionNeedsHolesResult(
     holes,
     subject,
   );
-  return Either.match(transaction, {
-    onLeft: (issue) => transactionDefectResult(resolution, issue),
-    onRight: ({ transaction, data }) =>
+  return Result.match(transaction, {
+    onFailure: (issue) => transactionDefectResult(resolution, issue),
+    onSuccess: ({ transaction, data }) =>
       projectPendingTransactionFrontier(resolution, transaction, data.fills),
   });
 }
@@ -855,13 +855,13 @@ function projectPendingTransactionFrontier(
     result: resolution.envelope.frontier,
     acceptedFills,
   });
-  return Either.match(projected, {
-    onLeft: (issue) =>
+  return Result.match(projected, {
+    onFailure: (issue) =>
       transactionDefectResult(resolution, {
         tag: "mechanicalFrontierProjection",
         issue,
       }),
-    onRight: (frontier) => ({
+    onSuccess: (frontier) => ({
       tag: "needsHoles" as const,
       resolution,
       transaction,
@@ -873,7 +873,7 @@ function projectPendingTransactionFrontier(
 function interruptedProcedureSubjectFromState(
   state: BattleRuntimeSession["state"],
 ): BattleSubject | null {
-  return Option.match(Option.fromNullable(currentInterruptCheckpoint(state)), {
+  return Option.match(Option.fromNullishOr(currentInterruptCheckpoint(state)), {
     onNone: () => null,
     onSome: (checkpoint) =>
       interruptedProcedureSubject(checkpoint.continuation),
@@ -890,7 +890,7 @@ function transactionForNeedsHoles(
   resolution: NeedsHolesResolution,
   holes: ReadonlyNonEmptyArray<BattleHole>,
   subject: BattleSubject,
-): BattlePendingTransactionCreation {
+): BattlePendingTransactionInitialization {
   return Match.value(input.operation).pipe(
     Match.when({ kind: "ordinarySubject" }, ({ subject, fills }) => {
       const pending = input.pendingData;
@@ -924,7 +924,7 @@ function transactionForNeedsHoles(
       });
     }),
     Match.when({ kind: "interruptDecision" }, ({ fill }) => {
-      return Option.match(Option.fromNullable(input.pendingData), {
+      return Option.match(Option.fromNullishOr(input.pendingData), {
         onNone: () =>
           createBattlePendingTransaction({
             baseSession: resolution.session,
@@ -1006,7 +1006,7 @@ function initialCompletionCursor(input: {
       readonly result: BattleRuntimeTransactionResult;
     } {
   if (input.transaction === null) return { tag: "cursor", cursor: null };
-  return Option.match(Option.fromNullable(input.pendingData), {
+  return Option.match(Option.fromNullishOr(input.pendingData), {
     onNone: () => ({ tag: "cursor" as const, cursor: null }),
     onSome: (transactionData) => ({
       tag: "cursor" as const,
@@ -1123,12 +1123,12 @@ function settleStandaloneCompletion(input: {
       frontier: currentFrontier,
     },
   };
-  return Either.match(transaction, {
-    onLeft: (issue) => ({
+  return Result.match(transaction, {
+    onFailure: (issue) => ({
       tag: "result" as const,
       result: transactionDefectResult(input.resolution, issue),
     }),
-    onRight: ({ transaction: token, data }) => ({
+    onSuccess: ({ transaction: token, data }) => ({
       tag: "result" as const,
       result: projectPendingTransactionFrontier(
         refreshedResolution,
@@ -1360,12 +1360,12 @@ function openNestedCheckpoint(
     holes: [currentFrontier.decisionHole],
     completion: completionForSubject(nestedSubject, input.parent),
   });
-  return Either.match(nestedTransaction, {
-    onLeft: (issue) => ({
+  return Result.match(nestedTransaction, {
+    onFailure: (issue) => ({
       tag: "ownerRetained" as const,
       result: transactionDefectResult(input.resolution, issue),
     }),
-    onRight: ({ transaction, data }) => ({
+    onSuccess: ({ transaction, data }) => ({
       tag: "nestedCheckpointOpened" as const,
       result: projectPendingTransactionFrontier(
         nestedResolution,
@@ -1409,12 +1409,12 @@ function retainParentFrontier(
     holes: [currentFrontier.decisionHole],
     completion: parentData.completion,
   });
-  return Either.match(refreshedTransaction, {
-    onLeft: (issue) => ({
+  return Result.match(refreshedTransaction, {
+    onFailure: (issue) => ({
       tag: "ownerRetained" as const,
       result: transactionDefectResult(input.resolution, issue),
     }),
-    onRight: ({ transaction, data }) => ({
+    onSuccess: ({ transaction, data }) => ({
       tag: "ownerRetained" as const,
       result: projectPendingTransactionFrontier(
         refreshedResolution,
@@ -1487,7 +1487,7 @@ function settledActsResult(
 ): BattleRuntimeTransactionResult {
   const acts = discoverBattleActs(resolution.session);
   const nonEmptyActs = nonEmpty(acts);
-  return Option.match(Option.fromNullable(nonEmptyActs), {
+  return Option.match(Option.fromNullishOr(nonEmptyActs), {
     onNone: () =>
       transactionDefectResult(resolution, { tag: "emptyActsAtSettledPoint" }),
     onSome: (acts) => ({

@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import { readRawSwarmCatalogue } from "./scenario-catalogue.ts";
 import { repoRoot } from "./transcript.ts";
@@ -23,24 +23,24 @@ const catalogue = readRawSwarmCatalogue({
   ),
   evidenceDirectory: resolve(repoRoot, "scripts/raw-swarm/out"),
 });
-if (Either.isLeft(catalogue)) {
-  fail(JSON.stringify(catalogue.left));
+if (Result.isFailure(catalogue)) {
+  fail(JSON.stringify(catalogue.failure));
 }
 
 const projection = args.includes("--rejected")
-  ? catalogue.right.rejectedCandidates
-  : catalogue.right.scenarios;
+  ? catalogue.success.rejectedCandidates
+  : catalogue.success.scenarios;
 
 if (args.includes("--json")) {
   process.stdout.write(`${JSON.stringify(projection, null, 2)}\n`);
 } else if (args.includes("--rejected")) {
-  for (const candidate of catalogue.right.rejectedCandidates) {
+  for (const candidate of catalogue.success.rejectedCandidates) {
     process.stdout.write(
       `${candidate.candidateId}\n  campaign: ${candidate.campaignId}\n  evidence: ${candidate.evidenceSetId}\n  reason: ${candidate.reason}\n`,
     );
   }
 } else {
-  for (const scenario of catalogue.right.scenarios) {
+  for (const scenario of catalogue.success.scenarios) {
     const spatial = Match.value(scenario.spatialRequirement).pipe(
       Match.when({ tag: "notRequired" }, () => "not required"),
       Match.when({ tag: "geometryAssisted" }, () => "geometry assisted"),

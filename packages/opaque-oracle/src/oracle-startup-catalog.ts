@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   buildStatBlockCatalog,
   defineSrdStatBlockCollection,
@@ -18,7 +18,7 @@ import {
   type SurfaceRelationTraversalIssues,
   closeSrdSurface,
 } from "@dnd/surface/surface/surface-relations";
-import { decodeSrdSurfaceEither } from "@dnd/surface/surface/schema";
+import { decodeSrdSurfaceResult } from "@dnd/surface/surface/schema";
 import type { SrdSurface } from "@dnd/surface/surface/types";
 import { deriveCharacterCreationWorkflowRoots } from "@dnd/character-creation-runtime/workflow-horizon";
 import type { OracleEvaluationServices } from "./oracle-evaluation.ts";
@@ -166,17 +166,17 @@ const fullStatBlockCollection = (surface: SrdSurface): SrdStatBlockCollection =>
 
 const parseProjectionBytes = (
   bytes: Uint8Array,
-): Either.Either<unknown, string> => {
+): Result.Result<unknown, string> => {
   try {
-    return Either.right(JSON.parse(new TextDecoder().decode(bytes)));
+    return Result.succeed(JSON.parse(new TextDecoder().decode(bytes)));
   } catch (error) {
-    return Either.left(String(error));
+    return Result.fail(String(error));
   }
 };
 
 const buildFullCatalogs = (
   surface: SrdSurface,
-): Either.Either<
+): Result.Result<
   {
     readonly unitCatalog: UnitCatalog;
     readonly statBlockCatalog: StatBlockCatalog;
@@ -197,13 +197,13 @@ const buildFullCatalogs = (
   if (failures.length > 0) {
     const firstFailure = failures[0];
     if (firstFailure !== undefined) {
-      return Either.left([firstFailure, ...failures.slice(1)]);
+      return Result.fail([firstFailure, ...failures.slice(1)]);
     }
   }
   if (unitResult.tag === "invalid" || statBlockResult.tag === "invalid") {
-    return Either.left([catalogInvariantIssue("canonicalCatalog")]);
+    return Result.fail([catalogInvariantIssue("canonicalCatalog")]);
   }
-  return Either.right({
+  return Result.succeed({
     unitCatalog: unitResult.catalog,
     statBlockCatalog: statBlockResult.catalog,
   });
@@ -217,38 +217,38 @@ const buildFullCatalogs = (
  */
 export function buildOracleStartupCatalog(
   canonicalSurface: SrdSurface,
-): Either.Either<OracleStartupCatalog, OracleStartupCatalogIssues> {
+): Result.Result<OracleStartupCatalog, OracleStartupCatalogIssues> {
   const fullCatalogs = buildFullCatalogs(canonicalSurface);
-  if (Either.isLeft(fullCatalogs)) return Either.left(fullCatalogs.left);
+  if (Result.isFailure(fullCatalogs)) return Result.fail(fullCatalogs.failure);
 
   const roots = deriveCharacterCreationWorkflowRoots({
-    unitLibrary: fullCatalogs.right.unitCatalog,
+    unitLibrary: fullCatalogs.success.unitCatalog,
   });
   const projection = startupSurfaceProjection(canonicalSurface, roots.unitIds);
-  if (Either.isLeft(projection)) return Either.left(projection.left);
+  if (Result.isFailure(projection)) return Result.fail(projection.failure);
 
-  const projectionBytes = encodeOracleStartupSurface(projection.right);
+  const projectionBytes = encodeOracleStartupSurface(projection.success);
   const decodedProjection = decodeStartupProjection(projectionBytes);
-  if (Either.isLeft(decodedProjection)) {
-    return Either.left([decodeIssue(decodedProjection.left)]);
+  if (Result.isFailure(decodedProjection)) {
+    return Result.fail([decodeIssue(decodedProjection.failure)]);
   }
 
-  const projectedCatalogs = buildProjectedCatalogs(decodedProjection.right);
-  if (Either.isLeft(projectedCatalogs)) {
-    return Either.left(projectedCatalogs.left);
+  const projectedCatalogs = buildProjectedCatalogs(decodedProjection.success);
+  if (Result.isFailure(projectedCatalogs)) {
+    return Result.fail(projectedCatalogs.failure);
   }
 
-  return Either.right({
-    projection: decodedProjection.right,
+  return Result.succeed({
+    projection: decodedProjection.success,
     projectionBytes,
-    services: projectedCatalogs.right,
+    services: projectedCatalogs.success,
   });
 }
 
 function startupSurfaceProjection(
   canonicalSurface: SrdSurface,
   rootUnitIds: readonly SrdSurface["units"][number]["id"][],
-): Either.Either<SrdSurface, OracleStartupCatalogIssues> {
+): Result.Result<SrdSurface, OracleStartupCatalogIssues> {
   const projection = closeSrdSurface({
     surface: canonicalSurface,
     rootUnitIds,
@@ -264,9 +264,9 @@ function startupSurfaceProjection(
           rootUnitIds.some((rootId) => rootId === relation.targetRecordId)),
     },
   });
-  return Either.isLeft(projection)
-    ? Either.left(startupSurfaceProjectionIssues(projection.left))
-    : Either.right(projection.right);
+  return Result.isFailure(projection)
+    ? Result.fail(startupSurfaceProjectionIssues(projection.failure))
+    : Result.succeed(projection.success);
 }
 
 function startupSurfaceProjectionIssues(
@@ -289,19 +289,19 @@ function startupSurfaceProjectionIssues(
 
 function decodeStartupProjection(
   bytes: Uint8Array,
-): Either.Either<SrdSurface, string> {
+): Result.Result<SrdSurface, string> {
   const parsedProjection = parseProjectionBytes(bytes);
-  if (Either.isLeft(parsedProjection))
-    return Either.left(parsedProjection.left);
-  const decodedProjection = decodeSrdSurfaceEither(parsedProjection.right);
-  return Either.isLeft(decodedProjection)
-    ? Either.left(String(decodedProjection.left))
-    : Either.right(decodedProjection.right);
+  if (Result.isFailure(parsedProjection))
+    return Result.fail(parsedProjection.failure);
+  const decodedProjection = decodeSrdSurfaceResult(parsedProjection.success);
+  return Result.isFailure(decodedProjection)
+    ? Result.fail(String(decodedProjection.failure))
+    : Result.succeed(decodedProjection.success);
 }
 
 function buildProjectedCatalogs(
   projection: SrdSurface,
-): Either.Either<OracleEvaluationServices, OracleStartupCatalogIssues> {
+): Result.Result<OracleEvaluationServices, OracleStartupCatalogIssues> {
   const unitCollection = defineSrdUnitCollection({ units: projection.units });
   const statBlockCollection = defineSrdStatBlockCollection({
     statBlocks: projection.statBlocks,
@@ -318,13 +318,13 @@ function buildProjectedCatalogs(
   if (failures.length > 0) {
     const firstFailure = failures[0];
     if (firstFailure !== undefined) {
-      return Either.left([firstFailure, ...failures.slice(1)]);
+      return Result.fail([firstFailure, ...failures.slice(1)]);
     }
   }
   if (unitResult.tag === "invalid" || statBlockResult.tag === "invalid") {
-    return Either.left([catalogInvariantIssue("projectedCatalog")]);
+    return Result.fail([catalogInvariantIssue("projectedCatalog")]);
   }
-  return Either.right({
+  return Result.succeed({
     unitLibrary: unitResult.catalog,
     statBlockCatalog: statBlockResult.catalog,
   });

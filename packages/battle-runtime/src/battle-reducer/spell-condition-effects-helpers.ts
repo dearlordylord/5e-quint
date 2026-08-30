@@ -19,10 +19,10 @@ import type { CreatureType } from "@dnd/shared/game-facts";
 import type { Condition } from "@dnd/shared/types";
 import type { CombatantId } from "../identity.ts";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
 } from "../identity.ts";
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
@@ -31,11 +31,11 @@ import type {
   BattleProtectionRelevantEffectSavingThrowOutcomeHole,
   BattleSavingThrowOutcomeValue,
   BattleState,
-  ProtectionFromEvilAndGoodPreventedCondition,
+  CreatureTypeProtectionPreventedCondition,
 } from "../battle-state-execution.ts";
 import { KnockedOutConditionState as KnockedOutConditionStateBrand } from "./knocked-out-state.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
-import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
+import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
 
 import {
   activeEffectCondition,
@@ -43,19 +43,19 @@ import {
   isConditionApplyingActiveEffect,
 } from "../active-effect/lifecycle.ts";
 export { conditionsAfterApplyingSpellConditionEffects };
-type ProtectionRelevantCondition = ProtectionFromEvilAndGoodPreventedCondition;
+type ProtectionRelevantCondition = CreatureTypeProtectionPreventedCondition;
 type ProtectionRelevantEffect =
   | Extract<BattleActiveEffect, { readonly kind: "spellConditionRepeatSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "possession" }>;
 type ProtectionRelevantEffectKind = ProtectionRelevantCondition | "possession";
 
-type HideousLaughterEffect = Extract<
+type SaveGatedConditionWithRepeatEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "hideousLaughter" }
+  { readonly kind: "saveGatedConditionWithRepeat" }
 >;
-type HypnoticPatternControlEffect = Extract<
+type SaveGatedAreaControlEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "hypnoticPatternControl" }
+  { readonly kind: "saveGatedAreaControl" }
 >;
 export type SpellConcentrationEffectSource = {
   readonly sourceCombatantId: CombatantId;
@@ -99,7 +99,7 @@ export function conditionHadNonSpellSourceBeforeSpellEffect(
     conditionHasNonSpellSource(combatant, condition) ||
     combatant.activeEffects.some(
       (effect) =>
-        (effect.kind === "hypnoticPatternControl" &&
+        (effect.kind === "saveGatedAreaControl" &&
           ((condition === "charmed" &&
             effect.conditionHadNonSpellCharmedSource) ||
             (condition === "incapacitated" &&
@@ -176,7 +176,7 @@ export function conditionApplicationPreventedByCreatureTypeProtection(
   target: BattleCreatureState,
   condition: Condition,
 ): boolean {
-  if (!isProtectionFromEvilAndGoodPreventedCondition(condition)) {
+  if (!isCreatureTypeProtectionPreventedCondition(condition)) {
     return false;
   }
   const sourceCreatureType = battleCreatureTypeForCombatant(
@@ -264,6 +264,7 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
   const key = [
     "battle:protection-relevant-effect-save:",
     targetId,
+    spellActiveEffectExecutionRef(effect),
     effect.sourceCombatantId,
     effect.sourceProcedureRef,
     relevantEffect,
@@ -277,6 +278,7 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
     label: `${relevantEffect} save`,
     protectionRelevantEffectSave: {
       targetId,
+      effectRef: spellActiveEffectExecutionRef(effect),
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       relevantEffect,
@@ -293,7 +295,9 @@ export function protectionRelevantEffectSavingThrowOutcomeHole(
       ? [{ targetId, rollMode: "advantage" }]
       : [],
     targetFlatBonuses: [...state.combatants].flatMap(([, target]) =>
-      wardingBondSavingThrowFlatBonusProjectionsForTarget(target),
+      linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
+        target,
+      ),
     ),
   };
 }
@@ -331,11 +335,11 @@ export function validateProtectionRelevantEffectSavingThrowOutcome(
   targetId: CombatantId,
 ): string | null {
   if ("area" in value) {
-    return "Protection from Evil and Good relevant-effect save must not include area facts.";
+    return "creature-type protection relevant-effect save must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
-    : "Protection from Evil and Good relevant-effect save must match the affected target exactly once.";
+    : "creature-type protection relevant-effect save must match the affected target exactly once.";
 }
 
 function isProtectionRelevantEffect(
@@ -402,9 +406,9 @@ function battleCreatureTypeForCombatant(
   return combatant === undefined ? null : battleCreatureType(combatant);
 }
 
-function isProtectionFromEvilAndGoodPreventedCondition(
+function isCreatureTypeProtectionPreventedCondition(
   condition: Condition,
-): condition is ProtectionFromEvilAndGoodPreventedCondition {
+): condition is CreatureTypeProtectionPreventedCondition {
   return condition === "charmed" || condition === "frightened";
 }
 
@@ -461,12 +465,13 @@ function activeEffectDirectlyAppliesCondition(
       effect.condition === condition) ||
     (effect.kind === "spellConditionCountedEndTurnSave" &&
       effect.condition === condition) ||
-    (effect.kind === "sleepPendingRepeatSave" &&
+    (effect.kind === "stagedSaveConditionPendingRepeat" &&
       condition === "incapacitated") ||
-    (effect.kind === "sleepUnconscious" && condition === "unconscious") ||
-    (effect.kind === "hideousLaughter" &&
+    (effect.kind === "stagedSaveConditionApplied" &&
+      condition === "unconscious") ||
+    (effect.kind === "saveGatedConditionWithRepeat" &&
       (condition === "prone" || condition === "incapacitated")) ||
-    (effect.kind === "hypnoticPatternControl" &&
+    (effect.kind === "saveGatedAreaControl" &&
       (condition === "charmed" || condition === "incapacitated"))
   );
 }
@@ -545,7 +550,7 @@ export function spellRestraintEffectEntries(
 export function spellRestraintEffectFor(
   state: BattleState,
   combatantId: CombatantId,
-  effectRef: BattleActiveEffectExecutionRef,
+  effectRef: BattleEffectExecutionRef,
 ):
   | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
   | undefined {
@@ -593,24 +598,27 @@ export function removeSpellConditionEffect(
   };
 }
 
-export function combatantHasSleepEffect(
+export function combatantHasHitPointBudgetConditionEffect(
   combatant: BattleCreatureState | undefined,
 ): combatant is BattleCreatureState {
-  return combatant?.activeEffects.some(isSleepEffect) === true;
+  return (
+    combatant?.activeEffects.some(isHitPointBudgetConditionEffect) === true
+  );
 }
 
-export function sleepShakeAwakeTargetChoices(
+export function hitPointBudgetConditionShakeAwakeTargetChoices(
   state: BattleState,
   actorId: CombatantId,
 ): readonly CombatantId[] {
   return [...state.combatants]
     .filter(
-      ([id, combatant]) => id !== actorId && combatantHasSleepEffect(combatant),
+      ([id, combatant]) =>
+        id !== actorId && combatantHasHitPointBudgetConditionEffect(combatant),
     )
     .map(([id]) => id);
 }
 
-export function hypnoticPatternShakeAwakeTargetChoices(
+export function saveGatedAreaControlShakeAwakeTargetChoices(
   state: BattleState,
   actorId: CombatantId,
 ): readonly CombatantId[] {
@@ -618,12 +626,12 @@ export function hypnoticPatternShakeAwakeTargetChoices(
     .filter(
       ([id, combatant]) =>
         id !== actorId &&
-        combatant.activeEffects.some(isHypnoticPatternControlEffect),
+        combatant.activeEffects.some(isSaveGatedAreaControlEffect),
     )
     .map(([id]) => id);
 }
 
-export function removeSleepEffectsFromTarget(
+export function removeHitPointBudgetConditionEffectsFromTarget(
   state: BattleState,
   targetId: CombatantId,
 ): BattleState {
@@ -631,7 +639,7 @@ export function removeSleepEffectsFromTarget(
   if (target === undefined) {
     return state;
   }
-  const expiring = target.activeEffects.filter(isSleepEffect);
+  const expiring = target.activeEffects.filter(isHitPointBudgetConditionEffect);
   if (expiring.length === 0) {
     return state;
   }
@@ -656,14 +664,14 @@ export function removeSleepEffectsFromTarget(
   };
 }
 
-function isSleepEffect(effect: BattleActiveEffect): boolean {
+function isHitPointBudgetConditionEffect(effect: BattleActiveEffect): boolean {
   return (
-    effect.kind === "sleepPendingRepeatSave" ||
-    effect.kind === "sleepUnconscious"
+    effect.kind === "stagedSaveConditionPendingRepeat" ||
+    effect.kind === "stagedSaveConditionApplied"
   );
 }
 
-export function removeHypnoticPatternControlEffectsFromTarget(
+export function removeSaveGatedAreaControlEffectsFromTarget(
   state: BattleState,
   targetId: CombatantId,
 ): BattleState {
@@ -671,7 +679,7 @@ export function removeHypnoticPatternControlEffectsFromTarget(
   if (target === undefined) {
     return state;
   }
-  const expiring = target.activeEffects.filter(isHypnoticPatternControlEffect);
+  const expiring = target.activeEffects.filter(isSaveGatedAreaControlEffect);
   if (expiring.length === 0) {
     return state;
   }
@@ -708,22 +716,24 @@ export function removeHypnoticPatternControlEffectsFromTarget(
   };
 }
 
-export function removeHideousLaughterEffectFromTarget(
+export function removeSaveGatedConditionWithRepeatEffectFromTarget(
   state: BattleState,
   targetId: CombatantId,
-  expiringEffect: HideousLaughterEffect,
+  effectRef: BattleEffectExecutionRef,
 ): BattleState {
   const target = state.combatants.get(targetId);
-  if (
-    target === undefined ||
-    !target.activeEffects.some((effect) => effect === expiringEffect)
-  ) {
+  const expiringEffect = target?.activeEffects.find(
+    (effect): effect is SaveGatedConditionWithRepeatEffect =>
+      effect.kind === "saveGatedConditionWithRepeat" &&
+      effect.effectRef === effectRef,
+  );
+  if (target === undefined || expiringEffect === undefined) {
     return state;
   }
   const activeEffects = target.activeEffects.filter(
-    (effect) => effect !== expiringEffect,
+    (effect) => effect.effectRef !== effectRef,
   );
-  const conditions = conditionsAfterExpiringHideousLaughterEffect(
+  const conditions = conditionsAfterExpiringSaveGatedConditionWithRepeatEffect(
     target.conditions,
     activeEffects,
     expiringEffect,
@@ -735,21 +745,22 @@ export function removeHideousLaughterEffectFromTarget(
   const combatants = new Map(state.combatants).set(targetId, nextCombatant);
   return {
     ...state,
-    combatants: combatantsAfterHideousLaughterSpellEndedIfNoEffects(
-      combatants,
-      expiringEffect,
-    ),
+    combatants:
+      combatantsAfterSaveGatedConditionWithRepeatSpellEndedIfNoEffects(
+        combatants,
+        expiringEffect,
+      ),
   };
 }
 
-export function combatantsAfterHideousLaughterSpellEndedIfNoEffects(
+export function combatantsAfterSaveGatedConditionWithRepeatSpellEndedIfNoEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
-  source: HideousLaughterEffect,
+  source: SaveGatedConditionWithRepeatEffect,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   return combatantsAfterMatchingConcentrationSpellEffectsEndedIfNoEffects(
     combatants,
     source,
-    sameHideousLaughterSpellEffect,
+    sameSaveGatedConditionWithRepeatSpellEffect,
   );
 }
 
@@ -814,18 +825,18 @@ export function combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSourc
   );
 }
 
-function isHypnoticPatternControlEffect(
+function isSaveGatedAreaControlEffect(
   effect: BattleActiveEffect,
-): effect is HypnoticPatternControlEffect {
-  return effect.kind === "hypnoticPatternControl";
+): effect is SaveGatedAreaControlEffect {
+  return effect.kind === "saveGatedAreaControl";
 }
 
-function sameHideousLaughterSpellEffect(
+function sameSaveGatedConditionWithRepeatSpellEffect(
   effect: BattleActiveEffect,
-  source: HideousLaughterEffect,
-): effect is HideousLaughterEffect {
+  source: SaveGatedConditionWithRepeatEffect,
+): effect is SaveGatedConditionWithRepeatEffect {
   return (
-    effect.kind === "hideousLaughter" &&
+    effect.kind === "saveGatedConditionWithRepeat" &&
     effect.sourceProcedureRef === source.sourceProcedureRef &&
     effect.sourceCombatantId === source.sourceCombatantId
   );
@@ -852,15 +863,15 @@ export function conditionsAfterExpiringSpellConditionEffects(
   const withoutExpiredConditionSources = expiringEffects
     .filter(isConditionApplyingActiveEffect)
     .reduce((nextConditions, effect) => {
-      if (effect.kind === "hideousLaughter") {
-        return conditionsAfterExpiringHideousLaughterEffect(
+      if (effect.kind === "saveGatedConditionWithRepeat") {
+        return conditionsAfterExpiringSaveGatedConditionWithRepeatEffect(
           nextConditions,
           remainingEffects,
           effect,
         );
       }
-      if (effect.kind === "hypnoticPatternControl") {
-        return conditionsAfterExpiringHypnoticPatternControlEffect(
+      if (effect.kind === "saveGatedAreaControl") {
+        return conditionsAfterExpiringSaveGatedAreaControlEffect(
           nextConditions,
           remainingEffects,
           effect,
@@ -921,12 +932,12 @@ function conditionsAfterExpiringConditionImmunity(
     : conditions;
 }
 
-function conditionsAfterExpiringHideousLaughterEffect(
+function conditionsAfterExpiringSaveGatedConditionWithRepeatEffect(
   conditions: ConditionState,
   remainingEffects: readonly BattleActiveEffect[],
   expiringEffect: Extract<
     BattleActiveEffect,
-    { readonly kind: "hideousLaughter" }
+    { readonly kind: "saveGatedConditionWithRepeat" }
   >,
 ): ConditionState {
   const withoutProne =
@@ -942,10 +953,10 @@ function conditionsAfterExpiringHideousLaughterEffect(
     : removeCondition(withoutProne, "incapacitated");
 }
 
-function conditionsAfterExpiringHypnoticPatternControlEffect(
+function conditionsAfterExpiringSaveGatedAreaControlEffect(
   conditions: ConditionState,
   remainingEffects: readonly BattleActiveEffect[],
-  expiringEffect: HypnoticPatternControlEffect,
+  expiringEffect: SaveGatedAreaControlEffect,
 ): ConditionState {
   const withoutCharmed =
     remainingEffects.some((remaining) =>

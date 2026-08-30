@@ -1,4 +1,4 @@
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type {
   AdmittedBattleResolutionInput,
   AttackSpellDamageAddition,
@@ -83,10 +83,13 @@ export function afterHitSpellDiscoveryRoutesForResolution(
     );
     /* v8 ignore next -- @preserve -- Every admitted after-hit choice retains its executable procedure binding. */
     if (invocation === undefined) continue;
-    if (invocation.resource.tag === "spellSlot") {
+    if ("resource" in invocation && invocation.resource.tag === "spellSlot") {
       owners.add("battleSpellSlotAndActionEconomy");
     }
-    if (invocation.resource.tag === "spellAccessFreeCast") {
+    if (
+      "resource" in invocation &&
+      invocation.resource.tag === "spellAccessFreeCast"
+    ) {
       owners.add("battleFeatureResource");
     }
     if (invocation.procedure === "afterHitDamageAndIllumination") {
@@ -181,7 +184,7 @@ export function afterHitSpellRouteForInterrupt(input: {
     ),
   ];
 
-  if (invocation.resource.tag === "spellSlot") {
+  if ("resource" in invocation && invocation.resource.tag === "spellSlot") {
     route.push(
       afterHitSpellDiscoverRoute(
         hasSaveFill ? ["savingThrowOutcome"] : ["interruptDecision"],
@@ -194,7 +197,10 @@ export function afterHitSpellRouteForInterrupt(input: {
       ),
     );
   }
-  if (invocation.resource.tag === "spellAccessFreeCast") {
+  if (
+    "resource" in invocation &&
+    invocation.resource.tag === "spellAccessFreeCast"
+  ) {
     route.push(
       afterHitSpellDiscoverRoute(
         hasSaveFill ? ["savingThrowOutcome"] : ["interruptDecision"],
@@ -343,7 +349,7 @@ function isAfterHitSpellConcentrationTeardownSubject(
   return [...state.combatants.values()].some((combatant) =>
     combatant.activeEffects.some(
       (effect) =>
-        effect.kind === "shiningSmiteIllumination" &&
+        effect.kind === "afterHitDamageAndIllumination" &&
         effect.sourceProcedureRef === concentration.sourceProcedureRef &&
         effect.sourceCombatantId === subject.actorId,
     ),

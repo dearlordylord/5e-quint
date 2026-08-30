@@ -3,10 +3,10 @@
 The battle companion cluster is named at two deliberately different levels. The
 state vocabulary is generic — `companion-state.ts` defines `BattleCompanion*`
 types, and the durable protocol is a familiar-like tag union with no authored
-identity. The behavior modules are spell-named — `find-familiar-lifecycle.ts`,
-`find-familiar-pact-chain.ts`, `find-familiar-telepathy.ts`,
-`find-familiar-state.ts`, the QNT slice `battle-runtime-find-familiar.qnt`, both
-MBT witnesses, and the coverage profile `spell.find-familiar-lifecycle` (whose
+identity. The behavior modules are spell-named — `companion-lifecycle.ts`,
+`companion-reaction-attack.ts`, `companion-communication.ts`,
+`companion-state.ts`, the QNT slice `battle-runtime-find-familiar.qnt`, both
+MBT witnesses, and the coverage profile `spell.companion-lifecycle` (whose
 `runtimeOwners` in `plans/unit-profile-coverage/profiles.jsonl` pin these
 paths). A 2026-06-11 architecture review of the companion session admission
 branch proposed completing the genericization: rename/split the lifecycle
@@ -46,11 +46,11 @@ facts it receives.
 
 ## Consequences
 
-- `find-familiar-lifecycle.ts` and its sibling modules keep their names;
+- `companion-lifecycle.ts` and its sibling modules keep their names;
   future architecture reviews should not re-suggest the rename absent the
   revisit trigger below.
 - Revisit trigger: a second source rule that contributes genuinely distinct
-  battle lifecycle *mechanics* — not merely different protocol facts — e.g.
+  battle lifecycle _mechanics_ — not merely different protocol facts — e.g.
   Find Steed's mounted-combat protocol. At that point the shared transitions,
   if any survive as shared, move to a protocol-named module driven by the new
   rule's own QNT slice; the split is justified by the new rule text, not by

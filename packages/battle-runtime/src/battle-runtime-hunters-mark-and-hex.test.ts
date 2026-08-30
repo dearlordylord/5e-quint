@@ -29,7 +29,7 @@ import {
   damageRollFillWithGroups,
   difficultyClass,
   discoverBattleActs,
-  Either,
+  Result,
   elapsedTimeTicks,
   endTurn,
   fighterAttackSubject,
@@ -842,7 +842,9 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
 
   test("Counterspell suspends Hunter's Mark after its Bonus Action is spent but before Spell Slot or effect commitment", () => {
     const session = startBattleSessionRight({
-      battleId: battleId("battle-hunters-mark-counterspell-window"),
+      battleId: battleId(
+        "battle-hunters-mark-spellCastInterruptionReaction-window",
+      ),
       combatants: [
         characterSeed({
           initiative: 20,
@@ -890,13 +892,17 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
           spatialFacts: [
             {
-              kind: "counterspellTriggerCasterVisibleWithinRange",
+              kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
               reactorId: skeletonId,
               casterId: fighterId,
               sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
                 session,
                 skeletonId,
-                spellSlotInvocationRef("counterspell", 3, "counterspell"),
+                spellSlotInvocationRef(
+                  "counterspell",
+                  3,
+                  "spellCastInterruptionReaction",
+                ),
               ),
               rangeFeet: movementFeet(60),
             },
@@ -1383,8 +1389,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     };
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...baseHole,
           spell: {
             ...baseSpell,
@@ -1396,8 +1402,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...baseHole,
           spell: {
             ...baseSpell,

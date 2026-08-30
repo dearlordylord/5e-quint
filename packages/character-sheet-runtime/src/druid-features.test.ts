@@ -6,7 +6,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   DRUID_WILD_SHAPE_UNIT_ID,
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   characterBuildResources,
@@ -27,7 +27,7 @@ import {
   druidWildShapeFixtureKnownFormStatBlockIds,
   druidWildShapeShortRestRecoveryTestName,
   parseCharacterSheet,
-  requireRight,
+  requireSuccess,
   resourceCount,
   storedAvailableSheetInput,
   unitLibrary,
@@ -35,7 +35,7 @@ import {
 
 describe("Character Sheet runtime / druid features", () => {
   test(druidCircleLandSpellAccessProjectionTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:druid-land-temperate"),
         build: druidCircleLandBuild({ druidLevel: 5 }),
@@ -49,21 +49,20 @@ describe("Character Sheet runtime / druid features", () => {
     );
 
     expect(
-      characterSheetDruidCircleLandPreparedSpellAccess({
-        sheet,
-        unitLibrary,
-      }),
+      requireSuccess(
+        characterSheetDruidCircleLandPreparedSpellAccess({
+          sheet,
+          unitLibrary,
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        land: "temperate",
-        druidLevel: 5,
-        spellcastingSourceUnitId: "class_druid",
-        spellIds: ["misty_step", "shocking_grasp", "sleep", "lightning_bolt"],
-      },
+      land: "temperate",
+      druidLevel: 5,
+      spellcastingSourceUnitId: "class_druid",
+      spellIds: ["misty_step", "shocking_grasp", "sleep", "lightning_bolt"],
     });
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({
         sheet,
         unitLibrary,
@@ -73,16 +72,15 @@ describe("Character Sheet runtime / druid features", () => {
 
     expect(rested.druidCircleLand).toEqual({ land: "arid" });
     expect(
-      characterSheetDruidCircleLandPreparedSpellAccess({
-        sheet: rested,
-        unitLibrary,
-      }),
+      requireSuccess(
+        characterSheetDruidCircleLandPreparedSpellAccess({
+          sheet: rested,
+          unitLibrary,
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        land: "arid",
-        spellIds: ["blur", "burning_hands", "fire_bolt", "fireball"],
-      },
+      land: "arid",
+      spellIds: ["blur", "burning_hands", "fire_bolt", "fireball"],
     });
   });
 
@@ -98,8 +96,8 @@ describe("Character Sheet runtime / druid features", () => {
     });
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Circle of the Land requires selected land state.",
       },
     });
@@ -130,8 +128,8 @@ describe("Character Sheet runtime / druid features", () => {
     });
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Circle of the Land selected land requires Druid spellcasting source.",
       },
@@ -139,7 +137,7 @@ describe("Character Sheet runtime / druid features", () => {
   });
 
   test(druidCircleLandSpellAccessBookOfShadowsDuplicateTestName, () => {
-    const polarSheet = requireRight(
+    const polarSheet = requireSuccess(
       parseCharacterSheet(
         {
           ...storedAvailableSheetInput({
@@ -165,8 +163,8 @@ describe("Character Sheet runtime / druid features", () => {
         druidCircleLandChoice: "arid",
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Character Build Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
       },
@@ -190,8 +188,8 @@ describe("Character Sheet runtime / druid features", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Character Build Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
       },
@@ -212,7 +210,7 @@ describe("Character Sheet runtime / druid features", () => {
       ]),
     );
 
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:druid-wild-shape-rest"),
         build: druidBuild,
@@ -232,7 +230,7 @@ describe("Character Sheet runtime / druid features", () => {
     );
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         rebuildCharacterSheetFixture({
           characterId: characterSheetId(
             "character:druid-wild-shape-missing-forms",
@@ -247,9 +245,8 @@ describe("Character Sheet runtime / druid features", () => {
     expect(characterSheetDruidWildShapeKnownForms(spent)).toEqual({
       statBlockIds: druidWildShapeFixtureKnownFormStatBlockIds,
     });
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(requireSuccess(characterSheetResources(spent, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: DRUID_WILD_SHAPE_UNIT_ID,
@@ -258,18 +255,19 @@ describe("Character Sheet runtime / druid features", () => {
           resetCadence: { kind: "partial_short_full_long", shortRestRefill: 1 },
         }),
       ]),
-    });
+    );
 
-    const shortRested = requireRight(
+    const shortRested = requireSuccess(
       completeShortRest({ sheet: spent, unitLibrary }),
     );
 
     expect(characterSheetDruidWildShapeKnownForms(shortRested)).toEqual({
       statBlockIds: druidWildShapeFixtureKnownFormStatBlockIds,
     });
-    expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(shortRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: DRUID_WILD_SHAPE_UNIT_ID,
@@ -277,9 +275,9 @@ describe("Character Sheet runtime / druid features", () => {
           expended: 1,
         }),
       ]),
-    });
+    );
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({
         sheet: shortRested,
         unitLibrary,
@@ -299,9 +297,10 @@ describe("Character Sheet runtime / druid features", () => {
         "stat_block_wolf",
       ],
     });
-    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(longRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: DRUID_WILD_SHAPE_UNIT_ID,
@@ -309,6 +308,6 @@ describe("Character Sheet runtime / druid features", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 });

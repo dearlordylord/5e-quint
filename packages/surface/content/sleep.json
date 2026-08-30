@@ -42,13 +42,37 @@
             }
           }
         },
+        "autoSuccessIfTarget": {
+          "kind": "any",
+          "predicates": [
+            {
+              "kind": "does_not_sleep"
+            },
+            {
+              "condition": "exhaustion",
+              "kind": "has_condition_immunity"
+            }
+          ]
+        },
         "dc": {
           "kind": "caster_spell_save_dc"
         },
         "kind": "save_gate",
         "onFail": {
-          "condition": "incapacitated",
-          "kind": "apply_condition"
+          "effects": [
+            {
+              "condition": "incapacitated",
+              "kind": "apply_condition"
+            },
+            {
+              "actor": "another_creature",
+              "cost": "action",
+              "kind": "target_effect_escape_action",
+              "method": "shake_awake",
+              "outcome": "end_current_effect"
+            }
+          ],
+          "kind": "composite"
         },
         "onSuccess": {
           "kind": "none"

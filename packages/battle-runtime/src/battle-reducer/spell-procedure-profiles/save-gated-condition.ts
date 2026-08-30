@@ -63,8 +63,8 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
-const SpellFailedSaveConditionExpirationExecutionSchema = Schema.Union(
-  Schema.Literal("endOfCasterNextTurn", "concentration"),
+const SpellFailedSaveConditionExpirationExecutionSchema = Schema.Union([
+  Schema.Literals(["endOfCasterNextTurn", "concentration"]),
   Schema.Struct({
     kind: Schema.Literal("concentration"),
     durationTicks: ElapsedTimeTicksSchema,
@@ -73,7 +73,7 @@ const SpellFailedSaveConditionExpirationExecutionSchema = Schema.Union(
     kind: Schema.Literal("duration"),
     durationTicks: ElapsedTimeTicksSchema,
   }),
-);
+]);
 
 const SpellTurnStartDamageExecutionSchema = Schema.Struct({
   expr: DiceExprSchema,
@@ -91,13 +91,13 @@ const SpellFailedSaveConditionRepeatFields = {
   expiresAt: SpellFailedSaveConditionExpirationExecutionSchema,
   escape: Schema.Null,
   turnStartDamage: Schema.Null,
-  repeatSave: Schema.Union(
+  repeatSave: Schema.Union([
     SpellConditionRepeatSaveSchema,
     SpellConditionCountedRepeatSaveSchema,
-  ),
+  ]),
 };
 
-export const SpellFailedSaveConditionEffectExecutionSchema = Schema.Union(
+export const SpellFailedSaveConditionEffectExecutionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("fixed"),
     condition: BattleConditionSchema,
@@ -118,7 +118,7 @@ export const SpellFailedSaveConditionEffectExecutionSchema = Schema.Union(
     choices: Schema.NonEmptyArray(BattleConditionSchema),
     ...SpellFailedSaveConditionRepeatFields,
   }),
-);
+]);
 import {
   saveGatedConditionHasConditionChoice,
   spellConditionChoiceHole,

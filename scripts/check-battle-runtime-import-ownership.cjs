@@ -23,6 +23,7 @@ const EXECUTION_ENTRY_POINT_FILES = [
 ];
 const SPELL_EXECUTION_COMPOSITION_MODULE = `${BATTLE_RUNTIME_SRC}/battle-reducer/spell-procedure-profiles/execution-composition.ts`;
 const SPELL_DECLARATION_REGISTRY_MODULE = `${BATTLE_RUNTIME_SRC}/battle-reducer/spell-procedure-profiles/registry.ts`;
+const BATTLE_RUNTIME_PACKAGE_MANIFEST = "packages/battle-runtime/package.json";
 
 const FORBIDDEN_OWNERS = [
   {
@@ -206,6 +207,94 @@ function executionEntryPoints() {
     ),
     ...declaredFiles,
   ].sort();
+}
+
+function battleRuntimeExecutionImportClosure() {
+  const entryPoints = [
+    ...executionEntryPoints(),
+    normalizedRepoPath(SPELL_DECLARATION_REGISTRY_MODULE),
+  ];
+  if (entryPoints.length === 0) {
+    throw new Error("No battle-runtime execution entry points were found.");
+  }
+  return [...reachableFiles(importGraph(entryPoints), entryPoints)]
+    .map(toRepoPath)
+    .sort();
+}
+
+function battleRuntimePublicExportOwnerFiles() {
+  const manifestPath = normalizedRepoPath(BATTLE_RUNTIME_PACKAGE_MANIFEST);
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const exportedEntrypoints = Object.values(manifest.exports ?? {}).map(
+    (relativePath) => {
+      assert.equal(
+        typeof relativePath,
+        "string",
+        "Battle-runtime package exports must resolve directly to source entry points.",
+      );
+      return path.normalize(
+        path.resolve(path.dirname(manifestPath), relativePath),
+      );
+    },
+  );
+  assertDeclaredEntryPointsExist(exportedEntrypoints);
+
+  const options = compilerOptions();
+  const resolutionCache = ts.createModuleResolutionCache(
+    ROOT,
+    (fileName) => fileName,
+    options,
+  );
+  const owners = new Set(exportedEntrypoints);
+  const pending = [...exportedEntrypoints];
+  while (pending.length > 0) {
+    const file = pending.pop();
+    const source = fs.readFileSync(file, "utf8");
+    const sourceFile = ts.createSourceFile(
+      file,
+      source,
+      ts.ScriptTarget.Latest,
+      false,
+    );
+    for (const statement of sourceFile.statements) {
+      if (
+        !ts.isExportDeclaration(statement) ||
+        statement.moduleSpecifier === undefined ||
+        !ts.isStringLiteral(statement.moduleSpecifier)
+      ) {
+        continue;
+      }
+      const specifier = statement.moduleSpecifier.text;
+      const resolved = ts.resolveModuleName(
+        specifier,
+        file,
+        options,
+        ts.sys,
+        resolutionCache,
+      ).resolvedModule?.resolvedFileName;
+      if (resolved === undefined) {
+        if (isRepoLocalSpecifier(specifier)) {
+          throw new Error(
+            `Could not resolve public re-export ${JSON.stringify(specifier)} from ${toRepoPath(file)}.`,
+          );
+        }
+        continue;
+      }
+      const owner = path.normalize(resolved);
+      if (
+        !owner.startsWith(
+          `${normalizedRepoPath(BATTLE_RUNTIME_SRC)}${path.sep}`,
+        ) ||
+        !isTypeScriptSource(owner) ||
+        owners.has(owner)
+      ) {
+        continue;
+      }
+      owners.add(owner);
+      pending.push(owner);
+    }
+  }
+  return [...owners].map(toRepoPath).sort();
 }
 
 function declaredDirectoryEntryPoints(directories) {
@@ -925,30 +1014,33 @@ function dispatcherEntryPoint() {
   );
 }
 
-const cliArguments = process.argv.slice(2);
-const supportedArguments = new Set(["--self-test"]);
-const unknownArguments = cliArguments.filter(
-  (argument) => !supportedArguments.has(argument),
-);
-if (unknownArguments.length > 0) {
-  throw new Error(
-    `Unknown battle-runtime import ownership argument(s): ${unknownArguments.join(", ")}.`,
-  );
-}
-if (cliArguments.length > 1) {
-  throw new Error("Choose exactly one battle-runtime import ownership mode.");
-}
+module.exports = {
+  battleRuntimeExecutionImportClosure,
+  battleRuntimePublicExportOwnerFiles,
+};
 
-runSelfTests();
-
-if (cliArguments.includes("--self-test")) {
-  console.log(
-    "Battle-runtime import ownership synthetic tests passed: reachable import closure traversal and shortest violation paths.",
+if (require.main === module) {
+  const cliArguments = process.argv.slice(2);
+  const supportedArguments = new Set(["--self-test"]);
+  const unknownArguments = cliArguments.filter(
+    (argument) => !supportedArguments.has(argument),
   );
-} else {
-  const entryPoints = executionEntryPoints();
-  if (entryPoints.length === 0) {
-    throw new Error("No battle-runtime execution entry points were found.");
+  if (unknownArguments.length > 0) {
+    throw new Error(
+      `Unknown battle-runtime import ownership argument(s): ${unknownArguments.join(", ")}.`,
+    );
   }
-  checkEntryPoints(entryPoints, true);
+  if (cliArguments.length > 1) {
+    throw new Error("Choose exactly one battle-runtime import ownership mode.");
+  }
+
+  runSelfTests();
+
+  if (cliArguments.includes("--self-test")) {
+    console.log(
+      "Battle-runtime import ownership synthetic tests passed: reachable import closure traversal and shortest violation paths.",
+    );
+  } else {
+    checkEntryPoints(executionEntryPoints(), true);
+  }
 }

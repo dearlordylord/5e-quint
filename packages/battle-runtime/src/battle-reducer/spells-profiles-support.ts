@@ -26,7 +26,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { BattleSpellAdmissionSource } from "../battle-state-execution.ts";
 import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import {
   BATTLE_SPECIAL_SPEED_KINDS,
   type BattleSpecialSpeedKind,
@@ -40,15 +40,16 @@ import {
   type RollModifierSpellTargeting,
   type ScalarBuffSpellEffect,
   type ScalarBuffSpellTargeting,
-  type ThaumaturgyBoomingVoiceSpellInvocation,
+  type TemporaryAbilityCheckRollModeSpellInvocation,
 } from "../battle-state-execution.ts";
 import { type BattleD20RollModifierKind } from "./domain-constants.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
   BATTLE_D20_ROLL_MODIFIER_KINDS,
-  THAUMATURGY_BOOMING_VOICE_DURATION_TICKS,
-  THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+  TEMPORARY_ABILITY_CHECK_ROLL_MODE_DURATION_TICKS,
+  TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
+  TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import {
   sameStringSet,
@@ -99,16 +100,16 @@ export function sameCreatureTypeSet(
   );
 }
 
-export function thaumaturgyBoomingVoiceProjection(
+export function temporaryAbilityCheckRollModeProjection(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): Pick<
-  ThaumaturgyBoomingVoiceSpellInvocation,
-  "activeEffect" | "rangeFeet"
+  TemporaryAbilityCheckRollModeSpellInvocation,
+  "activeEffect" | "rangeFeet" | "selectedMode" | "concurrentDurationModeLimit"
 > | null {
   const castingTime = topLevelSpellCastingTime(spell.mechanics);
   if (
-    spell.mechanics.family !== "ongoing_effect" ||
+    spell.mechanics.family !== "modal_ongoing_effect" ||
     spell.mechanics.level !== 0 ||
     castingTime?.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
@@ -117,12 +118,28 @@ export function thaumaturgyBoomingVoiceProjection(
     spell.mechanics.duration.value.unit !== "minute" ||
     spell.mechanics.duration.value.amount !== 1 ||
     spell.mechanics.attachment.kind !== "self" ||
-    spell.mechanics.operations.length !== 1
+    spell.mechanics.concurrentEffectLimit?.appliesTo !==
+      "spell_duration_modes" ||
+    spell.mechanics.concurrentEffectLimit.maximumActive !==
+      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS
   ) {
     return null;
   }
-  const operation = spell.mechanics.operations[0];
-  const effect = operation.effect;
+  const matchingEffects = spell.mechanics.mode.options.flatMap((option) => {
+    if (option.effectDuration !== "spell_duration") {
+      return [];
+    }
+    const effects = option.effects ?? [];
+    if (effects.length !== 1) {
+      return [];
+    }
+    const [effect] = effects;
+    return effect.kind === "modify_roll_advantage" ? [effect] : [];
+  });
+  if (matchingEffects.length !== 1) {
+    return null;
+  }
+  const [effect] = matchingEffects;
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
@@ -133,31 +150,39 @@ export function thaumaturgyBoomingVoiceProjection(
   const abilityFilter =
     effect.kind === "modify_roll_advantage" ? effect.abilityFilter : undefined;
   if (
-    Either.isLeft(durationTicks) ||
-    Number(durationTicks.right) !==
-      Number(THAUMATURGY_BOOMING_VOICE_DURATION_TICKS) ||
-    operation.trigger.kind !== "passive" ||
-    effect.kind !== "modify_roll_advantage" ||
+    Result.isFailure(durationTicks) ||
+    Number(durationTicks.success) !==
+      Number(TEMPORARY_ABILITY_CHECK_ROLL_MODE_DURATION_TICKS) ||
     effect.mode !== "advantage" ||
     (effect.affects ?? "self_roll") !== "self_roll" ||
     !sameStringSet(effect.on, ["ability_check"]) ||
     !Array.isArray(abilityFilter) ||
     !sameStringSet(abilityFilter, ["cha"]) ||
     skillFilter?.kind !== "fixed" ||
-    skillFilter.skill !== THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL
+    skillFilter.skill !== TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL
   ) {
     return null;
   }
   return {
     activeEffect: {
-      kind: "thaumaturgyBoomingVoice",
+      kind: "temporaryAbilityCheckRollMode",
       sourceCombatantId: actorId,
       expiresAt: {
         kind: "duration",
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
       },
     },
     rangeFeet: movementFeet(spell.mechanics.range.feet),
+    selectedMode: {
+      kind: "abilityCheckRollMode",
+      ability: "cha",
+      skill: "intimidation",
+      rollMode: "advantage",
+      effectDuration: "spellDuration",
+    },
+    concurrentDurationModeLimit: {
+      maximumActive: TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
+    },
   };
 }
 
@@ -391,12 +416,12 @@ function scalarBuffSpecialSpeedGrantExpiration(
     return scalarBuffActiveEffectExpiration(actorId, duration);
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.upTo);
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? null
     : {
         kind: "concentration",
         combatantId: actorId,
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
       };
 }
 
@@ -754,9 +779,9 @@ export function scalarBuffActiveEffectExpiration(
   }
   if (duration.kind === "timed") {
     const ticks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
-    return Either.isLeft(ticks)
+    return Result.isFailure(ticks)
       ? null
-      : { kind: "duration", durationTicks: ticks.right };
+      : { kind: "duration", durationTicks: ticks.success };
   }
   return null;
 }

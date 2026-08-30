@@ -1,4 +1,4 @@
-import { Either, JSONSchema, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { NonNegativeInteger } from "@dnd/shared/types";
 
@@ -189,13 +189,13 @@ const rolledRangedStatBlockAttack = {
 };
 
 function decodeSupportedAttack(input: unknown): SupportedAttackActionOption {
-  const decoded = Schema.decodeUnknownEither(SupportedAttackActionOptionSchema)(
+  const decoded = Schema.decodeUnknownResult(SupportedAttackActionOptionSchema)(
     input,
   );
-  if (Either.isLeft(decoded)) {
-    throw new Error(`Expected an admitted attack option: ${decoded.left}`);
+  if (Result.isFailure(decoded)) {
+    throw new Error(`Expected an admitted attack option: ${decoded.failure}`);
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 type JsonObject = { readonly [key: string]: unknown };
@@ -448,12 +448,10 @@ describe("mechanical attack option projection", () => {
   });
 
   test("does not publish authored identity or presentation properties", () => {
-    const schema = JSONSchema.make(
+    const document = Schema.toJsonSchemaDocument(
       MechanicalSupportedAttackActionOptionSchema,
-      {
-        target: "jsonSchema2020-12",
-      },
     );
+    const schema = { ...document.schema, $defs: document.definitions };
     const propertyNames = new Set(recursivelyCollectedPropertyNames(schema));
 
     for (const forbidden of [
@@ -471,12 +469,10 @@ describe("mechanical attack option projection", () => {
   });
 
   test("publishes two-or-more damage type choices structurally", () => {
-    const schema = JSONSchema.make(
+    const document = Schema.toJsonSchemaDocument(
       MechanicalSupportedAttackActionOptionSchema,
-      {
-        target: "jsonSchema2020-12",
-      },
     );
+    const schema = { ...document.schema, $defs: document.definitions };
     const choicesSchemas = recursivelyFindPropertySchemas(
       schema,
       "damageTypeChoices",
@@ -514,8 +510,8 @@ describe("mechanical attack option projection", () => {
 
     for (const invalidInput of invalidInputs) {
       expect(
-        Either.isLeft(
-          Schema.decodeUnknownEither(
+        Result.isFailure(
+          Schema.decodeUnknownResult(
             MechanicalSupportedAttackActionOptionSchema,
           )(invalidInput),
         ),

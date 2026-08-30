@@ -3,7 +3,7 @@ import {
   type BattleRuntimeSession,
   type CombatantId,
 } from "@dnd/battle-runtime";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import type { BattleLifecycleToolInput } from "./battle-lifecycle-tool-input.ts";
 import { battlePresentationIssueContent } from "./battle-tool-payloads.ts";
 import { BattleLifecycleOutputSchema } from "./battle-tool-output.ts";
@@ -65,23 +65,24 @@ function addCombatant(
     combatant,
     ownerPath: ["operation", "combatant"],
   });
-  if (Either.isLeft(projection)) {
-    return lifecycleFailureFromToolError(projection.left);
+  if (Result.isFailure(projection)) {
+    return lifecycleFailureFromToolError(projection.failure);
   }
 
   const operation: Extract<
     McpBattleRosterOperation,
     { readonly kind: "addCharacter" | "addStatBlock" }
   > =
-    projection.right.kind === "characterSheet"
-      ? { kind: "addCharacter", combatant: projection.right.combatant }
-      : { kind: "addStatBlock", combatant: projection.right.combatant };
+    projection.success.kind === "characterSheet"
+      ? { kind: "addCharacter", combatant: projection.success.combatant }
+      : { kind: "addStatBlock", combatant: projection.success.combatant };
   const planned = root.sessionStore.planActiveBattleRosterTransition(operation);
-  if (Either.isLeft(planned)) return rosterTransitionFailure(planned.left);
+  if (Result.isFailure(planned))
+    return rosterTransitionFailure(planned.failure);
 
   return commitBattleLifecycleTransition({
     root,
-    transition: planned.right,
+    transition: planned.success,
     result: {
       tag: "combatantAdded",
       combatantId: combatant.combatantId,
@@ -100,15 +101,16 @@ function removeCombatant(
     kind: "remove",
     combatantId,
   });
-  if (Either.isLeft(planned)) return rosterTransitionFailure(planned.left);
+  if (Result.isFailure(planned))
+    return rosterTransitionFailure(planned.failure);
 
   return commitBattleLifecycleTransition({
     root,
-    transition: planned.right,
+    transition: planned.success,
     result: {
       tag: "combatantRemoved",
       combatantId,
-      removedCombatantIds: planned.right.removedCombatantIds,
+      removedCombatantIds: planned.success.removedCombatantIds,
     },
   });
 }
@@ -130,28 +132,29 @@ function commitBattleLifecycleTransition(input: {
   const presentation = battlePresentationForCommit(
     input.transition.prospectiveBattle,
   );
-  if (Either.isLeft(presentation)) return presentation.left;
+  if (Result.isFailure(presentation)) return presentation.failure;
 
   const committed = input.root.sessionStore.commitActiveBattleRosterTransition(
     input.transition.plan,
   );
-  if (Either.isLeft(committed)) return rosterTransitionFailure(committed.left);
+  if (Result.isFailure(committed))
+    return rosterTransitionFailure(committed.failure);
 
   publishAdminProjectionBestEffort(input.root);
 
   const battleState = battleStateSnapshot({
     tag: "activeBattle",
-    session: committed.right,
+    session: committed.success,
   });
   return schemaJsonContent(BattleLifecycleOutputSchema, {
     result: input.result,
-    envelope: presentation.right,
+    envelope: presentation.success,
     session: { ...input.root.sessionStore.snapshot(), battleState },
   });
 }
 
 function battlePresentationForCommit(nextBattle: BattleRuntimeSession) {
-  return Either.mapLeft(
+  return Result.mapError(
     battlePresentedCheckpointFrontierEnvelope(nextBattle),
     battlePresentationIssueContent,
   );

@@ -13,9 +13,7 @@ import {
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 
-import { isNonEmptyReadonlyArray } from "effect/Array";
-
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 import * as Option from "effect/Option";
 
@@ -85,6 +83,12 @@ import {
   INITIAL_TURN_RESOURCES,
 } from "./battle-runtime-protocol.ts";
 
+function isNonEmptyReadonlyArray<T>(
+  values: readonly T[],
+): values is ReadonlyNonEmptyArray<T> {
+  return values.length > 0;
+}
+
 function admissionIssueToInitIssue(
   issue: BattleStateInitLeafIssue | BattleUnitSupportProfileIssue,
 ): BattleStateInitLeafIssue {
@@ -134,11 +138,11 @@ function battleInitializationLeafIssueFromStateIssue(
 
 function battleInitializationIssueFromLeafIssues(
   issues: ReadonlyNonEmptyArray<BattleInitializationLeafIssue>,
-): Either.Either<never, BattleInitializationIssue> {
+): Result.Result<never, BattleInitializationIssue> {
   const [first, second, ...rest] = issues;
   return second === undefined
-    ? Either.left(first)
-    : Either.left({
+    ? Result.fail(first)
+    : Result.fail({
         tag: "battleStateInitIssues",
         issues: [first, second, ...rest],
       });
@@ -171,10 +175,10 @@ export function battleStateInitIssueFromAdmissionIssues(
   issues: ReadonlyNonEmptyArray<
     BattleStateInitLeafIssue | BattleUnitSupportProfileIssue
   >,
-): Either.Either<never, BattleStateInitIssue> {
+): Result.Result<never, BattleStateInitIssue> {
   const first = admissionIssueToInitIssue(issues[0]);
   if (issues.length === 1) {
-    return Either.left(first);
+    return Result.fail(first);
   }
   const second = admissionIssueToInitIssue(issues[1]);
   const rest = issues.slice(2).map(admissionIssueToInitIssue);
@@ -552,11 +556,11 @@ export type BattleStartInput = {
 
 export function startBattleWithInitialInitiativeSetup(
   input: BattleStartInput,
-): Either.Either<InitialInitiativeSetup, BattleInitializationIssue> {
+): Result.Result<InitialInitiativeSetup, BattleInitializationIssue> {
   const session = startBattle(input);
-  return Either.isLeft(session)
-    ? Either.left(session.left)
-    : Either.right(initialInitiativeSetupState(session.right));
+  return Result.isFailure(session)
+    ? Result.fail(session.failure)
+    : Result.succeed(initialInitiativeSetupState(session.success));
 }
 
 export function finishInitialInitiativeSetup(
@@ -653,9 +657,9 @@ function appendPositiveHpUnconsciousIssue(
   ownerPath: readonly (string | number)[],
 ): boolean {
   const issue = positiveHpUnconsciousInitIssue(combatant);
-  if (issue === null || !Either.isLeft(issue)) return issue !== null;
+  if (issue === null || !Result.isFailure(issue)) return issue !== null;
   accumulator.initializationIssues.push(
-    ...battleStateInitIssueLeaves(issue.left).map((leaf) =>
+    ...battleStateInitIssueLeaves(issue.failure).map((leaf) =>
       battleInitializationLeafIssueFromStateIssue(
         leaf,
         {
@@ -819,11 +823,11 @@ function appendInitialHidePrerequisiteIssues(
 
 function appendInitialInitiativeIssues(
   accumulator: InitialBattleAdmissionAccumulator,
-  initiative: Either.Either<BattleState["initiative"], BattleStateInitIssue>,
+  initiative: Result.Result<BattleState["initiative"], BattleStateInitIssue>,
 ): void {
-  if (accumulator.combatants.size === 0 || Either.isRight(initiative)) return;
+  if (accumulator.combatants.size === 0 || Result.isSuccess(initiative)) return;
   accumulator.initializationIssues.push(
-    ...battleStateInitIssueLeaves(initiative.left).map((issue) =>
+    ...battleStateInitIssueLeaves(initiative.failure).map((issue) =>
       battleInitializationLeafIssueFromStateIssue(
         issue,
         {
@@ -839,26 +843,26 @@ function appendInitialInitiativeIssues(
 function initialBattleState(
   input: BattleStartInput,
   accumulator: InitialBattleAdmissionAccumulator,
-): Either.Either<BattleState, BattleInitializationIssue> {
+): Result.Result<BattleState, BattleInitializationIssue> {
   const initiative = createInitialInitiativeForCombatants({
     combatants: [...accumulator.combatants.values()],
     emptyRosterMessage: "startBattle requires at least one combatant.",
   });
   appendInitialInitiativeIssues(accumulator, initiative);
-  if (Either.isLeft(initiative)) {
+  if (Result.isFailure(initiative)) {
     if (isNonEmptyReadonlyArray(accumulator.initializationIssues)) {
       return battleInitializationIssueFromLeafIssues(
         accumulator.initializationIssues,
       );
     }
-    return Either.left(
+    return Result.fail(
       battleInitializationIssue(
         {
           kind: "initialInitiativeInvalid",
           initializationReason: "emptyRoster",
         },
-        initiative.left.tag === "battleStateInitIssue"
-          ? initiative.left.message
+        initiative.failure.tag === "battleStateInitIssue"
+          ? initiative.failure.message
           : "Battle initialization could not create an initiative stack.",
         ["battleInitialization", "initiative"],
       ),
@@ -873,9 +877,9 @@ function initialBattleState(
       accumulator.initializationIssues,
     );
   }
-  return Either.right({
+  return Result.succeed({
     battleId: input.battleId,
-    initiative: initiative.right,
+    initiative: initiative.success,
     combatants: accumulator.combatants,
     executionScopeCursors: accumulator.executionScopeCursors,
     companions: new Map(),
@@ -909,16 +913,16 @@ function appendCharacterWeaponPresentationIssues(input: {
       input.characterContext,
       attack.weapon.weaponUnitId,
     );
-    if (Either.isLeft(presentationSource)) {
+    if (Result.isFailure(presentationSource)) {
       input.initializationIssues.push(
         battleInitializationIssue(
           {
             kind: "weaponPresentationUnavailable",
             combatantId: input.combatant.combatantId,
             weaponUnitId: attack.weapon.weaponUnitId,
-            availability: presentationSource.left.reason,
+            availability: presentationSource.failure.reason,
           },
-          `Character ${input.combatant.combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.left.reason} authored presentation source.`,
+          `Character ${input.combatant.combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.failure.reason} authored presentation source.`,
           input.ownerPath,
         ),
       );
@@ -965,9 +969,9 @@ function initializeCharacterBattleExecutions(input: {
 
 export function startBattle(
   input: BattleStartInput,
-): Either.Either<BattleRuntimeSession, BattleInitializationIssue> {
+): Result.Result<BattleRuntimeSession, BattleInitializationIssue> {
   if (input.combatants.length === 0) {
-    return Either.left(
+    return Result.fail(
       battleInitializationIssue(
         { kind: "emptyRoster" },
         "startBattle requires at least one combatant.",
@@ -977,10 +981,10 @@ export function startBattle(
   const admission = admitInitialBattleCombatants(input);
   appendInitialHidePrerequisiteIssues(input, admission);
   const state = initialBattleState(input, admission);
-  if (Either.isLeft(state)) return Either.left(state.left);
+  if (Result.isFailure(state)) return Result.fail(state.failure);
   const combatantsWithCharacterExecutions = initializeCharacterBattleExecutions(
     {
-      state: state.right,
+      state: state.success,
       battleInput: input,
       characterContexts: admission.characterContexts,
       initializationIssues: admission.initializationIssues,
@@ -991,10 +995,10 @@ export function startBattle(
       admission.initializationIssues,
     );
   }
-  return Either.right(
+  return Result.succeed(
     battleRuntimeSessionFromAdmittedContext(
       {
-        ...state.right,
+        ...state.success,
         combatants: combatantsWithCharacterExecutions,
       },
       battleRuntimeContextFromCharacterAdmission(
@@ -1028,7 +1032,7 @@ export function createInitialInitiativeForCombatants(input: {
   readonly combatants: readonly InitialInitiativeCombatant[];
   readonly initialCombatantOrder?: ReadonlyMap<CombatantId, number>;
   readonly emptyRosterMessage: string;
-}): Either.Either<BattleState["initiative"], BattleStateInitIssue> {
+}): Result.Result<BattleState["initiative"], BattleStateInitIssue> {
   if (input.initialCombatantOrder !== undefined) {
     for (const combatant of input.combatants) {
       if (!input.initialCombatantOrder.has(combatant.combatantId)) {
@@ -1062,9 +1066,9 @@ export function createInitialInitiativeForCombatants(input: {
     orderedEntries,
     INITIAL_ROUND,
   );
-  return Either.isLeft(initiative)
-    ? battleStateInitIssue(initiative.left)
-    : Either.right(initiative.right);
+  return Result.isFailure(initiative)
+    ? battleStateInitIssue(initiative.failure)
+    : Result.succeed(initiative.success);
 }
 
 export type InitiativeSwapCandidateWitness =
@@ -1079,7 +1083,7 @@ export function applyInitiativeSwap(input: {
   readonly sourceId: CombatantId;
   readonly candidateId: CombatantId;
   readonly candidateWitness: InitiativeSwapCandidateWitness;
-}): Either.Either<void, BattleStateInitIssue> {
+}): Result.Result<void, BattleStateInitIssue> {
   const state = input.setup.state;
   if (!input.setup[InitialInitiativeSetupOpen]) {
     return battleStateInitIssue(
@@ -1167,7 +1171,7 @@ export function applyInitiativeSwap(input: {
     combatants,
     initiative: initiative.value,
   });
-  return Either.right(undefined);
+  return Result.succeed(undefined);
 }
 
 function combatantHasInitiativeProficiencyAndSwap(
@@ -1252,6 +1256,7 @@ function admitCharacterSpellExecution(input: {
               },
               /* v8 ignore next -- @preserve -- Fresh lifecycle admission allocates a new execution, then adds only currently admitted spells, so it cannot contain a retained unavailable spell binding. */
               unavailableSpellInvocation: () => [],
+              effectOccurrenceSource: () => [],
               unitFeature: () => [],
               unitSupportProfile: () => [],
             }),
@@ -1274,7 +1279,7 @@ function statBlockPresentationProjectionForAdmission(
     : {};
 }
 
-function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
+function admitBattleCombatant(input: AddBattleCombatantInput): Result.Result<
   {
     readonly state: BattleState;
     readonly characterContext?: CharacterBattleRuntimeContext;
@@ -1351,7 +1356,7 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
     nextScopeOrdinal: battleExecutionScopeCursor(admission.nextScopeOrdinal),
   });
 
-  return Either.right({
+  return Result.succeed({
     state: {
       ...input.state,
       initiative,
@@ -1367,8 +1372,8 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
 
 export function addBattleCombatant(
   input: AddBattleCombatantInput,
-): Either.Either<BattleState, BattleStateInitIssue> {
-  return Either.map(
+): Result.Result<BattleState, BattleStateInitIssue> {
+  return Result.map(
     admitBattleCombatant(input),
     (admission) => admission.state,
   );
@@ -1378,8 +1383,8 @@ export function addBattleRuntimeCombatant(input: {
   readonly session: BattleRuntimeSession;
   readonly combatant: BattleCreatureInit;
   readonly tieOrderIndex?: number;
-}): Either.Either<BattleRuntimeSession, BattleStateInitIssue> {
-  return Either.map(
+}): Result.Result<BattleRuntimeSession, BattleStateInitIssue> {
+  return Result.map(
     admitBattleCombatant({
       state: input.session.state,
       combatant: input.combatant,
@@ -1411,8 +1416,8 @@ export function addBattleRuntimeCombatant(input: {
 export function removeBattleRuntimeCombatants(input: {
   readonly session: BattleRuntimeSession;
   readonly combatantIds: readonly CombatantId[];
-}): Either.Either<BattleRuntimeSession, BattleStateInitIssue> {
-  return Either.map(
+}): Result.Result<BattleRuntimeSession, BattleStateInitIssue> {
+  return Result.map(
     removeBattleCombatants({
       state: input.session.state,
       combatantIds: input.combatantIds,

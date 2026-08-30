@@ -9,6 +9,8 @@ import {
 } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 
+import { Result } from "effect";
+
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { repoRoot, sha256Text } from "./transcript.ts";
 import {
@@ -22,16 +24,18 @@ function fail(message: string): never {
 
 function repositoryReadPath(path: string): string {
   const result = canonicalRepositoryReadPath(repoRoot, path);
-  return result._tag === "Right"
-    ? result.right
-    : fail(`Replay authority is not repository-owned: ${path}: ${result.left}`);
+  return Result.isSuccess(result)
+    ? result.success
+    : fail(
+        `Replay authority is not repository-owned: ${path}: ${result.failure}`,
+      );
 }
 
 function repositoryOutputPath(path: string): string {
   const result = canonicalRepositoryOutputPath(repoRoot, path);
-  return result._tag === "Right"
-    ? result.right
-    : fail(`Replay output is not repository-owned: ${path}: ${result.left}`);
+  return Result.isSuccess(result)
+    ? result.success
+    : fail(`Replay output is not repository-owned: ${path}: ${result.failure}`);
 }
 
 export type ReplayCacheMeasurement = {

@@ -18,8 +18,8 @@ import {
   spellTargetFill,
   spellTargetListFill,
   spellTouchedObjectTargetFill,
-  spiritualWeaponForcePositionFill,
-  spiritualWeaponTargetFill,
+  spatialMeleeSpellAttackProxyPositionFill,
+  spatialMeleeSpellAttackProxyTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   decodeSpellRecordForTest,
@@ -431,10 +431,10 @@ describe("spell target-selection public boundaries", () => {
           kind: "spellAreaChoice",
           holeId: area.holeId,
           value: {
-            kind: "antimagicFieldSelfEmanation",
+            kind: "magicSuppressionSelfEmanation",
             areaId: battleAreaId("target-selection-antimagic-field"),
             auraMembership: {
-              kind: "antimagicFieldAuraMembership",
+              kind: "magicSuppressionEmanationMembership",
               originIncluded: true,
               nonOriginCombatantIds: [insideAuraId],
             },
@@ -474,7 +474,7 @@ describe("spell target-selection public boundaries", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Magical effects can't target or otherwise affect things inside an Antimagic Field aura.",
+        "Magical effects can't target or otherwise affect things inside a magic-suppression area.",
     });
   });
 
@@ -490,19 +490,19 @@ describe("spell target-selection public boundaries", () => {
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           spiritualWeaponUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
-          "spiritualWeaponAttackProxy",
+          "spatialMeleeSpellAttackProxy",
     );
     if (cast === undefined) {
       throw new Error("Expected Spiritual Weapon cast.");
     }
     const castForce = requireHole(
       cast.initialHoles,
-      "spiritualWeaponForcePosition",
+      "spatialMeleeSpellAttackProxyPosition",
     );
     const initialPositionId = battleTablePositionId(
       "target-selection-spiritual-weapon-initial",
     );
-    const castForceFill = spiritualWeaponForcePositionFill({
+    const castForceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: castForce,
       positionId: initialPositionId,
     });
@@ -515,7 +515,7 @@ describe("spell target-selection public boundaries", () => {
       },
     } satisfies Extract<
       BattleFill,
-      { readonly kind: "spiritualWeaponForcePosition" }
+      { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
     >;
 
     expect(
@@ -527,11 +527,12 @@ describe("spell target-selection public boundaries", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Spiritual Weapon cast requires a cast force-position fill.",
+      message:
+        "spatial melee spell-attack proxy cast requires a cast force-position fill.",
     });
 
     const castTarget = requireHole(cast.initialHoles, "targetChoice");
-    const castTargetFill = spiritualWeaponTargetFill(
+    const castTargetFill = spatialMeleeSpellAttackProxyTargetFill(
       castTarget,
       spiritualWeaponUnitId,
       spellCasterId,
@@ -582,19 +583,19 @@ describe("spell target-selection public boundaries", () => {
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           spiritualWeaponUnitId &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
-          "spiritualWeaponRepeatAttack",
+          "spatialMeleeSpellAttackProxy",
     );
     if (repeat === undefined) {
       throw new Error("Expected Spiritual Weapon repeat attack.");
     }
     const repeatForce = requireHole(
       repeat.initialHoles,
-      "spiritualWeaponForcePosition",
+      "spatialMeleeSpellAttackProxyPosition",
     );
     const movedPositionId = battleTablePositionId(
       "target-selection-spiritual-weapon-moved",
     );
-    const repeatForceFill = spiritualWeaponForcePositionFill({
+    const repeatForceFill = spatialMeleeSpellAttackProxyPositionFill({
       hole: repeatForce,
       positionId: movedPositionId,
     });
@@ -607,7 +608,7 @@ describe("spell target-selection public boundaries", () => {
       },
     } satisfies Extract<
       BattleFill,
-      { readonly kind: "spiritualWeaponForcePosition" }
+      { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
     >;
 
     expect(
@@ -619,7 +620,8 @@ describe("spell target-selection public boundaries", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: "Spiritual Weapon repeat attack requires a reposition fill.",
+      message:
+        "spatial melee spell-attack proxy repeat attack requires a reposition fill.",
     });
   });
 });

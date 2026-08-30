@@ -93,7 +93,7 @@ const BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG: Readonly<
 
 type BlurBypassSense = Extract<
   BattleTargetSpatialFact,
-  { readonly kind: "attackAttackerPerceivesBlurredTargetWithSense" }
+  { readonly kind: "attackerPerceivesObscuredTargetWithSense" }
 >["sense"];
 
 type BlurAttackRollDefenseProjection = {
@@ -135,7 +135,7 @@ const driverSchema = {
 
 function createBlurAttackRollDefenseLifecycleDriver() {
   return defineDriver(driverSchema, () => {
-    let state = initialRuntimeState();
+    let state: BlurAttackRollDefenseRuntimeState = initialRuntimeState();
     return {
       init: () => {
         state = initialRuntimeState();
@@ -179,12 +179,12 @@ function createBlurAttackRollDefenseLifecycleDriver() {
       },
       doStutter: () => {},
       step: () => {},
-      getState: () => blurAttackRollDefenseProjection(state),
+      getState: () => perceptionGatedAttackRollDefenseProjection(state),
     };
   });
 }
 
-const blurAttackRollDefenseStateCheck = stateCheck(
+const perceptionGatedAttackRollDefenseStateCheck = stateCheck(
   normalizeBlurAttackRollDefenseQuintState,
   compareBlurAttackRollDefenseStates,
 );
@@ -194,7 +194,7 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
     const cast = castBlur(initialRuntimeState());
     const caster = requireCombatant(cast.battle.state, spellCasterId);
     const blurredEffect = caster.activeEffects.find(
-      (effect) => effect.kind === "blurred",
+      (effect) => effect.kind === "perceptionGatedAttackRollDefense",
     );
     expect(blurredEffect).toBeDefined();
 
@@ -205,7 +205,7 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
       },
       activeEffects: [
         expect.objectContaining({
-          kind: "blurred",
+          kind: "perceptionGatedAttackRollDefense",
           sourceCombatantId: spellCasterId,
           expiresAt: {
             kind: "concentration",
@@ -214,7 +214,7 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
         }),
       ],
     });
-    expect(blurAttackRollDefenseProjection(cast)).toMatchObject({
+    expect(perceptionGatedAttackRollDefenseProjection(cast)).toMatchObject({
       actionAvailable: false,
       spellAvailable: false,
       spellSlotExpended: 1,
@@ -232,7 +232,9 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
       const cast = castBlur(initialRuntimeState());
       const bypassed = { ...cast, bypassSense: sense };
 
-      expect(blurAttackRollDefenseProjection(bypassed)).toMatchObject({
+      expect(
+        perceptionGatedAttackRollDefenseProjection(bypassed),
+      ).toMatchObject({
         blurredEffectActive: true,
         casterConcentrating: true,
         attackerPerceivesWithBlindsight: sense === "blindsight",
@@ -246,7 +248,9 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
     const cast = castBlur(initialRuntimeState());
     const cancellation = { ...cast, otherAttackAdvantage: true };
 
-    expect(blurAttackRollDefenseProjection(cancellation)).toMatchObject({
+    expect(
+      perceptionGatedAttackRollDefenseProjection(cancellation),
+    ).toMatchObject({
       blurredEffectActive: true,
       otherAttackAdvantage: true,
       attackRollMode: "normal",
@@ -262,10 +266,12 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
         .activeEffects,
     ).toEqual(
       expect.not.arrayContaining([
-        expect.objectContaining({ kind: "blurred" }),
+        expect.objectContaining({ kind: "perceptionGatedAttackRollDefense" }),
       ]),
     );
-    expect(blurAttackRollDefenseProjection(concentrationBroken)).toMatchObject({
+    expect(
+      perceptionGatedAttackRollDefenseProjection(concentrationBroken),
+    ).toMatchObject({
       blurredEffectActive: false,
       casterConcentrating: false,
       attackRollMode: "normal",
@@ -287,7 +293,7 @@ describe("Blur attack-roll defense lifecycle MBT parity", () => {
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(6),
-        stateCheck: blurAttackRollDefenseStateCheck,
+        stateCheck: perceptionGatedAttackRollDefenseStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -327,7 +333,7 @@ function castBlur(
     tag: "spellSlot",
     spellId: blurUnitId,
     slotLevel: 2,
-    procedure: "blurAttackRollDefense",
+    procedure: "perceptionGatedAttackRollDefense",
   });
   const result = requireResolved(
     resolveBattleSubject({
@@ -350,7 +356,7 @@ function castBlur(
 function breakBlurConcentration(
   state: BlurAttackRollDefenseRuntimeState,
 ): BlurAttackRollDefenseRuntimeState {
-  if (!blurAttackRollDefenseProjection(state).casterConcentrating) {
+  if (!perceptionGatedAttackRollDefenseProjection(state).casterConcentrating) {
     return state;
   }
   return {
@@ -363,13 +369,13 @@ function breakBlurConcentration(
   };
 }
 
-function blurAttackRollDefenseProjection(
+function perceptionGatedAttackRollDefenseProjection(
   state: BlurAttackRollDefenseRuntimeState,
 ): BlurAttackRollDefenseProjection {
   const caster = requireCombatant(state.battle.state, spellCasterId);
   const spellSlotExpended = casterSpellSlotExpended(state.battle.state);
   const blurredEffect = caster.activeEffects.find(
-    (effect) => effect.kind === "blurred",
+    (effect) => effect.kind === "perceptionGatedAttackRollDefense",
   );
   const attackRollMode = attackerAttackRollMode(state);
   return {
@@ -454,7 +460,7 @@ function attackTargetFacts(
   const facts: BattleTargetSpatialFact[] = [];
   if (state.bypassSense !== undefined) {
     facts.push({
-      kind: "attackAttackerPerceivesBlurredTargetWithSense",
+      kind: "attackerPerceivesObscuredTargetWithSense",
       attackerId: state.attackerId,
       targetId: spellCasterId,
       sense: state.bypassSense,
@@ -514,7 +520,7 @@ function normalizeBlurAttackRollDefenseQuintState(
     state,
     protocolField: "protocol",
     noInvalidReason: "",
-    decodeHole: blurAttackRollDefenseUnexpectedHole,
+    decodeHole: perceptionGatedAttackRollDefenseUnexpectedHole,
   });
   if (protocol.holes.length !== 0) {
     throw new Error(
@@ -550,7 +556,7 @@ function normalizeBlurAttackRollDefenseQuintState(
   };
 }
 
-function blurAttackRollDefenseUnexpectedHole(raw: unknown): never {
+function perceptionGatedAttackRollDefenseUnexpectedHole(raw: unknown): never {
   throw new Error(
     `Blur attack-roll defense witness does not expect holes; received ${String(raw)}.`,
   );

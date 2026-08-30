@@ -31,6 +31,7 @@ import type {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
@@ -71,7 +72,7 @@ import {
   type BattleShovePushOutcome,
   type BattleTargetChoiceHole,
   type BattleUnitFeatureDecisionHole,
-  type BattleLightEmitter,
+  type BattleLightEmitterMechanicalFacts,
   type BattleObjectOutline,
   type BattleSavingThrowRelationshipFact,
   type BattleState,
@@ -108,7 +109,7 @@ import {
   currentActorId,
   grappledBy,
 } from "./creature-state-leaves.ts";
-import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
+import { ongoingSpellEffectSuppressedByMagicSuppressionEmanation } from "./magic-suppression-ongoing-effect.ts";
 import {
   activeOngoingFeatureOccurrenceFromExecution,
   extendOngoingFeatureToEndOfNextTurn,
@@ -209,10 +210,10 @@ export function attackRollHole(
     attack: unboundAttackActionOption(attack),
     attackBonus: attackActionBonusWithPassiveFeatureBonus(attacker, attack),
     ...optionalProperty("rollMode", rollMode),
-    ...(ongoingFeatureActivations === undefined ||
-    ongoingFeatureActivations.length === 0
-      ? {}
-      : { ongoingFeatureActivations }),
+    ...nonEmptyArrayProperty(
+      "ongoingFeatureActivations",
+      ongoingFeatureActivations ?? [],
+    ),
     ...(attacker === undefined
       ? {}
       : attackRollMissToHitReplacementHolePayloadForAttacker(attacker)),
@@ -554,7 +555,7 @@ export function objectInvisibleBenefitDenied(
 }
 
 function objectLightEmitterDeniesInvisibleBenefit(
-  emitter: BattleLightEmitter,
+  emitter: BattleLightEmitterMechanicalFacts,
   targetObjectId: BattleObjectId,
 ): boolean {
   return (
@@ -865,7 +866,7 @@ export function activeEffectGrantsAttackRollMode(
           (effect.kind === "abilityD20TestRollModeEndTurnSave" &&
             attackUsesAbility(context.attack, effect.ability)) ||
           (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
-            !ongoingSpellEffectSuppressedByAntimagicField(state, {
+            !ongoingSpellEffectSuppressedByMagicSuppressionEmanation(state, {
               kind: "spellActiveEffect",
               activeEffectKind: "spellObjectContactDamage",
               effectRef: effect.sourceEffectRef,
@@ -875,21 +876,22 @@ export function activeEffectGrantsAttackRollMode(
     target?.activeEffects.some(
       (effect) =>
         (effect.kind === "nextAttackRollAgainstSelf" && effect.mode === mode) ||
-        (effect.kind === "faerieFireOutline" &&
+        (effect.kind === "saveGatedTargetProjection" &&
           mode === "advantage" &&
           attackerCanSeeTarget) ||
-        (effect.kind === "shiningSmiteIllumination" && mode === "advantage") ||
+        (effect.kind === "afterHitDamageAndIllumination" &&
+          mode === "advantage") ||
         (effect.kind === "creatureTypeProtection" &&
           effect.attackRollMode === mode &&
           attackerCreatureType !== null &&
           effect.protectedAgainstCreatureTypes.includes(
             attackerCreatureType,
           )) ||
-        (effect.kind === "blurred" &&
+        (effect.kind === "perceptionGatedAttackRollDefense" &&
           mode === "disadvantage" &&
           attacker !== undefined &&
           target !== undefined &&
-          !attackerPerceivesBlurredTargetWithBypassSense(
+          !attackerPerceivesPerceptionGatedAttackRollDefenseTargetWithBypassSense(
             context.targetSpatialFacts ?? [],
             attacker.combatantId,
             target.combatantId,
@@ -898,14 +900,14 @@ export function activeEffectGrantsAttackRollMode(
   );
 }
 
-function attackerPerceivesBlurredTargetWithBypassSense(
+function attackerPerceivesPerceptionGatedAttackRollDefenseTargetWithBypassSense(
   facts: readonly BattleTargetSpatialFact[],
   attackerId: CombatantId,
   targetId: CombatantId,
 ): boolean {
   return facts.some(
     (fact) =>
-      fact.kind === "attackAttackerPerceivesBlurredTargetWithSense" &&
+      fact.kind === "attackerPerceivesObscuredTargetWithSense" &&
       fact.attackerId === attackerId &&
       fact.targetId === targetId,
   );
@@ -998,8 +1000,18 @@ export function applyWeaponMasterySapOnHit(
   if (selection === null || target === undefined) {
     return state;
   }
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "nextAttackRollBySelf",
+      sourceProcedureRef: selection.procedureRef,
+      sourceCombatantId: attackerId,
+      mode: "disadvantage",
+      expiresAt: { kind: "startOfTurn", combatantId: attackerId },
+    },
+  });
   const activeEffects = [
-    ...target.activeEffects.filter(
+    ...allocation.owner.activeEffects.filter(
       (effect) =>
         !(
           effect.kind === "nextAttackRollBySelf" &&
@@ -1008,18 +1020,12 @@ export function applyWeaponMasterySapOnHit(
           effect.sourceCombatantId === attackerId
         ),
     ),
-    {
-      kind: "nextAttackRollBySelf",
-      sourceProcedureRef: selection.procedureRef,
-      sourceCombatantId: attackerId,
-      mode: "disadvantage",
-      expiresAt: { kind: "startOfTurn", combatantId: attackerId },
-    } as const,
+    allocation.effect,
   ];
   return {
     ...state,
     combatants: new Map(state.combatants).set(targetId, {
-      ...target,
+      ...allocation.owner,
       activeEffects,
     }),
   };
@@ -1084,7 +1090,8 @@ export function tacticalMasterAttackWithReplacement<
   if (!isTacticalMasterReplacementMasteryProperty(input.decision.value)) {
     return {
       tag: "invalid",
-      message: "Tactical Master replacement choice is not Push, Sap, or Slow.",
+      message:
+        "Tactical Master replacement choice is not one of the supported mastery options.",
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -1201,8 +1208,18 @@ export function applyWeaponMasterySlowAfterDamage(input: {
   if (selection === null || target === undefined) {
     return input.state;
   }
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "unitFeatureSpeedDelta",
+      sourceProcedureRef: selection.procedureRef,
+      sourceCombatantId: input.attackerId,
+      deltaFeet: movementDeltaFeet(-10),
+      expiresAt: { kind: "startOfTurn", combatantId: input.attackerId },
+    },
+  });
   const activeEffects = [
-    ...target.activeEffects.filter(
+    ...allocation.owner.activeEffects.filter(
       (effect) =>
         !(
           effect.kind === "unitFeatureSpeedDelta" &&
@@ -1210,18 +1227,12 @@ export function applyWeaponMasterySlowAfterDamage(input: {
           effect.sourceProcedureRef === selection.procedureRef
         ),
     ),
-    {
-      kind: "unitFeatureSpeedDelta",
-      sourceProcedureRef: selection.procedureRef,
-      sourceCombatantId: input.attackerId,
-      deltaFeet: movementDeltaFeet(-10),
-      expiresAt: { kind: "startOfTurn", combatantId: input.attackerId },
-    } as const,
+    allocation.effect,
   ];
   return {
     ...input.state,
     combatants: new Map(input.state.combatants).set(input.targetId, {
-      ...target,
+      ...allocation.owner,
       activeEffects,
     }),
   };

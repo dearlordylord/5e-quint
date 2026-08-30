@@ -4,23 +4,22 @@ import type {
   DcSource,
 } from "@dnd/surface/surface/types";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleAreaId,
-  BattleDancingLightId,
-  BattleSpellEffectOccurrenceId,
+  BattleMovableLightId,
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
-  COMMAND_OPTIONS,
+  COMPELLED_BEHAVIOR_OPTIONS,
 } from "../battle-reducer/domain-constants.ts";
 
-export const MAGIC_WEAPON_ENHANCEMENT_BONUSES = [
+export const WEAPON_ATTACK_DAMAGE_ENHANCEMENT_BONUSES = [
   1, 2, 3,
 ] as const satisfies ReadonlyArray<number>;
-export type MagicWeaponEnhancementBonus =
-  (typeof MAGIC_WEAPON_ENHANCEMENT_BONUSES)[number];
+export type WeaponAttackDamageEnhancementBonus =
+  (typeof WEAPON_ATTACK_DAMAGE_ENHANCEMENT_BONUSES)[number];
 
 export const BATTLE_MOVEMENT_SPEED_KINDS = [
   "walk",
@@ -48,21 +47,22 @@ export type BattleD20RollModifierDelta = {
     }
 );
 
-export type BattleCommandOption = (typeof COMMAND_OPTIONS)[number];
+export type BattleCompelledBehaviorOption =
+  (typeof COMPELLED_BEHAVIOR_OPTIONS)[number];
 
-export type BattleDancingLight = {
-  readonly lightId: BattleDancingLightId;
+export type BattleMovableLight = {
+  readonly lightId: BattleMovableLightId;
   readonly positionId: BattleTablePositionId;
 };
-export type BattleDancingLightList =
-  | readonly [BattleDancingLight]
-  | readonly [BattleDancingLight, BattleDancingLight]
-  | readonly [BattleDancingLight, BattleDancingLight, BattleDancingLight]
+export type BattleMovableLightList =
+  | readonly [BattleMovableLight]
+  | readonly [BattleMovableLight, BattleMovableLight]
+  | readonly [BattleMovableLight, BattleMovableLight, BattleMovableLight]
   | readonly [
-      BattleDancingLight,
-      BattleDancingLight,
-      BattleDancingLight,
-      BattleDancingLight,
+      BattleMovableLight,
+      BattleMovableLight,
+      BattleMovableLight,
+      BattleMovableLight,
     ];
 
 export type SpellAttackKind = Extract<
@@ -78,25 +78,30 @@ export type SpellConditionRepeatSave = {
 export type BattleOngoingSpellEffectRef =
   | {
       readonly kind: "spellLightEmitter";
-      readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+      readonly effectRef: BattleEffectExecutionRef;
     }
   | {
       readonly kind: "spellActiveEffect";
-      readonly activeEffectKind: "spellObjectContactDamage" | "spiritualWeapon";
-      readonly effectRef: BattleActiveEffectExecutionRef;
+      readonly activeEffectKind:
+        | "spellObjectContactDamage"
+        | "spatialMeleeSpellAttackProxy";
+      readonly effectRef: BattleEffectExecutionRef;
     }
   | {
-      readonly kind: "antimagicFieldAura";
+      readonly kind: "magicSuppressionEmanation";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly areaId: BattleAreaId;
       readonly sourceCombatantId: CombatantId;
     };
-export type BattleAntimagicFieldOngoingSpellEffectRef = Exclude<
+export type BattleOngoingSpellOccurrenceRef = Exclude<
   BattleOngoingSpellEffectRef,
-  { readonly kind: "antimagicFieldAura" }
+  { readonly kind: "magicSuppressionEmanation" }
 >;
+export type BattleMagicSuppressionOngoingSpellEffectRef =
+  BattleOngoingSpellOccurrenceRef;
 
-export type BattleAntimagicFieldAuraMembership = {
-  readonly kind: "antimagicFieldAuraMembership";
+export type BattleMagicSuppressionEmanationMembership = {
+  readonly kind: "magicSuppressionEmanationMembership";
   readonly originIncluded: boolean;
   readonly nonOriginCombatantIds: readonly CombatantId[];
 };

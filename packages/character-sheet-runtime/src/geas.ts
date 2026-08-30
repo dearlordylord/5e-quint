@@ -8,7 +8,7 @@ import {
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -35,7 +35,7 @@ export function castGeas(input: {
   readonly unitLibrary: UnitCatalog;
   readonly target: CharacterSheetGeasTarget;
   readonly command: CharacterSheetGeasCommand;
-}): Either.Either<CharacterSheetGeasResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetGeasResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -90,7 +90,7 @@ function geasInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly target: CharacterSheetGeasTarget;
   readonly command: CharacterSheetGeasCommand;
-}): Either.Either<CharacterSheetGeasInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetGeasInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Geas support profile required by this projector. */
   if (
@@ -137,12 +137,12 @@ function geasInvocationFromSpell(input: {
     amount: GEAS_DURATION_DAYS,
   });
   /* v8 ignore start -- @preserve -- The fixed thirty-day Geas duration is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Geas requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "geas",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,
@@ -168,7 +168,7 @@ function geasInvocationFromSpell(input: {
     outcome: geasOutcome({
       target: input.target,
       command: input.command,
-      duration: duration.right,
+      duration: duration.success,
     }),
   });
 }

@@ -566,7 +566,7 @@ const seededSdkScenarioRows = [
           'attackKind: "ranged_spell_attack"',
           'targeting: { kind: "singleCreatureOrObject" }',
           "rangeFeet: 120",
-          'kind: "sorcerousBurstDamageTypeChoice"',
+          'kind: "spellAttackDamageTypeChoice"',
           "expr: { dice: 1, dieSize: 8 }",
           'damageTypeChoices: expect.arrayContaining(["thunder"])',
           "maxDieAdditionalDiceLimit: 2",
@@ -3019,7 +3019,7 @@ const seededSdkScenarioRows = [
       {
         anchor: "function thunderwaveSavingThrowOutcomeFill",
         needles: [
-          "area: thunderwaveArea(",
+          "area: selfOriginCubePushArea(",
           "outcomes.flatMap(",
           "originAnchorId",
         ],
@@ -3034,9 +3034,9 @@ const seededSdkScenarioRows = [
         ],
       },
       {
-        anchor: "function thunderwaveArea",
+        anchor: "function selfOriginCubePushArea",
         needles: [
-          'kind: "thunderwaveArea"',
+          'kind: "selfOriginCubePushArea"',
           "creaturePushes:",
           "distanceFeet: movementFeet(10)",
           "battleTablePositionId(",
@@ -3115,7 +3115,7 @@ const seededSdkScenarioRows = [
       {
         anchor: "function thunderwaveSavingThrowOutcomeFill",
         needles: [
-          "area: thunderwaveArea(",
+          "area: selfOriginCubePushArea(",
           "outcomes.flatMap(",
           "originAnchorId",
         ],
@@ -3130,9 +3130,9 @@ const seededSdkScenarioRows = [
         ],
       },
       {
-        anchor: "function thunderwaveArea",
+        anchor: "function selfOriginCubePushArea",
         needles: [
-          'kind: "thunderwaveArea"',
+          'kind: "selfOriginCubePushArea"',
           "creaturePushes:",
           "distanceFeet: movementFeet(10)",
           "battleTablePositionId(",
@@ -4453,7 +4453,7 @@ function blessResolutionHelperNeedle() {
     anchor: "function assertLevelOneBless",
     needles: [
       "const act = spellSlotActForProcedure(",
-      "const expectedEffect = expectedLevelOneBlessEffect(",
+      "const expectedEffectFacts = expectedLevelOneBlessEffectFacts(",
       "maxTargets: 3",
       'procedure: "rollModifier"',
       'actionCost: "magicAction"',
@@ -4461,7 +4461,8 @@ function blessResolutionHelperNeedle() {
       "effect: discoveryEffect",
       "blessTargetListFill(",
       "activeEffects",
-      "toEqual([expectedEffect])",
+      "...expectedEffectFacts,",
+      "effectRef: expect.any(String)",
       "caster.concentration",
       'effectKind: "spellEffect"',
       "expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);",
@@ -4473,7 +4474,7 @@ function blessResolutionHelperNeedle() {
 
 function blessActiveEffectHelperNeedle() {
   return {
-    anchor: "function expectedLevelOneBlessEffect",
+    anchor: "function expectedLevelOneBlessEffectFacts",
     needles: [
       'kind: "d20RollModifier"',
       "sourceProcedureRef,",
@@ -4551,7 +4552,7 @@ function shieldOfFaithResolutionHelperNeedle() {
     needles: [
       "shieldOfFaithBonusActionSpellSlotAct(session, input.casterId)",
       "snapshotCombatant(",
-      "expectedLevelOneShieldOfFaithEffect(",
+      "const expectedEffectFacts = expectedLevelOneShieldOfFaithEffectFacts(",
       'tag: "bonusActionSpell"',
       "spellId: shieldOfFaithSpellId",
       'procedure: "scalarBuff"',
@@ -4559,7 +4560,8 @@ function shieldOfFaithResolutionHelperNeedle() {
       "choices: expect.arrayContaining([input.casterId, input.targetId])",
       "spellTargetFill(",
       "activeEffects",
-      "toEqual([expectedEffect])",
+      "...expectedEffectFacts,",
+      "effectRef: expect.any(String)",
       "initialTargetArmorClass + 2",
       "caster.concentration",
       'effectKind: "spellEffect"',
@@ -4574,7 +4576,7 @@ function shieldOfFaithResolutionHelperNeedle() {
 
 function shieldOfFaithActiveEffectHelperNeedle() {
   return {
-    anchor: "function expectedLevelOneShieldOfFaithEffect",
+    anchor: "function expectedLevelOneShieldOfFaithEffectFacts",
     needles: [
       'kind: "spellArmorClassBonus"',
       "sourceProcedureRef,",

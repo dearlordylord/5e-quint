@@ -8,7 +8,7 @@ import {
 import { AdminSessionProjectionSchema } from "@dnd/mcp/experimental-admin-mirror-contract"
 import { productionBattleConsumerSeam } from "@dnd/mcp/test-support/cross-boundary-battle"
 import { Hp } from "@dnd/shared/types"
-import { Either, Schema } from "effect"
+import { Result, Schema } from "effect"
 import { describe, expect, test } from "vitest"
 
 import { computeWizardBattleScene } from "./battle-scene-layout.ts"
@@ -78,19 +78,19 @@ describe("wizard battle demo", () => {
   test("reports a typed issue instead of inventing a current-actor label", () => {
     const step = WIZARD_BATTLE_DEMO_STEPS[0]
     const presented = battlePresentedSnapshot(step.session)
-    expect(Either.isRight(presented)).toBe(true)
-    if (Either.isLeft(presented)) return
+    expect(Result.isSuccess(presented)).toBe(true)
+    if (Result.isFailure(presented)) return
     const missingActorId = combatantId("missing-demo-actor")
 
     expect(
       computeWizardBattleScene({
         meta: WIZARD_BATTLE_DEMO_META,
-        snapshot: { ...presented.right, currentActorId: missingActorId },
+        snapshot: { ...presented.success, currentActorId: missingActorId },
         step,
         stepIndex: 0
       })
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleScenePresentationIssue",
         reason: "missingCurrentActor",
         combatantId: missingActorId
@@ -100,7 +100,7 @@ describe("wizard battle demo", () => {
 
   test("projects fallback metadata, temporary HP, zero maximum HP, and cast-line shapes", () => {
     const step = WIZARD_BATTLE_DEMO_STEPS[0]
-    const presented = Either.getOrThrow(battlePresentedSnapshot(step.session))
+    const presented = Result.getOrThrow(battlePresentedSnapshot(step.session))
     const firstCombatant = presented.combatants[0]
     const snapshot = {
       ...presented,
@@ -113,7 +113,7 @@ describe("wizard battle demo", () => {
       step,
       stepIndex: 0
     })
-    expect(Either.getOrThrow(withoutMetadata).layout.creatures[0]?.tempHpBar).not.toBeNull()
+    expect(Result.getOrThrow(withoutMetadata).layout.creatures[0]?.tempHpBar).not.toBeNull()
 
     const casterId = presented.currentActorId
     const targetId = presented.combatants.find((combatant) => combatant.combatantId !== casterId)?.combatantId
@@ -132,7 +132,7 @@ describe("wizard battle demo", () => {
 
     for (const [stepIndex, cueStep] of cueSteps.entries()) {
       expect(
-        Either.isRight(
+        Result.isSuccess(
           computeWizardBattleScene({
             meta: WIZARD_BATTLE_DEMO_META,
             snapshot: presented,
@@ -144,7 +144,7 @@ describe("wizard battle demo", () => {
     }
 
     expect(
-      Either.isRight(
+      Result.isSuccess(
         computeWizardBattleScene({
           meta: { combatants: {}, objectNames: {} },
           snapshot: presented,
@@ -156,7 +156,7 @@ describe("wizard battle demo", () => {
 
     if (firstCombatant.origin.kind === "character") {
       expect(
-        Either.isRight(
+        Result.isSuccess(
           computeWizardBattleScene({
             meta: WIZARD_BATTLE_DEMO_META,
             snapshot: {
@@ -185,41 +185,41 @@ describe("wizard battle demo", () => {
         envelope: battlePresentedCheckpointFrontierEnvelope(step.session),
         step,
         stepIndex
-      })).find((entry) => Either.isRight(entry.envelope) && entry.envelope.right.frontier.kind === frontierKind)
-      if (candidate === undefined || Either.isLeft(candidate.envelope)) {
+      })).find((entry) => Result.isSuccess(entry.envelope) && entry.envelope.success.frontier.kind === frontierKind)
+      if (candidate === undefined || Result.isFailure(candidate.envelope)) {
         throw new Error(`Expected a ${frontierKind} demo frontier.`)
       }
 
-      const mcpProjection = Schema.decodeUnknownEither(AdminSessionProjectionSchema)({
+      const mcpProjection = Schema.decodeUnknownResult(AdminSessionProjectionSchema)({
         session: {
           draftIds: [],
           selectedStatBlockId: null,
           battleState: {
             tag: "activeBattle",
-            battleId: candidate.envelope.right.checkpoint.battleId,
-            currentActorId: candidate.envelope.right.checkpoint.currentActorId
+            battleId: candidate.envelope.success.checkpoint.battleId,
+            currentActorId: candidate.envelope.success.checkpoint.currentActorId
           }
         },
-        battle: candidate.envelope.right,
+        battle: candidate.envelope.success,
         characters: []
       })
-      expect(Either.isRight(mcpProjection)).toBe(true)
-      if (Either.isLeft(mcpProjection)) continue
-      const battle = mcpProjection.right.battle
+      expect(Result.isSuccess(mcpProjection)).toBe(true)
+      if (Result.isFailure(mcpProjection)) continue
+      const battle = mcpProjection.success.battle
       expect(battle).not.toBeNull()
       if (battle === null) continue
       const canonicalEnvelope = Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(battle)
       expect(canonicalEnvelope).toEqual(
-        Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(candidate.envelope.right)
+        Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(candidate.envelope.success)
       )
 
       const scene = computeWizardBattleScene({
         meta: WIZARD_BATTLE_DEMO_META,
-        snapshot: candidate.envelope.right.checkpoint,
+        snapshot: candidate.envelope.success.checkpoint,
         step: candidate.step,
         stepIndex: candidate.stepIndex
       })
-      expect(Either.isRight(scene)).toBe(true)
+      expect(Result.isSuccess(scene)).toBe(true)
     }
   })
 
@@ -266,7 +266,7 @@ describe("wizard battle demo", () => {
         },
         stepIndex
       })
-      expect(Either.isRight(scene)).toBe(true)
+      expect(Result.isSuccess(scene)).toBe(true)
     }
   }, 30_000)
 })

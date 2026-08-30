@@ -160,7 +160,7 @@ function reactionInterruptPayloadRouteSubjectForChoice(
     interruptChoiceResponderId(choice),
     choice.subject.procedureRef,
   );
-  if (invocation?.procedure === "shieldReaction") {
+  if (invocation?.procedure === "triggeredArmorDefense") {
     return "reactionArmorClassEffect";
   }
   if (
@@ -171,7 +171,7 @@ function reactionInterruptPayloadRouteSubjectForChoice(
   }
   if (
     frame.trigger === "spellCast" &&
-    invocation?.procedure === "counterspell"
+    invocation?.procedure === "spellCastInterruptionReaction"
   ) {
     return "reactionSpellInterruption";
   }

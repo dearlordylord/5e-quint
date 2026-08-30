@@ -1,6 +1,5 @@
 import { classLevel } from "@dnd/shared/types";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -104,8 +103,8 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       battleCheckpointFrontierEnvelope(awaitingReaction.state),
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),
@@ -116,8 +115,8 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       );
     }
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
           ...encoded,
           frontier: {
             ...encoded.frontier,

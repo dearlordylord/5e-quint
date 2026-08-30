@@ -3,7 +3,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { characterBuildGnomishLineageTraitProjection } from "./index.ts";
@@ -29,7 +29,7 @@ describe("Gnomish Lineage projection boundaries", () => {
         build: { species: authoredUnitId("species_orc") },
         unitLibrary,
       }),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
 
     expect(
       characterBuildGnomishLineageTraitProjection({
@@ -40,8 +40,8 @@ describe("Gnomish Lineage projection boundaries", () => {
         unitLibrary,
       }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         traitUnitId: "species_gnome_gnomish_lineage",
         spellcastingAbility: "int",
         option: { id: "forest_gnome" },
@@ -72,8 +72,8 @@ describe("Gnomish Lineage projection boundaries", () => {
           unitLibrary,
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           tag: "gnomishLineageTraitProjectionIssue",
           message: expect.stringContaining(message),
         },

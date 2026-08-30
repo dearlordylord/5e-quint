@@ -9,7 +9,7 @@ import {
   type FilledHoleValue,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { DieRollResult } from "@dnd/shared/types";
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
@@ -38,16 +38,16 @@ export function applyPassCalendarTimeOperation(
   },
 ) {
   const duration = timeSpanDuration(input.operation.duration);
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return errorContent("Character session operation failed.", {
       code: "CHARACTER_SESSION_OPERATION_INVALID",
       characterId: input.characterId,
-      message: `Invalid calendar-time duration: ${duration.left.kind}.`,
+      message: `Invalid calendar-time duration: ${duration.failure.kind}.`,
     });
   }
   const result = timePassed({
     sheet: input.session,
-    duration: duration.right,
+    duration: duration.success,
     fills: filledHoleValuesFromTool(input.operation.fills),
   });
   if (result.tag === "resolved") {

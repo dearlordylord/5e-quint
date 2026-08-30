@@ -13,7 +13,11 @@ import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
+import {
+  holeId,
+  holeInstanceKey,
+  type AttackRollMode,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import { battleFillKind } from "../battle-protocol-kinds.ts";
 import {
   difficultyClass,
@@ -21,10 +25,11 @@ import {
   type DifficultyClass,
 } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
-import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
 import { mechanicalD20TestRollMode } from "../d20-test-circumstance.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -46,7 +51,7 @@ import {
   resourceHasUsesRemaining,
   type CharacterBattleUseCountResourceState,
 } from "../character-battle-resource-execution.ts";
-import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
+import { ongoingSpellEffectSuppressedByMagicSuppressionEmanation } from "./magic-suppression-ongoing-effect.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
 import {
   activeCreatureSizeChangeEffect,
@@ -76,8 +81,6 @@ import {
   ATTACK_TARGET_HOLE_INSTANCE,
   ESCAPE_GRAPPLE_OUTCOME_HOLE_ID,
   ESCAPE_GRAPPLE_OUTCOME_HOLE_INSTANCE,
-  ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
-  ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE,
   GRAPPLE_OUTCOME_HOLE_ID,
   GRAPPLE_OUTCOME_HOLE_INSTANCE,
   GRAPPLE_TARGET_HOLE_ID,
@@ -85,8 +88,8 @@ import {
   HIDE_ABILITY_CHECK_HOLE_ID,
   HIDE_ABILITY_CHECK_HOLE_INSTANCE,
   HIDE_DC,
-  HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID,
-  HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
+  SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_ID,
+  SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
   SEARCH_ABILITY_CHECK_HOLE_ID,
   SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
   SEARCH_TARGET_HOLE_ID,
@@ -95,9 +98,10 @@ import {
   SHOVE_OUTCOME_HOLE_INSTANCE,
   SHOVE_TARGET_HOLE_ID,
   SHOVE_TARGET_HOLE_INSTANCE,
-  SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
-  SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
+  HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_ID,
+  HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
 } from "./battle-runtime-protocol.ts";
+import { escapeSpellRestraintAbilityCheckHoleKey } from "./selected-effect-hole-key.ts";
 import { spellSaveDcForCaster } from "./spell-save-dc.ts";
 import {
   creatureSizeIsLargerThanSelf,
@@ -114,17 +118,17 @@ import {
 import { activeSpellWeaponDamageRiders } from "./damage-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
-  THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
-  THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
-  THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+  MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
+  MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
+  TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
 } from "./domain-constants.ts";
 import {
   combatantCanTakeActions,
   isCharacterBattleCreatureState,
 } from "./creature-state-execution.ts";
 import {
-  hypnoticPatternShakeAwakeTargetChoices,
-  sleepShakeAwakeTargetChoices,
+  saveGatedAreaControlShakeAwakeTargetChoices,
+  hitPointBudgetConditionShakeAwakeTargetChoices,
 } from "./spell-condition-effects-helpers.ts";
 
 const byBattleHoleKind = Match.discriminator("kind");
@@ -142,8 +146,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
       byBattleHoleKind("attackRoll", () => "attackRoll" as const),
       byBattleHoleKind(
-        "commandOptionChoice",
-        () => "commandOptionChoice" as const,
+        "compelledBehaviorOptionChoice",
+        () => "compelledBehaviorOptionChoice" as const,
       ),
       byBattleHoleKind(
         "companionReappearanceInitiative",
@@ -168,18 +172,18 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
       byBattleHoleKind("damageTypeChoice", () => "damageTypeChoice" as const),
       byBattleHoleKind(
-        "dancingLightsPlacement",
-        () => "dancingLightsPlacement" as const,
+        "movableLightPlacement",
+        () => "movableLightPlacement" as const,
       ),
       byBattleHoleKind("deathSavingThrow", () => "deathSavingThrow" as const),
       byBattleHoleKind(
-        "findFamiliarConnection",
-        () => "findFamiliarConnection" as const,
+        "spawnedCompanionConnection",
+        () => "spawnedCompanionConnection" as const,
       ),
       byBattleHoleKind("grappleOutcome", () => "grappleOutcome" as const),
       byBattleHoleKind(
-        "gustOfWindLineDirectionChoice",
-        () => "gustOfWindLineDirectionChoice" as const,
+        "directionalPersistentAreaDirectionChoice",
+        () => "directionalPersistentAreaDirectionChoice" as const,
       ),
       byBattleHoleKind("heldObjectFacts", () => "heldObjectFacts" as const),
       byBattleHoleKind(
@@ -198,16 +202,16 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
       byBattleHoleKind("interruptDecision", () => "interruptDecision" as const),
       byBattleHoleKind(
-        "levitateAltitudeChange",
-        () => "levitateAltitudeChange" as const,
+        "controlledVerticalSuspensionAltitudeChange",
+        () => "controlledVerticalSuspensionAltitudeChange" as const,
       ),
       byBattleHoleKind(
-        "levitateInitialRise",
-        () => "levitateInitialRise" as const,
+        "controlledVerticalSuspensionInitialRise",
+        () => "controlledVerticalSuspensionInitialRise" as const,
       ),
       byBattleHoleKind(
-        "magicWeaponTargetItem",
-        () => "magicWeaponTargetItem" as const,
+        "weaponAttackDamageEnhancementTargetItem",
+        () => "weaponAttackDamageEnhancementTargetItem" as const,
       ),
       byBattleHoleKind(
         "movableZoneRamMovement",
@@ -216,6 +220,14 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       byBattleHoleKind(
         "movableZoneRepositionMovement",
         () => "movableZoneRepositionMovement" as const,
+      ),
+      byBattleHoleKind(
+        "persistentAreaSourceTurnTranslation",
+        () => "persistentAreaSourceTurnTranslation" as const,
+      ),
+      byBattleHoleKind(
+        "startTurnOccurrenceOrder",
+        () => "startTurnOccurrenceOrder" as const,
       ),
       byBattleHoleKind("readyDeclaration", () => "readyDeclaration" as const),
       byBattleHoleKind("movement", () => "movement" as const),
@@ -237,8 +249,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
       byBattleHoleKind("rolledDice", () => "rolledDice" as const),
       byBattleHoleKind(
-        "sanctuaryInterdictionOutcome",
-        () => "sanctuaryInterdictionOutcome" as const,
+        "targetingSaveInterdictionOutcome",
+        () => "targetingSaveInterdictionOutcome" as const,
       ),
       byBattleHoleKind(
         "savingThrowOutcome",
@@ -249,11 +261,12 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         () => "selfTransformationModeChoice" as const,
       ),
       byBattleHoleKind(
-        "slowSomaticSpellFailureOutcome",
-        () => "slowSomaticSpellFailureOutcome" as const,
+        "turnConstraintSomaticSpellFailureOutcome",
+        () => "turnConstraintSomaticSpellFailureOutcome" as const,
       ),
     )
     .pipe(
+      byBattleHoleKind("areaWindStrength", () => "areaWindStrength" as const),
       byBattleHoleKind("shoveOutcome", () => "shoveOutcome" as const),
       byBattleHoleKind("skillChoice", () => "skillChoice" as const),
       byBattleHoleKind("spellAreaChoice", () => "spellAreaChoice" as const),
@@ -267,8 +280,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         () => "spellcastingAbilityCheck" as const,
       ),
       byBattleHoleKind(
-        "spiritualWeaponForcePosition",
-        () => "spiritualWeaponForcePosition" as const,
+        "spatialMeleeSpellAttackProxyPosition",
+        () => "spatialMeleeSpellAttackProxyPosition" as const,
       ),
       byBattleHoleKind(
         "statBlockRechargeRoll",
@@ -288,12 +301,16 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         () => "teleportDestination" as const,
       ),
       byBattleHoleKind(
-        "thaumaturgyActiveOneMinuteEffectCount",
-        () => "thaumaturgyActiveOneMinuteEffectCount" as const,
+        "temporaryAbilityCheckRollModeActiveEffectCount",
+        () => "temporaryAbilityCheckRollModeActiveEffectCount" as const,
       ),
       byBattleHoleKind(
         "toolPossessionFacts",
         () => "toolPossessionFacts" as const,
+      ),
+      byBattleHoleKind(
+        "temporaryHitPointChoice",
+        () => "temporaryHitPointChoice" as const,
       ),
       byBattleHoleKind(
         "unitFeatureDecision",
@@ -383,9 +400,12 @@ export function escapeSpellRestraintAbilityCheckHole(
 ): BattleAbilityCheckHole {
   const dc = spellSaveDcForCaster(state, effect.sourceCombatantId);
   const rollMode = requiredAbilityCheckRollMode(state, input.actorId, "str");
+  const key = escapeSpellRestraintAbilityCheckHoleKey(
+    spellActiveEffectExecutionRef(effect),
+  );
   return {
-    holeInstanceKey: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_INSTANCE,
-    holeId: ESCAPE_SPELL_RESTRAINT_ABILITY_CHECK_HOLE_ID,
+    holeInstanceKey: holeInstanceKey(key),
+    holeId: holeId(key),
     kind: "abilityCheck",
     label: `Escape spell restraint Strength (Athletics) check (DC ${dc ?? 1})`,
     ability: "str",
@@ -398,22 +418,22 @@ export function escapeSpellRestraintAbilityCheckHole(
   };
 }
 
-export function thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
+export function temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
   state: BattleState,
   actorId: CombatantId,
   dc: DifficultyClass,
 ): BattleAbilityCheckHole {
   const rollMode = requiredAbilityCheckRollMode(state, actorId, "cha", {
-    skill: THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+    skill: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
   });
   return {
     holeInstanceKey:
-      THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
-    holeId: THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
+      MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
+    holeId: MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
     kind: "abilityCheck",
     label: `Influence Charisma (Intimidation) check (DC ${dc})`,
     ability: "cha",
-    skill: THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+    skill: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
     dc,
     ...optionalProperty("rollMode", rollMode),
   };
@@ -452,7 +472,7 @@ export function requiredAbilityCheckRollMode(
       "advantage",
     ) ||
     (context?.skill !== undefined &&
-      activeThaumaturgyBoomingVoiceAdvantageMatches(
+      activeTemporaryAbilityCheckRollModeAdvantageMatches(
         state,
         actorId,
         ability,
@@ -561,7 +581,7 @@ function activeAbilityCheckRollModeEffectMatches(
           (effect.kind === "abilityD20TestRollModeEndTurnSave" &&
             effect.ability === ability) ||
           (effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
-            !ongoingSpellEffectSuppressedByAntimagicField(state, {
+            !ongoingSpellEffectSuppressedByMagicSuppressionEmanation(state, {
               kind: "spellActiveEffect",
               activeEffectKind: "spellObjectContactDamage",
               effectRef: effect.sourceEffectRef,
@@ -582,7 +602,7 @@ function activeAnyAbilityCheckRollModeEffectMatches(
     actor?.activeEffects.some(
       (effect) =>
         effect.kind === "selfAttackRollAndAbilityCheckRollMode" &&
-        !ongoingSpellEffectSuppressedByAntimagicField(state, {
+        !ongoingSpellEffectSuppressedByMagicSuppressionEmanation(state, {
           kind: "spellActiveEffect",
           activeEffectKind: "spellObjectContactDamage",
           effectRef: effect.sourceEffectRef,
@@ -622,7 +642,7 @@ function passiveConditionEndAbilityCheckRollModeMatches(
   );
 }
 
-function activeThaumaturgyBoomingVoiceAdvantageMatches(
+function activeTemporaryAbilityCheckRollModeAdvantageMatches(
   state: BattleState,
   actorId: CombatantId,
   ability: Ability,
@@ -631,10 +651,10 @@ function activeThaumaturgyBoomingVoiceAdvantageMatches(
   const actor = state.combatants.get(actorId);
   return (
     ability === "cha" &&
-    skill === THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL &&
+    skill === TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL &&
     (actor?.activeEffects.some(
       (effect) =>
-        effect.kind === "thaumaturgyBoomingVoice" &&
+        effect.kind === "temporaryAbilityCheckRollMode" &&
         effect.sourceCombatantId === actorId,
     ) ??
       false)
@@ -824,31 +844,32 @@ export function shoveTargetHole(
   };
 }
 
-export function sleepShakeAwakeTargetHole(
+export function hitPointBudgetConditionShakeAwakeTargetHole(
   state: BattleState,
   actorId: CombatantId,
 ): BattleTargetChoiceHole {
   return {
     kind: "targetChoice",
-    holeId: SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID,
-    holeInstanceKey: SLEEP_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
-    label: "Sleep target to shake awake",
+    holeId: HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_ID,
+    holeInstanceKey:
+      HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
+    label: "Hit-point-budget condition target to shake awake",
     requiresTableSpatialFact: true,
-    choices: sleepShakeAwakeTargetChoices(state, actorId),
+    choices: hitPointBudgetConditionShakeAwakeTargetChoices(state, actorId),
   };
 }
 
-export function hypnoticPatternShakeAwakeTargetHole(
+export function saveGatedAreaControlShakeAwakeTargetHole(
   state: BattleState,
   actorId: CombatantId,
 ): BattleTargetChoiceHole {
   return {
     kind: "targetChoice",
-    holeId: HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID,
-    holeInstanceKey: HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
-    label: "Hypnotic Pattern target to shake awake",
+    holeId: SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_ID,
+    holeInstanceKey: SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_TARGET_HOLE_INSTANCE,
+    label: "Area-control condition target to shake awake",
     requiresTableSpatialFact: true,
-    choices: hypnoticPatternShakeAwakeTargetChoices(state, actorId),
+    choices: saveGatedAreaControlShakeAwakeTargetChoices(state, actorId),
   };
 }
 
@@ -1067,7 +1088,7 @@ export function alternateActionCostProfilesForActor(
     | {
         readonly kind: "spellEffect";
         readonly procedureRef: BattleProcedureExecutionRef;
-        readonly effectRef: BattleActiveEffectExecutionRef;
+        readonly effectRef: BattleEffectExecutionRef;
       };
   readonly profile: Extract<
     UnitSupportProcedureExecution,
@@ -1261,7 +1282,10 @@ export function grappleTargetChoices(
   actorId: CombatantId,
 ): readonly CombatantId[] {
   const actor = state.combatants.get(actorId);
-  if (actor === undefined || isPresentFindFamiliarCombatant(state, actorId)) {
+  if (
+    actor === undefined ||
+    isPresentSpawnedCompanionCombatant(state, actorId)
+  ) {
     return [];
   }
   return [...state.combatants.keys()].filter((targetId) => {
@@ -1281,7 +1305,10 @@ export function shoveTargetChoices(
   actorId: CombatantId,
 ): readonly CombatantId[] {
   const actor = state.combatants.get(actorId);
-  if (actor === undefined || isPresentFindFamiliarCombatant(state, actorId)) {
+  if (
+    actor === undefined ||
+    isPresentSpawnedCompanionCombatant(state, actorId)
+  ) {
     return [];
   }
   return [...state.combatants.keys()].filter((targetId) => {

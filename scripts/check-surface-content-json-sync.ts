@@ -3,7 +3,7 @@ import { join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   formatSurfaceDecodeError,
@@ -24,6 +24,10 @@ import {
   type SurfacePublicationExcerptSource,
   type SurfacePublicationBuildIssue,
 } from "./srd-surface-publication-artifacts.ts";
+import {
+  describeSurfacePublicationDeltaIssue,
+  verifySurfacePublicationDelta,
+} from "../packages/surface/src/surface/publication-delta-verifier.ts";
 
 export type PublicationIssue =
   | {
@@ -66,6 +70,10 @@ export type PublicationIssue =
   | {
       readonly kind: "publication-generation-failed";
       readonly issue: SurfacePublicationBuildIssue;
+    }
+  | {
+      readonly kind: "publication-delta-verification-failed";
+      readonly message: string;
     };
 
 type JsonDocument = unknown;
@@ -167,20 +175,20 @@ function decodeRecord(value: unknown): string | undefined {
     value.kind === "statBlock";
   const diagnostic = isStatBlock
     ? (() => {
-        const decoded = Schema.decodeUnknownEither(StatBlockRecordSchema, {
+        const decoded = Schema.decodeUnknownResult(StatBlockRecordSchema, {
           onExcessProperty: "error",
         })(value);
-        return Either.isRight(decoded)
+        return Result.isSuccess(decoded)
           ? undefined
-          : formatSurfaceDecodeError(decoded.left);
+          : formatSurfaceDecodeError(decoded.failure);
       })()
     : (() => {
-        const decoded = Schema.decodeUnknownEither(UnitRecordSchema, {
+        const decoded = Schema.decodeUnknownResult(UnitRecordSchema, {
           onExcessProperty: "error",
         })(value);
-        return Either.isRight(decoded)
+        return Result.isSuccess(decoded)
           ? undefined
-          : formatSurfaceDecodeError(decoded.left);
+          : formatSurfaceDecodeError(decoded.failure);
       })();
 
   if (diagnostic === undefined) return undefined;
@@ -472,12 +480,22 @@ function main(): void {
     return;
   }
 
-  const { issues, sourceCount, peerCount } = runPublicationCheck({
+  const publicationCheck = runPublicationCheck({
     repoRoot,
     contentDir,
     publicationDir: join(repoRoot, "packages", "surface", "publication"),
     compile: compileDhallToJson,
   });
+  const issues: PublicationIssue[] = [...publicationCheck.issues];
+  const publicationDelta = verifySurfacePublicationDelta({ repoRoot });
+  if (publicationDelta.tag === "invalid") {
+    issues.push(
+      ...publicationDelta.issues.map((issue) => ({
+        kind: "publication-delta-verification-failed" as const,
+        message: describeSurfacePublicationDeltaIssue(issue),
+      })),
+    );
+  }
 
   if (issues.length > 0) {
     console.error(
@@ -506,6 +524,8 @@ function main(): void {
         console.error(
           `- publication-generation-failed: ${describeSurfacePublicationBuildIssue(issue.issue)}`,
         );
+      } else if (issue.kind === "publication-delta-verification-failed") {
+        console.error(`- ${issue.message}`);
       } else {
         console.error(
           `- publication-schema-bound-exceeded: ${issue.measure} ${issue.actual} >= ${issue.limit}`,
@@ -517,7 +537,7 @@ function main(): void {
   }
 
   console.log(
-    `Surface content publication passed: ${sourceCount} canonical Dhall sources and ${peerCount} generated JSON peers decoded and synchronized.`,
+    `Surface content publication passed: ${publicationCheck.sourceCount} canonical Dhall sources and ${publicationCheck.peerCount} generated JSON peers decoded and synchronized.`,
   );
 }
 

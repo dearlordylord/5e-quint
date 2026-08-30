@@ -53,6 +53,10 @@
             {
               "condition": "invisible",
               "kind": "suppress_condition_benefit"
+            },
+            {
+              "kind": "emit_dim_illumination",
+              "radiusFeet": 10
             }
           ],
           "kind": "composite"

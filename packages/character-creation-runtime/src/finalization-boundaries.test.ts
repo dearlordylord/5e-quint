@@ -278,8 +278,8 @@ describe("character finalization boundaries", () => {
         "con",
       ]),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         str: 11,
         dex: 11,
         con: 11,
@@ -297,15 +297,15 @@ describe("character finalization boundaries", () => {
     expect(
       characterBuildHitPoints(unknownClassBuild, unitLibrary),
     ).toMatchObject({
-      _tag: "Left",
-      left: [{ cause: { tag: "unknownUnit", role: "class" } }],
+      _tag: "Failure",
+      failure: [{ cause: { tag: "unknownUnit", role: "class" } }],
     });
     expect(
       characterBuildProficiencies(unknownClassBuild, unitLibrary),
-    ).toHaveProperty("_tag", "Left");
+    ).toHaveProperty("_tag", "Failure");
     expect(
       characterBuildArmorTraining(unknownClassBuild, unitLibrary),
-    ).toHaveProperty("_tag", "Left");
+    ).toHaveProperty("_tag", "Failure");
 
     expect(
       characterBuildProficiencies(
@@ -313,8 +313,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "unreadableUnit",
@@ -337,8 +337,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [{ cause: { tag: "unknownUnit", role: "background" } }],
+      _tag: "Failure",
+      failure: [{ cause: { tag: "unknownUnit", role: "background" } }],
     });
     expect(
       characterBuildProficiencies(
@@ -349,8 +349,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [{ cause: { tag: "unreadableUnit", role: "background" } }],
+      _tag: "Failure",
+      failure: [{ cause: { tag: "unreadableUnit", role: "background" } }],
     });
   });
 
@@ -372,8 +372,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         skills: expect.arrayContaining(["arcana", "athletics"]),
         expertise: ["athletics"],
         weapon: expect.arrayContaining(["simple"]),
@@ -386,8 +386,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining(["heavy"]),
+      _tag: "Success",
+      success: expect.arrayContaining(["heavy"]),
     });
   });
 
@@ -412,8 +412,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "missingHitPointMaximumGrantSourceUnit",
@@ -439,8 +439,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "unknownUnit",
@@ -466,8 +466,8 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "unreadableUnit",
@@ -621,8 +621,8 @@ describe("character finalization boundaries", () => {
         }),
       ),
     ).toMatchObject({
-      _tag: "Right",
-      right: { maximum: 16 },
+      _tag: "Success",
+      success: { maximum: 16 },
     });
   });
 
@@ -644,8 +644,8 @@ describe("character finalization boundaries", () => {
         }),
       ),
     ).toMatchObject({
-      _tag: "Right",
-      right: { maximum: 15 },
+      _tag: "Success",
+      success: { maximum: 15 },
     });
   });
 
@@ -980,16 +980,16 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         { cause: { tag: "unknownUnit", role: "class" } },
         { cause: { tag: "unknownUnit", role: "background" } },
       ],
     });
 
     expect(finalizedBuildEquipment(bothUnknown, unitLibrary)).toMatchObject({
-      _tag: "Left",
-      left: [{ cause: { tag: "unknownUnit", role: "class" } }],
+      _tag: "Failure",
+      failure: [{ cause: { tag: "unknownUnit", role: "class" } }],
     });
 
     const fighter = selectionsWithStartingClass(
@@ -1004,13 +1004,13 @@ describe("character finalization boundaries", () => {
         unitLibrary,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: [{ cause: { tag: "unknownUnit", role: "background" } }],
+      _tag: "Failure",
+      failure: [{ cause: { tag: "unknownUnit", role: "background" } }],
     });
 
     expect(finalizedBuildEquipment(fighter, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: { startingEquipmentCurrencyRemainderCp: 0 },
+      _tag: "Success",
+      success: { startingEquipmentCurrencyRemainderCp: 0 },
     });
   });
 });

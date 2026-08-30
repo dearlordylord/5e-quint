@@ -22,7 +22,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(goblin)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblin.left),
+      obstruction: sdk.battleStateInitIssueMessage(goblin.failure),
       observation: { combatant: "goblin-warrior" },
     };
   }
@@ -46,23 +46,23 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeleton)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeleton.left),
+      obstruction: sdk.battleStateInitIssueMessage(skeleton.failure),
       observation: { combatant: "skeleton" },
     };
   }
   const started = sdk.startBattle({
     battleId: sdk.battleId("goblin-warrior-skeleton-tracer"),
-    combatants: [goblin.right, skeleton.right],
+    combatants: [goblin.success, skeleton.success],
   });
   if (sdk.isLeft(started)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(started.left),
+      obstruction: sdk.battleStateInitIssueMessage(started.failure),
       observation: { operation: "startBattle" },
     };
   }
   const session = sdk.createScenarioSession({
-    battle: started.right,
+    battle: started.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -73,8 +73,8 @@ export const setupScenario: ScenarioSetup = (context) => {
         boundaries: [],
       },
       placements: [
-        { tokenId: goblin.right.combatantId, coordinate: { x: 0, y: 0 } },
-        { tokenId: skeleton.right.combatantId, coordinate: { x: 1, y: 0 } },
+        { tokenId: goblin.success.combatantId, coordinate: { x: 0, y: 0 } },
+        { tokenId: skeleton.success.combatantId, coordinate: { x: 1, y: 0 } },
       ],
       spatialDecisions: [],
     },
@@ -83,23 +83,23 @@ export const setupScenario: ScenarioSetup = (context) => {
     environment: { overhead: { kind: "open" }, barrierHeights: [] },
     initialRangedAttackEnemyRelationships: [
       {
-        attackerId: goblin.right.combatantId,
-        enemyId: skeleton.right.combatantId,
+        attackerId: goblin.success.combatantId,
+        enemyId: skeleton.success.combatantId,
       },
       {
-        attackerId: skeleton.right.combatantId,
-        enemyId: goblin.right.combatantId,
+        attackerId: skeleton.success.combatantId,
+        enemyId: goblin.success.combatantId,
       },
     ],
     movementAllyRelationships: [],
     opportunityAttackEnemyRelationships: [
       {
-        reactorId: goblin.right.combatantId,
-        moverId: skeleton.right.combatantId,
+        reactorId: goblin.success.combatantId,
+        moverId: skeleton.success.combatantId,
       },
       {
-        reactorId: skeleton.right.combatantId,
-        moverId: goblin.right.combatantId,
+        reactorId: skeleton.success.combatantId,
+        moverId: goblin.success.combatantId,
       },
     ],
     objects: [],
@@ -107,12 +107,12 @@ export const setupScenario: ScenarioSetup = (context) => {
   return sdk.isLeft(session)
     ? {
         kind: "obstructed",
-        obstruction: sdk.scenarioSessionIssueMessage(session.left),
+        obstruction: sdk.scenarioSessionIssueMessage(session.failure),
         observation: { operation: "createScenarioSession" },
       }
     : {
         kind: "ready",
-        session: session.right,
+        session: session.success,
         observation: {
           combatants: ["goblin-warrior", "skeleton"],
           initiatives: [15, 10],

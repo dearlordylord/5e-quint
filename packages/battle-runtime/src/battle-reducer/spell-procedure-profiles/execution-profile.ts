@@ -7,13 +7,16 @@ import type {
 } from "../../battle-state-execution.ts";
 import type {
   BattleSpellProcedureExecution,
+  BattleSpellProcedureKey,
+  SpellProcedureInput,
   SpellProcedureExecutionByProcedure,
-  SpellProcedureKey,
 } from "../../character-execution.ts";
 import type { CombatantId } from "../../identity.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
+import type { SpellProcedureExecutionCodec } from "./execution-schema-contract.ts";
 import type { SpellProcedureDeclarationResolution } from "./resolution-contract.ts";
+export type { SpellProcedureExecutionCodec } from "./execution-schema-contract.ts";
 
 export type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
 
@@ -43,10 +46,19 @@ export function spellProcedureResolutionContext<
 }
 
 export type SpellProcedureProfileResolveInput<
-  I extends { readonly procedure: SpellProcedureKey },
-> = SpellProcedureDeclarationResolution<I["procedure"]>;
+  I extends SpellProcedureInput<BattleSpellProcedureKey>,
+> =
+  SpellProcedureDeclarationResolution<I["procedure"]> extends infer Resolution
+    ? Resolution extends { readonly invocation: unknown }
+      ? Omit<Resolution, "invocation"> & {
+          readonly invocation: BattleSpellProcedureExecution<I>;
+        }
+      : never
+    : never;
 
-export type SpellProcedureExecutionDeclaration<P extends SpellProcedureKey> = {
+export type SpellProcedureExecutionDeclaration<
+  P extends BattleSpellProcedureKey,
+> = {
   readonly procedure: P;
   readonly discoverCastAct: (
     state: BattleState,
@@ -55,9 +67,7 @@ export type SpellProcedureExecutionDeclaration<P extends SpellProcedureKey> = {
       SpellProcedureExecutionByProcedure[P]
     >,
   ) => readonly BattleActDiscoveryCandidate[];
-  readonly executionSchema: {
-    readonly Type: SpellProcedureExecutionByProcedure[P];
-  };
+  readonly executionSchema: SpellProcedureExecutionCodec<P>;
   readonly resolve: (
     input: SpellProcedureDeclarationResolution<P>,
     executionRegistry: SpellProcedureExecutionRegistry,
@@ -65,7 +75,7 @@ export type SpellProcedureExecutionDeclaration<P extends SpellProcedureKey> = {
 };
 
 export function spellProcedureExecutionSchema<
-  S extends Schema.Schema.AnyNoContext,
+  S extends Schema.ConstraintCodec<unknown, unknown, never, never>,
 >(schema: S & (0 extends 1 & S["Type"] ? never : unknown)): S {
   return schema;
 }

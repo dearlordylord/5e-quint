@@ -16,7 +16,7 @@ import type { Readable, Writable } from "node:stream";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
@@ -48,12 +48,12 @@ import {
 const packageRoot = resolve(import.meta.dirname, "..");
 const corpusPath = resolve(packageRoot, "corpus/oracle-evaluation-corpus.json");
 const decodedCorpus = decodeOracleCorpusJson(readFileSync(corpusPath, "utf8"));
-if (Either.isLeft(decodedCorpus)) {
+if (Result.isFailure(decodedCorpus)) {
   throw new Error(
-    `The committed Oracle corpus failed canonical decoding: ${JSON.stringify(decodedCorpus.left)}`,
+    `The committed Oracle corpus failed canonical decoding: ${JSON.stringify(decodedCorpus.failure)}`,
   );
 }
-const corpus = decodedCorpus.right;
+const corpus = decodedCorpus.success;
 
 const distributionAssetNames = [
   ORACLE_DISTRIBUTION_FILE_NAMES.executable,
@@ -608,16 +608,18 @@ function parseResponseLines(
   return frames.map((frame) => decodeJson(OracleBatchResponseSchema, frame));
 }
 
-function decodeJson<T extends Schema.Schema.AnyNoContext>(
+function decodeJson<T extends Schema.ConstraintDecoder<unknown, never>>(
   schema: T,
   text: string,
-): Schema.Schema.Type<T> {
+): T["Type"] {
   const value: unknown = JSON.parse(text);
-  const decoded = Schema.decodeUnknownEither(schema)(value);
-  if (Either.isLeft(decoded)) {
-    throw new Error(`Unexpected JSON contract value: ${String(decoded.left)}`);
+  const decoded = Schema.decodeUnknownResult(schema)(value);
+  if (Result.isFailure(decoded)) {
+    throw new Error(
+      `Unexpected JSON contract value: ${String(decoded.failure)}`,
+    );
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 function assertSuccessfulProcess(result: ProcessResult): void {
@@ -905,13 +907,13 @@ describe("Opaque Oracle source-free distribution", () => {
       const loaded = loadOracleApplicationFromDirectory({
         directory: firstDirectory,
       });
-      expect(Either.isRight(loaded)).toBe(true);
-      if (Either.isRight(loaded)) {
-        expect(Object.isFrozen(loaded.right)).toBe(true);
-        expect(Object.hasOwn(loaded.right, "distributionId")).toBe(false);
-        expect(Object.isFrozen(loaded.right.identity)).toBe(true);
-        expect(Object.isFrozen(loaded.right.projection)).toBe(true);
-        expect(Object.isFrozen(loaded.right.services)).toBe(true);
+      expect(Result.isSuccess(loaded)).toBe(true);
+      if (Result.isSuccess(loaded)) {
+        expect(Object.isFrozen(loaded.success)).toBe(true);
+        expect(Object.hasOwn(loaded.success, "distributionId")).toBe(false);
+        expect(Object.isFrozen(loaded.success.identity)).toBe(true);
+        expect(Object.isFrozen(loaded.success.projection)).toBe(true);
+        expect(Object.isFrozen(loaded.success.services)).toBe(true);
       }
 
       const stagedDirectory = join(temporaryRoot, "staged", "oracle");
@@ -919,7 +921,7 @@ describe("Opaque Oracle source-free distribution", () => {
         recursive: true,
         dereference: true,
       });
-      expect(Either.isRight(checkOracleDistribution(stagedDirectory))).toBe(
+      expect(Result.isSuccess(checkOracleDistribution(stagedDirectory))).toBe(
         true,
       );
       const cleanWorkingDirectory = mkdtempSync(
@@ -1034,16 +1036,16 @@ describe("Opaque Oracle source-free distribution", () => {
       const stagedApplication = loadOracleApplicationFromDirectory({
         directory: stagedDirectory,
       });
-      expect(Either.isRight(stagedApplication)).toBe(true);
-      if (Either.isLeft(stagedApplication)) return;
+      expect(Result.isSuccess(stagedApplication)).toBe(true);
+      if (Result.isFailure(stagedApplication)) return;
       const decodedSelectedBatch =
         decodeOracleEvaluationBatchJson(selectedBatch);
-      expect(Either.isRight(decodedSelectedBatch)).toBe(true);
-      if (Either.isLeft(decodedSelectedBatch)) return;
+      expect(Result.isSuccess(decodedSelectedBatch)).toBe(true);
+      if (Result.isFailure(decodedSelectedBatch)) return;
       expect(batchTraces).toEqual(
         evaluateOracleBatch({
-          batch: decodedSelectedBatch.right,
-          services: stagedApplication.right.services,
+          batch: decodedSelectedBatch.success,
+          services: stagedApplication.success.services,
         }),
       );
       const singletonTraces = [
@@ -1179,7 +1181,7 @@ describe("Opaque Oracle source-free distribution", () => {
         join(tamperedDirectory, ORACLE_DISTRIBUTION_FILE_NAMES.projection),
         tamperedProjection,
       );
-      expect(Either.isLeft(checkOracleDistribution(tamperedDirectory))).toBe(
+      expect(Result.isFailure(checkOracleDistribution(tamperedDirectory))).toBe(
         true,
       );
       const tamperedIdentity = runExecutable(
@@ -1222,8 +1224,8 @@ describe("Opaque Oracle source-free distribution", () => {
       const loaded = loadOracleApplicationFromDirectory({
         directory: build.destination,
       });
-      expect(Either.isRight(loaded)).toBe(true);
-      if (Either.isLeft(loaded)) return;
+      expect(Result.isSuccess(loaded)).toBe(true);
+      if (Result.isFailure(loaded)) return;
 
       const caseA = corpus.batch.cases[0];
       const caseB = corpus.batch.cases[1];
@@ -1283,14 +1285,14 @@ describe("Opaque Oracle source-free distribution", () => {
       );
 
       const decodedBatch = decodeOracleEvaluationBatchJson(selectedBatch);
-      expect(Either.isRight(decodedBatch)).toBe(true);
-      if (Either.isLeft(decodedBatch)) return;
+      expect(Result.isSuccess(decodedBatch)).toBe(true);
+      if (Result.isFailure(decodedBatch)) return;
       const expectedBatchResponse = {
         tag: "evaluated",
         distributionId: identity.distributionId,
         traces: evaluateOracleBatch({
-          batch: decodedBatch.right,
-          services: loaded.right.services,
+          batch: decodedBatch.success,
+          services: loaded.success.services,
         }),
       };
       const batchResponse = await post(Buffer.from(selectedBatch));

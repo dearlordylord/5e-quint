@@ -51,7 +51,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeletonResult)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeletonResult.left),
+      obstruction: sdk.battleStateInitIssueMessage(skeletonResult.failure),
       observation: {
         operation: "battleCreatureInitFromStatBlock",
         combatant: "Skeleton",
@@ -70,7 +70,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(goblinResult)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblinResult.left),
+      obstruction: sdk.battleStateInitIssueMessage(goblinResult.failure),
       observation: {
         operation: "battleCreatureInitFromStatBlock",
         combatant: "Goblin Warrior",
@@ -80,18 +80,18 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const battleResult = sdk.startBattle({
     battleId: sdk.battleId(SCENARIO_ID),
-    combatants: [skeletonResult.right, goblinResult.right],
+    combatants: [skeletonResult.success, goblinResult.success],
   });
   if (sdk.isLeft(battleResult)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(battleResult.left),
+      obstruction: sdk.battleStateInitIssueMessage(battleResult.failure),
       observation: { operation: "startBattle" },
     };
   }
 
   const sessionResult = sdk.createScenarioSession({
-    battle: battleResult.right,
+    battle: battleResult.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -120,14 +120,14 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(sessionResult)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(sessionResult.left),
+      obstruction: sdk.scenarioSessionIssueMessage(sessionResult.failure),
       observation: { operation: "createScenarioSession" },
     };
   }
 
   return {
     kind: "ready",
-    session: sessionResult.right,
+    session: sessionResult.success,
     observation: {
       scenarioId: SCENARIO_ID,
       spatialSource: "geometryDerived",

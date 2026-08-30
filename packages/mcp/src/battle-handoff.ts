@@ -5,7 +5,7 @@ import type {
 } from "@dnd/battle-runtime";
 import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
 import type { CharacterSheetId } from "@dnd/character-sheet-runtime";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type {
@@ -44,7 +44,7 @@ export type BattleCharacterSessionHandoffIssue =
 export function settleCharacterSessionsFromBattle(
   root: McpPlaySessionRoot,
   battleSession: BattleRuntimeSession,
-): Either.Either<
+): Result.Result<
   readonly BattleCharacterSessionSettlement[],
   BattleCharacterSessionHandoffIssue
 > {
@@ -56,7 +56,7 @@ export function settleCharacterSessionsFromBattle(
     const characterId = combatant.origin.characterId;
     const session = root.sessionStore.characters.get(characterId);
     if (session == null) {
-      return Either.left({
+      return Result.fail({
         tag: "unknownBattleCharacterSession",
         combatantId: combatant.combatantId,
         characterId,
@@ -64,13 +64,13 @@ export function settleCharacterSessionsFromBattle(
     }
 
     if (session.tag !== "inBattle") {
-      return Either.left({
+      return Result.fail({
         tag: "characterSessionNotInBattle",
         characterId,
       });
     }
     if (session.battleId !== state.battleId) {
-      return Either.left({
+      return Result.fail({
         tag: "characterSessionBattleOwnershipConflict",
         characterId,
         expectedBattleId: state.battleId,
@@ -85,17 +85,17 @@ export function settleCharacterSessionsFromBattle(
       unitLibrary: root.unitLibrary,
       statBlockCatalog: root.statBlockCatalog,
     });
-    if (Either.isLeft(settledSession)) {
-      return Either.left({
+    if (Result.isFailure(settledSession)) {
+      return Result.fail({
         tag: "characterSessionSettlementInvalid",
         characterId,
-        message: settledSession.left.message,
+        message: settledSession.failure.message,
       });
     }
-    settlements.push({ expected: session, next: settledSession.right });
+    settlements.push({ expected: session, next: settledSession.success });
   }
 
-  return Either.right(settlements);
+  return Result.succeed(settlements);
 }
 
 export function characterSessionHandoffErrorContent(

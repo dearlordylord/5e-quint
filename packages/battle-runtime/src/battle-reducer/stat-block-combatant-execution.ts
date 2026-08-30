@@ -5,10 +5,10 @@ import {
   insertAtOrderIndex,
 } from "@dnd/shared-algebras/initiative-algebra";
 import { movementFeet, type Hp } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 import {
-  battleActiveEffectExecutionOrdinal,
+  battleEffectExecutionOrdinal,
   battleExecutionScopeCursor,
   battleExecutionScopeInitialOrNextOrdinal,
   battleStatBlockExecutionScopeRefBelongsToBattle,
@@ -45,7 +45,7 @@ export function addBattleStatBlockCombatant(input: {
     readonly ammunitionStocks: readonly BattleAmmunitionStock[];
     readonly reactionAvailable: boolean;
   };
-}): Either.Either<BattleState, BattleStateInitIssue> {
+}): Result.Result<BattleState, BattleStateInitIssue> {
   const { combatant } = input;
   const identityIssue = statBlockCombatantIdentityIssue(input);
   if (identityIssue !== null) return battleStateInitIssue(identityIssue);
@@ -75,7 +75,7 @@ export function addBattleStatBlockCombatant(input: {
     conditions: EMPTY_CONDITION_STATE,
     positiveHpUnconscious: null,
     activeEffects: [],
-    nextActiveEffectOrdinal: battleActiveEffectExecutionOrdinal(0),
+    nextEffectOrdinal: battleEffectExecutionOrdinal(0),
     activeOngoingFeatureOccurrences: new Map(),
     attackRollMissToHitReplacementsUsedSinceTurnStart: [],
     concentration: null,
@@ -114,7 +114,7 @@ export function addBattleStatBlockCombatant(input: {
       combatant.admission.cursorTransition.to,
     ),
   });
-  return Either.right({
+  return Result.succeed({
     ...input.state,
     initiative: insertAtOrderIndex(input.state.initiative, insertionIndex, {
       creature: combatant.combatantId,

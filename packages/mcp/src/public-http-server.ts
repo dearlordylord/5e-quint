@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import {
   createMcpApplicationServices,
@@ -29,8 +29,8 @@ import {
 } from "./saved-session-authorization/http.ts";
 
 export type DndMcpHttpServer = {
-  listen(): Promise<Either.Either<URL, DndMcpHttpServerIssue>>;
-  close(): Promise<Either.Either<void, DndMcpHttpServerIssue>>;
+  listen(): Promise<Result.Result<URL, DndMcpHttpServerIssue>>;
+  close(): Promise<Result.Result<void, DndMcpHttpServerIssue>>;
 };
 
 export type DndMcpHttpServerIssue = {
@@ -113,14 +113,14 @@ export function createDndMcpHttpServer(input: {
     listen() {
       return new Promise((resolve) => {
         const onError = (cause: Error) =>
-          resolve(Either.left(httpServerIssue("listenFailed", cause)));
+          resolve(Result.fail(httpServerIssue("listenFailed", cause)));
         server.once("error", onError);
         server.listen(port, hostname, () => {
           server.off("error", onError);
           const address = server.address();
           if (address === null || typeof address === "string") {
             resolve(
-              Either.left({
+              Result.fail({
                 tag: "dndMcpHttpServerIssue",
                 reason: "invalidAddress",
                 message: "Public MCP server did not bind a TCP address.",
@@ -129,7 +129,7 @@ export function createDndMcpHttpServer(input: {
             return;
           }
           resolve(
-            Either.right(new URL(`http://${hostname}:${address.port}/mcp`)),
+            Result.succeed(new URL(`http://${hostname}:${address.port}/mcp`)),
           );
         });
       });
@@ -137,14 +137,14 @@ export function createDndMcpHttpServer(input: {
     close() {
       return new Promise((resolve) => {
         if (!server.listening) {
-          resolve(Either.right(undefined));
+          resolve(Result.succeed(undefined));
           return;
         }
         server.close((error) => {
           resolve(
             error === undefined
-              ? Either.right(undefined)
-              : Either.left(httpServerIssue("closeFailed", error)),
+              ? Result.succeed(undefined)
+              : Result.fail(httpServerIssue("closeFailed", error)),
           );
         });
       });
@@ -193,10 +193,10 @@ async function savedSessionAuthorizationRequestAttempt(input: {
 }> {
   try {
     const result = await handleSavedSessionAuthorizationRequest(input);
-    if (Either.isLeft(result)) {
+    if (Result.isFailure(result)) {
       return writeSavedSessionAuthorizationIssue(
         input.outgoing,
-        result.left.reason,
+        result.failure.reason,
       );
     }
     const status = input.outgoing.statusCode;

@@ -2,7 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { requireJsonSchema } from "../../test-support/json-schema.ts";
 import { decodePlaySessionId, type PlaySessionId } from "../play-session.ts";
@@ -227,10 +227,10 @@ function canonicalPlaySessionId(
   value: Readonly<Record<string, unknown>>,
 ): PlaySessionId {
   const decoded = decodePlaySessionId(value.playSessionId);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     throw new Error("Canonical tool result omitted its Play Session id.");
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 function listedPlaySessionIds(

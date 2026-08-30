@@ -12,7 +12,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -142,15 +142,15 @@ describe("Druid Wild Shape boundaries", () => {
         build: retainedFeatureBuild([]),
         unitLibrary,
       }),
-    ).toEqual(Either.right(undefined));
+    ).toEqual(Result.succeed(undefined));
     expect(
       characterBuildDruidWildShapeFacts({
         build: retainedFeatureBuild([DRUID_WILD_SHAPE_UNIT_ID]),
         unitLibrary,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Wild Shape projection requires Druid class progression.",
       },
     });
@@ -165,8 +165,8 @@ describe("Druid Wild Shape boundaries", () => {
         unitLibrary: secondFeature.catalog,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Wild Shape projection supports exactly one Druid Wild Shape feature.",
       },
@@ -191,8 +191,8 @@ describe("Druid Wild Shape boundaries", () => {
         unitLibrary,
       }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         knownFormRoster: {
           flySpeed: "forbidden",
         },
@@ -218,8 +218,8 @@ describe("Druid Wild Shape boundaries", () => {
         unitLibrary,
       }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         knownFormRoster: {
           flySpeed: "allowed",
         },
@@ -333,7 +333,7 @@ describe("Druid Wild Shape boundaries", () => {
         knownFormStatBlockIds: eligibleFormIds,
         statBlockCatalog,
       }),
-    ).toEqual(Either.right(eligibleFormIds));
+    ).toEqual(Result.succeed(eligibleFormIds));
     expect(
       validateDruidWildShapeKnownForms({
         facts: wildShapeFacts,
@@ -341,8 +341,8 @@ describe("Druid Wild Shape boundaries", () => {
         statBlockCatalog,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Wild Shape known forms must match the Druid's known-form count.",
       },
@@ -356,15 +356,15 @@ describe("Druid Wild Shape boundaries", () => {
         facts: wildShapeFacts,
         knownForms: eligibleRecords,
       }),
-    ).toEqual(Either.right(eligibleRecords));
+    ).toEqual(Result.succeed(eligibleRecords));
     expect(
       validateDruidWildShapeKnownFormRecords({
         facts: wildShapeFacts,
         knownForms: eligibleRecords.slice(0, 3),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Wild Shape known forms must match the Druid's known-form count.",
       },
@@ -378,8 +378,8 @@ describe("Druid Wild Shape boundaries", () => {
         ],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Wild Shape known forms cannot have a Fly Speed at this Druid level.",
       },
@@ -448,8 +448,8 @@ describe("Druid Wild Shape boundaries", () => {
           statBlockCatalog,
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: { tag: "druidWildShapeFactsIssue", message },
+        _tag: "Failure",
+        failure: { tag: "druidWildShapeFactsIssue", message },
       });
     }
   });

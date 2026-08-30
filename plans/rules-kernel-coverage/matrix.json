@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 147,
-    "covered": 139,
-    "open": 2,
+    "covered": 141,
+    "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,8 +12,8 @@
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 139,
-      "needs-qnt-owner": 2,
+      "covered": 141,
+      "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
       "boundary-only": 5,
@@ -27,16 +27,16 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 184,
+    "total": 192,
     "bySubject": {
-      "battle-hole-family": 92,
-      "battle-fill-kind": 53,
+      "battle-hole-family": 96,
+      "battle-fill-kind": 57,
       "battle-subject-kind": 39
     },
     "byClassification": {
-      "semantic-frontier": 145,
+      "semantic-frontier": 149,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 39,
+      "table-owned-fact": 43,
       "unsupported-dead-branch": 0
     }
   },
@@ -174,13 +174,14 @@
       ],
       "profiles": ["spell.invocation-sleet-storm-area-hazard"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt"
       ],
       "reason": "The promoted Sleet Storm runtime consumes caller-supplied area identity, movement facts, and entry/start-turn trigger subjects. Automatic geometry, pathfinding, area membership, and exposed-flame state are explicit table/environment boundaries.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/sleet-storm-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-composite.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
@@ -203,20 +204,31 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-insect-plague-area-hazard.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/insect-plague-area-hazard.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-insect-plague-area-hazard.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": ["spell.invocation-insect-plague-area-hazard"],
-      "qntOwners": [],
-      "reason": "The promoted Insect Plague runtime consumes caller-supplied area identity, movement facts, appears-in-area, enters-area, and ends-turn-in-area trigger subjects, then owns Concentration duration, active Sphere effect state, Difficult Terrain and Lightly Obscured projections, one shared once-per-turn save ledger, Constitution save-for-half Piercing damage, slot scaling, and cleanup. Automatic Sphere geometry, pathfinding, area membership derivation, and environmental swarm presentation are explicit table/spatial boundaries. Focused QNT semantic ownership and QNT-connected parity remain unassessed after retirement of the mixed Ground Command owner.",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/battle-runtime/battle-runtime-insect-plague-area-hazard.qnt"
+      ],
+      "reason": "The promoted Insect Plague runtime consumes caller-supplied area identity, movement facts, appears-in-area, enters-area, and ends-turn-in-area trigger subjects, then owns Concentration duration, active Sphere effect state, Difficult Terrain and Lightly Obscured projections, one shared once-per-turn save ledger, Constitution save-for-half Piercing damage, slot scaling, and cleanup. Automatic Sphere geometry, pathfinding, area membership derivation, and environmental swarm presentation are explicit table/spatial boundaries. The identity-free persistent-area and trigger QNT semantic owners, SRD-named BattleState projection/proof witness, and connected MBT witness cover the reducer-owned lifecycle and its production projection.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/stationary-persistent-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "status": "needs-qnt-owner",
+      "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Insect Plague",
         "UBIQUITOUS_LANGUAGE.md#Movement",
@@ -234,31 +246,57 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-cloudkill-area-hazard.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/cloudkill-turn-boundary-movement.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/cloudkill-strong-wind-dispersal.test.ts"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/cloudkill-area-hazard.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": ["spell.invocation-cloudkill-area-hazard"],
-      "qntOwners": [],
-      "reason": "The promoted Cloudkill runtime consumes caller-supplied Sphere area identity, appears/moves-into-space/enters/ends-turn area membership trigger subjects, and environmental strong-wind facts, then owns Concentration duration, active Sphere effect state, Heavily Obscured projection, one shared once-per-turn save ledger, Constitution save-for-half Poison damage, slot scaling, strong-wind cleanup, and Concentration/duration cleanup. Automatic cloud movement away from the caster, terrain descent, wind derivation, pathfinding, and area membership derivation remain table/spatial and environment boundaries. Focused QNT semantic ownership and QNT-connected parity remain unassessed after retirement of the mixed Ground Command owner.",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.qnt"
+      ],
+      "reason": "The promoted Cloudkill runtime consumes caller-supplied Sphere area identity, appears/enters/ends-turn area membership trigger subjects, and occurrence-bound environmental strong-wind facts, then owns Concentration duration, active Sphere effect state, Heavily Obscured projection, one shared once-per-turn save ledger, Constitution save-for-half Poison damage, slot scaling, strong-wind cleanup, and Concentration/duration cleanup. The turn-boundary owner additionally requires one movement exactly at the start of each source turn, fixes the distance at 10 feet away from the source, preserves the caller-supplied affected-creature resolution order, asks the turn owner to order Cloudkill movement against simultaneous source-start effects, preserves exact interrupted affected-target progress through direct or delegated End Turn replay, and cancels remaining movement consequences deterministically if damage to the source or an intervening Reaction ends source Concentration. Affected-creature membership and resolution order remain table/spatial facts and cannot restate the fixed movement rule. The runtime and focused MBT witnesses cover both simultaneous orderings, reducer consequences, and the production projection; the contract witness checks table-owned movement and ordering hole/fill boundaries.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts",
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/source-turn-translation-persistent-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/replay-continuation.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/compelled-behavior-procedures.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-subjects.ts"
+        "packages/battle-runtime/src/battle-subjects.ts",
+        "packages/battle-runtime/src/battle-reducer/area-wind-strength.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-effect-cleanup-procedures.ts"
       ],
-      "status": "needs-qnt-owner",
+      "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Cloudkill",
+        ".references/srd-5.2.1/Rules-Glossary.md#Simultaneous Effects",
         "UBIQUITOUS_LANGUAGE.md#Movement",
         "UBIQUITOUS_LANGUAGE.md#Area of Effect",
         "UBIQUITOUS_LANGUAGE.md#Saving Throw",
         "UBIQUITOUS_LANGUAGE.md#Damage Type",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
-      "title": "Battle Cloudkill active Sphere hazard projects Heavily Obscured area facts, resolves table-triggered Constitution saves and Poison damage, and cleans up on Concentration, duration, or strong wind"
+      "title": "Battle Cloudkill active Sphere hazard projects Heavily Obscured area facts, resolves table-triggered Constitution saves and Poison damage, moves at the source turn boundary, and cleans up on Concentration, duration, or strong wind"
     },
     {
       "id": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
@@ -277,18 +315,20 @@
       ],
       "profiles": ["spell.invocation-slow-active-penalties"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle-tests.qnt",
         "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
       ],
       "reason": "The promoted Slow runtime consumes caller-supplied affected-creature area witnesses, save outcomes, retained active Slow effects, shared action-economy state, Attack action resource state, and canonical spell component facts. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts",
         "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
-        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
+        "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-runtime.ts",
         "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -361,6 +401,7 @@
         "unit-feature.reaction-roll-or-damage-reduction"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
         "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
@@ -587,6 +628,7 @@
       ],
       "profiles": ["spell.invocation-damage-save-or-attack"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-direct-damage-projection-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt",
@@ -654,11 +696,12 @@
       ],
       "profiles": ["spell.invocation-spiritual-weapon-attack-proxy"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-spatial-melee-spell-attack-proxy.qnt",
         "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spiritual-weapon.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spatial-melee-spell-attack-proxy.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -715,7 +758,7 @@
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-condition.ts",
         "packages/battle-runtime/src/battle-reducer/direct-condition-lifecycle.ts",
-        "packages/battle-runtime/src/battle-reducer/sanctuary-targeting-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/targeting-save-interdiction.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
@@ -734,6 +777,22 @@
           "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
         }
       ],
       "profiles": [
@@ -743,6 +802,10 @@
         "spell.invocation-save-gated-condition-immunity"
       ],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
+        "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
         "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
         "packages/battle-runtime/battle-runtime-prone-movement.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
@@ -759,11 +822,13 @@
         "packages/battle-runtime/battle-runtime-save-gated-damage-target.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-object-facts.qnt"
       ],
+      "reason": "The mapped profile runtime tests join to profile-level QNT proof owners. Hypnotic Pattern specifically requires an exact caller-supplied physical-shake reachability witness bound to the eligible other creature and affected target; the reducer owns Action spend and source-owned control cleanup without inventing a distance.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
-        "packages/battle-runtime/src/battle-reducer/damage-apply.ts"
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [],
@@ -814,6 +879,7 @@
       ],
       "profiles": ["spell.invocation-see-invisible-observer-sight"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-observer-sight-grant.qnt",
         "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
       ],
       "runtime": "battle",
@@ -914,15 +980,18 @@
           "stepAction": "step"
         }
       ],
-      "profiles": ["spell.find-familiar-lifecycle"],
-      "qntOwners": ["packages/battle-runtime/battle-runtime-find-familiar.qnt"],
+      "profiles": ["spell.companion-lifecycle"],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-spawned-companion-lifecycle.qnt",
+        "packages/battle-runtime/battle-runtime-find-familiar.qnt"
+      ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/find-familiar-lifecycle.ts",
-        "packages/battle-runtime/src/find-familiar-state.ts",
-        "packages/battle-runtime/src/find-familiar-telepathy.ts",
-        "packages/battle-runtime/src/find-familiar-pact-chain.ts",
-        "packages/battle-runtime/src/battle-reducer/find-familiar-procedures.ts",
+        "packages/battle-runtime/src/companion-lifecycle.ts",
+        "packages/battle-runtime/src/companion-state.ts",
+        "packages/battle-runtime/src/companion-communication.ts",
+        "packages/battle-runtime/src/companion-reaction-attack.ts",
+        "packages/battle-runtime/src/battle-reducer/companion-lifecycle-procedures.ts",
         "packages/battle-runtime/src/battle-reducer/companion-routes.ts"
       ],
       "status": "covered",
@@ -946,6 +1015,7 @@
       ],
       "profiles": ["spell.invocation-web-restraint-hazard"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
       ],
@@ -1042,7 +1112,10 @@
         }
       ],
       "profiles": ["spell.invocation-gust-of-wind-line"],
-      "qntOwners": ["packages/battle-runtime/battle-runtime-gust-of-wind.qnt"],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+        "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+      ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
@@ -1118,13 +1191,14 @@
       ],
       "profiles": ["spell.invocation-levitated-creature"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-controlled-vertical-suspension.qnt",
         "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt"
       ],
       "reason": "The reducer owns the creature-branch active effect, altitude scalar, action/resource spending, save outcome, caster control command, target movement altitude update, and concentration/duration cleanup. Caller/table facts still own target visibility, target range, fixed-object or surface reach, and map geometry.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/levitate-creature.ts",
+        "packages/battle-runtime/src/battle-reducer/controlled-vertical-suspension.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
@@ -1209,7 +1283,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
         "packages/battle-runtime/src/battle-reducer/spell-cast-interrupt-frame.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/counterspell.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-cast-interruption-reaction.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/creature-size-change.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
@@ -1251,7 +1325,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
         "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -1291,7 +1365,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/metamagic.ts",
         "packages/battle-runtime/src/battle-reducer/metamagic-support.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-condition-immunity.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-damage.ts",
@@ -1546,15 +1620,15 @@
           "stepAction": "step"
         }
       ],
-      "profiles": [
-        "spell.invocation-antimagic-field-ongoing-spell-suppression"
-      ],
+      "profiles": ["spell.invocation-magic-suppression-emanation"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
+        "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt",
         "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "status": "covered",
@@ -1571,17 +1645,19 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt",
           "stepAction": "step"
         }
       ],
-      "profiles": ["spell.invocation-antimagic-field-action-interdiction"],
+      "profiles": ["spell.invocation-magic-suppression-action-interdiction"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
+        "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt",
+        "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/antimagic-field-action-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/magic-suppression-action-interdiction.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
@@ -1603,19 +1679,21 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt",
           "stepAction": "step"
         }
       ],
       "profiles": [
-        "spell.invocation-antimagic-field-magical-effect-interdiction"
+        "spell.invocation-magic-suppression-magical-effect-interdiction"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
+        "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt",
+        "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/antimagic-field-magical-effect-interdiction.ts",
+        "packages/battle-runtime/src/battle-reducer/magic-suppression-magical-effect-interdiction.ts",
         "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
@@ -1642,6 +1720,7 @@
       ],
       "profiles": ["spell.invocation-spike-growth-movement-hazard"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
         "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt"
       ],
       "runtime": "battle",
@@ -1676,6 +1755,7 @@
         "spell.invocation-sleep-target-admission"
       ],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt",
         "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
         "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
@@ -1702,6 +1782,7 @@
       ],
       "profiles": ["spell.invocation-grease-ground-hazard"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
       ],
@@ -1730,7 +1811,7 @@
       ],
       "profiles": ["spell.invocation-fog-cloud-obscurement"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1761,7 +1842,7 @@
       ],
       "profiles": ["spell.invocation-magical-darkness-point-origin"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+        "packages/battle-runtime/battle-runtime-magical-darkness-point-origin.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1822,6 +1903,7 @@
       ],
       "profiles": ["spell.invocation-flaming-sphere-hazard-ram"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
         "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
@@ -1951,7 +2033,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/expeditious-retreat-dash.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/bonus-action-dash.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -1971,7 +2053,10 @@
         }
       ],
       "profiles": ["spell.invocation-feather-fall-mitigation"],
-      "qntOwners": ["packages/battle-runtime/battle-runtime-feather-fall.qnt"],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-falling-creature-mitigation-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-feather-fall.qnt"
+      ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -1996,7 +2081,10 @@
         }
       ],
       "profiles": ["spell.invocation-jump-movement-replacement"],
-      "qntOwners": ["packages/battle-runtime/battle-runtime-jump-movement.qnt"],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-fixed-cost-movement-replacement.qnt",
+        "packages/battle-runtime/battle-runtime-jump-movement.qnt"
+      ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2076,7 +2164,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/antimagic-field-transit-blocking.ts",
+        "packages/battle-runtime/src/battle-reducer/magic-suppression-transit-blocking.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-teleport.ts"
       ],
       "status": "covered",
@@ -2104,6 +2192,7 @@
       ],
       "profiles": ["spell.invocation-blur-attack-roll-defense"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-perception-gated-attack-roll-defense.qnt",
         "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
       ],
       "runtime": "battle",
@@ -2133,6 +2222,7 @@
       ],
       "profiles": ["spell.invocation-moonbeam-movable-zone"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
@@ -2206,6 +2296,7 @@
         "spell.invocation-self-ability-check-advantage"
       ],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
         "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
         "packages/battle-runtime/battle-runtime-thaumaturgy.qnt"
       ],
@@ -2250,6 +2341,7 @@
       ],
       "profiles": ["spell.scalar-buff"],
       "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
         "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
         "packages/battle-runtime/battle-runtime-armor-class.qnt",
         "packages/battle-runtime/battle-runtime-armor-spell-resolution.qnt",
@@ -2445,6 +2537,8 @@
         "spell.reaction-hellish-rebuke"
       ],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-spell-cast-interruption-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-after-damage-save-reaction.qnt",
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
         "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt",
@@ -2707,16 +2801,17 @@
       ],
       "profiles": ["spell.invocation-mirror-image-hit-interception"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-duplicate-hit-interception.qnt",
         "packages/battle-runtime/battle-runtime-mirror-image.qnt",
         "packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/mirror-image-hit-interception.ts",
+        "packages/battle-runtime/src/battle-reducer/duplicate-hit-interception.ts",
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/mirror-image-hit-interception.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/duplicate-hit-interception.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -2737,14 +2832,15 @@
       ],
       "profiles": ["spell.invocation-warding-bond-linked-effect"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-linked-defense-damage-share.qnt",
         "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt",
         "packages/battle-runtime/battle-runtime-warding-bond.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/warding-bond.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/warding-bond.ts",
+        "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
+        "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -2769,6 +2865,7 @@
       ],
       "profiles": ["spell.invocation-sanctuary-targeting-interdiction"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-targeting-save-interdiction.qnt",
         "packages/battle-runtime/battle-runtime-sanctuary.qnt",
         "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
         "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
@@ -2776,7 +2873,7 @@
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/sanctuary-targeting-interdiction.ts"
+        "packages/battle-runtime/src/battle-reducer/targeting-save-interdiction.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [],
@@ -2907,13 +3004,14 @@
         "spell.invocation-command-halt-grovel"
       ],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt",
         "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
         "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
         "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/command-procedures.ts",
+        "packages/battle-runtime/src/battle-reducer/compelled-behavior-procedures.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
@@ -3127,12 +3225,6 @@
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/death-saving-throw.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
-          "stepAction": "step"
-        },
-        {
-          "kind": "focused-mbt",
-          "ownerPath": "packages/shared-algebras/src/reducer-algebras.mbt.test.ts",
-          "qntSpecPath": "packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt",
           "stepAction": "step"
         }
       ],
@@ -3434,6 +3526,7 @@
       ],
       "profiles": [],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt",
         "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-replay.qnt",
@@ -3450,7 +3543,7 @@
         "packages/battle-runtime/src/battle-reducer/attack-main.ts",
         "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts",
@@ -4324,12 +4417,13 @@
       ],
       "profiles": ["spell.invocation-dragons-breath-initial"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-granted-area-save-damage.qnt",
         "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/dragons-breath-initial.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/granted-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
       ],
       "status": "covered",
@@ -4351,13 +4445,14 @@
       ],
       "profiles": ["spell.invocation-dragons-breath-granted-action"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-granted-area-save-damage.qnt",
         "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
       ],
       "reason": "The target-attached Dragon's Breath effect grants the current target a Magic action. The reducer validates caller/table Cone membership facts, applies Dexterity save-for-half slot-scaled damage of the retained type, spends the target's Magic action, and reuses the shared damage lifecycle for Concentration and zero-Hit-Point follow-up holes.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/dragons-breath.ts",
+        "packages/battle-runtime/src/battle-reducer/granted-area-save-damage.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
@@ -4614,6 +4709,8 @@
       ],
       "profiles": [],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-spell-cast-interruption-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-after-damage-save-reaction.qnt",
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
         "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -4707,14 +4804,14 @@
       ],
       "profiles": ["spell.invocation-haste-positive"],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt"
       ],
       "reason": "The positive Haste slice admits the typed SRD Surface shape without authored spell identity dispatch, spends Magic Action plus a level-3-or-higher Spell Slot, owns caster Concentration, applies doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, derives one target-turn spell-effect action resource restricted to Attack with one attack only, Dash, Disengage, Hide, or Utilize, and clears a current-turn Haste spell-effect action resource when the source Concentration effect ends. Spell-end lethargy cleanup is covered separately by BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/composite-target-buff.ts",
         "packages/battle-runtime/src/battle-reducer/spell-granted-action-resource.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
@@ -4752,6 +4849,8 @@
       ],
       "profiles": ["spell.invocation-haste-positive"],
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt",
+        "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath-tests.qnt",
         "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt"
       ],
       "reason": "The Haste profile stores the typed spell-end target state as a source-owned Concentration effect. Concentration break, duration expiry, and recast/replacement cleanup promote that monitor into source-owned Incapacitated and a separate source-owned Speed 0 effect expiring at the end of the target's next turn. Promoted Incapacitated then breaks the target's own Concentration using the shared Concentration teardown path. Target-turn cleanup removes only Haste-owned lethargy effects, preserving independent Incapacitated sources, and movement projection treats the Speed 0 effect as its own terminal-speed fact rather than deriving Speed 0 from Incapacitated.",
@@ -4759,7 +4858,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/active-effect/types.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/composite-target-buff.ts",
         "packages/battle-runtime/src/battle-reducer/spell-end-target-state.ts",
         "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
@@ -5292,7 +5391,7 @@
       ],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
-      "id": "BattleSleetStormAreaHazardSavingThrowOutcomeHole",
+      "id": "BattlePersistentAreaSaveCompositeSavingThrowOutcomeHole",
       "reason": "Sleet Storm Saving Throw outcomes consume table-triggered first-entry or start-turn area membership witnesses and drive reducer-owned Prone application, target Concentration loss, and per-trigger save ledger updates. Automatic geometry, pathfinding, area membership derivation, and exposed-flame state remain table/environment-owned boundary facts.",
       "subject": "battle-hole-family"
     },
@@ -5300,49 +5399,125 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
-        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE"
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
+        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE"
       ],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
-      "id": "BattleInsectPlagueAreaHazardSavingThrowOutcomeHole",
-      "reason": "Insect Plague Saving Throw outcomes consume table-triggered appearance, entry, or end-turn area membership witnesses and drive generic save-for-half damage sequencing. Automatic geometry, pathfinding, area membership derivation, visibility obstruction, and area placement remain table/environment-owned boundary facts. Focused Insect Plague QNT lifecycle ownership remains unassessed.",
+      "id": "BattleStationaryPersistentAreaSaveDamageSavingThrowOutcomeHole",
+      "reason": "Insect Plague Saving Throw outcomes consume table-triggered appearance, entry, or end-turn area membership witnesses and drive generic save-for-half damage sequencing. Automatic geometry, pathfinding, area membership derivation, visibility obstruction, and area placement remain table/environment-owned boundary facts; the focused Insect Plague lifecycle owner covers reducer-owned trigger timing and effect consequences.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
-        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE"
       ],
       "followUpTaskIds": [],
       "holeKind": "rolledDice",
-      "id": "BattleInsectPlagueAreaHazardDamageRollHole",
-      "reason": "Insect Plague damage rolls provide the Piercing damage total after table-triggered active-area membership and Constitution save outcome are known. Shared HP damage and generic damage disposition own damage application; focused Insect Plague QNT hazard-trigger sequencing remains unassessed.",
+      "id": "BattleStationaryPersistentAreaSaveDamageRollHole",
+      "reason": "Insect Plague damage rolls provide the Piercing damage total after table-triggered active-area membership and Constitution save outcome are known. Shared HP damage and generic damage disposition own damage application; the focused Insect Plague lifecycle owner covers hazard-trigger sequencing.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
-        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE"
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
+        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE"
       ],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
-      "id": "BattleCloudkillAreaHazardSavingThrowOutcomeHole",
-      "reason": "Cloudkill Saving Throw outcomes consume table-triggered appearance, cloud movement, entry, or end-turn area membership witnesses and drive generic save-for-half Poison damage sequencing. Automatic cloud movement geometry, pathfinding, area membership derivation, terrain descent, and wind predicate derivation remain table/environment-owned boundary facts. Focused Cloudkill QNT lifecycle ownership remains unassessed.",
+      "id": "BattleTranslatingPersistentAreaSaveDamageSavingThrowOutcomeHole",
+      "reason": "Cloudkill Saving Throw outcomes consume table-triggered appearance, cloud movement, entry, or end-turn area membership witnesses and drive generic save-for-half Poison damage sequencing. Automatic area-membership and wind-predicate derivation remain table/environment-owned boundary facts; the focused Cloudkill lifecycle owner covers reducer-owned trigger timing and effect consequences.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
-        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE"
       ],
       "followUpTaskIds": [],
       "holeKind": "rolledDice",
-      "id": "BattleCloudkillAreaHazardDamageRollHole",
-      "reason": "Cloudkill damage rolls provide the Poison damage total after table-triggered active-area membership and Constitution save outcome are known. Shared HP damage and generic damage disposition own damage application; focused Cloudkill QNT hazard-trigger sequencing remains unassessed.",
+      "id": "BattleTranslatingPersistentAreaSaveDamageRollHole",
+      "reason": "Cloudkill damage rolls provide the Poison damage total after table-triggered active-area membership and Constitution save outcome are known. Shared HP damage and generic damage disposition own damage application; the focused Cloudkill lifecycle owner covers hazard-trigger sequencing.",
       "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
+      "followUpTaskIds": [],
+      "holeKind": "persistentAreaSourceTurnTranslation",
+      "id": "BattlePersistentAreaSourceTurnTranslationHole",
+      "reason": "This protocol row classifies the Cloudkill movement hole's request for affected-creature membership and resolution order after the reducer fixes the movement at 10 feet away from the source. Automatic area-membership derivation remains outside reducer world state. The reducer-owned source-start-turn timing and one occurrence per source turn are covered by the Cloudkill lifecycle obligation; this boundary row remains table-owned and does not duplicate those rules.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
+      "fillKind": "persistentAreaSourceTurnTranslation",
+      "followUpTaskIds": [],
+      "id": "persistentAreaSourceTurnTranslation",
+      "reason": "Cloudkill movement fills supply affected-creature membership in table-chosen resolution order for the current discovered movement hole. The fill cannot restate the reducer-owned fixed distance, away-from-source rule, or timing, and it introduces no durable map geometry or pathfinding state.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"],
+      "followUpTaskIds": [],
+      "holeKind": "startTurnOccurrenceOrder",
+      "id": "BattleStartTurnOccurrenceOrderHole",
+      "reason": "When Cloudkill movement and another effect occur simultaneously at its source's turn start, this exact source-turn occurrence asks the turn owner which reducer consequence resolves first. The focused runtime witness covers both choices and their different Concentration consequences. The Cloudkill lifecycle owner separately covers reducer-owned movement timing and consequences; this protocol registration remains the table-selected ordering boundary.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"],
+      "fillKind": "startTurnOccurrenceOrder",
+      "followUpTaskIds": [],
+      "id": "startTurnOccurrenceOrder",
+      "reason": "The fill selects whether Cloudkill movement or the source's other simultaneous start-turn effects resolve first for the discovered occurrence. It changes reducer execution order but stores no duplicate timing or effect state. The focused runtime witness covers both choices; Cloudkill lifecycle ownership is registered separately.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"],
+      "followUpTaskIds": [],
+      "holeKind": "temporaryHitPointChoice",
+      "id": "BattleTemporaryHitPointChoiceHole",
+      "reason": "When a start-turn occurrence grants Temporary Hit Points to a recipient who already has a pool, this exact occurrence asks the recipient whether to retain the existing pool or replace it with the granted pool. The hole derives both amounts and source-turn identity from reducer state; it does not store a second pool.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"],
+      "fillKind": "temporaryHitPointChoice",
+      "followUpTaskIds": [],
+      "id": "temporaryHitPointChoice",
+      "reason": "The fill selects keepExisting or replaceWithGranted for one exact Temporary Hit Point grant occurrence. The focused runtime witness covers retaining a larger pool and accepting a lower granted pool; broader Temporary Hit Point award owners and formal ownership remain outside this Cloudkill increment.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
+      "followUpTaskIds": [],
+      "holeKind": "areaWindStrength",
+      "id": "BattleAreaWindStrengthHole",
+      "reason": "Area wind strength is caller/table environmental evidence scoped to the area of the exact active spell-effect occurrence. The reducer requests and consumes this fact without deriving or storing weather, wind sources, area overlap, or terrain geometry.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
+      "fillKind": "areaWindStrength",
+      "followUpTaskIds": [],
+      "id": "areaWindStrength",
+      "reason": "Area wind-strength fills explicitly distinguish strong from not-strong table evidence for the requested active-effect area. Environmental derivation remains outside reducer state; spell-specific cleanup consequences remain owned by the corresponding spell lifecycle obligation.",
+      "subject": "battle-fill-kind"
     },
     {
       "classification": "table-owned-fact",
@@ -5387,7 +5562,7 @@
       ],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
-      "id": "BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole",
+      "id": "BattleTurnConstraintEndTurnSavingThrowOutcomeHole",
       "reason": "Slow end-of-target-turn Saving Throw outcomes drive reducer-owned per-target active penalty cleanup and caster Concentration cleanup when no affected targets remain.",
       "subject": "battle-hole-family"
     },
@@ -5397,8 +5572,8 @@
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
       ],
       "followUpTaskIds": [],
-      "holeKind": "slowSomaticSpellFailureOutcome",
-      "id": "BattleSlowSomaticSpellFailureOutcomeHole",
+      "holeKind": "turnConstraintSomaticSpellFailureOutcome",
+      "id": "BattleTurnConstraintSomaticSpellFailureOutcomeHole",
       "reason": "Slow Somatic spell-failure outcome holes carry the RAW 25 percent chance for an affected target casting a spell with an effective Somatic component. The fill determines whether casting resources are spent without applying the spell or resolution continues.",
       "subject": "battle-hole-family"
     },
@@ -5419,7 +5594,7 @@
       "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
       "followUpTaskIds": [],
       "holeKind": "targetSpatialFacts",
-      "id": "BattleWardingBondSeparationFactsHole",
+      "id": "BattleLinkedEffectSeparationFactsHole",
       "reason": "Connected-creature separation is table spatial evidence. The reducer may consume the fact for Warding Bond cleanup, but distance/position derivation remains outside rules-kernel state; linked-effect cleanup parity is covered by the Warding Bond obligation.",
       "subject": "battle-hole-family"
     },
@@ -5463,8 +5638,8 @@
       "classification": "table-owned-fact",
       "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
       "followUpTaskIds": [],
-      "holeKind": "findFamiliarConnection",
-      "id": "BattleFindFamiliarConnectionHole",
+      "holeKind": "spawnedCompanionConnection",
+      "id": "BattleSpawnedCompanionConnectionHole",
       "reason": "Find Familiar connection holes carry caller/table spatial evidence that the present familiar is within 100 feet of its owner. The reducer consumes the fact for Find Familiar shared senses and touch spell delivery without deriving map geometry, pathfinding, or durable position state.",
       "subject": "battle-hole-family"
     },
@@ -5599,7 +5774,7 @@
       ],
       "followUpTaskIds": [],
       "holeKind": "rolledDice",
-      "id": "BattleDragonsBreathDamageRollHole",
+      "id": "BattleGrantedAreaSaveDamageActionDamageRollHole",
       "reason": "Dragon's Breath exhale damage rolls determine slot-scaled retained-type breath damage after table-supplied Cone membership and Dexterity save outcomes; shared HP, by-type adjustment, and zero-Hit-Point disposition semantics are reused by the granted-action obligation.",
       "subject": "battle-hole-family"
     },
@@ -5640,7 +5815,7 @@
       "coveredByObligationIds": ["BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"],
       "followUpTaskIds": [],
       "holeKind": "rolledDice",
-      "id": "BattleMirrorImageDuplicateRollHole",
+      "id": "BattleDuplicateHitInterceptionRollHole",
       "reason": "Mirror Image duplicate interception roll changes hit redirection, duplicate lifecycle, and continuation after an attack hit; those semantics are covered by the Mirror Image hit-interception obligation.",
       "subject": "battle-hole-family"
     },
@@ -5679,7 +5854,7 @@
       ],
       "followUpTaskIds": [],
       "holeKind": "rolledDice",
-      "id": "BattleFlamingSphereDamageRollHole",
+      "id": "BattleCollisionRepositionPersistentAreaSaveDamageRollHole",
       "reason": "Flaming Sphere damage rolls depend on table-owned hazard positioning but the lifecycle obligation owns the table-triggered reducer flow, and damage application reuses shared HP damage plus the generic damage-disposition split.",
       "subject": "battle-hole-family"
     },
@@ -5756,8 +5931,8 @@
       "classification": "table-owned-fact",
       "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
       "followUpTaskIds": [],
-      "holeKind": "thaumaturgyActiveOneMinuteEffectCount",
-      "id": "BattleThaumaturgyActiveOneMinuteEffectCountHole",
+      "holeKind": "temporaryAbilityCheckRollModeActiveEffectCount",
+      "id": "BattleTemporaryAbilityCheckRollModeActiveEffectCountHole",
       "reason": "The count of separate active Thaumaturgy presentation effects is caller/table presentation state, not reducer-owned battle state.",
       "subject": "battle-hole-family"
     },
@@ -5768,8 +5943,8 @@
         "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "followUpTaskIds": [],
-      "holeKind": "commandOptionChoice",
-      "id": "BattleCommandOptionChoiceHole",
+      "holeKind": "compelledBehaviorOptionChoice",
+      "id": "BattleCompelledBehaviorOptionChoiceHole",
       "reason": "Command option choice selects RAW-fixed reducer consequences for Halt, Grovel, Drop, Approach, or Flee. The protocol ordering obligation owns its reducer-visible position before the Saving Throw outcome; route and object facts remain table-owned boundary facts.",
       "subject": "battle-hole-family"
     },
@@ -5777,8 +5952,8 @@
       "classification": "table-owned-fact",
       "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
       "followUpTaskIds": [],
-      "holeKind": "dancingLightsPlacement",
-      "id": "BattleDancingLightsPlacementHole",
+      "holeKind": "movableLightPlacement",
+      "id": "BattleMovableLightPlacementHole",
       "reason": "Light placement and repositioning are table spatial facts; the reducer can record caller-supplied light identities without pathfinding or geometry ownership.",
       "subject": "battle-hole-family"
     },
@@ -5807,7 +5982,7 @@
       ],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
-      "id": "BattleDragonsBreathSavingThrowOutcomeHole",
+      "id": "BattleGrantedAreaSaveDamageActionSavingThrowOutcomeHole",
       "reason": "Dragon's Breath exhale Saving Throw outcomes pair caller/table Cone membership facts with reducer-visible Dexterity save success or failure; table geometry stays boundary-owned while the granted-action obligation owns action spend and save-for-half damage resolution.",
       "subject": "battle-hole-family"
     },
@@ -5840,7 +6015,7 @@
       "coveredByObligationIds": ["BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
-      "id": "BattleSleepRepeatSavingThrowOutcomeHole",
+      "id": "BattleStagedConditionRepeatSavingThrowOutcomeHole",
       "reason": "Sleep repeat Saving Throw outcomes control pending repeat-save cleanup and the Unconscious transition for an active spell effect, covered by the Sleep repeat-save lifecycle obligation.",
       "subject": "battle-hole-family"
     },
@@ -5849,7 +6024,7 @@
       "coveredByObligationIds": ["BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
-      "id": "BattleHideousLaughterRepeatSavingThrowOutcomeHole",
+      "id": "BattleSaveGatedConditionRepeatSavingThrowOutcomeHole",
       "reason": "Hideous Laughter repeat Saving Throw outcomes depend on end-turn or damage triggers and control effect lifecycle cleanup through the save-gated condition lifecycle obligation.",
       "subject": "battle-hole-family"
     },
@@ -5858,7 +6033,7 @@
       "coveredByObligationIds": ["BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE"],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
-      "id": "BattleGreaseGroundHazardSavingThrowOutcomeHole",
+      "id": "BattlePersistentAreaSaveConditionSavingThrowOutcomeHole",
       "reason": "Grease area entry/end-turn subjects and area occupancy are table facts; the reducer-owned Saving Throw outcome and Prone consequences are covered by the Grease ground hazard lifecycle obligation while map geometry remains boundary evidence.",
       "subject": "battle-hole-family"
     },
@@ -5891,7 +6066,7 @@
       "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
       "followUpTaskIds": [],
       "holeKind": "movableZoneRamMovement",
-      "id": "BattleFlamingSphereRamMovementHole",
+      "id": "BattlePersistentAreaSaveDamageRamMovementHole",
       "reason": "Movable-zone ram distance and contact are caller/table spatial facts. Route, obstacle, unoccupied-space, and contact derivation stay outside reducer state; damage/save consequences are separate semantic rows.",
       "subject": "battle-hole-family"
     },
@@ -5912,7 +6087,7 @@
       ],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
-      "id": "BattleFlamingSphereSavingThrowOutcomeHole",
+      "id": "BattleCollisionRepositionPersistentAreaSaveDamageSavingThrowOutcomeHole",
       "reason": "Flaming Sphere Saving Throw outcomes determine full or half damage after a table-owned area/ram trigger; the lifecycle obligation owns the hazard-specific trigger and Bonus Action flow, generic save damage branching remains covered, and hazard placement facts remain boundary evidence.",
       "subject": "battle-hole-family"
     },
@@ -6043,8 +6218,8 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": ["BATTLE.SANCTUARY.TARGETING_INTERDICTION"],
       "followUpTaskIds": [],
-      "holeKind": "sanctuaryInterdictionOutcome",
-      "id": "BattleSanctuaryInterdictionOutcomeHole",
+      "holeKind": "targetingSaveInterdictionOutcome",
+      "id": "BattleTargetingSaveInterdictionOutcomeHole",
       "reason": "Sanctuary interdiction combines a Wisdom Saving Throw outcome with loss of targeting or replacement target choice; the Sanctuary obligation owns those reducer outcomes while original and replacement target legality facts remain caller/table inputs.",
       "subject": "battle-hole-family"
     },
@@ -6145,9 +6320,9 @@
       "coveredByObligationIds": [
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
       ],
-      "fillKind": "slowSomaticSpellFailureOutcome",
+      "fillKind": "turnConstraintSomaticSpellFailureOutcome",
       "followUpTaskIds": [],
-      "id": "slowSomaticSpellFailureOutcome",
+      "id": "turnConstraintSomaticSpellFailureOutcome",
       "reason": "Slow Somatic spell-failure fills decide the RAW 25 percent failure branch for affected targets: failed outcomes spend casting resources without applying the spell or starting Concentration, while nonfailed outcomes allow ordinary spell resolution to continue.",
       "subject": "battle-fill-kind"
     },
@@ -6198,9 +6373,9 @@
     {
       "classification": "table-owned-fact",
       "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
-      "fillKind": "thaumaturgyActiveOneMinuteEffectCount",
+      "fillKind": "temporaryAbilityCheckRollModeActiveEffectCount",
       "followUpTaskIds": [],
-      "id": "thaumaturgyActiveOneMinuteEffectCount",
+      "id": "temporaryAbilityCheckRollModeActiveEffectCount",
       "reason": "This fill supplies a table-owned presentation-effect count; the reducer does not model every Thaumaturgy minor wonder.",
       "subject": "battle-fill-kind"
     },
@@ -6210,18 +6385,18 @@
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
         "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
-      "fillKind": "commandOptionChoice",
+      "fillKind": "compelledBehaviorOptionChoice",
       "followUpTaskIds": [],
-      "id": "commandOptionChoice",
+      "id": "compelledBehaviorOptionChoice",
       "reason": "Command option fills select the RAW branch whose reducer-visible consequences are modeled. The protocol ordering obligation owns their reducer-visible ordering before the Saving Throw outcome; route and held-object details remain table facts.",
       "subject": "battle-fill-kind"
     },
     {
       "classification": "table-owned-fact",
       "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
-      "fillKind": "dancingLightsPlacement",
+      "fillKind": "movableLightPlacement",
       "followUpTaskIds": [],
-      "id": "dancingLightsPlacement",
+      "id": "movableLightPlacement",
       "reason": "Light positions, spacing, and movement are table spatial facts.",
       "subject": "battle-fill-kind"
     },
@@ -6378,9 +6553,9 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": ["BATTLE.SANCTUARY.TARGETING_INTERDICTION"],
-      "fillKind": "sanctuaryInterdictionOutcome",
+      "fillKind": "targetingSaveInterdictionOutcome",
       "followUpTaskIds": [],
-      "id": "sanctuaryInterdictionOutcome",
+      "id": "targetingSaveInterdictionOutcome",
       "reason": "Sanctuary fills select save success, lost targeting, or replacement target outcome.",
       "subject": "battle-fill-kind"
     },
@@ -6453,7 +6628,7 @@
       "coveredByObligationIds": ["BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
-      "id": "BattleMoonbeamSavingThrowOutcomeHole",
+      "id": "BattleDirectedRepositionPersistentAreaSaveDamageSavingThrowOutcomeHole",
       "reason": "Moonbeam Saving Throw outcomes determine full or half Radiant damage after table-owned area trigger evidence; generic save damage branching is covered and movable-zone trigger facts remain boundary evidence.",
       "subject": "battle-hole-family"
     },
@@ -6465,7 +6640,7 @@
       ],
       "followUpTaskIds": [],
       "holeKind": "rolledDice",
-      "id": "BattleMoonbeamDamageRollHole",
+      "id": "BattleDirectedRepositionPersistentAreaSaveDamageRollHole",
       "reason": "Moonbeam damage rolls depend on table-owned movable-zone trigger evidence but reuse shared HP damage and the generic damage-disposition split; area trigger facts remain boundary evidence.",
       "subject": "battle-hole-family"
     },
@@ -6504,7 +6679,7 @@
       ],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
-      "id": "BattleGustOfWindLineSavingThrowOutcomeHole",
+      "id": "BattleDirectionalPersistentAreaSavingThrowOutcomeHole",
       "reason": "Gust of Wind Line save outcomes consume table-supplied area membership and push facts while reducer-visible semantics validate failed-save 15-foot non-Opportunity-Attack push facts and end-turn save advancement through the supported spell profile.",
       "subject": "battle-hole-family"
     },
@@ -6515,8 +6690,8 @@
         "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE"
       ],
       "followUpTaskIds": [],
-      "holeKind": "gustOfWindLineDirectionChoice",
-      "id": "BattleGustOfWindLineDirectionChoiceHole",
+      "holeKind": "directionalPersistentAreaDirectionChoice",
+      "id": "BattleDirectionalPersistentAreaDirectionChoiceHole",
       "reason": "Gust of Wind Line direction is a table-supplied direction identity that changes the active Line effect and later movement/save fact validation without deriving map geometry in the reducer.",
       "subject": "battle-hole-family"
     },
@@ -6526,9 +6701,9 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
         "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE"
       ],
-      "fillKind": "gustOfWindLineDirectionChoice",
+      "fillKind": "directionalPersistentAreaDirectionChoice",
       "followUpTaskIds": [],
-      "id": "gustOfWindLineDirectionChoice",
+      "id": "directionalPersistentAreaDirectionChoice",
       "reason": "Gust of Wind Line direction-choice fills supply a typed table direction identity and update reducer-owned active Line direction state without introducing automatic geometry or pathfinding.",
       "subject": "battle-fill-kind"
     },
@@ -6568,9 +6743,9 @@
     {
       "classification": "table-owned-fact",
       "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
-      "fillKind": "findFamiliarConnection",
+      "fillKind": "spawnedCompanionConnection",
       "followUpTaskIds": [],
-      "id": "findFamiliarConnection",
+      "id": "spawnedCompanionConnection",
       "reason": "Find Familiar connection fills supply the table-verified within-100-feet fact for a present familiar. The reducer validates owner and familiar identity, then consumes the fact for shared senses or touch spell delivery without owning spatial derivation.",
       "subject": "battle-fill-kind"
     },
@@ -6604,8 +6779,8 @@
         "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE"
       ],
       "followUpTaskIds": [],
-      "holeKind": "levitateAltitudeChange",
-      "id": "BattleLevitateAltitudeChangeHole",
+      "holeKind": "controlledVerticalSuspensionAltitudeChange",
+      "id": "BattleControlledVerticalSuspensionAltitudeChangeHole",
       "reason": "Levitate altitude-control holes choose a reducer-visible up/down distance for an active levitated creature while the caller supplies the separate target-within-range spatial witness. The reducer owns Magic Action spending, the 20-foot control limit, and active altitude state; range, elevation geometry, fixed objects, and surfaces remain caller/table facts.",
       "subject": "battle-hole-family"
     },
@@ -6615,9 +6790,9 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
         "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE"
       ],
-      "fillKind": "levitateAltitudeChange",
+      "fillKind": "controlledVerticalSuspensionAltitudeChange",
       "followUpTaskIds": [],
-      "id": "levitateAltitudeChange",
+      "id": "controlledVerticalSuspensionAltitudeChange",
       "reason": "Levitate altitude-change fills supply the command direction and distance consumed by the supported creature spell profile. The fill changes active spell altitude state, while the target-within-range fact remains table-owned spatial evidence rather than derived map state.",
       "subject": "battle-fill-kind"
     },
@@ -6628,8 +6803,8 @@
         "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE"
       ],
       "followUpTaskIds": [],
-      "holeKind": "levitateInitialRise",
-      "id": "BattleLevitateInitialRiseHole",
+      "holeKind": "controlledVerticalSuspensionInitialRise",
+      "id": "BattleControlledVerticalSuspensionInitialRiseHole",
       "reason": "Levitate initial-rise holes choose the caller/table-selected vertical rise for the creature branch after a legal target and save outcome are known. The reducer owns the 0-to-20-foot spell limit and active altitude state, while ceiling, route, and table placement constraints remain caller/table facts.",
       "subject": "battle-hole-family"
     },
@@ -6639,9 +6814,9 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
         "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE"
       ],
-      "fillKind": "levitateInitialRise",
+      "fillKind": "controlledVerticalSuspensionInitialRise",
       "followUpTaskIds": [],
-      "id": "levitateInitialRise",
+      "id": "controlledVerticalSuspensionInitialRise",
       "reason": "Levitate initial-rise fills supply the selected starting altitude up to 20 feet for the supported creature spell profile. The fill initializes spell-owned levitated altitude without deriving table geometry, ceilings, or automatic pathfinding.",
       "subject": "battle-fill-kind"
     },
@@ -6652,8 +6827,8 @@
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
       ],
       "followUpTaskIds": [],
-      "holeKind": "magicWeaponTargetItem",
-      "id": "BattleMagicWeaponTargetItemHole",
+      "holeKind": "weaponAttackDamageEnhancementTargetItem",
+      "id": "BattleWeaponEnhancementTargetItemHole",
       "reason": "Magic Weapon target holder identity, item identity, and nonmagical-weapon witness are caller/table inventory facts. The reducer consumes the exact holder-plus-item identity for the spell-owned active effect and later attack/damage projection without deriving inventory, range, or item magicality from duplicated state.",
       "subject": "battle-hole-family"
     },
@@ -6663,9 +6838,9 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
       ],
-      "fillKind": "magicWeaponTargetItem",
+      "fillKind": "weaponAttackDamageEnhancementTargetItem",
       "followUpTaskIds": [],
-      "id": "magicWeaponTargetItem",
+      "id": "weaponAttackDamageEnhancementTargetItem",
       "reason": "Magic Weapon target-item fills supply the table-verified exact holder-plus-item identity for a nonmagical weapon; the weapon-hosted spell obligation owns the item-attached effect, same-caster replacement, other-caster rejection, and exact holder-plus-item attack/damage projection.",
       "subject": "battle-fill-kind"
     },
@@ -6677,7 +6852,7 @@
       ],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
-      "id": "BattleWebRestraintSavingThrowOutcomeHole",
+      "id": "BattlePersistentAreaSaveConditionEscapeSavingThrowOutcomeHole",
       "reason": "Web restraint Saving Throw outcomes consume table-triggered entry or start-turn area membership witnesses and drive reducer-owned spell-condition application plus first-entry ledger updates. Automatic geometry and area membership derivation remain table-owned boundary facts.",
       "subject": "battle-hole-family"
     },
@@ -6727,7 +6902,7 @@
       ],
       "followUpTaskIds": [],
       "holeKind": "rolledDice",
-      "id": "BattleSpikeGrowthMovementDamageRollHole",
+      "id": "BattleAreaMovementDistanceDamageRollHole",
       "reason": "Spike Growth movement damage consumes caller-supplied movement-distance facts, scales 2d4 Piercing per 5 feet traveled into or within the area, and reuses shared HP damage and the generic damage-disposition split; automatic geometry and pathfinding remain boundary evidence.",
       "subject": "battle-hole-family"
     },
@@ -6738,8 +6913,8 @@
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY"
       ],
       "followUpTaskIds": [],
-      "holeKind": "spiritualWeaponForcePosition",
-      "id": "BattleSpiritualWeaponForcePositionHole",
+      "holeKind": "spatialMeleeSpellAttackProxyPosition",
+      "id": "BattleSpatialMeleeSpellAttackProxyPositionHole",
       "reason": "Spiritual Weapon force placement and later force movement are caller/table spatial facts. The reducer consumes typed placement and movement-distance witnesses without deriving map geometry, pathfinding, or force-space identity from duplicated runtime state.",
       "subject": "battle-hole-family"
     },
@@ -6749,9 +6924,9 @@
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY"
       ],
-      "fillKind": "spiritualWeaponForcePosition",
+      "fillKind": "spatialMeleeSpellAttackProxyPosition",
       "followUpTaskIds": [],
-      "id": "spiritualWeaponForcePosition",
+      "id": "spatialMeleeSpellAttackProxyPosition",
       "reason": "Spiritual Weapon force-position fills supply the table-verified cast position or later reposition for the spell-owned attack proxy; target adjacency remains a separate table spatial fact consumed by the spell target fill.",
       "subject": "battle-fill-kind"
     },
@@ -7483,8 +7658,7 @@
     },
     {
       "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
-      "profileId": "spell.reaction-shield",
-      "semanticOwnerPolicy": "profile-local-semantic-core"
+      "profileId": "spell.reaction-shield"
     },
     {
       "obligationIds": [
@@ -7748,7 +7922,7 @@
     },
     {
       "obligationIds": ["BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"],
-      "profileId": "spell.find-familiar-lifecycle"
+      "profileId": "spell.companion-lifecycle"
     },
     {
       "obligationIds": ["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"],
@@ -7976,17 +8150,17 @@
     },
     {
       "obligationIds": ["BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"],
-      "profileId": "spell.invocation-antimagic-field-ongoing-spell-suppression"
+      "profileId": "spell.invocation-magic-suppression-emanation"
     },
     {
       "obligationIds": ["BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"],
-      "profileId": "spell.invocation-antimagic-field-action-interdiction"
+      "profileId": "spell.invocation-magic-suppression-action-interdiction"
     },
     {
       "obligationIds": [
         "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION"
       ],
-      "profileId": "spell.invocation-antimagic-field-magical-effect-interdiction"
+      "profileId": "spell.invocation-magic-suppression-magical-effect-interdiction"
     },
     {
       "obligationIds": ["BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"],
@@ -7999,8 +8173,7 @@
     },
     {
       "obligationIds": ["BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY"],
-      "profileId": "spell.invocation-spiritual-weapon-attack-proxy",
-      "semanticOwnerPolicy": "profile-local-semantic-core"
+      "profileId": "spell.invocation-spiritual-weapon-attack-proxy"
     },
     {
       "obligationIds": ["BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL"],
@@ -8124,8 +8297,10 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt is the focused QNT owner carrying reusable reducer-owned area and emanation trigger cadence semantics while keeping area membership and geometry as table-supplied witness facts.",
       "obligationIds": [
+        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
         "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
@@ -8134,15 +8309,27 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt is the focused QNT owner carrying Antimagic Field ongoing-spell suppression state and suppressed-reference projection semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for the identity-free magic-suppression semantic core.",
       "obligationIds": ["BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"],
       "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused executable proof for composite enhancement aftermath and independent-source preservation.",
+      "obligationIds": ["BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Identity-free source-owned Incapacitated and Speed 0 aftermath lifetime and target-turn cleanup semantics.",
+      "obligationIds": ["BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt is the focused Antimagic Field action-interdiction literal projection witness for aura-membership spellcasting and Magic Action blocking. It is MBT-only parity evidence, not qnt-proof verification evidence.",
+      "evidence": "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt is the focused Antimagic Field action-interdiction literal projection witness for aura-membership spellcasting and Magic Action blocking. It is MBT-only parity evidence, not qnt-proof verification evidence.",
       "obligationIds": ["BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION"],
-      "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt",
       "role": "mbt-fixture"
     },
     {
@@ -8152,11 +8339,11 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt is the focused Antimagic Field magical-effect interdiction literal projection witness for target and affected-creature blocking through shared aura-membership witnesses. It is MBT-only parity evidence, not qnt-proof verification evidence.",
+      "evidence": "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt is the focused Antimagic Field magical-effect interdiction literal projection witness for target and affected-creature blocking through shared aura-membership witnesses. It is MBT-only parity evidence, not qnt-proof verification evidence.",
       "obligationIds": [
         "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION"
       ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-field-magical-effect-interdiction.mbt.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt",
       "role": "mbt-fixture"
     },
     {
@@ -8188,10 +8375,10 @@
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt is the focused QNT owner carrying Blur self Spell Effect, Blindsight/Truesight bypass, attack-roll mode projection, Concentration, and cleanup semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-concentration.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
@@ -8265,16 +8452,16 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt is the focused QNT owner carrying Flaming Sphere hazard and ram reducer semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-feather-fall.qnt is the focused QNT owner carrying Feather Fall Reaction mitigation, descent-rate projection, and landing cleanup semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Focused Fighter Rage and Reckless Attack end-turn, start-turn, and early-ending lifecycle owner.",
@@ -8304,10 +8491,10 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-command-next-turn.qnt owns Command option application and next-turn procedure semantics, including delegated movement and reaction continuations.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"],
       "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt is the focused Haste lethargy literal projection witness for Concentration-loss promotion, target-owned Concentration break from promoted Incapacitated, duration-expiry promotion, recast replacement ordering, and target-turn cleanup preserving unrelated Incapacitated. It is MBT-only parity evidence, not qnt-proof verification evidence.",
@@ -8316,10 +8503,10 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-hit-points.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
@@ -8332,10 +8519,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-jump-movement.qnt is the focused QNT owner carrying Jump target admission, per-turn movement replacement, landing witness, and cleanup semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-jump-movement.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-light.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
@@ -8377,10 +8564,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-levitate-creature.qnt is the covered obligation QNT owner carrying executable Levitate creature-branch altitude and lifecycle semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-marked-riders.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
@@ -8435,10 +8622,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-mirror-image.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"],
       "ownerPath": "packages/battle-runtime/battle-runtime-mirror-image.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-monk-focus.qnt carries focused Monk's Focus battle-option semantics for Focus Point capacity, Flurry of Blows Bonus Action strike grants, Patient Defense Disengage/Dodge modes, Step of the Wind Dash/Disengage modes, and turn-scoped jump-distance multiplier projection.",
@@ -8477,10 +8664,10 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt is the focused QNT owner carrying Moonbeam movable Cylinder reducer semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-movement.qnt is the focused QNT owner carrying Expeditious Retreat Dash, Dissonant Whispers forced Reaction movement, and Unit feature Bonus Action Dash Temporary Hit Points reducer semantics.",
@@ -8530,34 +8717,34 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt owns the typed Shield Reaction offer, decline, resource admission, spend, and frame-close decision protocol.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
       "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt owns Shield continuation admission and resume for direct Ray of Frost, Poison Spray, and Chill Touch attack frames.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
       "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt owns Shield continuation admission and resume for Produce Flame hurl and Flame Blade attack frames, including the consumed-held-light boundary.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
       "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt owns Shield continuation admission and resume for the Ice Knife attack-and-burst frame.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
       "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt owns Shield continuation admission and resume for the True Strike weapon attack frame.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt owns attack-damage continuation and Concentration interruption resolution semantics.",
@@ -8569,13 +8756,13 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt owns Counterspell spell-cast Reaction resolution and direct suspended spell-attack continuation semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": [
         "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
         "BATTLE.SPELL.REACTION_CASTING_TIME"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt owns non-SpellCast Reaction decisions and suspended procedure continuation semantics; Hellish Rebuke after-damage Reaction admission and resolution belong to its focused owner.",
@@ -8587,31 +8774,31 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt owns Counterspell decision, slot finalization, and continuation handoff semantics independent of the triggering spell family.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": [
         "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
         "BATTLE.SPELL.REACTION_CASTING_TIME"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt owns Counterspell resume dispatch for suspended weapon-hosted spell continuations.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": [
         "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
         "BATTLE.SPELL.REACTION_CASTING_TIME"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt owns Counterspell resume dispatch for suspended save-gated spell continuations.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": [
         "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
         "BATTLE.SPELL.REACTION_CASTING_TIME"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-replay-equivalence.qnt is the covered obligation QNT owner carrying replay-from-root projection computation and equivalence semantics over recorded subject and fill protocol vocabulary.",
@@ -8669,16 +8856,16 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-sanctuary.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SANCTUARY.TARGETING_INTERDICTION"],
       "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-see-invisibility.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"],
       "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-self-teleport.qnt is the focused QNT owner carrying self-teleport destination witness, resource spend, and no-Movement/no-Opportunity-Attack projection semantics.",
@@ -8699,25 +8886,69 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "Focused executable proof of generic suppression and interdiction boundaries.",
+      "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION",
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION",
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Identity-free ongoing-effect suppression, action and magical-effect interdiction, and duration-consumption semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION",
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION",
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused executable proof for save-gated control projection, damage cleanup, and exact physical-shake Action eligibility including other-creature, action-resource, actor-eligibility, and reachability witnesses.",
+      "obligationIds": ["BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Identity-free save-gated control projection plus damage or exact physically reachable other-creature Action escape semantics.",
+      "obligationIds": ["BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused executable boundary proof for the generic turn-constraint bundle.",
+      "obligationIds": ["BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Identity-free save-gated turn-cost, attack-cap, somatic-failure, and repeat-save escape semantics.",
+      "obligationIds": ["BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Named SRD instantiation evidence for generic save-gated condition and repeat-save semantic cores.",
       "obligationIds": [
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "Executable Spiritual Weapon cast, force-position, attack-proxy, repeat-movement, damage, and cleanup semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY"],
       "ownerPath": "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"],
       "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-timed-effects.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
@@ -8784,13 +9015,13 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-dragons-breath.qnt carries Dragon's Breath initial target-attached effect and target-granted Magic action reducer semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": [
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
         "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt carries focused Druid Wild Shape form lifecycle, projection, Temporary Hit Points, spellcasting gate, and reversion semantics without run-block coupling.",
@@ -8799,10 +9030,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-find-familiar.qnt carries focused Find Familiar companion lifecycle, replacement, dismissal, telepathy, shared senses, touch delivery, and Pact reaction attack semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt is a thin reducer-spine composition fixture for battle start, act discovery, subject hole/fill resolution, turn advancement, and reducer-owned resource/vital projections. Focused QNT owners remain authoritative for detailed spell, attack, turn-boundary, and interrupt semantics.",
@@ -9267,10 +9498,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt is the covered obligation QNT owner carrying QCORE10 Sleep repeat-save lifecycle semantics without importing authored Spell Definition records.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt is the covered obligation QNT owner carrying reusable Spell Slot expenditure semantics for QCORE10 spell procedure profiles.",
@@ -9488,10 +9719,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt is the focused semantic core for Warding Bond target Resistance, same-amount source damage, and source-zero/separation/recast cleanup.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"],
       "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-direct-condition-removal-tests.qnt is assessed generator-readiness proofOnly evidence for direct condition removal replay coverage. It is classified as proof-only because profile coverage uses it as qnt-proof verification evidence.",
@@ -9734,10 +9965,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-command-ordering.qnt carries the reusable Command hole-frontier order over protocol vocabulary variants: target list and Command option choice, Saving Throw outcome, failed-save next-turn consequence stages, Movement fill admission for Approach/Flee, table-fact frontier marking for Drop held-object release, and the reducer-backed distinction between earliest-needed-frontier requests and the explicit partial-Flee Movement rejection.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"],
       "ownerPath": "packages/battle-runtime/battle-runtime-command-ordering.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.qnt carries reusable Stat Block action-control hole-frontier order over protocol vocabulary variants: action or Multiattack control before constituent attack target choice, Stat Block Attack Roll before rolled damage dice, static-damage resolution without invented dice holes, and Stat Block Recharge Roll timing before recharge-gated action availability is restored.",
@@ -9746,10 +9977,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt owns Sanctuary spell activation and target ward application semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SANCTUARY.TARGETING_INTERDICTION"],
       "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-hunters-prey.qnt carries Hunter's Prey option admission and battle hit-rider semantics for the broad Unit feature procedure obligation.",
@@ -9758,10 +9989,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt carries the focused Mirror Image hit-interception semantic slice used by the focused witness.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"],
       "ownerPath": "packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-prone-movement.qnt is QNT proof support for Hideous Laughter Prone movement interaction while existing save-gated condition and movement owners remain the semantic cores.",
@@ -9982,9 +10213,9 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt carries identity-free Haste positive-effect semantics for doubled Speed, +2 Armor Class, Dexterity Saving Throw Advantage, and the restricted additional action with Attack capped to one attack.",
+      "evidence": "Identity-free composite target buff and restricted additional-action semantics.",
       "obligationIds": ["BATTLE.SPELL.HASTE_POSITIVE_EFFECTS"],
-      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -10321,10 +10552,10 @@
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-metamagic-distant.qnt is a focused QNT owner extracted from a former catch-all production closure.",
@@ -10453,10 +10684,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt is a focused QNT owner extracted from a former catch-all production closure.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt is a focused QNT owner extracted from a former catch-all production closure.",
@@ -10780,12 +11011,9 @@
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt owns Fog Cloud and magical Darkness BattleState integration semantics.",
-      "obligationIds": [
-        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
-        "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt",
+      "evidence": "Identity-free point-origin magical-darkness BattleState projection and lifecycle semantic core.",
+      "obligationIds": ["BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-magical-darkness-point-origin.qnt",
       "role": "semantic-core"
     },
     {
@@ -10795,10 +11023,10 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Focused Spike Growth BattleState movement-cost, damage, and Concentration lifecycle owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"],
       "ownerPath": "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Focused run-test owner for Spike Growth BattleState semantics.",
@@ -10807,10 +11035,10 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Focused Sleet Storm BattleState save, terrain, obscurement, and Concentration lifecycle owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Focused run-test owner for Sleet Storm BattleState semantics and cross-effect Concentration teardown.",
@@ -10819,16 +11047,16 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Focused Command Grovel, Drop, and Halt next-turn procedure owner.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"],
       "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "Focused Command Approach and Flee next-turn movement procedure owner.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": ["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"],
       "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Focused run-test proof owner for Command Approach next-turn movement and early turn termination.",
@@ -10843,16 +11071,16 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Focused Flaming Sphere cast-state and Concentration lifecycle owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "Focused Flaming Sphere fire-damage and half-save arithmetic owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Focused run-test proof owner for Flaming Sphere cast, reposition, and Concentration lifecycle semantics.",
@@ -10867,16 +11095,16 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Focused Flaming Sphere ram targeting, save, and damage integration owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "Focused Flaming Sphere bonus-action reposition owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Focused proof owner for Flaming Sphere end-within-5-feet damage before delegated End Turn advancement.",
@@ -10885,22 +11113,22 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Focused Flaming Sphere Dexterity-save damage application owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "Focused Flaming Sphere slot, duration, range, and area vocabulary owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "Focused Flaming Sphere end-within-five-feet damage plus canonical End Turn composition owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Focused run-test proof owner for Grease entry, turn-start save, prone, and terrain lifecycle semantics.",
@@ -10909,28 +11137,28 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Focused Grease BattleState area-entry, turn-start save, prone, and terrain lifecycle owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "Focused Moonbeam cast-state and Concentration lifecycle owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "Canonical Moonbeam duration, Cylinder dimensions, reposition distance, slot scaling, and half-save damage facts owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "Focused Moonbeam Radiant damage adjustment and Hit Point application owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Focused run-test proof owner for Moonbeam cast, reposition, and Concentration lifecycle semantics.",
@@ -10939,10 +11167,10 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Focused Moonbeam action-based area reposition owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Focused run-test proof owner for Moonbeam save, damage, and once-per-turn gating.",
@@ -10951,16 +11179,16 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Focused Moonbeam Constitution-save damage and once-per-turn integration owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "Focused composition owner for Moonbeam save damage followed by its Shape-Shift rider.",
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Focused run-test proof owner for Moonbeam Shape-Shift rider semantics.",
@@ -10969,22 +11197,22 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Focused Moonbeam Shape-Shift revert and retained-damage result owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "Focused Moonbeam BattleState active-area and once-per-turn save state owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-state.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
-      "evidence": "Focused Moonbeam once-per-turn reset plus canonical End Turn composition owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Focused proof owner for Moonbeam once-per-turn save reset during delegated End Turn advancement.",
@@ -10993,10 +11221,10 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Focused Web BattleState area-entry, restraint, recurring save, and Concentration lifecycle owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
       "obligationIds": ["BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Focused run-test proof owner for Web cast, area-entry, restraint, and Concentration lifecycle semantics.",
@@ -11065,13 +11293,13 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt owns Hellish Rebuke damager/damaged direction, after-damage Reaction admission, window take/decline, slot-level save damage, frame close, and resume semantics.",
+      "evidence": "Named SRD instantiation and BattleState projection evidence for its identity-free semantic core.",
       "obligationIds": [
         "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
         "BATTLE.SPELL.REACTION_CASTING_TIME"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "evidence": "Owns identity-free ordinary route traversal and extra-cost semantics for living creature versus corpse occupancy, including ally, Tiny, Incapacitated, and symmetric two-or-more-size permissions.",
@@ -11177,6 +11405,194 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity-tests.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-insect-plague-area-hazard.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
+      "obligationIds": ["BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-insect-plague-area-hazard.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused run-test proof owner for Insect Plague BattleState area-hazard semantics.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-insect-plague-area-hazard-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.qnt is an SRD-named BattleState instantiation and projection proof for the identity-free persistent-area and trigger semantic cores.",
+      "obligationIds": ["BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused run-test proof owner for Cloudkill BattleState area-hazard semantics.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-cloudkill-area-hazard-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Identity-free persistent-area lifecycle, separate active-effect/projected-zone identity, save, damage, movement, condition, and distance-scaling semantics shared by spatial SRD instantiations.",
+      "obligationIds": [
+        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
+        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
+        "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
+        "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable focused proof examples for generic persistent-area identity, save, damage, movement, and scaling semantics.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Stateful inductive proof model whose transitions preserve coherent active-effect and projected-zone area identities.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Identity-free attack-roll defense semantic core for perception-gated disadvantage.",
+      "obligationIds": ["BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-perception-gated-attack-roll-defense.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free reaction mitigation semantic core for falling creatures.",
+      "obligationIds": ["BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-falling-creature-mitigation-reaction.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free fixed-cost movement replacement semantic core.",
+      "obligationIds": ["BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-fixed-cost-movement-replacement.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free save-gated targeting interdiction semantic core.",
+      "obligationIds": ["BATTLE.SANCTUARY.TARGETING_INTERDICTION"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-targeting-save-interdiction.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free temporary ability-check roll-mode semantic core.",
+      "obligationIds": ["BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free linked defense and damage-sharing semantic core.",
+      "obligationIds": ["BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-linked-defense-damage-share.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free simultaneous multi-packet damage arithmetic semantic core.",
+      "obligationIds": ["BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free observer sight-grant semantic core.",
+      "obligationIds": ["BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-observer-sight-grant.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free save-gated condition-immunity semantic core.",
+      "obligationIds": ["BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free compelled next-turn behavior and hole-ordering semantic core.",
+      "obligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free spell-cast interruption Reaction and continuation semantic core.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-interruption-reaction.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free triggered armor-defense Reaction, Armor Class bonus, one-round duration, and automatic force-packet prevention semantic core.",
+      "obligationIds": [
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+        "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free granted area save-damage semantic core.",
+      "obligationIds": [
+        "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+        "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-granted-area-save-damage.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free controlled vertical-suspension semantic core.",
+      "obligationIds": ["BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-controlled-vertical-suspension.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free duplicate hit-interception semantic core.",
+      "obligationIds": ["BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-duplicate-hit-interception.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free positioned melee spell-attack proxy semantic core.",
+      "obligationIds": ["BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spatial-melee-spell-attack-proxy.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free after-damage save Reaction semantic core.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-after-damage-save-reaction.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free repeated-save and early-ending condition-control semantic core.",
+      "obligationIds": ["BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free spawned-companion lifecycle and capability semantic core.",
+      "obligationIds": ["BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spawned-companion-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Identity-free staged save-condition lifecycle semantic core.",
+      "obligationIds": ["BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt",
+      "role": "semantic-core"
     }
   ],
   "qntRegistry": [
@@ -11197,8 +11613,13 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-after-damage-save-reaction.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt",
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -11233,7 +11654,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -11257,27 +11678,42 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-combat-holes.qnt",
       "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-command-ordering.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt",
       "role": "semantic-core"
     },
     {
@@ -11293,8 +11729,13 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-controlled-vertical-suspension.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -11334,16 +11775,21 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-druid-wild-shape.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-duplicate-hit-interception.qnt",
       "role": "semantic-core"
     },
     {
@@ -11358,8 +11804,13 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-falling-creature-mitigation-reaction.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
+      "role": "proof-only"
     },
     {
       "category": "proof-only-example",
@@ -11400,47 +11851,52 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-fixed-cost-movement-replacement.qnt",
       "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -11449,18 +11905,23 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-granted-area-save-damage.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -11494,6 +11955,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-insect-plague-area-hazard.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-interrupt-bridge.qnt",
       "role": "bridge"
     },
@@ -11505,7 +11971,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-jump-movement.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -11515,7 +11981,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -11525,7 +11991,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -11544,19 +12010,34 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-linked-defense-damage-share.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt",
       "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "category": "proof-only-example",
       "classification": "exempt",
       "evidence": "Literal Magic Missile fixture facts shared by the focused witness and the reducer-route connector; the active route contract is owned by battle-runtime-magic-missile.route.mbt.qnt.",
       "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-facts.qnt"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-magical-darkness-point-origin.qnt",
+      "role": "semantic-core"
     },
     {
       "category": "leaf-type-vocabulary",
@@ -11673,12 +12154,12 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-mirror-image-hit-interception.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-mirror-image.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "category": "leaf-type-vocabulary",
@@ -11700,52 +12181,52 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "category": "proof-only-example",
@@ -11788,7 +12269,7 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-observer-sight-grant.qnt",
       "role": "semantic-core"
     },
     {
@@ -11820,6 +12301,21 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-perception-gated-attack-roll-defense.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt",
       "role": "proof-only"
     },
     {
@@ -11886,6 +12382,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-replay-equivalence.qnt",
       "role": "semantic-core"
     },
@@ -11913,12 +12414,12 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -11933,7 +12434,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -11972,8 +12473,18 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -11998,7 +12509,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -12008,6 +12519,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
       "role": "semantic-core"
     },
     {
@@ -12024,7 +12540,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-see-invisibility.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -12044,17 +12560,22 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
       "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -12076,6 +12597,16 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
       "role": "bridge"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spatial-melee-spell-attack-proxy.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spawned-companion-lifecycle.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -12120,8 +12651,13 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-interruption-reaction.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -12176,12 +12712,12 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -12211,8 +12747,18 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-targeting-save-interdiction.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -12247,7 +12793,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -12267,7 +12813,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -12287,12 +12833,12 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "category": "witness-protocol-leaf",
@@ -12418,6 +12964,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/attack-roll-damage-dice-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -12604,11 +13155,6 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
-      "role": "semantic-core"
-    },
-    {
-      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt",
       "role": "semantic-core"
     },
@@ -12695,7 +13241,7 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
-      "role": "semantic-core"
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -12710,6 +13256,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-slot-transitions.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -12745,6 +13296,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
       "role": "semantic-core"
     },
     {
@@ -13725,29 +14281,87 @@
       ],
       "obligationId": "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard-tests.qnt"
+        "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt",
+        "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-        "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-insect-plague-area-hazard.qnt",
+        "packages/battle-runtime/battle-runtime-insect-plague-area-hazard-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
-      "generatorSubset": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "list",
+        "set",
+        "map",
+        "filter",
+        "fold",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
       "obligationId": "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
-      "proofOnly": [],
-      "semanticCore": [],
-      "status": "not-assessed"
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.qnt",
+        "packages/battle-runtime/battle-runtime-cloudkill-area-hazard-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+      ],
+      "status": "generation-subset-clean"
     },
     {
       "blockedBy": [],
@@ -13808,16 +14422,17 @@
       "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-inductive.qnt",
-        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-examples.qnt"
-      ],
-      "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
-        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration-examples.qnt",
         "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
         "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-opportunity-attack.qnt"
       ],
       "status": "generation-subset-clean"
@@ -13911,9 +14526,11 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
-      "proofOnly": [],
-      "semanticCore": [
+      "proofOnly": [
         "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-spatial-melee-spell-attack-proxy.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14127,14 +14744,18 @@
       ],
       "obligationId": "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+        "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+        "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt"
       ],
       "semanticCore": [
+        "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
+        "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-facts.qnt",
         "packages/battle-runtime/battle-runtime-save-condition-target-list.qnt",
         "packages/battle-runtime/battle-runtime-save-condition-target-list-resolution.qnt",
         "packages/battle-runtime/battle-runtime-save-condition-blindness.qnt",
-        "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
         "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
         "packages/battle-runtime/battle-runtime-save-condition-entangle.qnt",
         "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
@@ -14204,9 +14825,11 @@
         "set-operators"
       ],
       "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
-      "proofOnly": [],
-      "semanticCore": [
+      "proofOnly": [
         "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-observer-sight-grant.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14300,9 +14923,9 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE",
-      "proofOnly": [],
+      "proofOnly": ["packages/battle-runtime/battle-runtime-find-familiar.qnt"],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-find-familiar.qnt"
+        "packages/battle-runtime/battle-runtime-spawned-companion-lifecycle.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14333,11 +14956,15 @@
       ],
       "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
       "proofOnly": [
+        "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt",
         "packages/battle-runtime/battle-runtime-web-restraint-lifecycle-tests.qnt",
-        "packages/battle-runtime/battle-runtime-web-restraint-recurring-save-tests.qnt"
+        "packages/battle-runtime/battle-runtime-web-restraint-recurring-save-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14416,10 +15043,13 @@
       ],
       "obligationId": "BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-gust-of-wind-tests.qnt"
+        "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
+        "packages/battle-runtime/battle-runtime-gust-of-wind-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-gust-of-wind.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14482,10 +15112,11 @@
       ],
       "obligationId": "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-levitate-creature-tests.qnt"
+        "packages/battle-runtime/battle-runtime-levitate-creature-tests.qnt",
+        "packages/battle-runtime/battle-runtime-levitate-creature.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
+        "packages/battle-runtime/battle-runtime-controlled-vertical-suspension.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt"
       ],
       "status": "generation-subset-clean"
@@ -14854,9 +15485,12 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION",
-      "proofOnly": [],
-      "semanticCore": [
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt",
         "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-magic-suppression.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14884,10 +15518,12 @@
         "set-operators"
       ],
       "obligationId": "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
-      "proofOnly": [],
-      "semanticCore": [
+      "proofOnly": [
         "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14918,11 +15554,14 @@
       ],
       "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt"
+        "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
+        "packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-        "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14953,10 +15592,12 @@
       ],
       "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt"
+        "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14990,7 +15631,7 @@
         "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+        "packages/battle-runtime/battle-runtime-magical-darkness-point-origin.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15049,11 +15690,6 @@
       ],
       "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-flaming-sphere-lifecycle-tests.qnt",
-        "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end-tests.qnt",
-        "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage-tests.qnt"
-      ],
-      "semanticCore": [
         "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
         "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
         "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
@@ -15061,7 +15697,16 @@
         "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
         "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
         "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
-        "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt"
+        "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-lifecycle-tests.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end-tests.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15222,9 +15867,9 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
-      "proofOnly": [],
+      "proofOnly": ["packages/battle-runtime/battle-runtime-feather-fall.qnt"],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-feather-fall.qnt"
+        "packages/battle-runtime/battle-runtime-falling-creature-mitigation-reaction.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15251,9 +15896,9 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
-      "proofOnly": [],
+      "proofOnly": ["packages/battle-runtime/battle-runtime-jump-movement.qnt"],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-jump-movement.qnt"
+        "packages/battle-runtime/battle-runtime-fixed-cost-movement-replacement.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15327,9 +15972,11 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
-      "proofOnly": [],
-      "semanticCore": [
+      "proofOnly": [
         "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-perception-gated-attack-roll-defense.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15353,15 +16000,8 @@
       ],
       "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-moonbeam-lifecycle-tests.qnt",
-        "packages/battle-runtime/battle-runtime-moonbeam-save-damage-tests.qnt",
-        "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider-tests.qnt",
-        "packages/battle-runtime/battle-runtime-moonbeam-turn-end-tests.qnt"
-      ],
-      "semanticCore": [
         "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
@@ -15369,7 +16009,17 @@
         "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
-        "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt"
+        "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-lifecycle-tests.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-save-damage-tests.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider-tests.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-turn-end-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15420,10 +16070,10 @@
         "set-operators"
       ],
       "obligationId": "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
-      "proofOnly": [],
+      "proofOnly": ["packages/battle-runtime/battle-runtime-thaumaturgy.qnt"],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
-        "packages/battle-runtime/battle-runtime-thaumaturgy.qnt"
+        "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+        "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15456,6 +16106,7 @@
       "obligationId": "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
       "proofOnly": [],
       "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
         "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
@@ -15613,16 +16264,19 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
-      "proofOnly": [],
-      "semanticCore": [
-        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
-        "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
-        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt",
+      "proofOnly": [
         "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
         "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
         "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-spell-cast-interruption-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-after-damage-save-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+        "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15799,10 +16453,6 @@
     {
       "blockedBy": [],
       "generatorSubset": [
-        "import",
-        "variant",
-        "record",
-        "record-update",
         "pure-def",
         "constant-def",
         "int",
@@ -15810,18 +16460,12 @@
         "if-expression",
         "arithmetic",
         "comparison",
-        "boolean-connective",
-        "pattern-match",
-        "set",
-        "map",
-        "filter",
-        "fold",
-        "exists"
+        "boolean-connective"
       ],
       "obligationId": "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
-      "proofOnly": [],
+      "proofOnly": ["packages/battle-runtime/battle-runtime-mirror-image.qnt"],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-mirror-image.qnt"
+        "packages/battle-runtime/battle-runtime-duplicate-hit-interception.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15841,9 +16485,11 @@
         "boolean-connective"
       ],
       "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
-      "proofOnly": [],
-      "semanticCore": [
+      "proofOnly": [
         "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-linked-defense-damage-share.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15870,11 +16516,13 @@
         "set-operators"
       ],
       "obligationId": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
-      "proofOnly": [],
-      "semanticCore": [
+      "proofOnly": [
         "packages/battle-runtime/battle-runtime-sanctuary.qnt",
-        "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt",
         "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-targeting-save-interdiction.qnt",
+        "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15962,12 +16610,13 @@
       "proofOnly": [
         "packages/battle-runtime/battle-runtime-command-control-next-turn-tests.qnt",
         "packages/battle-runtime/battle-runtime-command-approach-next-turn-tests.qnt",
-        "packages/battle-runtime/battle-runtime-command-flee-next-turn-tests.qnt"
-      ],
-      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-command-flee-next-turn-tests.qnt",
         "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
         "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
         "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -16101,8 +16750,11 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt"
+      ],
       "semanticCore": [
+        "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-direct-damage-projection-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt",
@@ -16111,7 +16763,6 @@
         "packages/shared-algebras/proofs/rule-core/spell-attack-damage-projection-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
-        "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
         "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt"
       ],
@@ -16255,7 +16906,8 @@
       ],
       "obligationId": "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
       "proofOnly": [
-        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt"
+        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+        "packages/character-creation-runtime/character-creation-runtime-slice-tests.qnt"
       ],
       "semanticCore": [
         "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
@@ -16641,9 +17293,11 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
-      "proofOnly": [],
-      "semanticCore": [
+      "proofOnly": [
         "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-granted-area-save-damage.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -16670,9 +17324,11 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
-      "proofOnly": [],
-      "semanticCore": [
+      "proofOnly": [
         "packages/battle-runtime/battle-runtime-dragons-breath.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-granted-area-save-damage.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -16774,14 +17430,16 @@
         "set"
       ],
       "obligationId": "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-command-ordering.qnt"
+      ],
       "semanticCore": [
+        "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt",
         "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-replay.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt",
-        "packages/battle-runtime/battle-runtime-command-ordering.qnt",
         "packages/battle-runtime/battle-runtime-stat-block-action-ordering.qnt"
       ],
       "status": "generation-subset-clean"
@@ -16816,17 +17474,20 @@
         "size"
       ],
       "obligationId": "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
-      "proofOnly": [],
-      "semanticCore": [
-        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
-        "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
-        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+      "proofOnly": [
         "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
         "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
         "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-spell-cast-interruption-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-after-damage-save-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+        "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
         "packages/battle-runtime/battle-runtime-replay-equivalence.qnt"
       ],
       "status": "generation-subset-clean"
@@ -16946,7 +17607,91 @@
       "obligationId": "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
       "proofOnly": [],
       "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+        "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match"
+      ],
+      "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective"
+      ],
+      "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-magic-suppression.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective"
+      ],
+      "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-magic-suppression.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match"
+      ],
+      "obligationId": "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -16996,10 +17741,13 @@
       ],
       "obligationId": "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard-tests.qnt"
+        "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt",
+        "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -17453,17 +18201,14 @@
     "character-sheet.wall-of-stone-session-invocation",
     "character-sheet.weapon-mastery-class-level-reselection",
     "character-sheet.weapon-mastery-reselection",
+    "spell.companion-lifecycle",
     "spell.creature-type-protection-and-charm",
-    "spell.find-familiar-lifecycle",
     "spell.hit-point-restoration",
     "spell.invocation-acid-arrow-attack-timing",
     "spell.invocation-after-hit-damage",
     "spell.invocation-after-hit-damage-illumination",
     "spell.invocation-after-hit-restraint-turn-start-damage",
     "spell.invocation-after-hit-timed-damage-save",
-    "spell.invocation-antimagic-field-action-interdiction",
-    "spell.invocation-antimagic-field-magical-effect-interdiction",
-    "spell.invocation-antimagic-field-ongoing-spell-suppression",
     "spell.invocation-attack-roll-advantage-save",
     "spell.invocation-blur-attack-roll-defense",
     "spell.invocation-chained-attack-damage",
@@ -17504,6 +18249,9 @@
     "spell.invocation-insect-plague-area-hazard",
     "spell.invocation-jump-movement-replacement",
     "spell.invocation-levitated-creature",
+    "spell.invocation-magic-suppression-action-interdiction",
+    "spell.invocation-magic-suppression-emanation",
+    "spell.invocation-magic-suppression-magical-effect-interdiction",
     "spell.invocation-magic-weapon-enhancement",
     "spell.invocation-magical-darkness-point-origin",
     "spell.invocation-make-stable",

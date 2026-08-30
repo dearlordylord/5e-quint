@@ -6,6 +6,30 @@
       "kind": "action",
       "ritual": true
     },
+    "companionLifecycle": {
+      "kind": "bound_companion",
+      "recast": {
+        "existingCompanion": "adopt_new_eligible_form",
+        "zeroHitPointDisappearance": "reappear"
+      },
+      "temporaryDismissal": {
+        "cost": "magic_action",
+        "destination": "pocket_dimension",
+        "recall": {
+          "cost": "magic_action",
+          "placement": {
+            "kind": "unoccupied_space_within_feet_of_caster",
+            "maxDistanceFeet": 30
+          }
+        }
+      },
+      "touchSpellDelivery": {
+        "companionCost": "reaction",
+        "companionWithinFeetOfCaster": 100,
+        "spellRange": "touch",
+        "timing": "when_caster_casts_spell"
+      }
+    },
     "components": {
       "m": "burning incense worth 10+ GP, which the spell consumes",
       "materialConsumed": true,
@@ -91,8 +115,7 @@
     },
     "dismissal": {
       "leavesBehind": "equipment",
-      "manualDismiss": "magic_action",
-      "onSpellEnd": "disappears",
+      "onSpellEnd": "persists",
       "onZeroHp": "disappears"
     },
     "duration": {

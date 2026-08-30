@@ -18,7 +18,7 @@ import {
 } from "@dnd/battle-runtime";
 import { statBlockId, type StatBlockId } from "@dnd/shared/game-facts";
 import { movementFeet, resourceCount } from "@dnd/shared/types";
-import { Either, Option, Schema } from "effect";
+import { Result, Option, Schema } from "effect";
 
 import {
   abilityScoreAssignment,
@@ -136,11 +136,11 @@ type BattleMovementStart = Pick<
  */
 export function oracleEvaluationSourceCases(
   services: OracleEvaluationServices,
-): Either.Either<OracleCorpusCases, OracleEvaluationSourceIssue> {
+): Result.Result<OracleCorpusCases, OracleEvaluationSourceIssue> {
   try {
     return buildSourceCases(services);
   } catch (error) {
-    return Either.left({
+    return Result.fail({
       tag: "sourceConstructionFailure",
       message: safeErrorMessage(error),
     });
@@ -149,38 +149,38 @@ export function oracleEvaluationSourceCases(
 
 function buildSourceCases(
   services: OracleEvaluationServices,
-): Either.Either<OracleCorpusCases, OracleEvaluationSourceIssue> {
+): Result.Result<OracleCorpusCases, OracleEvaluationSourceIssue> {
   const creationBatches = completeCreationFillBatches(services.unitLibrary);
-  if (Either.isLeft(creationBatches)) {
-    return Either.left(creationBatches.left);
+  if (Result.isFailure(creationBatches)) {
+    return Result.fail(creationBatches.failure);
   }
-  const firstFill = creationBatches.right[0]?.[0];
+  const firstFill = creationBatches.success[0]?.[0];
   if (firstFill === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "sourceConstructionFailure",
       message: "Source Character Creation produced no fill batches.",
     });
   }
   const creation: CreationSource = {
-    fillBatches: creationBatches.right,
+    fillBatches: creationBatches.success,
     firstFill,
   };
 
   const initial = buildInitialSourceCases(creation);
-  if (Either.isLeft(initial)) return Either.left(initial.left);
+  if (Result.isFailure(initial)) return Result.fail(initial.failure);
   const sourceBattle = battleSourceFacts(services);
-  if (Either.isLeft(sourceBattle)) return Either.left(sourceBattle.left);
-  const transition = buildTransitionSourceCases(creation, sourceBattle.right);
-  if (Either.isLeft(transition)) return Either.left(transition.left);
+  if (Result.isFailure(sourceBattle)) return Result.fail(sourceBattle.failure);
+  const transition = buildTransitionSourceCases(creation, sourceBattle.success);
+  if (Result.isFailure(transition)) return Result.fail(transition.failure);
   const boundary = buildBoundarySourceCases(creation);
-  if (Either.isLeft(boundary)) return Either.left(boundary.left);
-  const initialCases = initial.right;
-  const transitionCases = transition.right;
-  const boundaryCases = boundary.right;
+  if (Result.isFailure(boundary)) return Result.fail(boundary.failure);
+  const initialCases = initial.success;
+  const transitionCases = transition.success;
+  const boundaryCases = boundary.success;
 
   // Keep A/B/A at the beginning of the actual ordered batch. The repeated
   // entered Case is intentional evidence for equality, order, and multiplicity.
-  return Either.right([
+  return Result.succeed([
     initialCases.enteredCase,
     initialCases.exhaustedCase,
     initialCases.enteredCase,
@@ -205,27 +205,28 @@ type InitialSourceCases = {
 
 function buildInitialSourceCases(
   creation: CreationSource,
-): Either.Either<InitialSourceCases, OracleEvaluationSourceIssue> {
+): Result.Result<InitialSourceCases, OracleEvaluationSourceIssue> {
   const enteredCase = decodeSourceCase({
     creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
     battle: singleStatBlockBattle(),
   });
-  if (Either.isLeft(enteredCase)) return Either.left(enteredCase.left);
+  if (Result.isFailure(enteredCase)) return Result.fail(enteredCase.failure);
 
   const exhaustedCase = decodeSourceCase({
     creation: { fillBatches: [] },
     sheet: { tag: "ordinary" },
-    battle: enteredCase.right.battle,
+    battle: enteredCase.success.battle,
   });
-  if (Either.isLeft(exhaustedCase)) return Either.left(exhaustedCase.left);
+  if (Result.isFailure(exhaustedCase))
+    return Result.fail(exhaustedCase.failure);
 
   const mixedCase = decodeSourceCase({
     creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
     battle: mixedOriginBattle(),
   });
-  if (Either.isLeft(mixedCase)) return Either.left(mixedCase.left);
+  if (Result.isFailure(mixedCase)) return Result.fail(mixedCase.failure);
 
   const wildShapeCase = decodeSourceCase({
     creation: { fillBatches: creation.fillBatches },
@@ -235,13 +236,14 @@ function buildInitialSourceCases(
     },
     battle: singleStatBlockBattle(),
   });
-  if (Either.isLeft(wildShapeCase)) return Either.left(wildShapeCase.left);
+  if (Result.isFailure(wildShapeCase))
+    return Result.fail(wildShapeCase.failure);
 
-  return Either.right({
-    enteredCase: enteredCase.right,
-    exhaustedCase: exhaustedCase.right,
-    mixedCase: mixedCase.right,
-    wildShapeCase: wildShapeCase.right,
+  return Result.succeed({
+    enteredCase: enteredCase.success,
+    exhaustedCase: exhaustedCase.success,
+    mixedCase: mixedCase.success,
+    wildShapeCase: wildShapeCase.success,
   });
 }
 
@@ -255,7 +257,7 @@ type TransitionSourceCases = {
 function buildTransitionSourceCases(
   creation: CreationSource,
   sourceBattle: BattleSourceFacts,
-): Either.Either<TransitionSourceCases, OracleEvaluationSourceIssue> {
+): Result.Result<TransitionSourceCases, OracleEvaluationSourceIssue> {
   const moveHolesCase = decodeSourceCase({
     creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
@@ -270,7 +272,8 @@ function buildTransitionSourceCases(
       ],
     },
   });
-  if (Either.isLeft(moveHolesCase)) return Either.left(moveHolesCase.left);
+  if (Result.isFailure(moveHolesCase))
+    return Result.fail(moveHolesCase.failure);
 
   const retryCase = decodeSourceCase({
     creation: { fillBatches: creation.fillBatches },
@@ -294,7 +297,7 @@ function buildTransitionSourceCases(
       ],
     },
   });
-  if (Either.isLeft(retryCase)) return Either.left(retryCase.left);
+  if (Result.isFailure(retryCase)) return Result.fail(retryCase.failure);
 
   const resolvedMovementCase = decodeSourceCase({
     creation: { fillBatches: creation.fillBatches },
@@ -310,8 +313,8 @@ function buildTransitionSourceCases(
       ],
     },
   });
-  if (Either.isLeft(resolvedMovementCase)) {
-    return Either.left(resolvedMovementCase.left);
+  if (Result.isFailure(resolvedMovementCase)) {
+    return Result.fail(resolvedMovementCase.failure);
   }
 
   const interruptResolutionCase = decodeSourceCase({
@@ -329,15 +332,15 @@ function buildTransitionSourceCases(
       ],
     },
   });
-  if (Either.isLeft(interruptResolutionCase)) {
-    return Either.left(interruptResolutionCase.left);
+  if (Result.isFailure(interruptResolutionCase)) {
+    return Result.fail(interruptResolutionCase.failure);
   }
 
-  return Either.right({
-    moveHolesCase: moveHolesCase.right,
-    retryCase: retryCase.right,
-    resolvedMovementCase: resolvedMovementCase.right,
-    interruptResolutionCase: interruptResolutionCase.right,
+  return Result.succeed({
+    moveHolesCase: moveHolesCase.success,
+    retryCase: retryCase.success,
+    resolvedMovementCase: resolvedMovementCase.success,
+    interruptResolutionCase: interruptResolutionCase.success,
   });
 }
 
@@ -349,7 +352,7 @@ type BoundarySourceCases = {
 
 function buildBoundarySourceCases(
   creation: CreationSource,
-): Either.Either<BoundarySourceCases, OracleEvaluationSourceIssue> {
+): Result.Result<BoundarySourceCases, OracleEvaluationSourceIssue> {
   const inputSurplusCase = decodeSourceCase({
     creation: {
       fillBatches: [...creation.fillBatches, [creation.firstFill]],
@@ -357,8 +360,8 @@ function buildBoundarySourceCases(
     sheet: { tag: "ordinary" },
     battle: singleStatBlockBattle(),
   });
-  if (Either.isLeft(inputSurplusCase)) {
-    return Either.left(inputSurplusCase.left);
+  if (Result.isFailure(inputSurplusCase)) {
+    return Result.fail(inputSurplusCase.failure);
   }
 
   const fillRejectedCase = decodeSourceCase({
@@ -376,8 +379,8 @@ function buildBoundarySourceCases(
     sheet: { tag: "ordinary" },
     battle: singleStatBlockBattle(),
   });
-  if (Either.isLeft(fillRejectedCase)) {
-    return Either.left(fillRejectedCase.left);
+  if (Result.isFailure(fillRejectedCase)) {
+    return Result.fail(fillRejectedCase.failure);
   }
 
   const emptyRosterCase = decodeSourceCase({
@@ -388,12 +391,13 @@ function buildBoundarySourceCases(
       attempts: [],
     },
   });
-  if (Either.isLeft(emptyRosterCase)) return Either.left(emptyRosterCase.left);
+  if (Result.isFailure(emptyRosterCase))
+    return Result.fail(emptyRosterCase.failure);
 
-  return Either.right({
-    inputSurplusCase: inputSurplusCase.right,
-    fillRejectedCase: fillRejectedCase.right,
-    emptyRosterCase: emptyRosterCase.right,
+  return Result.succeed({
+    inputSurplusCase: inputSurplusCase.success,
+    fillRejectedCase: fillRejectedCase.success,
+    emptyRosterCase: emptyRosterCase.success,
   });
 }
 
@@ -470,14 +474,14 @@ export function startStatBlockBattle(
     OracleStatBlockBattlePlacement,
     ...OracleStatBlockBattlePlacement[],
   ],
-): Either.Either<BattleRuntimeSession, OracleEvaluationSourceIssue> {
+): Result.Result<BattleRuntimeSession, OracleEvaluationSourceIssue> {
   const initialized: BattleCreatureInit[] = [];
   for (const placement of placements) {
     const statBlock = services.statBlockCatalog.getStatBlock(
       placement.statBlockId,
     );
     if (Option.isNone(statBlock)) {
-      return Either.left({
+      return Result.fail({
         tag: "sourceConstructionFailure",
         message: `Source stat-block ${placement.statBlockId} was not found.`,
       });
@@ -489,34 +493,34 @@ export function startStatBlockBattle(
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(0) }],
       conditions: [],
     });
-    if (Either.isLeft(creature)) {
-      return Either.left({
+    if (Result.isFailure(creature)) {
+      return Result.fail({
         tag: "sourceConstructionFailure",
         message: `Source stat-block ${placement.statBlockId} could not be initialized for ${placement.combatantId}.`,
       });
     }
-    initialized.push(creature.right);
+    initialized.push(creature.success);
   }
 
   const started = startBattle({
     battleId: ORACLE_BATTLE_ID,
     combatants: initialized,
   });
-  return Either.isLeft(started)
-    ? Either.left({
+  return Result.isFailure(started)
+    ? Result.fail({
         tag: "sourceConstructionFailure",
         message: "Source stat-block battle could not be started.",
       })
-    : Either.right(started.right);
+    : Result.succeed(started.success);
 }
 
 export function discoverStatBlockAttackProcedureRef(
   session: BattleRuntimeSession,
   actorId: CombatantId,
-): Either.Either<StatBlockProcedureRef, OracleEvaluationSourceIssue> {
+): Result.Result<StatBlockProcedureRef, OracleEvaluationSourceIssue> {
   const ended = endBattleRuntimeTurn({ session, actorId });
   if (ended.tag !== "resolved") {
-    return Either.left({
+    return Result.fail({
       tag: "sourceConstructionFailure",
       message: "Source stat-block turn could not end.",
     });
@@ -532,44 +536,45 @@ export function discoverStatBlockAttackProcedureRef(
     attackAct.subject.action !== "attack" ||
     "statBlockDamageNotation" in attackAct.subject
   ) {
-    return Either.left({
+    return Result.fail({
       tag: "sourceConstructionFailure",
       message: "Source reactor did not expose a typed attack procedure.",
     });
   }
-  const procedureRef = Schema.decodeUnknownEither(
+  const procedureRef = Schema.decodeUnknownResult(
     BattleStatBlockProcedureExecutionRef,
   )(attackAct.subject.procedureRef);
-  return Either.isLeft(procedureRef)
-    ? Either.left({
+  return Result.isFailure(procedureRef)
+    ? Result.fail({
         tag: "sourceConstructionFailure",
         message: "Source attack procedure reference was not canonical.",
       })
-    : Either.right(procedureRef.right);
+    : Result.succeed(procedureRef.success);
 }
 
 function battleSourceFacts(
   services: OracleEvaluationServices,
-): Either.Either<BattleSourceFacts, OracleEvaluationSourceIssue> {
+): Result.Result<BattleSourceFacts, OracleEvaluationSourceIssue> {
   const firstId = CORPUS_BATTLE_STAT_BLOCK_PLACEMENTS[0].combatantId;
   const secondId = CORPUS_BATTLE_STAT_BLOCK_PLACEMENTS[1].combatantId;
   const movement = prepareBattleMovementFacts(services, firstId, secondId);
-  if (Either.isLeft(movement)) return Either.left(movement.left);
+  if (Result.isFailure(movement)) return Result.fail(movement.failure);
   const interruptDecisionDecline = buildInterruptDecisionDecline(
     services,
-    movement.right,
+    movement.success,
   );
-  if (Either.isLeft(interruptDecisionDecline)) {
-    return Either.left(interruptDecisionDecline.left);
+  if (Result.isFailure(interruptDecisionDecline)) {
+    return Result.fail(interruptDecisionDecline.failure);
   }
-  return Either.right({
+  return Result.succeed({
     battle: twoStatBlockBattle(),
-    moveSubject: movement.right.moveSubject,
-    movementHole: movement.right.movementHole,
+    moveSubject: movement.success.moveSubject,
+    movementHole: movement.success.movementHole,
     movementWithoutOpportunityAttack:
-      movement.right.movementWithoutOpportunityAttack,
-    movementWithOpportunityAttack: movement.right.movementWithOpportunityAttack,
-    interruptDecisionDecline: interruptDecisionDecline.right,
+      movement.success.movementWithoutOpportunityAttack,
+    movementWithOpportunityAttack:
+      movement.success.movementWithOpportunityAttack,
+    interruptDecisionDecline: interruptDecisionDecline.success,
   });
 }
 
@@ -577,21 +582,21 @@ function prepareBattleMovementFacts(
   services: OracleEvaluationServices,
   firstId: CombatantId,
   secondId: CombatantId,
-): Either.Either<BattleMovementFacts, OracleEvaluationSourceIssue> {
+): Result.Result<BattleMovementFacts, OracleEvaluationSourceIssue> {
   const started = discoverBattleMovementStart(services);
-  if (Either.isLeft(started)) return Either.left(started.left);
+  if (Result.isFailure(started)) return Result.fail(started.failure);
 
   const procedureRef = discoverStatBlockAttackProcedureRef(
-    started.right.session,
+    started.success.session,
     firstId,
   );
-  if (Either.isLeft(procedureRef)) {
-    return Either.left(procedureRef.left);
+  if (Result.isFailure(procedureRef)) {
+    return Result.fail(procedureRef.failure);
   }
 
   const movementWithoutOpportunityAttack: BattleFill = {
     kind: "movement",
-    holeId: started.right.movementHole.holeId,
+    holeId: started.success.movementHole.holeId,
     value: {
       speedKind: "walk",
       movementCostFeet: movementFeet(10),
@@ -600,7 +605,7 @@ function prepareBattleMovementFacts(
   };
   const movementWithOpportunityAttack: BattleFill = {
     kind: "movement",
-    holeId: started.right.movementHole.holeId,
+    holeId: started.success.movementHole.holeId,
     value: {
       speedKind: "walk",
       movementCostFeet: movementFeet(10),
@@ -608,15 +613,15 @@ function prepareBattleMovementFacts(
         {
           reactorId: secondId,
           distanceFeet: movementFeet(5),
-          procedureRef: procedureRef.right,
+          procedureRef: procedureRef.success,
         },
       ],
     },
   };
-  return Either.right({
-    session: started.right.session,
-    moveSubject: started.right.moveSubject,
-    movementHole: started.right.movementHole,
+  return Result.succeed({
+    session: started.success.session,
+    moveSubject: started.success.moveSubject,
+    movementHole: started.success.movementHole,
     movementWithoutOpportunityAttack,
     movementWithOpportunityAttack,
   });
@@ -624,32 +629,32 @@ function prepareBattleMovementFacts(
 
 function discoverBattleMovementStart(
   services: OracleEvaluationServices,
-): Either.Either<BattleMovementStart, OracleEvaluationSourceIssue> {
+): Result.Result<BattleMovementStart, OracleEvaluationSourceIssue> {
   const started = startStatBlockBattle(
     services,
     CORPUS_BATTLE_STAT_BLOCK_PLACEMENTS,
   );
-  if (Either.isLeft(started)) return Either.left(started.left);
+  if (Result.isFailure(started)) return Result.fail(started.failure);
 
-  const moveSubject = discoverBattleMoveSubject(started.right);
-  if (Either.isLeft(moveSubject)) return Either.left(moveSubject.left);
+  const moveSubject = discoverBattleMoveSubject(started.success);
+  if (Result.isFailure(moveSubject)) return Result.fail(moveSubject.failure);
   const movementHole = discoverBattleMovementHole(
-    started.right,
-    moveSubject.right,
+    started.success,
+    moveSubject.success,
     services.statBlockCatalog,
   );
-  if (Either.isLeft(movementHole)) return Either.left(movementHole.left);
+  if (Result.isFailure(movementHole)) return Result.fail(movementHole.failure);
 
-  return Either.right({
-    session: started.right,
-    moveSubject: moveSubject.right,
-    movementHole: movementHole.right,
+  return Result.succeed({
+    session: started.success,
+    moveSubject: moveSubject.success,
+    movementHole: movementHole.success,
   });
 }
 
 function discoverBattleMoveSubject(
   session: BattleRuntimeSession,
-): Either.Either<MoveSubject, OracleEvaluationSourceIssue> {
+): Result.Result<MoveSubject, OracleEvaluationSourceIssue> {
   const moveAct = discoverBattleActs(session).find(
     (act) =>
       act.subject.tag === "runtimeCommand" && act.subject.command === "move",
@@ -659,19 +664,19 @@ function discoverBattleMoveSubject(
     moveAct.subject.tag !== "runtimeCommand" ||
     moveAct.subject.command !== "move"
   ) {
-    return Either.left({
+    return Result.fail({
       tag: "sourceConstructionFailure",
       message: "Source stat-block battle did not expose a Move act.",
     });
   }
-  return Either.right(moveAct.subject);
+  return Result.succeed(moveAct.subject);
 }
 
 function discoverBattleMovementHole(
   session: BattleRuntimeSession,
   moveSubject: MoveSubject,
   statBlockCatalog: OracleEvaluationServices["statBlockCatalog"],
-): Either.Either<OrdinaryMovementHole, OracleEvaluationSourceIssue> {
+): Result.Result<OrdinaryMovementHole, OracleEvaluationSourceIssue> {
   const moveHoles = settleBattleRuntimeTransaction({
     session,
     transaction: null,
@@ -686,7 +691,7 @@ function discoverBattleMovementHole(
     moveHoles.tag !== "needsHoles" ||
     moveHoles.frontier.kind !== "ordinaryHoles"
   ) {
-    return Either.left({
+    return Result.fail({
       tag: "sourceConstructionFailure",
       message: "Source Move did not expose ordinary mechanical holes.",
     });
@@ -695,8 +700,8 @@ function discoverBattleMovementHole(
     (hole) => hole.kind === "movement",
   );
   return movementHole?.kind === "movement"
-    ? Either.right(movementHole)
-    : Either.left({
+    ? Result.succeed(movementHole)
+    : Result.fail({
         tag: "sourceConstructionFailure",
         message: "Source Move did not expose a movement hole.",
       });
@@ -705,7 +710,7 @@ function discoverBattleMovementHole(
 function buildInterruptDecisionDecline(
   services: OracleEvaluationServices,
   movement: BattleMovementFacts,
-): Either.Either<OracleBattleAttempt, OracleEvaluationSourceIssue> {
+): Result.Result<OracleBattleAttempt, OracleEvaluationSourceIssue> {
   const opportunityAttack = settleBattleRuntimeTransaction({
     session: movement.session,
     transaction: null,
@@ -720,7 +725,7 @@ function buildInterruptDecisionDecline(
     opportunityAttack.tag !== "needsHoles" ||
     opportunityAttack.frontier.kind !== "interruptDecision"
   ) {
-    return Either.left({
+    return Result.fail({
       tag: "sourceConstructionFailure",
       message: "Source movement did not expose an interrupt decision.",
     });
@@ -731,12 +736,12 @@ function buildInterruptDecisionDecline(
       choice.subject.command === "opportunityAttack",
   );
   if (opportunityChoice === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "sourceConstructionFailure",
       message: "Source movement interrupt did not expose Opportunity Attack.",
     });
   }
-  const declineFill = Schema.decodeUnknownEither(
+  const declineFill = Schema.decodeUnknownResult(
     OracleBattleInterruptDecisionFillSchema,
   )({
     kind: "interruptDecision",
@@ -746,31 +751,34 @@ function buildInterruptDecisionDecline(
       responderId: interruptChoiceResponderId(opportunityChoice),
     },
   });
-  if (Either.isLeft(declineFill)) {
-    return Either.left({
+  if (Result.isFailure(declineFill)) {
+    return Result.fail({
       tag: "sourceConstructionFailure",
       message: "Source interrupt decline fill was not canonical.",
     });
   }
 
-  return Either.right({ kind: "interruptDecision", fill: declineFill.right });
+  return Result.succeed({
+    kind: "interruptDecision",
+    fill: declineFill.success,
+  });
 }
 
 function decodeSourceCase(
   input: unknown,
-): Either.Either<OracleCase, OracleEvaluationSourceIssue> {
+): Result.Result<OracleCase, OracleEvaluationSourceIssue> {
   const decoded = decodeOracleCase(input);
-  return Either.isLeft(decoded)
-    ? Either.left({
+  return Result.isFailure(decoded)
+    ? Result.fail({
         tag: "sourceConstructionFailure",
-        message: `Source Case failed admission: ${JSON.stringify(decoded.left)}`,
+        message: `Source Case failed admission: ${JSON.stringify(decoded.failure)}`,
       })
-    : Either.right(decoded.right);
+    : Result.succeed(decoded.success);
 }
 
 export function completeCreationFillBatches(
   unitLibrary: OracleEvaluationServices["unitLibrary"],
-): Either.Either<OracleCreationFillBatches, OracleEvaluationSourceIssue> {
+): Result.Result<OracleCreationFillBatches, OracleEvaluationSourceIssue> {
   let draft = createCharacterDraft({
     draftId: characterDraftId("opaque-oracle:corpus-draft"),
   });
@@ -783,8 +791,8 @@ export function completeCreationFillBatches(
     wis: 10,
     cha: 8,
   });
-  if (Either.isLeft(scores)) {
-    return Either.left({
+  if (Result.isFailure(scores)) {
+    return Result.fail({
       tag: "sourceConstructionFailure",
       message: "Source ability-score assignment was rejected.",
     });
@@ -796,19 +804,19 @@ export function completeCreationFillBatches(
       unitLibrary,
     })[0];
     if (hole === undefined) {
-      return Either.right(batches);
+      return Result.succeed(batches);
     }
     const accepted = acceptedFillForHole(
       draft,
       hole,
-      scores.right,
+      scores.success,
       unitLibrary,
     );
-    if (Either.isLeft(accepted)) return Either.left(accepted.left);
-    batches.push([accepted.right.fill]);
-    draft = accepted.right.draft;
+    if (Result.isFailure(accepted)) return Result.fail(accepted.failure);
+    batches.push([accepted.success.fill]);
+    draft = accepted.success.draft;
   }
-  return Either.left({
+  return Result.fail({
     tag: "sourceConstructionFailure",
     message: "Source Character Creation did not converge.",
   });
@@ -819,7 +827,7 @@ function acceptedFillForHole(
   hole: CreationHole,
   scores: Extract<CreationFill, { kind: "abilityScores" }>["value"],
   unitLibrary: OracleEvaluationServices["unitLibrary"],
-): Either.Either<
+): Result.Result<
   { readonly fill: CreationFill; readonly draft: CharacterDraft },
   OracleEvaluationSourceIssue
 > {
@@ -837,8 +845,8 @@ function acceptedFillForHole(
       fills: [fill],
     });
     return result.tag === "accepted"
-      ? Either.right({ fill, draft: result.draft })
-      : Either.left({
+      ? Result.succeed({ fill, draft: result.draft })
+      : Result.fail({
           tag: "sourceConstructionFailure",
           message: `Source ability-score fill rejected at ${hole.holeId}.`,
         });
@@ -860,11 +868,11 @@ function acceptedFillForHole(
         fills: [fill],
       });
       if (result.tag === "accepted") {
-        return Either.right({ fill, draft: result.draft });
+        return Result.succeed({ fill, draft: result.draft });
       }
     }
   }
-  return Either.left({
+  return Result.fail({
     tag: "sourceConstructionFailure",
     message: `Source has no accepted fill for ${hole.holeId}.`,
   });

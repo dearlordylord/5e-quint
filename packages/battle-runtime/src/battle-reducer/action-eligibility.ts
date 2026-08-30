@@ -12,7 +12,7 @@ import type {
   BattleState,
   BattleTurnResources,
 } from "../battle-state-execution.ts";
-import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
 import { canSpendEscapeGrappleActionResource } from "./action-resource-kinds.ts";
 import {
   combatantCanTakeActions,
@@ -22,7 +22,8 @@ import {
 const ACTION_ELIGIBILITY_ISSUES = {
   unavailable:
     "The selected action is no longer available for the current actor.",
-  familiarCannotAttack: "Find Familiar familiars can't attack.",
+  familiarCannotAttack:
+    "Spawned companions without an admitted attack procedure can't attack.",
   heldWeaponActivationUnavailable:
     "Attack action feature is no longer available for the current actor.",
   bonusActionUnavailable:
@@ -67,7 +68,7 @@ export function battleSubjectBeginsBonusAction(
     byTag("monkFocusOption", () => true),
     byTag("monkFocusFlurryOfBlowsStrike", () => false),
     byTag("unitFeatureHeldWeaponActivation", () => false),
-    byTag("pactOfTheChainFamiliarAttack", () => false),
+    byTag("companionAttack", () => false),
     byTag("actionSpell", () => false),
     byTag("bonusAction", () => true),
     byTag("bonusActionDashSpell", () => true),
@@ -75,8 +76,8 @@ export function battleSubjectBeginsBonusAction(
     byTag("bonusActionStandardAction", () => true),
     byTag("companionLifecycle", () => false),
     byTag("druidWildShape", () => true),
-    byTag("findFamiliarSharedSenses", () => true),
-    byTag("findFamiliarTouchSpell", () => false),
+    byTag("spawnedCompanionSharedSenses", () => true),
+    byTag("spawnedCompanionTouchSpellProxy", () => false),
     byTag("runtimeCommand", () => false),
     byTag("unitFeature", (unitFeatureSubject) => {
       const actor = state.combatants.get(unitFeatureSubject.actorId);
@@ -108,7 +109,7 @@ export function battleSubjectActionEligibilityIssue(
     return actorUnavailableIssue(facts);
   }
   if (
-    isPresentFindFamiliarCombatant(state, actorId) &&
+    isPresentSpawnedCompanionCombatant(state, actorId) &&
     familiarCannotUseActionFacts(facts)
   ) {
     return ACTION_ELIGIBILITY_ISSUES.familiarCannotAttack;
@@ -138,7 +139,7 @@ function actionEligibilityFacts(
       () => ({ tag: "heldWeaponActivation" }) as const,
     ),
     byTag(
-      "pactOfTheChainFamiliarAttack",
+      "companionAttack",
       () => ({ tag: "standardAction", action: "attack" }) as const,
     ),
     byTag("actionSpell", () => ({ tag: "magicAction" }) as const),
@@ -149,10 +150,13 @@ function actionEligibilityFacts(
     byTag("companionLifecycle", () => ({ tag: "notApplicable" }) as const),
     byTag("druidWildShape", () => ({ tag: "wildShapeBonusAction" }) as const),
     byTag(
-      "findFamiliarSharedSenses",
+      "spawnedCompanionSharedSenses",
       () => ({ tag: "notApplicable" }) as const,
     ),
-    byTag("findFamiliarTouchSpell", () => ({ tag: "notApplicable" }) as const),
+    byTag(
+      "spawnedCompanionTouchSpellProxy",
+      () => ({ tag: "notApplicable" }) as const,
+    ),
     byTag("runtimeCommand", () => ({ tag: "notApplicable" }) as const),
     byTag("unitFeature", () => ({ tag: "unitFeatureActor" }) as const),
     Match.exhaustive,
@@ -325,11 +329,11 @@ function actionSubjectEligibilityFacts(
     ),
     Match.when("escapeSpellRestraint", () => standard("utilize")),
     Match.when(
-      "shakeAwakeFromSleep",
+      "shakeAwakeFromStagedCondition",
       () => ({ tag: "actorEligibilityOnly" }) as const,
     ),
     Match.when(
-      "shakeAwakeFromHypnoticPattern",
+      "shakeAwakeFromAreaControl",
       () => ({ tag: "actorEligibilityOnly" }) as const,
     ),
     Match.exhaustive,

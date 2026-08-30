@@ -42,7 +42,7 @@ import type {
   DiceExprDelta,
   EffectAtom,
 } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
@@ -51,11 +51,11 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
-import { antimagicFieldOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
+import { magicSuppressionOngoingSpellEffectRefForActiveEffect } from "../magic-suppression-ongoing-effect.ts";
 import {
   resolveObjectContactDamageRepeatSpellAct,
   resolveObjectContactDamageSpellAct,
@@ -158,7 +158,7 @@ function admitObjectContactDamageRepeat(
         effect.sourceCombatantId !== ctx.actor.combatantId ||
         spellAdmissionOngoingSpellEffectSuppressed(
           ctx,
-          antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
+          magicSuppressionOngoingSpellEffectRefForActiveEffect(effect),
         ) ||
         !objectContactDamageRepeatIsDiscoverable(effect, ctx)
       ) {
@@ -221,7 +221,7 @@ function objectContactDamageSpell(spell: BattleSpellAdmissionSource): {
     spell.mechanics.duration.upTo.unit !== "minute" ||
     spell.mechanics.duration.upTo.amount !== 1 ||
     durationTicks === null ||
-    Either.isLeft(durationTicks) ||
+    Result.isFailure(durationTicks) ||
     spell.mechanics.operations.length !== 1 ||
     !isManufacturedMetalObjectAttachment(attachment) ||
     initialPhase?.kind !== "direct" ||
@@ -242,7 +242,7 @@ function objectContactDamageSpell(spell: BattleSpellAdmissionSource): {
   return {
     damageAmount: initialEffect.amount,
     damageType: initialEffect.damageType,
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     rangeFeet: movementFeet(rangeFeet),
   };
 }
@@ -290,7 +290,7 @@ type LinearPerLevelDiceAmount = Extract<
   DiceAmount,
   { readonly kind: "linear_per_level" }
 >;
-type SupportedHeatMetalDamageAmount = LinearPerLevelDiceAmount & {
+type SupportedObjectContactDamageAmount = LinearPerLevelDiceAmount & {
   readonly axis: "slot";
   readonly base: DiceExpr & {
     readonly dice: 2;
@@ -308,7 +308,7 @@ type SupportedHeatMetalDamageAmount = LinearPerLevelDiceAmount & {
 };
 type SupportedObjectContactDamageEffect = ObjectContactDamageEffect & {
   readonly damageType: Extract<DamageType, "fire">;
-  readonly amount: SupportedHeatMetalDamageAmount;
+  readonly amount: SupportedObjectContactDamageAmount;
 };
 
 function isObjectContactDamageEffect(
@@ -322,14 +322,14 @@ function isObjectContactDamageEffect(
     effect.contact.kind ===
       "table_witnessed_physical_contact_with_spell_object" &&
     effect.damageType === "fire" &&
-    isSupportedHeatMetalDamageAmount(amount) &&
+    isSupportedObjectContactDamageAmount(amount) &&
     isSupportedObjectContactHoldingOrWearingSave(effect.holdingOrWearingSave)
   );
 }
 
-function isSupportedHeatMetalDamageAmount(
+function isSupportedObjectContactDamageAmount(
   amount: DiceAmount,
-): amount is SupportedHeatMetalDamageAmount {
+): amount is SupportedObjectContactDamageAmount {
   return (
     amount.kind === "linear_per_level" &&
     amount.axis === "slot" &&
@@ -475,8 +475,8 @@ const ObjectContactDamageInvocationSchema = spellProcedureExecutionSchema(
 const ObjectContactDamageRepeatInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     procedure: Schema.Literal("objectContactDamageRepeat"),
-    spellRuleFacts: Schema.optionalWith(Schema.Never, { exact: true }),
-    activeEffectRef: BattleActiveEffectExecutionRef,
+    spellRuleFacts: Schema.optionalKey(Schema.Never),
+    activeEffectRef: BattleEffectExecutionRef,
     activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
   }),
 );

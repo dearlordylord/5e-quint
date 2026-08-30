@@ -18,7 +18,7 @@ import {
   type LandChoicePreparedSpellAccessGrant,
   type UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Either, Match, Option } from "effect";
+import { Result, Match, Option } from "effect";
 
 import {
   characterSheetIssue,
@@ -49,7 +49,7 @@ export function characterSheetDruidWildShapeKnownForms(
 export function characterSheetDruidCircleLandPreparedSpellAccess(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetDruidCircleLandPreparedSpellAccess | undefined,
   CharacterSheetIssue
 > {
@@ -68,13 +68,13 @@ export function druidWildShapeKnownFormsFromInput(
     | "druidWildShapeKnownFormStatBlockIds"
     | "statBlockCatalog"
   >,
-): Either.Either<
+): Result.Result<
   CharacterSheetDruidWildShapeKnownForms | undefined,
   CharacterSheetIssue
 > {
   const result = druidWildShapeKnownFormsConstruction(input);
-  if (Either.isRight(result)) return Either.right(result.right);
-  const issue = result.left[0];
+  if (Result.isSuccess(result)) return Result.succeed(result.success);
+  const issue = result.failure[0];
   /* v8 ignore start -- @preserve -- These translations describe malformed or unsupported stored known-form inputs rejected during construction. */
   if ("statBlockId" in issue) {
     return characterSheetIssue(messageForDruidWildShapeKnownFormIssue(issue));
@@ -113,7 +113,7 @@ export function druidWildShapeKnownFormsConstruction(
     | "druidWildShapeKnownFormStatBlockIds"
     | "statBlockCatalog"
   >,
-): Either.Either<
+): Result.Result<
   CharacterSheetDruidWildShapeKnownForms | undefined,
   ReadonlyNonEmptyArray<DruidWildShapeKnownFormsConstructionIssue>
 > {
@@ -122,40 +122,40 @@ export function druidWildShapeKnownFormsConstruction(
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore start -- @preserve -- Build-owned Wild Shape feature ids and their Unit facts are correlated by Character Build parsing. */
-  if (Either.isLeft(facts)) {
-    return Either.left([{ code: "wildShapeKnownFormsInvalid" }]);
+  if (Result.isFailure(facts)) {
+    return Result.fail([{ code: "wildShapeKnownFormsInvalid" }]);
   }
   /* v8 ignore stop -- @preserve */
-  if (facts.right === undefined) {
+  if (facts.success === undefined) {
     return input.druidWildShapeKnownFormStatBlockIds === undefined
-      ? Either.right(undefined)
-      : Either.left([{ code: "wildShapeKnownFormsUnexpected" }]);
+      ? Result.succeed(undefined)
+      : Result.fail([{ code: "wildShapeKnownFormsUnexpected" }]);
   }
   if (input.druidWildShapeKnownFormStatBlockIds === undefined) {
-    return Either.left([{ code: "wildShapeKnownFormsRequired" }]);
+    return Result.fail([{ code: "wildShapeKnownFormsRequired" }]);
   }
   const statBlockCatalog = druidWildShapeStatBlockCatalogFromInput(
     input.statBlockCatalog,
   );
   /* v8 ignore start -- @preserve -- The caller-supplied SRD Stat Block catalog must parse before known-form construction. */
-  if (Either.isLeft(statBlockCatalog)) {
-    return Either.left([{ code: "wildShapeKnownFormsInvalid" }]);
+  if (Result.isFailure(statBlockCatalog)) {
+    return Result.fail([{ code: "wildShapeKnownFormsInvalid" }]);
   }
   /* v8 ignore stop -- @preserve */
   const knownFormIssues = validateDruidWildShapeKnownFormIssues({
-    facts: facts.right,
+    facts: facts.success,
     knownFormStatBlockIds: input.druidWildShapeKnownFormStatBlockIds,
-    statBlockCatalog: statBlockCatalog.right,
+    statBlockCatalog: statBlockCatalog.success,
   });
-  if (knownFormIssues !== undefined) return Either.left(knownFormIssues);
-  return Either.right({
+  if (knownFormIssues !== undefined) return Result.fail(knownFormIssues);
+  return Result.succeed({
     statBlockIds: input.druidWildShapeKnownFormStatBlockIds,
   });
 }
 
 export function druidCircleLandFromInput(
   input: Pick<CharacterSheetInput, "build" | "unitLibrary" | "druidCircleLand">,
-): Either.Either<
+): Result.Result<
   CharacterSheetDruidCircleLand | undefined,
   CharacterSheetIssue
 > {
@@ -164,10 +164,10 @@ export function druidCircleLandFromInput(
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: Circle of the Land grants are projected only from feature ids admitted into this build. */
-  if (Either.isLeft(ownedGrants)) return Either.left(ownedGrants.left);
-  if (ownedGrants.right.length === 0) {
+  if (Result.isFailure(ownedGrants)) return Result.fail(ownedGrants.failure);
+  if (ownedGrants.success.length === 0) {
     /* v8 ignore start -- @preserve -- Malformed sheet input: V8 maps retained Circle of the Land state without its owning Circle Spells feature to this conditional. */
-    if (input.druidCircleLand === undefined) return Either.right(undefined);
+    if (input.druidCircleLand === undefined) return Result.succeed(undefined);
     return characterSheetIssue(
       "Circle of the Land selected land requires the Circle Spells feature.",
     );
@@ -189,9 +189,9 @@ export function druidCircleLandFromInput(
     build: input.build,
     unitLibrary: input.unitLibrary,
   });
-  if (Either.isLeft(druidSourceUnitId))
-    return Either.left(druidSourceUnitId.left);
-  return Either.right(input.druidCircleLand);
+  if (Result.isFailure(druidSourceUnitId))
+    return Result.fail(druidSourceUnitId.failure);
+  return Result.succeed(input.druidCircleLand);
 }
 
 export function isDruidCircleLandChoice(
@@ -205,8 +205,8 @@ export function isDruidCircleLandChoice(
 
 export function druidWildShapeStatBlockCatalogFromInput(
   statBlockCatalog: StatBlockCatalog | undefined,
-): Either.Either<StatBlockCatalog, CharacterSheetIssue> {
-  if (statBlockCatalog !== undefined) return Either.right(statBlockCatalog);
+): Result.Result<StatBlockCatalog, CharacterSheetIssue> {
+  if (statBlockCatalog !== undefined) return Result.succeed(statBlockCatalog);
   return characterSheetIssue(
     "Wild Shape known forms require a valid SRD Stat Block catalog.",
   );
@@ -215,13 +215,13 @@ export function druidWildShapeStatBlockCatalogFromInput(
 export function druidWildShapeKnownFormsAfterLongRest(input: {
   readonly input: CharacterSheetLongRestInput;
   readonly build: CharacterBuild;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetDruidWildShapeKnownForms | undefined,
   CharacterSheetIssue
 > {
   const sheet = input.input.completion.startedRest.sheet;
   if (input.input.druidWildShapeKnownFormReplacement === undefined) {
-    return Either.right(sheet.druidWildShapeKnownForms);
+    return Result.succeed(sheet.druidWildShapeKnownForms);
   }
   /* v8 ignore start -- @preserve -- A Long Rest replacement is admitted only from a sheet retaining current Wild Shape known forms. */
   if (sheet.druidWildShapeKnownForms === undefined) {
@@ -235,9 +235,10 @@ export function druidWildShapeKnownFormsAfterLongRest(input: {
     unitLibrary: input.input.unitLibrary,
   });
   /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: retained Wild Shape state is projected only from its admitted Druid feature Units. */
-  if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
+  if (Result.isFailure(facts))
+    return characterSheetIssue(facts.failure.message);
   /* v8 ignore start -- @preserve -- Retained known forms and the owning Wild Shape feature are correlated by sheet construction. */
-  if (facts.right === undefined) {
+  if (facts.success === undefined) {
     return characterSheetIssue(
       "Wild Shape known-form replacement requires the Druid Wild Shape feature.",
     );
@@ -247,28 +248,28 @@ export function druidWildShapeKnownFormsAfterLongRest(input: {
     input.input.statBlockCatalog,
   );
   /* v8 ignore start -- @preserve -- Malformed Long Rest input: a Wild Shape replacement requires the same parsed StatBlock catalog used to admit known forms. */
-  if (Either.isLeft(statBlockCatalog))
-    return Either.left(statBlockCatalog.left);
+  if (Result.isFailure(statBlockCatalog))
+    return Result.fail(statBlockCatalog.failure);
   /* v8 ignore stop -- @preserve */
   const replaced = replaceDruidWildShapeKnownForm({
-    facts: facts.right,
+    facts: facts.success,
     currentKnownFormStatBlockIds: sheet.druidWildShapeKnownForms.statBlockIds,
     replacement: input.input.druidWildShapeKnownFormReplacement,
-    statBlockCatalog: statBlockCatalog.right,
+    statBlockCatalog: statBlockCatalog.success,
   });
   /* v8 ignore start -- @preserve -- Malformed Long Rest input: replacement forms must satisfy the retained Wild Shape profile and known-form roster. */
-  if (Either.isLeft(replaced))
-    return characterSheetIssue(replaced.left.message);
+  if (Result.isFailure(replaced))
+    return characterSheetIssue(replaced.failure.message);
   /* v8 ignore stop -- @preserve */
-  return Either.right({
-    statBlockIds: replaced.right,
+  return Result.succeed({
+    statBlockIds: replaced.success,
   });
 }
 
 export function druidCircleLandAfterLongRest(input: {
   readonly input: CharacterSheetLongRestInput;
   readonly build: CharacterBuild;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetDruidCircleLand | undefined,
   CharacterSheetIssue
 > {
@@ -277,10 +278,10 @@ export function druidCircleLandAfterLongRest(input: {
     unitLibrary: input.input.unitLibrary,
   });
   /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: Circle of the Land grants are projected only from feature ids admitted into this build. */
-  if (Either.isLeft(grants)) return Either.left(grants.left);
-  if (grants.right.length === 0) {
+  if (Result.isFailure(grants)) return Result.fail(grants.failure);
+  if (grants.success.length === 0) {
     if (input.input.druidCircleLandChoice === undefined) {
-      return Either.right(undefined);
+      return Result.succeed(undefined);
     }
     /* v8 ignore start -- @preserve -- A Long Rest land reselection without the owning Circle Spells feature is a malformed rest request. */
     return characterSheetIssue(
@@ -293,8 +294,8 @@ export function druidCircleLandAfterLongRest(input: {
     unitLibrary: input.input.unitLibrary,
   });
   /* v8 ignore start -- @preserve -- Malformed admitted build: Circle Spells ownership requires its correlated Druid spellcasting source. */
-  if (Either.isLeft(druidSourceUnitId))
-    return Either.left(druidSourceUnitId.left);
+  if (Result.isFailure(druidSourceUnitId))
+    return Result.fail(druidSourceUnitId.failure);
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed Long Rest input: an admitted Circle Spells feature requires a land selection for the completed rest. */
   if (input.input.druidCircleLandChoice === undefined) {
@@ -318,26 +319,26 @@ export function druidCircleLandAfterLongRest(input: {
       unitLibrary: input.input.unitLibrary,
       circleLand,
     });
-  if (Either.isLeft(duplicateBookOfShadowsIssue)) {
-    return Either.left(duplicateBookOfShadowsIssue.left);
+  if (Result.isFailure(duplicateBookOfShadowsIssue)) {
+    return Result.fail(duplicateBookOfShadowsIssue.failure);
   }
-  return Either.right(circleLand);
+  return Result.succeed(circleLand);
 }
 
 function druidCircleLandPreparedSpellAccessForBuild(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly circleLand: CharacterSheetDruidCircleLand | undefined;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetDruidCircleLandPreparedSpellAccess | undefined,
   CharacterSheetIssue
 > {
   const grants = druidCircleLandPreparedSpellAccessGrantsForBuild(input);
   /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: Circle of the Land grants are projected only from feature ids admitted into this build. */
-  if (Either.isLeft(grants)) return Either.left(grants.left);
-  if (grants.right.length === 0) {
+  if (Result.isFailure(grants)) return Result.fail(grants.failure);
+  if (grants.success.length === 0) {
     /* v8 ignore start -- @preserve -- Malformed sheet state: V8 maps retained land state without the owning Circle Spells grant to this conditional. */
-    if (input.circleLand === undefined) return Either.right(undefined);
+    if (input.circleLand === undefined) return Result.succeed(undefined);
     return characterSheetIssue(
       "Circle of the Land selected land requires the Circle Spells feature.",
     );
@@ -355,14 +356,14 @@ function druidCircleLandPreparedSpellAccessForBuild(input: {
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore start -- @preserve -- Malformed admitted build: Circle Spells ownership requires its correlated Druid spellcasting source. */
-  if (Either.isLeft(druidSourceUnitId))
-    return Either.left(druidSourceUnitId.left);
+  if (Result.isFailure(druidSourceUnitId))
+    return Result.fail(druidSourceUnitId.failure);
   /* v8 ignore stop -- @preserve */
   const druidLevel = classLevelForUnit(
     input.build.progression,
-    druidSourceUnitId.right,
+    druidSourceUnitId.success,
   );
-  const grant = grants.right[0];
+  const grant = grants.success[0];
   /* v8 ignore start -- @preserve -- A nonempty, uniqueness-checked grant collection always has a first prepared-spell grant. */
   if (grant === undefined) {
     return characterSheetIssue(
@@ -373,9 +374,9 @@ function druidCircleLandPreparedSpellAccessForBuild(input: {
   const spellIds = grant.grant.spellsByLand[input.circleLand.land]
     .filter((tier) => tier.minimumClassLevel <= druidLevel)
     .flatMap((tier) => tier.spellIds.map(authoredUnitId));
-  return Either.right({
+  return Result.succeed({
     sourceUnitId: grant.sourceUnitId,
-    spellcastingSourceUnitId: druidSourceUnitId.right,
+    spellcastingSourceUnitId: druidSourceUnitId.success,
     land: input.circleLand.land,
     druidLevel,
     spellIds,
@@ -385,7 +386,7 @@ function druidCircleLandPreparedSpellAccessForBuild(input: {
 function druidCircleLandPreparedSpellAccessGrantsForBuild(input: {
   readonly build: Pick<CharacterBuild, "progression" | "features">;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   readonly {
     readonly sourceUnitId: UnitRecord["id"];
     readonly grant: LandChoicePreparedSpellAccessGrant;
@@ -421,24 +422,24 @@ function druidCircleLandPreparedSpellAccessGrantsForBuild(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right(grants);
+  return Result.succeed(grants);
 }
 
 function druidCircleLandSpellcastingSourceUnitId(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<UnitRecord["id"], CharacterSheetIssue> {
+}): Result.Result<UnitRecord["id"], CharacterSheetIssue> {
   const druidSourceUnitId = spellcastingSourceUnitIdForClassName({
     build: input.build,
     unitLibrary: input.unitLibrary,
     className: "druid",
   });
   /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: a retained Druid spellcasting source id must resolve in the same Unit catalog. */
-  if (Either.isLeft(druidSourceUnitId))
-    return Either.left(druidSourceUnitId.left);
+  if (Result.isFailure(druidSourceUnitId))
+    return Result.fail(druidSourceUnitId.failure);
   /* v8 ignore stop -- @preserve */
-  if (druidSourceUnitId.right !== undefined) {
-    return Either.right(druidSourceUnitId.right);
+  if (druidSourceUnitId.success !== undefined) {
+    return Result.succeed(druidSourceUnitId.success);
   }
   /* v8 ignore start -- @preserve -- A retained Circle Spells grant without its Druid spellcasting source is malformed build state. */
   return characterSheetIssue(
@@ -451,7 +452,7 @@ function spellcastingSourceUnitIdForClassName(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly className: "druid";
-}): Either.Either<UnitRecord["id"] | undefined, CharacterSheetIssue> {
+}): Result.Result<UnitRecord["id"] | undefined, CharacterSheetIssue> {
   const sourceUnitIds = input.build.spellcasting?.sources.flatMap((source) => {
     const unit = input.unitLibrary.getUnit(source.sourceUnitId);
     if (
@@ -464,10 +465,10 @@ function spellcastingSourceUnitIdForClassName(input: {
     return [source.sourceUnitId];
   });
   if (sourceUnitIds === undefined || sourceUnitIds.length === 0) {
-    return Either.right(undefined);
+    return Result.succeed(undefined);
   }
   /* v8 ignore start -- @preserve -- Unsupported duplicate build correlation: V8 maps the multiple-Druid-source edge to this final conditional, but the runtime admits one spellcasting source per class. */
-  if (sourceUnitIds.length === 1) return Either.right(sourceUnitIds[0]);
+  if (sourceUnitIds.length === 1) return Result.succeed(sourceUnitIds[0]);
   return characterSheetIssue(
     "Character Sheet supports one spellcasting source for a class.",
   );
@@ -478,12 +479,13 @@ export function storedBookOfShadowsDruidCircleLandSelectionIssue(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly circleLand: CharacterSheetDruidCircleLand | undefined;
-}): Either.Either<void, CharacterSheetIssue> {
+}): Result.Result<void, CharacterSheetIssue> {
   const projectedAccess = druidCircleLandPreparedSpellAccessForBuild(input);
   /* v8 ignore next -- @preserve -- Malformed retained Druid state: Circle of the Land access must reproject from its admitted build and catalog. */
-  if (Either.isLeft(projectedAccess)) return Either.left(projectedAccess.left);
-  if (projectedAccess.right === undefined) return Either.right(undefined);
-  const selectedSpellIds = new Set(projectedAccess.right.spellIds);
+  if (Result.isFailure(projectedAccess))
+    return Result.fail(projectedAccess.failure);
+  if (projectedAccess.success === undefined) return Result.succeed(undefined);
+  const selectedSpellIds = new Set(projectedAccess.success.spellIds);
   /* v8 ignore start -- @preserve -- Malformed build correlation: projected Circle Spells access can exist only with the Druid spellcasting source that owns it. */
   const spellcastingSources = input.build.spellcasting?.sources ?? [];
   /* v8 ignore stop -- @preserve */
@@ -500,6 +502,6 @@ export function storedBookOfShadowsDruidCircleLandSelectionIssue(input: {
       );
     }
   }
-  return Either.right(undefined);
+  return Result.succeed(undefined);
 }
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";

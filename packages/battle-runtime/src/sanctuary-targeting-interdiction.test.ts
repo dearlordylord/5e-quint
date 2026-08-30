@@ -5,8 +5,7 @@ import { spellTargetListFillForTest } from "./spell-target-list.test-support.ts"
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-sanctuary-targeting-interdiction
 import { battleProcedureExecutionRefForSpellHoleForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -45,7 +44,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
-import { targetChoiceFillAfterSanctuaryAttackRollReplacement } from "./battle-reducer/sanctuary-targeting-interdiction.ts";
+import { targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement } from "./battle-reducer/targeting-save-interdiction.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
@@ -89,7 +88,7 @@ describe("Sanctuary targeting interdiction", () => {
     };
 
     expect(
-      targetChoiceFillAfterSanctuaryAttackRollReplacement({
+      targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
         fill: {
           kind: "targetChoice",
           holeId: holeId("synthetic-sanctuary-target"),
@@ -117,10 +116,9 @@ describe("Sanctuary targeting interdiction", () => {
 
     expect(combatant(cast.state, wardedId).activeEffects).toContainEqual(
       expect.objectContaining({
-        kind: "sanctuaryWard",
+        kind: "targetingSaveInterdiction",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: casterId,
-        save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       }),
     );
   });
@@ -131,20 +129,20 @@ describe("Sanctuary targeting interdiction", () => {
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.procedure ===
-          "sanctuaryTargetingInterdiction",
+          "targetingSaveInterdiction",
     );
     if (act === undefined || act.subject.tag !== "bonusActionSpell") {
       throw new Error("Expected Sanctuary Bonus Action spell act.");
     }
     const sanctuaryProcedureRef = act.subject.procedureRef;
-    const decoded = Schema.decodeUnknownEither(BattleHoleSchema)(
+    const decoded = Schema.decodeUnknownResult(BattleHoleSchema)(
       requireHole(act.initialHoles, "spellTargetList"),
     );
 
-    if (Either.isLeft(decoded)) {
-      throw new Error(String(decoded.left));
+    if (Result.isFailure(decoded)) {
+      throw new Error(String(decoded.failure));
     }
-    expect(decoded.right).toMatchObject({
+    expect(decoded.success).toMatchObject({
       kind: "spellTargetList",
     });
 
@@ -192,8 +190,8 @@ describe("Sanctuary targeting interdiction", () => {
       },
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           wrongTargetListOwner,
         ),
       ),
@@ -231,8 +229,8 @@ describe("Sanctuary targeting interdiction", () => {
       },
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           nestedWrongOwner,
         ),
       ),
@@ -258,7 +256,7 @@ describe("Sanctuary targeting interdiction", () => {
     expect(needsSanctuary).toMatchObject({
       tag: "needsHoles",
       holes: [
-        expect.objectContaining({ kind: "sanctuaryInterdictionOutcome" }),
+        expect.objectContaining({ kind: "targetingSaveInterdictionOutcome" }),
       ],
     });
     if (needsSanctuary.tag !== "needsHoles") {
@@ -273,7 +271,7 @@ describe("Sanctuary targeting interdiction", () => {
     });
     const sanctuaryHole = requireHole(
       needsSanctuary.holes,
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     expect(sanctuaryHole).toMatchObject({
       replacementTargetKind: "attackRoll",
@@ -356,7 +354,7 @@ describe("Sanctuary targeting interdiction", () => {
       fills: [
         targetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],
@@ -393,7 +391,7 @@ describe("Sanctuary targeting interdiction", () => {
       fills: [
         targetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
           { saveSucceeded: true },
         ),
       ],
@@ -433,7 +431,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
 
     const sanctuaryFill = sanctuaryOutcomeFill(
-      requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+      requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
       {
         saveSucceeded: false,
         outcome: {
@@ -518,7 +516,7 @@ describe("Sanctuary targeting interdiction", () => {
       fills: [
         targetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],
@@ -563,7 +561,7 @@ describe("Sanctuary targeting interdiction", () => {
       fills: [
         targetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],
@@ -609,7 +607,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     const sanctuaryHole = requireHole(
       needsSanctuary.holes,
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     if (sanctuaryHole.replacementTargetKind !== "nonAttack") {
       throw new Error("Expected a non-attack Sanctuary replacement.");
@@ -694,7 +692,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     const sanctuaryHole = requireHole(
       needsSanctuary.holes,
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     expect(sanctuaryHole).toMatchObject({
       replacementTargetKind: "nonAttack",
@@ -752,7 +750,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     const sanctuaryHole = requireHole(
       needsSanctuary.holes,
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     const needsDamage = resolveBattleSubject({
       state: warded.state,
@@ -829,7 +827,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     const sanctuaryHole = requireHole(
       needsSanctuary.holes,
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     const sanctuaryFill = sanctuaryOutcomeFill(sanctuaryHole, {
       saveSucceeded: false,
@@ -905,7 +903,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     const sanctuaryHole = requireHole(
       needsSanctuary.holes,
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     if (sanctuaryHole.replacementTargetKind !== "nonAttack") {
       throw new Error("Expected a non-attack Sanctuary replacement.");
@@ -982,7 +980,7 @@ describe("Sanctuary targeting interdiction", () => {
       fills: [
         targetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],
@@ -1027,7 +1025,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     const firstSanctuaryHole = requireHole(
       needsFirstSanctuary.holes,
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     expect(firstSanctuaryHole).toMatchObject({ ability: "wis" });
 
@@ -1061,7 +1059,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     const secondSanctuaryHole = requireHole(
       needsSecondSanctuary.holes,
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     expect(secondSanctuaryHole).toMatchObject({ ability: "wis" });
     expect(secondSanctuaryHole.holeId).not.toBe(firstSanctuaryHole.holeId);
@@ -1101,7 +1099,7 @@ describe("Sanctuary targeting interdiction", () => {
       fills: [
         targetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],
@@ -1144,7 +1142,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     const sanctuaryHole = requireHole(
       needsSanctuary.holes,
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     if (sanctuaryHole.replacementTargetKind !== "attackRoll") {
       throw new Error("Expected an attack-roll Sanctuary replacement.");
@@ -1230,7 +1228,7 @@ describe("Sanctuary targeting interdiction", () => {
         damageTypeFill,
         targetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],
@@ -1285,7 +1283,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     const sanctuaryHole = requireHole(
       needsSanctuary.holes,
-      "sanctuaryInterdictionOutcome",
+      "targetingSaveInterdictionOutcome",
     );
     if (sanctuaryHole.replacementTargetKind !== "attackRoll") {
       throw new Error("Expected an attack-roll Sanctuary replacement.");
@@ -1448,7 +1446,7 @@ describe("Sanctuary targeting interdiction", () => {
         duplicateDamageFill,
         leapTargetFill,
         sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          requireHole(needsSanctuary.holes, "targetingSaveInterdictionOutcome"),
           { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
         ),
       ],
@@ -1505,7 +1503,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     expect(needsDamage.holes).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "sanctuaryInterdictionOutcome" }),
+        expect.objectContaining({ kind: "targetingSaveInterdictionOutcome" }),
       ]),
     );
 
@@ -1559,7 +1557,7 @@ describe("Sanctuary targeting interdiction", () => {
     );
     expect(combatant(needsTarget.state, casterId).activeEffects).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "sanctuaryWard" }),
+        expect.objectContaining({ kind: "targetingSaveInterdiction" }),
       ]),
     );
   });
@@ -1597,7 +1595,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     expect(combatant(resolved.state, casterId).activeEffects).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "sanctuaryWard" }),
+        expect.objectContaining({ kind: "targetingSaveInterdiction" }),
       ]),
     );
     expect(resolved.routeEvents).toEqual(
@@ -1650,7 +1648,7 @@ describe("Sanctuary targeting interdiction", () => {
     }
     expect(combatant(needsDamage.state, attackerId).activeEffects).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "sanctuaryWard" }),
+        expect.objectContaining({ kind: "targetingSaveInterdiction" }),
       ]),
     );
     expect(needsDamage.routeEvents).toEqual(
@@ -1676,7 +1674,7 @@ describe("Sanctuary targeting interdiction", () => {
     const afterSpellCast = castSanctuary(recast, wardedId);
     expect(combatant(afterSpellCast.state, casterId).activeEffects).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "sanctuaryWard" }),
+        expect.objectContaining({ kind: "targetingSaveInterdiction" }),
       ]),
     );
 
@@ -1692,7 +1690,7 @@ describe("Sanctuary targeting interdiction", () => {
     });
     expect(combatant(afterDamage, attackerId).activeEffects).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "sanctuaryWard" }),
+        expect.objectContaining({ kind: "targetingSaveInterdiction" }),
       ]),
     );
   });
@@ -1773,11 +1771,11 @@ function battleWithSanctuary(
       characterCreature(replacementId, "Replacement", 9),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function castSanctuary(
@@ -1788,7 +1786,7 @@ function castSanctuary(
     (candidate) =>
       candidate.subject.tag === "bonusActionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "sanctuaryTargetingInterdiction",
+        "targetingSaveInterdiction",
   );
   if (act === undefined || act.subject.tag !== "bonusActionSpell") {
     throw new Error("Expected Sanctuary Bonus Action spell act.");
@@ -2143,13 +2141,20 @@ function savingThrowOutcomeFill(
 }
 
 function sanctuaryOutcomeFill(
-  hole: Extract<BattleHole, { readonly kind: "sanctuaryInterdictionOutcome" }>,
+  hole: Extract<
+    BattleHole,
+    { readonly kind: "targetingSaveInterdictionOutcome" }
+  >,
   value: Extract<
     BattleFill,
-    { readonly kind: "sanctuaryInterdictionOutcome" }
+    { readonly kind: "targetingSaveInterdictionOutcome" }
   >["value"],
-): Extract<BattleFill, { readonly kind: "sanctuaryInterdictionOutcome" }> {
-  return { kind: "sanctuaryInterdictionOutcome", holeId: hole.holeId, value };
+): Extract<BattleFill, { readonly kind: "targetingSaveInterdictionOutcome" }> {
+  return {
+    kind: "targetingSaveInterdictionOutcome",
+    holeId: hole.holeId,
+    value,
+  };
 }
 
 function characterCreature(

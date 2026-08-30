@@ -22,8 +22,8 @@ Strict level-9 final support blockers: 0.
 | Strict level-9 final support | 353/353 (100%) |
 | SRD authored product readiness | 119/119 (100%) |
 | Rules-kernel profile join | 119/119 (100%) |
-| Rules-kernel covered profile join | 105/119 (88.2%) |
-| Supported Unit rules-kernel chain | 139/167 (83.2%) |
+| Rules-kernel covered profile join | 106/119 (89.1%) |
+| Supported Unit rules-kernel chain | 140/167 (83.8%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -145,7 +145,6 @@ This gate checks authored records and retained Unit references that must resolve
 | `druid_primal_order` | mapped-open | `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
 | `fighter_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (covered)); `character-creation.fighter-fighting-style-advancement-replacement` (mapped-open: `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT` (covered)) | _plan-update-required_ |
 | `fighter_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
-| `haste` | mapped-open | `spell.invocation-haste-positive` (mapped-open: `BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE` (covered), `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` (covered)) | _plan-update-required_ |
 | `misty_step` | mapped-open | `spell.invocation-self-teleport` (mapped-open: `BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING` (covered), `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE` (covered)) | _plan-update-required_ |
 | `monk_uncanny_metabolism` | mapped-open | `character-creation.class-feature-source-fact-projection` (mapped-open: `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION` (covered)) | _plan-update-required_ |
 | `paladin_channel_divinity` | mapped-open | `character-creation.class-feature-resource-projection` (mapped-open: `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` (covered)) | _plan-update-required_ |
@@ -158,7 +157,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `ranger_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `rogue_expertise` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `rogue_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
-| `slow` | mapped-open | `spell.invocation-slow-active-penalties` (mapped-open: `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` (covered)) | _plan-update-required_ |
+| `see_invisibility` | mapped-open | `spell.invocation-see-invisible-observer-sight` (mapped-open: `BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT` (covered)) | _plan-update-required_ |
 | `sorcerer_draconic_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
 | `warlock_eldritch_invocations` | mapped-open | `character-creation.eldritch-invocation-choice` (mapped-open: `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE` (covered)); `character-creation.warlock-pact-magic-advancement` (mapped-open: `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION` (covered)) | _plan-update-required_ |
 | `warlock_fiend_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |

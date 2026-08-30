@@ -1,14 +1,14 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 /** Decode one complete transport frame as strict UTF-8. */
 export function decodeOracleUtf8(
   bytes: Uint8Array,
-): Either.Either<string, void> {
+): Result.Result<string, void> {
   try {
-    return Either.right(
+    return Result.succeed(
       new TextDecoder("utf-8", { fatal: true }).decode(bytes),
     );
   } catch {
-    return Either.left(undefined);
+    return Result.fail(undefined);
   }
 }

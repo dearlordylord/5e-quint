@@ -29,7 +29,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
           kind: "abilityScores" as const,
           holeId: hole.holeId,
           method: "standardArray" as const,
-          value: scores.right,
+          value: scores.success,
         };
       }
       const key =
@@ -130,13 +130,13 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
   if (sdk.isLeft(sheet)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.characterSheetConstructionIssuesSummary(sheet.left),
+      obstruction: sdk.characterSheetConstructionIssuesSummary(sheet.failure),
       observation: { phase: "fresh-sheet" },
     };
   }
   return {
     kind: "ready",
-    characterSheets: [sheet.right],
-    observation: { characterIds: [sheet.right.characterId] },
+    characterSheets: [sheet.success],
+    observation: { characterIds: [sheet.success.characterId] },
   };
 };

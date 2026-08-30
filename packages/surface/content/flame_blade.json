@@ -53,7 +53,7 @@
         "effect": {
           "brightRadiusFeet": 10,
           "dimAdditionalFeet": 10,
-          "kind": "emit_light"
+          "kind": "emit_bright_and_dim_illumination"
         },
         "predicate": {
           "kind": "spell_created_held_object_active"

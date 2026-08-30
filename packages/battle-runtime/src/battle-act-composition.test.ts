@@ -10,7 +10,7 @@ import {
   discoverBattleActs,
 } from "./battle-act-composition.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleId,
   battleProcedureExecutionRefForTest,
   characterSeed,
@@ -224,7 +224,7 @@ describe("battle act composition presentations", () => {
     const missingProcedureRef = battleProcedureExecutionRefForTest(
       "missing-character-procedure",
     );
-    const missingEffectRef = battleActiveEffectExecutionRefForTest(
+    const missingEffectRef = battleEffectExecutionRefForTest(
       "missing-character-effect",
     );
 
@@ -249,7 +249,7 @@ describe("battle act composition presentations", () => {
         speedKind: "walk",
       },
       {
-        tag: "findFamiliarTouchSpell",
+        tag: "spawnedCompanionTouchSpellProxy",
         actorId: fighterId,
         procedureRef: missingProcedureRef,
         companionId: goblinId,
@@ -387,12 +387,12 @@ describe("battle act composition presentations", () => {
         action: "permanentlyDismiss",
       },
       {
-        tag: "findFamiliarSharedSenses",
+        tag: "spawnedCompanionSharedSenses",
         actorId: goblinId,
         familiarId: fighterId,
       },
       {
-        tag: "pactOfTheChainFamiliarAttack",
+        tag: "companionAttack",
         actorId: goblinId,
         familiarId: fighterId,
         procedureRef: battleStatBlockProcedureExecutionRef(
@@ -441,7 +441,7 @@ describe("battle act composition presentations", () => {
       "missing-attack-procedure",
       fighterId,
     );
-    const missingEffectRef = battleActiveEffectExecutionRefForTest(
+    const missingEffectRef = battleEffectExecutionRefForTest(
       "missing-jump-effect",
     );
     const staleSubjects = [
@@ -482,7 +482,7 @@ describe("battle act composition presentations", () => {
     const jump = {
       tag: "runtimeCommand",
       actorId: goblinId,
-      command: "jumpMovementReplacement",
+      command: "fixedCostMovementReplacement",
       effectRef: missingEffectRef,
     } as const satisfies BattleSubject;
     expect(battleSubjectPresentation(session, jump)).toEqual({

@@ -6,7 +6,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -191,13 +191,13 @@ function levelTwoClassBuild(input: {
 
 function selectedMetamagicOption(optionId: string): CharacterBuildFeature {
   const parsed = parseSorcererMetamagicOptionId(optionId);
-  if (Either.isLeft(parsed)) {
+  if (Result.isFailure(parsed)) {
     throw new Error(`Unsupported Metamagic fixture option ${optionId}.`);
   }
   return {
     kind: "selectedSorcererMetamagicOption",
     selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
-    optionId: parsed.right,
+    optionId: parsed.success,
   };
 }
 
@@ -289,8 +289,8 @@ describe("class-feature projection boundaries", () => {
       expect(
         project({ build: buildWithRetainedFeatures(), unitLibrary }),
       ).toMatchObject({
-        _tag: "Right",
-        right: undefined,
+        _tag: "Success",
+        success: undefined,
       });
     },
   );
@@ -309,8 +309,8 @@ describe("class-feature projection boundaries", () => {
       expect(
         project({ build, unitLibrary: catalogWithout(unitId) }),
       ).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           tag: issueTag,
           message: `${featureName} requires an installed Unit.`,
         },
@@ -318,8 +318,8 @@ describe("class-feature projection boundaries", () => {
       expect(
         project({ build, unitLibrary: catalogWithWrongKind(unitId) }),
       ).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           tag: issueTag,
           message: `${featureName} requires the installed Surface feature record.`,
         },
@@ -333,8 +333,8 @@ describe("class-feature projection boundaries", () => {
           unitLibrary,
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           tag: issueTag,
           message: expect.stringContaining(
             `requires ${ownerClassName} class progression`,
@@ -354,8 +354,8 @@ describe("class-feature projection boundaries", () => {
           route: ["seed"],
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: { tag: issueTag },
+        _tag: "Failure",
+        failure: { tag: issueTag },
       });
     },
   );
@@ -373,8 +373,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Metamagic option selections require the retained Metamagic feature.",
       },
@@ -390,8 +390,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Metamagic known option count must match the Sorcerer level.",
       },
     });
@@ -406,8 +406,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Metamagic known options must be unique." },
+      _tag: "Failure",
+      failure: { message: "Metamagic known options must be unique." },
     });
 
     const completeBuild = levelTwoClassBuild({
@@ -420,8 +420,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary: catalogWithout(authoredUnitId("sorcerer_font_of_magic")),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Font of Magic requires an installed Unit." },
+      _tag: "Failure",
+      failure: { message: "Font of Magic requires an installed Unit." },
     });
 
     const sorcererClass = unitLibrary.requireUnit("class_sorcerer");
@@ -440,8 +440,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary: catalogReplacing(sorcererWithoutFontOfMagic),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Metamagic requires the shared Font of Magic Sorcery Point resource.",
       },
@@ -452,12 +452,12 @@ describe("class-feature projection boundaries", () => {
     expect(
       parseSorcererMetamagicOptionId("sorcerer_empowered_spell"),
     ).toMatchObject({
-      _tag: "Right",
-      right: "sorcerer_empowered_spell",
+      _tag: "Success",
+      success: "sorcerer_empowered_spell",
     });
     expect(parseSorcererMetamagicOptionId("synthetic_unknown")).toMatchObject({
-      _tag: "Left",
-      left: { message: "Unknown Sorcerer Metamagic option id." },
+      _tag: "Failure",
+      failure: { message: "Unknown Sorcerer Metamagic option id." },
     });
 
     const build = levelTwoClassBuild({
@@ -468,18 +468,18 @@ describe("class-feature projection boundaries", () => {
       build,
       unitLibrary,
     });
-    if (Either.isLeft(facts) || facts.right === undefined) {
+    if (Result.isFailure(facts) || facts.success === undefined) {
       throw new Error("The Sorcerer fixture must project Font of Magic facts.");
     }
     expect(
       fontOfMagicSpellSlotCreationOption({
-        facts: facts.right,
+        facts: facts.success,
         spellLevel: spellSlotLevel(1),
       }),
     ).toMatchObject({ spellSlotLevel: 1, pointCost: 2 });
     expect(
       fontOfMagicSpellSlotCreationOption({
-        facts: facts.right,
+        facts: facts.success,
         spellLevel: spellSlotLevel(9),
       }),
     ).toBeUndefined();
@@ -507,8 +507,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary: catalogReplacing(fixedSorceryPointCap),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic requires class-level Sorcery Point scaling facts.",
       },
@@ -529,8 +529,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary: catalogReplacing(withoutSpellSlotCreation),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Font of Magic requires Spell Slot creation source facts.",
       },
     });
@@ -570,8 +570,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary: catalogReplacing(wrongFocusPointBase),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Monk's Focus requires Monk-level Focus Point scaling facts.",
       },
     });
@@ -581,8 +581,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary: catalogWithout(authoredUnitId("monk_monks_focus")),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Monk's Focus requires an installed Unit." },
+      _tag: "Failure",
+      failure: { message: "Monk's Focus requires an installed Unit." },
     });
     expect(
       characterBuildMonkUncannyMetabolismFacts({
@@ -590,8 +590,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary: catalogWithout(authoredUnitId("monk_martial_arts")),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Uncanny Metabolism requires the installed Martial Arts Unit.",
       },
     });
@@ -601,8 +601,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary: catalogWithWrongKind(authoredUnitId("monk_martial_arts")),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Uncanny Metabolism requires Martial Arts die source facts.",
       },
     });
@@ -623,8 +623,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary: catalogReplacing(monkWithoutFocusGrant),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Uncanny Metabolism requires the shared Monk's Focus resource projection.",
       },
@@ -641,7 +641,7 @@ describe("class-feature projection boundaries", () => {
         "The Uncanny Metabolism fixture must expose recovery facts.",
       );
     }
-    const mismatchedRecovery = decodeUnitRecordSync({
+    const mismatchedRecovery = Object.assign({}, uncannyMetabolism, {
       ...uncannyMetabolism,
       mechanics: {
         ...uncannyMetabolism.mechanics,
@@ -657,8 +657,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary: catalogReplacing(mismatchedRecovery),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Uncanny Metabolism recovery must reference the shared Monk's Focus resource.",
       },
@@ -695,8 +695,8 @@ describe("class-feature projection boundaries", () => {
         unitLibrary: catalogReplacing(withoutDieSource),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Uncanny Metabolism requires Martial Arts die source facts.",
       },
     });
@@ -765,8 +765,8 @@ describe("class-feature projection boundaries", () => {
         }),
         malformed.name,
       ).toMatchObject({
-        _tag: "Left",
-        left: { message: malformed.message },
+        _tag: "Failure",
+        failure: { message: malformed.message },
       });
     }
   });

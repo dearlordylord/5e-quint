@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./protocol-codecs": "./src/protocol-codecs.ts",
     "./test-support": "./src/battle-runtime-session.test-support.ts"
   },
   "imports": {
@@ -16,7 +17,9 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,mts,cts}\"",
     "test": "vitest run --exclude \"**/*.mbt.test.ts\"",
     "test:qnt-proofs": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh pnpm run test:qnt-proofs:body",
-    "test:qnt-proofs:body": "../../scripts/assert-resource-lock.sh mbt && RUN_QNT_PROOFS=1 vitest run src/battle-runtime-qnt-proofs.test.ts",
+    "test:qnt-proofs:body": "../../scripts/assert-resource-lock.sh mbt && RUN_QNT_PROOFS=1 vitest run src/battle-runtime-qnt-proofs.test.ts && RUN_QNT_INDUCTIVE_PROOFS=1 vitest run src/battle-runtime-qnt-inductive-proofs.test.ts",
+    "proof:qnt:persistent-area-identity": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh pnpm run proof:qnt:persistent-area-identity:body",
+    "proof:qnt:persistent-area-identity:body": "../../scripts/assert-resource-lock.sh mbt && RUN_QNT_INDUCTIVE_PROOFS=1 vitest run src/battle-runtime-qnt-inductive-proofs.test.ts",
     "test:mbt:acid-arrow-timing": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/acid-arrow-timing.mbt.test.ts",
     "test:mbt:after-hit-damage-riders": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/after-hit-damage-riders.mbt.test.ts",
     "test:mbt:weapon-hosted-attack-and-riders": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/weapon-hosted-attack-and-riders.mbt.test.ts",
@@ -55,6 +58,8 @@
     "test:mbt:see-invisibility-observer-sight": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/see-invisibility-observer-sight.mbt.test.ts",
     "test:mbt:self-teleport-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/self-teleport-lifecycle.mbt.test.ts",
     "test:mbt:self-transformation-mode-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/self-transformation-mode-lifecycle.mbt.test.ts",
+    "test:mbt:insect-plague-area-hazard": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/insect-plague-area-hazard.mbt.test.ts",
+    "test:mbt:cloudkill-area-hazard": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/cloudkill-area-hazard.mbt.test.ts",
     "test:mbt:sleet-storm-area-hazard": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/sleet-storm-area-hazard.mbt.test.ts",
     "test:mbt:slow-active-penalties": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/slow-active-penalties.mbt.test.ts",
     "test:mbt:spell-created-held-object-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/spell-created-held-object-lifecycle.mbt.test.ts",
@@ -85,13 +90,13 @@
     "@dnd/shared": "workspace:*",
     "@dnd/shared-algebras": "workspace:*",
     "@dnd/surface": "workspace:*",
-    "effect": "^3.21.0"
+    "effect": "4.0.0-rc.112"
   },
   "devDependencies": {
     "@firfi/quint-connect": "catalog:",
-    "@types/node": "^22.10.0",
+    "@types/node": "22.19.15",
     "@typescript/native": "npm:typescript@^7.0.2",
-    "typescript": "^5.9.3",
+    "typescript": "5.9.3",
     "vitest": "4.1.11"
   }
 }

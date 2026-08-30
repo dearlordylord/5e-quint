@@ -1,16 +1,16 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { PublicMcpOriginSchema } from "./public-origin.ts";
 
-const decode = Schema.decodeUnknownEither(PublicMcpOriginSchema);
+const decode = Schema.decodeUnknownResult(PublicMcpOriginSchema);
 
 describe("public MCP origin", () => {
   it("accepts exactly one HTTPS origin", () => {
     const decoded = decode("https://oracle.example.test");
-    expect(Either.isRight(decoded)).toBe(true);
-    if (Either.isRight(decoded)) {
-      expect(decoded.right.toString()).toBe("https://oracle.example.test/");
+    expect(Result.isSuccess(decoded)).toBe(true);
+    if (Result.isSuccess(decoded)) {
+      expect(decoded.success.toString()).toBe("https://oracle.example.test/");
     }
   });
 
@@ -21,6 +21,6 @@ describe("public MCP origin", () => {
     "https://oracle.example.test/?query=yes",
     "https://oracle.example.test/#fragment",
   ])("rejects non-origin URL %s", (value) => {
-    expect(decode(value)).toMatchObject({ _tag: "Left" });
+    expect(decode(value)).toMatchObject({ _tag: "Failure" });
   });
 });

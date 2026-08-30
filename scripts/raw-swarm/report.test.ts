@@ -14,7 +14,7 @@ import { tmpdir } from "node:os";
 import { dirname, relative, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import {
@@ -54,27 +54,27 @@ function temporaryDirectory(): string {
 
 function decodePortableManifest(bytes: Uint8Array): PortableManifest {
   const value: unknown = JSON.parse(Buffer.from(bytes).toString("utf8"));
-  const decoded = Schema.decodeUnknownEither(PortableManifestSchema, {
+  const decoded = Schema.decodeUnknownResult(PortableManifestSchema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isLeft(decoded)) {
-    throw new Error(`Portable manifest fixture is invalid: ${decoded.left}`);
+  if (Result.isFailure(decoded)) {
+    throw new Error(`Portable manifest fixture is invalid: ${decoded.failure}`);
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 function decodePortableArtifact(row: unknown): PortableManifestArtifact {
-  const decoded = Schema.decodeUnknownEither(PortableManifestArtifactSchema, {
+  const decoded = Schema.decodeUnknownResult(PortableManifestArtifactSchema, {
     onExcessProperty: "error",
   })(row);
-  if (Either.isLeft(decoded)) {
-    throw new Error(`Portable artifact fixture is invalid: ${decoded.left}`);
+  if (Result.isFailure(decoded)) {
+    throw new Error(`Portable artifact fixture is invalid: ${decoded.failure}`);
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 const PortableFindingsRowSchema = Schema.Struct({
-  sha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  sha256: Schema.String.pipe(Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/))),
   path: Schema.String,
 });
 
@@ -82,24 +82,24 @@ function decodePortableFindingsRow(row: unknown): {
   readonly sha256: string;
   readonly path: string;
 } {
-  const decoded = Schema.decodeUnknownEither(PortableFindingsRowSchema, {
+  const decoded = Schema.decodeUnknownResult(PortableFindingsRowSchema, {
     onExcessProperty: "error",
   })(row);
-  if (Either.isLeft(decoded)) {
-    throw new Error(`Portable findings row is invalid: ${decoded.left}`);
+  if (Result.isFailure(decoded)) {
+    throw new Error(`Portable findings row is invalid: ${decoded.failure}`);
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 function decodeFindingsProjection(bytes: Uint8Array): FindingsProjection {
   const value: unknown = JSON.parse(Buffer.from(bytes).toString("utf8"));
-  const decoded = Schema.decodeUnknownEither(FindingsProjectionSchema, {
+  const decoded = Schema.decodeUnknownResult(FindingsProjectionSchema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isLeft(decoded)) {
-    throw new Error(`Portable findings fixture is invalid: ${decoded.left}`);
+  if (Result.isFailure(decoded)) {
+    throw new Error(`Portable findings fixture is invalid: ${decoded.failure}`);
   }
-  return decoded.right;
+  return decoded.success;
 }
 
 afterEach(() => {
@@ -209,14 +209,14 @@ describe("RAW swarm artifact report index", () => {
   test("rejects direct and nested traversal in portable artifact paths", () => {
     for (const path of ["../escape.json", "nested/../../escape.json"]) {
       expect(
-        Either.isLeft(
-          Schema.decodeUnknownEither(PortableRelativePathSchema)(path),
+        Result.isFailure(
+          Schema.decodeUnknownResult(PortableRelativePathSchema)(path),
         ),
       ).toBe(true);
     }
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(PortableRelativePathSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(PortableRelativePathSchema)(
           "nested/artifact.json",
         ),
       ),
@@ -1032,12 +1032,12 @@ describe("RAW swarm artifact report index", () => {
       }),
     };
     const linker = makeGitHubIssueLinker(runner);
-    expect(Either.isRight(linker.ensureLinked(issueNumber, fingerprint))).toBe(
-      true,
-    );
-    expect(Either.isRight(linker.ensureLinked(issueNumber, fingerprint))).toBe(
-      true,
-    );
+    expect(
+      Result.isSuccess(linker.ensureLinked(issueNumber, fingerprint)),
+    ).toBe(true);
+    expect(
+      Result.isSuccess(linker.ensureLinked(issueNumber, fingerprint)),
+    ).toBe(true);
     expect(
       body.match(new RegExp(`Raw-Swarm-Fingerprint: ${fingerprint}`, "g")),
     ).toHaveLength(1);

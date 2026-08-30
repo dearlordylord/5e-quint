@@ -15,7 +15,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import {
-  counterspellUnitId,
+  spellCastInterruptionReactionUnitId,
   flameBladeUnitId,
   spellCasterId,
   spellTargetId,
@@ -52,6 +52,7 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 
@@ -349,7 +350,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
       fills: [
         targetFill,
         spellCastReactionFactsFill([
-          counterspellTriggerFact({
+          spellCastInterruptionReactionTriggerFact({
             reactorId: spellTargetId,
             casterId: spellCasterId,
           }),
@@ -778,6 +779,7 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
 
   test("flame_blade concentration break and duration expiry remove the held blade light", () => {
     const cast = castFlameBlade(flameBladeBattle());
+    const caster = requireCombatant(cast.state, spellCasterId);
     const broken = breakBattleConcentration(cast.state, spellCasterId);
 
     expect(requireCombatant(broken, spellCasterId).concentration).toBeNull();
@@ -794,7 +796,6 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     );
     expect(snapshotBattle(broken).lightEmitters).toEqual([]);
 
-    const caster = requireCombatant(cast.state, spellCasterId);
     const nearlyExpired: BattleState = {
       ...cast.state,
       combatants: new Map(cast.state.combatants).set(spellCasterId, {
@@ -830,31 +831,25 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     expect(snapshotBattle(expired).lightEmitters).toEqual([]);
   });
 
-  test("flame_blade concentration cleanup preserves an unrelated caster effect", () => {
+  test("flame_blade concentration cleanup preserves a low-level unrelated caster effect", () => {
     const cast = castFlameBlade(flameBladeBattle());
-    const caster = requireCombatant(cast.state, spellCasterId);
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-flame-blade-unrelated-resistance",
     );
-    const state: BattleState = {
-      ...cast.state,
-      combatants: new Map(cast.state.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "damageResistance" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            damageType: "cold" as const,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
-      }),
-    };
+    const state = battleStateWithAllocatedEffectForTest({
+      state: cast.state,
+      ownerId: spellCasterId,
+      effect: {
+        kind: "damageResistance",
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellCasterId,
+        damageType: "cold",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    });
     const broken = breakBattleConcentration(state, spellCasterId);
     const brokenCaster = requireCombatant(broken, spellCasterId);
     expect(brokenCaster.activeEffects).toContainEqual(
@@ -1004,19 +999,19 @@ type SpellCastReactionFactsFill = Extract<
 
 type CounterspellTriggerFact = Extract<
   SpellCastReactionFactsFill["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(input: {
+function spellCastInterruptionReactionTriggerFact(input: {
   readonly reactorId: CombatantId;
   readonly casterId: CombatantId;
 }): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(counterspellUnitId),
+      String(spellCastInterruptionReactionUnitId),
     ),
     rangeFeet: movementFeet(60),
   };

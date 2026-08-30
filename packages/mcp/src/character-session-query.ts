@@ -23,7 +23,7 @@ import {
   type CharacterSheetSpellbookRitualInvocationProjection,
   type CharacterSheetWeaponMasterySelectedReferenceProjection,
 } from "@dnd/character-sheet-runtime";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type {
@@ -32,9 +32,11 @@ import type {
 } from "./character-session-query-tool-input.ts";
 import type { AvailableCharacterSession } from "./session-store.ts";
 
-type RightProjection<Result> =
-  Result extends Either.Either<infer Projection, unknown> ? Projection : never;
-type CharacterSheetAbilityCheckProficiencyBonusProjection = RightProjection<
+type SuccessProjection<Candidate> =
+  Candidate extends Result.Result<infer Projection, unknown>
+    ? Projection
+    : never;
+type CharacterSheetAbilityCheckProficiencyBonusProjection = SuccessProjection<
   ReturnType<typeof characterSheetAbilityCheckProficiencyBonusProjection>
 >;
 
@@ -111,16 +113,16 @@ export type CharacterSessionQueryRequest = Omit<
 export function queryCharacterSession(
   root: McpPlaySessionRoot,
   input: CharacterSessionQueryRequest,
-): Either.Either<CharacterSessionQueryProjection, CharacterSessionQueryIssue> {
+): Result.Result<CharacterSessionQueryProjection, CharacterSessionQueryIssue> {
   const session = root.sessionStore.characters.get(input.characterId);
   if (session === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "unknownCharacterSession",
       characterId: input.characterId,
     });
   }
   if (session.tag === "inBattle") {
-    return Either.left({
+    return Result.fail({
       tag: "inBattleCharacterSession",
       characterId: input.characterId,
       battleId: session.battleId,
@@ -140,7 +142,7 @@ function projectCharacterSessionQuery(input: {
   readonly unitLibrary: UnitCatalog;
   readonly query: CharacterSessionQueryInput;
   readonly characterId: CharacterId;
-}): Either.Either<CharacterSessionQueryProjection, CharacterSessionQueryIssue> {
+}): Result.Result<CharacterSessionQueryProjection, CharacterSessionQueryIssue> {
   return Match.value(input.query).pipe(
     Match.when({ kind: "abilityCheckAbility" }, (query) =>
       projectEither(
@@ -199,7 +201,7 @@ function projectCharacterSessionQuery(input: {
       ),
     ),
     Match.when({ kind: "spellAccess" }, (query) =>
-      Either.right({
+      Result.succeed({
         kind: query.kind,
         projection: characterSheetSpellAccessesForBuild({
           build: input.sheet.build,
@@ -215,7 +217,7 @@ function projectCharacterSessionQuery(input: {
             query,
             "Character Session does not have Druid Wild Shape known forms.",
           )
-        : Either.right({ kind: query.kind, projection });
+        : Result.succeed({ kind: query.kind, projection });
     }),
     Match.when({ kind: "weaponMasterySelections" }, (query) =>
       projectEither(
@@ -250,7 +252,7 @@ function projectCharacterSessionQuery(input: {
       ),
     ),
     Match.when({ kind: "spellInvocation" }, (query) =>
-      Either.right({
+      Result.succeed({
         kind: query.kind,
         projection: characterSheetSpellbookRitualInvocationProjection({
           sheet: input.sheet,
@@ -269,14 +271,14 @@ function projectEither<Query extends CharacterSessionQueryInput, Projection>(
     readonly characterId: CharacterId;
   },
   query: Query,
-  result: Either.Either<Projection, CharacterSheetIssue>,
-): Either.Either<
+  result: Result.Result<Projection, CharacterSheetIssue>,
+): Result.Result<
   { readonly kind: Query["kind"]; readonly projection: Projection },
   CharacterSessionQueryIssue
 > {
-  return Either.isLeft(result)
-    ? queryRejected(input, query, result.left.message, result.left)
-    : Either.right({ kind: query.kind, projection: result.right });
+  return Result.isFailure(result)
+    ? queryRejected(input, query, result.failure.message, result.failure)
+    : Result.succeed({ kind: query.kind, projection: result.success });
 }
 
 function queryRejected<Query extends CharacterSessionQueryInput>(
@@ -287,8 +289,8 @@ function queryRejected<Query extends CharacterSessionQueryInput>(
     tag: "characterSheetIssue",
     message,
   },
-): Either.Either<never, CharacterSessionQueryIssue> {
-  return Either.left({
+): Result.Result<never, CharacterSessionQueryIssue> {
+  return Result.fail({
     tag: "queryRejected",
     characterId: input.characterId,
     queryKind: query.kind,

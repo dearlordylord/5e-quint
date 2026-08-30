@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { mkdtempSync, rmSync } from "node:fs";
 
-import { Either } from "effect";
+import { Result } from "effect";
 import { afterAll, describe, expect, test } from "vitest";
 
 import { buildOracleEvaluationCorpus } from "./oracle-corpus.ts";
@@ -49,22 +49,22 @@ const distribution = buildOracleDistribution({
 const loaded = loadOracleApplicationFromDirectory({
   directory: distribution.destination,
 });
-if (Either.isLeft(loaded)) {
-  throw new Error(`Oracle HTTP test application failed: ${loaded.left.tag}`);
+if (Result.isFailure(loaded)) {
+  throw new Error(`Oracle HTTP test application failed: ${loaded.failure.tag}`);
 }
-const application = loaded.right;
+const application = loaded.success;
 const portZero = decodeOracleBindPort(0);
-const portZeroValue = Either.isLeft(portZero)
+const portZeroValue = Result.isFailure(portZero)
   ? (() => {
       throw new Error("Oracle port zero must decode.");
     })()
-  : portZero.right;
+  : portZero.success;
 
 const corpusResult = buildOracleEvaluationCorpus(application.services);
-if (Either.isLeft(corpusResult)) {
+if (Result.isFailure(corpusResult)) {
   throw new Error("Oracle HTTP test corpus failed to build.");
 }
-const corpus = corpusResult.right;
+const corpus = corpusResult.success;
 
 afterAll(() => {
   rmSync(temporaryRoot, { recursive: true, force: true });
@@ -101,18 +101,20 @@ async function openServer(
           port: portZeroValue,
           ...options,
         });
-  if (Either.isLeft(result)) {
-    throw new Error(`Oracle HTTP test server failed: ${result.left.tag}`);
+  if (Result.isFailure(result)) {
+    throw new Error(`Oracle HTTP test server failed: ${result.failure.tag}`);
   }
-  return result.right;
+  return result.success;
 }
 
 async function closeServer(
   server: Awaited<ReturnType<typeof openServer>>,
 ): Promise<void> {
   const result = await server.close();
-  if (Either.isLeft(result)) {
-    throw new Error(`Oracle HTTP test server close failed: ${result.left.tag}`);
+  if (Result.isFailure(result)) {
+    throw new Error(
+      `Oracle HTTP test server close failed: ${result.failure.tag}`,
+    );
   }
 }
 
@@ -174,11 +176,13 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
         { encodeBatchResponse, serverFactory },
       ),
     );
-    if (Either.isLeft(result)) {
-      throw new Error(`Oracle HTTP public listen failed: ${result.left.tag}`);
+    if (Result.isFailure(result)) {
+      throw new Error(
+        `Oracle HTTP public listen failed: ${result.failure.tag}`,
+      );
     }
     try {
-      const response = await request(result.right, {
+      const response = await request(result.success, {
         method: "POST",
         path: ORACLE_HTTP_EVALUATIONS_PATH,
         body: "not-json",
@@ -186,7 +190,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
       });
       expect(response.statusCode).toBe(400);
     } finally {
-      await closeServer(result.right);
+      await closeServer(result.success);
     }
     expect(serverFactoryCalls).toBe(0);
   });
@@ -216,7 +220,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
         },
       ),
     );
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(serverFactoryCalls).toBe(0);
   });
 
@@ -239,8 +243,8 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
       server.close(),
       server.close(),
     ]);
-    expect(Either.isRight(firstClose)).toBe(true);
-    expect(Either.isRight(secondClose)).toBe(true);
+    expect(Result.isSuccess(firstClose)).toBe(true);
+    expect(Result.isSuccess(secondClose)).toBe(true);
   });
 
   test("captures termination during readiness publication and closes cleanly", async () => {
@@ -277,7 +281,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
     releaseReadiness();
 
     const result = await service;
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(nodeServer?.listening).toBe(false);
     expect(process.listenerCount("SIGINT")).toBe(sigintListeners);
     expect(process.listenerCount("SIGTERM")).toBe(sigtermListeners);
@@ -316,7 +320,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
     process.emit("SIGINT");
 
     const result = await service;
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(nodeServer?.listening).toBe(false);
     expect(process.listenerCount("SIGINT")).toBe(sigintListeners);
     expect(process.listenerCount("SIGTERM")).toBe(sigtermListeners);
@@ -509,8 +513,9 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
       throw new Error("HTTP server was not created");
     nodeServer.emit("error", new Error("injected listener failure"));
     const result = await service;
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) expect(result.left.tag).toBe("listenerFailed");
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result))
+      expect(result.failure.tag).toBe("listenerFailed");
     expect(process.listenerCount("SIGTERM")).toBe(signalListenerCount);
   });
 
@@ -532,8 +537,9 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
       },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) expect(result.left.tag).toBe("invalidAddress");
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result))
+      expect(result.failure.tag).toBe("invalidAddress");
     expect(closeObserved).toBe(true);
     expect(nodeServer?.listening).toBe(false);
   });
@@ -552,17 +558,18 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
       });
     });
     const decodedPort = decodeOracleBindPort(occupiedPort);
-    if (Either.isLeft(decodedPort))
+    if (Result.isFailure(decodedPort))
       throw new Error("occupied port did not decode");
 
     try {
       const result = await listenOracleHttpServer({
         application,
         host: ORACLE_LOOPBACK_HOST,
-        port: decodedPort.right,
+        port: decodedPort.success,
       });
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) expect(result.left.tag).toBe("listenFailed");
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result))
+        expect(result.failure.tag).toBe("listenFailed");
     } finally {
       await new Promise<void>((resolve, reject) => {
         occupied.close((error) =>

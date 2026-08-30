@@ -1,6 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE sorcerer_metamagic
-// UNIT-IDENTITY-REPLAY: L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic doResolveHeightenedSaveGatedDamage doResolveHeightenedHideousLaughter doResolveHeightenedGreaseEntrySave doResolveHeightenedGustOfWindEndTurnSave doResolveHeightenedSaveGatedConditionEndTurnSave
+// UNIT-IDENTITY-REPLAY: L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic doResolveHeightenedSaveGatedDamage doResolveHeightenedStagedCondition doResolveHeightenedGreaseEntrySave doResolveHeightenedGustOfWindEndTurnSave doResolveHeightenedSaveGatedConditionEndTurnSave
 // UNIT-IDENTITY-REPLAY: L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE sorcerer_metamagic doResolveHeightenedSaveGatedConditionEndTurnSave
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE
@@ -44,12 +44,12 @@ import {
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import {
   heightenedSorcererMetamagicBattle,
-  observeHeightenedHideousLaughterRoute,
+  observeHeightenedStagedConditionRoute,
   projectBattleState,
   resolveHeightenedBurningHands,
   resolveHeightenedGreaseEntrySave,
   resolveHeightenedGustOfWindEndTurnSave,
-  resolveHeightenedHideousLaughter,
+  resolveHeightenedStagedCondition,
   resolveHeightenedSaveGatedConditionEndTurnSave,
 } from "./sorcerer-metamagic-selected-identity.test-support.ts";
 
@@ -77,7 +77,7 @@ defineSelectedIdentityReplayAndQntReplay({
     lastResult: {
       Init: "init",
       HeightenedSaveGatedDamage: "heightenedSaveGatedDamage",
-      HeightenedHideousLaughter: "heightenedHideousLaughter",
+      HeightenedStagedCondition: "heightenedStagedCondition",
       HeightenedGreaseEntrySave: "heightenedGreaseEntrySave",
       HeightenedGustOfWindEndTurnSave: "heightenedGustOfWindEndTurnSave",
       HeightenedSaveGatedConditionEndTurnSave:
@@ -115,13 +115,13 @@ defineSelectedIdentityReplayAndQntReplay({
             ),
         },
         {
-          actionName: "doResolveHeightenedHideousLaughter",
+          actionName: "doResolveHeightenedStagedCondition",
           discover: () =>
             projectBattleState(
-              resolveHeightenedHideousLaughter(
+              resolveHeightenedStagedCondition(
                 heightenedSorcererMetamagicBattle(),
               ),
-              "heightenedHideousLaughter",
+              "heightenedStagedCondition",
             ),
         },
         {
@@ -182,14 +182,14 @@ it(
 function createHeightenedMetamagicRouteReplayDriver() {
   return defineDriver(heightenedMetamagicRouteReplayDriverSchema, () => {
     let route: readonly BattleReducerRouteEvent[] =
-      observeHeightenedHideousLaughterInitialRoute();
+      observeHeightenedStagedConditionInitialRoute();
 
     function reset(): void {
-      route = observeHeightenedHideousLaughterInitialRoute();
+      route = observeHeightenedStagedConditionInitialRoute();
     }
 
     function recordResolvedRoute(): void {
-      route = observeHeightenedHideousLaughterRoute(
+      route = observeHeightenedStagedConditionRoute(
         heightenedSorcererMetamagicBattle(),
       );
     }
@@ -205,6 +205,6 @@ function createHeightenedMetamagicRouteReplayDriver() {
   });
 }
 
-function observeHeightenedHideousLaughterInitialRoute() {
+function observeHeightenedStagedConditionInitialRoute() {
   return [battleReducerStartRouteEvent()];
 }

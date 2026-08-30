@@ -3,7 +3,7 @@ import { builtinModules } from "node:module";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   loadOracleApplicationFromDirectory,
@@ -39,28 +39,28 @@ export type OracleDistributionCheckIssue =
 /** Check the exact source-free distribution tree and its runtime identity. */
 export function checkOracleDistribution(
   directory: string = defaultDirectory,
-): Either.Either<true, OracleDistributionCheckIssue> {
+): Result.Result<true, OracleDistributionCheckIssue> {
   const root = resolve(directory);
   let entries: readonly Dirent[];
   try {
     entries = readdirSync(root, { withFileTypes: true });
   } catch {
-    return Either.left({ tag: "missingDirectory" });
+    return Result.fail({ tag: "missingDirectory" });
   }
   for (const entry of entries) {
     const path = resolve(root, entry.name);
     if (entry.isSymbolicLink())
-      return Either.left({ tag: "symbolicLink", path });
-    if (!entry.isFile()) return Either.left({ tag: "nonFile", path });
+      return Result.fail({ tag: "symbolicLink", path });
+    if (!entry.isFile()) return Result.fail({ tag: "nonFile", path });
     if (!expectedFiles.has(entry.name)) {
-      return Either.left({ tag: "unexpectedFile", path });
+      return Result.fail({ tag: "unexpectedFile", path });
     }
     const sourceIssue = inspectBytes(path);
-    if (sourceIssue !== undefined) return Either.left(sourceIssue);
+    if (sourceIssue !== undefined) return Result.fail(sourceIssue);
   }
   for (const name of expectedFiles) {
     if (!entries.some((entry) => entry.name === name)) {
-      return Either.left({
+      return Result.fail({
         tag: "applicationRejected",
         message: `missing ${name}`,
       });
@@ -79,33 +79,33 @@ export function checkOracleDistribution(
     "stat-block-catalog-data.ts",
   ]) {
     if (executable.includes(marker)) {
-      return Either.left({
+      return Result.fail({
         tag: "sourceLeak",
         path: `${executablePath} contains ${marker}`,
       });
     }
   }
   const importIssue = inspectImports(executable);
-  if (importIssue !== undefined) return Either.left(importIssue);
+  if (importIssue !== undefined) return Result.fail(importIssue);
   const repositoryRoot = resolve(packageRoot, "../..");
   if (executable.includes(repositoryRoot)) {
-    return Either.left({ tag: "repositoryPathLeak", path: executablePath });
+    return Result.fail({ tag: "repositoryPathLeak", path: executablePath });
   }
   const stat = lstatSync(executablePath);
   if ((stat.mode & 0o111) === 0) {
-    return Either.left({
+    return Result.fail({
       tag: "applicationRejected",
       message: "executable is not executable",
     });
   }
 
   const application = loadOracleApplicationFromDirectory({ directory: root });
-  return Either.isLeft(application)
-    ? Either.left({
+  return Result.isFailure(application)
+    ? Result.fail({
         tag: "applicationRejected",
-        message: application.left.tag,
+        message: application.failure.tag,
       })
-    : Either.right(true);
+    : Result.succeed(true);
 }
 
 function inspectBytes(path: string): OracleDistributionCheckIssue | undefined {
@@ -150,8 +150,8 @@ function isBuiltinSpecifier(specifier: string): boolean {
 function runCli(): void {
   const directory = process.argv[2] ?? defaultDirectory;
   const result = checkOracleDistribution(directory);
-  if (Either.isLeft(result)) {
-    throw new Error(JSON.stringify(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(JSON.stringify(result.failure));
   }
   process.stdout.write(
     `opaque-oracle distribution check passed: ${resolve(directory)}\n`,

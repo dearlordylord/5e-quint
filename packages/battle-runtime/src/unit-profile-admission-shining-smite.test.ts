@@ -2,12 +2,14 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SHINING-SMITE shining_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage-illumination
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   BattleInterruptProcedureChoiceSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleSnapshotSchema,
 } from "./index.ts";
+import { battleCheckpointFrontierEnvelope } from "./battle-session-execution.ts";
 import {
   battleFrontierInterruptDecisionForState,
   characterSpellInvocationRefForProcedureRefForTest,
@@ -32,7 +34,6 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./battle-reducer/spells-active-effects.ts";
 import {
   applyCondition,
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -142,6 +143,16 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     ) {
       throw new Error("Expected Shining Smite after-hit choice.");
     }
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaitingReaction.state),
+    );
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
         battleRuntimeSessionForTest({
@@ -217,16 +228,19 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     });
     expect(
       requireCombatant(afterWeaponDamage.state, spellTargetId).activeEffects,
-    ).toContainEqual({
-      kind: "shiningSmiteIllumination",
-      sourceProcedureRef: choice.subject.procedureRef,
-      sourceCombatantId: spellCasterId,
-      expiresAt: {
-        kind: "concentration",
-        combatantId: spellCasterId,
-        durationTicks: elapsedTimeTicks(10),
+    ).toEqual([
+      {
+        effectRef: expect.any(String),
+        kind: "afterHitDamageAndIllumination",
+        sourceProcedureRef: choice.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+          durationTicks: elapsedTimeTicks(10),
+        },
       },
-    });
+    ]);
     expect(snapshotBattle(afterWeaponDamage.state).lightEmitters).toEqual([
       {
         kind: "spellLightEmitter",
@@ -234,9 +248,8 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
         sourceCombatantId: spellCasterId,
         attachment: { kind: "combatant", combatantId: spellTargetId },
         emission: {
-          kind: "brightAndDim",
-          brightRadiusFeet: SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET,
-          dimAdditionalFeet: movementFeet(0),
+          kind: "bright",
+          radiusFeet: movementFeet(5),
         },
         opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
         expiresAt: {
@@ -384,7 +397,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       requireCombatant(concentrationBroken.state, spellTargetId).activeEffects,
     ).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: "shiningSmiteIllumination" }),
+        expect.objectContaining({ kind: "afterHitDamageAndIllumination" }),
       ]),
     );
     expect(snapshotBattle(concentrationBroken.state).lightEmitters).toEqual([]);

@@ -10,7 +10,7 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 //   - admit()                         - was
 //                                       supportedCantripHeldLightSpellProfile
 //                                       in spells-profiles.ts
-//   - isProduceFlameOngoingEffectSpell - shared shape parser for the paired
+//   - isHeldFlameAttackOngoingEffectSpell - shared shape parser for the paired
 //                                       heldLightHurl profile
 //   - discoverCastAct()               - was the heldLight branch in
 //                                       spells-discovery.ts:discoverBattleActs
@@ -28,8 +28,8 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { attackBonus, movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
+import { Result } from "effect";
+import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 
 import type { CombatantId } from "../../identity.ts";
 import {
@@ -73,7 +73,7 @@ type HeldLightInvocation = Extract<
   { readonly procedure: "heldLight" }
 >;
 
-export function isProduceFlameOngoingEffectSpell(
+export function isHeldFlameAttackOngoingEffectSpell(
   spell: BattleSpellAdmissionSource,
 ): spell is BattleSpellAdmissionSource & {
   readonly mechanics: Extract<
@@ -103,17 +103,17 @@ function admitHeldLight(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly HeldLightInvocation[] {
-  if (!isProduceFlameOngoingEffectSpell(spell)) {
+  if (!isHeldFlameAttackOngoingEffectSpell(spell)) {
     return [];
   }
   const lightOperation = spell.mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "passive" &&
-      operation.effect.kind === "emit_light",
+      operation.effect.kind === "emit_bright_and_dim_illumination",
   );
   if (
     lightOperation === undefined ||
-    lightOperation.effect.kind !== "emit_light" ||
+    lightOperation.effect.kind !== "emit_bright_and_dim_illumination" ||
     lightOperation.effect.brightRadiusFeet !== 20 ||
     lightOperation.effect.dimAdditionalFeet !== 20
   ) {
@@ -125,7 +125,7 @@ function admitHeldLight(
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
   const hurl = heldLightHurlMechanicalFacts(spell, ctx);
-  return Either.isLeft(durationTicks) || hurl === null
+  return Result.isFailure(durationTicks) || hurl === null
     ? []
     : [
         {
@@ -143,7 +143,7 @@ function admitHeldLight(
             ),
           },
           hurl,
-          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
         },
       ];
 }
@@ -152,7 +152,7 @@ export function heldLightHurlMechanicalFacts(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): HeldLightHurlMechanicalFacts | null {
-  if (!isProduceFlameOngoingEffectSpell(spell)) return null;
+  if (!isHeldFlameAttackOngoingEffectSpell(spell)) return null;
   const hurlOperation = spell.mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "on_caster_spends_action" &&
@@ -221,7 +221,7 @@ function applyHeldLightEffect(
   if (caster === undefined) {
     return state;
   }
-  const allocation = allocateBattleActiveEffectRefForCreature({
+  const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: caster,
   });
   const hurlExecution = {

@@ -22,6 +22,7 @@ import {
 import { CONDITIONS } from "@dnd/shared/types";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
 import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
 import {
@@ -74,7 +75,6 @@ import {
   creatureSpaceMovementPermissionProfileForUnit,
   dwarfDwarvenResilienceUnitId,
   discoverBattleActs,
-  Either,
   endTurn,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
@@ -340,7 +340,7 @@ describe("L3MSPEC species battle support", () => {
         sourceFacts: draconicAncestrySourceFacts,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(speciesDragonbornBreathWeaponUnitId),
         supportProfiles: [expectedBreathWeaponSupport],
       }),
@@ -374,7 +374,7 @@ describe("L3MSPEC species battle support", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleUnitSupportProfileIssue",
         message: `Unsupported battle Attack-action area save-damage replacement Unit hook: ${unit.id}.`,
       }),
@@ -689,7 +689,7 @@ describe("L3MSPEC species battle support", () => {
         sourceFacts: draconicAncestrySourceFacts,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(speciesDragonbornDamageResistanceUnitId),
         supportProfiles: [expectedDamageResistanceSupport],
       }),
@@ -722,7 +722,7 @@ describe("L3MSPEC species battle support", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleUnitSupportProfileIssue",
         message: `Unsupported battle passive damage Resistance Unit hook: ${unit.id}.`,
       }),
@@ -814,9 +814,9 @@ describe("L3MSPEC species battle support", () => {
       unit,
       sourceFacts: draconicAncestrySourceFacts,
     });
-    expect(Either.isRight(unitRef)).toBe(true);
-    if (Either.isLeft(unitRef)) {
-      throw new Error(unitRef.left.message);
+    expect(Result.isSuccess(unitRef)).toBe(true);
+    if (Result.isFailure(unitRef)) {
+      throw new Error(unitRef.failure.message);
     }
     const targetId = combatantId("dragonborn-damage-resistance-target");
     const result = startBattle({
@@ -826,7 +826,7 @@ describe("L3MSPEC species battle support", () => {
           combatantId: targetId,
           displayName: "Dragonborn Target",
           initiative: 10,
-          characterUnitRefs: [unitRef.right],
+          characterUnitRefs: [unitRef.success],
         }),
         characterCreature({
           combatantId: combatantId("dragonborn-damage-resistance-attacker"),
@@ -838,22 +838,32 @@ describe("L3MSPEC species battle support", () => {
         }),
       ],
     });
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      throw new Error(battleStateInitIssueMessage(result.left));
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      throw new Error(battleStateInitIssueMessage(result.failure));
     }
-    const target = result.right.state.combatants.get(targetId);
+    const target = result.success.state.combatants.get(targetId);
     if (target === undefined) {
       throw new Error("Expected Dragonborn target combatant.");
     }
 
     expect(
-      damageAmountAfterTargetAdjustments(result.right.state, target, 9, "fire"),
+      damageAmountAfterTargetAdjustments(
+        result.success.state,
+        target,
+        9,
+        "fire",
+      ),
     ).toBe(4);
     expect(
-      damageAmountAfterTargetAdjustments(result.right.state, target, 9, "cold"),
+      damageAmountAfterTargetAdjustments(
+        result.success.state,
+        target,
+        9,
+        "cold",
+      ),
     ).toBe(9);
-    const fireBoltAct = discoverBattleActs(result.right).find(
+    const fireBoltAct = discoverBattleActs(result.success).find(
       (candidate) => candidate.subject.tag === "actionSpell",
     );
     expect(fireBoltAct?.routeEvents).toEqual(
@@ -872,7 +882,7 @@ describe("L3MSPEC species battle support", () => {
     const spellTarget = findHole(fireBoltAct.initialHoles, "targetChoice");
     const spellAttack = requireHole(
       resolveBattleSubject({
-        state: result.right.state,
+        state: result.success.state,
         subject: fireBoltAct.subject,
         fills: [targetFill(spellTarget, targetId)],
       }),
@@ -880,7 +890,7 @@ describe("L3MSPEC species battle support", () => {
     );
     const spellDamage = requireHole(
       resolveBattleSubject({
-        state: result.right.state,
+        state: result.success.state,
         subject: fireBoltAct.subject,
         fills: [
           targetFill(spellTarget, targetId),
@@ -891,7 +901,7 @@ describe("L3MSPEC species battle support", () => {
     );
     const spellResolved = requireResolved(
       resolveBattleSubject({
-        state: result.right.state,
+        state: result.success.state,
         subject: fireBoltAct.subject,
         fills: [
           targetFill(spellTarget, targetId),
@@ -919,7 +929,7 @@ describe("L3MSPEC species battle support", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(dwarfDwarvenResilienceUnitId),
         supportProfiles: [
           expectedPoisonedSaveAdvantageSupport,
@@ -1079,7 +1089,7 @@ describe("L3MSPEC species battle support", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(speciesHalflingBraveUnitId),
         supportProfiles: [expectedFrightenedSaveAdvantageSupport],
       }),
@@ -1117,7 +1127,7 @@ describe("L3MSPEC species battle support", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(speciesHalflingNimblenessUnitId),
         supportProfiles: [expectedCreatureSpaceMovementPermissionSupport],
       }),
@@ -1229,7 +1239,7 @@ describe("L3MSPEC species battle support", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(speciesGoliathPowerfulBuildUnitId),
         supportProfiles: [expectedPowerfulBuildSupport],
       }),
@@ -1347,9 +1357,9 @@ function powerfulBuildEscapeGrappleScenario(input: {
     unitRef: { unitId: unit.id },
     unit,
   });
-  expect(Either.isRight(unitRef)).toBe(true);
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  expect(Result.isSuccess(unitRef)).toBe(true);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const scenarioId = input.selected
     ? input.poisoned === true
@@ -1372,7 +1382,7 @@ function powerfulBuildEscapeGrappleScenario(input: {
         combatantId: goliathId,
         displayName: "Powerful Build Goliath",
         initiative: 10,
-        characterUnitRefs: input.selected ? [unitRef.right] : [],
+        characterUnitRefs: input.selected ? [unitRef.success] : [],
         unitFeatures: input.selected
           ? [characterBattleFeatureInitForTest(unit)]
           : [],
@@ -1380,9 +1390,9 @@ function powerfulBuildEscapeGrappleScenario(input: {
       }),
     ],
   });
-  expect(Either.isRight(state)).toBe(true);
-  if (Either.isLeft(state)) {
-    throw new Error(battleStateInitIssueMessage(state.left));
+  expect(Result.isSuccess(state)).toBe(true);
+  if (Result.isFailure(state)) {
+    throw new Error(battleStateInitIssueMessage(state.failure));
   }
   const grappleSubject = {
     tag: "action",
@@ -1391,7 +1401,7 @@ function powerfulBuildEscapeGrappleScenario(input: {
   } as const;
   const target = requireHole(
     resolveBattleSubject({
-      state: state.right.state,
+      state: state.success.state,
       subject: grappleSubject,
       fills: [],
     }),
@@ -1402,7 +1412,7 @@ function powerfulBuildEscapeGrappleScenario(input: {
   ]);
   const outcome = requireHole(
     resolveBattleSubject({
-      state: state.right.state,
+      state: state.success.state,
       subject: grappleSubject,
       fills: [targetChoice],
     }),
@@ -1410,7 +1420,7 @@ function powerfulBuildEscapeGrappleScenario(input: {
   );
   const grappled = requireResolved(
     resolveBattleSubject({
-      state: state.right.state,
+      state: state.success.state,
       subject: grappleSubject,
       fills: [targetChoice, grappleOutcomeFill(outcome, false)],
     }),
@@ -1425,7 +1435,7 @@ function powerfulBuildEscapeGrappleScenario(input: {
   ).state;
   const discoveredEscape = discoverBattleActs(
     battleRuntimeSessionForTest({
-      ...state.right,
+      ...state.success,
       state: goliathTurn,
     }),
   ).find(
@@ -1456,9 +1466,9 @@ function dwarvenResilienceBattle() {
     unitRef: { unitId: unit.id },
     unit,
   });
-  expect(Either.isRight(unitRef)).toBe(true);
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  expect(Result.isSuccess(unitRef)).toBe(true);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const targetId = combatantId("dwarven-resilience-target");
   const result = startBattle({
@@ -1469,7 +1479,7 @@ function dwarvenResilienceBattle() {
         displayName: "Dwarf Target",
         initiative: 10,
         unitFeatures: [characterBattleFeatureInitForTest(unit)],
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
       }),
       characterCreature({
         combatantId: combatantId("dwarven-resilience-attacker"),
@@ -1478,11 +1488,11 @@ function dwarvenResilienceBattle() {
       }),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function halflingBraveBattle() {
@@ -1491,9 +1501,9 @@ function halflingBraveBattle() {
     unitRef: { unitId: unit.id },
     unit,
   });
-  expect(Either.isRight(unitRef)).toBe(true);
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  expect(Result.isSuccess(unitRef)).toBe(true);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const targetId = combatantId("halfling-brave-target");
   const result = startBattle({
@@ -1504,7 +1514,7 @@ function halflingBraveBattle() {
         displayName: "Halfling Target",
         initiative: 10,
         unitFeatures: [characterBattleFeatureInitForTest(unit)],
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
       }),
       characterCreature({
         combatantId: combatantId("halfling-brave-attacker"),
@@ -1513,11 +1523,11 @@ function halflingBraveBattle() {
       }),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () => {
@@ -1527,7 +1537,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(monkMartialArtsUnitId),
         supportProfiles: [MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE],
       }),
@@ -1743,7 +1753,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(monkMonksFocusUnitId),
         supportProfiles: [supportProfile],
       }),
@@ -1901,7 +1911,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(monkStunningStrikeUnitId),
         supportProfiles: [supportProfile],
       }),
@@ -1956,7 +1966,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(monkDeflectAttacksUnitId),
         supportProfiles: [supportProfile],
       }),
@@ -2015,7 +2025,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(monkSlowFallUnitId),
         supportProfiles: [supportProfile],
       }),
@@ -2150,7 +2160,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(fighterActionSurgeUnitId),
         supportProfiles: [],
       }),
@@ -2170,7 +2180,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(fighterImprovedCriticalUnitId),
         supportProfiles: [WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE],
       }),
@@ -2220,7 +2230,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
         classLevels: [{ className: "fighter", level: 8 }],
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(fighterTacticalMasterUnitId),
         supportProfiles: [],
       }),
@@ -2232,7 +2242,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
         classLevels: [{ className: "fighter", level: 9 }],
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(fighterTacticalMasterUnitId),
         supportProfiles: [
           {
@@ -2261,7 +2271,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
         unit: push,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit("mastery_push"),
         supportProfiles: [WEAPON_MASTERY_PUSH_SUPPORT_PROFILE],
       }),
@@ -2272,7 +2282,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
         unit: slow,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit("mastery_slow"),
         supportProfiles: [WEAPON_MASTERY_SLOW_SUPPORT_PROFILE],
       }),
@@ -2288,7 +2298,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(barbarianRageUnitId),
         supportProfiles: [],
       }),
@@ -2471,7 +2481,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(rogueCunningActionUnitId),
         supportProfiles: [
           {
@@ -2496,7 +2506,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(rogueUncannyDodgeUnitId),
         supportProfiles: [REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE],
       }),
@@ -2526,7 +2536,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(rogueSneakAttackUnitId),
         supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
       }),
@@ -2612,7 +2622,7 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(barbarianFrenzyUnitId),
         supportProfiles: [ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE],
       }),

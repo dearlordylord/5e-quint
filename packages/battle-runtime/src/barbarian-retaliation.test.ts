@@ -2,7 +2,7 @@ import { movementFeet } from "@dnd/shared/types";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.retaliation-reaction-attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-01-BARBARIAN-RETALIATION barbarian_retaliation
 import { describe, expect, test } from "vitest";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import { classLevel } from "@dnd/shared/types";
 import {
   BattleCheckpointFrontierEnvelopeSchema,
@@ -11,7 +11,6 @@ import {
   battleCheckpointFrontierEnvelope,
 } from "./index.ts";
 import {
-  Either,
   attackRollFill,
   battleId,
   battleUnitSupportProfilesForUnit,
@@ -70,8 +69,8 @@ describe("battle runtime: Barbarian Retaliation", () => {
       battleCheckpointFrontierEnvelope(awaitingRetaliation.state),
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),
@@ -229,10 +228,10 @@ function barbarianRetaliationBattle(input?: {
 function retaliationSupportProfiles() {
   const unit = unitLibrary.requireUnit("barbarian_retaliation");
   const supportProfiles = battleUnitSupportProfilesForUnit({ unit });
-  if (Either.isLeft(supportProfiles)) {
-    throw new Error(supportProfiles.left.message);
+  if (Result.isFailure(supportProfiles)) {
+    throw new Error(supportProfiles.failure.message);
   }
-  return supportProfiles.right;
+  return supportProfiles.success;
 }
 
 function resolveGoblinScimitarDamage(input: {

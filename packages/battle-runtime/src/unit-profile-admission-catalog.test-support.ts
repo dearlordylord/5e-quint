@@ -186,7 +186,7 @@ export const continualFlameUnitId = "continual_flame";
 
 export const contagionUnitId = "contagion";
 
-export const counterspellUnitId = "counterspell";
+export const spellCastInterruptionReactionUnitId = "counterspell";
 
 export const dispelMagicUnitId = "dispel_magic";
 export const dispelEvilAndGoodUnitId = "dispel_evil_and_good";
@@ -231,13 +231,13 @@ export const iceKnifeUnitId = "ice_knife";
 
 export const sleepUnitId = "sleep";
 
-export const hideousLaughterUnitId = "hideous_laughter";
+export const saveGatedConditionWithRepeatUnitId = "hideous_laughter";
 
-export const hideousLaughterDurationTicks = elapsedTimeTicks(10);
+export const saveGatedConditionWithRepeatDurationTicks = elapsedTimeTicks(10);
 
-export const hypnoticPatternUnitId = "hypnotic_pattern";
+export const saveGatedAreaControlUnitId = "hypnotic_pattern";
 
-export const hypnoticPatternDurationTicks = elapsedTimeTicks(10);
+export const saveGatedAreaControlDurationTicks = elapsedTimeTicks(10);
 
 export const holdPersonUnitId = "hold_person";
 
@@ -428,7 +428,7 @@ export const starryWispUnitId = "starry_wisp";
 
 export const viciousMockeryUnitId = "vicious_mockery";
 
-export const wardingBondUnitId = "warding_bond";
+export const linkedDefenseResistanceDamageShareUnitId = "warding_bond";
 
 export const paladinExtraAttackUnitId = "paladin_extra_attack";
 

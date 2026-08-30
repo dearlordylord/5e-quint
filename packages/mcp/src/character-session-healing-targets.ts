@@ -1,5 +1,5 @@
 import type { CharacterId } from "@dnd/battle-runtime";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -28,10 +28,10 @@ export function lookupAvailableHealingTargetSession(
     readonly targetCharacterId: CharacterId;
     readonly recipientIndex?: number;
   },
-): Either.Either<AvailableCharacterSession, HealingTargetIssue> {
+): Result.Result<AvailableCharacterSession, HealingTargetIssue> {
   const session = root.sessionStore.characters.get(input.targetCharacterId);
   if (session === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "unknownCharacterSession",
       targetCharacterId: input.targetCharacterId,
       ...(input.recipientIndex === undefined
@@ -41,7 +41,7 @@ export function lookupAvailableHealingTargetSession(
     });
   }
   if (session.tag === "inBattle") {
-    return Either.left({
+    return Result.fail({
       tag: "characterSessionInBattle",
       targetCharacterId: input.targetCharacterId,
       ...(input.recipientIndex === undefined
@@ -51,13 +51,13 @@ export function lookupAvailableHealingTargetSession(
         "Healing operation requires every affected Character Session to be available.",
     });
   }
-  return Either.right(session);
+  return Result.succeed(session);
 }
 
 export function spellRestBenefitRecipientSessions(
   root: McpPlaySessionRoot,
   input: { readonly recipients: SpellRestBenefitOperation["recipients"] },
-): Either.Either<
+): Result.Result<
   readonly [
     SpellRestBenefitRecipientSession,
     ...SpellRestBenefitRecipientSession[],
@@ -77,17 +77,18 @@ export function spellRestBenefitRecipientSessions(
       }),
   );
   const issues = [firstSession, ...remainingSessions].flatMap((session) =>
-    Either.isLeft(session) ? [session.left] : [],
+    Result.isFailure(session) ? [session.failure] : [],
   );
   const [firstIssue, ...remainingIssues] = issues;
   if (firstIssue !== undefined) {
-    return Either.left([firstIssue, ...remainingIssues]);
+    return Result.fail([firstIssue, ...remainingIssues]);
   }
-  if (Either.isLeft(firstSession)) return Either.left([firstSession.left]);
-  return Either.right([
-    firstSession.right,
+  if (Result.isFailure(firstSession))
+    return Result.fail([firstSession.failure]);
+  return Result.succeed([
+    firstSession.success,
     ...remainingSessions.flatMap((session) =>
-      Either.isRight(session) ? [session.right] : [],
+      Result.isSuccess(session) ? [session.success] : [],
     ),
   ]);
 }
@@ -114,8 +115,8 @@ function lookupSpellRestBenefitRecipientSession(
     readonly recipient: SpellRestBenefitOperation["recipients"][number];
     readonly recipientIndex: number;
   },
-): Either.Either<SpellRestBenefitRecipientSession, HealingTargetIssue> {
-  return Either.map(
+): Result.Result<SpellRestBenefitRecipientSession, HealingTargetIssue> {
+  return Result.map(
     lookupAvailableHealingTargetSession(root, {
       targetCharacterId: input.recipient.characterId,
       recipientIndex: input.recipientIndex,

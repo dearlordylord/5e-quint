@@ -28,7 +28,7 @@ import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/
 //   - Duration expiry stays in the shared active-effect lifecycle.
 
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -46,6 +46,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -82,7 +83,7 @@ function seeInvisibleObserverSightShape(
     phase.attachment.kind !== "self" ||
     effects.length !== 1 ||
     effect?.kind !== "see_invisible_and_ethereal" ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
@@ -92,13 +93,14 @@ function seeInvisibleObserverSightShape(
       sourceCombatantId: actorId,
       expiresAt: {
         kind: "duration",
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
       },
     },
   };
 }
 
 const SeeInvisibleAndEtherealEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("seeInvisibleAndEthereal"),
   sourceCombatantId: CombatantId,
   expiresAt: DurationBattleActiveEffectExpirationSchema,
@@ -165,7 +167,7 @@ function resolveSeeInvisibleObserverSight(
     return invalidResult(
       input.input.state,
       "invalidFill",
-      "See Invisibility uses no target, roll, damage, or selection fills.",
+      "concealment-visibility override uses no target, roll, damage, or selection fills.",
     );
   }
   /* v8 ignore stop -- @preserve */

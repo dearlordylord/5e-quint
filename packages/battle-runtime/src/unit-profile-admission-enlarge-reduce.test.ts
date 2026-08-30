@@ -1,9 +1,10 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
   battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -83,11 +84,9 @@ import {
   elapsedTimeTicks,
   resolveBattleInterrupt,
   resolveBattleSubject,
-  spellId,
   spellSlotInvocationRef,
   type BattleRuntimeSession,
   type BattleState,
-  type SpellMarkedDamageRider,
 } from "./unit-profile-admission.test-support.ts";
 
 function creatureSizeAct(
@@ -444,7 +443,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
           spellTargetId,
         ),
         spellCastReactionFactsFill([
-          counterspellTriggerFact(castingSession, spellTargetId, spellCasterId),
+          spellCastInterruptionReactionTriggerFact(
+            castingSession,
+            spellTargetId,
+            spellCasterId,
+          ),
         ]),
       ],
     });
@@ -525,7 +528,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
           spellTargetId,
         ),
         spellCastReactionFactsFill([
-          counterspellTriggerFact(session, spellTargetId, spellCasterId),
+          spellCastInterruptionReactionTriggerFact(
+            session,
+            spellTargetId,
+            spellCasterId,
+          ),
         ]),
       ],
     });
@@ -580,7 +587,11 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
           spellTargetId,
         ),
         spellCastReactionFactsFill([
-          counterspellTriggerFact(session, spellTargetId, spellCasterId),
+          spellCastInterruptionReactionTriggerFact(
+            session,
+            spellTargetId,
+            spellCasterId,
+          ),
         ]),
       ],
     });
@@ -870,6 +881,9 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     if (enlarged.tag !== "resolved") {
       throw new Error("Expected Enlarge self cast to resolve.");
     }
+    const enlargedCaster = requireCombatant(enlarged.state, spellCasterId);
+    const enlargedEffect = sizeChangeEffects(enlarged.state, spellCasterId)[0];
+    expect(enlargedEffect).toHaveProperty("effectRef");
 
     const recastReady = {
       ...enlarged.state,
@@ -900,6 +914,21 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     if (reduced.tag !== "resolved") {
       throw new Error("Expected Reduce recast to resolve.");
     }
+    const reducedCaster = requireCombatant(reduced.state, spellCasterId);
+    const reducedEffect = sizeChangeEffects(reduced.state, spellCasterId)[0];
+    expect(reducedEffect).toHaveProperty("effectRef");
+    const enlargedEffectRef =
+      enlargedEffect !== undefined && "effectRef" in enlargedEffect
+        ? enlargedEffect.effectRef
+        : undefined;
+    const reducedEffectRef =
+      reducedEffect !== undefined && "effectRef" in reducedEffect
+        ? reducedEffect.effectRef
+        : undefined;
+    expect(reducedEffectRef).not.toBe(enlargedEffectRef);
+    expect(Number(reducedCaster.nextEffectOrdinal)).toBe(
+      Number(enlargedCaster.nextEffectOrdinal) + 1,
+    );
     expect(sizeChangeEffects(reduced.state, spellCasterId)).toEqual([
       expect.objectContaining({
         kind: "spellCreatureSizeChange",
@@ -1168,7 +1197,7 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     ).toBe(11);
   });
 
-  test("Reduce damage floor applies before target resistance", () => {
+  test("low-level injected damage interactions: Reduce damage floor applies before target resistance", () => {
     const spell = spellRecord(enlargeReduceUnitId);
     const session = spellBattle({
       preparedSpells: [spell],
@@ -1195,7 +1224,12 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       throw new Error("Expected Reduce self cast to resolve.");
     }
 
-    const withRider = withSyntheticHitRider(reduced.state, false);
+    // Reduce is admitted above; the rider and resistance are deliberately
+    // injected to isolate damage-modifier ordering rather than spell admission.
+    const withRider = withLowLevelInjectedDamageInteractions(
+      reduced.state,
+      false,
+    );
     expect(
       resolveAttackHitHp(
         battleRuntimeSessionForTest({
@@ -1210,7 +1244,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       ),
     ).toBe(11);
 
-    const resisted = withSyntheticHitRider(reduced.state, true);
+    const resisted = withLowLevelInjectedDamageInteractions(
+      reduced.state,
+      true,
+    );
     expect(
       resolveAttackHitHp(
         battleRuntimeSessionForTest({
@@ -1273,7 +1310,7 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     ).toBe(11);
   });
 
-  test("Reduce subtracts from total attack-hit damage including marked riders", () => {
+  test("Reduce subtracts from total attack-hit damage in a low-level marked-rider interaction", () => {
     const spell = spellRecord(enlargeReduceUnitId);
     const session = spellBattle({
       preparedSpells: [spell],
@@ -1576,94 +1613,90 @@ function resolveAttackHitHp(
   return requireCombatant(resolved.state, spellTargetId).hp;
 }
 
-function withSyntheticHitRider(
+function withLowLevelInjectedDamageInteractions(
   state: BattleState,
   targetResistsDamage: boolean,
 ): BattleState {
-  const caster = requireCombatant(state, spellCasterId);
-  const target = requireCombatant(state, spellTargetId);
   const duration = {
     kind: "duration" as const,
     durationTicks: elapsedTimeTicks(600),
   };
-  return {
-    ...state,
-    combatants: new Map(state.combatants)
-      .set(spellCasterId, {
-        ...caster,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "spellWeaponDamageRider" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("synthetic_reduce_floor_rider"),
-            ),
-            sourceCombatantId: spellCasterId,
-            damage: {
-              expr: { dice: 1, dieSize: 4 },
-              damageType: "radiant" as const,
-            },
-            expiresAt: duration,
+  const riderProcedureRef = battleProcedureExecutionRefForTest(
+    "synthetic-reduce-floor-rider",
+  );
+  const resistanceProcedureRef = battleProcedureExecutionRefForTest(
+    "synthetic-reduce-floor-resistance",
+  );
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: spellCasterId,
+        effect: {
+          kind: "spellWeaponDamageRider" as const,
+          sourceProcedureRef: riderProcedureRef,
+          sourceCombatantId: spellCasterId,
+          damage: {
+            expr: { dice: 1, dieSize: 4 },
+            damageType: "radiant" as const,
           },
-        ],
-      })
-      .set(spellTargetId, {
-        ...target,
-        activeEffects: targetResistsDamage
-          ? [
-              ...target.activeEffects,
-              {
+          expiresAt: duration,
+        },
+      },
+      ...(targetResistsDamage
+        ? ([
+            {
+              kind: "activeEffect" as const,
+              ownerId: spellTargetId,
+              effect: {
                 kind: "damageResistance" as const,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String("synthetic_reduce_floor_resistance"),
-                ),
+                sourceProcedureRef: resistanceProcedureRef,
                 sourceCombatantId: spellTargetId,
                 damageType: "slashing" as const,
                 expiresAt: duration,
               },
-              {
+            },
+            {
+              kind: "activeEffect" as const,
+              ownerId: spellTargetId,
+              effect: {
                 kind: "damageResistance" as const,
-                sourceProcedureRef: battleProcedureExecutionRefForTest(
-                  String("synthetic_reduce_floor_resistance"),
-                ),
+                sourceProcedureRef: resistanceProcedureRef,
                 sourceCombatantId: spellTargetId,
                 damageType: "radiant" as const,
                 expiresAt: duration,
               },
-            ]
-          : target.activeEffects,
-      }),
-  };
+            },
+          ] as const)
+        : []),
+    ],
+  }).state;
 }
 
 function withSyntheticMarkedDamageRider(state: BattleState): BattleState {
-  const caster = requireCombatant(state, spellCasterId);
-  const markedRider = {
-    kind: "spellMarkedDamageRider",
-    effectRef: battleActiveEffectExecutionRefForTest("reduce-floor-mark"),
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(spellId("synthetic_reduce_floor_mark")),
-    ),
-    sourceCombatantId: spellCasterId,
-    targetCombatantId: spellTargetId,
-    transfer: {
-      kind: "awaitingTargetDrop",
-      retargetTiming: "sameTurn",
+  return battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: spellCasterId,
+    effect: {
+      kind: "spellMarkedDamageRider",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-reduce-damage-aggregation-mark",
+      ),
+      sourceCombatantId: spellCasterId,
+      targetCombatantId: spellTargetId,
+      transfer: {
+        kind: "awaitingTargetDrop",
+        retargetTiming: "sameTurn",
+      },
+      abilityCheckBehavior: { kind: "none" },
+      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" },
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(600),
+      },
     },
-    abilityCheckBehavior: { kind: "none" },
-    damage: { expr: { dice: 1, dieSize: 6 }, damageType: "force" },
-    expiresAt: {
-      kind: "concentration",
-      combatantId: spellCasterId,
-    },
-  } satisfies SpellMarkedDamageRider;
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, {
-      ...caster,
-      activeEffects: [...caster.activeEffects, markedRider],
-    }),
-  };
+  });
 }
 
 function sizeChangeEffects(
@@ -1769,22 +1802,26 @@ type CounterspellTriggerFact = Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(
+function spellCastInterruptionReactionTriggerFact(
   session: BattleRuntimeSession,
   reactorId: typeof spellTargetId,
   casterId: typeof spellCasterId,
 ): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId,
     casterId,
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
       session,
       reactorId,
-      spellSlotInvocationRef("counterspell", 3, "counterspell"),
+      spellSlotInvocationRef(
+        "counterspell",
+        3,
+        "spellCastInterruptionReaction",
+      ),
     ),
     rangeFeet: movementFeet(60),
   };
@@ -1834,8 +1871,8 @@ function requireCounterspellChoice(
     );
     return (
       invocation.tag === "spellSlot" &&
-      invocation.spellId === "counterspell" &&
-      invocation.procedure === "counterspell" &&
+      invocation.spellId === "spellCastInterruptionReaction" &&
+      invocation.procedure === "spellCastInterruptionReaction" &&
       Number(invocation.slotLevel) === 3
     );
   });

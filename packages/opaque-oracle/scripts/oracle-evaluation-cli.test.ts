@@ -1,6 +1,16 @@
-import { FileSystem, Path, Terminal } from "@effect/platform";
-import { SystemError } from "@effect/platform/Error";
-import { Effect, Either, Layer, Option } from "effect";
+import {
+  Effect,
+  FileSystem,
+  Result,
+  Layer,
+  Option,
+  Path,
+  Stdio,
+  Terminal,
+} from "effect";
+import { PlatformError, SystemError } from "effect/PlatformError";
+import { NodeServices } from "@effect/platform-node";
+import type { ChildProcessSpawner } from "effect/unstable/process";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -25,16 +35,18 @@ import {
 const services = emptyEvaluationServices();
 const fixtureCorpus = createFixtureCorpus();
 const buildFixtureCorpus: OracleEvaluationCorpusBuilder = () =>
-  Either.right(fixtureCorpus);
+  Result.succeed(fixtureCorpus);
 
 describe("Opaque Oracle evaluation CLI", () => {
   test("production composition builds populated evaluator catalogs once", () => {
     const result = buildProductionOracleEvaluationServices();
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) return;
-    expect(result.right.unitLibrary.listUnits()).not.toHaveLength(0);
-    expect(result.right.statBlockCatalog.listStatBlocks()).not.toHaveLength(0);
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) return;
+    expect(result.success.unitLibrary.listUnits()).not.toHaveLength(0);
+    expect(result.success.statBlockCatalog.listStatBlocks()).not.toHaveLength(
+      0,
+    );
   });
 
   test("generate validates and writes only to stdout", async () => {
@@ -49,7 +61,7 @@ describe("Opaque Oracle evaluation CLI", () => {
       recordingTerminal(output),
     );
 
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(output).toEqual([expected.toString("utf8")]);
     expect(events).toEqual([]);
   });
@@ -74,7 +86,7 @@ describe("Opaque Oracle evaluation CLI", () => {
       recordingTerminal(output),
     );
 
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(output).toHaveLength(1);
     expect(events).toEqual([]);
   });
@@ -93,7 +105,7 @@ describe("Opaque Oracle evaluation CLI", () => {
       fileSystem,
     );
 
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(events).toEqual([
       "directory:corpus/nested:true",
       `temporary:${temporary}:corpus/nested:.oracle-evaluation-corpus.json.:.tmp`,
@@ -128,7 +140,7 @@ describe("Opaque Oracle evaluation CLI", () => {
       recordingTerminal(output),
     );
 
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(events).toEqual([
       "directory:corpus/command:true",
       `temporary:${temporary}:corpus/command:.oracle-evaluation-corpus.json.:.tmp`,
@@ -158,7 +170,7 @@ describe("Opaque Oracle evaluation CLI", () => {
       fileSystem,
     );
 
-    expect(Either.isLeft(result)).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
     expect(events).toEqual([
       "directory:corpus:true",
       `temporary:${temporary}:corpus:.oracle-evaluation-corpus.json.:.tmp`,
@@ -182,10 +194,10 @@ describe("Opaque Oracle evaluation CLI", () => {
       recordingTerminal([]),
     );
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toMatchObject({ tag: "corpusValidationFailed" });
-    expect(result.left).toMatchObject({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toMatchObject({ tag: "corpusValidationFailed" });
+    expect(result.failure).toMatchObject({
       issues: expect.arrayContaining([
         expect.objectContaining({
           tag: "publicationSchemaRead",
@@ -210,10 +222,10 @@ describe("Opaque Oracle evaluation CLI", () => {
       recordingTerminal([]),
     );
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toMatchObject({ tag: "corpusValidationFailed" });
-    expect(result.left).toMatchObject({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toMatchObject({ tag: "corpusValidationFailed" });
+    expect(result.failure).toMatchObject({
       issues: expect.arrayContaining([
         expect.objectContaining({
           tag: "publicationSchema",
@@ -254,10 +266,10 @@ describe("Opaque Oracle evaluation CLI", () => {
       recordingTerminal([]),
     );
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toMatchObject({ tag: "corpusValidationFailed" });
-    expect(result.left).toMatchObject({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toMatchObject({ tag: "corpusValidationFailed" });
+    expect(result.failure).toMatchObject({
       issues: expect.arrayContaining([
         expect.objectContaining({
           tag: "publicationSchemaOrphan",
@@ -282,10 +294,10 @@ describe("Opaque Oracle evaluation CLI", () => {
       recordingTerminal([]),
     );
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toMatchObject({ tag: "corpusValidationFailed" });
-    expect(result.left).toMatchObject({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toMatchObject({ tag: "corpusValidationFailed" });
+    expect(result.failure).toMatchObject({
       issues: expect.arrayContaining([
         expect.objectContaining({
           tag: "decode",
@@ -329,10 +341,10 @@ describe("Opaque Oracle evaluation CLI", () => {
       recordingTerminal([]),
     );
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toMatchObject({ tag: "corpusValidationFailed" });
-    expect(result.left).toMatchObject({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toMatchObject({ tag: "corpusValidationFailed" });
+    expect(result.failure).toMatchObject({
       issues: expect.arrayContaining([
         expect.objectContaining({ tag: "traceMismatch", position: 0 }),
       ]),
@@ -351,10 +363,10 @@ describe("Opaque Oracle evaluation CLI", () => {
       recordingTerminal([]),
     );
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toMatchObject({ tag: "sourceBuildFailed" });
-    expect(result.left).toMatchObject({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toMatchObject({ tag: "sourceBuildFailed" });
+    expect(result.failure).toMatchObject({
       issues: [
         expect.objectContaining({
           tag: "sourceDefect",
@@ -376,9 +388,9 @@ describe("Opaque Oracle evaluation CLI", () => {
       recordingTerminal([]),
     );
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toMatchObject({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toMatchObject({
       tag: "filesystemFailed",
       operation: "read",
       path: "corpus/missing.json",
@@ -434,12 +446,12 @@ function createFixtureCorpus(): OracleCorpus {
     cases: [fixtureCase()],
     services,
   });
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `CLI fixture corpus failed: ${JSON.stringify(result.left)}`,
+      `CLI fixture corpus failed: ${JSON.stringify(result.failure)}`,
     );
   }
-  return result.right;
+  return result.success;
 }
 
 function fixtureCase() {
@@ -451,10 +463,12 @@ function fixtureCase() {
       attempts: [],
     },
   });
-  if (Either.isLeft(result)) {
-    throw new Error(`CLI fixture Case failed: ${JSON.stringify(result.left)}`);
+  if (Result.isFailure(result)) {
+    throw new Error(
+      `CLI fixture Case failed: ${JSON.stringify(result.failure)}`,
+    );
   }
-  return result.right;
+  return result.success;
 }
 
 function emptyEvaluationServices(): OracleEvaluationServices {
@@ -538,25 +552,29 @@ function validationFileSystem(
       );
       if (member === undefined) {
         return Effect.fail(
-          new SystemError({
-            reason: "Unknown",
-            module: "FileSystem",
-            method: "readFile",
-            description: "unknown fixture path",
-            pathOrDescriptor: path,
-          }),
+          new PlatformError(
+            new SystemError({
+              _tag: "Unknown",
+              module: "FileSystem",
+              method: "readFile",
+              description: "unknown fixture path",
+              pathOrDescriptor: path,
+            }),
+          ),
         );
       }
       const override = schemaOverrides[member];
       if (override === "missing") {
         return Effect.fail(
-          new SystemError({
-            reason: "NotFound",
-            module: "FileSystem",
-            method: "readFile",
-            description: "missing fixture schema",
-            pathOrDescriptor: path,
-          }),
+          new PlatformError(
+            new SystemError({
+              _tag: "NotFound",
+              module: "FileSystem",
+              method: "readFile",
+              description: "missing fixture schema",
+              pathOrDescriptor: path,
+            }),
+          ),
         );
       }
       return Effect.succeed(
@@ -592,13 +610,15 @@ function failingCorpusReadFileSystem(): FileSystem.FileSystem {
   return FileSystem.makeNoop({
     readFileString: (path) =>
       Effect.fail(
-        new SystemError({
-          reason: "NotFound",
-          module: "FileSystem",
-          method: "readFileString",
-          description: "missing fixture corpus",
-          pathOrDescriptor: path,
-        }),
+        new PlatformError(
+          new SystemError({
+            _tag: "NotFound",
+            module: "FileSystem",
+            method: "readFileString",
+            description: "missing fixture corpus",
+            pathOrDescriptor: path,
+          }),
+        ),
       ),
   });
 }
@@ -636,13 +656,15 @@ function recordingFileSystem(
       events.push(`write:${path}:${options?.flag}`);
       if (failWrite) {
         return Effect.fail(
-          new SystemError({
-            reason: "Unknown",
-            module: "FileSystem",
-            method: "writeFile",
-            description: "fixture write failure",
-            pathOrDescriptor: path,
-          }),
+          new PlatformError(
+            new SystemError({
+              _tag: "Unknown",
+              module: "FileSystem",
+              method: "writeFile",
+              description: "fixture write failure",
+              pathOrDescriptor: path,
+            }),
+          ),
         );
       }
       files.set(path, Buffer.from(data));
@@ -664,24 +686,27 @@ function recordingFileSystem(
 }
 
 function recordingTerminal(output: string[]): Terminal.Terminal {
-  return {
+  return Terminal.make({
     columns: Effect.succeed(80),
     rows: Effect.succeed(24),
-    isTTY: Effect.succeed(false),
     readInput: Effect.never,
     readLine: Effect.never,
     display: (text: string) => {
       output.push(text);
       return Effect.succeed(undefined);
     },
-  };
+  });
 }
 
 function runWithPlatform<A, E>(
   effect: Effect.Effect<
     A,
     E,
-    FileSystem.FileSystem | Path.Path | Terminal.Terminal
+    | FileSystem.FileSystem
+    | Path.Path
+    | Terminal.Terminal
+    | Stdio.Stdio
+    | ChildProcessSpawner.ChildProcessSpawner
   >,
   fileSystem: FileSystem.FileSystem,
   terminal: Terminal.Terminal,
@@ -689,13 +714,15 @@ function runWithPlatform<A, E>(
   return Effect.runPromise(
     effect.pipe(
       Effect.provide(
-        Layer.mergeAll(
-          Layer.succeed(FileSystem.FileSystem, fileSystem),
-          Path.layer,
-          Layer.succeed(Terminal.Terminal, terminal),
+        Layer.merge(
+          NodeServices.layer,
+          Layer.merge(
+            Layer.succeed(FileSystem.FileSystem, fileSystem),
+            Layer.succeed(Terminal.Terminal, terminal),
+          ),
         ),
       ),
-      Effect.either,
+      Effect.result,
     ),
   );
 }
@@ -712,7 +739,7 @@ function runWithPath<A, E>(
           Path.layer,
         ),
       ),
-      Effect.either,
+      Effect.result,
     ),
   );
 }

@@ -12,7 +12,7 @@ import {
   type CharacterProgression,
   type CharacterCreationSupportProfile,
 } from "@dnd/character-creation-runtime";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { ELAPSED_TIME_TICKS_PER_HOUR } from "@dnd/shared/elapsed-time";
 import { unitId, type Skill } from "@dnd/shared/game-facts";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
@@ -35,10 +35,10 @@ import { requireJsonSchema } from "./json-schema.ts";
 export type JsonObject = Record<string, unknown>;
 
 const CatalogUnitListProtocolSchema = Schema.Struct({
-  unitsByKind: Schema.Record({
-    key: Schema.String,
-    value: Schema.Array(Schema.Struct({ id: Schema.String })),
-  }),
+  unitsByKind: Schema.Record(
+    Schema.String,
+    Schema.Array(Schema.Struct({ id: Schema.String })),
+  ),
 });
 const CatalogUnitDetailProtocolSchema = Schema.Struct({
   unitRecordJson: Schema.String,
@@ -1965,7 +1965,7 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
       holeId: savingThrowHole.holeId,
       value: {
         area: {
-          kind: "fireballArea",
+          kind: "pointOriginSphereSaveDamageArea",
           originAnchorId: "sphinx",
           affectedTargetIds: ["sphinx"],
           objectIgnitionFacts: [],
@@ -3844,12 +3844,12 @@ function sameClassProgression(
       characterLevel: characterClassLevel(index + 2),
       hitPointRule: { tag: "fixedHigherLevelGain" },
     });
-    if (Either.isLeft(entry)) {
+    if (Result.isFailure(entry)) {
       assert.fail(
-        `Invalid Level 10 MCP fixture progression: ${JSON.stringify(entry.left)}`,
+        `Invalid Level 10 MCP fixture progression: ${JSON.stringify(entry.failure)}`,
       );
     }
-    return entry.right;
+    return entry.success;
   });
 
   return {
@@ -3971,8 +3971,8 @@ export function acceptancePlaySessionId(client: Client): Promise<string> {
 export async function acceptancePlaySessionCaller(client: Client) {
   const access = await playSessionAccess(client);
   const decoded = decodeGuestAccessGrant(access.guestAccessGrant);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left);
-  return { tag: "guest" as const, guestAccessGrant: decoded.right };
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure);
+  return { tag: "guest" as const, guestAccessGrant: decoded.success };
 }
 
 export function retainAcceptancePlaySessionAccess(

@@ -1,5 +1,6 @@
 import { NodeRuntime } from "@effect/platform-node";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Runtime } from "effect";
 
 import { createMcpApplicationServices } from "../../packages/mcp/src/composition-root.ts";
 import { createDndMcpProtocolServer } from "../../packages/mcp/src/protocol-server.ts";
@@ -12,7 +13,11 @@ const { server } = createDndMcpProtocolServer(
 );
 const program = dndMcpStdioProgram(server, new StdioServerTransport());
 
+const drainStandardOutputTeardown: Runtime.Teardown = (exit, onExit) => {
+  process.stdout.write("", () => Runtime.defaultTeardown(exit, onExit));
+};
+
 NodeRuntime.runMain(program, {
-  disablePrettyLogger: true,
   disableErrorReporting: true,
+  teardown: drainStandardOutputTeardown,
 });

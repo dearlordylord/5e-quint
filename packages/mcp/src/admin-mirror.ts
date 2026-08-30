@@ -1,4 +1,4 @@
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 
 import { characterListRows } from "./character-session-rows.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
@@ -118,12 +118,12 @@ export function enabledAdminMirrorPublication(input: {
 
 export function adminProjection(
   root: McpPlaySessionRoot,
-): Either.Either<
+): Result.Result<
   AdminSessionProjection,
   string | import("@dnd/battle-runtime").BattlePresentationIssues
 > {
   const characters = characterListRows(root);
-  if (Either.isLeft(characters)) return Either.left(characters.left);
+  if (Result.isFailure(characters)) return Result.fail(characters.failure);
   const battleState = root.sessionStore.battleState;
   const snapshot = root.sessionStore.snapshot();
   const sessionSummary = {
@@ -132,34 +132,34 @@ export function adminProjection(
   };
   const presentedBattle =
     battleState.tag !== "activeBattle"
-      ? Either.right(null)
+      ? Result.succeed(null)
       : battlePresentationEnvelopeForSession(root, battleState.session);
-  if (Either.isLeft(presentedBattle)) {
-    return Either.left(presentedBattle.left);
+  if (Result.isFailure(presentedBattle)) {
+    return Result.fail(presentedBattle.failure);
   }
   const projectedBattleState = battleStateSnapshot(
     root.sessionStore.battleState,
   );
   if (projectedBattleState.tag === "activeBattle") {
-    if (presentedBattle.right === null) {
-      return Either.left("Active Battle projection is missing its envelope.");
+    if (presentedBattle.success === null) {
+      return Result.fail("Active Battle projection is missing its envelope.");
     }
-    return Either.right({
-      battle: presentedBattle.right,
-      characters: characters.right,
+    return Result.succeed<AdminSessionProjection>({
+      battle: presentedBattle.success,
+      characters: characters.success,
       session: { ...sessionSummary, battleState: projectedBattleState },
     });
   }
   if (projectedBattleState.tag === "none") {
-    return Either.right({
+    return Result.succeed<AdminSessionProjection>({
       battle: null,
-      characters: characters.right,
+      characters: characters.success,
       session: { ...sessionSummary, battleState: projectedBattleState },
     });
   }
-  return Either.right({
+  return Result.succeed<AdminSessionProjection>({
     battle: null,
-    characters: characters.right,
+    characters: characters.success,
     session: { ...sessionSummary, battleState: projectedBattleState },
   });
 }
@@ -168,10 +168,10 @@ function publishAdminProjection(root: McpPlaySessionRoot): Effect.Effect<void> {
   const publication = root.adminMirrorPublication;
   if (publication.tag === "disabled") return Effect.void;
   const projection = adminProjection(root);
-  if (Either.isLeft(projection)) return Effect.void;
+  if (Result.isFailure(projection)) return Effect.void;
   return publication.publisher.publish({
     mirrorSessionId: publication.mirrorSessionId,
-    projection: projection.right,
+    projection: projection.success,
     publisherInstanceId: publication.publisherInstanceId,
     sequence: publication.nextSequence(),
     sourceProcessId: process.pid,

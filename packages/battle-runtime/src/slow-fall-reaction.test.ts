@@ -1,8 +1,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.reaction-roll-or-damage-reduction
 import { describe, expect, test } from "vitest";
 import { classLevel } from "@dnd/shared/types";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 
 import {
   battleFrontierInterruptDecisionForState,
@@ -80,8 +79,8 @@ describe("Slow Fall Reaction", () => {
       battleCheckpointFrontierEnvelope(awaitingReaction.state),
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),
@@ -90,8 +89,8 @@ describe("Slow Fall Reaction", () => {
       throw new Error("Expected the encoded Slow Fall Reaction frontier.");
     }
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)({
           ...encoded,
           frontier: {
             ...encoded.frontier,
@@ -146,8 +145,7 @@ describe("Slow Fall Reaction", () => {
       effectiveFallDamage: damageAmount(3),
       fallDamagePrevented: false,
       fallingPronePrevented: false,
-      slowFallReductionAmount: damageAmount(25),
-      featherFallMitigated: false,
+      fallDamageReductionAmount: damageAmount(25),
     });
     if (landing.tag !== "landed") {
       throw new Error("Expected Slow Fall landing resolution.");
@@ -172,7 +170,7 @@ describe("Slow Fall Reaction", () => {
       effectiveFallDamage: damageAmount(0),
       fallDamagePrevented: true,
       fallingPronePrevented: true,
-      slowFallReductionAmount: damageAmount(20),
+      fallDamageReductionAmount: damageAmount(20),
     });
     if (landing.tag !== "landed") {
       throw new Error("Expected Slow Fall landing resolution.");

@@ -22,7 +22,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "../../../packages/surface/src/surface/unit-catalog.ts";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue } from "./json-value.ts";
@@ -86,7 +86,7 @@ function characterContext(): CharacterContextResult {
           fillCreationHoles,
           finalizeCharacterDraft,
           hp: Hp,
-          isLeft: Either.isLeft,
+          isLeft: Result.isFailure,
         },
       },
     })),
@@ -101,27 +101,27 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 function parsedCharacterSheets(
   value: unknown,
   context: ScenarioCharacterContext,
-): Either.Either<readonly FreshCharacterSheet[], string> {
+): Result.Result<readonly FreshCharacterSheet[], string> {
   if (!Array.isArray(value)) {
-    return Either.left("Scenario characters must return Character Sheets.");
+    return Result.fail("Scenario characters must return Character Sheets.");
   }
   const parsed: FreshCharacterSheet[] = [];
   const issues: string[] = [];
   for (const [index, candidate] of value.entries()) {
     const sheet = parseFreshCharacterSheet(candidate, context.unitCatalog);
-    if (Either.isLeft(sheet)) {
+    if (Result.isFailure(sheet)) {
       issues.push(`Character Sheet ${String(index + 1)} is invalid.`);
       continue;
     }
-    parsed.push(sheet.right);
+    parsed.push(sheet.success);
   }
   const ids = parsed.map(({ characterId }) => characterId);
   if (new Set(ids).size !== ids.length) {
     issues.push("Scenario characters returned duplicate Character Sheet ids.");
   }
   return issues.length === 0
-    ? Either.right(parsed)
-    : Either.left(issues.join(" "));
+    ? Result.succeed(parsed)
+    : Result.fail(issues.join(" "));
 }
 
 function validateOutcome(
@@ -144,13 +144,13 @@ function validateOutcome(
   return Match.value(outcome.kind).pipe(
     Match.when("ready", () => {
       const sheets = parsedCharacterSheets(outcome.characterSheets, context);
-      return Either.isRight(sheets)
+      return Result.isSuccess(sheets)
         ? {
             tag: "ready" as const,
-            characterSheets: sheets.right,
+            characterSheets: sheets.success,
             observation,
           }
-        : { tag: "invalid" as const, message: sheets.left };
+        : { tag: "invalid" as const, message: sheets.failure };
     }),
     Match.when("obstructed", () =>
       typeof outcome.obstruction === "string" &&

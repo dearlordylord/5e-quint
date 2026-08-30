@@ -9,7 +9,9 @@ import {
 } from "./raw-swarm-identities.ts";
 import { GitShaSchema, StartedAtSchema } from "./transcript.ts";
 
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
+const HashSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/)),
+);
 
 export const ScenarioCampaignManifestSchema = Schema.Struct({
   type: Schema.Literal("raw-swarm-scenario-campaign"),
@@ -36,10 +38,10 @@ export const ExecutionStartRecordSchema = Schema.Struct({
   startedAt: StartedAtSchema,
 });
 
-export const FindingsManifestSchema = Schema.Union(
+export const FindingsManifestSchema = Schema.Union([
   ScenarioCampaignManifestSchema,
   ExecutionStartRecordSchema,
-);
+]);
 
 export type FindingsManifest = Schema.Schema.Type<
   typeof FindingsManifestSchema

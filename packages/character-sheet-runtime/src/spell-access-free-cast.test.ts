@@ -5,7 +5,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Hp, resourceCount } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -21,7 +21,7 @@ import {
   completeLongRest,
   completeShortRest,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   unitLibrary,
   wizardBuild,
 } from "./test-support.test-support.ts";
@@ -45,7 +45,7 @@ function magicInitiateWizardBuild(): CharacterBuild {
 }
 
 function magicInitiateSheet() {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:synthetic-magic-initiate"),
       build: magicInitiateWizardBuild(),
@@ -129,7 +129,7 @@ describe("Character Sheet Spell Access free casts", () => {
   test("spends exactly one source-and-spell free cast without spending a Spell Slot", () => {
     const sheet = magicInitiateSheet();
     const slotsBefore = characterSheetSpellSlotSourceState(sheet);
-    const spent = requireRight(
+    const spent = requireSuccess(
       spendCharacterSheetSpellAccessFreeCast({
         sheet,
         unitLibrary,
@@ -157,13 +157,13 @@ describe("Character Sheet Spell Access free casts", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Spell Access free cast is exhausted." },
+      _tag: "Failure",
+      failure: { message: "Spell Access free cast is exhausted." },
     });
   });
 
   test("Short Rest preserves and Long Rest restores a spent free cast", () => {
-    const spent = requireRight(
+    const spent = requireSuccess(
       spendCharacterSheetSpellAccessFreeCast({
         sheet: magicInitiateSheet(),
         unitLibrary,
@@ -173,19 +173,20 @@ describe("Character Sheet Spell Access free casts", () => {
         },
       }),
     );
-    const shortRested = requireRight(
+    const shortRested = requireSuccess(
       completeShortRest({ sheet: spent, unitLibrary }),
     );
     expect(shortRested.resourceExpenditures).toEqual(
       spent.resourceExpenditures,
     );
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({ sheet: shortRested, unitLibrary }),
     );
     expect(longRested.resourceExpenditures).toEqual([]);
-    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(
+      requireSuccess(characterSheetResources(longRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "spellAccessFreeCast",
           sourceUnitId: magicInitiateSourceUnitId,
@@ -194,11 +195,11 @@ describe("Character Sheet Spell Access free casts", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 
   test("stored sheets round-trip the mandatory access and reject invalid access or expenditure keys", () => {
-    const spent = requireRight(
+    const spent = requireSuccess(
       spendCharacterSheetSpellAccessFreeCast({
         sheet: magicInitiateSheet(),
         unitLibrary,
@@ -209,14 +210,16 @@ describe("Character Sheet Spell Access free casts", () => {
       }),
     );
     expect(
-      parseCharacterSheet(JSON.parse(JSON.stringify(spent)), unitLibrary),
-    ).toMatchObject({ _tag: "Right", right: spent });
+      requireSuccess(
+        parseCharacterSheet(JSON.parse(JSON.stringify(spent)), unitLibrary),
+      ),
+    ).toEqual(spent);
 
     const missingAccess = JSON.parse(JSON.stringify(spent));
     delete missingAccess.build.magicInitiateSpellAccesses;
     expect(parseCharacterSheet(missingAccess, unitLibrary)).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Character Build requires Magic Initiate Spell Accesses.",
       },
     });
@@ -225,7 +228,7 @@ describe("Character Sheet Spell Access free casts", () => {
     invalidExpenditure.resourceExpenditures[0].spellId =
       "synthetic_other_spell";
     expect(
-      Either.isLeft(parseCharacterSheet(invalidExpenditure, unitLibrary)),
+      Result.isFailure(parseCharacterSheet(invalidExpenditure, unitLibrary)),
     ).toBe(true);
 
     const duplicateExpenditure = JSON.parse(JSON.stringify(spent));
@@ -233,7 +236,7 @@ describe("Character Sheet Spell Access free casts", () => {
       duplicateExpenditure.resourceExpenditures[0],
     );
     expect(
-      Either.isLeft(parseCharacterSheet(duplicateExpenditure, unitLibrary)),
+      Result.isFailure(parseCharacterSheet(duplicateExpenditure, unitLibrary)),
     ).toBe(true);
   });
 
@@ -248,8 +251,8 @@ describe("Character Sheet Spell Access free casts", () => {
       },
     ];
     expect(parseCharacterSheet(duplicateList, unitLibrary)).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: expect.stringContaining(
           "Character Build cannot acquire Magic Initiate more than once for the same spell list.",
         ),
@@ -272,7 +275,7 @@ describe("Character Sheet Spell Access free casts", () => {
       levelOneSpell: "bless",
     });
     expect(parseCharacterSheet(distinctLists, unitLibrary)).toMatchObject({
-      _tag: "Right",
+      _tag: "Success",
     });
   });
 
@@ -290,9 +293,9 @@ describe("Character Sheet Spell Access free casts", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(parsed)).toBe(true);
-    if (Either.isLeft(parsed)) {
-      expect(parsed.left.map((issue) => issue.index)).toEqual(
+    expect(Result.isFailure(parsed)).toBe(true);
+    if (Result.isFailure(parsed)) {
+      expect(parsed.failure.map((issue) => issue.index)).toEqual(
         expect.arrayContaining([0, 1]),
       );
     }

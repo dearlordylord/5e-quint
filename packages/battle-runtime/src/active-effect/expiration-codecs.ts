@@ -8,15 +8,15 @@ import type {
 import { BattleRoundSchema } from "./round-codec.ts";
 
 function exactSchema<Expected>() {
-  return <Encoded, Context, Actual extends Expected>(
-    schema: Schema.Schema<Actual, Encoded, Context> &
+  return <Encoded, Actual extends Expected>(
+    schema: Schema.Codec<Actual, Encoded, never, never> &
       ([Expected] extends [Actual] ? unknown : never),
-  ): Schema.Schema<Actual, Encoded, Context> => schema;
+  ): Schema.Codec<Actual, Encoded, never, never> => schema;
 }
 
 export const BattleActiveEffectExpirationSchema =
   exactSchema<BattleActiveEffectExpiration>()(
-    Schema.Union(
+    Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("startOfTurn"),
         combatantId: CombatantId,
@@ -29,16 +29,14 @@ export const BattleActiveEffectExpirationSchema =
       Schema.Struct({
         kind: Schema.Literal("concentration"),
         combatantId: CombatantId,
-        durationTicks: Schema.optionalWith(ElapsedTimeTicksSchema, {
-          exact: true,
-        }),
+        durationTicks: Schema.optionalKey(ElapsedTimeTicksSchema),
       }),
       Schema.Struct({
         kind: Schema.Literal("duration"),
         durationTicks: ElapsedTimeTicksSchema,
       }),
       Schema.Struct({ kind: Schema.Literal("untilDispelled") }),
-    ),
+    ]),
   );
 
 export const DurationBattleActiveEffectExpirationSchema =
@@ -59,8 +57,6 @@ export const ConcentrationBattleActiveEffectExpirationSchema =
     Schema.Struct({
       kind: Schema.Literal("concentration"),
       combatantId: CombatantId,
-      durationTicks: Schema.optionalWith(ElapsedTimeTicksSchema, {
-        exact: true,
-      }),
+      durationTicks: Schema.optionalKey(ElapsedTimeTicksSchema),
     }),
   );

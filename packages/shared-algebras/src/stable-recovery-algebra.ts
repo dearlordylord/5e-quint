@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   ELAPSED_TIME_TICKS_PER_HOUR,
   elapsedTimeTicks,
@@ -72,7 +72,7 @@ export type StableRecoveryIssue = {
 
 export function advanceStableRecovery(
   input: StableRecoveryAdvanceInput,
-): Either.Either<StableRecoveryAdvanceResult, StableRecoveryIssue> {
+): Result.Result<StableRecoveryAdvanceResult, StableRecoveryIssue> {
   if (input.recovery.kind === "regains1HpAfter") {
     return passSampledStableRecoveryTime(
       input.recovery.remaining,
@@ -84,7 +84,7 @@ export function advanceStableRecovery(
   const totalTicks =
     Number(input.recovery.elapsedBeforeRecoveryRoll) + Number(input.ticks);
   if (totalTicks < ELAPSED_TIME_TICKS_PER_HOUR) {
-    return Either.right({
+    return Result.succeed({
       tag: "stable",
       recovery: {
         kind: "regains1HpAfter1d4Hours",
@@ -95,18 +95,18 @@ export function advanceStableRecovery(
   }
 
   const remainingTicks = parsePositiveElapsedTimeTicks(totalTicks);
-  return Either.isLeft(remainingTicks)
+  return Result.isFailure(remainingTicks)
     ? stableRecoveryIssue("Stable recovery elapsed time must be positive.")
-    : Either.right({
+    : Result.succeed({
         tag: "needsStableRecoveryRoll",
         elapsedTicks: elapsedTimeTicks(0),
-        remainingTicks: remainingTicks.right,
+        remainingTicks: remainingTicks.success,
       });
 }
 
 export function advanceStableRecoveryWithRoll(
   input: StableRecoveryRollInput,
-): Either.Either<StableRecoveryAdvanceResult, StableRecoveryIssue> {
+): Result.Result<StableRecoveryAdvanceResult, StableRecoveryIssue> {
   const totalTicks =
     Number(input.recovery.elapsedBeforeRecoveryRoll) + Number(input.ticks);
   if (totalTicks < ELAPSED_TIME_TICKS_PER_HOUR) {
@@ -116,10 +116,10 @@ export function advanceStableRecoveryWithRoll(
   }
 
   const sampledRecovery = stableRecoveryFromRoll(input.roll);
-  return Either.isLeft(sampledRecovery)
-    ? Either.left(sampledRecovery.left)
+  return Result.isFailure(sampledRecovery)
+    ? Result.fail(sampledRecovery.failure)
     : passSampledStableRecoveryTime(
-        sampledRecovery.right.remaining,
+        sampledRecovery.success.remaining,
         elapsedTimeTicks(totalTicks),
         input.ticks,
       );
@@ -127,7 +127,7 @@ export function advanceStableRecoveryWithRoll(
 
 function stableRecoveryFromRoll(
   roll: DieRollResult,
-): Either.Either<
+): Result.Result<
   Extract<StableRecovery, { readonly kind: "regains1HpAfter" }>,
   StableRecoveryIssue
 > {
@@ -137,11 +137,11 @@ function stableRecoveryFromRoll(
   const remaining = parsePositiveElapsedTimeTicks(
     Number(roll) * ELAPSED_TIME_TICKS_PER_HOUR,
   );
-  return Either.isLeft(remaining)
+  return Result.isFailure(remaining)
     ? stableRecoveryIssue("Stable recovery requires one d4 roll.")
-    : Either.right({
+    : Result.succeed({
         kind: "regains1HpAfter",
-        remaining: remaining.right,
+        remaining: remaining.success,
       });
 }
 
@@ -149,20 +149,20 @@ function passSampledStableRecoveryTime(
   remaining: PositiveElapsedTimeTicks,
   ticksForCalculation: ElapsedTimeTicks,
   elapsedTicks: ElapsedTimeTicks,
-): Either.Either<StableRecoveryAdvanceResult, StableRecoveryIssue> {
+): Result.Result<StableRecoveryAdvanceResult, StableRecoveryIssue> {
   if (Number(ticksForCalculation) >= Number(remaining)) {
-    return Either.right({ tag: "recovered", elapsedTicks });
+    return Result.succeed({ tag: "recovered", elapsedTicks });
   }
   const nextRemaining = parsePositiveElapsedTimeTicks(
     Number(remaining) - Number(ticksForCalculation),
   );
-  return Either.isLeft(nextRemaining)
+  return Result.isFailure(nextRemaining)
     ? stableRecoveryIssue("Stable recovery remaining time must stay positive.")
-    : Either.right({
+    : Result.succeed({
         tag: "stable",
         recovery: {
           kind: "regains1HpAfter",
-          remaining: nextRemaining.right,
+          remaining: nextRemaining.success,
         },
         elapsedTicks,
       });
@@ -170,6 +170,6 @@ function passSampledStableRecoveryTime(
 
 function stableRecoveryIssue(
   message: string,
-): Either.Either<never, StableRecoveryIssue> {
-  return Either.left({ tag: "stableRecoveryIssue", message });
+): Result.Result<never, StableRecoveryIssue> {
+  return Result.fail({ tag: "stableRecoveryIssue", message });
 }

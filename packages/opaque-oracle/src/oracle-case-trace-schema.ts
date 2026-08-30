@@ -40,22 +40,19 @@ import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import { CombatantId } from "@dnd/battle-runtime";
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThanOrEqualTo(0)),
 );
-const IntegerSchema = Schema.Number.pipe(Schema.int());
-const OracleIndexSchema = Schema.fromBrand(Index, {
-  ...semanticRefinement("constraintFreeBrand"),
-})(NonNegativeIntegerSchema);
-
-const CreationFillWithDistinctOptionIdsSchema = Schema.make<CreationFillFact>(
-  CreationFillFactSchema.ast,
-);
+const IntegerSchema = Schema.Number.pipe(Schema.check(Schema.isInt()));
+const OracleIndexSchema = Schema.fromBrand(
+  "Index",
+  Index,
+)(NonNegativeIntegerSchema).annotate(semanticRefinement("constraintFreeBrand"));
 
 // CreationFillFactSchema owns the choice optionIds set refinement and its
 // uniqueItems annotation. Reuse that schema directly so the surrounding fill
 // batch remains an ordered sequence rather than inheriting set semantics.
-const DistinctCreationFillSchema = CreationFillWithDistinctOptionIdsSchema;
+const DistinctCreationFillSchema = CreationFillFactSchema;
 
 export const CreationFillBatchSchema = Schema.NonEmptyArray(
   DistinctCreationFillSchema,
@@ -64,43 +61,50 @@ export type CreationFillBatch = Schema.Schema.Type<
   typeof CreationFillBatchSchema
 >;
 
-export const FreshSheetInputSchema = Schema.Union(
+export const FreshSheetInputSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("ordinary") }),
   Schema.Struct({
     tag: Schema.Literal("wildShapeKnownForms"),
     statBlockIds: Schema.NonEmptyArray(StatBlockIdSchema).pipe(
-      Schema.filter((values) => !hasDuplicateStructuralValues(values), {
-        message: () => "statBlockIds must not contain duplicate members",
-        jsonSchema: { minItems: 1, uniqueItems: true },
-      }),
+      Schema.check(
+        Schema.makeFilter((values) => !hasDuplicateStructuralValues(values), {
+          message: "statBlockIds must not contain duplicate members",
+          oracleUniqueItems: true,
+          toJsonSchema: () => ({ minItems: 1, uniqueItems: true }),
+        }),
+      ),
     ),
   }),
-);
+]);
 export type FreshSheetInput = Schema.Schema.Type<typeof FreshSheetInputSchema>;
 
 const AmmunitionStockValueSchema = NonNegativeIntegerSchema;
 const OracleAmmunitionStockFields = {
-  arrow: Schema.optionalWith(AmmunitionStockValueSchema, { exact: true }),
-  bolt: Schema.optionalWith(AmmunitionStockValueSchema, { exact: true }),
-  bullet: Schema.optionalWith(AmmunitionStockValueSchema, { exact: true }),
-  needle: Schema.optionalWith(AmmunitionStockValueSchema, { exact: true }),
-  sling_bullet: Schema.optionalWith(AmmunitionStockValueSchema, {
-    exact: true,
-  }),
+  arrow: Schema.optionalKey(AmmunitionStockValueSchema),
+  bolt: Schema.optionalKey(AmmunitionStockValueSchema),
+  bullet: Schema.optionalKey(AmmunitionStockValueSchema),
+  needle: Schema.optionalKey(AmmunitionStockValueSchema),
+  sling_bullet: Schema.optionalKey(AmmunitionStockValueSchema),
 } satisfies Record<AmmunitionKind, object>;
 
 export const OracleAmmunitionStocksSchema = Schema.Struct(
   OracleAmmunitionStockFields,
-).annotations({ parseOptions: { onExcessProperty: "error" } });
+).annotate({ parseOptions: { onExcessProperty: "error" } });
 export type OracleAmmunitionStocks = Schema.Schema.Type<
   typeof OracleAmmunitionStocksSchema
 >;
 
 const OracleBattleConditionsSchema = Schema.Array(Schema.Literal("prone")).pipe(
-  Schema.filter((conditions) => !hasDuplicateStructuralValues(conditions), {
-    message: () => "conditions must not contain duplicate members",
-    jsonSchema: { uniqueItems: true },
-  }),
+  Schema.check(
+    Schema.makeFilter(
+      (conditions) => !hasDuplicateStructuralValues(conditions),
+      {
+        message: "conditions must not contain duplicate members",
+        oracleUniqueItems: true,
+        toJsonSchema: () => ({ uniqueItems: true }),
+      },
+    ),
+  ),
 );
 
 const OracleCharacterSheetRosterEntrySchema = Schema.Struct({
@@ -115,7 +119,7 @@ const OracleStatBlockRosterEntrySchema = Schema.Struct({
   initiative: IntegerSchema,
   ammunitionStocks: OracleAmmunitionStocksSchema,
   conditions: OracleBattleConditionsSchema,
-  currentHp: Schema.optional(NonNegativeIntegerSchema),
+  currentHp: Schema.optionalKey(NonNegativeIntegerSchema),
   tempHp: NonNegativeIntegerSchema,
 });
 
@@ -125,7 +129,7 @@ const OracleStatBlockRosterEntrySchema = Schema.Struct({
  * position structural: a roster either contains only Stat Blocks or has one
  * Character Sheet between the two Stat Block sequences.
  */
-export const OracleBattleRosterSchema = Schema.Union(
+export const OracleBattleRosterSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("statBlocks"),
     entries: Schema.Array(OracleStatBlockRosterEntrySchema),
@@ -136,7 +140,7 @@ export const OracleBattleRosterSchema = Schema.Union(
     characterSheet: OracleCharacterSheetRosterEntrySchema,
     followingStatBlocks: Schema.Array(OracleStatBlockRosterEntrySchema),
   }),
-).annotations({ parseOptions: { onExcessProperty: "error" } });
+]).annotate({ parseOptions: { onExcessProperty: "error" } });
 export type OracleBattleCharacterSheetRosterEntry = Schema.Schema.Type<
   typeof OracleCharacterSheetRosterEntrySchema
 >;
@@ -147,13 +151,13 @@ export type OracleBattleRoster = Schema.Schema.Type<
   typeof OracleBattleRosterSchema
 >;
 
-const OracleBattleFillSchema = BattleFillSchema.annotations({
+const OracleBattleFillSchema = BattleFillSchema.annotate({
   identifier: "BattleFill",
   parseOptions: { onExcessProperty: "error" },
 });
 
 export const OracleBattleInterruptDecisionFillSchema =
-  BattleInterruptDecisionFillSchema.annotations({
+  BattleInterruptDecisionFillSchema.annotate({
     identifier: "BattleInterruptDecisionFill",
     parseOptions: { onExcessProperty: "error" },
   });
@@ -164,7 +168,7 @@ export const OracleBattleOrdinaryAttemptSchema = Schema.Struct({
   kind: Schema.Literal("ordinarySubject"),
   subject: BattleSubjectSchema,
   fills: Schema.Array(OracleBattleFillSchema),
-}).annotations({
+}).annotate({
   identifier: "OracleBattleOrdinaryAttempt",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -175,7 +179,7 @@ export type OracleBattleOrdinaryAttempt = Schema.Schema.Type<
 export const OracleBattleInterruptAttemptSchema = Schema.Struct({
   kind: Schema.Literal("interruptDecision"),
   fill: OracleBattleInterruptDecisionFillSchema,
-}).annotations({
+}).annotate({
   identifier: "OracleBattleInterruptAttempt",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -183,10 +187,10 @@ export type OracleBattleInterruptAttempt = Schema.Schema.Type<
   typeof OracleBattleInterruptAttemptSchema
 >;
 
-export const OracleBattleAttemptSchema = Schema.Union(
+export const OracleBattleAttemptSchema = Schema.Union([
   OracleBattleOrdinaryAttemptSchema,
   OracleBattleInterruptAttemptSchema,
-).annotations({
+]).annotate({
   identifier: "OracleBattleAttempt",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -200,7 +204,7 @@ export const OracleBattleInputSchema = Schema.Struct({
   // be projected into the Trace.
   roster: OracleBattleRosterSchema,
   attempts: Schema.Array(OracleBattleAttemptSchema),
-}).annotations({
+}).annotate({
   identifier: "OracleBattleInput",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -214,10 +218,10 @@ const OracleCaseShapeSchema = Schema.Struct({
   }),
   sheet: FreshSheetInputSchema,
   battle: OracleBattleInputSchema,
-}).annotations({ parseOptions: { onExcessProperty: "error" } });
+}).annotate({ parseOptions: { onExcessProperty: "error" } });
 export const OracleCaseSchema = OracleCaseShapeSchema.pipe(
   Schema.brand("OracleCase"),
-).annotations({
+).annotate({
   identifier: "OracleCase",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -225,7 +229,7 @@ export type OracleCase = Schema.Schema.Type<typeof OracleCaseSchema>;
 
 export const OracleEvaluationBatchSchema = Schema.Struct({
   cases: Schema.NonEmptyArray(OracleCaseSchema),
-}).annotations({
+}).annotate({
   identifier: "OracleEvaluationBatch",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -248,59 +252,60 @@ const SheetConstructionRejectionSchema = Schema.Struct({
   issues: Schema.NonEmptyArray(CharacterSheetConstructionIssueSchema),
 });
 
-const CharacterBattleSpellAccessProjectionIssueSchema = Schema.Union(
+const CharacterBattleSpellAccessProjectionIssueSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("characterBattleSpellAccessProjectionIssue"),
     accessIndex: NonNegativeIntegerSchema,
     featUnitId: UnitIdSchema,
-    cause: Schema.Literal(
+    cause: Schema.Literals([
       "missingSourceUnit",
       "unsupportedSourceUnit",
       "missingSpellListSource",
       "invalidSpellSelection",
-    ),
+    ]),
   }),
   Schema.Struct({
     tag: Schema.Literal("characterBattleSpellAccessProjectionIssue"),
     issueIndex: NonNegativeIntegerSchema,
     cause: Schema.Literal("invalidBuildSpellAccess"),
   }),
-);
+]);
 
 const CharacterBattleCreatureInitIssueSchema = Schema.Struct({
   tag: Schema.Literal("battleCreatureInitIssue"),
-  spellAccessIssues: Schema.optionalWith(
+  spellAccessIssues: Schema.optionalKey(
     Schema.NonEmptyArray(CharacterBattleSpellAccessProjectionIssueSchema),
-    { exact: true },
   ),
 });
 export type OracleBattleCreatureInitIssue = Schema.Schema.Type<
   typeof CharacterBattleCreatureInitIssueSchema
 >;
-const BattleStateInitLeafIssueSchema = Schema.Union(
+const BattleStateInitLeafIssueSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("battleStateInitIssue"),
   }),
   Schema.Struct({
     tag: Schema.Literal("weaponLoadoutMismatch"),
-    slot: Schema.Literal("main-hand", "off-hand"),
+    slot: Schema.Literals(["main-hand", "off-hand"]),
   }),
-);
+]);
 export type OracleBattleStateInitLeafIssue = Schema.Schema.Type<
   typeof BattleStateInitLeafIssueSchema
 >;
-const BattleStateInitIssueSchema = Schema.Union(
+const BattleStateInitIssueSchema = Schema.Union([
   BattleStateInitLeafIssueSchema,
   Schema.Struct({
     tag: Schema.Literal("battleStateInitIssues"),
     issues: Schema.Array(BattleStateInitLeafIssueSchema).pipe(
-      Schema.filter((issues) => issues.length >= 2, {
-        message: () => "battleStateInitIssues must contain at least two issues",
-        jsonSchema: { minItems: 2 },
-      }),
+      Schema.check(
+        Schema.makeFilter((issues) => issues.length >= 2, {
+          message: "battleStateInitIssues must contain at least two issues",
+          toJsonSchema: () => ({ minItems: 2 }),
+        }),
+      ),
     ),
   }),
-);
+]);
 export type OracleBattleStateInitIssue = Schema.Schema.Type<
   typeof BattleStateInitIssueSchema
 >;
@@ -321,17 +326,17 @@ const StatBlockBattleProjectionIssueSchema = Schema.Struct({
 const BattleProjectionIssuesSchema = Schema.Struct({
   tag: Schema.Literal("characterBattleEncounterProjectionIssues"),
   issues: Schema.NonEmptyArray(
-    Schema.Union(
+    Schema.Union([
       BattleProjectionIssueSchema,
       StatBlockBattleProjectionIssueSchema,
-    ),
+    ]),
   ),
 });
 export type OracleBattleProjectionIssue = Schema.Schema.Type<
   typeof BattleProjectionIssuesSchema
 >["issues"][number];
 
-const BattleEntryIssueSchema = Schema.Union(
+const BattleEntryIssueSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("statBlockUnavailable"),
     statBlockId: StatBlockIdSchema,
@@ -348,7 +353,7 @@ const BattleEntryIssueSchema = Schema.Union(
     tag: Schema.Literal("battleStateInitRejected"),
     issue: BattleStateInitIssueSchema,
   }),
-);
+]);
 
 export const BattleEntryRejectionSchema = Schema.Struct({
   tag: Schema.Literal("rejected"),
@@ -360,17 +365,23 @@ export type OracleBattleEntryRejection = Schema.Schema.Type<
 
 const OracleBattleCreatureSnapshotSchema = Schema.Struct({
   combatantId: CombatantId,
-  origin: Schema.Struct({ kind: Schema.Literal("character", "statBlock") }),
+  origin: Schema.Struct({ kind: Schema.Literals(["character", "statBlock"]) }),
   hp: NonNegativeIntegerSchema,
   maxHp: NonNegativeIntegerSchema,
   tempHp: NonNegativeIntegerSchema,
   armorClass: Schema.Number,
-  size: Schema.Literal(...SIZES),
-  conditions: Schema.Array(Schema.Literal(...CONDITIONS)).pipe(
-    Schema.filter((conditions) => !hasDuplicateStructuralValues(conditions), {
-      message: () => "conditions must not contain duplicate members",
-      jsonSchema: { uniqueItems: true },
-    }),
+  size: Schema.Literals(SIZES),
+  conditions: Schema.Array(Schema.Literals(CONDITIONS)).pipe(
+    Schema.check(
+      Schema.makeFilter(
+        (conditions) => !hasDuplicateStructuralValues(conditions),
+        {
+          message: "conditions must not contain duplicate members",
+          oracleUniqueItems: true,
+          toJsonSchema: () => ({ uniqueItems: true }),
+        },
+      ),
+    ),
   ),
 });
 export type OracleBattleCreatureSnapshot = Schema.Schema.Type<
@@ -386,7 +397,7 @@ export type OracleBattleInitiativeEntry = Schema.Schema.Type<
 >;
 
 const OracleBattleCheckpointFields = {
-  round: NonNegativeIntegerSchema.pipe(Schema.greaterThan(0)),
+  round: NonNegativeIntegerSchema.pipe(Schema.check(Schema.isGreaterThan(0))),
   alreadyActed: Schema.Array(OracleBattleInitiativeEntrySchema),
   stillToAct: Schema.NonEmptyArray(OracleBattleInitiativeEntrySchema),
 };
@@ -396,11 +407,13 @@ const OracleBattleCheckpointShapeSchema = Schema.Struct(
 
 export const OracleBattleCheckpointSchema =
   OracleBattleCheckpointShapeSchema.pipe(
-    Schema.filter(oracleBattleCheckpointInvariantsHold, {
-      message: () =>
-        "Battle checkpoint initiative entries must be unique and have valid hit points.",
-      ...semanticRefinement("checkpointFrontierCorrelation"),
-    }),
+    Schema.check(
+      Schema.makeFilter(oracleBattleCheckpointInvariantsHold, {
+        message:
+          "Battle checkpoint initiative entries must be unique and have valid hit points.",
+        ...semanticRefinement("checkpointFrontierCorrelation"),
+      }),
+    ),
   );
 export type OracleBattleCheckpoint = Schema.Schema.Type<
   typeof OracleBattleCheckpointSchema
@@ -412,22 +425,24 @@ export type OracleBattleEnteredCheckpoint = Omit<
 
 const OracleBattleEnteredCheckpointShapeSchema = Schema.Struct({
   ...OracleBattleCheckpointFields,
-  alreadyActed: Schema.Tuple(),
+  alreadyActed: Schema.Tuple([]),
 });
 const OracleBattleEnteredCheckpointSchema =
   OracleBattleEnteredCheckpointShapeSchema.pipe(
-    Schema.filter(oracleBattleCheckpointInvariantsHold, {
-      message: () =>
-        "Battle checkpoint initiative entries must be unique and have valid hit points.",
-      ...semanticRefinement("checkpointFrontierCorrelation"),
-    }),
+    Schema.check(
+      Schema.makeFilter(oracleBattleCheckpointInvariantsHold, {
+        message:
+          "Battle checkpoint initiative entries must be unique and have valid hit points.",
+        ...semanticRefinement("checkpointFrontierCorrelation"),
+      }),
+    ),
   );
 
 /** Available Battle subjects, without presentation or Runtime Hole details. */
 export const OracleBattleActsFrontierSchema = Schema.Struct({
   kind: Schema.Literal("acts"),
   acts: Schema.NonEmptyArray(BattleSubjectSchema),
-}).annotations({
+}).annotate({
   identifier: "OracleBattleActsFrontier",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -435,10 +450,10 @@ export type OracleBattleActsFrontier = Schema.Schema.Type<
   typeof OracleBattleActsFrontierSchema
 >;
 
-export const OracleBattleNonterminalFrontierSchema = Schema.Union(
+export const OracleBattleNonterminalFrontierSchema = Schema.Union([
   OracleBattleActsFrontierSchema,
   BattleMechanicalFrontierSchema,
-).annotations({
+]).annotate({
   identifier: "OracleBattleNonterminalFrontier",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -446,14 +461,14 @@ export type OracleBattleNonterminalFrontier =
   | OracleBattleActsFrontier
   | BattleMechanicalFrontier;
 
-export const OracleBattleAttemptRejectionReasonSchema = Schema.Literal(
+export const OracleBattleAttemptRejectionReasonSchema = Schema.Literals([
   "staleSubject",
   "wrongActor",
   "missingCombatant",
   "invalidFill",
   "unsupportedSubject",
   "unsupportedActOption",
-).annotations({ identifier: "OracleBattleAttemptRejectionReason" });
+]).annotate({ identifier: "OracleBattleAttemptRejectionReason" });
 export type OracleBattleAttemptRejectionReason = Schema.Schema.Type<
   typeof OracleBattleAttemptRejectionReasonSchema
 >;
@@ -487,12 +502,8 @@ interface OracleBattleAttemptSegmentEncoded {
 }
 
 interface OracleBattleContinuationEncoded {
-  readonly checkpoint: Schema.Schema.Encoded<
-    typeof OracleBattleCheckpointSchema
-  >;
-  readonly frontier: Schema.Schema.Encoded<
-    typeof OracleBattleNonterminalFrontierSchema
-  >;
+  readonly checkpoint: (typeof OracleBattleCheckpointSchema)["Encoded"];
+  readonly frontier: (typeof OracleBattleNonterminalFrontierSchema)["Encoded"];
   readonly segment: OracleBattleAttemptSegmentEncoded;
 }
 
@@ -538,37 +549,39 @@ export interface OracleCreationTrace {
   readonly outcome: OracleCreationOutcome;
 }
 
-export const OracleBattleContinuationSchema: Schema.suspend<
+export const OracleBattleContinuationSchema: Schema.Codec<
   OracleBattleContinuation,
-  OracleBattleContinuationEncoded,
-  never
-> = Schema.suspend(() =>
-  Schema.Struct({
-    checkpoint: OracleBattleCheckpointSchema,
-    frontier: OracleBattleNonterminalFrontierSchema,
-    segment: OracleBattleAttemptSegmentSchema,
-  }).pipe(
-    Schema.filter(oracleBattleCheckpointFrontierInvariantsHold, {
-      message: () =>
-        "Battle frontier references must agree with the projected checkpoint.",
-      ...semanticRefinement("checkpointFrontierCorrelation"),
-    }),
-  ),
-).annotations({
+  OracleBattleContinuationEncoded
+> = Schema.suspend(
+  (): Schema.Codec<OracleBattleContinuation, OracleBattleContinuationEncoded> =>
+    Schema.Struct({
+      checkpoint: OracleBattleCheckpointSchema,
+      frontier: OracleBattleNonterminalFrontierSchema,
+      segment: OracleBattleAttemptSegmentSchema,
+    }).pipe(
+      Schema.check(
+        Schema.makeFilter(oracleBattleCheckpointFrontierInvariantsHold, {
+          message:
+            "Battle frontier references must agree with the projected checkpoint.",
+          ...semanticRefinement("checkpointFrontierCorrelation"),
+        }),
+      ),
+    ),
+).annotate({
   identifier: "OracleBattleContinuation",
   parseOptions: { onExcessProperty: "error" },
 });
 
 export const OracleBattleAttemptSegmentSchema = Schema.Struct({
   rejections: Schema.Array(OracleBattleAttemptRejectionReasonSchema),
-  outcome: Schema.Union(
+  outcome: Schema.Union([
     Schema.Struct({ tag: Schema.Literal("awaitingInput") }),
     Schema.Struct({
       tag: Schema.Literal("next"),
       continuation: OracleBattleContinuationSchema,
     }),
-  ),
-}).annotations({
+  ]),
+}).annotate({
   identifier: "OracleBattleAttemptSegment",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -578,14 +591,16 @@ const OracleBattleEnteredShapeSchema = Schema.Struct({
   frontier: OracleBattleActsFrontierSchema,
   segment: OracleBattleAttemptSegmentSchema,
 }).pipe(
-  Schema.filter(oracleBattleEnteredInvariantsHold, {
-    message: () =>
-      "Battle frontier subjects must reference combatants in the checkpoint.",
-    ...semanticRefinement("checkpointFrontierCorrelation"),
-  }),
+  Schema.check(
+    Schema.makeFilter(oracleBattleEnteredInvariantsHold, {
+      message:
+        "Battle frontier subjects must reference combatants in the checkpoint.",
+      ...semanticRefinement("checkpointFrontierCorrelation"),
+    }),
+  ),
 );
 export const OracleBattleEnteredSchema =
-  OracleBattleEnteredShapeSchema.annotations({
+  OracleBattleEnteredShapeSchema.annotate({
     identifier: "OracleBattleEntered",
     parseOptions: { onExcessProperty: "error" },
   });
@@ -593,18 +608,18 @@ export const OracleBattleEnteredSchema =
 const OracleSheetConstructionSuccessSchema = Schema.Struct({
   tag: Schema.Literal("constructed"),
   sheet: FreshCharacterSheetProjectionSchema,
-  battle: Schema.Union(BattleEntryRejectionSchema, OracleBattleEnteredSchema),
+  battle: Schema.Union([BattleEntryRejectionSchema, OracleBattleEnteredSchema]),
 });
 
-export const OracleSheetOutcomeSchema = Schema.Union(
+export const OracleSheetOutcomeSchema = Schema.Union([
   SheetConstructionRejectionSchema,
   OracleSheetConstructionSuccessSchema,
-).annotations({
+]).annotate({
   identifier: "OracleSheetOutcome",
   parseOptions: { onExcessProperty: "error" },
 });
 
-export const OracleCreationOutcomeSchema = Schema.Union(
+export const OracleCreationOutcomeSchema = Schema.Union([
   CreationFillRejectionSchema,
   CreationFinalizationRejectionSchema,
   Schema.Struct({ tag: Schema.Literal("inputExhausted") }),
@@ -618,7 +633,7 @@ export const OracleCreationOutcomeSchema = Schema.Union(
     build: CharacterBuildFactSchema,
     sheet: OracleSheetOutcomeSchema,
   }),
-).annotations({
+]).annotate({
   identifier: "OracleCreationOutcome",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -627,7 +642,7 @@ export const OracleCreationTraceSchema = Schema.Struct({
   started: CreationFrontierFactSchema,
   progression: Schema.Array(CreationFrontierFactSchema),
   outcome: OracleCreationOutcomeSchema,
-}).annotations({
+}).annotate({
   identifier: "OracleCreationTrace",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -636,7 +651,7 @@ export const OracleTraceSchema = Schema.Struct({
   creation: OracleCreationTraceSchema,
 })
   .pipe(Schema.brand("OracleTrace"))
-  .annotations({
+  .annotate({
     identifier: "OracleTrace",
     parseOptions: { onExcessProperty: "error" },
   });
@@ -695,6 +710,7 @@ const BATTLE_SUBJECT_REFERENCE_PROPERTIES = {
   actorId: true,
   casterId: true,
   companionId: true,
+  effectOwnerId: true,
   fallingCreatureId: true,
   familiarId: true,
   reactorId: true,

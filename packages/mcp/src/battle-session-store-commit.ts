@@ -1,5 +1,5 @@
 import type { BattleRuntimeSession } from "@dnd/battle-runtime";
-import { Either, Match } from "effect";
+import { Match, Result } from "effect";
 
 import type { BattleCharacterSessionSettlement } from "./battle-handoff.ts";
 import { projectCharacterSessionInBattle } from "./character-session-occupancy.ts";
@@ -18,7 +18,7 @@ export function commitBattleStartTransition(input: {
   readonly nextBattleState: Exclude<McpBattleState, { readonly tag: "none" }>;
   readonly characterSessions: readonly AvailableCharacterSession[];
   readonly characters: CharacterSessionRegistry;
-}): Either.Either<McpBattleState, McpBattleStateTransitionIssue> {
+}): Result.Result<McpBattleState, McpBattleStateTransitionIssue> {
   if (input.currentBattleState.tag !== "none") {
     return invalidBattleStateTransition(
       input.currentBattleState.tag,
@@ -29,7 +29,7 @@ export function commitBattleStartTransition(input: {
     .filter((session) => input.characters.get(session.characterId) !== session)
     .map((session) => session.characterId);
   if (changedCharacterIds.length > 0) {
-    return Either.left({
+    return Result.fail({
       tag: "battleStateCharacterSessionChanged",
       affectedCharacterIds: changedCharacterIds,
     });
@@ -50,7 +50,7 @@ export function commitBattleStartTransition(input: {
     ({ characterId }) => characterId,
   );
   if (!sameUniqueCharacterIdSet(battleCharacterIds, transitionCharacterIds)) {
-    return Either.left({
+    return Result.fail({
       tag: "battleStateCharacterRosterMismatch",
       battleCharacterIds,
       transitionCharacterIds,
@@ -60,16 +60,16 @@ export function commitBattleStartTransition(input: {
     projectCharacterSessionInBattle({ session, battleId }),
   );
   const committed = input.characters.setAll(nextCharacterSessions);
-  if (Either.isLeft(committed)) {
-    return Either.left({
+  if (Result.isFailure(committed)) {
+    return Result.fail({
       tag: "battleStateCharacterSessionRegistryConflict",
-      registryIssue: committed.left,
+      registryIssue: committed.failure,
       affectedCharacterIds: nextCharacterSessions.map(
         ({ sheet }) => sheet.characterId,
       ),
     });
   }
-  return Either.right(input.nextBattleState);
+  return Result.succeed(input.nextBattleState);
 }
 
 export function commitBattleEndTransition(input: {
@@ -77,12 +77,12 @@ export function commitBattleEndTransition(input: {
   readonly battleSession: BattleRuntimeSession;
   readonly characterSettlements: readonly BattleCharacterSessionSettlement[];
   readonly characters: CharacterSessionRegistry;
-}): Either.Either<McpBattleState, McpBattleStateTransitionIssue> {
+}): Result.Result<McpBattleState, McpBattleStateTransitionIssue> {
   if (input.currentBattleState.tag !== "activeBattle") {
     return invalidBattleStateTransition(input.currentBattleState.tag, "none");
   }
   if (input.currentBattleState.session !== input.battleSession) {
-    return Either.left({
+    return Result.fail({
       tag: "battleStateSessionChanged",
       battleId: input.currentBattleState.session.state.battleId,
     });
@@ -91,7 +91,7 @@ export function commitBattleEndTransition(input: {
     ({ expected, next }) => expected.sheet.characterId !== next.characterId,
   );
   if (mismatchedSettlement !== undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "battleStateCharacterSettlementMismatch",
       expectedCharacterId: mismatchedSettlement.expected.sheet.characterId,
       nextCharacterId: mismatchedSettlement.next.characterId,
@@ -110,7 +110,7 @@ export function commitBattleEndTransition(input: {
     !sameUniqueCharacterIdSet(battleCharacterIds, transitionCharacterIds) ||
     !sameUniqueCharacterIdSet(transitionCharacterIds, settledCharacterIds)
   ) {
-    return Either.left({
+    return Result.fail({
       tag: "battleStateCharacterRosterMismatch",
       battleCharacterIds,
       transitionCharacterIds: settledCharacterIds,
@@ -123,7 +123,7 @@ export function commitBattleEndTransition(input: {
     )
     .map(({ expected }) => expected.sheet.characterId);
   if (changedCharacterIds.length > 0) {
-    return Either.left({
+    return Result.fail({
       tag: "battleStateCharacterSessionChanged",
       affectedCharacterIds: changedCharacterIds,
     });
@@ -131,16 +131,16 @@ export function commitBattleEndTransition(input: {
   const committed = input.characters.setAll(
     input.characterSettlements.map(({ next }) => next),
   );
-  if (Either.isLeft(committed)) {
-    return Either.left({
+  if (Result.isFailure(committed)) {
+    return Result.fail({
       tag: "battleStateCharacterSessionRegistryConflict",
-      registryIssue: committed.left,
+      registryIssue: committed.failure,
       affectedCharacterIds: input.characterSettlements.map(
         ({ next }) => next.characterId,
       ),
     });
   }
-  return Either.right({ tag: "none" });
+  return Result.succeed({ tag: "none" });
 }
 
 function battleCharacterIdsFromState(

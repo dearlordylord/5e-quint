@@ -14,9 +14,9 @@ export const PUBLIC_MCP_DEPLOYMENT_ENVIRONMENTS = [
 export type PublicMcpDeploymentEnvironment =
   (typeof PUBLIC_MCP_DEPLOYMENT_ENVIRONMENTS)[number];
 
-export const PublicMcpPublisherNameSchema = Schema.NonEmptyTrimmedString.pipe(
-  Schema.brand("PublicMcpPublisherName"),
-);
+export const PublicMcpPublisherNameSchema = Schema.Trimmed.check(
+  Schema.isNonEmpty(),
+).pipe(Schema.brand("PublicMcpPublisherName"));
 export type PublicMcpPublisherName = typeof PublicMcpPublisherNameSchema.Type;
 export const DEFAULT_PUBLIC_MCP_PUBLISHER_NAME = Schema.decodeUnknownSync(
   PublicMcpPublisherNameSchema,

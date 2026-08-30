@@ -54,7 +54,7 @@ import {
   currentActorId,
   grappledBy,
 } from "./creature-state-leaves.ts";
-import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
 import { GRAPPLE_TARGET_REACH_FEET } from "./domain-constants.ts";
 import {
   activeDruidWildShapeForm,
@@ -62,6 +62,11 @@ import {
   combatantD20ProficiencyBonus,
   combatantEffectiveSize,
 } from "./druid-wild-shape.ts";
+
+export {
+  opportunityAttackThreatEqual,
+  opportunityAttackThreatIdentityEqual,
+} from "./opportunity-attack-equality.ts";
 
 export {
   baseWalkSpeed,
@@ -230,7 +235,7 @@ export function opportunityAttackOptionForReactor(
   targetId: CombatantId,
   selection: BattleOpportunityAttackSelection,
 ): BoundSupportedAttackActionOption | undefined {
-  if (isPresentFindFamiliarCombatant(state, reactorId)) {
+  if (isPresentSpawnedCompanionCombatant(state, reactorId)) {
     return undefined;
   }
   if (
@@ -325,26 +330,6 @@ export type BattleOpportunityAttackExecutionCandidate = Readonly<{
   readonly selection: BattleOpportunityAttackSelection;
   readonly reachFeet: MovementFeet;
 }>;
-
-export function opportunityAttackThreatEqual(
-  left: BattleOpportunityAttackThreat,
-  right: BattleOpportunityAttackThreat,
-): boolean {
-  return (
-    opportunityAttackThreatIdentityEqual(left, right) &&
-    Number(left.distanceFeet) === Number(right.distanceFeet)
-  );
-}
-
-export function opportunityAttackThreatIdentityEqual(
-  left: BattleOpportunityAttackThreat,
-  right: BattleOpportunityAttackThreat,
-): boolean {
-  return (
-    left.reactorId === right.reactorId &&
-    interruptAttackExecutionSelectionsEqual(left, right)
-  );
-}
 
 export function opportunityAttackLeavesReach(input: {
   readonly beforeDistanceFeet: MovementFeet;

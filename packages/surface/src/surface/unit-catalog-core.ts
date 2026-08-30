@@ -322,7 +322,7 @@ export function buildUnitCatalog(input: {
     tag: "ok",
     catalog: {
       getUnit: (id) =>
-        Option.fromNullable(state.records.get(UnitIdSchema.make(id))),
+        Option.fromNullishOr(state.records.get(UnitIdSchema.make(id))),
       listUnits: () => Array.from(state.records.values()),
       requireUnit: (id) => state.records.get(UnitIdSchema.make(id))!,
     },

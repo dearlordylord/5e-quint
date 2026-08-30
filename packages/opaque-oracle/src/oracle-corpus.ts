@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import type { OracleEvaluationServices } from "./oracle-evaluation.ts";
 import { evaluateOracleBatch } from "./oracle-evaluation.ts";
@@ -27,25 +27,27 @@ import {
 const OracleCorpusShapeSchema = Schema.Struct({
   batch: OracleEvaluationBatchSchema,
   traces: Schema.NonEmptyArray(OracleTraceSchema),
-}).annotations({
+}).annotate({
   identifier: "OracleCorpus",
   parseOptions: { onExcessProperty: "error" },
 });
 
 const OracleCorpusWithPositionalLengthSchema = OracleCorpusShapeSchema.pipe(
-  Schema.filter(
-    (corpus) => corpus.batch.cases.length === corpus.traces.length,
-    {
-      message: () =>
-        "Oracle corpus traces must have one entry for every batch Case.",
-      ...semanticRefinement("corpusBatchTraceLengthCorrelation"),
-    },
+  Schema.check(
+    Schema.makeFilter(
+      (corpus) => corpus.batch.cases.length === corpus.traces.length,
+      {
+        message:
+          "Oracle corpus traces must have one entry for every batch Case.",
+        ...semanticRefinement("corpusBatchTraceLengthCorrelation"),
+      },
+    ),
   ),
 );
 
 export const OracleCorpusSchema = OracleCorpusWithPositionalLengthSchema.pipe(
   Schema.brand("OracleCorpus"),
-).annotations({
+).annotate({
   identifier: "OracleCorpus",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -86,10 +88,10 @@ export type OracleCorpusIssues = readonly [
 /** Build the committed ordered source corpus and evaluate its batch once. */
 export function buildOracleEvaluationCorpus(
   services: OracleEvaluationServices,
-): Either.Either<OracleCorpus, OracleCorpusIssues> {
+): Result.Result<OracleCorpus, OracleCorpusIssues> {
   const sourceCases = oracleEvaluationSourceCases(services);
-  if (Either.isLeft(sourceCases)) return Either.left([sourceCases.left]);
-  return buildOracleCorpus({ cases: sourceCases.right, services });
+  if (Result.isFailure(sourceCases)) return Result.fail([sourceCases.failure]);
+  return buildOracleCorpus({ cases: sourceCases.success, services });
 }
 
 /**
@@ -99,18 +101,18 @@ export function buildOracleEvaluationCorpus(
  */
 export function buildOracleCorpus(
   input: OracleCorpusEvaluationInput,
-): Either.Either<OracleCorpus, OracleCorpusIssues> {
+): Result.Result<OracleCorpus, OracleCorpusIssues> {
   const batch = OracleEvaluationBatchSchema.make({ cases: input.cases });
   const evaluatedTraces = evaluateCorpusTraces({
     batch,
     services: input.services,
   });
-  if (Either.isLeft(evaluatedTraces)) {
-    return Either.left([evaluatedTraces.left]);
+  if (Result.isFailure(evaluatedTraces)) {
+    return Result.fail([evaluatedTraces.failure]);
   }
-  const traces = evaluatedTraces.right;
+  const traces = evaluatedTraces.success;
   if (traces.length !== batch.cases.length) {
-    return Either.left([
+    return Result.fail([
       {
         tag: "traceCountMismatch",
         expected: batch.cases.length,
@@ -120,7 +122,7 @@ export function buildOracleCorpus(
   }
   const [firstTrace, ...remainingTraces] = traces;
   if (firstTrace === undefined) {
-    return Either.left([
+    return Result.fail([
       {
         tag: "traceCountMismatch",
         expected: batch.cases.length,
@@ -128,7 +130,7 @@ export function buildOracleCorpus(
       },
     ]);
   }
-  return Either.right(
+  return Result.succeed(
     OracleCorpusSchema.make({
       batch,
       traces: [firstTrace, ...remainingTraces],
@@ -138,19 +140,19 @@ export function buildOracleCorpus(
 
 export function admitOracleCorpusDocument(
   document: OracleCorpusDocument,
-): Either.Either<OracleCorpus, OracleDecodeIssues> {
+): Result.Result<OracleCorpus, OracleDecodeIssues> {
   const decoded = decodeWithSchema(
     OracleCorpusSchema,
     canonicalizeOracleCorpusInput(document),
   );
-  return Either.isLeft(decoded)
-    ? Either.left(repathCorpusIssues(decoded.left))
+  return Result.isFailure(decoded)
+    ? Result.fail(repathCorpusIssues(decoded.failure))
     : decoded;
 }
 
 export function decodeOracleCorpusDocument(
   input: unknown,
-): Either.Either<OracleCorpusDocument, OracleDecodeIssues> {
+): Result.Result<OracleCorpusDocument, OracleDecodeIssues> {
   return decodeWithSchema(
     OracleCorpusDocumentSchema,
     canonicalizeOracleCorpusInput(input),
@@ -159,20 +161,20 @@ export function decodeOracleCorpusDocument(
 
 export function decodeOracleCorpus(
   input: unknown,
-): Either.Either<OracleCorpus, OracleDecodeIssues> {
+): Result.Result<OracleCorpus, OracleDecodeIssues> {
   const document = decodeOracleCorpusDocument(input);
-  return Either.isLeft(document)
-    ? Either.left(document.left)
-    : admitOracleCorpusDocument(document.right);
+  return Result.isFailure(document)
+    ? Result.fail(document.failure)
+    : admitOracleCorpusDocument(document.success);
 }
 
 export function decodeOracleCorpusJson(
   input: string,
-): Either.Either<OracleCorpus, OracleDecodeIssues> {
+): Result.Result<OracleCorpus, OracleDecodeIssues> {
   const parsed = parseJsonWithDuplicateDetection(input);
-  return Either.isLeft(parsed)
-    ? Either.left(parsed.left)
-    : decodeOracleCorpus(parsed.right);
+  return Result.isFailure(parsed)
+    ? Result.fail(parsed.failure)
+    : decodeOracleCorpus(parsed.success);
 }
 
 /** Serialize the corpus as formatter-stable, deterministic JSON with a final newline. */
@@ -187,11 +189,11 @@ export function serializeOracleCorpus(
 
 function evaluateCorpusTraces(
   input: Parameters<typeof evaluateOracleBatch>[0],
-): Either.Either<readonly OracleTrace[], OracleCorpusIssue> {
+): Result.Result<readonly OracleTrace[], OracleCorpusIssue> {
   try {
-    return Either.right(evaluateOracleBatch(input));
+    return Result.succeed(evaluateOracleBatch(input));
   } catch (error) {
-    return Either.left({
+    return Result.fail({
       tag: "evaluationDefect",
       message: safeErrorMessage(error),
     });

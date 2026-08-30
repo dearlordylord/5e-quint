@@ -2,10 +2,10 @@ import { createHash } from "node:crypto";
 import { lstatSync, readFileSync, readdirSync, type Dirent } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
-  decodeSrdSurfaceEither,
+  decodeSrdSurfaceResult,
   formatSurfaceDecodeError,
 } from "@dnd/surface/surface/schema";
 import type { SrdSurface } from "@dnd/surface/surface/types";
@@ -143,7 +143,7 @@ export type OracleDistributionLoadIssue =
       readonly issue: OracleApplicationBuildIssue;
     };
 
-export type OracleDistributionLoadResult = Either.Either<
+export type OracleDistributionLoadResult = Result.Result<
   OracleApplication,
   OracleDistributionLoadIssue
 >;
@@ -210,35 +210,35 @@ export function serializeOracleDistributionIdentity(
 function buildOracleApplicationFromProjection(input: {
   readonly distributionId: DistributionId;
   readonly projectionBytes: Uint8Array;
-}): Either.Either<OracleApplication, OracleApplicationBuildIssue> {
+}): Result.Result<OracleApplication, OracleApplicationBuildIssue> {
   const parsed = parseProjectionJson(input.projectionBytes);
-  if (Either.isLeft(parsed)) return Either.left(parsed.left);
+  if (Result.isFailure(parsed)) return Result.fail(parsed.failure);
 
-  const decoded = decodeSrdSurfaceEither(parsed.right);
-  if (Either.isLeft(decoded)) {
-    return Either.left({
+  const decoded = decodeSrdSurfaceResult(parsed.success);
+  if (Result.isFailure(decoded)) {
+    return Result.fail({
       tag: "projectionSchema",
-      message: formatSurfaceDecodeError(decoded.left),
+      message: formatSurfaceDecodeError(decoded.failure),
     });
   }
-  const canonicalBytes = encodeOracleStartupSurface(decoded.right);
+  const canonicalBytes = encodeOracleStartupSurface(decoded.success);
   if (!bytesEqual(canonicalBytes, input.projectionBytes)) {
-    return Either.left({ tag: "projectionCanonicality" });
+    return Result.fail({ tag: "projectionCanonicality" });
   }
 
-  const services = buildOracleEvaluationServicesFromSurface(decoded.right);
-  if (Either.isLeft(services)) {
-    return Either.left({
+  const services = buildOracleEvaluationServicesFromSurface(decoded.success);
+  if (Result.isFailure(services)) {
+    return Result.fail({
       tag: "projectionCatalog",
-      issues: services.left,
+      issues: services.failure,
     });
   }
 
-  const projection = deepFreeze(decoded.right);
+  const projection = deepFreeze(decoded.success);
   const identity = Object.freeze({
     distributionId: input.distributionId,
   });
-  const servicesValue = deepFreeze(services.right);
+  const servicesValue = deepFreeze(services.success);
   const application: OracleApplication = Object.freeze({
     [oracleApplicationBrand]: true,
     identity,
@@ -247,25 +247,25 @@ function buildOracleApplicationFromProjection(input: {
     evaluateJson: (rawJson: string) =>
       evaluateOracleBatchJson({ application, rawJson }),
   });
-  return Either.right(application);
+  return Result.succeed(application);
 }
 
 function parseProjectionJson(
   bytes: Uint8Array,
-): Either.Either<unknown, OracleApplicationBuildIssue> {
+): Result.Result<unknown, OracleApplicationBuildIssue> {
   let text: string;
   try {
     text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   } catch {
-    return Either.left({
+    return Result.fail({
       tag: "projectionJson",
       issues: [{ path: "", code: "invalidJson" }],
     });
   }
   const parsed = parseJsonWithDuplicateDetection(text);
-  return Either.isLeft(parsed)
-    ? Either.left({ tag: "projectionJson", issues: parsed.left })
-    : Either.right(parsed.right);
+  return Result.isFailure(parsed)
+    ? Result.fail({ tag: "projectionJson", issues: parsed.failure })
+    : Result.succeed(parsed.success);
 }
 
 /** Load and verify a distribution root relative to its own executable/assets. */
@@ -274,21 +274,22 @@ export function loadOracleApplicationFromDirectory(input: {
 }): OracleDistributionLoadResult {
   const directory = resolve(input.directory);
   const assets = readDistributionAssets(directory);
-  if (Either.isLeft(assets)) return Either.left(assets.left);
-  const distributionId = verifyDistributionIdentity(assets.right);
-  if (Either.isLeft(distributionId)) return Either.left(distributionId.left);
+  if (Result.isFailure(assets)) return Result.fail(assets.failure);
+  const distributionId = verifyDistributionIdentity(assets.success);
+  if (Result.isFailure(distributionId))
+    return Result.fail(distributionId.failure);
   const application = buildOracleApplicationFromProjection({
-    distributionId: distributionId.right,
-    projectionBytes: assets.right.projection,
+    distributionId: distributionId.success,
+    projectionBytes: assets.success.projection,
   });
-  return Either.isLeft(application)
-    ? Either.left({ tag: "applicationBuild", issue: application.left })
-    : Either.right(application.right);
+  return Result.isFailure(application)
+    ? Result.fail({ tag: "applicationBuild", issue: application.failure })
+    : Result.succeed(application.success);
 }
 
 function readDistributionAssets(
   directory: string,
-): Either.Either<OracleDistributionAssets, OracleDistributionLoadIssue> {
+): Result.Result<OracleDistributionAssets, OracleDistributionLoadIssue> {
   const expectedNames = new Set<string>([
     ORACLE_DISTRIBUTION_FILE_NAMES.executable,
     ORACLE_DISTRIBUTION_FILE_NAMES.identity,
@@ -298,16 +299,16 @@ function readDistributionAssets(
     ),
   ]);
   const entries = readDirectoryEntries(directory);
-  if (Either.isLeft(entries)) return Either.left(entries.left);
-  const unexpectedAsset = entries.right.find(
+  if (Result.isFailure(entries)) return Result.fail(entries.failure);
+  const unexpectedAsset = entries.success.find(
     (entry) => !expectedNames.has(entry.name),
   );
   if (unexpectedAsset !== undefined) {
-    return Either.left({ tag: "unexpectedAsset", name: unexpectedAsset.name });
+    return Result.fail({ tag: "unexpectedAsset", name: unexpectedAsset.name });
   }
 
   const required = readRequiredDistributionAssets(directory);
-  if (Either.isLeft(required)) return Either.left(required.left);
+  if (Result.isFailure(required)) return Result.fail(required.failure);
 
   const schemas: Record<OraclePublicationMember, Uint8Array> = {
     case: new Uint8Array(0),
@@ -319,24 +320,24 @@ function readDistributionAssets(
       directory,
       ORACLE_PUBLICATION_FILE_NAMES[member],
     );
-    if (Either.isLeft(artifact)) return Either.left(artifact.left);
+    if (Result.isFailure(artifact)) return Result.fail(artifact.failure);
     if (
-      !bytesEqual(artifact.right, ORACLE_PUBLICATION_ARTIFACTS[member].bytes)
+      !bytesEqual(artifact.success, ORACLE_PUBLICATION_ARTIFACTS[member].bytes)
     ) {
-      return Either.left({ tag: "schemaMismatch", member });
+      return Result.fail({ tag: "schemaMismatch", member });
     }
-    schemas[member] = artifact.right;
+    schemas[member] = artifact.success;
   }
 
-  return Either.right({
-    ...required.right,
+  return Result.succeed({
+    ...required.success,
     schemas,
   });
 }
 
 function readRequiredDistributionAssets(
   directory: string,
-): Either.Either<
+): Result.Result<
   Pick<OracleDistributionAssets, "executable" | "identity" | "projection">,
   OracleDistributionLoadIssue
 > {
@@ -344,42 +345,43 @@ function readRequiredDistributionAssets(
     directory,
     ORACLE_DISTRIBUTION_FILE_NAMES.executable,
   );
-  if (Either.isLeft(executable)) return Either.left(executable.left);
+  if (Result.isFailure(executable)) return Result.fail(executable.failure);
   const identity = readAsset(
     directory,
     ORACLE_DISTRIBUTION_FILE_NAMES.identity,
   );
-  if (Either.isLeft(identity)) return Either.left(identity.left);
+  if (Result.isFailure(identity)) return Result.fail(identity.failure);
   const projection = readAsset(
     directory,
     ORACLE_DISTRIBUTION_FILE_NAMES.projection,
   );
-  if (Either.isLeft(projection)) return Either.left(projection.left);
-  return Either.right({
-    executable: executable.right,
-    identity: identity.right,
-    projection: projection.right,
+  if (Result.isFailure(projection)) return Result.fail(projection.failure);
+  return Result.succeed({
+    executable: executable.success,
+    identity: identity.success,
+    projection: projection.success,
   });
 }
 
 function verifyDistributionIdentity(
   assets: OracleDistributionAssets,
-): Either.Either<DistributionId, OracleDistributionLoadIssue> {
+): Result.Result<DistributionId, OracleDistributionLoadIssue> {
   const decodedIdentity = decodeDistributionIdentity(assets.identity);
-  if (Either.isLeft(decodedIdentity)) return Either.left(decodedIdentity.left);
+  if (Result.isFailure(decodedIdentity))
+    return Result.fail(decodedIdentity.failure);
   const computed = computeOracleDistributionId({
     executable: assets.executable,
     schemas: assets.schemas,
     projection: assets.projection,
   });
-  if (computed !== decodedIdentity.right.distributionId) {
-    return Either.left({
+  if (computed !== decodedIdentity.success.distributionId) {
+    return Result.fail({
       tag: "identityMismatch",
-      expected: decodedIdentity.right.distributionId,
+      expected: decodedIdentity.success.distributionId,
       actual: computed,
     });
   }
-  return Either.right(computed);
+  return Result.succeed(computed);
 }
 
 export function loadOracleApplicationFromExecutable(
@@ -392,11 +394,11 @@ export function loadOracleApplicationFromExecutable(
 
 function readDirectoryEntries(
   directory: string,
-): Either.Either<readonly Dirent[], OracleDistributionLoadIssue> {
+): Result.Result<readonly Dirent[], OracleDistributionLoadIssue> {
   try {
-    return Either.right(readdirSync(directory, { withFileTypes: true }));
+    return Result.succeed(readdirSync(directory, { withFileTypes: true }));
   } catch (error) {
-    return Either.left({
+    return Result.fail({
       tag: "assetRead",
       name: directory,
       message: String(error),
@@ -407,16 +409,16 @@ function readDirectoryEntries(
 function readAsset(
   directory: string,
   name: string,
-): Either.Either<Buffer, OracleDistributionLoadIssue> {
+): Result.Result<Buffer, OracleDistributionLoadIssue> {
   const path = join(directory, name);
   try {
     const stat = lstatSync(path);
     if (stat.isSymbolicLink() || !stat.isFile()) {
-      return Either.left({ tag: "assetType", name });
+      return Result.fail({ tag: "assetType", name });
     }
-    return Either.right(readFileSync(path));
+    return Result.succeed(readFileSync(path));
   } catch (error) {
-    return Either.left({
+    return Result.fail({
       tag: "assetRead",
       name,
       message: String(error),
@@ -426,41 +428,41 @@ function readAsset(
 
 function decodeDistributionIdentity(
   bytes: Uint8Array,
-): Either.Either<OracleIdentityResponse, OracleDistributionLoadIssue> {
+): Result.Result<OracleIdentityResponse, OracleDistributionLoadIssue> {
   let text: string;
   try {
     text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   } catch {
-    return Either.left({
+    return Result.fail({
       tag: "identityDecode",
       issues: [{ path: "", code: "invalidJson" }],
     });
   }
   const parsed = parseJsonWithDuplicateDetection(text);
-  if (Either.isLeft(parsed)) {
-    return Either.left({ tag: "identityDecode", issues: parsed.left });
+  if (Result.isFailure(parsed)) {
+    return Result.fail({ tag: "identityDecode", issues: parsed.failure });
   }
-  const decoded = Schema.decodeUnknownEither(OracleIdentityResponseSchema, {
+  const decoded = Schema.decodeUnknownResult(OracleIdentityResponseSchema, {
     errors: "all",
     onExcessProperty: "error",
-  })(parsed.right);
-  if (Either.isLeft(decoded)) {
-    return Either.left({
+  })(parsed.success);
+  if (Result.isFailure(decoded)) {
+    return Result.fail({
       tag: "identityDecode",
       issues: [{ path: "", code: "wrongType" }],
     });
   }
-  const canonical = serializeOracleDistributionIdentity(decoded.right);
+  const canonical = serializeOracleDistributionIdentity(decoded.success);
   if (!bytesEqual(canonical, bytes)) {
-    return Either.left({ tag: "identityCanonicality" });
+    return Result.fail({ tag: "identityCanonicality" });
   }
-  return Either.right(decoded.right);
+  return Result.succeed(decoded.success);
 }
 
-function bytesEqual(left: Uint8Array, right: Uint8Array): boolean {
-  if (left.byteLength !== right.byteLength) return false;
-  for (let index = 0; index < left.byteLength; index += 1) {
-    if (left[index] !== right[index]) return false;
+function bytesEqual(first: Uint8Array, second: Uint8Array): boolean {
+  if (first.byteLength !== second.byteLength) return false;
+  for (let index = 0; index < first.byteLength; index += 1) {
+    if (first[index] !== second[index]) return false;
   }
   return true;
 }

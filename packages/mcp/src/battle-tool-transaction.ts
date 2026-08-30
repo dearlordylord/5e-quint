@@ -12,7 +12,7 @@ import {
   type BattleRuntimeTransactionResult,
   type BattleSubject,
 } from "@dnd/battle-runtime";
-import { Either, Match, Option } from "effect";
+import { Match, Option, Result } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -45,9 +45,9 @@ export function handleFillBattleHoleToolCall(
   input: FillBattleHoleToolInput,
 ): BattleToolResult {
   const admitted = admitBattleFillToolInput(root, input);
-  if (Either.isLeft(admitted)) return admitted.left;
+  if (Result.isFailure(admitted)) return admitted.failure;
 
-  const { session, previous, subject, fill } = admitted.right;
+  const { session, previous, subject, fill } = admitted.success;
   const operation = battleRuntimeTransactionOperationForFill({
     subject,
     fill,
@@ -77,18 +77,20 @@ function admitBattleFillToolInput(
   input: FillBattleHoleToolInput,
 ) {
   const visibleSession = activeBattleForTool(root);
-  if (Either.isLeft(visibleSession)) return Either.left(visibleSession.left);
+  if (Result.isFailure(visibleSession)) {
+    return Result.fail(visibleSession.failure);
+  }
 
   const previous = root.sessionStore.getPendingBattleTransaction();
   const pendingIssue = battleFillPendingTransactionIssue(previous, input);
-  if (pendingIssue !== undefined) return Either.left(pendingIssue);
+  if (pendingIssue !== undefined) return Result.fail(pendingIssue);
   const frontier = battleMechanicsEnvelopeForSession(
     root,
-    visibleSession.right,
+    visibleSession.success,
   ).frontier;
   const frontierIssue = pendingFillFrontierIssue(frontier, input.fill);
   if (frontierIssue !== null) {
-    return Either.left(
+    return Result.fail(
       errorContent(frontierIssue.message, frontierIssue.details),
     );
   }
@@ -96,15 +98,15 @@ function admitBattleFillToolInput(
     previous === null &&
     !battleSubjectIsAvailableWithoutPendingFills(frontier, input.subject)
   ) {
-    return Either.left(
+    return Result.fail(
       errorContent("Battle act is not currently available.", {
         code: "BATTLE_ACT_NOT_AVAILABLE",
         subject: input.subject,
       }),
     );
   }
-  return Either.right({
-    session: visibleSession.right,
+  return Result.succeed({
+    session: visibleSession.success,
     previous,
     subject: input.subject,
     fill: input.fill,
@@ -288,9 +290,9 @@ function battleResolutionContent(
   result: BattleRuntimeResolutionResult,
 ): BattleToolResult {
   const payload = battleResolutionPayload(root, result);
-  return Either.isLeft(payload)
-    ? battlePresentationIssueContent(payload.left)
-    : schemaJsonContent(BattleResolutionOutputSchema, payload.right);
+  return Result.isFailure(payload)
+    ? battlePresentationIssueContent(payload.failure)
+    : schemaJsonContent(BattleResolutionOutputSchema, payload.success);
 }
 
 export function storedBattleTransactionContent(
@@ -302,8 +304,8 @@ export function storedBattleTransactionContent(
     expectedSession,
     result,
   );
-  if (Either.isLeft(stored)) {
-    return battleStateTransitionErrorContent(stored.left);
+  if (Result.isFailure(stored)) {
+    return battleStateTransitionErrorContent(stored.failure);
   }
   return Match.value(result).pipe(
     Match.when({ tag: "invalid" }, ({ resolution }) =>
@@ -330,35 +332,35 @@ export function storedBattleTransactionContent(
 export function activeBattleWithoutPendingFills(
   root: McpPlaySessionRoot,
   pendingMessage: string,
-): Either.Either<BattleRuntimeSession, ToolError> {
+): Result.Result<BattleRuntimeSession, ToolError> {
   const session = activeBattleForTool(root);
-  if (Either.isLeft(session)) return session;
+  if (Result.isFailure(session)) return session;
   const pendingTransaction = root.sessionStore.getPendingBattleTransaction();
-  if (pendingTransaction === null) return Either.right(session.right);
+  if (pendingTransaction === null) return Result.succeed(session.success);
   const pendingFills = battlePendingTransactionView(pendingTransaction);
   return Option.isNone(pendingFills)
-    ? Either.left(
+    ? Result.fail(
         errorContent("The stored battle transaction is invalid.", {
           code: "BATTLE_TRANSACTION_DEFECT",
           issue: { tag: "foreignTransaction" },
         }),
       )
-    : Either.left(
+    : Result.fail(
         pendingBattleFillsContent(pendingFills.value, pendingMessage),
       );
 }
 
 function activeBattleForTool(
   root: McpPlaySessionRoot,
-): Either.Either<BattleRuntimeSession, ToolError> {
+): Result.Result<BattleRuntimeSession, ToolError> {
   const state = root.sessionStore.battleState;
-  if (state.tag === "none") return Either.left(noStoredBattleContent());
+  if (state.tag === "none") return Result.fail(noStoredBattleContent());
   if (state.tag === "initialInitiativeSetup") {
-    return Either.left(
+    return Result.fail(
       errorContent("Initial Initiative setup is not finalized.", {
         code: "INITIAL_INITIATIVE_SETUP_NOT_FINALIZED",
       }),
     );
   }
-  return Either.right(state.session);
+  return Result.succeed(state.session);
 }

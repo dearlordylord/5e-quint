@@ -1,21 +1,21 @@
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet } from "@dnd/shared/types";
 
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import type {
-  BattleActiveEffect,
-  BattleAntimagicFieldAuraMembership,
+  BattleMagicSuppressionEmanationMembership,
+  BattleMagicSuppressionOngoingSpellEffectRef,
   BattleAreaId,
   CombatantId,
 } from "./index.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import { antimagicFieldUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 
 export type TestAntimagicFieldAuraMembership = {
   readonly sourceCombatantId: CombatantId;
-  readonly membership: BattleAntimagicFieldAuraMembership;
+  readonly membership: BattleMagicSuppressionEmanationMembership;
 };
 
-export function antimagicFieldAuraMembershipForTest(input: {
+export function magicSuppressionEmanationMembershipForTest(input: {
   readonly sourceCombatantId: CombatantId;
   readonly originIncluded: boolean;
   readonly nonOriginCombatantIds: readonly CombatantId[];
@@ -23,30 +23,30 @@ export function antimagicFieldAuraMembershipForTest(input: {
   return {
     sourceCombatantId: input.sourceCombatantId,
     membership: {
-      kind: "antimagicFieldAuraMembership",
+      kind: "magicSuppressionEmanationMembership",
       originIncluded: input.originIncluded,
       nonOriginCombatantIds: input.nonOriginCombatantIds,
     },
   };
 }
 
-export function antimagicFieldAuraEffectForTest(input: {
+export function magicSuppressionEmanationEffectTemplateForTest(input: {
   readonly areaId: BattleAreaId;
   readonly aura: TestAntimagicFieldAuraMembership;
+  readonly suppressedOngoingSpellEffects?: readonly BattleMagicSuppressionOngoingSpellEffectRef[];
 }): Extract<
-  BattleActiveEffect,
-  { readonly kind: "antimagicFieldOngoingSpellSuppression" }
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "magicSuppressionEmanation" }
 > {
   return {
-    kind: "antimagicFieldOngoingSpellSuppression",
+    kind: "magicSuppressionEmanation",
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(antimagicFieldUnitId),
     ),
     sourceCombatantId: input.aura.sourceCombatantId,
     areaId: input.areaId,
     auraMembership: input.aura.membership,
-    radiusFeet: movementFeet(10),
-    suppressedOngoingSpellEffects: [],
+    suppressedOngoingSpellEffects: input.suppressedOngoingSpellEffects ?? [],
     expiresAt: {
       kind: "concentration",
       combatantId: input.aura.sourceCombatantId,

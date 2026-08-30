@@ -8,7 +8,7 @@ import {
 import { dirname, parse, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { Either } from "effect";
+import { Result } from "effect";
 import { buildSync } from "esbuild";
 
 import {
@@ -62,9 +62,9 @@ export function buildOracleDistribution(
     options.entryPoint ?? DEFAULT_DISTRIBUTION_ENTRYPOINT,
   );
   const startup = buildOracleStartupCatalog(srdSurface);
-  if (Either.isLeft(startup)) {
+  if (Result.isFailure(startup)) {
     throw new Error(
-      `Oracle startup catalog failed: ${JSON.stringify(startup.left)}`,
+      `Oracle startup catalog failed: ${JSON.stringify(startup.failure)}`,
     );
   }
 
@@ -116,7 +116,9 @@ export function buildOracleDistribution(
     destination,
     ORACLE_DISTRIBUTION_FILE_NAMES.projection,
   );
-  writeFileSync(projectionPath, startup.right.projectionBytes, { mode: 0o644 });
+  writeFileSync(projectionPath, startup.success.projectionBytes, {
+    mode: 0o644,
+  });
   const schemas = writePublicationArtifacts(destination);
   const executable = readFileSync(executablePath);
   const projection = readFileSync(projectionPath);

@@ -21,7 +21,7 @@ describe("spell invocation guards", () => {
     expect(
       isTargetListSpellInvocation(
         guardRelevantInvocation({
-          procedure: "levitatedCreature",
+          procedure: "controlledVerticalSuspension",
           targeting: { kind: "targetList" },
         }),
       ),

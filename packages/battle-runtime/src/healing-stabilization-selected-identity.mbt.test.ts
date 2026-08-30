@@ -3,7 +3,7 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay healing-stabilization spare_the_dying
 // UNIT-IDENTITY-REPLAY: healing-stabilization spare_the_dying doResolveSpareTheDyingStable
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MAKE_STABLE_LIFECYCLE
-import { Either } from "effect";
+import { Result } from "effect";
 import { expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -271,10 +271,10 @@ function spareTheDyingBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function healingCreature(input: {

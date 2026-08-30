@@ -6,7 +6,7 @@ import {
   battleSubjectPresentation,
 } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { BattleHoleSchema } from "./index.ts";
 import {
   produceFlameUnitId,
@@ -49,6 +49,7 @@ import type {
   BattleState,
 } from "./unit-profile-admission.test-support.ts";
 import {
+  assertBattleSnapshotCodecRoundTripForTest,
   battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForSpellHoleForTest,
 } from "./battle-runtime.test-support.ts";
@@ -110,6 +111,8 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         },
       },
     ]);
+    expect(resolved.snapshot.storedLightEmitters).toEqual([]);
+    assertBattleSnapshotCodecRoundTripForTest(resolved.snapshot);
     expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
       false,
     );
@@ -224,8 +227,8 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       }),
     );
     expect(heldLightEffects[0]?.effectRef).not.toBe(firstHeldLight.effectRef);
-    expect(Number(recastCaster.nextActiveEffectOrdinal)).toBe(
-      Number(initialCaster.nextActiveEffectOrdinal) + 2,
+    expect(Number(recastCaster.nextEffectOrdinal)).toBe(
+      Number(initialCaster.nextEffectOrdinal) + 2,
     );
     expect(recast.snapshot.lightEmitters).toHaveLength(1);
     expect(recast.snapshot.lightEmitters[0]).toEqual(
@@ -477,8 +480,8 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     }
     expect(encoded).not.toHaveProperty("spell");
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...encoded,
           spell: { procedure: "heldLightHurl" },
         }),

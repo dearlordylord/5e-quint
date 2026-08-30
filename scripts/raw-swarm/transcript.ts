@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   decodeScenarioId,
@@ -12,12 +12,15 @@ import {
   type HistoricalScenarioId,
   type ScenarioId,
 } from "./raw-swarm-identities.ts";
+import { canonicalJson, sha256Canonical } from "./sdk-player/json-value.ts";
 
 export {
+  canonicalJson,
   decodeHistoricalScenarioId,
   decodeScenarioId,
   HistoricalScenarioIdSchema,
   ScenarioIdSchema,
+  sha256Canonical,
   type HistoricalScenarioId,
   type ScenarioId,
 };
@@ -26,23 +29,6 @@ export const repoRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "../..",
 );
-
-export function canonicalJson(value: unknown): string {
-  if (value === null || typeof value !== "object") {
-    return JSON.stringify(value) ?? "undefined";
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map((entry) => canonicalJson(entry)).join(",")}]`;
-  }
-  const entries = Object.entries(value)
-    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-    .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`);
-  return `{${entries.join(",")}}`;
-}
-
-export function sha256Canonical(value: unknown): string {
-  return createHash("sha256").update(canonicalJson(value)).digest("hex");
-}
 
 export function sha256Text(value: string): string {
   return createHash("sha256").update(value).digest("hex");
@@ -71,17 +57,21 @@ export function currentGitRevision(
 }
 
 export const GitShaSchema = Schema.String.pipe(
-  Schema.pattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/),
+  Schema.check(Schema.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/)),
   Schema.brand("RawSwarmGitSha"),
 );
 export type GitSha = Schema.Schema.Type<typeof GitShaSchema>;
 export const StartedAtSchema = Schema.String.pipe(
-  Schema.filter(
-    (value) => {
-      const parsed = new Date(value);
-      return !Number.isNaN(parsed.valueOf()) && parsed.toISOString() === value;
-    },
-    { message: () => "startedAt must be a canonical ISO timestamp" },
+  Schema.check(
+    Schema.makeFilter(
+      (value) => {
+        const parsed = new Date(value);
+        return (
+          !Number.isNaN(parsed.valueOf()) && parsed.toISOString() === value
+        );
+      },
+      { message: "startedAt must be a canonical ISO timestamp" },
+    ),
   ),
   Schema.brand("RawSwarmStartedAt"),
 );
@@ -171,16 +161,16 @@ export function parsePlayerTranscript(
   readonly exchanges: readonly McpToolExchange[];
 }> {
   const [headerInput, ...steps] = records;
-  const decodedHeader = Schema.decodeUnknownEither(TranscriptHeaderSchema, {
+  const decodedHeader = Schema.decodeUnknownResult(TranscriptHeaderSchema, {
     onExcessProperty: "error",
   })(headerInput);
-  if (Either.isLeft(decodedHeader)) {
+  if (Result.isFailure(decodedHeader)) {
     return {
       tag: "invalid",
       message: "Player transcript requires one first header",
     };
   }
-  const header = decodedHeader.right;
+  const header = decodedHeader.success;
   if (!steps.every(isMcpTranscriptStep)) {
     return {
       tag: "invalid",

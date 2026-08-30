@@ -1,4 +1,4 @@
-import { Either, Match, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
   BattleFillSchema,
@@ -18,15 +18,15 @@ import { BattleSubjectSchema, type BattleSubject } from "./battle-subjects.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
 export const BattleMechanicalHoleSchema =
-  BattleMechanicalHoleCodecSchema.annotations({
+  BattleMechanicalHoleCodecSchema.annotate({
     parseOptions: { onExcessProperty: "error" },
   });
 export const BattleMechanicalOrdinaryHoleSchema =
-  BattleMechanicalOrdinaryHoleCodecSchema.annotations({
+  BattleMechanicalOrdinaryHoleCodecSchema.annotate({
     parseOptions: { onExcessProperty: "error" },
   });
 export const BattleMechanicalInterruptDecisionHoleSchema =
-  BattleMechanicalInterruptDecisionHoleCodecSchema.annotations({
+  BattleMechanicalInterruptDecisionHoleCodecSchema.annotate({
     parseOptions: { onExcessProperty: "error" },
   });
 
@@ -74,11 +74,11 @@ export type BattleMechanicalFrontierIssue =
   | { readonly tag: "interruptFrontierDecisionHoleMismatch" };
 
 export const BattleMechanicalInterruptChoiceSchema =
-  BattleMechanicalInterruptProcedureChoiceSchema.annotations({
+  BattleMechanicalInterruptProcedureChoiceSchema.annotate({
     parseOptions: { onExcessProperty: "error" },
   });
 
-export const BattleMechanicalFrontierSchema = Schema.Union(
+export const BattleMechanicalFrontierSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("ordinaryHoles"),
     subject: BattleSubjectSchema,
@@ -90,7 +90,7 @@ export const BattleMechanicalFrontierSchema = Schema.Union(
     decisionHole: BattleMechanicalInterruptDecisionHoleSchema,
     choices: Schema.NonEmptyArray(BattleMechanicalInterruptChoiceSchema),
   }),
-).annotations({
+]).annotate({
   identifier: "BattleMechanicalFrontier",
   parseOptions: { onExcessProperty: "error" },
 });
@@ -98,25 +98,25 @@ export const BattleMechanicalFrontierSchema = Schema.Union(
 export function battleMechanicalFrontier(input: {
   readonly result: BattleMechanicalFrontierResult;
   readonly acceptedFills: readonly BattleFill[];
-}): Either.Either<BattleMechanicalFrontier, BattleMechanicalFrontierIssue> {
+}): Result.Result<BattleMechanicalFrontier, BattleMechanicalFrontierIssue> {
   const { result } = input;
   if (result.kind === "interruptDecision") {
     if (result.trigger !== result.decisionHole.trigger) {
-      return Either.left({ tag: "interruptFrontierDecisionHoleMismatch" });
+      return Result.fail({ tag: "interruptFrontierDecisionHoleMismatch" });
     }
     const mechanicalInterruptHole = projectMechanicalInterruptHole(
       result.decisionHole,
     );
-    return Either.right({
+    return Result.succeed({
       kind: "interruptDecision",
       decisionHole: mechanicalInterruptHole,
       choices: projectMechanicalChoices(result.choices),
     });
   }
   if (result.holes.length === 0) {
-    return Either.left({ tag: "emptyHoleFrontier" });
+    return Result.fail({ tag: "emptyHoleFrontier" });
   }
-  return Either.right({
+  return Result.succeed({
     kind: "ordinaryHoles",
     subject: result.subject,
     holes: projectMechanicalOrdinaryHoles(result.holes),
@@ -172,10 +172,11 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
     Match.discriminatorsExhaustive("kind")({
       abilityCheck: (value) => projectMechanicalD20Hole(value),
       abilityChoice: (value) => projectHoleWithoutPresentationLabel(value),
+      areaWindStrength: (value) => projectHoleWithoutPresentationLabel(value),
       attackDamageDisposition: (value) =>
         projectHoleWithoutPresentationLabel(value),
       attackRoll: (value) => projectMechanicalAttackRollHole(value),
-      commandOptionChoice: (value) =>
+      compelledBehaviorOptionChoice: (value) =>
         projectHoleWithoutPresentationLabel(value),
       companionReappearanceInitiative: (value) =>
         projectHoleWithoutPresentationLabel(value),
@@ -188,13 +189,13 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
       damageRelationshipDecisions: (value) =>
         projectHoleWithoutPresentationLabel(value),
       damageTypeChoice: (value) => projectHoleWithoutPresentationLabel(value),
-      dancingLightsPlacement: (value) =>
+      movableLightPlacement: (value) =>
         projectHoleWithoutPresentationLabel(value),
       deathSavingThrow: (value) => projectMechanicalD20Hole(value),
-      findFamiliarConnection: (value) =>
+      spawnedCompanionConnection: (value) =>
         projectHoleWithoutPresentationLabel(value),
       grappleOutcome: (value) => projectHoleWithoutPresentationLabel(value),
-      gustOfWindLineDirectionChoice: (value) =>
+      directionalPersistentAreaDirectionChoice: (value) =>
         projectHoleWithoutPresentationLabel(value),
       heldObjectFacts: (value) => projectHoleWithoutPresentationLabel(value),
       helpAttackAllyDecision: (value) =>
@@ -204,11 +205,11 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
       hitPointHealingDistribution: (value) =>
         projectHoleWithoutPresentationLabel(value),
       interruptDecision: (value) => projectHoleWithoutPresentationLabel(value),
-      levitateAltitudeChange: (value) =>
+      controlledVerticalSuspensionAltitudeChange: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      levitateInitialRise: (value) =>
+      controlledVerticalSuspensionInitialRise: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      magicWeaponTargetItem: (value) =>
+      weaponAttackDamageEnhancementTargetItem: (value) =>
         projectHoleWithoutPresentationLabel(value),
       movableZoneRamMovement: (value) =>
         projectHoleWithoutPresentationLabel(value),
@@ -224,12 +225,12 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
       ongoingSpellTargetChoice: (value) =>
         projectHoleWithoutPresentationLabel(value),
       rolledDice: (value) => projectMechanicalRolledDiceHole(value),
-      sanctuaryInterdictionOutcome: (value) =>
+      targetingSaveInterdictionOutcome: (value) =>
         projectHoleWithoutPresentationLabel(value),
       savingThrowOutcome: (value) => projectMechanicalSavingThrowHole(value),
       selfTransformationModeChoice: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      slowSomaticSpellFailureOutcome: (value) =>
+      turnConstraintSomaticSpellFailureOutcome: (value) =>
         projectHoleWithoutPresentationLabel(value),
       shoveOutcome: (value) => projectHoleWithoutPresentationLabel(value),
       skillChoice: (value) => projectHoleWithoutPresentationLabel(value),
@@ -238,19 +239,25 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
         projectHoleWithoutPresentationLabel(value),
       spellTargetList: (value) => projectHoleWithoutPresentationLabel(value),
       spellcastingAbilityCheck: (value) => projectMechanicalD20Hole(value),
-      spiritualWeaponForcePosition: (value) =>
+      spatialMeleeSpellAttackProxyPosition: (value) =>
         projectHoleWithoutPresentationLabel(value),
       statBlockRechargeRoll: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      startTurnOccurrenceOrder: (value) =>
         projectHoleWithoutPresentationLabel(value),
       targetAbilityChoices: (value) =>
         projectHoleWithoutPresentationLabel(value),
       targetChoice: (value) => projectHoleWithoutPresentationLabel(value),
       targetSpatialFacts: (value) => projectHoleWithoutPresentationLabel(value),
+      temporaryHitPointChoice: (value) =>
+        projectHoleWithoutPresentationLabel(value),
       teleportDestination: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      thaumaturgyActiveOneMinuteEffectCount: (value) =>
+      temporaryAbilityCheckRollModeActiveEffectCount: (value) =>
         projectHoleWithoutPresentationLabel(value),
       toolPossessionFacts: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      persistentAreaSourceTurnTranslation: (value) =>
         projectHoleWithoutPresentationLabel(value),
       unitFeatureDecision: (value) =>
         projectHoleWithoutPresentationLabel(value),

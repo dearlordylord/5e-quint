@@ -32,9 +32,7 @@ import {
 const EmptyArgsSchema = Schema.Struct({});
 const PlaySessionArgsSchema = Schema.Struct({
   playSessionId: PlaySessionIdSchema,
-  guestAccessGrant: Schema.optionalWith(GuestAccessGrantSchema, {
-    exact: true,
-  }),
+  guestAccessGrant: Schema.optionalKey(GuestAccessGrantSchema),
 });
 const SavePlaySessionArgsSchema = Schema.Struct({
   playSessionId: PlaySessionIdSchema,

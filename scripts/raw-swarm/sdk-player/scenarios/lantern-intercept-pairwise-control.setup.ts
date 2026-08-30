@@ -79,7 +79,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     if (sdk.isLeft(initialized)) {
       return {
         kind: "obstructed",
-        obstruction: sdk.battleStateInitIssueMessage(initialized.left),
+        obstruction: sdk.battleStateInitIssueMessage(initialized.failure),
         observation: {
           tag: "stat-block-combatant-initialization-obstructed",
           scenarioId,
@@ -87,7 +87,7 @@ export const setupScenario: ScenarioSetup = (context) => {
         },
       };
     }
-    combatants.push(initialized.right);
+    combatants.push(initialized.success);
   }
 
   const started = sdk.startBattle({
@@ -97,7 +97,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(started)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(started.left),
+      obstruction: sdk.battleStateInitIssueMessage(started.failure),
       observation: {
         tag: "battle-start-obstructed",
         scenarioId,
@@ -112,7 +112,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   ];
 
   const created = sdk.createScenarioSession({
-    battle: started.right,
+    battle: started.success,
     spatial: {
       kind: "geometryDerived",
       arena: {
@@ -157,7 +157,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(created)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.scenarioSessionIssueMessage(created.left),
+      obstruction: sdk.scenarioSessionIssueMessage(created.failure),
       observation: {
         tag: "scenario-session-construction-obstructed",
         scenarioId,
@@ -167,7 +167,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   return {
     kind: "ready",
-    session: created.right,
+    session: created.success,
     observation: {
       tag: "scenario-session-ready",
       scenarioId,

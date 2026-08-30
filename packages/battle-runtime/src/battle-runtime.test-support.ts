@@ -1,4 +1,10 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  allocateBattleEffectOccurrenceTemplatesForCreature,
+  type BattleActiveEffectOccurrenceTemplate,
+  type BattleAllocatedEffectOccurrence,
+} from "./effect-execution-ref.ts";
+import type { BattleStoredLightEmitterTemplate } from "./battle-state-execution.ts";
 
 export const SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS = 10_000;
 
@@ -11,13 +17,12 @@ export type MembersOf<Owner, Members extends Owner> = Members;
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84E fog_cloud
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV87C ranger_favored_enemy
 import {
-  findFamiliarFormEligibilityForSpell,
-  pactOfTheChainFindFamiliarFormEligibilityForSpell,
-  resolveFindFamiliarForm,
-  resolvePactOfTheChainFindFamiliarForm,
+  spawnedCompanionFormEligibilityForSpell,
+  pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
+  resolveSpawnedCompanionForm,
+  resolvePactOfTheChainSpawnedCompanionForm,
 } from "@dnd/surface/surface/find-familiar-forms";
-import { Match, Schema } from "effect";
-import * as Either from "effect/Either";
+import { Match, Result, Schema } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import {
   battleAmmunitionStock,
@@ -28,8 +33,8 @@ import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
-import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
-import { resolveAdmittedFindFamiliarReappearanceSubject } from "./battle-reducer/find-familiar-procedures.ts";
+import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
+import { resolveAdmittedCompanionReappearanceSubject } from "./battle-reducer/companion-lifecycle-procedures.ts";
 
 import {
   abilityModifier,
@@ -98,7 +103,7 @@ import chainLightningInput from "../../surface/content/chain_lightning.json";
 import chillTouchInput from "../../surface/content/chill_touch.json";
 import colorSprayInput from "../../surface/content/color_spray.json";
 import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
-import findFamiliarInput from "../../surface/content/find_familiar.json";
+import spawnedCompanionInput from "../../surface/content/find_familiar.json";
 import fireBoltInput from "../../surface/content/fire_bolt.json";
 import fogCloudInput from "../../surface/content/fog_cloud.json";
 import greaseInput from "../../surface/content/grease.json";
@@ -145,13 +150,13 @@ import {
 } from "./battle-subjects.ts";
 import {
   battleCharacterExecutionScopeRef,
-  battleActiveEffectExecutionRef,
+  battleEffectExecutionRef,
   battleExecutionScopeOrdinal,
   battleProcedureExecutionRef,
   BattleProcedureExecutionRef,
   spellId,
 } from "./identity.ts";
-import type { BattleActiveEffectExecutionRef } from "./identity.ts";
+import type { BattleEffectExecutionRef } from "./identity.ts";
 import {
   battleRuntimeContextFromCharacterAdmission,
   type BattleRuntimeContext,
@@ -295,7 +300,7 @@ type CharacterProcedureSubjectForTest = Extract<
       | "actionSpell"
       | "bonusActionSpell"
       | "bonusActionDashSpell"
-      | "findFamiliarTouchSpell"
+      | "spawnedCompanionTouchSpellProxy"
       | "unitFeature"
       | "unitFeatureHeldWeaponActivation"
       | "druidWildShape"
@@ -316,9 +321,9 @@ type BonusActionDashSpellSubjectForTest = Extract<
   CharacterProcedureSubjectForTest,
   { readonly tag: "bonusActionDashSpell" }
 >;
-type FindFamiliarTouchSpellSubjectForTest = Extract<
+type SpawnedCompanionTouchSpellSubjectForTest = Extract<
   CharacterProcedureSubjectForTest,
-  { readonly tag: "findFamiliarTouchSpell" }
+  { readonly tag: "spawnedCompanionTouchSpellProxy" }
 >;
 
 type SpellProcedureSelectorForTest =
@@ -347,14 +352,14 @@ type SpellProcedureSelectorForTest =
       readonly speedKind: BonusActionDashSpellSubjectForTest["speedKind"];
     }
   | {
-      readonly tag: "findFamiliarTouchSpell";
+      readonly tag: "spawnedCompanionTouchSpellProxy";
       readonly actorId: CombatantId;
       readonly invocation: SpellInvocationRef;
       readonly procedureRef?: BattleProcedureExecutionRef;
-      readonly companionId: FindFamiliarTouchSpellSubjectForTest["companionId"];
-      readonly spellAction: FindFamiliarTouchSpellSubjectForTest["spellAction"];
-      readonly mode: FindFamiliarTouchSpellSubjectForTest["mode"];
-      readonly metamagic?: FindFamiliarTouchSpellSubjectForTest["metamagic"];
+      readonly companionId: SpawnedCompanionTouchSpellSubjectForTest["companionId"];
+      readonly spellAction: SpawnedCompanionTouchSpellSubjectForTest["spellAction"];
+      readonly mode: SpawnedCompanionTouchSpellSubjectForTest["mode"];
+      readonly metamagic?: SpawnedCompanionTouchSpellSubjectForTest["metamagic"];
     };
 
 type UnitFeatureSelectorForTest =
@@ -409,7 +414,7 @@ type BonusActionStandardActionSelectorForTest =
       readonly tag: "bonusActionStandardAction";
       readonly actorId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
-      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+      readonly sourceEffectRef: BattleEffectExecutionRef;
       readonly action: "dash";
       readonly speedKind: Extract<
         CharacterProcedureSubjectForTest,
@@ -555,16 +560,16 @@ export function battleProcedureExecutionRefForSpellHoleForTest(
   );
 }
 
-export function battleActiveEffectExecutionRefForTest(
+export function battleEffectExecutionRefForTest(
   discriminator: string,
-): BattleActiveEffectExecutionRef {
+): BattleEffectExecutionRef {
   let ordinal = 2_166_136_261;
   for (const character of discriminator) {
     ordinal = Math.imul(ordinal ^ character.charCodeAt(0), 16_777_619) >>> 0;
   }
-  return battleActiveEffectExecutionRef(
+  return battleEffectExecutionRef(
     JSON.stringify({
-      kind: "activeEffectOccurrence",
+      kind: "effectOccurrence",
       ownerScopeRef: battleCharacterExecutionScopeRef(
         battleId("test-battle"),
         combatantId("test-active-effect-owner"),
@@ -572,6 +577,95 @@ export function battleActiveEffectExecutionRefForTest(
       ),
       ordinal,
     }),
+  );
+}
+
+export function battleStateWithAllocatedEffectForTest(input: {
+  readonly state: BattleState;
+  readonly ownerId: CombatantId;
+  readonly effect: BattleActiveEffectOccurrenceTemplate;
+}): BattleState {
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state: input.state,
+    occurrences: [
+      { kind: "activeEffect", ownerId: input.ownerId, effect: input.effect },
+    ],
+  }).state;
+}
+
+export function battleStateWithAllocatedEffectOccurrencesForTest(input: {
+  readonly state: BattleState;
+  readonly occurrences: readonly (
+    | {
+        readonly kind: "activeEffect";
+        readonly ownerId: CombatantId;
+        readonly effect: BattleActiveEffectOccurrenceTemplate;
+      }
+    | {
+        readonly kind: "storedLightEmitter";
+        readonly ownerId: CombatantId;
+        readonly emitter: BattleStoredLightEmitterTemplate;
+      }
+  )[];
+}): {
+  readonly state: BattleState;
+  readonly occurrences: readonly (BattleAllocatedEffectOccurrence & {
+    readonly ownerId: CombatantId;
+  })[];
+} {
+  return input.occurrences.reduce<{
+    readonly state: BattleState;
+    readonly occurrences: readonly (BattleAllocatedEffectOccurrence & {
+      readonly ownerId: CombatantId;
+    })[];
+  }>(
+    (result, occurrence) => {
+      const owner = result.state.combatants.get(occurrence.ownerId);
+      if (owner === undefined) {
+        throw new Error(
+          `Expected effect occurrence owner ${occurrence.ownerId}.`,
+        );
+      }
+      const allocation = allocateBattleEffectOccurrenceTemplatesForCreature({
+        owner,
+        occurrences: [occurrence],
+      });
+      const allocated = allocation.occurrences[0];
+      if (allocated === undefined) {
+        throw new Error("A single occurrence template must allocate once.");
+      }
+      const state =
+        allocated.kind === "activeEffect"
+          ? {
+              ...result.state,
+              combatants: new Map(result.state.combatants).set(
+                occurrence.ownerId,
+                {
+                  ...allocation.owner,
+                  activeEffects: [
+                    ...allocation.owner.activeEffects,
+                    allocated.effect,
+                  ],
+                },
+              ),
+            }
+          : {
+              ...result.state,
+              combatants: new Map(result.state.combatants).set(
+                occurrence.ownerId,
+                allocation.owner,
+              ),
+              lightEmitters: [...result.state.lightEmitters, allocated.emitter],
+            };
+      return {
+        state,
+        occurrences: [
+          ...result.occurrences,
+          { ...allocated, ownerId: occurrence.ownerId },
+        ],
+      };
+    },
+    { state: input.state, occurrences: [] },
   );
 }
 
@@ -603,7 +697,11 @@ export function characterSpellInvocationRefForProcedureRefForTest(
     ?.spellPresentationSources.find(
       (candidate) => candidate.procedureRef === procedureRef,
     );
-  if (source === undefined) {
+  if (
+    source === undefined ||
+    !("access" in source.invocation) ||
+    !("spell" in source.invocation)
+  ) {
     throw new Error(
       `Expected spell presentation source ${procedureRef} for ${actorId}.`,
     );
@@ -638,7 +736,7 @@ export function requireCharacterSpellProcedureRefForTest(
     const presentation = battleActSpellPresentation(act);
     return (
       presentation !== undefined &&
-      sameSpellInvocationRef(presentation.invocation, invocationRef)
+      spellInvocationRefsEqualForTest(presentation.invocation, invocationRef)
     );
   })?.subject;
   if (
@@ -660,40 +758,65 @@ export function requireCharacterSpellProcedureRefForTest(
   return procedureRef;
 }
 
-function sameSpellInvocationRef(
+export function spellInvocationRefsEqualForTest(
   left: SpellInvocationRef,
   right: SpellInvocationRef,
 ): boolean {
-  if (
-    left.tag !== right.tag ||
-    left.spellId !== right.spellId ||
-    left.procedure !== right.procedure
-  ) {
+  if (left.spellId !== right.spellId || left.procedure !== right.procedure) {
     return false;
   }
-  if (left.tag === "cantrip" && right.tag === "cantrip") return true;
-  if (left.tag === "spellEffect" && right.tag === "spellEffect") {
-    return left.sourceCombatantId === right.sourceCombatantId;
-  }
-  if (
-    left.tag === "spellAccessFreeCast" &&
-    right.tag === "spellAccessFreeCast"
-  ) {
-    return left.resourcePoolRef === right.resourcePoolRef;
-  }
-  if (left.tag === "armorOfShadows" && right.tag === "armorOfShadows") {
-    return true;
-  }
-  return left.tag === "spellSlot" && right.tag === "spellSlot"
-    ? left.slotLevel === right.slotLevel
-    : false;
+  return Match.value(left).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      cantrip: (invocation) =>
+        right.tag === "cantrip" &&
+        spellInvocationSourceRefsEqualForTest(invocation.source, right.source),
+      spellSlot: (invocation) =>
+        right.tag === "spellSlot" &&
+        spellInvocationSourceRefsEqualForTest(
+          invocation.source,
+          right.source,
+        ) &&
+        invocation.slotLevel === right.slotLevel,
+      spellAccessFreeCast: (invocation) =>
+        right.tag === "spellAccessFreeCast" &&
+        spellInvocationSourceRefsEqualForTest(
+          invocation.source,
+          right.source,
+        ) &&
+        invocation.resourcePoolRef === right.resourcePoolRef,
+      armorOfShadows: () => right.tag === "armorOfShadows",
+      spellEffect: (invocation) =>
+        right.tag === "spellEffect" &&
+        invocation.sourceCombatantId === right.sourceCombatantId,
+    }),
+  );
+}
+
+function spellInvocationSourceRefsEqualForTest(
+  left: Extract<SpellInvocationRef, { readonly tag: "cantrip" }>["source"],
+  right: Extract<SpellInvocationRef, { readonly tag: "cantrip" }>["source"],
+): boolean {
+  return Match.value(left).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      classSpellcasting: () => right.tag === "classSpellcasting",
+      spellAccess: (source) =>
+        right.tag === "spellAccess" &&
+        source.spellAccessRef === right.spellAccessRef,
+    }),
+  );
 }
 
 function supportedSpellInvocationMatchesRef(
   invocation: AuthoredSelectedSpellInvocation,
   ref: SpellInvocationRef,
 ): boolean {
-  return sameSpellInvocationRef(supportedSpellInvocationRef(invocation), ref);
+  if (!("access" in invocation) || !("spell" in invocation)) {
+    return false;
+  }
+  return spellInvocationRefsEqualForTest(
+    supportedSpellInvocationRef(invocation),
+    ref,
+  );
 }
 
 export function requireCharacterUnitProcedureRefForTest(
@@ -745,32 +868,32 @@ export function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleState {
   const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  registerStatBlockPresentationsForTest(result.right);
-  return result.right.state;
+  registerStatBlockPresentationsForTest(result.success);
+  return result.success.state;
 }
 
 export function startBattleSessionRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleRuntimeSession {
   const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  registerStatBlockPresentationsForTest(result.right);
-  return result.right;
+  registerStatBlockPresentationsForTest(result.success);
+  return result.success;
 }
 
 function parseCharacterBattleClassLevelsRight(
   classLevels: Parameters<typeof parseCharacterBattleClassLevels>[0],
 ): CharacterBattleClassLevels {
   const result = parseCharacterBattleClassLevels(classLevels);
-  if (Either.isLeft(result)) {
-    throw new Error(result.left.messages.join("; "));
+  if (Result.isFailure(result)) {
+    throw new Error(result.failure.messages.join("; "));
   }
-  return result.right;
+  return result.success;
 }
 
 export const ROGUE_CUNNING_ACTION_SUPPORT_PROFILE = {
@@ -801,20 +924,20 @@ export function addBattleCombatantRight(
   input: Parameters<typeof addBattleCombatant>[0],
 ): BattleState {
   const result = addBattleCombatant(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 export function removeBattleCombatantsRight(
   input: Parameters<typeof removeBattleCombatants>[0],
 ): BattleState {
   const result = removeBattleCombatants(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 export const fighterId = combatantId("fighter");
 export const goblinId = combatantId("goblin");
@@ -839,10 +962,20 @@ const statBlockCatalogResult = buildStatBlockCatalog({
 
 export function requireElapsedHours(hours: number) {
   const parsed = elapsedTimeTicksFromHours(hours);
-  if (Either.isLeft(parsed)) {
+  if (Result.isFailure(parsed)) {
     throw new Error(`invalid test elapsed hours: ${hours}`);
   }
-  return parsed.right;
+  return parsed.success;
+}
+
+function requireBattleStatBlockCombatantSource(
+  statBlock: Parameters<typeof battleStatBlockCombatantSource>[0],
+) {
+  const source = battleStatBlockCombatantSource(statBlock);
+  if (Result.isFailure(source)) {
+    throw new Error(battleStateInitIssueMessage(source.failure));
+  }
+  return source.success;
 }
 
 if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
@@ -886,11 +1019,16 @@ const testSpellRecords = new Map(
         : [],
     ),
 );
-const findFamiliarSpellRecord = decodeUnitRecordSync(findFamiliarInput);
-if (findFamiliarSpellRecord.kind !== "spell") {
+const spawnedCompanionLifecycleSpellRecord = decodeUnitRecordSync(
+  spawnedCompanionInput,
+);
+if (spawnedCompanionLifecycleSpellRecord.kind !== "spell") {
   throw new Error("Find Familiar test input must decode to a spell record.");
 }
-testSpellRecords.set(findFamiliarSpellRecord.id, findFamiliarSpellRecord);
+testSpellRecords.set(
+  spawnedCompanionLifecycleSpellRecord.id,
+  spawnedCompanionLifecycleSpellRecord,
+);
 
 export function requireResolved(
   result: ReturnType<typeof resolveBattleSubject>,
@@ -934,86 +1072,11 @@ export function requireNeedsHoles(
   return result;
 }
 
-export function subjectName(
-  subject: BattleSubject,
-):
-  | "attack"
-  | "dash"
-  | "disengage"
-  | "dodge"
-  | "helpAttack"
-  | "hide"
-  | "multiattack"
-  | "ready"
-  | "search"
-  | "grapple"
-  | "shove"
-  | "escapeGrapple"
-  | "escapeSpellRestraint"
-  | "shakeAwakeFromSleep"
-  | "offHandAttack"
-  | "martialArtsUnarmedStrike"
-  | "statBlockActionOption"
-  | "actionSpell"
-  | "bonusActionSpell"
-  | "bonusActionDashSpell"
-  | "pactOfTheChainFamiliarAttack"
-  | "monkFocusOption"
-  | "monkFocusFlurryOfBlowsStrike"
-  | "unitFeature"
-  | "unitFeatureHeldWeaponActivation"
-  | "druidWildShape"
-  | "companionLifecycle"
-  | "findFamiliarSharedSenses"
-  | "findFamiliarTouchSpell"
-  | "endTurn"
-  | "endConcentration"
-  | "move"
-  | "standFromProne"
-  | "releaseGrapple"
-  | "releaseReadiedSpell"
-  | "releaseReadiedMovement"
-  | "reportReadyTrigger"
-  | "releaseReadiedAction"
-  | "releaseReadiedAttack"
-  | "releaseSpellCreatedHeldObject"
-  | "castTriggeredReactionSpell"
-  | "castAttackHitBonusActionSpell"
-  | "opportunityAttack"
-  | "retaliationAttack"
-  | "greaseGroundHazardSave"
-  | "webRestraintSave"
-  | "sleetStormAreaHazardSave"
-  | "insectPlagueAreaHazardSave"
-  | "cloudkillAreaHazardSave"
-  | "webRestrainedNoLongerInArea"
-  | "webAreaRemoved"
-  | "gustOfWindLineSave"
-  | "gustOfWindLineDirectionChange"
-  | "movableZoneSave"
-  | "moonbeamCylinderExit"
-  | "movableZoneReposition"
-  | "movableZoneRam"
-  | "jumpMovementReplacement"
-  | "levitateAltitudeControl"
-  | "dragonsBreathExhale"
-  | "replaceSelfTransformationMode"
-  | "commandGrovel"
-  | "commandDrop"
-  | "commandApproach"
-  | "commandFlee"
-  | "disperseFogCloud"
-  | "disperseCloudkill"
-  | "wardingBondSeparation"
-  | "shakeAwakeFromHypnoticPattern"
-  | "protectionRelevantEffectSave"
-  | "creatureTypeProtectionConditionAttempt"
-  | "creatureTypeProtectionPossessionAttempt"
-  | "creatureFalls" {
+export function subjectName(subject: BattleSubject) {
   if (subject.tag === "action") {
     return subject.action;
   }
-  if (subject.tag === "pactOfTheChainFamiliarAttack") {
+  if (subject.tag === "companionAttack") {
     return subject.tag;
   }
   if (subject.tag === "bonusAction") {
@@ -1049,11 +1112,11 @@ export function subjectName(
   if (subject.tag === "companionLifecycle") {
     return "companionLifecycle";
   }
-  if (subject.tag === "findFamiliarSharedSenses") {
-    return "findFamiliarSharedSenses";
+  if (subject.tag === "spawnedCompanionSharedSenses") {
+    return "spawnedCompanionSharedSenses";
   }
-  if (subject.tag === "findFamiliarTouchSpell") {
-    return "findFamiliarTouchSpell";
+  if (subject.tag === "spawnedCompanionTouchSpellProxy") {
+    return "spawnedCompanionTouchSpellProxy";
   }
   return subject.command;
 }
@@ -1215,13 +1278,13 @@ export function grapplerUnitRefs(): Extract<
   const supportProfiles = battleUnitSupportProfilesForUnit({
     unit: grapplerUnit,
   });
-  if (Either.isLeft(supportProfiles)) {
-    throw new Error(supportProfiles.left.message);
+  if (Result.isFailure(supportProfiles)) {
+    throw new Error(supportProfiles.failure.message);
   }
   return [
     {
       unit: unitLibrary.requireUnit("feat_grappler"),
-      supportProfiles: supportProfiles.right,
+      supportProfiles: supportProfiles.success,
     },
   ];
 }
@@ -1234,13 +1297,13 @@ export function halflingNimblenessUnitRefs(): Extract<
   const supportProfiles = battleUnitSupportProfilesForUnit({
     unit,
   });
-  if (Either.isLeft(supportProfiles)) {
-    throw new Error(supportProfiles.left.message);
+  if (Result.isFailure(supportProfiles)) {
+    throw new Error(supportProfiles.failure.message);
   }
   return [
     {
       unit: unitLibrary.requireUnit("species_halfling_nimbleness"),
-      supportProfiles: supportProfiles.right,
+      supportProfiles: supportProfiles.success,
     },
   ];
 }
@@ -1970,7 +2033,7 @@ function isSpellProcedureSelectorForTest(
     (selector.tag === "actionSpell" ||
       selector.tag === "bonusActionSpell" ||
       selector.tag === "bonusActionDashSpell" ||
-      selector.tag === "findFamiliarTouchSpell")
+      selector.tag === "spawnedCompanionTouchSpellProxy")
   );
 }
 
@@ -2005,7 +2068,7 @@ function spellProcedureSubjectForTest(
         mode: value.mode,
         speedKind: value.speedKind,
       }),
-      findFamiliarTouchSpell: (value) => ({
+      spawnedCompanionTouchSpellProxy: (value) => ({
         tag: value.tag,
         actorId: value.actorId,
         procedureRef,
@@ -2249,7 +2312,7 @@ function resolveBattleSubject(
     (subject.tag === "actionSpell" ||
       subject.tag === "bonusActionSpell" ||
       subject.tag === "bonusActionDashSpell" ||
-      subject.tag === "findFamiliarTouchSpell")
+      subject.tag === "spawnedCompanionTouchSpellProxy")
       ? bindSelectedSpellSpatialFactsForTest(input.fills, subject.procedureRef)
       : input.fills;
   return resolveBattleSubjectWithOptionalFamiliarAdmission(
@@ -2269,24 +2332,25 @@ function resolveBattleSubjectWithOptionalFamiliarAdmission(
   ) {
     return resolveBattleSubjectRuntime(input);
   }
-  const admission = admitFindFamiliarReappearance({
+  const admission = admitSpawnedCompanionReappearance({
     state: input.state,
     casterId: input.subject.actorId,
     catalog,
   });
-  if (Either.isRight(admission)) {
+  if (Result.isSuccess(admission)) {
     statBlockPresentationsByExecutionScopeForTest.set(
       String(
-        admission.right.mechanics.combatantAdmission.origin.execution.scopeRef,
+        admission.success.mechanics.combatantAdmission.origin.execution
+          .scopeRef,
       ),
-      admission.right.presentation,
+      admission.success.presentation,
     );
   }
-  return Either.isLeft(admission)
+  return Result.isFailure(admission)
     ? resolveBattleSubjectRuntime(input)
-    : resolveAdmittedFindFamiliarReappearanceSubject({
+    : resolveAdmittedCompanionReappearanceSubject({
         fills: input.fills,
-        admission: admission.right.mechanics,
+        admission: admission.success.mechanics,
       });
 }
 
@@ -2387,17 +2451,21 @@ export function battleSubjectSelection(subject: BattleSubject) {
 
 type SleepShakeAwakeSubject = Extract<
   BattleSubject,
-  { readonly tag: "action"; readonly action: "shakeAwakeFromSleep" }
+  { readonly tag: "action"; readonly action: "shakeAwakeFromStagedCondition" }
 >;
 
 export function sleepShakeAwakeSubject(): SleepShakeAwakeSubject {
-  return { tag: "action", actorId: fighterId, action: "shakeAwakeFromSleep" };
+  return {
+    tag: "action",
+    actorId: fighterId,
+    action: "shakeAwakeFromStagedCondition",
+  };
 }
 
 export function sleepShakeAwakeTargetFill(hole: BattleHole): BattleFill {
   return targetFill(hole, goblinId, [
     {
-      kind: "sleepShakeAwakeActorWithin5Feet",
+      kind: "stagedConditionShakeAwakeActorWithin5Feet",
       actorId: fighterId,
       targetId: goblinId,
     },
@@ -3145,7 +3213,7 @@ export function castGroundHazardForMovementTest(
     resolveBattleSubject({
       session,
       subject,
-      fills: [greaseGroundAreaSavingThrowFill(save, areaId)],
+      fills: [persistentAreaSaveConditionAreaSavingThrowFill(save, areaId)],
     }),
   ).state;
 }
@@ -3190,12 +3258,12 @@ export function castFogCloud(
     resolveBattleSubject({
       session,
       subject,
-      fills: [fogCloudAreaFill(area, areaId)],
+      fills: [persistentAreaTraitAreaFill(area, areaId)],
     }),
   );
 }
 
-export function fogCloudAreaFill(
+export function persistentAreaTraitAreaFill(
   hole: BattleHole,
   areaId: BattleAreaId,
   originAnchor: BattleSpellAreaOriginAnchor = { kind: "tableSelectedPoint" },
@@ -3206,11 +3274,11 @@ export function fogCloudAreaFill(
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "fogCloudArea", areaId, originAnchor },
+    value: { kind: "persistentAreaTraitArea", areaId, originAnchor },
   };
 }
 
-function greaseGroundAreaSavingThrowFill(
+function persistentAreaSaveConditionAreaSavingThrowFill(
   hole: BattleHole,
   areaId: BattleAreaId,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
@@ -3222,7 +3290,7 @@ function greaseGroundAreaSavingThrowFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "greaseGroundArea",
+        kind: "persistentAreaSaveConditionArea",
         originAnchorId: wizardId,
         affectedTargetIds: [],
         areaId,
@@ -3671,23 +3739,23 @@ export function characterSeed(input: {
         });
   if (
     druidWildShapeAvailableForms !== undefined &&
-    Either.isLeft(druidWildShapeAvailableForms)
+    Result.isFailure(druidWildShapeAvailableForms)
   ) {
-    throw new Error(druidWildShapeAvailableForms.left.message);
+    throw new Error(druidWildShapeAvailableForms.failure.message);
   }
   const parsedDruidWildShapeAvailableForms =
     druidWildShapeAvailableForms === undefined
       ? undefined
-      : druidWildShapeAvailableForms.right;
+      : druidWildShapeAvailableForms.success;
   const resourceUnitRefs = (input.resources ?? []).map((resource) => {
     const supportProfiles = battleUnitSupportProfilesForUnit({
       unit: resource.unit,
       classLevels: parseCharacterBattleClassLevelsRight(classLevels),
     });
-    if (Either.isLeft(supportProfiles)) {
-      throw new Error(supportProfiles.left.message);
+    if (Result.isFailure(supportProfiles)) {
+      throw new Error(supportProfiles.failure.message);
     }
-    return { unit: resource.unit, supportProfiles: supportProfiles.right };
+    return { unit: resource.unit, supportProfiles: supportProfiles.success };
   });
   const weaponPresentationUnitRefs = [attack, input.offHandAttack].flatMap(
     (candidate) => {
@@ -4040,7 +4108,7 @@ export function statBlockCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(battleStatBlockCombatantSource(statBlock)),
+      source: requireBattleStatBlockCombatantSource(statBlock),
       currentHp: Hp(input.currentHp ?? maxHp),
       tempHp: Hp(input.tempHp ?? 0),
       ammunitionStocks,
@@ -4214,10 +4282,8 @@ export function skeletonCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
-        battleStatBlockCombatantSource(
-          statBlockCatalog.requireStatBlock("stat_block_skeleton"),
-        ),
+      source: requireBattleStatBlockCombatantSource(
+        statBlockCatalog.requireStatBlock("stat_block_skeleton"),
       ),
       currentHp: Hp(13),
       tempHp: Hp(0),
@@ -4242,17 +4308,15 @@ export function resistantSkeletonCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
-        battleStatBlockCombatantSource({
-          id: statBlockId("stat_block_slashing_resistant_skeleton"),
-          challengeRating: skeleton.challengeRating,
-          statBlock: {
-            ...statBlockWithoutDamageModifiers,
-            displayName: "Slashing Resistant Skeleton",
-            resistances: { kind: "fixed", damageTypes: ["slashing"] },
-          },
-        }),
-      ),
+      source: requireBattleStatBlockCombatantSource({
+        id: statBlockId("stat_block_slashing_resistant_skeleton"),
+        challengeRating: skeleton.challengeRating,
+        statBlock: {
+          ...statBlockWithoutDamageModifiers,
+          displayName: "Slashing Resistant Skeleton",
+          resistances: { kind: "fixed", damageTypes: ["slashing"] },
+        },
+      }),
       currentHp: Hp(13),
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
@@ -4305,12 +4369,12 @@ export function resource(input?: {
 
 export function supportedBattleUnitRef(unit: UnitRecord): BattleUnitRef {
   const profiles = battleUnitSupportProfilesForUnit({ unit });
-  if (Either.isLeft(profiles)) {
-    throw new Error(profiles.left.message);
+  if (Result.isFailure(profiles)) {
+    throw new Error(profiles.failure.message);
   }
   return {
     unit,
-    supportProfiles: profiles.right,
+    supportProfiles: profiles.success,
   };
 }
 
@@ -5846,7 +5910,7 @@ function testMagicSubjectInvocation(spell: SpellRecord): SpellInvocationRef {
     const presentation = battleActSpellPresentation(act);
     return presentation !== undefined &&
       presentation.invocation.spellId === spellId(spell.id) &&
-      presentation.invocation.procedure !== "shieldReaction" &&
+      presentation.invocation.procedure !== "triggeredArmorDefense" &&
       act.subject.tag === "actionSpell" &&
       act.subject.mode.tag === "cast" &&
       act.subject.metamagic === undefined
@@ -5970,11 +6034,11 @@ export {
   difficultyClass,
   discoverBattleActCandidates,
   discoverBattleActs,
-  Either,
+  Result,
   elapsedTimeTicks,
   endTurn,
-  findFamiliarFormEligibilityForSpell,
-  findFamiliarInput,
+  spawnedCompanionFormEligibilityForSpell,
+  spawnedCompanionInput,
   hasCondition,
   holeId,
   holeInstanceKey,
@@ -5985,7 +6049,7 @@ export {
   movementFeet,
   objectInvisibleBenefitDenied,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
-  pactOfTheChainFindFamiliarFormEligibilityForSpell,
+  pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
   removeCondition,
   requiredAbilityCheckRollMode,
   resolveBardicInspirationFailedD20Test,
@@ -5993,8 +6057,8 @@ export {
   resolveBattleInterrupt,
   resolveBattleSubject,
   resolveFailedAbilityCheckResourceBoost,
-  resolveFindFamiliarForm,
-  resolvePactOfTheChainFindFamiliarForm,
+  resolveSpawnedCompanionForm,
+  resolvePactOfTheChainSpawnedCompanionForm,
   resolveSuccessfulAbilityCheckReactionReduction,
   resourceCount,
   sameBattleSubject,

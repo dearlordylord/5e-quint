@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import * as fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
@@ -24,9 +24,11 @@ const distributionId = Schema.decodeUnknownSync(DistributionIdSchema)(
 
 describe("Opaque Oracle process contract", () => {
   test("parses only the branded distribution identity format", () => {
-    expect(Either.isRight(decodeDistributionId(distributionId))).toBe(true);
-    expect(Either.isLeft(decodeDistributionId("sha256:ABC"))).toBe(true);
-    expect(Either.isLeft(decodeDistributionId("catalog:unknown"))).toBe(true);
+    expect(Result.isSuccess(decodeDistributionId(distributionId))).toBe(true);
+    expect(Result.isFailure(decodeDistributionId("sha256:ABC"))).toBe(true);
+    expect(Result.isFailure(decodeDistributionId("catalog:unknown"))).toBe(
+      true,
+    );
   });
 
   test("requires non-empty canonical issues and keeps response variants exclusive", () => {
@@ -37,11 +39,13 @@ describe("Opaque Oracle process contract", () => {
 
     expect(Schema.is(OracleBatchResponseSchema)(rejected)).toBe(true);
     expect(
-      Either.isLeft(Schema.decodeUnknownEither(OracleDecodeIssuesSchema)([])),
+      Result.isFailure(
+        Schema.decodeUnknownResult(OracleDecodeIssuesSchema)([]),
+      ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(OracleBatchResponseSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(OracleBatchResponseSchema)({
           tag: "evaluated",
           distributionId,
           traces: [],
@@ -64,19 +68,19 @@ describe("Opaque Oracle process contract", () => {
 
   test("encodes only a loopback readiness endpoint and a transport defect", () => {
     const port = decodeOracleListeningPort(42);
-    expect(Either.isRight(port)).toBe(true);
-    if (Either.isLeft(port)) return;
+    expect(Result.isSuccess(port)).toBe(true);
+    if (Result.isFailure(port)) return;
 
-    const readiness = { host: ORACLE_LOOPBACK_HOST, port: port.right };
+    const readiness = { host: ORACLE_LOOPBACK_HOST, port: port.success };
     expect(Schema.is(OracleHttpReadinessSchema)(readiness)).toBe(true);
     expect(encodeOracleHttpReadinessJson(readiness)).toBe(
       '{"host":"127.0.0.1","port":42}',
     );
-    expect(Either.isLeft(decodeOracleBindPort(65_536))).toBe(true);
-    expect(Either.isLeft(decodeOracleListeningPort(0))).toBe(true);
+    expect(Result.isFailure(decodeOracleBindPort(65_536))).toBe(true);
+    expect(Result.isFailure(decodeOracleListeningPort(0))).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(OracleHttpReadinessSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(OracleHttpReadinessSchema)({
           host: ORACLE_LOOPBACK_HOST,
           port: 0,
         }),
@@ -90,20 +94,20 @@ describe("Opaque Oracle process contract", () => {
   test("keeps bind and listening port domains exact across generated integers", () => {
     fc.assert(
       fc.property(fc.integer({ min: -1_024, max: 66_559 }), (value) => {
-        expect(Either.isRight(decodeOracleBindPort(value))).toBe(
+        expect(Result.isSuccess(decodeOracleBindPort(value))).toBe(
           value >= 0 && value <= 65_535,
         );
-        expect(Either.isRight(decodeOracleListeningPort(value))).toBe(
+        expect(Result.isSuccess(decodeOracleListeningPort(value))).toBe(
           value >= 1 && value <= 65_535,
         );
       }),
       { numRuns: 200 },
     );
     for (const value of [0, 1, 65_535]) {
-      expect(Either.isRight(decodeOracleBindPort(value))).toBe(true);
+      expect(Result.isSuccess(decodeOracleBindPort(value))).toBe(true);
     }
-    expect(Either.isLeft(decodeOracleListeningPort(0))).toBe(true);
-    expect(Either.isRight(decodeOracleListeningPort(1))).toBe(true);
-    expect(Either.isRight(decodeOracleListeningPort(65_535))).toBe(true);
+    expect(Result.isFailure(decodeOracleListeningPort(0))).toBe(true);
+    expect(Result.isSuccess(decodeOracleListeningPort(1))).toBe(true);
+    expect(Result.isSuccess(decodeOracleListeningPort(65_535))).toBe(true);
   });
 });

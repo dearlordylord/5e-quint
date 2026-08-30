@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -46,12 +46,12 @@ const statBlockCatalog = statBlockCatalogResult.catalog;
 
 const services = { unitLibrary, statBlockCatalog };
 const sourceCorpusResult = buildOracleEvaluationCorpus(services);
-if (Either.isLeft(sourceCorpusResult)) {
+if (Result.isFailure(sourceCorpusResult)) {
   throw new Error(
-    `Oracle source fixture failed: ${JSON.stringify(sourceCorpusResult.left)}`,
+    `Oracle source fixture failed: ${JSON.stringify(sourceCorpusResult.failure)}`,
   );
 }
-const sourceCorpus = sourceCorpusResult.right;
+const sourceCorpus = sourceCorpusResult.success;
 const sourceCases = sourceCorpus.batch.cases;
 const enteredCase = sourceCases[0];
 const exhaustedCase = sourceCases[1];
@@ -204,9 +204,9 @@ describe("Opaque Oracle corpus", () => {
     );
 
     const document = decodeOracleCorpusDocument(corpus);
-    expect(Either.isRight(document)).toBe(true);
+    expect(Result.isSuccess(document)).toBe(true);
     const decoded = decodeOracleCorpusJson(serialized.toString("utf8"));
-    expect(decoded).toEqual(Either.right(corpus));
+    expect(decoded).toEqual(Result.succeed(corpus));
 
     const duplicateMember = `{"batch":${JSON.stringify(
       corpus.batch,
@@ -214,7 +214,7 @@ describe("Opaque Oracle corpus", () => {
       corpus.traces,
     )}}`;
     expect(decodeOracleCorpusJson(duplicateMember)).toEqual(
-      Either.left([{ path: "/batch", code: "duplicateMember" }]),
+      Result.fail([{ path: "/batch", code: "duplicateMember" }]),
     );
   });
 
@@ -224,15 +224,17 @@ describe("Opaque Oracle corpus", () => {
       ...corpus,
       traces: [corpus.traces[0]],
     };
-    expect(Either.isRight(decodeOracleCorpusDocument(tooFewTraces))).toBe(true);
+    expect(Result.isSuccess(decodeOracleCorpusDocument(tooFewTraces))).toBe(
+      true,
+    );
     expect(decodeOracleCorpus(tooFewTraces)).toEqual(
-      Either.left([{ path: "/traces", code: "nonCanonicalDomainValue" }]),
+      Result.fail([{ path: "/traces", code: "nonCanonicalDomainValue" }]),
     );
 
     const unknownMember = decodeOracleCorpus({ ...corpus, extra: true });
-    expect(Either.isLeft(unknownMember)).toBe(true);
-    if (Either.isLeft(unknownMember)) {
-      expect(unknownMember.left).toContainEqual({
+    expect(Result.isFailure(unknownMember)).toBe(true);
+    if (Result.isFailure(unknownMember)) {
+      expect(unknownMember.failure).toContainEqual({
         path: "/extra",
         code: "unknownMember",
       });
@@ -242,20 +244,20 @@ describe("Opaque Oracle corpus", () => {
 
 function buildPublishedCorpus(): OracleCorpus {
   const result = buildOracleEvaluationCorpus(services);
-  if (Either.isLeft(result)) {
-    throw new Error(`Corpus fixture failed: ${JSON.stringify(result.left)}`);
+  if (Result.isFailure(result)) {
+    throw new Error(`Corpus fixture failed: ${JSON.stringify(result.failure)}`);
   }
-  return result.right;
+  return result.success;
 }
 
 function buildCorpus(
   cases: readonly [OracleCase, ...OracleCase[]],
 ): OracleCorpus {
   const result = buildOracleCorpus({ cases, services });
-  if (Either.isLeft(result)) {
-    throw new Error(`Corpus fixture failed: ${JSON.stringify(result.left)}`);
+  if (Result.isFailure(result)) {
+    throw new Error(`Corpus fixture failed: ${JSON.stringify(result.failure)}`);
   }
-  return result.right;
+  return result.success;
 }
 
 function battleContinuationsOf(

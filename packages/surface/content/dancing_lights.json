@@ -49,9 +49,8 @@
       },
       {
         "effect": {
-          "brightRadiusFeet": 0,
-          "dimAdditionalFeet": 10,
-          "kind": "emit_light"
+          "kind": "emit_dim_illumination",
+          "radiusFeet": 10
         },
         "trigger": {
           "kind": "passive"

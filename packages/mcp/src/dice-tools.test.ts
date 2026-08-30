@@ -2,7 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -39,8 +39,8 @@ const request = {
 describe("structured MCP bulk dice roller", () => {
   test("rejects empty groups and requires a caller idempotency key", () => {
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(RollDiceArgsSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(RollDiceArgsSchema)({
           requestId: request.requestId,
           groups: [],
         }),
@@ -51,7 +51,7 @@ describe("structured MCP bulk dice roller", () => {
       name: "roll_dice",
       args: { groups: request.groups },
     });
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 
   test("enforces bounded per-group and aggregate work before allocation", () => {
@@ -64,7 +64,7 @@ describe("structured MCP bulk dice roller", () => {
     };
     expect(validateInput(tooManyInOneGroup).valid).toBe(false);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeDiceToolCall({ name: "roll_dice", args: tooManyInOneGroup }),
       ),
     ).toBe(true);
@@ -75,7 +75,7 @@ describe("structured MCP bulk dice roller", () => {
     };
     expect(validateInput(atPerGroupBoundary).valid).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decodeDiceToolCall({ name: "roll_dice", args: atPerGroupBoundary }),
       ),
     ).toBe(true);
@@ -88,7 +88,7 @@ describe("structured MCP bulk dice roller", () => {
       })),
     };
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decodeDiceToolCall({ name: "roll_dice", args: atAggregateBoundary }),
       ),
     ).toBe(true);
@@ -103,7 +103,7 @@ describe("structured MCP bulk dice roller", () => {
       ],
     };
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeDiceToolCall({ name: "roll_dice", args: overAggregateBoundary }),
       ),
     ).toBe(true);
@@ -116,7 +116,7 @@ describe("structured MCP bulk dice roller", () => {
     };
     expect(validateInput(tooManyGroups).valid).toBe(false);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeDiceToolCall({ name: "roll_dice", args: tooManyGroups }),
       ),
     ).toBe(true);
@@ -155,7 +155,11 @@ describe("structured MCP bulk dice roller", () => {
       groups: [{ dieSize: 6, results: [1, 7] }],
     };
     expect(
-      Either.isLeft(Schema.decodeUnknownEither(RollDiceOutputSchema)(invalid)),
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(RollDiceOutputSchema))(
+          invalid,
+        ),
+      ),
     ).toBe(true);
 
     const validate = new AjvJsonSchemaValidator().getValidator(
@@ -192,9 +196,9 @@ describe("structured MCP bulk dice roller", () => {
     expect(repeatedCall.groups).toEqual(firstCall.groups);
     expect(repeatedCall.disposition).toBe("replayed");
     expect(
-      Either.isLeft(
+      Result.isFailure(
         Effect.runSync(
-          Effect.either(
+          Effect.result(
             first.sample(request.requestId, [{ dice: 1, dieSize: 20 }]),
           ),
         ),
@@ -401,12 +405,12 @@ function ajvJsonSchema(schema: unknown): JsonSchemaType {
 
 function requireDiceRollRequestId(input: string) {
   const decoded = decodeDiceRollRequestId(input);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
+  return decoded.success;
 }
 
 function requireDiceSeed(input: readonly [string, string, string, string]) {
   const decoded = decodeDiceSeed(input);
-  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
-  return decoded.right;
+  if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
+  return decoded.success;
 }

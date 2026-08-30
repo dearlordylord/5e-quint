@@ -1,4 +1,4 @@
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import {
   DEFAULT_MAX_SAVED_PLAY_SESSIONS_PER_PRINCIPAL,
@@ -33,11 +33,11 @@ export async function saveRecoverableSession(
   guestAccessGrant: GuestAccessGrant,
   principalId: PrincipalId,
 ): Promise<
-  Either.Either<PlaySessionTenureProjection, PlaySessionAccessFailure>
+  Result.Result<PlaySessionTenureProjection, PlaySessionAccessFailure>
 > {
   const prunedExpired = runtime.input.repository.pruneExpired(runtime.now());
-  if (Either.isLeft(prunedExpired)) {
-    return Either.left(accessFailure(prunedExpired.left));
+  if (Result.isFailure(prunedExpired)) {
+    return Result.fail(accessFailure(prunedExpired.failure));
   }
   const principalTenure = savedTenure(principalId, runtime.now());
   const admitted = admitRequest(
@@ -46,15 +46,15 @@ export async function saveRecoverableSession(
     runtime.now(),
     runtime.maximumRequestsPerMinute,
   );
-  if (Either.isLeft(admitted)) return Either.left(admitted.left);
+  if (Result.isFailure(admitted)) return Result.fail(admitted.failure);
   for (
     let attempt = 0;
     attempt < MAX_CONCURRENT_COMMIT_ATTEMPTS;
     attempt += 1
   ) {
     const loaded = loadSaveRecord(runtime, playSessionId, guestAccessGrant);
-    if (Either.isLeft(loaded)) return Either.left(loaded.left);
-    const result = commitSaveAttempt(runtime, principalId, loaded.right);
+    if (Result.isFailure(loaded)) return Result.fail(loaded.failure);
+    const result = commitSaveAttempt(runtime, principalId, loaded.success);
     const decision = Match.value(result).pipe(
       Match.when({ tag: "retry" }, () => ({ tag: "retry" as const })),
       Match.when({ tag: "result" }, ({ result: value }) => ({
@@ -66,28 +66,29 @@ export async function saveRecoverableSession(
     if (decision.tag === "retry") continue;
     return decision.value;
   }
-  return Either.left(concurrentWriteFailure());
+  return Result.fail(concurrentWriteFailure());
 }
 
 function loadSaveRecord(
   runtime: RecoverableRegistryRuntime,
   playSessionId: PlaySessionId,
   guestAccessGrant: GuestAccessGrant,
-): Either.Either<RecoverablePlaySessionRecord, PlaySessionAccessFailure> {
+): Result.Result<RecoverablePlaySessionRecord, PlaySessionAccessFailure> {
   const loaded = runtime.input.repository.load(playSessionId);
-  if (Either.isLeft(loaded)) return Either.left(accessFailure(loaded.left));
-  if (loaded.right.tag === "absent") {
-    return Either.left(PLAY_SESSION_UNAVAILABLE);
+  if (Result.isFailure(loaded))
+    return Result.fail(accessFailure(loaded.failure));
+  if (loaded.success.tag === "absent") {
+    return Result.fail(PLAY_SESSION_UNAVAILABLE);
   }
-  const record = loaded.right.record;
+  const record = loaded.success.record;
   const caller = { tag: "guest" as const, guestAccessGrant };
   if (
     playSessionIsExpired(record.tenure, runtime.now()) ||
     !callerAuthorizes(caller, record.tenure)
   ) {
-    return Either.left(PLAY_SESSION_UNAVAILABLE);
+    return Result.fail(PLAY_SESSION_UNAVAILABLE);
   }
-  return Either.right(record);
+  return Result.succeed(record);
 }
 
 function commitSaveAttempt(
@@ -101,25 +102,25 @@ function commitSaveAttempt(
     tenure,
     DEFAULT_MAX_SAVED_PLAY_SESSIONS_PER_PRINCIPAL,
   );
-  if (Either.isLeft(committed)) {
+  if (Result.isFailure(committed)) {
     return {
       tag: "result",
-      result: Either.left(accessFailure(committed.left)),
+      result: Result.fail(accessFailure(committed.failure)),
     };
   }
-  if (committed.right.tag === "savedSessionQuotaExceeded") {
+  if (committed.success.tag === "savedSessionQuotaExceeded") {
     return {
       tag: "result",
-      result: Either.left({
+      result: Result.fail({
         tag: "playSessionLimitFailure",
         reason: "savedSessionQuotaExceeded",
         message: "This account has reached its saved Play Session limit.",
       }),
     };
   }
-  if (committed.right.tag === "revisionConflict") return { tag: "retry" };
+  if (committed.success.tag === "revisionConflict") return { tag: "retry" };
   return {
     tag: "result",
-    result: Either.right(projectPlaySessionTenure(tenure)),
+    result: Result.succeed(projectPlaySessionTenure(tenure)),
   };
 }

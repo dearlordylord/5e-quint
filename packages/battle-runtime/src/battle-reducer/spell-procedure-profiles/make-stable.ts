@@ -10,7 +10,7 @@ import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.
 // What lives here:
 //   - admit()              - was supportedCantripMakeStableSpellProfile in
 //                            spells-profiles.ts
-//   - spareTheDyingRangeFeet - was private to spells-profiles.ts
+//   - makeStableRangeFeet - was private to spells-profiles.ts
 //   - discoverCastAct()    - was the generic single-target action-spell
 //                            discovery path in spells-discovery.ts
 //   - castSummary()        - was the makeStable branch in
@@ -64,7 +64,7 @@ type MakeStableInvocation = Extract<
   { readonly procedure: "makeStable" }
 >;
 
-function spareTheDyingRangeFeet(
+function makeStableRangeFeet(
   range: BattleSpellAdmissionSource["mechanics"]["range"],
   characterLevel: number,
 ): MovementFeet | null {
@@ -101,7 +101,7 @@ function admitMakeStable(
       ? phase.attachment.value.selection
       : null;
   const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
-  const rangeFeet = spareTheDyingRangeFeet(
+  const rangeFeet = makeStableRangeFeet(
     spell.mechanics.range,
     spellAdmissionCharacterLevel(ctx),
   );

@@ -5,7 +5,7 @@ import {
   sameBattleSubject,
   type BattleSubject,
 } from "@dnd/battle-runtime";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -59,17 +59,17 @@ export function handleBattleToolCall(
       const selected = root.sessionStore.selectStatBlock(
         matched.args.statBlockId,
       );
-      if (Either.isLeft(selected)) {
+      if (Result.isFailure(selected)) {
         return unknownStatBlockContent(
           matched.args.statBlockId,
-          selected.left.message,
+          selected.failure.message,
         );
       }
-      if (previousSelectedStatBlockId !== selected.right.id) {
+      if (previousSelectedStatBlockId !== selected.success.id) {
         publishAdminProjectionBestEffort(root);
       }
       return schemaJsonContent(SelectStatBlockOutputSchema, {
-        selectedStatBlock: selected.right,
+        selectedStatBlock: selected.success,
         session: mcpSessionSummary(root.sessionStore.snapshot()),
       });
     }),
@@ -93,30 +93,30 @@ export function handleBattleToolCall(
         root,
         "Cannot resolve another act with pending fills.",
       );
-      if (Either.isLeft(state)) return state.left;
+      if (Result.isFailure(state)) return state.failure;
       if (
         matched.args.subject.tag === "runtimeCommand" &&
         matched.args.subject.command === "creatureFalls"
       ) {
         const result = settleCreatureFallsRuntimeTransaction({
-          session: state.right,
+          session: state.success,
           transaction: null,
           fallingCreatureId: matched.args.subject.fallingCreatureId,
           reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
           statBlockCatalog: root.statBlockCatalog,
         });
-        return storedBattleTransactionContent(root, state.right, result);
+        return storedBattleTransactionContent(root, state.success, result);
       }
       const presentation = battlePresentationEnvelopeForSession(
         root,
-        state.right,
+        state.success,
       );
-      if (Either.isLeft(presentation)) {
-        return battlePresentationIssueContent(presentation.left);
+      if (Result.isFailure(presentation)) {
+        return battlePresentationIssueContent(presentation.failure);
       }
       const availableAct =
-        presentation.right.frontier.kind === "acts"
-          ? presentation.right.frontier.acts.find((act) =>
+        presentation.success.frontier.kind === "acts"
+          ? presentation.success.frontier.acts.find((act) =>
               sameBattleSubject(act.subject, matched.args.subject),
             )
           : undefined;
@@ -133,57 +133,57 @@ export function handleBattleToolCall(
         });
       }
       const result = settleBattleRuntimeTransaction({
-        session: state.right,
+        session: state.success,
         transaction: null,
         operation: battleRuntimeTransactionOperationForSubject(
           matched.args.subject,
         ),
         statBlockCatalog: root.statBlockCatalog,
       });
-      return storedBattleTransactionContent(root, state.right, result);
+      return storedBattleTransactionContent(root, state.success, result);
     }),
     Match.when({ name: battleToolNames.endTurn }, (matched) => {
       const state = activeBattleWithoutPendingFills(
         root,
         "Cannot end turn with pending battle fills.",
       );
-      if (Either.isLeft(state)) return state.left;
+      if (Result.isFailure(state)) return state.failure;
       const subject: BattleSubject = {
         tag: "runtimeCommand",
         actorId: matched.args.actorId,
         command: "endTurn",
       };
       const result = settleBattleRuntimeTransaction({
-        session: state.right,
+        session: state.success,
         transaction: null,
         operation: battleRuntimeTransactionOperationForSubject(subject),
         statBlockCatalog: root.statBlockCatalog,
       });
-      return storedBattleTransactionContent(root, state.right, result);
+      return storedBattleTransactionContent(root, state.success, result);
     }),
     Match.when({ name: battleToolNames.endBattle }, () => {
       const state = activeBattleWithoutPendingFills(
         root,
         "Cannot end battle with pending battle fills.",
       );
-      if (Either.isLeft(state)) return state.left;
+      if (Result.isFailure(state)) return state.failure;
 
-      const handoff = settleCharacterSessionsFromBattle(root, state.right);
-      if (Either.isLeft(handoff)) {
-        return characterSessionHandoffErrorContent(handoff.left);
+      const handoff = settleCharacterSessionsFromBattle(root, state.success);
+      if (Result.isFailure(handoff)) {
+        return characterSessionHandoffErrorContent(handoff.failure);
       }
       const committed = root.sessionStore.commitBattleEnd({
-        battleSession: state.right,
-        characterSettlements: handoff.right,
+        battleSession: state.success,
+        characterSettlements: handoff.success,
       });
-      if (Either.isLeft(committed)) {
-        return battleStateTransitionErrorContent(committed.left);
+      if (Result.isFailure(committed)) {
+        return battleStateTransitionErrorContent(committed.failure);
       }
       publishAdminProjectionBestEffort(root);
 
       return schemaJsonContent(EndBattleOutputSchema, {
-        endedBattleId: state.right.state.battleId,
-        closedAt: battleInitiativePosition(state.right.state),
+        endedBattleId: state.success.state.battleId,
+        closedAt: battleInitiativePosition(state.success.state),
         characters: Array.from(root.sessionStore.characters.entries()).map(
           ([characterId, session]) => ({
             characterId,
@@ -207,12 +207,12 @@ function battleSessionContent(root: McpPlaySessionRoot): BattleToolResult {
   }
   if (state.tag === "activeBattle") {
     const payload = battleSessionPayload(root, state.session);
-    return Either.isLeft(payload)
-      ? battlePresentationIssueContent(payload.left)
-      : schemaJsonContent(BattleSessionOutputSchema, payload.right);
+    return Result.isFailure(payload)
+      ? battlePresentationIssueContent(payload.failure)
+      : schemaJsonContent(BattleSessionOutputSchema, payload.success);
   }
   const payload = battleSessionPayload(root, null);
-  return Either.isLeft(payload)
-    ? battlePresentationIssueContent(payload.left)
-    : schemaJsonContent(BattleSessionOutputSchema, payload.right);
+  return Result.isFailure(payload)
+    ? battlePresentationIssueContent(payload.failure)
+    : schemaJsonContent(BattleSessionOutputSchema, payload.success);
 }

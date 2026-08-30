@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "certifiedBy": "GitHub issue #386 final certification",
+  "verificationCommand": "pnpm typecheck",
+  "lock": "broad",
+  "pnpm": "10.29.3",
+  "diagnosticKey": ["source", "line", "column", "code", "message"],
+  "owners": [
+    {
+      "package": "@dnd/app",
+      "manifest": "packages/app/package.json",
+      "command": "pnpm --filter @dnd/app run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
+      "package": "@dnd/battle-runtime",
+      "manifest": "packages/battle-runtime/package.json",
+      "command": "pnpm --filter @dnd/battle-runtime run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
+      "package": "@dnd/character-battle-runtime",
+      "manifest": "packages/character-battle-runtime/package.json",
+      "command": "pnpm --filter @dnd/character-battle-runtime run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
+      "package": "@dnd/character-creation-runtime",
+      "manifest": "packages/character-creation-runtime/package.json",
+      "command": "pnpm --filter @dnd/character-creation-runtime run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
+      "package": "@dnd/character-sheet-runtime",
+      "manifest": "packages/character-sheet-runtime/package.json",
+      "command": "pnpm --filter @dnd/character-sheet-runtime run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
+      "package": "@dnd/mcp",
+      "manifest": "packages/mcp/package.json",
+      "command": "pnpm --filter @dnd/mcp run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
+      "package": "@dnd/shared",
+      "manifest": "packages/shared/package.json",
+      "command": "pnpm --filter @dnd/shared run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
+      "package": "@dnd/shared-algebras",
+      "manifest": "packages/shared-algebras/package.json",
+      "command": "pnpm --filter @dnd/shared-algebras run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
+      "package": "@dnd/surface",
+      "manifest": "packages/surface/package.json",
+      "command": "pnpm --filter @dnd/surface run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
+      "package": "@dnd/tactical-adjudicator-prototype",
+      "manifest": "packages/tactical-adjudicator-prototype/package.json",
+      "command": "pnpm --filter @dnd/tactical-adjudicator-prototype run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
+      "package": "@dnd/tactical-space",
+      "manifest": "packages/tactical-space/package.json",
+      "command": "pnpm --filter @dnd/tactical-space run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
+      "package": "@dnd/tactical-space-cli-prototype",
+      "manifest": "packages/tactical-space-cli-prototype/package.json",
+      "command": "pnpm --filter @dnd/tactical-space-cli-prototype run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    },
+    {
+      "package": "@dnd/tactical-space-prototype",
+      "manifest": "packages/tactical-space-prototype/package.json",
+      "command": "pnpm --filter @dnd/tactical-space-prototype run typecheck --pretty false",
+      "exitCode": 0,
+      "rawDiagnostics": 0
+    }
+  ],
+  "totals": { "raw": 0, "deduplicated": 0 },
+  "families": {
+    "removed-module-entrypoints": {
+      "codes": ["TS2305", "TS2307"],
+      "raw": 0,
+      "deduplicated": 0
+    },
+    "removed-renamed-effect-api-members": {
+      "codes": ["TS2551", "TS2694", "TS2724"],
+      "raw": 0,
+      "deduplicated": 0
+    },
+    "changed-schema-type-signatures": {
+      "codes": [
+        "TS2314",
+        "TS2344",
+        "TS2394",
+        "TS2554",
+        "TS2556",
+        "TS2558",
+        "TS2560",
+        "TS2740",
+        "TS2741",
+        "TS2749",
+        "TS2769"
+      ],
+      "raw": 0,
+      "deduplicated": 0
+    },
+    "downstream-type-inference-cascade": {
+      "codes": "all remaining TypeScript codes",
+      "raw": 0,
+      "deduplicated": 0
+    }
+  },
+  "codes": {}
+}

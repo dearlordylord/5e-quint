@@ -1,4 +1,7 @@
-import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleEffectExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
+} from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light produce_flame thunderwave
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
@@ -10,7 +13,7 @@ import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-sup
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness produce_flame doProduceFlameHeldLightProjectionHurlCleanup
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness thunderwave doThunderwaveSavePushObjectsBoom
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   resolveBattleSubject,
@@ -54,7 +57,7 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
-  activeFeatherFallDescentRateCapFeetPerRound,
+  activeFallingCreatureMitigationDescentRateCapFeetPerRound,
   battleAreaId,
   battleId,
   battleIlluminationFromLightEmitters,
@@ -66,17 +69,18 @@ import {
   characterId,
   combatantId,
   discoverBattleActCandidates,
-  FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+  FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND,
   initiativeScore,
   objectInvisibleBenefitDenied,
   openCreatureFallsInterruptWindow,
   resolveBattleInterrupt,
-  resolveFeatherFallLanding,
+  resolveFallingCreatureMitigationLanding,
   snapshotBattle,
   startBattle,
   type BattleActiveEffect,
   type BattleCreatureInit,
   type BattleFill,
+  type BattleFallingCreatureMitigationTriggerFact,
   type BattleHole,
   type BattleInterruptProcedureChoice,
   type BattleIllumination,
@@ -98,6 +102,7 @@ import {
   type BattleTargetSpatialFact,
   type CombatantId,
 } from "./index.ts";
+import type { BattleEffectExecutionRef } from "./identity.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 import type { BattleInterruptSubject } from "./battle-subjects.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -105,6 +110,11 @@ import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { battleActsWithReducerRouteEvents } from "./battle-act-composition.ts";
+import { persistentAreaTraitRadiusFeet } from "./battle-reducer/persistent-spell-area-binding.ts";
+import {
+  boundFixedCostMovementReplacementEffect,
+  type BoundFixedCostMovementReplacementEffect,
+} from "./battle-reducer/spell-modifier-binding.ts";
 
 type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly lightEmitterCount: number;
@@ -117,8 +127,8 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly lightOpaqueCoverIllumination: BattleIllumination;
   readonly lightRecastReplacedPriorEmitter: boolean;
   readonly lightDurationCleanupClearedEmitter: boolean;
-  readonly faerieFireOutlinedCreatureCount: number;
-  readonly faerieFireOutlinedObjectCount: number;
+  readonly saveGatedTargetProjectedCreatureCount: number;
+  readonly saveGatedTargetProjectedObjectCount: number;
   readonly faerieFireCreatureAttackRollMode: ProjectedAttackRollMode;
   readonly faerieFireInvisibleCreatureAttackRollMode: ProjectedAttackRollMode;
   readonly faerieFireObjectAttackRollMode: ProjectedAttackRollMode;
@@ -134,7 +144,8 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly featherFallLandingFallingPronePrevented: boolean;
   readonly featherFallLandedTargetMitigationCleared: boolean;
   readonly featherFallOtherTargetStillMitigated: boolean;
-  readonly fogCloudAreaIdentityRetained: boolean;
+  readonly persistentAreaTraitActiveEffectAreaId: string;
+  readonly persistentAreaTraitProjectedZoneAreaId: string;
   readonly fogCloudHeavilyObscuredZoneCount: number;
   readonly fogCloudRadiusFeet: number;
   readonly fogCloudDurationTicks: number;
@@ -199,12 +210,12 @@ type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly lastResult:
     | "init"
     | "dancingLightsMovableDimLight"
-    | "faerieFireOutlineAdvantageInvisibleDimLight"
+    | "saveGatedTargetProjectionAdvantageInvisibleDimLight"
     | "featherFallReactionMitigationLanding"
-    | "fogCloudAreaIdentityObscurementStrongWindCleanup"
+    | "persistentAreaTraitAreaIdentityObscurementStrongWindCleanup"
     | "greaseCastGroundHazardSavingThrows"
     | "greaseMovementAndTurnTriggers"
-    | "jumpMovementReplacementLandingWitness"
+    | "fixedCostMovementReplacementLandingWitness"
     | "lightObjectEmitterProjectionReplacementCleanup"
     | "produceFlameHeldLightProjectionHurlCleanup"
     | "thunderwaveSavePushObjectsBoom";
@@ -268,7 +279,10 @@ type BonusActionSpellAct = BattleActDiscoveryCandidate & {
 type FogCloudStrongWindDispersalAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
-    { readonly tag: "runtimeCommand"; readonly command: "disperseFogCloud" }
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "endPersistentAreaTraitForEnvironment";
+    }
   >;
 };
 type MovementAct = BattleActDiscoveryCandidate & {
@@ -282,7 +296,7 @@ type GreaseGroundHazardSaveAct = BattleActDiscoveryCandidate & {
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "greaseGroundHazardSave";
+      readonly command: "persistentAreaSaveConditionSave";
     }
   >;
 };
@@ -291,13 +305,13 @@ type JumpMovementReplacementAct = BattleActDiscoveryCandidate & {
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "jumpMovementReplacement";
+      readonly command: "fixedCostMovementReplacement";
     }
   >;
 };
 type FogCloudObscurementEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "fogCloudObscurement" }
+  { readonly kind: "persistentAreaTrait" }
 >;
 type SpellObscurementZone = Extract<
   BattleObscurementZone,
@@ -316,7 +330,7 @@ type ObjectLightEmitter = SpellLightEmitter & {
 };
 type DancingLightAttachment = Extract<
   SpellLightEmitter["attachment"],
-  { readonly kind: "dancingLight" }
+  { readonly kind: "movableLight" }
 >;
 type DancingLightEmitter = SpellLightEmitter & {
   readonly attachment: DancingLightAttachment;
@@ -341,7 +355,8 @@ type FeatherFallProjection = {
   readonly otherTargetStillMitigated: boolean;
 };
 type FogCloudProjection = {
-  readonly areaIdentityRetained: boolean;
+  readonly activeEffectAreaId: string;
+  readonly projectedZoneAreaId: string;
   readonly heavilyObscuredZoneCount: number;
   readonly radiusFeet: number;
   readonly durationTicks: number;
@@ -353,7 +368,7 @@ type FogCloudProjection = {
 };
 type GreaseGroundHazardEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "greaseGroundHazard" }
+  { readonly kind: "persistentAreaSaveCondition" }
 >;
 type GreaseProjection = {
   readonly areaIdentityRetained: boolean;
@@ -381,7 +396,7 @@ type GreaseSavingThrowOutcome = {
 };
 type JumpMovementReplacementEffect = Extract<
   BattleActiveEffect,
-  { readonly kind: "jumpMovementReplacement" }
+  { readonly kind: "fixedCostMovementReplacement" }
 >;
 type JumpProjection = {
   readonly targetEffectInstalled: boolean;
@@ -404,7 +419,7 @@ type ProduceFlameProjection = {
 };
 type ThunderwaveAreaChoice = Extract<
   BattleSpellAreaChoice,
-  { readonly kind: "thunderwaveArea" }
+  { readonly kind: "selfOriginCubePushArea" }
 >;
 type NestedProcedureChoice = Extract<
   BattleInterruptProcedureChoice,
@@ -500,7 +515,8 @@ const faerieFireObjectId = battleObjectId("level1-faerie-fire-object");
 const faerieFireObjectArmorClass = armorClass(13);
 const starryWispObjectTargetRangeFeet = movementFeet(60);
 const darkvisionWitnessRangeFeet = movementFeet(60);
-const fogCloudAreaId = battleAreaId("level1-fog-cloud-area");
+const persistentAreaTraitAreaId = battleAreaId("level1-fog-cloud-area");
+const persistentAreaTraitAbsentAreaId = "absent";
 const fogCloudLevelOneRadiusFeet = movementFeet(20);
 const fogCloudOneHourDurationTicks = requireElapsedHours(1);
 const greaseAreaId = battleAreaId("level1-grease-ground-area");
@@ -587,8 +603,8 @@ const selectedUnitIdentityReplays = [
         expected: expectedProjection({
           lightEmitterCount: 2,
           dimLightEmitterCount: 2,
-          faerieFireOutlinedCreatureCount: 1,
-          faerieFireOutlinedObjectCount: 1,
+          saveGatedTargetProjectedCreatureCount: 1,
+          saveGatedTargetProjectedObjectCount: 1,
           faerieFireCreatureAttackRollMode: "advantage",
           faerieFireInvisibleCreatureAttackRollMode: "advantage",
           faerieFireObjectAttackRollMode: "advantage",
@@ -600,7 +616,7 @@ const selectedUnitIdentityReplays = [
           casterConcentrating: true,
           magicActionAvailable: true,
           bonusActionAvailable: true,
-          lastResult: "faerieFireOutlineAdvantageInvisibleDimLight",
+          lastResult: "saveGatedTargetProjectionAdvantageInvisibleDimLight",
         }),
       },
     ],
@@ -620,7 +636,7 @@ const selectedUnitIdentityReplays = [
           featherFallSlotExpended: true,
           featherFallMitigatedTargetCountBeforeLanding: 2,
           featherFallLandedTargetDescentRateCapFeetPerRound:
-            FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+            FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND,
           featherFallLandingFallDamagePrevented: true,
           featherFallLandingFallingPronePrevented: true,
           featherFallLandedTargetMitigationCleared: true,
@@ -641,7 +657,8 @@ const selectedUnitIdentityReplays = [
         name: "table-supplied-area-obscurement-duration-and-strong-wind-cleanup",
         actions: ["doFogCloudAreaIdentityObscurementStrongWindCleanup"],
         expected: expectedProjection({
-          fogCloudAreaIdentityRetained: true,
+          persistentAreaTraitActiveEffectAreaId: persistentAreaTraitAreaId,
+          persistentAreaTraitProjectedZoneAreaId: persistentAreaTraitAreaId,
           fogCloudHeavilyObscuredZoneCount: 1,
           fogCloudRadiusFeet: Number(fogCloudLevelOneRadiusFeet),
           fogCloudDurationTicks: Number(fogCloudOneHourDurationTicks),
@@ -652,7 +669,8 @@ const selectedUnitIdentityReplays = [
           fogCloudSlotExpended: true,
           magicActionAvailable: false,
           bonusActionAvailable: true,
-          lastResult: "fogCloudAreaIdentityObscurementStrongWindCleanup",
+          lastResult:
+            "persistentAreaTraitAreaIdentityObscurementStrongWindCleanup",
         }),
       },
     ],
@@ -734,7 +752,7 @@ const selectedUnitIdentityReplays = [
           jumpSlotExpended: true,
           magicActionAvailable: true,
           bonusActionAvailable: true,
-          lastResult: "jumpMovementReplacementLandingWitness",
+          lastResult: "fixedCostMovementReplacementLandingWitness",
         }),
       },
     ],
@@ -827,14 +845,14 @@ const LEVEL1_SPATIAL_WITNESS_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   DancingLightsMovableDimLight: "dancingLightsMovableDimLight",
   FaerieFireOutlineAdvantageInvisibleDimLight:
-    "faerieFireOutlineAdvantageInvisibleDimLight",
+    "saveGatedTargetProjectionAdvantageInvisibleDimLight",
   FeatherFallReactionMitigationLanding: "featherFallReactionMitigationLanding",
   FogCloudAreaIdentityObscurementStrongWindCleanup:
-    "fogCloudAreaIdentityObscurementStrongWindCleanup",
+    "persistentAreaTraitAreaIdentityObscurementStrongWindCleanup",
   GreaseCastGroundHazardSavingThrows: "greaseCastGroundHazardSavingThrows",
   GreaseMovementAndTurnTriggers: "greaseMovementAndTurnTriggers",
   JumpMovementReplacementLandingWitness:
-    "jumpMovementReplacementLandingWitness",
+    "fixedCostMovementReplacementLandingWitness",
   LightObjectEmitterProjectionReplacementCleanup:
     "lightObjectEmitterProjectionReplacementCleanup",
   ProduceFlameHeldLightProjectionHurlCleanup:
@@ -845,12 +863,12 @@ const LEVEL1_SPATIAL_WITNESS_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
     string,
     | "init"
     | "dancingLightsMovableDimLight"
-    | "faerieFireOutlineAdvantageInvisibleDimLight"
+    | "saveGatedTargetProjectionAdvantageInvisibleDimLight"
     | "featherFallReactionMitigationLanding"
-    | "fogCloudAreaIdentityObscurementStrongWindCleanup"
+    | "persistentAreaTraitAreaIdentityObscurementStrongWindCleanup"
     | "greaseCastGroundHazardSavingThrows"
     | "greaseMovementAndTurnTriggers"
-    | "jumpMovementReplacementLandingWitness"
+    | "fixedCostMovementReplacementLandingWitness"
     | "lightObjectEmitterProjectionReplacementCleanup"
     | "produceFlameHeldLightProjectionHurlCleanup"
     | "thunderwaveSavePushObjectsBoom"
@@ -867,7 +885,11 @@ defineSelectedIdentityReplayAndQntReplay({
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
-  quintFieldNames: { lastResult: "qScenarioOutcome" },
+  quintFieldNames: {
+    lastResult: "qScenarioOutcome",
+    saveGatedTargetProjectedCreatureCount: "qFaerieFireOutlinedCreatureCount",
+    saveGatedTargetProjectedObjectCount: "qFaerieFireOutlinedObjectCount",
+  },
   quintVariantFieldTags: {
     lastResult:
       LEVEL1_SPATIAL_WITNESS_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
@@ -883,8 +905,8 @@ defineSelectedIdentityReplayAndQntReplay({
     lightOpaqueCoverIllumination: "str",
     lightRecastReplacedPriorEmitter: "bool",
     lightDurationCleanupClearedEmitter: "bool",
-    faerieFireOutlinedCreatureCount: "int",
-    faerieFireOutlinedObjectCount: "int",
+    saveGatedTargetProjectedCreatureCount: "int",
+    saveGatedTargetProjectedObjectCount: "int",
     faerieFireCreatureAttackRollMode: "str",
     faerieFireInvisibleCreatureAttackRollMode: "str",
     faerieFireObjectAttackRollMode: "str",
@@ -900,7 +922,8 @@ defineSelectedIdentityReplayAndQntReplay({
     featherFallLandingFallingPronePrevented: "bool",
     featherFallLandedTargetMitigationCleared: "bool",
     featherFallOtherTargetStillMitigated: "bool",
-    fogCloudAreaIdentityRetained: "bool",
+    persistentAreaTraitActiveEffectAreaId: "str",
+    persistentAreaTraitProjectedZoneAreaId: "str",
     fogCloudHeavilyObscuredZoneCount: "int",
     fogCloudRadiusFeet: "int",
     fogCloudDurationTicks: "int",
@@ -1215,7 +1238,7 @@ function replayTask25SupportingConnectorPublicReducerRoutes(): Readonly<
       featherFallReactionSpell: replayReactionCastingTimeRoute(),
     },
     reactionInterruptPayloadTaxonomy: {
-      featherFallMitigationPayload: replayFallMitigationRoute(),
+      fallingCreatureMitigationReactionPayload: replayFallMitigationRoute(),
     },
     objectLightRiders: {
       objectAttachedEmitter: replayObjectLightEmitterRoute(),
@@ -1282,7 +1305,7 @@ function expectedTask25SupportingConnectorPublicReducerRoutes(): Readonly<
       ],
     },
     reactionInterruptPayloadTaxonomy: {
-      featherFallMitigationPayload:
+      fallingCreatureMitigationReactionPayload:
         expectedLevel1SpatialWitnessPublicReducerRoutes().fallMitigation,
     },
     objectLightRiders: {
@@ -1317,7 +1340,7 @@ function expectedTask25SupportingConnectorPublicReducerRoutes(): Readonly<
 function replayMovableMultiEmitterLightRoute(): readonly BattleReducerRouteEvent[] {
   const state = dancingLightsBattle();
   const route: BattleReducerRouteEvent[] = [startRoute()];
-  const castAct = dancingLightsSeparateCastAct(state);
+  const castAct = movableLightCastAct(state);
   route.push(
     ...routeEventsOfSubject(
       castAct,
@@ -1330,7 +1353,7 @@ function replayMovableMultiEmitterLightRoute(): readonly BattleReducerRouteEvent
     subject: castAct.subject,
     fills: [
       separateCastPlacement(
-        requireHole(castAct.initialHoles, "dancingLightsPlacement"),
+        requireHole(castAct.initialHoles, "movableLightPlacement"),
       ),
     ],
   });
@@ -1346,7 +1369,7 @@ function replayMovableMultiEmitterLightRoute(): readonly BattleReducerRouteEvent
       `Expected Dancing Lights cast to resolve, got ${cast.tag}.`,
     );
   }
-  const moveAct = dancingLightsRepositionAct(cast.state);
+  const moveAct = movableLightRepositionAct(cast.state);
   route.push(
     ...routeEventsOfSubject(
       moveAct,
@@ -1359,7 +1382,7 @@ function replayMovableMultiEmitterLightRoute(): readonly BattleReducerRouteEvent
     subject: moveAct.subject,
     fills: [
       separateRepositionPlacement(
-        requireHole(moveAct.initialHoles, "dancingLightsPlacement"),
+        requireHole(moveAct.initialHoles, "movableLightPlacement"),
         dancingLightEmitters(cast.state),
       ),
     ],
@@ -1454,7 +1477,7 @@ function replayFallMitigationRoute(): readonly BattleReducerRouteEvent[] {
   if (resolved.tag !== "resolved") {
     throw new Error(`Expected Feather Fall to resolve, got ${resolved.tag}.`);
   }
-  const landing = resolveFeatherFallLanding({
+  const landing = resolveFallingCreatureMitigationLanding({
     state: resolved.state,
     targetId: featherFallFallingAllyId,
   });
@@ -1478,7 +1501,11 @@ function replayAreaObscurementCleanupRoute(): readonly BattleReducerRouteEvent[]
   const cast = resolveBattleSubject({
     state,
     subject: act.subject,
-    fills: [fogCloudAreaFill(requireHole(act.initialHoles, "spellAreaChoice"))],
+    fills: [
+      persistentAreaTraitAreaFill(
+        requireHole(act.initialHoles, "spellAreaChoice"),
+      ),
+    ],
   });
   route.push(...routeEventsOfSubject(cast, "Fog Cloud cast", "spatialEffect"));
   if (cast.tag !== "resolved") {
@@ -1525,7 +1552,8 @@ function replayAreaHazardSaveRoute(): readonly BattleReducerRouteEvent[] {
       greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
         areaId: greaseAreaId,
         movementCostFeet: greaseDifficultTerrainMovementCostFeet,
-        sourceProcedureRef: greaseGroundHazardEffect(cast.state)
+        effectRef: persistentAreaSaveConditionEffect(cast.state).effectRef,
+        sourceProcedureRef: persistentAreaSaveConditionEffect(cast.state)
           .sourceProcedureRef,
       }),
     ],
@@ -1533,7 +1561,7 @@ function replayAreaHazardSaveRoute(): readonly BattleReducerRouteEvent[] {
   if (moved.tag !== "resolved") {
     throw new Error(`Expected Grease setup movement, got ${moved.tag}.`);
   }
-  const entryAct = greaseGroundHazardSaveAct(
+  const entryAct = persistentAreaSaveConditionSaveAct(
     moved.state,
     casterId,
     "entersArea",
@@ -1550,7 +1578,7 @@ function replayAreaHazardSaveRoute(): readonly BattleReducerRouteEvent[] {
     state: moved.state,
     subject: entryAct.subject,
     fills: [
-      greaseGroundHazardSavingThrowOutcomeFill(entrySave, {
+      persistentAreaSaveConditionSavingThrowOutcomeFill(entrySave, {
         targetId: casterId,
         succeeded: false,
       }),
@@ -1602,7 +1630,8 @@ function replayAreaHazardMovementRoute(): readonly BattleReducerRouteEvent[] {
       greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
         areaId: greaseAreaId,
         movementCostFeet: greaseDifficultTerrainMovementCostFeet,
-        sourceProcedureRef: greaseGroundHazardEffect(cast.state)
+        effectRef: persistentAreaSaveConditionEffect(cast.state).effectRef,
+        sourceProcedureRef: persistentAreaSaveConditionEffect(cast.state)
           .sourceProcedureRef,
       }),
     ],
@@ -1636,7 +1665,7 @@ function replayMovementReplacementRoute(): readonly BattleReducerRouteEvent[] {
   }
   const targetTurn = resolveEndTurn(cast.state, casterId, "Jump caster");
   const route: BattleReducerRouteEvent[] = [startRoute()];
-  const jumpAct = jumpMovementReplacementAct(targetTurn, jumpTargetId);
+  const jumpAct = fixedCostMovementReplacementAct(targetTurn, jumpTargetId);
   route.push(
     ...routeEventsOfSubject(
       jumpAct,
@@ -1648,7 +1677,7 @@ function replayMovementReplacementRoute(): readonly BattleReducerRouteEvent[] {
     state: targetTurn,
     subject: jumpAct.subject,
     fills: [
-      jumpMovementReplacementFill(
+      fixedCostMovementReplacementFill(
         requireHole(jumpAct.initialHoles, "movement"),
         {
           difficultTerrainAcrobatics: "notRequired",
@@ -1726,7 +1755,7 @@ function replaySavePushPresentationRoute(): readonly BattleReducerRouteEvent[] {
   );
   const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
   const outcomes = thunderwaveSavingThrowOutcomes();
-  const acceptedArea = thunderwaveAreaChoice();
+  const acceptedArea = selfOriginCubePushAreaChoice();
   const awaitingDamage = resolveBattleSubject({
     state,
     subject: act.subject,
@@ -1769,7 +1798,7 @@ function replaySaveGatedSpellOrderingRoute(): readonly BattleReducerRouteEvent[]
   );
   const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
   const outcomes = thunderwaveSavingThrowOutcomes();
-  const acceptedArea = thunderwaveAreaChoice();
+  const acceptedArea = selfOriginCubePushAreaChoice();
   const awaitingDamage = resolveBattleSubject({
     state,
     subject: act.subject,
@@ -2012,13 +2041,13 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
     init: reset,
     doDancingLightsMovableDimLight: () => {
       state = dancingLightsBattle();
-      const castAct = dancingLightsSeparateCastAct(state);
+      const castAct = movableLightCastAct(state);
       const cast = resolveBattleSubject({
         state,
         subject: castAct.subject,
         fills: [
           separateCastPlacement(
-            requireHole(castAct.initialHoles, "dancingLightsPlacement"),
+            requireHole(castAct.initialHoles, "movableLightPlacement"),
           ),
         ],
       });
@@ -2029,13 +2058,13 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       }
 
       const beforeMoveEmitters = dancingLightEmitters(cast.state);
-      const moveAct = dancingLightsRepositionAct(cast.state);
+      const moveAct = movableLightRepositionAct(cast.state);
       const moved = resolveBattleSubject({
         state: cast.state,
         subject: moveAct.subject,
         fills: [
           separateRepositionPlacement(
-            requireHole(moveAct.initialHoles, "dancingLightsPlacement"),
+            requireHole(moveAct.initialHoles, "movableLightPlacement"),
             beforeMoveEmitters,
           ),
         ],
@@ -2092,7 +2121,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       faerieFireObjectAttackRollMode =
         attackRollModeForFaerieFireObject(invisibleOutlined);
       state = invisibleOutlined;
-      lastResult = "faerieFireOutlineAdvantageInvisibleDimLight";
+      lastResult = "saveGatedTargetProjectionAdvantageInvisibleDimLight";
     },
     doFeatherFallReactionMitigationLanding: () => {
       state = featherFallBattle();
@@ -2143,7 +2172,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         );
       }
 
-      const landing = resolveFeatherFallLanding({
+      const landing = resolveFallingCreatureMitigationLanding({
         state: resolved.state,
         targetId: featherFallFallingAllyId,
       });
@@ -2155,23 +2184,22 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         unwitnessedTriggerRejected,
         reactionSpent: !featherFallCaster(resolved.state).reactionAvailable,
         slotExpended: featherFallCasterSlotExpended(resolved.state),
-        mitigatedTargetCountBeforeLanding: featherFallMitigationTargetCount(
-          resolved.state,
-        ),
+        mitigatedTargetCountBeforeLanding:
+          fallingCreatureMitigationReactionTargetCount(resolved.state),
         landedTargetDescentRateCapFeetPerRound:
-          activeFeatherFallDescentRateCapFeetPerRound(
+          activeFallingCreatureMitigationDescentRateCapFeetPerRound(
             featherFallCombatant(resolved.state, featherFallFallingAllyId),
           ) ?? 0,
         landingFallDamagePrevented: landing.fallDamagePrevented,
         landingFallingPronePrevented: landing.fallingPronePrevented,
         landedTargetMitigationCleared:
-          activeFeatherFallDescentRateCapFeetPerRound(
+          activeFallingCreatureMitigationDescentRateCapFeetPerRound(
             featherFallCombatant(landing.state, featherFallFallingAllyId),
           ) === null,
         otherTargetStillMitigated:
-          activeFeatherFallDescentRateCapFeetPerRound(
+          activeFallingCreatureMitigationDescentRateCapFeetPerRound(
             featherFallCombatant(landing.state, featherFallOtherFallingAllyId),
-          ) === FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+          ) === FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND,
       };
       state = landing.state;
       lastResult = "featherFallReactionMitigationLanding";
@@ -2184,7 +2212,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       const cast = resolveBattleSubject({
         state,
         subject: act.subject,
-        fills: [fogCloudAreaFill(area)],
+        fills: [persistentAreaTraitAreaFill(area)],
       });
       if (cast.tag !== "resolved") {
         throw new Error(`Expected Fog Cloud cast to resolve, got ${cast.tag}.`);
@@ -2206,7 +2234,8 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         strongWindCommandOffered: true,
       });
       state = dispersed.state;
-      lastResult = "fogCloudAreaIdentityObscurementStrongWindCleanup";
+      lastResult =
+        "persistentAreaTraitAreaIdentityObscurementStrongWindCleanup";
     },
     doGreaseCastGroundHazardSavingThrows: () => {
       state = greaseBattle();
@@ -2296,7 +2325,8 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           greaseMovementFill(movement, {
             areaId: staleGreaseAreaId,
             movementCostFeet: greaseDifficultTerrainMovementCostFeet,
-            sourceProcedureRef: greaseGroundHazardEffect(cast.state)
+            effectRef: persistentAreaSaveConditionEffect(cast.state).effectRef,
+            sourceProcedureRef: persistentAreaSaveConditionEffect(cast.state)
               .sourceProcedureRef,
           }),
         ],
@@ -2309,7 +2339,8 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           greaseMovementFill(movement, {
             areaId: greaseAreaId,
             movementCostFeet: greaseDifficultTerrainMovementCostFeet,
-            sourceProcedureRef: greaseGroundHazardEffect(cast.state)
+            effectRef: persistentAreaSaveConditionEffect(cast.state).effectRef,
+            sourceProcedureRef: persistentAreaSaveConditionEffect(cast.state)
               .sourceProcedureRef,
           }),
         ],
@@ -2320,7 +2351,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         );
       }
 
-      const entryAct = greaseGroundHazardSaveAct(
+      const entryAct = persistentAreaSaveConditionSaveAct(
         moved.state,
         casterId,
         "entersArea",
@@ -2333,7 +2364,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state: moved.state,
         subject: entryAct.subject,
         fills: [
-          greaseGroundHazardSavingThrowOutcomeFill(entrySave, {
+          persistentAreaSaveConditionSavingThrowOutcomeFill(entrySave, {
             targetId: greaseSuccessfulTargetId,
             succeeded: true,
           }),
@@ -2347,7 +2378,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state: moved.state,
         subject: entryAct.subject,
         fills: [
-          greaseGroundHazardSavingThrowOutcomeFill(entrySave, {
+          persistentAreaSaveConditionSavingThrowOutcomeFill(entrySave, {
             targetId: casterId,
             succeeded: false,
           }),
@@ -2369,7 +2400,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         greaseFailedTargetId,
         "Grease failed target",
       );
-      const endTurnAct = greaseGroundHazardSaveAct(
+      const endTurnAct = persistentAreaSaveConditionSaveAct(
         successfulTargetTurn,
         greaseSuccessfulTargetId,
         "endsTurnInArea",
@@ -2382,7 +2413,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state: successfulTargetTurn,
         subject: endTurnAct.subject,
         fills: [
-          greaseGroundHazardSavingThrowOutcomeFill(endTurnSave, {
+          persistentAreaSaveConditionSavingThrowOutcomeFill(endTurnSave, {
             targetId: casterId,
             succeeded: true,
           }),
@@ -2396,7 +2427,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state: successfulTargetTurn,
         subject: endTurnAct.subject,
         fills: [
-          greaseGroundHazardSavingThrowOutcomeFill(endTurnSave, {
+          persistentAreaSaveConditionSavingThrowOutcomeFill(endTurnSave, {
             targetId: greaseSuccessfulTargetId,
             succeeded: false,
           }),
@@ -2446,7 +2477,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
 
       const targetEffectInstalled = jumpTargetEffectInstalled(cast.state);
       const targetTurn = resolveEndTurn(cast.state, casterId, "Jump caster");
-      const jumpAct = jumpMovementReplacementAct(targetTurn, jumpTargetId);
+      const jumpAct = fixedCostMovementReplacementAct(targetTurn, jumpTargetId);
       const movement = requireHole(jumpAct.initialHoles, "movement");
       const missingLandingFact = resolveBattleSubject({
         state: targetTurn,
@@ -2461,7 +2492,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state: targetTurn,
         subject: jumpAct.subject,
         fills: [
-          jumpMovementReplacementFill(movement, {
+          fixedCostMovementReplacementFill(movement, {
             difficultTerrainAcrobatics: "notRequired",
           }),
         ],
@@ -2485,7 +2516,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       const nextTargetTurnAvailable =
         maybeJumpMovementReplacementAct(nextTargetTurn, jumpTargetId) !==
         undefined;
-      const nextJumpAct = jumpMovementReplacementAct(
+      const nextJumpAct = fixedCostMovementReplacementAct(
         nextTargetTurn,
         jumpTargetId,
       );
@@ -2494,7 +2525,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         state: nextTargetTurn,
         subject: nextJumpAct.subject,
         fills: [
-          jumpMovementReplacementFill(nextMovement, {
+          fixedCostMovementReplacementFill(nextMovement, {
             difficultTerrainAcrobatics: "failed",
           }),
         ],
@@ -2511,7 +2542,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           jumpCombatant(jumped.state, jumpTargetId).movementSpentFeet,
         ),
         usedMarkerSet:
-          jumpMovementReplacementEffect(jumped.state, jumpTargetId)
+          fixedCostMovementReplacementEffect(jumped.state, jumpTargetId)
             ?.usedThisTurn === true,
         sameTurnUnavailable:
           maybeJumpMovementReplacementAct(jumped.state, jumpTargetId) ===
@@ -2525,7 +2556,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         slotExpended: jumpCasterSlotExpended(cast.state),
       };
       state = failedLanding.state;
-      lastResult = "jumpMovementReplacementLandingWitness";
+      lastResult = "fixedCostMovementReplacementLandingWitness";
     },
     doLightObjectEmitterProjectionReplacementCleanup: () => {
       state = lightBattle();
@@ -2756,7 +2787,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
       const act = thunderwaveAct(state);
       const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
       const outcomes = thunderwaveSavingThrowOutcomes();
-      const acceptedArea = thunderwaveAreaChoice();
+      const acceptedArea = selfOriginCubePushAreaChoice();
 
       const missingAreaFacts = resolveBattleSubject({
         state,
@@ -2781,7 +2812,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           thunderwaveSavingThrowOutcomeFill(
             savingThrow,
             outcomes,
-            thunderwaveAreaChoice({
+            selfOriginCubePushAreaChoice({
               audibleBoom: {
                 sound: "thunderous boom",
                 audibleRadiusFeet: movementFeet(100),
@@ -2858,18 +2889,18 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
 
 function requireElapsedHours(hours: number) {
   const ticks = elapsedTimeTicksFromHours(hours);
-  if (Either.isLeft(ticks)) {
+  if (Result.isFailure(ticks)) {
     throw new Error(`Expected valid elapsed hours: ${hours}.`);
   }
-  return ticks.right;
+  return ticks.success;
 }
 
 function requireElapsedMinutes(minutes: number) {
   const ticks = elapsedTimeTicksFromMinutes(minutes);
-  if (Either.isLeft(ticks)) {
+  if (Result.isFailure(ticks)) {
     throw new Error(`Expected valid elapsed minutes: ${minutes}.`);
   }
-  return ticks.right;
+  return ticks.success;
 }
 
 function expectedProjection(
@@ -2886,8 +2917,8 @@ function expectedProjection(
     lightOpaqueCoverIllumination: "darkness",
     lightRecastReplacedPriorEmitter: false,
     lightDurationCleanupClearedEmitter: false,
-    faerieFireOutlinedCreatureCount: 0,
-    faerieFireOutlinedObjectCount: 0,
+    saveGatedTargetProjectedCreatureCount: 0,
+    saveGatedTargetProjectedObjectCount: 0,
     faerieFireCreatureAttackRollMode: "normal",
     faerieFireInvisibleCreatureAttackRollMode: "normal",
     faerieFireObjectAttackRollMode: "normal",
@@ -2903,7 +2934,8 @@ function expectedProjection(
     featherFallLandingFallingPronePrevented: false,
     featherFallLandedTargetMitigationCleared: false,
     featherFallOtherTargetStillMitigated: false,
-    fogCloudAreaIdentityRetained: false,
+    persistentAreaTraitActiveEffectAreaId: persistentAreaTraitAbsentAreaId,
+    persistentAreaTraitProjectedZoneAreaId: persistentAreaTraitAbsentAreaId,
     fogCloudHeavilyObscuredZoneCount: 0,
     fogCloudRadiusFeet: 0,
     fogCloudDurationTicks: 0,
@@ -2987,7 +3019,8 @@ function emptyFeatherFallProjection(): FeatherFallProjection {
 
 function emptyFogCloudProjection(): FogCloudProjection {
   return {
-    areaIdentityRetained: false,
+    activeEffectAreaId: persistentAreaTraitAbsentAreaId,
+    projectedZoneAreaId: persistentAreaTraitAbsentAreaId,
     heavilyObscuredZoneCount: 0,
     radiusFeet: 0,
     durationTicks: 0,
@@ -3109,10 +3142,10 @@ function dancingLightsBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function faerieFireBattle(): BattleState {
@@ -3149,10 +3182,10 @@ function faerieFireBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function featherFallBattle(): BattleState {
@@ -3193,10 +3226,10 @@ function featherFallBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function fogCloudBattle(): BattleState {
@@ -3232,10 +3265,10 @@ function fogCloudBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function greaseBattle(): BattleState {
@@ -3276,10 +3309,10 @@ function greaseBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function jumpBattle(): BattleState {
@@ -3315,10 +3348,10 @@ function jumpBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function lightBattle(): BattleState {
@@ -3354,24 +3387,28 @@ function lightBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function lightOneRoundRemainingBattle(): BattleState {
   const battle = lightBattle();
-  return {
-    ...battle,
-    lightEmitters: [
-      lightObjectSpellEmitter({
-        objectId: lightExpiringObjectId,
-        durationTicks: lightExpiringDurationTicks,
-        sourceProcedureRef: lightAct(battle).subject.procedureRef,
-      }),
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state: battle,
+    occurrences: [
+      {
+        kind: "storedLightEmitter",
+        ownerId: casterId,
+        emitter: lightObjectSpellEmitter({
+          objectId: lightExpiringObjectId,
+          durationTicks: lightExpiringDurationTicks,
+          sourceProcedureRef: lightAct(battle).subject.procedureRef,
+        }),
+      },
     ],
-  };
+  }).state;
 }
 
 function produceFlameBattle(): BattleState {
@@ -3407,10 +3444,10 @@ function produceFlameBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function produceFlameOneRoundRemainingBattle(): BattleState {
@@ -3474,10 +3511,10 @@ function thunderwaveBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function spatialWitnessCreature(input: {
@@ -3574,12 +3611,12 @@ function discoverRoutedBattleActCandidates(
   );
 }
 
-function dancingLightsSeparateCastAct(state: BattleState): ActionSpellAct {
+function movableLightCastAct(state: BattleState): ActionSpellAct {
   const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure ===
-        "dancingLightsSeparateCast",
+        "movableLightManifestation",
   );
   if (act === undefined) {
     throw new Error("Expected Dancing Lights separate cast action.");
@@ -3587,12 +3624,12 @@ function dancingLightsSeparateCastAct(state: BattleState): ActionSpellAct {
   return act;
 }
 
-function dancingLightsRepositionAct(state: BattleState): BonusActionSpellAct {
+function movableLightRepositionAct(state: BattleState): BonusActionSpellAct {
   const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure ===
-        "dancingLightsReposition",
+        "movableLightManifestation",
   );
   if (act === undefined) {
     throw new Error("Expected Dancing Lights reposition Bonus Action.");
@@ -3618,7 +3655,7 @@ function fogCloudAct(state: BattleState): ActionSpellAct {
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure ===
-        "fogCloudObscurement",
+        "persistentAreaTrait",
   );
   if (act === undefined) {
     throw new Error("Expected Fog Cloud obscurement action.");
@@ -3631,7 +3668,7 @@ function greaseAct(state: BattleState): ActionSpellAct {
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure ===
-        "greaseGroundHazard",
+        "persistentAreaSaveCondition",
   );
   if (act === undefined) {
     throw new Error("Expected Grease ground-hazard action.");
@@ -3652,7 +3689,7 @@ function greaseMovementAct(state: BattleState): MovementAct {
   return act;
 }
 
-function greaseGroundHazardSaveAct(
+function persistentAreaSaveConditionSaveAct(
   state: BattleState,
   actorId: CombatantId,
   trigger: GreaseGroundHazardSaveAct["subject"]["trigger"],
@@ -3660,7 +3697,7 @@ function greaseGroundHazardSaveAct(
   const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is GreaseGroundHazardSaveAct =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "greaseGroundHazardSave" &&
+      candidate.subject.command === "persistentAreaSaveConditionSave" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.areaId === greaseAreaId &&
       candidate.subject.trigger === trigger,
@@ -3676,7 +3713,7 @@ function jumpCastAct(state: BattleState): BonusActionSpellAct {
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure ===
-        "jumpMovementReplacement",
+        "fixedCostMovementReplacement",
   );
   if (act === undefined) {
     throw new Error("Expected Jump movement replacement Bonus Action spell.");
@@ -3732,7 +3769,7 @@ function thunderwaveAct(state: BattleState): ActionSpellAct {
   return act;
 }
 
-function jumpMovementReplacementAct(
+function fixedCostMovementReplacementAct(
   state: BattleState,
   actorId: CombatantId,
 ): JumpMovementReplacementAct {
@@ -3750,16 +3787,16 @@ function maybeJumpMovementReplacementAct(
   return discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is JumpMovementReplacementAct =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "jumpMovementReplacement" &&
+      candidate.subject.command === "fixedCostMovementReplacement" &&
       candidate.subject.actorId === actorId,
   );
 }
 
 function separateCastPlacement(
-  hole: Extract<BattleHole, { readonly kind: "dancingLightsPlacement" }>,
-): Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }> {
+  hole: Extract<BattleHole, { readonly kind: "movableLightPlacement" }>,
+): Extract<BattleFill, { readonly kind: "movableLightPlacement" }> {
   return {
-    kind: "dancingLightsPlacement",
+    kind: "movableLightPlacement",
     holeId: hole.holeId,
     value: {
       mode: "cast",
@@ -3781,15 +3818,15 @@ function separateCastPlacement(
 }
 
 function separateRepositionPlacement(
-  hole: Extract<BattleHole, { readonly kind: "dancingLightsPlacement" }>,
+  hole: Extract<BattleHole, { readonly kind: "movableLightPlacement" }>,
   emitters: readonly DancingLightEmitter[],
-): Extract<BattleFill, { readonly kind: "dancingLightsPlacement" }> {
+): Extract<BattleFill, { readonly kind: "movableLightPlacement" }> {
   const [firstEmitter, secondEmitter] = emitters;
   if (firstEmitter === undefined || secondEmitter === undefined) {
     throw new Error("Expected two Dancing Lights emitters to reposition.");
   }
   return {
-    kind: "dancingLightsPlacement",
+    kind: "movableLightPlacement",
     holeId: hole.holeId,
     value: {
       mode: "reposition",
@@ -3827,7 +3864,7 @@ function faerieFireSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "faerieFireArea",
+        kind: "saveGatedTargetProjectionArea",
         originAnchorId: casterId,
         affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
         affectedObjectIds,
@@ -3847,7 +3884,7 @@ function greaseSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "greaseGroundArea",
+        kind: "persistentAreaSaveConditionArea",
         areaId: greaseAreaId,
         originAnchorId: casterId,
         affectedTargetIds,
@@ -3884,13 +3921,13 @@ function thunderwaveSavingThrowOutcomeFill(
   };
 }
 
-function thunderwaveAreaChoice(
+function selfOriginCubePushAreaChoice(
   input: {
     readonly audibleBoom?: ThunderwaveAreaChoice["audibleBoom"];
   } = {},
 ): ThunderwaveAreaChoice {
   return {
-    kind: "thunderwaveArea",
+    kind: "selfOriginCubePushArea",
     originAnchorId: casterId,
     affectedTargetIds: thunderwaveSavingThrowOutcomes().map(
       (outcome) => outcome.targetId,
@@ -3958,6 +3995,7 @@ function greaseMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   input: {
     readonly areaId: BattleAreaId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly movementCostFeet: MovementFeet;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
   },
@@ -3973,7 +4011,8 @@ function greaseMovementFill(
         kind: "areaDifficultTerrain",
         sources: [
           {
-            kind: "greaseGroundHazard",
+            kind: "persistentAreaSaveCondition",
+            effectRef: input.effectRef,
             sourceCombatantId: casterId,
             sourceProcedureRef: input.sourceProcedureRef,
             areaId: input.areaId,
@@ -4027,14 +4066,14 @@ function ordinaryMovementFill(
   };
 }
 
-function jumpMovementReplacementFill(
+function fixedCostMovementReplacementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   input: {
     readonly difficultTerrainAcrobatics: NonNullable<
       Extract<
         BattleFill,
         { readonly kind: "movement" }
-      >["value"]["jumpMovementReplacement"]
+      >["value"]["fixedCostMovementReplacement"]
     >["landing"]["difficultTerrainAcrobatics"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
@@ -4045,8 +4084,8 @@ function jumpMovementReplacementFill(
       speedKind: "walk",
       movementCostFeet: jumpMovementCostFeet,
       provokedOpportunityAttacks: [],
-      jumpMovementReplacement: {
-        kind: "jumpMovementReplacement",
+      fixedCostMovementReplacement: {
+        kind: "fixedCostMovementReplacement",
         distanceFeet: jumpMaxDistanceFeet,
         landing: {
           kind: "legalLanding",
@@ -4096,7 +4135,7 @@ function lightObjectProjectionFact(
   };
 }
 
-function greaseGroundHazardSavingThrowOutcomeFill(
+function persistentAreaSaveConditionSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
   outcome: GreaseSavingThrowOutcome,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
@@ -4109,7 +4148,7 @@ function greaseGroundHazardSavingThrowOutcomeFill(
 
 function openFeatherFallWindow(
   state: BattleState,
-  reactionSpellTargetFacts: readonly BattleTargetSpatialFact[],
+  reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerFact[],
 ): BattleResolutionResult {
   return openCreatureFallsInterruptWindow({
     state,
@@ -4127,7 +4166,8 @@ function featherFallProcedureRef(
       ? caster.origin.execution.procedureBindings.find(
           (candidate) =>
             candidate.procedure.kind === "spellInvocation" &&
-            candidate.procedure.execution.procedure === "featherFallMitigation",
+            candidate.procedure.execution.procedure ===
+              "fallingCreatureMitigationReaction",
         )
       : undefined;
   if (binding === undefined) {
@@ -4138,16 +4178,16 @@ function featherFallProcedureRef(
 
 function featherFallTriggerFact(
   sourceProcedureRef: BattleProcedureExecutionRef,
-): Extract<
-  BattleTargetSpatialFact,
-  { readonly kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange" }
-> {
+): BattleFallingCreatureMitigationTriggerFact {
   return {
-    kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+    kind: "fallingCreatureMitigationTrigger",
     reactorId: casterId,
-    fallingCreatureId: featherFallFallingAllyId,
     sourceProcedureRef,
-    rangeFeet: movementFeet(60),
+    witness: {
+      kind: "visibleCreatureFalls",
+      fallingCreatureId: featherFallFallingAllyId,
+      distanceFeet: movementFeet(60),
+    },
   };
 }
 
@@ -4164,7 +4204,7 @@ function featherFallReactionChoice(
       characterSpellProcedureExecution(
         reactor.origin.execution,
         candidate.subject.procedureRef,
-      )?.procedure === "featherFallMitigation"
+      )?.procedure === "fallingCreatureMitigationReaction"
     );
   });
   if (choice === undefined) {
@@ -4183,7 +4223,7 @@ function featherFallTargetListFill(
     holeId: hole.holeId,
     value: { targetIds },
     spatialFacts: targetIds.map((targetId) => ({
-      kind: "featherFallTargetFallingWithinRange",
+      kind: "fallingCreatureTargetWithinRange",
       casterId,
       targetId,
       sourceProcedureRef,
@@ -4192,14 +4232,18 @@ function featherFallTargetListFill(
   };
 }
 
-function fogCloudAreaFill(
+function persistentAreaTraitAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   originAnchor: BattleSpellAreaOriginAnchor = { kind: "tableSelectedPoint" },
 ): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
   return {
     kind: "spellAreaChoice",
     holeId: hole.holeId,
-    value: { kind: "fogCloudArea", areaId: fogCloudAreaId, originAnchor },
+    value: {
+      kind: "persistentAreaTraitArea",
+      areaId: persistentAreaTraitAreaId,
+      originAnchor,
+    },
   };
 }
 
@@ -4209,8 +4253,8 @@ function fogCloudStrongWindDispersalAct(
   const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is FogCloudStrongWindDispersalAct =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "disperseFogCloud" &&
-      candidate.subject.areaId === fogCloudAreaId,
+      candidate.subject.command === "endPersistentAreaTraitForEnvironment" &&
+      candidate.subject.areaId === persistentAreaTraitAreaId,
   );
   if (act === undefined) {
     throw new Error("Expected Fog Cloud strong-wind dispersal command.");
@@ -4479,22 +4523,26 @@ function projectFogCloudReplay(
   input: { readonly strongWindCommandOffered: boolean },
 ): FogCloudProjection {
   const activeEffect = fogCloudActiveEffect(activeState);
-  const activeZone = fogCloudObscurementZone(activeState);
+  const activeZone = persistentAreaTraitZone(activeState);
   const activeZoneArea =
     activeZone?.area.kind === "pointOriginSphere" ? activeZone.area : undefined;
+  const activeEffectRadius =
+    activeEffect === undefined
+      ? undefined
+      : persistentAreaTraitRadiusFeet(activeState, activeEffect);
   const radiusMatches =
-    activeEffect?.radiusFeet === fogCloudLevelOneRadiusFeet &&
+    activeEffectRadius === fogCloudLevelOneRadiusFeet &&
     activeZoneArea?.radiusFeet === fogCloudLevelOneRadiusFeet;
   return {
-    areaIdentityRetained:
-      activeEffect?.areaId === fogCloudAreaId &&
-      activeZoneArea?.areaId === fogCloudAreaId,
+    activeEffectAreaId: activeEffect?.areaId ?? persistentAreaTraitAbsentAreaId,
+    projectedZoneAreaId:
+      activeZoneArea?.areaId ?? persistentAreaTraitAbsentAreaId,
     heavilyObscuredZoneCount: fogCloudHeavilyObscuredZoneCount(activeState),
     radiusFeet: radiusMatches ? Number(fogCloudLevelOneRadiusFeet) : 0,
     durationTicks: fogCloudMatchingDurationTicks(activeEffect, activeZone),
     strongWindCommandOffered: input.strongWindCommandOffered,
     cleanupClearedEffect: fogCloudActiveEffect(cleanupState) === undefined,
-    cleanupClearedZone: fogCloudObscurementZone(cleanupState) === undefined,
+    cleanupClearedZone: persistentAreaTraitZone(cleanupState) === undefined,
     cleanupClearedConcentration:
       cleanupState.combatants.get(casterId)?.concentration === null,
     slotExpended: fogCloudCasterSlotExpended(activeState),
@@ -4508,13 +4556,13 @@ function fogCloudActiveEffect(
     .get(casterId)
     ?.activeEffects.find(
       (effect): effect is FogCloudObscurementEffect =>
-        effect.kind === "fogCloudObscurement" &&
+        effect.kind === "persistentAreaTrait" &&
         effect.sourceCombatantId === casterId &&
-        effect.areaId === fogCloudAreaId,
+        effect.areaId === persistentAreaTraitAreaId,
     );
 }
 
-function fogCloudObscurementZone(
+function persistentAreaTraitZone(
   state: BattleState,
 ): SpellObscurementZone | undefined {
   const activeEffect = fogCloudActiveEffect(state);
@@ -4526,7 +4574,7 @@ function fogCloudObscurementZone(
       zone.sourceCombatantId === casterId &&
       zone.obscurement === "heavilyObscured" &&
       zone.area.kind === "pointOriginSphere" &&
-      zone.area.areaId === fogCloudAreaId,
+      zone.area.areaId === persistentAreaTraitAreaId,
   );
 }
 
@@ -4539,7 +4587,7 @@ function fogCloudHeavilyObscuredZoneCount(state: BattleState): number {
       zone.sourceProcedureRef === activeEffect.sourceProcedureRef &&
       zone.sourceCombatantId === casterId &&
       zone.obscurement === "heavilyObscured" &&
-      zone.area.areaId === fogCloudAreaId,
+      zone.area.areaId === persistentAreaTraitAreaId,
   ).length;
 }
 
@@ -4660,13 +4708,13 @@ function greaseActiveEffects(
 ): readonly GreaseGroundHazardEffect[] {
   return greaseCombatant(state, casterId).activeEffects.filter(
     (effect): effect is GreaseGroundHazardEffect =>
-      effect.kind === "greaseGroundHazard" &&
+      effect.kind === "persistentAreaSaveCondition" &&
       effect.sourceCombatantId === casterId &&
       effect.areaId === greaseAreaId,
   );
 }
 
-function greaseGroundHazardEffect(
+function persistentAreaSaveConditionEffect(
   state: BattleState,
 ): GreaseGroundHazardEffect {
   const effect = greaseActiveEffects(state)[0];
@@ -4761,19 +4809,22 @@ function thunderwaveCombatant(state: BattleState, id: CombatantId) {
   return combatant;
 }
 
-function jumpMovementReplacementEffect(
+function fixedCostMovementReplacementEffect(
   state: BattleState,
   id: CombatantId,
-): JumpMovementReplacementEffect | undefined {
-  return jumpCombatant(state, id).activeEffects.find(
+): BoundFixedCostMovementReplacementEffect | undefined {
+  const effect = jumpCombatant(state, id).activeEffects.find(
     (effect): effect is JumpMovementReplacementEffect =>
-      effect.kind === "jumpMovementReplacement" &&
+      effect.kind === "fixedCostMovementReplacement" &&
       effect.sourceCombatantId === casterId,
   );
+  return effect === undefined
+    ? undefined
+    : boundFixedCostMovementReplacementEffect(state, effect);
 }
 
 function jumpTargetEffectInstalled(state: BattleState): boolean {
-  const effect = jumpMovementReplacementEffect(state, jumpTargetId);
+  const effect = fixedCostMovementReplacementEffect(state, jumpTargetId);
   return (
     effect !== undefined &&
     effect.movementCostFeet === jumpMovementCostFeet &&
@@ -4846,8 +4897,10 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
     lightRecastReplacedPriorEmitter: lightProjection.recastReplacedPriorEmitter,
     lightDurationCleanupClearedEmitter:
       lightProjection.durationCleanupClearedEmitter,
-    faerieFireOutlinedCreatureCount: faerieFireOutlinedCreatureCount(state),
-    faerieFireOutlinedObjectCount: faerieFireOutlinedObjectCount(state),
+    saveGatedTargetProjectedCreatureCount:
+      saveGatedTargetProjectedCreatureCount(state),
+    saveGatedTargetProjectedObjectCount:
+      saveGatedTargetProjectedObjectCount(state),
     faerieFireCreatureAttackRollMode,
     faerieFireInvisibleCreatureAttackRollMode,
     faerieFireObjectAttackRollMode,
@@ -4871,7 +4924,10 @@ function projectLevel1SpatialWitnessSelectedIdentityState(
       featherFallProjection.landedTargetMitigationCleared,
     featherFallOtherTargetStillMitigated:
       featherFallProjection.otherTargetStillMitigated,
-    fogCloudAreaIdentityRetained: fogCloudProjection.areaIdentityRetained,
+    persistentAreaTraitActiveEffectAreaId:
+      fogCloudProjection.activeEffectAreaId,
+    persistentAreaTraitProjectedZoneAreaId:
+      fogCloudProjection.projectedZoneAreaId,
     fogCloudHeavilyObscuredZoneCount:
       fogCloudProjection.heavilyObscuredZoneCount,
     fogCloudRadiusFeet: fogCloudProjection.radiusFeet,
@@ -4970,7 +5026,7 @@ function selectedLightEmitters(
   if (lastResult === "dancingLightsMovableDimLight") {
     return dancingLightEmitters(state);
   }
-  if (lastResult === "faerieFireOutlineAdvantageInvisibleDimLight") {
+  if (lastResult === "saveGatedTargetProjectionAdvantageInvisibleDimLight") {
     return faerieFireEmitters(state);
   }
   if (lastResult === "lightObjectEmitterProjectionReplacementCleanup") {
@@ -4991,7 +5047,7 @@ function dimLightRadiusFeet(
   if (lastResult === "produceFlameHeldLightProjectionHurlCleanup") {
     return produceFlameDimProjectionDistanceFeet;
   }
-  return lastResult === "faerieFireOutlineAdvantageInvisibleDimLight"
+  return lastResult === "saveGatedTargetProjectionAdvantageInvisibleDimLight"
     ? faerieFireDimLightRadiusFeet
     : dancingLightsDimLightRadiusFeet;
 }
@@ -5005,10 +5061,11 @@ function casterConcentratingOnSelectedUnit(
   }
   if (
     lastResult === "featherFallReactionMitigationLanding" ||
-    lastResult === "fogCloudAreaIdentityObscurementStrongWindCleanup" ||
+    lastResult ===
+      "persistentAreaTraitAreaIdentityObscurementStrongWindCleanup" ||
     lastResult === "greaseCastGroundHazardSavingThrows" ||
     lastResult === "greaseMovementAndTurnTriggers" ||
-    lastResult === "jumpMovementReplacementLandingWitness" ||
+    lastResult === "fixedCostMovementReplacementLandingWitness" ||
     lastResult === "lightObjectEmitterProjectionReplacementCleanup" ||
     lastResult === "produceFlameHeldLightProjectionHurlCleanup" ||
     lastResult === "thunderwaveSavePushObjectsBoom"
@@ -5016,10 +5073,10 @@ function casterConcentratingOnSelectedUnit(
     return false;
   }
   const sourceProcedureRef =
-    lastResult === "faerieFireOutlineAdvantageInvisibleDimLight"
+    lastResult === "saveGatedTargetProjectionAdvantageInvisibleDimLight"
       ? state.objectOutlines.find(
           (outline) =>
-            outline.kind === "faerieFireObjectOutline" &&
+            outline.kind === "saveGatedTargetProjectionObject" &&
             outline.sourceCombatantId === casterId,
         )?.sourceProcedureRef
       : dancingLightEmitters(state)[0]?.sourceProcedureRef;
@@ -5036,7 +5093,7 @@ function dancingLightEmitters(
     (emitter): emitter is DancingLightEmitter =>
       emitter.kind === "spellLightEmitter" &&
       emitter.sourceCombatantId === casterId &&
-      emitter.attachment.kind === "dancingLight",
+      emitter.attachment.kind === "movableLight",
   );
 }
 
@@ -5078,7 +5135,7 @@ function matchingProjectionFacts(
   if (lastResult === "dancingLightsMovableDimLight") {
     return dancingLightsMatchingProjectionFacts(dancingLightEmitters(state));
   }
-  if (lastResult === "faerieFireOutlineAdvantageInvisibleDimLight") {
+  if (lastResult === "saveGatedTargetProjectionAdvantageInvisibleDimLight") {
     return [
       faerieFireCombatantProjectionFact(observerId),
       faerieFireObjectProjectionFact(faerieFireObjectId),
@@ -5111,7 +5168,7 @@ function mismatchedProjectionFacts(
   if (lastResult === "dancingLightsMovableDimLight") {
     return dancingLightsMismatchedProjectionFacts(dancingLightEmitters(state));
   }
-  if (lastResult === "faerieFireOutlineAdvantageInvisibleDimLight") {
+  if (lastResult === "saveGatedTargetProjectionAdvantageInvisibleDimLight") {
     return [
       faerieFireCombatantProjectionFact(
         combatantId("level1-faerie-fire-stale-combatant"),
@@ -5206,7 +5263,7 @@ function projectionFactForEmitter(
   positionId: DancingLightAttachment["positionId"],
 ): BattleLightEmitterProjectionFact {
   return {
-    kind: "dancingLight",
+    kind: "movableLight",
     lightId: emitter.attachment.lightId,
     positionId,
     form: emitter.attachment.form,
@@ -5214,23 +5271,23 @@ function projectionFactForEmitter(
   };
 }
 
-function faerieFireOutlinedCreatureCount(state: BattleState): number {
+function saveGatedTargetProjectedCreatureCount(state: BattleState): number {
   return [...state.combatants.values()].reduce(
     (count, combatant) =>
       count +
       combatant.activeEffects.filter(
         (effect) =>
-          effect.kind === "faerieFireOutline" &&
+          effect.kind === "saveGatedTargetProjection" &&
           effect.sourceCombatantId === casterId,
       ).length,
     0,
   );
 }
 
-function faerieFireOutlinedObjectCount(state: BattleState): number {
+function saveGatedTargetProjectedObjectCount(state: BattleState): number {
   return state.objectOutlines.filter(
     (outline) =>
-      outline.kind === "faerieFireObjectOutline" &&
+      outline.kind === "saveGatedTargetProjectionObject" &&
       outline.sourceCombatantId === casterId,
   ).length;
 }
@@ -5239,7 +5296,7 @@ function faerieFireTargetInvisible(
   state: BattleState,
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
 ): boolean {
-  if (lastResult !== "faerieFireOutlineAdvantageInvisibleDimLight") {
+  if (lastResult !== "saveGatedTargetProjectionAdvantageInvisibleDimLight") {
     return false;
   }
   const target = state.combatants.get(observerId);
@@ -5253,7 +5310,7 @@ function faerieFireObjectInvisibleBenefitDenied(
   state: BattleState,
   lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"],
 ): boolean {
-  if (lastResult !== "faerieFireOutlineAdvantageInvisibleDimLight") {
+  if (lastResult !== "saveGatedTargetProjectionAdvantageInvisibleDimLight") {
     return false;
   }
   return objectInvisibleBenefitDenied(state, faerieFireObjectId);
@@ -5283,12 +5340,14 @@ function featherFallCasterSlotExpended(state: BattleState): boolean {
   );
 }
 
-function featherFallMitigationTargetCount(state: BattleState): number {
+function fallingCreatureMitigationReactionTargetCount(
+  state: BattleState,
+): number {
   return [featherFallFallingAllyId, featherFallOtherFallingAllyId].filter(
     (targetId) =>
-      activeFeatherFallDescentRateCapFeetPerRound(
+      activeFallingCreatureMitigationDescentRateCapFeetPerRound(
         featherFallCombatant(state, targetId),
-      ) === FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+      ) === FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND,
   ).length;
 }
 
@@ -5344,7 +5403,7 @@ function lightObjectSpellEmitter(input: {
   readonly objectId: BattleObjectId;
   readonly durationTicks: ElapsedTimeTicks;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
-}): ObjectLightEmitter {
+}) {
   return {
     kind: "spellLightEmitter",
     sourceProcedureRef: input.sourceProcedureRef,
@@ -5363,7 +5422,7 @@ function lightObjectSpellEmitter(input: {
       kind: "duration",
       durationTicks: input.durationTicks,
     },
-  };
+  } as const;
 }
 
 function produceFlameHeldLightEffect(
@@ -5408,7 +5467,7 @@ function produceFlameHeldLightEffectValue(
 ): Extract<BattleActiveEffect, { readonly kind: "heldLight" }> {
   return {
     kind: "heldLight",
-    effectRef: battleActiveEffectExecutionRefForTest(
+    effectRef: battleEffectExecutionRefForTest(
       "synthetic-produce-flame-held-light",
     ),
     sourceProcedureRef,

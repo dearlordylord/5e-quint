@@ -5,7 +5,7 @@ import {
   Hp,
   characterSheetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   stableSheet,
   timePassed,
   timeSpanDuration,
@@ -49,7 +49,9 @@ describe("Character Sheet runtime / time passage", () => {
       };
       const result = timePassed({
         sheet,
-        duration: requireRight(timeSpanDuration({ unit: "round", amount: 1 })),
+        duration: requireSuccess(
+          timeSpanDuration({ unit: "round", amount: 1 }),
+        ),
         fills: [],
       });
 
@@ -64,7 +66,7 @@ describe("Character Sheet runtime / time passage", () => {
   test("timePassed accumulates Stable recovery time before one hour can pass", () => {
     const result = timePassed({
       sheet: stableSheet("character:stable-round"),
-      duration: requireRight(timeSpanDuration({ unit: "round", amount: 1 })),
+      duration: requireSuccess(timeSpanDuration({ unit: "round", amount: 1 })),
       fills: [],
     });
 
@@ -89,7 +91,7 @@ describe("Character Sheet runtime / time passage", () => {
   test("timePassed asks for a Stable recovery roll at the one-hour boundary", () => {
     const result = timePassed({
       sheet: stableSheet("character:stable-roll"),
-      duration: requireRight(timeSpanDuration({ unit: "hour", amount: 1 })),
+      duration: requireSuccess(timeSpanDuration({ unit: "hour", amount: 1 })),
       fills: [],
     });
 
@@ -110,7 +112,9 @@ describe("Character Sheet runtime / time passage", () => {
   test("timePassed reaches the Stable recovery roll boundary across multiple calls", () => {
     const firstHalfHour = timePassed({
       sheet: stableSheet("character:stable-halves"),
-      duration: requireRight(timeSpanDuration({ unit: "minute", amount: 30 })),
+      duration: requireSuccess(
+        timeSpanDuration({ unit: "minute", amount: 30 }),
+      ),
       fills: [],
     });
     if (firstHalfHour.tag !== "resolved") {
@@ -119,7 +123,9 @@ describe("Character Sheet runtime / time passage", () => {
 
     const secondHalfHour = timePassed({
       sheet: firstHalfHour.sheet,
-      duration: requireRight(timeSpanDuration({ unit: "minute", amount: 30 })),
+      duration: requireSuccess(
+        timeSpanDuration({ unit: "minute", amount: 30 }),
+      ),
       fills: [],
     });
 
@@ -134,7 +140,7 @@ describe("Character Sheet runtime / time passage", () => {
     const sheet = stableSheet("character:stable-early-roll");
     const awaitingRoll = timePassed({
       sheet,
-      duration: requireRight(timeSpanDuration({ unit: "hour", amount: 1 })),
+      duration: requireSuccess(timeSpanDuration({ unit: "hour", amount: 1 })),
       fills: [],
     });
     if (awaitingRoll.tag !== "needsHoles") {
@@ -144,7 +150,7 @@ describe("Character Sheet runtime / time passage", () => {
     expect(
       timePassed({
         sheet,
-        duration: requireRight(
+        duration: requireSuccess(
           timeSpanDuration({ unit: "minute", amount: 30 }),
         ),
         fills: [
@@ -165,7 +171,7 @@ describe("Character Sheet runtime / time passage", () => {
     const sheet = stableSheet("character:stable-recovery");
     const awaitingRoll = timePassed({
       sheet,
-      duration: requireRight(timeSpanDuration({ unit: "hour", amount: 1 })),
+      duration: requireSuccess(timeSpanDuration({ unit: "hour", amount: 1 })),
       fills: [],
     });
     if (awaitingRoll.tag !== "needsHoles") {
@@ -174,7 +180,7 @@ describe("Character Sheet runtime / time passage", () => {
 
     const firstHour = timePassed({
       sheet,
-      duration: requireRight(timeSpanDuration({ unit: "hour", amount: 1 })),
+      duration: requireSuccess(timeSpanDuration({ unit: "hour", amount: 1 })),
       fills: [
         {
           kind: "rolledDice",
@@ -204,7 +210,7 @@ describe("Character Sheet runtime / time passage", () => {
     expect(
       timePassed({
         sheet: firstHour.sheet,
-        duration: requireRight(timeSpanDuration({ unit: "hour", amount: 1 })),
+        duration: requireSuccess(timeSpanDuration({ unit: "hour", amount: 1 })),
         fills: [],
       }),
     ).toMatchObject({
@@ -215,7 +221,7 @@ describe("Character Sheet runtime / time passage", () => {
   });
 
   test("preserves spell-slot state when Stable recovery restores 1 HP", () => {
-    const spellcaster = requireRight(
+    const spellcaster = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-spellcaster-stable-recovery",
@@ -233,7 +239,7 @@ describe("Character Sheet runtime / time passage", () => {
     };
     const awaitingRoll = timePassed({
       sheet,
-      duration: requireRight(timeSpanDuration({ unit: "hour", amount: 1 })),
+      duration: requireSuccess(timeSpanDuration({ unit: "hour", amount: 1 })),
       fills: [],
     });
     if (awaitingRoll.tag !== "needsHoles") {
@@ -242,7 +248,7 @@ describe("Character Sheet runtime / time passage", () => {
 
     const result = timePassed({
       sheet,
-      duration: requireRight(timeSpanDuration({ unit: "hour", amount: 1 })),
+      duration: requireSuccess(timeSpanDuration({ unit: "hour", amount: 1 })),
       fills: [
         {
           kind: "rolledDice",

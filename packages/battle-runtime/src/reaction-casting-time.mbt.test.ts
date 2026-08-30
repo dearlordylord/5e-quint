@@ -101,13 +101,14 @@ type ReactionCastingTimeContinuationKind =
   | "afterDamageResolved";
 type ReactionCastingTimeLastResult =
   | "init"
-  | "counterspellEndedSpellCast"
-  | "counterspellAllowedSpellCastResume"
+  | "spellCastInterruptionReactionEndedSpellCast"
+  | "spellCastInterruptionReactionAllowedSpellCastResume"
   | "hellishRebukeAfterDamage";
 const REACTION_CASTING_TIME_LAST_RESULT_BY_SCENARIO_OUTCOME_TAG = {
   Init: "init",
-  CounterspellEndedSpellCast: "counterspellEndedSpellCast",
-  CounterspellAllowedSpellCastResume: "counterspellAllowedSpellCastResume",
+  CounterspellEndedSpellCast: "spellCastInterruptionReactionEndedSpellCast",
+  CounterspellAllowedSpellCastResume:
+    "spellCastInterruptionReactionAllowedSpellCastResume",
   HellishRebukeAfterDamage: "hellishRebukeAfterDamage",
 } as const satisfies Readonly<Record<string, ReactionCastingTimeLastResult>>;
 
@@ -147,12 +148,12 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 
 const magicMissileUnitId = "magic_missile";
-const counterspellUnitId = "counterspell";
+const spellCastInterruptionReactionUnitId = "spellCastInterruptionReaction";
 const hellishRebukeUnitId = "hellish_rebuke";
 const triggerCreatureId = combatantId("reaction-casting-time-trigger-creature");
 const reactorId = combatantId("reaction-casting-time-reactor");
 const initialHp = 30;
-const counterspellSlotLevel = 3;
+const spellCastInterruptionReactionSlotLevel = 3;
 const hellishRebukeSlotLevel = 2;
 const magicMissileFirstSlotLevel = 1;
 const magicMissileFourthSlotLevel = 4;
@@ -162,7 +163,7 @@ const hellishRebukeDamageRoll = [[1, 1, 1]] as const;
 
 const replaySequences = [
   {
-    name: "counterspell-ends-spell-cast",
+    name: "spellCastInterruptionReaction-ends-spell-cast",
     actions: ["doCounterspellEndsSpellCast"],
     expected: expectedReactionCastingTimeProjection({
       triggerKind: "spellCast",
@@ -170,11 +171,11 @@ const replaySequences = [
       reactorReactionAvailable: false,
       reactorThirdLevelSlotsExpended: 1,
       reactionWindowCleared: true,
-      lastResult: "counterspellEndedSpellCast",
+      lastResult: "spellCastInterruptionReactionEndedSpellCast",
     }),
   },
   {
-    name: "counterspell-allows-spell-cast-resume",
+    name: "spellCastInterruptionReaction-allows-spell-cast-resume",
     actions: ["doCounterspellAllowsSpellCastResume"],
     expected: expectedReactionCastingTimeProjection({
       triggerKind: "spellCast",
@@ -184,7 +185,7 @@ const replaySequences = [
       triggerCreatureFourthLevelSlotsExpended: 1,
       reactorThirdLevelSlotsExpended: 1,
       reactionWindowCleared: true,
-      lastResult: "counterspellAllowedSpellCastResume",
+      lastResult: "spellCastInterruptionReactionAllowedSpellCastResume",
     }),
   },
   {
@@ -268,10 +269,10 @@ function createReactionCastingTimeDriver() {
         state = initialRuntimeState();
       },
       doCounterspellEndsSpellCast: () => {
-        state = counterspellEndsSpellCast();
+        state = spellCastInterruptionReactionEndsSpellCast();
       },
       doCounterspellAllowsSpellCastResume: () => {
-        state = counterspellAllowsSpellCastResume();
+        state = spellCastInterruptionReactionAllowsSpellCastResume();
       },
       doHellishRebukeAfterDamage: () => {
         state = hellishRebukeAfterDamage();
@@ -287,8 +288,12 @@ function initialRuntimeState(): ReactionCastingTimeRuntimeState {
     battle: reactionCastingTimeBattle({
       triggerCreaturePreparedSpells: [srdSpellRecord(magicMissileUnitId)],
       triggerCreatureSpellSlots: [{ spellLevel: 1, count: 1 }],
-      reactorPreparedSpells: [srdSpellRecord(counterspellUnitId)],
-      reactorSpellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
+      reactorPreparedSpells: [
+        srdSpellRecord(spellCastInterruptionReactionUnitId),
+      ],
+      reactorSpellSlots: [
+        { spellLevel: spellCastInterruptionReactionSlotLevel, count: 1 },
+      ],
     }).state,
     triggerKind: "none",
     continuationKind: "none",
@@ -296,12 +301,16 @@ function initialRuntimeState(): ReactionCastingTimeRuntimeState {
   };
 }
 
-function counterspellEndsSpellCast(): ReactionCastingTimeRuntimeState {
+function spellCastInterruptionReactionEndsSpellCast(): ReactionCastingTimeRuntimeState {
   const session = reactionCastingTimeBattle({
     triggerCreaturePreparedSpells: [srdSpellRecord(magicMissileUnitId)],
     triggerCreatureSpellSlots: [{ spellLevel: 1, count: 1 }],
-    reactorPreparedSpells: [srdSpellRecord(counterspellUnitId)],
-    reactorSpellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
+    reactorPreparedSpells: [
+      srdSpellRecord(spellCastInterruptionReactionUnitId),
+    ],
+    reactorSpellSlots: [
+      { spellLevel: spellCastInterruptionReactionSlotLevel, count: 1 },
+    ],
   });
   const awaitingReaction = startMagicMissileWithCounterspell({
     session,
@@ -328,18 +337,22 @@ function counterspellEndsSpellCast(): ReactionCastingTimeRuntimeState {
     battle: resolved.state,
     triggerKind: "spellCast",
     continuationKind: "spellCastEnded",
-    lastResult: "counterspellEndedSpellCast",
+    lastResult: "spellCastInterruptionReactionEndedSpellCast",
   };
 }
 
-function counterspellAllowsSpellCastResume(): ReactionCastingTimeRuntimeState {
+function spellCastInterruptionReactionAllowsSpellCastResume(): ReactionCastingTimeRuntimeState {
   const session = reactionCastingTimeBattle({
     triggerCreaturePreparedSpells: [srdSpellRecord(magicMissileUnitId)],
     triggerCreatureSpellSlots: [
       { spellLevel: magicMissileFourthSlotLevel, count: 1 },
     ],
-    reactorPreparedSpells: [srdSpellRecord(counterspellUnitId)],
-    reactorSpellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
+    reactorPreparedSpells: [
+      srdSpellRecord(spellCastInterruptionReactionUnitId),
+    ],
+    reactorSpellSlots: [
+      { spellLevel: spellCastInterruptionReactionSlotLevel, count: 1 },
+    ],
   });
   const awaitingReaction = startMagicMissileWithCounterspell({
     session,
@@ -377,7 +390,7 @@ function counterspellAllowsSpellCastResume(): ReactionCastingTimeRuntimeState {
     battle: resolved.state,
     triggerKind: "spellCast",
     continuationKind: "spellCastResumed",
-    lastResult: "counterspellAllowedSpellCastResume",
+    lastResult: "spellCastInterruptionReactionAllowedSpellCastResume",
   };
 }
 
@@ -677,7 +690,7 @@ function startMagicMissileWithCounterspell(input: {
       {
         kind: "targetSpatialFacts",
         holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
-        spatialFacts: [counterspellTriggerFact(input.session)],
+        spatialFacts: [spellCastInterruptionReactionTriggerFact(input.session)],
       },
     ],
   });
@@ -838,23 +851,23 @@ type CounterspellTriggerFact = Extract<
     BattleFill,
     { readonly kind: "targetSpatialFacts" }
   >["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(
+function spellCastInterruptionReactionTriggerFact(
   session: BattleRuntimeSession,
 ): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId,
     casterId: triggerCreatureId,
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
       session,
       reactorId,
       spellSlotInvocationRef(
-        counterspellUnitId,
-        counterspellSlotLevel,
-        "counterspell",
+        spellCastInterruptionReactionUnitId,
+        spellCastInterruptionReactionSlotLevel,
+        "spellCastInterruptionReaction",
       ),
     ),
     rangeFeet: movementFeet(60),
@@ -876,9 +889,9 @@ function requireCounterspellChoice(
 ): TriggeredReactionSpellChoice {
   return requireTriggeredReactionSpellChoice({
     result,
-    spellId: counterspellUnitId,
-    procedure: "counterspell",
-    slotLevel: counterspellSlotLevel,
+    spellId: spellCastInterruptionReactionUnitId,
+    procedure: "spellCastInterruptionReaction",
+    slotLevel: spellCastInterruptionReactionSlotLevel,
   });
 }
 

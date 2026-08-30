@@ -10,7 +10,7 @@ import {
   type SpellRecord,
   type UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { characterSheetClassFeaturePreparedSpellAccessesForBuild } from "./class-feature-spells.ts";
 import {
@@ -35,11 +35,11 @@ type ContactPatronFreeCastResource = Extract<
 export function castContactPatron(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheetContactPatronResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetContactPatronResult, CharacterSheetIssue> {
   const resource = contactPatronFreeCastResource(input);
   /* v8 ignore next -- @preserve -- Malformed retained support state: Contact Patron admission correlates the feature with its projected free-cast resource. */
-  if (Either.isLeft(resource)) return Either.left(resource.left);
-  if (resource.right.expended >= resource.right.count) {
+  if (Result.isFailure(resource)) return Result.fail(resource.failure);
+  if (resource.success.expended >= resource.success.count) {
     return characterSheetIssue(
       "Contact Patron cannot be used again until a Long Rest.",
     );
@@ -47,11 +47,13 @@ export function castContactPatron(input: {
 
   const feature = getRequiredUnit(
     input.unitLibrary,
-    resource.right.sourceUnitId,
+    resource.success.sourceUnitId,
   );
   /* v8 ignore next -- @preserve -- Malformed sheet/catalog correlation: the projected Contact Patron resource retains its admitted feature Unit id. */
-  if (Either.isLeft(feature)) return Either.left(feature.left);
-  const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(feature.right);
+  if (Result.isFailure(feature)) return Result.fail(feature.failure);
+  const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(
+    feature.success,
+  );
   /* v8 ignore start -- @preserve -- The retained Contact Patron resource and its authored free-cast grant are one correlated support profile. */
   if (!hasContactPatronFreeCastProfile(grants)) {
     return characterSheetIssue(
@@ -67,7 +69,7 @@ export function castContactPatron(input: {
     });
   const hasPreparedAccess = preparedAccesses.some(
     (access) =>
-      access.sourceUnitId === resource.right.sourceUnitId &&
+      access.sourceUnitId === resource.success.sourceUnitId &&
       access.spellIds.some(
         (spellId) => spellId === CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID,
       ),
@@ -85,30 +87,33 @@ export function castContactPatron(input: {
     CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID,
   );
   /* v8 ignore next -- @preserve -- Malformed support catalog: the fixed Contact Other Plane reference is required when Contact Patron is admitted. */
-  if (Either.isLeft(spell)) return Either.left(spell.left);
+  if (Result.isFailure(spell)) return Result.fail(spell.failure);
   /* v8 ignore start -- @preserve -- The fixed Contact Other Plane id must resolve to its Spell Unit in the same catalog. */
-  if (spell.right.kind !== "spell") {
+  if (spell.success.kind !== "spell") {
     return characterSheetIssue("Contact Patron requires a Spell record.");
   }
   /* v8 ignore stop -- @preserve */
 
   const invocation = contactPatronInvocationFromSpell({
-    spell: spell.right,
-    featureUnitId: resource.right.sourceUnitId,
+    spell: spell.success,
+    featureUnitId: resource.success.sourceUnitId,
   });
   /* v8 ignore next -- @preserve -- Unsupported authored data: admission verifies the exact Contact Other Plane invocation profile before this projector runs. */
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
+  if (Result.isFailure(invocation)) return Result.fail(invocation.failure);
 
   const sheet = spendCharacterSheetSpellAccessFreeCast({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
     resource: {
-      sourceUnitId: resource.right.sourceUnitId,
-      spellId: resource.right.spellId,
+      sourceUnitId: resource.success.sourceUnitId,
+      spellId: resource.success.spellId,
     },
   });
-  if (Either.isLeft(sheet)) return Either.left(sheet.left);
-  return Either.right({ sheet: sheet.right, invocation: invocation.right });
+  if (Result.isFailure(sheet)) return Result.fail(sheet.failure);
+  return Result.succeed({
+    sheet: sheet.success,
+    invocation: invocation.success,
+  });
 }
 
 function hasContactPatronFreeCastProfile(
@@ -125,11 +130,11 @@ function hasContactPatronFreeCastProfile(
 function contactPatronFreeCastResource(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<ContactPatronFreeCastResource, CharacterSheetIssue> {
+}): Result.Result<ContactPatronFreeCastResource, CharacterSheetIssue> {
   const resources = characterSheetResources(input.sheet, input.unitLibrary);
   /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: resource projection can fail only when retained admitted Units no longer resolve. */
-  if (Either.isLeft(resources)) return Either.left(resources.left);
-  const resource = resources.right.find(
+  if (Result.isFailure(resources)) return Result.fail(resources.failure);
+  const resource = resources.success.find(
     (candidate): candidate is ContactPatronFreeCastResource =>
       candidate.tag === "spellAccessFreeCast" &&
       candidate.spellId === CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID,
@@ -141,13 +146,13 @@ function contactPatronFreeCastResource(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right(resource);
+  return Result.succeed(resource);
 }
 
 function contactPatronInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly featureUnitId: UnitRecord["id"];
-}): Either.Either<CharacterSheetContactPatronInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetContactPatronInvocation, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Unsupported authored Contact Other Plane data: Contact Patron admission requires activation mechanics before save-phase projection. */
   const phase =
     input.spell.mechanics.family === "activation"
@@ -176,14 +181,14 @@ function contactPatronInvocationFromSpell(input: {
 
   const questionWindow = timeSpanDuration(phase.onSuccess.questionWindow);
   /* v8 ignore start -- @preserve -- The admitted authored question window is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(questionWindow)) {
+  if (Result.isFailure(questionWindow)) {
     return characterSheetIssue(
       "Contact Patron requires a supported question window duration.",
     );
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "contactPatron",
     spellId: input.spell.id,
     spellLevel: input.spell.mechanics.level,
@@ -207,7 +212,7 @@ function contactPatronInvocationFromSpell(input: {
       primaryAnswer: phase.onSuccess.answer.primary,
       unknownAnswer: phase.onSuccess.answer.unknown,
       misleadingAnswerFallback: phase.onSuccess.answer.fallback,
-      window: questionWindow.right,
+      window: questionWindow.success,
     },
   });
 }

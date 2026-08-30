@@ -2,7 +2,7 @@ import type { CreationFill, CreationHole, SupportedAbilityScoreMethod } from "@d
 import { BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY } from "@dnd/character-creation-runtime"
 import { ABILITIES, type Ability } from "@dnd/shared/game-facts"
 import { STANDARD_ARRAY_SCORES, totalPointBuyCost } from "@dnd/shared-algebras/ability-score-algebra"
-import { Either, Option } from "effect"
+import { Option, Result } from "effect"
 import { useState } from "react"
 
 import { type AbilityScoreInput, abilityScoresFill } from "#/components/character-creation/characterCreationRuntime.ts"
@@ -17,17 +17,6 @@ function completeScores(scores: Partial<Record<Ability, number>>): AbilityScoreI
   return str == null || dex == null || con == null || int == null || wis == null || cha == null
     ? null
     : { str, dex, con, int, wis, cha }
-}
-
-function abilityScoreSubmitHandler(
-  abilityScoreFill: ReturnType<typeof abilityScoresFill> | null,
-  onFill: (fill: CreationFill) => void
-): (() => void) | undefined {
-  if (abilityScoreFill === null) return undefined
-  return Either.match(abilityScoreFill, {
-    onLeft: () => undefined,
-    onRight: (fill) => () => onFill(fill)
-  })
 }
 
 export function AbilityScoresStep({
@@ -51,7 +40,6 @@ export function AbilityScoresStep({
     abilityScoreHole == null || complete == null
       ? null
       : abilityScoresFill({ holeId: abilityScoreHole.holeId, method, scores: complete })
-  const submitAbilityScores = abilityScoreSubmitHandler(abilityScoreFill, onFill)
 
   return (
     <div className="mt-5 space-y-5">
@@ -114,8 +102,10 @@ export function AbilityScoresStep({
           </div>
           <button
             className="rounded-md border border-amber-500 px-4 py-2 text-sm text-amber-200 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-40"
-            disabled={submitAbilityScores === undefined}
-            onClick={submitAbilityScores}
+            disabled={abilityScoreFill == null || Result.isFailure(abilityScoreFill)}
+            onClick={() => {
+              if (abilityScoreFill != null && Result.isSuccess(abilityScoreFill)) onFill(abilityScoreFill.success)
+            }}
             type="button"
           >
             Submit Ability Scores

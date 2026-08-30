@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import type { JsonValue } from "./sdk-player/continuation-contract.ts";
 import { ReviewOutputSchema } from "./review-contract.ts";
@@ -216,20 +216,20 @@ export function validateReviewOutput(
   identity: ReviewIdentity,
   evidenceCatalog: ReviewEvidenceCatalog,
 ): ReviewOutputValidation {
-  const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
+  const decoded = Schema.decodeUnknownResult(ReviewOutputSchema, {
     onExcessProperty: "error",
   })(value);
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     return {
       tag: "invalid",
       reason: "invalidOutput",
-      message: `Reviewer output is invalid: ${decoded.left.message}`,
+      message: `Reviewer output is invalid: ${decoded.failure.message}`,
     };
   }
   if (
-    decoded.right.scenarioId !== identity.scenarioId ||
-    decoded.right.gitSha !== identity.gitSha ||
-    decoded.right.transcriptSha256 !== identity.transcriptSha256
+    decoded.success.scenarioId !== identity.scenarioId ||
+    decoded.success.gitSha !== identity.gitSha ||
+    decoded.success.transcriptSha256 !== identity.transcriptSha256
   ) {
     return {
       tag: "invalid",
@@ -239,7 +239,7 @@ export function validateReviewOutput(
     };
   }
   if (
-    decoded.right.verdicts.some(
+    decoded.success.verdicts.some(
       ({ evidence }) => !reviewEvidenceIsExact(evidence, evidenceCatalog),
     )
   ) {
@@ -250,7 +250,7 @@ export function validateReviewOutput(
         "Every reviewer verdict requires an exact audited sequence, setup line, character line, or transcript-header citation.",
     };
   }
-  return { tag: "valid", verdictCount: decoded.right.verdicts.length };
+  return { tag: "valid", verdictCount: decoded.success.verdicts.length };
 }
 
 function fail(message: string): never {

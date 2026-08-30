@@ -9,6 +9,7 @@ import {
   battleId,
   battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   characterBattleFeatureInitForTest,
   characterSeed,
   damageRollFill,
@@ -600,10 +601,36 @@ describe("battle runtime complexity extraction route boundaries", () => {
       }),
       "rolledDice",
     );
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      "complexity-source-penalty",
+    );
+    const allocatedSourcePenalty =
+      battleStateWithAllocatedEffectOccurrencesForTest({
+        state: secondTurn,
+        occurrences: [
+          {
+            kind: "activeEffect",
+            ownerId: goblinId,
+            effect: {
+              kind: "sourceDamageRollPenalty",
+              sourceProcedureRef,
+              sourceCombatantId: wizardId,
+              amount: { dice: 1, dieSize: 8 },
+              expiresAt: { kind: "concentration", combatantId: wizardId },
+            },
+          },
+        ],
+      });
+    const sourcePenaltyOccurrence = allocatedSourcePenalty.occurrences[0];
+    if (
+      sourcePenaltyOccurrence?.kind !== "activeEffect" ||
+      sourcePenaltyOccurrence.effect.kind !== "sourceDamageRollPenalty"
+    ) {
+      throw new Error("Expected allocated source damage roll penalty.");
+    }
     const sourcePenalty = sourceDamageRollPenaltyRollHole({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "complexity-source-penalty",
-      ),
+      effectRef: sourcePenaltyOccurrence.effect.effectRef,
+      sourceProcedureRef,
       sourceCombatantId: wizardId,
       affectedCombatantId: goblinId,
       damageRollHoleId: damage.holeId,

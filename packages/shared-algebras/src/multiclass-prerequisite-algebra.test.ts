@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
@@ -31,29 +31,29 @@ function scores(
     cha: 10,
     ...overrides,
   });
-  if (Either.isLeft(result)) {
-    throw new Error(`Invalid test scores: ${result.left[0].tag}`);
+  if (Result.isFailure(result)) {
+    throw new Error(`Invalid test scores: ${result.failure[0].tag}`);
   }
-  return result.right;
+  return result.success;
 }
 
 function classChange(
   input: Parameters<typeof multiclassClassChange>[0],
 ): MulticlassClassChange {
   const result = multiclassClassChange(input);
-  if (Either.isLeft(result)) {
-    throw new Error(`Invalid test class change: ${result.left.tag}`);
+  if (Result.isFailure(result)) {
+    throw new Error(`Invalid test class change: ${result.failure.tag}`);
   }
-  return result.right;
+  return result.success;
 }
 
 function prerequisiteTable(): MulticlassPrerequisiteTable {
-  if (Either.isLeft(MULTICLASS_PREREQUISITES)) {
+  if (Result.isFailure(MULTICLASS_PREREQUISITES)) {
     throw new Error(
-      `Invalid SRD multiclass prerequisite table: ${MULTICLASS_PREREQUISITES.left[0].tag}`,
+      `Invalid SRD multiclass prerequisite table: ${MULTICLASS_PREREQUISITES.failure[0].tag}`,
     );
   }
-  return MULTICLASS_PREREQUISITES.right;
+  return MULTICLASS_PREREQUISITES.success;
 }
 
 function meets(
@@ -61,12 +61,12 @@ function meets(
   className: Parameters<typeof meetsMulticlassPrerequisite>[1],
 ): boolean {
   const result = meetsMulticlassPrerequisite(scoreAssignment, className);
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Invalid multiclass prerequisite lookup: ${result.left[0].tag}`,
+      `Invalid multiclass prerequisite lookup: ${result.failure[0].tag}`,
     );
   }
-  return result.right;
+  return result.success;
 }
 
 function canAddClass(
@@ -74,12 +74,12 @@ function canAddClass(
   change: MulticlassClassChange,
 ): boolean {
   const result = canMulticlass(scoreAssignment, change);
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Invalid multiclass prerequisite lookup: ${result.left[0].tag}`,
+      `Invalid multiclass prerequisite lookup: ${result.failure[0].tag}`,
     );
   }
-  return result.right;
+  return result.success;
 }
 
 describe("multiclass-prerequisite-algebra", () => {
@@ -104,9 +104,9 @@ describe("multiclass-prerequisite-algebra", () => {
   it("reports missing SRD class containers as typed table issues", () => {
     const result = multiclassPrerequisitesFromSrdClassContainers([]);
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toContainEqual({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toContainEqual({
       tag: "missingSrdClassContainer",
       className: "barbarian",
     });
@@ -125,9 +125,9 @@ describe("multiclass-prerequisite-algebra", () => {
       barbarian,
     ]);
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) return;
-    expect(result.left).toContainEqual({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toContainEqual({
       tag: "duplicateSrdClassContainer",
       className: "barbarian",
     });
@@ -294,14 +294,14 @@ describe("multiclass-prerequisite-algebra", () => {
         currentClasses: [],
         newClass: "fighter",
       }),
-    ).toEqual(Either.left({ tag: "missingCurrentClass" }));
+    ).toEqual(Result.fail({ tag: "missingCurrentClass" }));
     expect(
       multiclassClassChange({
         currentClasses: ["fighter", "fighter"],
         newClass: "wizard",
       }),
     ).toEqual(
-      Either.left({ tag: "duplicateCurrentClass", className: "fighter" }),
+      Result.fail({ tag: "duplicateCurrentClass", className: "fighter" }),
     );
     expect(
       multiclassClassChange({
@@ -309,7 +309,7 @@ describe("multiclass-prerequisite-algebra", () => {
         newClass: "fighter",
       }),
     ).toEqual(
-      Either.left({ tag: "newClassAlreadyCurrent", className: "fighter" }),
+      Result.fail({ tag: "newClassAlreadyCurrent", className: "fighter" }),
     );
   });
 

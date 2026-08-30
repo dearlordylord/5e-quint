@@ -3,6 +3,7 @@ import type {
   BattleActDiscoveryCandidate,
   AdmittedBattleResolutionInput,
   BattleFill,
+  BattleHandledInterruptOccurrence,
   BattleInterruptedProcedure,
   BattleResolutionInput,
   BattleResolutionResult,
@@ -25,16 +26,16 @@ import {
 import {
   openCreatureFallsInterruptWindow as openCreatureFallsInterruptWindowStateOnly,
   resolveFallDamageLanding as resolveFallDamageLandingStateOnly,
-  resolveFeatherFallLanding as resolveFeatherFallLandingStateOnly,
+  resolveFallingCreatureMitigationLanding as resolveFallingCreatureMitigationLandingStateOnly,
   resolveFlySpeedGrantEndFallCleanup as resolveFlySpeedGrantEndFallCleanupStateOnly,
 } from "./battle-reducer/environmental-fall-procedures.ts";
 import {
-  FindFamiliarProcedureExecution,
-  resolveAdmittedFindFamiliarReappearanceSubject as resolveAdmittedFindFamiliarReappearanceSubjectStateOnly,
-  resolveFindFamiliarTouchSpellSubject,
-  shareFindFamiliarSenses as shareFindFamiliarSensesStateOnly,
-} from "./battle-reducer/find-familiar-procedures.ts";
-import { findFamiliarConnectionHole } from "./find-familiar-companion-subjects.ts";
+  CompanionLifecycleProcedureExecution,
+  resolveAdmittedCompanionReappearanceSubject as resolveAdmittedCompanionReappearanceSubjectStateOnly,
+  resolveSpawnedCompanionTouchSpellSubject,
+  shareSpawnedCompanionSenses as shareSpawnedCompanionSensesStateOnly,
+} from "./battle-reducer/companion-lifecycle-procedures.ts";
+import { spawnedCompanionConnectionHole } from "./companion-subjects.ts";
 import {
   ReplayContinuationExecution,
   resolveReplayContinuationFromState as resolveReplayContinuationFromStateWithRegistry,
@@ -46,11 +47,11 @@ import {
   battleSnapshotProjection as battleSnapshotProjectionFromState,
   snapshotBattle as snapshotBattleFromState,
 } from "./battle-reducer/battle-snapshot.ts";
-import type { FindFamiliarWithin100FeetFact } from "./find-familiar-telepathy.ts";
+import type { SpawnedCompanionWithin100FeetFact } from "./companion-communication.ts";
 import type { CombatantId } from "./identity.ts";
 import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import { resolveMonkFocusFlurryOfBlowsStrike } from "./battle-reducer/monk-flurry-attack.ts";
-import { resolvePactOfTheChainFamiliarReactionAttack } from "./find-familiar-pact-chain.ts";
+import { resolvePactOfTheChainFamiliarReactionAttack } from "./companion-reaction-attack.ts";
 import type { BattleAttackRouteResolvers } from "./battle-reducer/attack-resolvers.ts";
 
 const BATTLE_ATTACK_ROUTE_RESOLVERS = {
@@ -72,7 +73,9 @@ export function resolveAdmittedBattleSubject(
       BATTLE_ATTACK_ROUTE_RESOLVERS,
       options,
     ),
-    options.handledInterruptTrigger,
+    "handledInterruptTrigger" in options
+      ? options.handledInterruptTrigger
+      : undefined,
   );
 }
 
@@ -91,14 +94,14 @@ export function resolveBattleInterrupt(input: {
   );
 }
 
-export function resolveAdmittedFindFamiliarReappearanceSubject(
+export function resolveAdmittedCompanionReappearanceSubject(
   input: Parameters<
-    typeof resolveAdmittedFindFamiliarReappearanceSubjectStateOnly
+    typeof resolveAdmittedCompanionReappearanceSubjectStateOnly
   >[0],
 ): BattleResolutionResult {
   return battleResolutionWithExecutionSnapshot(
     input.admission.state,
-    resolveAdmittedFindFamiliarReappearanceSubjectStateOnly(input),
+    resolveAdmittedCompanionReappearanceSubjectStateOnly(input),
   );
 }
 
@@ -143,29 +146,30 @@ export function endTurn(input: {
   );
 }
 
-export function deliverTouchSpellThroughFindFamiliar(input: {
+export function deliverTouchSpellThroughSpawnedCompanion(input: {
   readonly state: BattleState;
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "actionSpell" | "bonusActionSpell" }
   >;
   readonly fills: BattleResolutionInput["fills"];
-  readonly fact: FindFamiliarWithin100FeetFact;
+  readonly fact: SpawnedCompanionWithin100FeetFact;
 }): BattleResolutionResult {
   const executionRegistry = spellProcedureExecutionRegistry();
   if (input.subject.mode.tag !== "cast") {
     return {
       tag: "invalid",
       reason: "unsupportedActOption",
-      message: "Find Familiar touch delivery requires an immediate spell cast.",
+      message:
+        "Spawned companion touch delivery requires an immediate spell cast.",
       snapshot: snapshotBattleFromState(input.state),
     };
   }
   const subject: Extract<
     BattleSubject,
-    { readonly tag: "findFamiliarTouchSpell" }
+    { readonly tag: "spawnedCompanionTouchSpellProxy" }
   > = {
-    tag: "findFamiliarTouchSpell",
+    tag: "spawnedCompanionTouchSpellProxy",
     actorId: input.subject.actorId,
     procedureRef: input.subject.procedureRef,
     companionId: input.fact.familiarId,
@@ -173,26 +177,26 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
     mode: input.subject.mode,
     ...optionalProperty("metamagic", input.subject.metamagic),
   };
-  const connectionHole = findFamiliarConnectionHole({
+  const connectionHole = spawnedCompanionConnectionHole({
     ownerId: input.fact.ownerId,
     companionId: input.fact.familiarId,
   });
   return battleResolutionWithExecutionSnapshot(
     input.state,
-    resolveFindFamiliarTouchSpellSubject(
+    resolveSpawnedCompanionTouchSpellSubject(
       {
         state: input.state,
         subject,
         fills: [
           {
-            kind: "findFamiliarConnection",
+            kind: "spawnedCompanionConnection",
             holeId: connectionHole.holeId,
             value: { withinRange: true },
           },
           ...input.fills,
         ],
       },
-      FindFamiliarProcedureExecution.fromResolver((admitted) =>
+      CompanionLifecycleProcedureExecution.fromResolver((admitted) =>
         resolveAdmittedBattleSubjectWithRegistry(
           admitted,
           executionRegistry,
@@ -204,12 +208,12 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
   );
 }
 
-export function shareFindFamiliarSenses(
-  input: Parameters<typeof shareFindFamiliarSensesStateOnly>[0],
+export function shareSpawnedCompanionSenses(
+  input: Parameters<typeof shareSpawnedCompanionSensesStateOnly>[0],
 ): BattleResolutionResult {
   return battleResolutionWithExecutionSnapshot(
     input.state,
-    shareFindFamiliarSensesStateOnly(input),
+    shareSpawnedCompanionSensesStateOnly(input),
   );
 }
 
@@ -222,10 +226,12 @@ export function openCreatureFallsInterruptWindow(
   );
 }
 
-export function resolveFeatherFallLanding(
-  input: Parameters<typeof resolveFeatherFallLandingStateOnly>[0],
-): ReturnType<typeof resolveFeatherFallLandingStateOnly> {
-  return resultWithExecutionSnapshot(resolveFeatherFallLandingStateOnly(input));
+export function resolveFallingCreatureMitigationLanding(
+  input: Parameters<typeof resolveFallingCreatureMitigationLandingStateOnly>[0],
+): ReturnType<typeof resolveFallingCreatureMitigationLandingStateOnly> {
+  return resultWithExecutionSnapshot(
+    resolveFallingCreatureMitigationLandingStateOnly(input),
+  );
 }
 
 export function resolveFallDamageLanding(
@@ -248,7 +254,7 @@ export function resolveReplayContinuationFromState(
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >,
-  handledInterruptTrigger: BattleInterruptTrigger,
+  handledInterruptOccurrence: BattleHandledInterruptOccurrence,
   fills: readonly BattleFill[],
 ): BattleResolutionResult {
   const executionRegistry = spellProcedureExecutionRegistry();
@@ -257,7 +263,7 @@ export function resolveReplayContinuationFromState(
     resolveReplayContinuationFromStateWithRegistry({
       state,
       continuation,
-      handledInterruptTrigger,
+      handledInterruptOccurrence,
       fills,
       execution: replayContinuationExecution(executionRegistry),
     }),

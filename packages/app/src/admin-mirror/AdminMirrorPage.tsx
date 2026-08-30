@@ -1,61 +1,79 @@
 import {
   type AdminMirrorPresentationTimelineEntry,
-  type AdminMirrorSessionListResponse,
-  AdminMirrorSessionListResponseSchema,
-  type AdminMirrorSessionState,
-  AdminMirrorSessionStateSchema
+  type AdminMirrorSessionState
 } from "@dnd/mcp/experimental-admin-mirror-contract"
-import { Either, Schema } from "effect"
+import { Match, Result } from "effect"
 import { parseAsString, useQueryState } from "nuqs"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react"
 
 import { PageShell } from "#/components/PageShell.tsx"
 import { BTN_SM } from "#/components/styles.ts"
 
-const DEFAULT_MIRROR_PORT = 8787
+import {
+  decodeMirrorSessionEvent,
+  defaultAdminMirrorOrigin,
+  loadMirrorSessions,
+  type MirrorSessionLoadState
+} from "./admin-mirror-session-boundary.ts"
+import {
+  makeInitialMirrorSessionCollectionState,
+  makeMirrorSessionLoadRequestId,
+  mirrorSessionCollectionLoadState,
+  mirrorSessionCollectionSessions,
+  reduceMirrorSessionCollection
+} from "./admin-mirror-session-collection.ts"
+import { type MirrorStreamStatus, mirrorStreamStatusPresentation } from "./admin-mirror-stream-status.ts"
+
 const EVENT_JSON_INDENT_SPACES = 2
 const SELECTED_SESSION_QUERY_PARAM = "session"
 
 export function AdminMirrorPage() {
-  const mirrorUrl = useMemo(defaultMirrorUrl, [])
-  const [sessions, setSessions] = useState<ReadonlyArray<AdminMirrorSessionState>>([])
+  const mirrorOrigin = useMemo(defaultAdminMirrorOrigin, [])
+  const [sessionCollection, dispatchSessionCollection] = useReducer(
+    reduceMirrorSessionCollection,
+    mirrorOrigin,
+    makeInitialMirrorSessionCollectionState
+  )
+  const sessions = mirrorSessionCollectionSessions(sessionCollection)
+  const sessionLoadState = mirrorSessionCollectionLoadState(sessionCollection)
   const [selectedSessionId, setSelectedSessionId] = useQueryState(
     SELECTED_SESSION_QUERY_PARAM,
     parseAsString.withOptions({ history: "replace" })
   )
-  const [connection, setConnection] = useState<"connecting" | "offline" | "streaming">("connecting")
+  const [streamStatus, setStreamStatus] = useState<MirrorStreamStatus>(() =>
+    Result.isFailure(mirrorOrigin) ? { tag: "configurationInvalid" } : { tag: "connecting" }
+  )
 
   const refresh = useCallback(async () => {
-    try {
-      const response = await fetch(`${mirrorUrl}/admin-projections`)
-      if (!response.ok) throw new Error(`Mirror returned ${response.status}`)
-      const decoded = decodeMirrorSessionResponse(await response.json())
-      if (Either.isLeft(decoded)) throw new Error(decoded.left)
-      const payload = decoded.right
-      setSessions(payload.sessions)
-      setConnection((current) => (current === "streaming" ? current : "offline"))
-    } catch {
-      setConnection("offline")
+    if (Result.isFailure(mirrorOrigin)) return
+    const requestId = makeMirrorSessionLoadRequestId()
+    dispatchSessionCollection({ tag: "loadStarted", requestId })
+    const loaded = await loadMirrorSessions(mirrorOrigin.success)
+    if (Result.isFailure(loaded)) {
+      dispatchSessionCollection({ tag: "loadFailed", issue: loaded.failure, requestId })
+      return
     }
-  }, [mirrorUrl])
+    dispatchSessionCollection({ tag: "loadSucceeded", requestId, sessions: loaded.success.sessions })
+  }, [mirrorOrigin])
 
   useEffect(() => {
     void refresh()
   }, [refresh])
 
   useEffect(() => {
-    setConnection("connecting")
-    const source = new EventSource(`${mirrorUrl}/admin-projections/events`)
-    const handleOpen = () => setConnection("streaming")
-    const handleError = () => setConnection("offline")
+    if (Result.isFailure(mirrorOrigin)) return
+    const source = new EventSource(new URL("/admin-projections/events", mirrorOrigin.success))
+    const handleOpen = () => setStreamStatus({ tag: "streaming" })
+    const handleError = () => setStreamStatus({ tag: "transportFailure" })
     const handleMessage = (event: MessageEvent<string>) => {
       const decoded = decodeMirrorSessionEvent(event.data)
-      if (Either.isLeft(decoded)) {
-        setConnection("offline")
+      if (Result.isFailure(decoded)) {
+        setStreamStatus({ tag: "invalidEvent" })
         return
       }
-      const session = decoded.right
-      setSessions((current) => upsertSession(current, session))
+      const session = decoded.success
+      dispatchSessionCollection({ tag: "streamSessionReceived", session })
+      setStreamStatus({ tag: "streaming" })
     }
     source.addEventListener("open", handleOpen)
     source.addEventListener("error", handleError)
@@ -66,10 +84,11 @@ export function AdminMirrorPage() {
       source.removeEventListener("message", handleMessage)
       source.close()
     }
-  }, [mirrorUrl])
+  }, [mirrorOrigin])
 
   const selectedSession = selectMirrorSession(sessions, selectedSessionId)
   const visibleSelectedSessionId = selectedSession?.envelope.mirrorSessionId ?? null
+  const streamStatusPresentation = mirrorStreamStatusPresentation(streamStatus)
 
   useEffect(() => {
     if (visibleSelectedSessionId !== null && selectedSessionId !== visibleSelectedSessionId)
@@ -81,7 +100,7 @@ export function AdminMirrorPage() {
       title="MCP Admin Mirror"
       actions={
         <div className="flex items-center gap-2 text-xs text-gray-400">
-          <span className={connectionClass(connection)}>{connection}</span>
+          <span className={streamStatusPresentation.className}>{streamStatusPresentation.label}</span>
           <button className={BTN_SM} onClick={() => void refresh()} type="button">
             Refresh
           </button>
@@ -92,41 +111,48 @@ export function AdminMirrorPage() {
         <aside className="rounded-lg border border-gray-800 bg-gray-900/80 p-3">
           <h2 className="mb-3 text-sm font-semibold text-gray-200">Sessions</h2>
           {sessions.length === 0 ? (
-            <p className="text-sm text-gray-500">No mirror sessions.</p>
+            <p className="text-sm text-gray-500">{emptyMirrorSessionCollectionMessage(sessionLoadState)}</p>
           ) : (
-            <ol className="space-y-2">
-              {sessions.map((session) => {
-                const selected = session.envelope.mirrorSessionId === visibleSelectedSessionId
-                return (
-                  <li key={session.envelope.mirrorSessionId}>
-                    <button
-                      className={`w-full rounded-md border px-3 py-2 text-left text-sm ${
-                        selected
-                          ? "border-amber-400 bg-amber-400/10 text-amber-100"
-                          : "border-gray-800 bg-black/20 text-gray-300 hover:border-gray-700"
-                      }`}
-                      onClick={() => void setSelectedSessionId(session.envelope.mirrorSessionId)}
-                      type="button"
-                    >
-                      <span className="block truncate font-medium">{session.envelope.mirrorSessionId}</span>
-                      <span className="mt-1 block text-xs text-gray-500">
-                        seq {session.envelope.sequence} · pid {session.envelope.sourceProcessId}
-                      </span>
-                      {session.multiSource ? (
-                        <span className="mt-1 block text-xs text-amber-300">multiple publishers</span>
-                      ) : null}
-                    </button>
-                  </li>
-                )
-              })}
-            </ol>
+            <>
+              {sessionLoadState.tag === "loaded" ? null : (
+                <p className="mb-2 text-xs text-amber-300">
+                  {mirrorSessionLoadMessage(sessionLoadState, () => "Mirror sessions loaded.")}
+                </p>
+              )}
+              <ol className="space-y-2">
+                {sessions.map((session) => {
+                  const selected = session.envelope.mirrorSessionId === visibleSelectedSessionId
+                  return (
+                    <li key={session.envelope.mirrorSessionId}>
+                      <button
+                        className={`w-full rounded-md border px-3 py-2 text-left text-sm ${
+                          selected
+                            ? "border-amber-400 bg-amber-400/10 text-amber-100"
+                            : "border-gray-800 bg-black/20 text-gray-300 hover:border-gray-700"
+                        }`}
+                        onClick={() => void setSelectedSessionId(session.envelope.mirrorSessionId)}
+                        type="button"
+                      >
+                        <span className="block truncate font-medium">{session.envelope.mirrorSessionId}</span>
+                        <span className="mt-1 block text-xs text-gray-500">
+                          seq {session.envelope.sequence} · pid {session.envelope.sourceProcessId}
+                        </span>
+                        {session.multiSource ? (
+                          <span className="mt-1 block text-xs text-amber-300">multiple publishers</span>
+                        ) : null}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ol>
+            </>
           )}
         </aside>
 
         <section className="space-y-4">
           {selectedSession === null ? (
             <div className="rounded-lg border border-gray-800 bg-gray-900/80 p-6 text-center text-gray-500">
-              {selectedSessionId === null ? "No session selected." : `Session ${selectedSessionId} is not retained.`}
+              {missingMirrorSessionMessage(sessionLoadState, selectedSessionId)}
             </div>
           ) : (
             <SessionDetail session={selectedSession} />
@@ -134,6 +160,27 @@ export function AdminMirrorPage() {
         </section>
       </main>
     </PageShell>
+  )
+}
+
+function emptyMirrorSessionCollectionMessage(state: MirrorSessionLoadState): string {
+  return mirrorSessionLoadMessage(state, () => "No mirror sessions.")
+}
+
+function missingMirrorSessionMessage(state: MirrorSessionLoadState, selectedSessionId: string | null): string {
+  return mirrorSessionLoadMessage(state, () =>
+    selectedSessionId === null ? "No session selected." : `Session ${selectedSessionId} is not retained.`
+  )
+}
+
+function mirrorSessionLoadMessage(state: MirrorSessionLoadState, loadedMessage: () => string): string {
+  return Match.value(state).pipe(
+    Match.when({ tag: "loading" }, () => "Loading mirror sessions."),
+    Match.when({ tag: "loaded" }, loadedMessage),
+    Match.when({ tag: "invalidConfiguration" }, () => "Mirror session configuration is invalid."),
+    Match.when({ tag: "invalidResponse" }, () => "Mirror session response is invalid."),
+    Match.when({ tag: "unavailable" }, () => "Mirror sessions are unavailable."),
+    Match.exhaustive
   )
 }
 
@@ -355,16 +402,6 @@ function hpChangeTitle(change: AdminMirrorPresentationTimelineEntry["hpChanges"]
   return `${change.displayName} HP changed`
 }
 
-function upsertSession(
-  sessions: ReadonlyArray<AdminMirrorSessionState>,
-  session: AdminMirrorSessionState
-): ReadonlyArray<AdminMirrorSessionState> {
-  return [
-    session,
-    ...sessions.filter((current) => current.envelope.mirrorSessionId !== session.envelope.mirrorSessionId)
-  ]
-}
-
 export function selectMirrorSession(
   sessions: ReadonlyArray<AdminMirrorSessionState>,
   selectedSessionId: string | null
@@ -374,34 +411,4 @@ export function selectMirrorSession(
     return sessions.find((session) => session.envelope.mirrorSessionId === selectedSessionId) ?? null
   }
   return sessions[0] ?? null
-}
-
-export function decodeMirrorSessionResponse(value: unknown): Either.Either<AdminMirrorSessionListResponse, string> {
-  const decoded = Schema.decodeUnknownEither(AdminMirrorSessionListResponseSchema)(value)
-  return Either.mapLeft(decoded, (error) => error.message)
-}
-
-export function decodeMirrorSessionEvent(value: string): Either.Either<AdminMirrorSessionState, string> {
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(value)
-  } catch {
-    return Either.left("Expected JSON mirror session event.")
-  }
-  const decoded = Schema.decodeUnknownEither(AdminMirrorSessionStateSchema)(parsed)
-  return Either.mapLeft(decoded, (error) => error.message)
-}
-
-function defaultMirrorUrl(): string {
-  const configured = import.meta.env.VITE_ADMIN_MIRROR_URL
-  if (configured !== undefined && configured.length > 0) return configured
-  /* v8 ignore next -- @preserve -- this browser page only constructs its default URL while rendering in a browser */
-  if (typeof window === "undefined") return `http://localhost:${DEFAULT_MIRROR_PORT}`
-  return `${window.location.protocol}//${window.location.hostname}:${DEFAULT_MIRROR_PORT}`
-}
-
-function connectionClass(connection: "connecting" | "offline" | "streaming"): string {
-  if (connection === "streaming") return "text-emerald-300"
-  if (connection === "connecting") return "text-amber-300"
-  return "text-rose-300"
 }

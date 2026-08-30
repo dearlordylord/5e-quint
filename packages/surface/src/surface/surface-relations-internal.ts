@@ -1,5 +1,5 @@
 import * as AST from "effect/SchemaAST";
-import { Either, Match, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
   readSurfaceSchemaRole,
@@ -157,7 +157,7 @@ const decodeSurfaceAuthoredRelation = (input: {
   readonly fieldPath: string;
   readonly issuePath: string;
   readonly targetRecordId: unknown;
-}): Either.Either<SurfaceAuthoredRelation, SurfaceRelationTraversalIssue> => {
+}): Result.Result<SurfaceAuthoredRelation, SurfaceRelationTraversalIssue> => {
   const shared = {
     sourceRecordName: input.record.value.name,
     fieldPath: input.fieldPath,
@@ -166,92 +166,92 @@ const decodeSurfaceAuthoredRelation = (input: {
     Match.when({ sourceKind: "unit" }, ({ value }) =>
       Match.value(input.role).pipe(
         Match.when({ targetKind: "unit", category: "reference" }, (role) => {
-          const targetRecordId = Schema.decodeUnknownEither(UnitId)(
+          const targetRecordId = Schema.decodeUnknownResult(UnitId)(
             input.targetRecordId,
           );
-          return Either.isLeft(targetRecordId)
-            ? Either.left(
+          return Result.isFailure(targetRecordId)
+            ? Result.fail(
                 invalidRelationTargetIssue({
                   role,
                   path: input.issuePath,
                 }),
               )
-            : Either.right({
+            : Result.succeed({
                 ...shared,
                 sourceKind: "unit" as const,
                 sourceRecordId: value.id,
                 relationKind: role.category,
                 relation: role.relation,
                 targetKind: "unit" as const,
-                targetRecordId: targetRecordId.right,
+                targetRecordId: targetRecordId.success,
               });
         }),
         Match.when({ targetKind: "unit", category: "dependency" }, (role) => {
-          const targetRecordId = Schema.decodeUnknownEither(UnitId)(
+          const targetRecordId = Schema.decodeUnknownResult(UnitId)(
             input.targetRecordId,
           );
-          return Either.isLeft(targetRecordId)
-            ? Either.left(
+          return Result.isFailure(targetRecordId)
+            ? Result.fail(
                 invalidRelationTargetIssue({
                   role,
                   path: input.issuePath,
                 }),
               )
-            : Either.right({
+            : Result.succeed({
                 ...shared,
                 sourceKind: "unit" as const,
                 sourceRecordId: value.id,
                 relationKind: role.category,
                 relation: role.relation,
                 targetKind: "unit" as const,
-                targetRecordId: targetRecordId.right,
+                targetRecordId: targetRecordId.success,
               });
         }),
         Match.when(
           { targetKind: "statBlock", category: "reference" },
           (role) => {
-            const targetRecordId = Schema.decodeUnknownEither(StatBlockId)(
+            const targetRecordId = Schema.decodeUnknownResult(StatBlockId)(
               input.targetRecordId,
             );
-            return Either.isLeft(targetRecordId)
-              ? Either.left(
+            return Result.isFailure(targetRecordId)
+              ? Result.fail(
                   invalidRelationTargetIssue({
                     role,
                     path: input.issuePath,
                   }),
                 )
-              : Either.right({
+              : Result.succeed({
                   ...shared,
                   sourceKind: "unit" as const,
                   sourceRecordId: value.id,
                   relationKind: role.category,
                   relation: role.relation,
                   targetKind: "statBlock" as const,
-                  targetRecordId: targetRecordId.right,
+                  targetRecordId: targetRecordId.success,
                 });
           },
         ),
         Match.when(
           { targetKind: "statBlock", category: "dependency" },
           (role) => {
-            const targetRecordId = Schema.decodeUnknownEither(StatBlockId)(
+            const targetRecordId = Schema.decodeUnknownResult(StatBlockId)(
               input.targetRecordId,
             );
-            return Either.isLeft(targetRecordId)
-              ? Either.left(
+            return Result.isFailure(targetRecordId)
+              ? Result.fail(
                   invalidRelationTargetIssue({
                     role,
                     path: input.issuePath,
                   }),
                 )
-              : Either.right({
+              : Result.succeed({
                   ...shared,
                   sourceKind: "unit" as const,
                   sourceRecordId: value.id,
                   relationKind: role.category,
                   relation: role.relation,
                   targetKind: "statBlock" as const,
-                  targetRecordId: targetRecordId.right,
+                  targetRecordId: targetRecordId.success,
                 });
           },
         ),
@@ -261,92 +261,92 @@ const decodeSurfaceAuthoredRelation = (input: {
     Match.when({ sourceKind: "statBlock" }, ({ value }) =>
       Match.value(input.role).pipe(
         Match.when({ targetKind: "unit", category: "reference" }, (role) => {
-          const targetRecordId = Schema.decodeUnknownEither(UnitId)(
+          const targetRecordId = Schema.decodeUnknownResult(UnitId)(
             input.targetRecordId,
           );
-          return Either.isLeft(targetRecordId)
-            ? Either.left(
+          return Result.isFailure(targetRecordId)
+            ? Result.fail(
                 invalidRelationTargetIssue({
                   role,
                   path: input.issuePath,
                 }),
               )
-            : Either.right({
+            : Result.succeed({
                 ...shared,
                 sourceKind: "statBlock" as const,
                 sourceRecordId: value.id,
                 relationKind: role.category,
                 relation: role.relation,
                 targetKind: "unit" as const,
-                targetRecordId: targetRecordId.right,
+                targetRecordId: targetRecordId.success,
               });
         }),
         Match.when({ targetKind: "unit", category: "dependency" }, (role) => {
-          const targetRecordId = Schema.decodeUnknownEither(UnitId)(
+          const targetRecordId = Schema.decodeUnknownResult(UnitId)(
             input.targetRecordId,
           );
-          return Either.isLeft(targetRecordId)
-            ? Either.left(
+          return Result.isFailure(targetRecordId)
+            ? Result.fail(
                 invalidRelationTargetIssue({
                   role,
                   path: input.issuePath,
                 }),
               )
-            : Either.right({
+            : Result.succeed({
                 ...shared,
                 sourceKind: "statBlock" as const,
                 sourceRecordId: value.id,
                 relationKind: role.category,
                 relation: role.relation,
                 targetKind: "unit" as const,
-                targetRecordId: targetRecordId.right,
+                targetRecordId: targetRecordId.success,
               });
         }),
         Match.when(
           { targetKind: "statBlock", category: "reference" },
           (role) => {
-            const targetRecordId = Schema.decodeUnknownEither(StatBlockId)(
+            const targetRecordId = Schema.decodeUnknownResult(StatBlockId)(
               input.targetRecordId,
             );
-            return Either.isLeft(targetRecordId)
-              ? Either.left(
+            return Result.isFailure(targetRecordId)
+              ? Result.fail(
                   invalidRelationTargetIssue({
                     role,
                     path: input.issuePath,
                   }),
                 )
-              : Either.right({
+              : Result.succeed({
                   ...shared,
                   sourceKind: "statBlock" as const,
                   sourceRecordId: value.id,
                   relationKind: role.category,
                   relation: role.relation,
                   targetKind: "statBlock" as const,
-                  targetRecordId: targetRecordId.right,
+                  targetRecordId: targetRecordId.success,
                 });
           },
         ),
         Match.when(
           { targetKind: "statBlock", category: "dependency" },
           (role) => {
-            const targetRecordId = Schema.decodeUnknownEither(StatBlockId)(
+            const targetRecordId = Schema.decodeUnknownResult(StatBlockId)(
               input.targetRecordId,
             );
-            return Either.isLeft(targetRecordId)
-              ? Either.left(
+            return Result.isFailure(targetRecordId)
+              ? Result.fail(
                   invalidRelationTargetIssue({
                     role,
                     path: input.issuePath,
                   }),
                 )
-              : Either.right({
+              : Result.succeed({
                   ...shared,
                   sourceKind: "statBlock" as const,
                   sourceRecordId: value.id,
                   relationKind: role.category,
                   relation: role.relation,
                   targetKind: "statBlock" as const,
-                  targetRecordId: targetRecordId.right,
+                  targetRecordId: targetRecordId.success,
                 });
           },
         ),
@@ -378,17 +378,13 @@ const roleEqual = (
 ): boolean => surfaceSchemaRolesEqual(left, right);
 
 const structuralAst = (ast: AST.AST): AST.AST => {
-  let current = ast;
-  while (current._tag === "Transformation" || current._tag === "Refinement") {
-    current = current._tag === "Transformation" ? current.to : current.from;
-  }
-  return current;
+  return ast;
 };
 
 const isStringLikeAst = (ast: AST.AST): boolean => {
   const current = structuralAst(ast);
   return (
-    current._tag === "StringKeyword" ||
+    current._tag === "String" ||
     (current._tag === "Literal" && typeof current.literal === "string")
   );
 };
@@ -419,26 +415,26 @@ const primitiveBranchMayContainValue = (
   value: unknown,
 ): boolean | undefined => {
   if (ast._tag === "Literal") return value === ast.literal;
-  if (ast._tag === "StringKeyword") return typeof value === "string";
-  if (ast._tag === "NumberKeyword") return typeof value === "number";
-  if (ast._tag === "BooleanKeyword") return typeof value === "boolean";
+  if (ast._tag === "String") return typeof value === "string";
+  if (ast._tag === "Number") return typeof value === "number";
+  if (ast._tag === "Boolean") return typeof value === "boolean";
   return undefined;
 };
 
 const branchMayContainValue = (ast: AST.AST, value: unknown): boolean => {
   const current = structuralAst(ast);
   if (current._tag === "Suspend") {
-    return branchMayContainValue(current.f(), value);
+    return branchMayContainValue(current.thunk(), value);
   }
   if (current._tag === "Union") {
     return current.types.some((member) => branchMayContainValue(member, value));
   }
   const primitiveResult = primitiveBranchMayContainValue(current, value);
   if (primitiveResult !== undefined) return primitiveResult;
-  if (current._tag === "TupleType") {
+  if (current._tag === "Arrays") {
     return tupleBranchMayContainValue(current, value);
   }
-  if (current._tag === "TypeLiteral") {
+  if (current._tag === "Objects") {
     return typeLiteralBranchMayContainValue(current, value);
   }
   return true;
@@ -453,11 +449,13 @@ const unionBranchesForValue = (
 };
 
 const tupleBranchMayContainValue = (
-  ast: AST.TupleType,
+  ast: AST.Arrays,
   value: unknown,
 ): boolean => {
   if (!Array.isArray(value)) return false;
-  const required = ast.elements.filter((element) => !element.isOptional).length;
+  const required = ast.elements.filter(
+    (element) => !AST.isOptional(element),
+  ).length;
   return (
     value.length >= required &&
     (ast.rest.length > 0 || value.length <= ast.elements.length)
@@ -469,7 +467,7 @@ const typeLiteralPropertyMayContainValue = (
   value: ObjectLike,
 ): boolean => {
   if (!Object.prototype.hasOwnProperty.call(value, property.name)) {
-    return property.isOptional;
+    return AST.isOptional(property.type);
   }
   const propertyValue = value[String(property.name)];
   const values = literalValues(property.type);
@@ -480,7 +478,7 @@ const typeLiteralPropertyMayContainValue = (
 };
 
 const typeLiteralBranchMayContainValue = (
-  ast: AST.TypeLiteral,
+  ast: AST.Objects,
   value: unknown,
 ): boolean =>
   isObjectLike(value) &&
@@ -495,24 +493,30 @@ type AstChild = {
 };
 
 const tupleElementForIndex = (
-  ast: AST.TupleType,
+  ast: AST.Arrays,
   index: number,
-): AST.Type | undefined => {
+  valueLength: number,
+): AST.AST | undefined => {
   if (index < ast.elements.length) return ast.elements[index];
-  return ast.rest[Math.min(index - ast.elements.length, ast.rest.length - 1)];
+  if (ast.rest.length === 0) return undefined;
+  const postRestCount = ast.rest.length - 1;
+  const postRestStart = valueLength - postRestCount;
+  return index < postRestStart
+    ? ast.rest[0]
+    : ast.rest[1 + index - postRestStart];
 };
 
 const tupleAstChildren = (
-  ast: AST.TupleType,
+  ast: AST.Arrays,
   value: unknown,
 ): readonly AstChild[] => {
   if (!Array.isArray(value)) return [];
   const children: AstChild[] = [];
   for (let index = 0; index < value.length; index += 1) {
-    const element = tupleElementForIndex(ast, index);
+    const element = tupleElementForIndex(ast, index, value.length);
     if (element !== undefined) {
       children.push({
-        ast: element.type ?? element,
+        ast: element,
         value: value[index],
         path: `[${index}]`,
       });
@@ -522,7 +526,7 @@ const tupleAstChildren = (
 };
 
 const typeLiteralAstChildren = (
-  ast: AST.TypeLiteral,
+  ast: AST.Objects,
   value: unknown,
 ): readonly AstChild[] => {
   if (!isObjectLike(value)) return [];
@@ -542,7 +546,7 @@ const typeLiteralAstChildren = (
 const astChildren = (ast: AST.AST, value: unknown): readonly AstChild[] => {
   const current = structuralAst(ast);
   if (current._tag === "Suspend") {
-    return [{ ast: current.f(), value, path: "" }];
+    return [{ ast: current.thunk(), value, path: "" }];
   }
   if (current._tag === "Union") {
     return unionBranchesForValue(current.types, value).map((member) => ({
@@ -551,10 +555,10 @@ const astChildren = (ast: AST.AST, value: unknown): readonly AstChild[] => {
       path: "",
     }));
   }
-  if (current._tag === "TupleType") {
+  if (current._tag === "Arrays") {
     return tupleAstChildren(current, value);
   }
-  if (current._tag === "TypeLiteral") {
+  if (current._tag === "Objects") {
     return typeLiteralAstChildren(current, value);
   }
   return [];
@@ -580,7 +584,7 @@ type SurfaceWalkContext = {
 
 const walkTaskRole = (
   task: WalkTask,
-): Either.Either<
+): Result.Result<
   SurfaceSchemaFieldRole | undefined,
   SurfaceRelationTraversalIssue
 > => {
@@ -590,14 +594,14 @@ const walkTaskRole = (
     task.inheritedRole !== undefined &&
     !roleEqual(ownRole, task.inheritedRole)
   ) {
-    return Either.left({
+    return Result.fail({
       tag: "surfaceRelationTraversalIssue",
       code: "conflictingRole",
       path: task.path,
       message: `Surface schema roles conflict at ${task.path}`,
     });
   }
-  return Either.right(ownRole ?? task.inheritedRole);
+  return Result.succeed(ownRole ?? task.inheritedRole);
 };
 
 const isSurfaceRelationRole = (
@@ -611,7 +615,7 @@ const isUnownedStringTask = (
 ): boolean =>
   typeof task.current === "string" &&
   role === undefined &&
-  structuralAst(task.ast)._tag === "StringKeyword";
+  structuralAst(task.ast)._tag === "String";
 
 const visitWalkTaskString = (
   context: SurfaceWalkContext,
@@ -651,12 +655,12 @@ const markWalkTaskSeen = (
 };
 
 const surfaceRelationLeafAstTags = new Set<AST.AST["_tag"]>([
-  "StringKeyword",
+  "String",
   "Literal",
-  "NumberKeyword",
-  "BooleanKeyword",
-  "UnknownKeyword",
-  "NeverKeyword",
+  "Number",
+  "Boolean",
+  "Unknown",
+  "Never",
 ]);
 
 const unsupportedSurfaceWalkIssue = (
@@ -666,8 +670,8 @@ const unsupportedSurfaceWalkIssue = (
   if (children.length > 0 || !isObjectValue(task.current)) return undefined;
   const current = structuralAst(task.ast);
   if (
-    current._tag === "TypeLiteral" ||
-    current._tag === "TupleType" ||
+    current._tag === "Objects" ||
+    current._tag === "Arrays" ||
     surfaceRelationLeafAstTags.has(current._tag)
   ) {
     return undefined;
@@ -698,11 +702,11 @@ const appendWalkChildren = (
 
 const walkSurfaceTask = (context: SurfaceWalkContext, task: WalkTask): void => {
   const roleResult = walkTaskRole(task);
-  if (Either.isLeft(roleResult)) {
-    context.issues.push(roleResult.left);
+  if (Result.isFailure(roleResult)) {
+    context.issues.push(roleResult.failure);
     return;
   }
-  const role = roleResult.right;
+  const role = roleResult.success;
   visitWalkTaskString(context, task, role);
   if (markWalkTaskSeen(context, task, role)) return;
   const children = astChildren(task.ast, task.current);
@@ -712,8 +716,8 @@ const walkSurfaceTask = (context: SurfaceWalkContext, task: WalkTask): void => {
 };
 
 /** Visit schema-owned strings in one already-decoded Surface value. */
-export function walkSurfaceSchemaValue<A, I, R>(
-  schema: Schema.Schema<A, I, R>,
+export function walkSurfaceSchemaValue<A>(
+  schema: Schema.Schema<A>,
   value: A,
   visitString: SurfaceSchemaStringVisitor,
 ): readonly SurfaceRelationTraversalIssue[] {
@@ -761,9 +765,9 @@ const walkSurfaceRecord = (
 };
 
 /** Collect authored relations from one schema-decoded record value. */
-export function collectSurfaceRecordAuthoredRelations<A, I, R>(input: {
+export function collectSurfaceRecordAuthoredRelations<A>(input: {
   readonly source: SurfaceRelationSource;
-  readonly schema: Schema.Schema<A, I, R>;
+  readonly schema: Schema.Schema<A>;
   readonly value: A;
 }): SurfaceWalkCollections {
   const collections: SurfaceWalkCollections = { relations: [], issues: [] };
@@ -776,10 +780,10 @@ export function collectSurfaceRecordAuthoredRelations<A, I, R>(input: {
       issuePath: path,
       targetRecordId: value,
     });
-    if (Either.isLeft(relationResult)) {
-      collections.issues.push(relationResult.left);
+    if (Result.isFailure(relationResult)) {
+      collections.issues.push(relationResult.failure);
     } else {
-      collections.relations.push(relationResult.right);
+      collections.relations.push(relationResult.success);
     }
   };
   const walkIssues = walkSurfaceSchemaValue(
@@ -793,14 +797,14 @@ export function collectSurfaceRecordAuthoredRelations<A, I, R>(input: {
 
 const surfaceWalkResult = (
   collections: SurfaceWalkCollections,
-): Either.Either<
+): Result.Result<
   readonly SurfaceAuthoredRelation[],
   SurfaceRelationTraversalIssues
 > => {
   const firstIssue = collections.issues[0];
   return firstIssue === undefined
-    ? Either.right(collections.relations)
-    : Either.left([firstIssue, ...collections.issues.slice(1)]);
+    ? Result.succeed(collections.relations)
+    : Result.fail([firstIssue, ...collections.issues.slice(1)]);
 };
 
 /**
@@ -810,7 +814,7 @@ const surfaceWalkResult = (
  */
 export function collectSurfaceAuthoredRelations(
   surface: Pick<SrdSurface, "units" | "statBlocks">,
-): Either.Either<
+): Result.Result<
   readonly SurfaceAuthoredRelation[],
   SurfaceRelationTraversalIssues
 > {
@@ -1032,11 +1036,11 @@ const closeSurfaceReachability = (context: SurfaceClosureContext): void => {
 
 const closureIssuesResult = (
   issues: readonly SurfaceRelationClosureIssue[],
-): Either.Either<void, SurfaceRelationClosureIssues> => {
+): Result.Result<void, SurfaceRelationClosureIssues> => {
   const firstIssue = issues[0];
   return firstIssue === undefined
-    ? Either.right(undefined)
-    : Either.left([firstIssue, ...issues.slice(1)]);
+    ? Result.succeed(undefined)
+    : Result.fail([firstIssue, ...issues.slice(1)]);
 };
 
 const emptySurfaceProjectionIssue = (
@@ -1057,7 +1061,7 @@ const projectClosedSurface = (
   surface: SrdSurface,
   selectedUnits: ReadonlySet<SurfaceUnitId>,
   selectedStatBlocks: ReadonlySet<SurfaceStatBlockId>,
-): Either.Either<SrdSurface, SurfaceRelationClosureIssues> => {
+): Result.Result<SrdSurface, SurfaceRelationClosureIssues> => {
   const units = surface.units.filter((record) => selectedUnits.has(record.id));
   const statBlocks = surface.statBlocks.filter((record) =>
     selectedStatBlocks.has(record.id),
@@ -1065,8 +1069,8 @@ const projectClosedSurface = (
   const firstUnit = units[0];
   const firstStatBlock = statBlocks[0];
   const emptyIssue = emptySurfaceProjectionIssue(firstUnit, firstStatBlock);
-  if (emptyIssue !== undefined) return Either.left([emptyIssue]);
-  return Either.right({
+  if (emptyIssue !== undefined) return Result.fail([emptyIssue]);
+  return Result.succeed({
     kind: "srd-5.2.1-surface-catalog",
     units: [firstUnit, ...units.slice(1)],
     statBlocks: [firstStatBlock, ...statBlocks.slice(1)],
@@ -1084,15 +1088,15 @@ export function closeSrdSurface(input: {
   readonly rootUnitIds: readonly SurfaceUnitId[];
   readonly rootStatBlockIds: readonly SurfaceStatBlockId[];
   readonly relationSelection?: SurfaceRelationSelection;
-}): Either.Either<SrdSurface, SurfaceRelationClosureIssues> {
+}): Result.Result<SrdSurface, SurfaceRelationClosureIssues> {
   const relationGraph = collectSurfaceAuthoredRelations(input.surface);
-  if (Either.isLeft(relationGraph)) {
-    return Either.left([...relationGraph.left]);
+  if (Result.isFailure(relationGraph)) {
+    return Result.fail([...relationGraph.failure]);
   }
   const maps = surfaceRecordMaps(input.surface);
   const context: SurfaceClosureContext = {
     ...maps,
-    relationsBySource: indexSurfaceRelations(relationGraph.right),
+    relationsBySource: indexSurfaceRelations(relationGraph.success),
     relationSelection: input.relationSelection ?? {},
     selectedUnits: new Set(),
     selectedStatBlocks: new Set(),
@@ -1102,7 +1106,7 @@ export function closeSrdSurface(input: {
   addSurfaceRoots(context, input);
   closeSurfaceReachability(context);
   const issueResult = closureIssuesResult(context.issues);
-  if (Either.isLeft(issueResult)) return Either.left(issueResult.left);
+  if (Result.isFailure(issueResult)) return Result.fail(issueResult.failure);
   return projectClosedSurface(
     input.surface,
     context.selectedUnits,

@@ -40,6 +40,7 @@ import {
 } from "../../procedure-execution/persistent-armor-effect-facts.ts";
 import { CombatantId } from "../../identity.ts";
 import { combatantWearingArmor } from "../creature-state-leaves.ts";
+import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -52,6 +53,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -70,13 +72,14 @@ type PersistentArmorInvocation = Extract<
 >;
 
 const PersistentArmorEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("spellBaseArmorClass"),
   sourceCombatantId: CombatantId,
   base: ArmorClassSchema,
   ability: Schema.Literal("dex"),
-  earlyEnds: Schema.Tuple(
+  earlyEnds: Schema.Tuple([
     Schema.Struct({ kind: Schema.Literal("targetDonsArmor") }),
-  ),
+  ]),
   expiresAt: DurationBattleActiveEffectExpirationSchema,
 });
 type PersistentArmorSpellSource =
@@ -217,26 +220,18 @@ function applyPersistentArmorEffect(
     return state;
   }
 
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(targetId, {
-      ...target,
-      activeEffects: [
-        ...target.activeEffects.filter(
-          (effect) =>
-            !(
-              effect.kind === invocation.activeEffect.kind &&
-              effect.sourceProcedureRef === invocation.sourceProcedureRef
-            ),
-        ),
-        {
-          ...invocation.activeEffect,
-          sourceProcedureRef: invocation.sourceProcedureRef,
-          sourceCombatantId: actorId,
-        },
-      ],
-    }),
-  };
+  return replaceTargetSpellActiveEffect(
+    state,
+    targetId,
+    (effect) =>
+      effect.kind === invocation.activeEffect.kind &&
+      effect.sourceProcedureRef === invocation.sourceProcedureRef,
+    {
+      ...invocation.activeEffect,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      sourceCombatantId: actorId,
+    },
+  );
 }
 
 function resolvePersistentArmorEffect(
@@ -333,7 +328,7 @@ function resolvePersistentArmorEffect(
 }
 
 const PersistentArmorEffectInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
@@ -350,7 +345,7 @@ const PersistentArmorEffectInvocationSchema = spellProcedureExecutionSchema(
       rangeFeet: MovementFeet,
       activeEffect: PersistentArmorEffectSchema,
     }),
-  ),
+  ]),
 );
 export const persistentArmorEffectProfile: SpellProcedureDeclaration<
   "persistentArmorEffect",

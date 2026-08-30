@@ -33,9 +33,9 @@ import {
   singleTargetSavingThrowOutcomeFill,
   spellAct,
   webAreaFill,
-  webAreaRemovedAct,
+  persistentAreaSaveConditionEscapeAreaRemovedAct,
   webRestrainedNoLongerInAreaAct,
-  webRestraintSaveAct,
+  persistentAreaSaveConditionEscapeSaveAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
@@ -52,7 +52,7 @@ import {
   type BattleRuntimeSession,
   type BattleSubject,
 } from "./index.ts";
-import type { WebRestraintHazardEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
+import type { PersistentAreaSaveConditionEscapeEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
 
 const webMovementSpentFeet = 15;
 
@@ -304,7 +304,11 @@ function discoverWebSave(
   state: WebRuntimeState,
   trigger: "entersArea" | "startsTurnInArea",
 ): WebRuntimeState {
-  const act = webRestraintSaveAct(state.battle, spellTargetId, trigger);
+  const act = persistentAreaSaveConditionEscapeSaveAct(
+    state.battle,
+    spellTargetId,
+    trigger,
+  );
   const result = resolveBattleSubject({
     state: state.battle.state,
     subject: act.subject,
@@ -327,7 +331,11 @@ function fillWebSave(
   succeeded: boolean,
 ): WebRuntimeState {
   const save = requireWebSaveHole(state.holes, trigger);
-  const act = webRestraintSaveAct(state.battle, spellTargetId, trigger);
+  const act = persistentAreaSaveConditionEscapeSaveAct(
+    state.battle,
+    spellTargetId,
+    trigger,
+  );
   const result = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
@@ -412,8 +420,9 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
     state.battle.state,
     spellCasterId,
   ).activeEffects.find(
-    (effect): effect is WebRestraintHazardEffect =>
-      effect.kind === "webRestraintHazard" && effect.areaId === webAreaId,
+    (effect): effect is PersistentAreaSaveConditionEscapeEffect =>
+      effect.kind === "persistentAreaSaveConditionEscape" &&
+      effect.areaId === webAreaId,
   );
   if (hazard === undefined) {
     throw new Error("Expected active Web hazard.");
@@ -443,7 +452,8 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
             kind: "areaDifficultTerrain",
             sources: [
               {
-                kind: "webAreaHazard",
+                kind: "persistentAreaSaveConditionEscape",
+                effectRef: hazard.effectRef,
                 sourceCombatantId: spellCasterId,
                 sourceProcedureRef: hazard.sourceProcedureRef,
                 areaId: webAreaId,
@@ -472,7 +482,8 @@ function removeArea(state: WebRuntimeState): WebRuntimeState {
   const result = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
-      subject: webAreaRemovedAct(state.battle).subject,
+      subject: persistentAreaSaveConditionEscapeAreaRemovedAct(state.battle)
+        .subject,
       fills: [],
     }),
     "Expected Web area removal to resolve.",
@@ -492,8 +503,8 @@ function webProjection(state: WebRuntimeState): WebRestraintHazardState {
   const caster = requireCombatant(state.battle.state, spellCasterId);
   const target = requireCombatant(state.battle.state, spellTargetId);
   const hazard = caster.activeEffects.find(
-    (effect): effect is WebRestraintHazardEffect =>
-      effect.kind === "webRestraintHazard" &&
+    (effect): effect is PersistentAreaSaveConditionEscapeEffect =>
+      effect.kind === "persistentAreaSaveConditionEscape" &&
       effect.sourceCombatantId === spellCasterId &&
       effect.areaId === webAreaId,
   );
@@ -539,8 +550,8 @@ function requireWebSaveHole(
       { readonly kind: "savingThrowOutcome" }
     > =>
       candidate.kind === "savingThrowOutcome" &&
-      "webRestraint" in candidate &&
-      candidate.webRestraint.trigger === trigger,
+      "persistentAreaSaveConditionEscape" in candidate &&
+      candidate.persistentAreaSaveConditionEscape.trigger === trigger,
   );
   if (hole === undefined) {
     throw new Error(`Expected Web ${trigger} Saving Throw outcome hole.`);
@@ -553,8 +564,11 @@ function battleHolesToWebHoles(
 ): readonly WebHole[] {
   return holes
     .map((hole) => {
-      if (hole.kind === "savingThrowOutcome" && "webRestraint" in hole) {
-        return hole.webRestraint.trigger === "entersArea"
+      if (
+        hole.kind === "savingThrowOutcome" &&
+        "persistentAreaSaveConditionEscape" in hole
+      ) {
+        return hole.persistentAreaSaveConditionEscape.trigger === "entersArea"
           ? "EntrySavingThrowOutcome"
           : "StartTurnSavingThrowOutcome";
       }

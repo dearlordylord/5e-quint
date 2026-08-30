@@ -28,7 +28,7 @@ import {
 // UNIT-IDENTITY-REPLAY: L1E-SEARING-SMITE searing_smite doSearingSmiteAfterHitTimedDamageAndSaveCleanup
 // UNIT-IDENTITY-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
-import { Either } from "effect";
+import { Result } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, expect, it } from "vitest";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
@@ -2676,10 +2676,10 @@ function level1BuffMarkSmiteSession(
         : []),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function level1BuffMarkSmiteCreature(input: {
@@ -2778,7 +2778,7 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(battleStatBlockCombatantSource(statBlock)),
+      source: Result.getOrThrow(battleStatBlockCombatantSource(statBlock)),
       currentHp: maxHp,
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],

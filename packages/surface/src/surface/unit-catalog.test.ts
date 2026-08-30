@@ -1,10 +1,10 @@
 import { existsSync, readFileSync } from "node:fs";
 
-import { Either, Option, Schema } from "effect";
+import { Result, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { type UnitId, UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
 
-import findFamiliarInput from "../../content/find_familiar.json";
+import spawnedCompanionInput from "../../content/find_familiar.json";
 import flyInput from "../../content/fly.json";
 import glyphOfWardingInput from "../../content/glyph_of_warding.json";
 import hasteInput from "../../content/haste.json";
@@ -24,7 +24,7 @@ import {
   AudibleEffectSchema,
   ClassFeatureRecordSchema,
   ComponentsSchema,
-  decodeUnitRecordEither,
+  decodeUnitRecordResult,
   decodeUnitRecordSync,
   EffectAtomSchema,
   FeatherFallMitigationSchema,
@@ -50,7 +50,9 @@ import { CREATURE_TYPES } from "./types.ts";
 import type { Srd521Unit, SrdUnitCollection } from "./unit-catalog.ts";
 import type { StartingEquipmentItemRef, WeaponRecord } from "./types.ts";
 
-const publication = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
+const publication = Schema.decodeUnknownSync(
+  Schema.toType(PublishedSrdSurfaceSchema),
+)(
   JSON.parse(
     readFileSync(
       new URL("../../publication/srd-surface.json", import.meta.url),
@@ -575,7 +577,7 @@ describe("SRD Unit catalog boundary", () => {
       },
     };
 
-    expect(Either.isLeft(decodeUnitRecordEither(contradictory))).toBe(true);
+    expect(Result.isFailure(decodeUnitRecordResult(contradictory))).toBe(true);
   });
 
   test("keeps Shield of Faith's creature target and Armor Class bonus explicit", () => {
@@ -1203,7 +1205,7 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects lossy Alter Self Natural Weapons placeholders", () => {
-    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
     const completeNaturalWeapons = {
       kind: "natural_weapons",
       damageType: alterSelfNaturalWeaponGrowthDamageType,
@@ -1214,7 +1216,7 @@ describe("SRD Unit catalog boundary", () => {
     };
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...completeNaturalWeapons,
           damageType: "slashing",
@@ -1222,7 +1224,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...completeNaturalWeapons,
           damageDie: 8,
@@ -1230,7 +1232,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...completeNaturalWeapons,
           damageType: {
@@ -1241,7 +1243,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "natural_weapons",
           damageType: alterSelfNaturalWeaponGrowthDamageType,
@@ -1502,7 +1504,7 @@ describe("SRD Unit catalog boundary", () => {
         operations: [
           {
             trigger: { kind: "passive" },
-            effect: { kind: "emit_light", brightRadiusFeet: 5 },
+            effect: { kind: "emit_bright_illumination", radiusFeet: 5 },
           },
           {
             trigger: { kind: "passive" },
@@ -1523,6 +1525,65 @@ describe("SRD Unit catalog boundary", () => {
         ],
       });
     }
+  });
+
+  test("keeps combined, bright-only, and dim-only illumination states distinct", () => {
+    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
+
+    expect(
+      Result.isSuccess(
+        decode({
+          kind: "emit_bright_and_dim_illumination",
+          brightRadiusFeet: 20,
+          dimAdditionalFeet: 20,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decode({
+          kind: "emit_bright_and_dim_illumination",
+          brightRadiusFeet: 0,
+          dimAdditionalFeet: 10,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decode({
+          kind: "emit_bright_and_dim_illumination",
+          brightRadiusFeet: 10,
+          dimAdditionalFeet: 0,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        decode({ kind: "emit_dim_illumination", radiusFeet: 10 }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decode({ kind: "emit_dim_illumination", radiusFeet: 0 }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        decode({
+          kind: "emit_dim_illumination_until_end_of_caster_next_turn",
+          radiusFeet: 10,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decode({
+          kind: "emit_light",
+          brightRadiusFeet: 20,
+          dimAdditionalFeet: 20,
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("keeps See Invisibility as a narrow sight override, not Truesight", () => {
@@ -1994,11 +2055,13 @@ describe("SRD Unit catalog boundary", () => {
     expect(magicCircle.mechanics.family).toBe("magic_circle_ward");
     if (magicCircle.mechanics.family !== "magic_circle_ward") return;
 
-    const decode = Schema.decodeUnknownEither(MagicCircleWardMechanicsSchema);
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(MagicCircleWardMechanicsSchema),
+    );
     const mechanics = magicCircle.mechanics;
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           affectedCreatureTypes: {
@@ -2009,7 +2072,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           affectedCreatureTypes: {
@@ -2020,7 +2083,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           occurrence: {
@@ -2037,7 +2100,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           direction: {
@@ -2055,7 +2118,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           direction: {
@@ -2209,11 +2272,13 @@ describe("SRD Unit catalog boundary", () => {
     expect(meldIntoStone.mechanics.family).toBe("stone_merge");
     if (meldIntoStone.mechanics.family !== "stone_merge") return;
 
-    const decode = Schema.decodeUnknownEither(StoneMergeMechanicsSchema);
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(StoneMergeMechanicsSchema),
+    );
     const mechanics = meldIntoStone.mechanics;
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           target: {
@@ -2227,7 +2292,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           occupancy: {
@@ -2244,7 +2309,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           occupancy: {
@@ -2264,7 +2329,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           stoneEventResponses: {
@@ -2290,7 +2355,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           stoneEventResponses: {
@@ -2317,11 +2382,13 @@ describe("SRD Unit catalog boundary", () => {
     expect(glyph.mechanics.family).toBe("glyph_warding");
     if (glyph.mechanics.family !== "glyph_warding") return;
 
-    const decode = Schema.decodeUnknownEither(GlyphWardingMechanicsSchema);
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(GlyphWardingMechanicsSchema),
+    );
     const mechanics = glyph.mechanics;
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           occurrence: {
@@ -2335,7 +2402,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           release: {
@@ -2356,7 +2423,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           release: {
@@ -2379,7 +2446,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...mechanics,
           release: {
@@ -2602,7 +2669,7 @@ describe("SRD Unit catalog boundary", () => {
       if (phase?.kind !== "save_gate") return;
 
       expect(phase.onFail).toEqual({
-        kind: "command_target_next_turn",
+        kind: "compelled_target_next_turn",
         execution: "target_next_turn",
         options: {
           approach: {
@@ -3160,7 +3227,7 @@ describe("SRD Unit catalog boundary", () => {
         {
           trigger: { kind: "passive" },
           effect: {
-            kind: "emit_light",
+            kind: "emit_bright_and_dim_illumination",
             brightRadiusFeet: 20,
             dimAdditionalFeet: 20,
           },
@@ -3305,7 +3372,7 @@ describe("SRD Unit catalog boundary", () => {
           trigger: { kind: "passive" },
           predicate: { kind: "spell_created_held_object_active" },
           effect: {
-            kind: "emit_light",
+            kind: "emit_bright_and_dim_illumination",
             brightRadiusFeet: 10,
             dimAdditionalFeet: 10,
           },
@@ -4142,7 +4209,7 @@ describe("SRD Unit catalog boundary", () => {
       {
         trigger: { kind: "passive" },
         effect: {
-          kind: "grant_magic_weapon_enhancement",
+          kind: "grant_weapon_attack_enhancement",
           bonus: {
             kind: "threshold_tiers",
             axis: "slot",
@@ -4159,7 +4226,7 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects Magic Weapon enhancement bonuses outside the SRD slot tiers", () => {
-    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
     const invalidBonuses = [
       { kind: "fixed_number", amount: 1, sign: "+" },
       { kind: "fixed_dice", dice: 1, dieSize: 4, sign: "+" },
@@ -4197,9 +4264,9 @@ describe("SRD Unit catalog boundary", () => {
 
     for (const bonus of invalidBonuses) {
       expect(
-        Either.isLeft(
+        Result.isFailure(
           decode({
-            kind: "grant_magic_weapon_enhancement",
+            kind: "grant_weapon_attack_enhancement",
             bonus,
           }),
         ),
@@ -4208,7 +4275,7 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects paired worn material components with duplicated generic material-cost metadata", () => {
-    const decode = Schema.decodeUnknownEither(ComponentsSchema);
+    const decode = Schema.decodeUnknownResult(Schema.toType(ComponentsSchema));
     const pairedWornRings = {
       kind: "paired_worn_items",
       itemKind: "ring",
@@ -4219,7 +4286,7 @@ describe("SRD Unit catalog boundary", () => {
     };
 
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decode({
           v: true,
           s: true,
@@ -4228,7 +4295,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           v: true,
           s: true,
@@ -5033,7 +5100,7 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects Sending mental message block durations other than 8 hours", () => {
-    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
     const sendingMentalMessageEffect = {
       kind: "deliver_mental_message",
       recipient: "met_by_caster_or_described_by_someone_who_met_it",
@@ -5062,14 +5129,14 @@ describe("SRD Unit catalog boundary", () => {
       },
     };
 
-    expect(Either.isRight(decode(sendingMentalMessageEffect))).toBe(true);
+    expect(Result.isSuccess(decode(sendingMentalMessageEffect))).toBe(true);
     for (const duration of [
       { unit: "hour", amount: 1 },
       { unit: "minute", amount: 8 },
       { unit: "day", amount: 1 },
     ] as const) {
       expect(
-        Either.isLeft(
+        Result.isFailure(
           decode({
             ...sendingMentalMessageEffect,
             recipientBlock: {
@@ -5341,7 +5408,7 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects Water Walk traversal facts with non-RAW surface example sequences", () => {
-    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
     const baseEffect = {
       kind: "grant_liquid_surface_traversal",
       surfaceScope: {
@@ -5370,7 +5437,7 @@ describe("SRD Unit catalog boundary", () => {
       ["acid", "water", "mud", "snow", "quicksand", "lava"],
     ]) {
       expect(
-        Either.isLeft(
+        Result.isFailure(
           decode({
             ...baseEffect,
             surfaceScope: { ...baseEffect.surfaceScope, examples },
@@ -5544,10 +5611,12 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects contradictory Revivify death target-state filters", () => {
-    const decode = Schema.decodeUnknownEither(TargetSelectionSchema);
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(TargetSelectionSchema),
+    );
 
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decode({
           mode: "one",
           targetKinds: ["creature"],
@@ -5556,7 +5625,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           mode: "one",
           targetKinds: ["creature"],
@@ -5565,7 +5634,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           mode: "one",
           targetKinds: ["creature"],
@@ -5829,10 +5898,10 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects non-RAW Locate Object subject variants", () => {
-    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "object_location_sense",
           searchModes: {
@@ -5846,7 +5915,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "object_location_sense",
           searchModes: {
@@ -5860,7 +5929,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "object_location_sense",
           searchModes: {
@@ -5874,7 +5943,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "object_location_sense",
           searchModes: {
@@ -5890,8 +5959,10 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects non-RAW Animal Messenger courier task variants", () => {
-    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
-    const decodePhase = Schema.decodeUnknownEither(ActivationPhaseSchema);
+    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
+    const decodePhase = Schema.decodeUnknownResult(
+      Schema.toType(ActivationPhaseSchema),
+    );
     const courierTask = {
       kind: "assign_courier_task",
       messenger: "target_beast",
@@ -5940,9 +6011,9 @@ describe("SRD Unit catalog boundary", () => {
       },
     };
 
-    expect(Either.isRight(decode(courierTask))).toBe(true);
+    expect(Result.isSuccess(decode(courierTask))).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decodePhase({
           kind: "save_gate",
           attachment: tinyBeastTargetAttachment,
@@ -5958,7 +6029,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...courierTask,
           message: {
@@ -5969,7 +6040,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...courierTask,
           travel: {
@@ -5981,7 +6052,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           ...courierTask,
           onExpiryBeforeArrival: "message_lost",
@@ -5989,7 +6060,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodePhase({
           kind: "save_gate",
           attachment: { kind: "self" },
@@ -6005,7 +6076,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodePhase({
           kind: "save_gate",
           attachment: { kind: "self" },
@@ -6021,7 +6092,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodePhase({
           kind: "save_gate",
           attachment: objectTargetAttachment,
@@ -6037,7 +6108,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodePhase({
           kind: "save_gate",
           attachment: creatureOrObjectTargetAttachment,
@@ -6109,10 +6180,10 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects non-RAW Knock Arcane Lock suppression variants", () => {
-    const decode = Schema.decodeUnknownEither(EffectAtomSchema);
+    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "suppress_arcane_lock",
           duration: { unit: "minute", amount: 9 },
@@ -6121,7 +6192,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "suppress_arcane_lock",
           duration: { unit: "hour", amount: 10 },
@@ -6130,7 +6201,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "suppress_object_access_spell",
           spellId: "arcane_lock",
@@ -6511,10 +6582,12 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects Thunderwave area-only push facts outside area attachments", () => {
-    const decode = Schema.decodeUnknownEither(ActivationPhaseSchema);
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(ActivationPhaseSchema),
+    );
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "direct",
           attachment: { kind: "self" },
@@ -6530,7 +6603,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "direct",
           attachment: {
@@ -6552,11 +6625,15 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects non-positive or fractional Thunderwave feet facts", () => {
-    const decodeAudible = Schema.decodeUnknownEither(AudibleEffectSchema);
-    const decodeEffectAtom = Schema.decodeUnknownEither(EffectAtomSchema);
+    const decodeAudible = Schema.decodeUnknownResult(
+      Schema.toType(AudibleEffectSchema),
+    );
+    const decodeEffectAtom = Schema.decodeUnknownResult(
+      Schema.toType(EffectAtomSchema),
+    );
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeAudible({
           kind: "audible",
           sound: "thunderous boom",
@@ -6565,7 +6642,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeAudible({
           kind: "audible",
           sound: "thunderous boom",
@@ -6574,7 +6651,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeEffectAtom({
           kind: "force_move",
           movementKind: "push",
@@ -6584,7 +6661,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeEffectAtom({
           kind: "force_move",
           direction: "away_from_caster",
@@ -6639,10 +6716,12 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects malformed Expeditious Retreat action economy facts", () => {
-    const decodeEffectAtom = Schema.decodeUnknownEither(EffectAtomSchema);
+    const decodeEffectAtom = Schema.decodeUnknownResult(
+      Schema.toType(EffectAtomSchema),
+    );
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeEffectAtom({
           kind: "take_standard_action",
           action: "dash",
@@ -6650,7 +6729,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeEffectAtom({
           kind: "take_standard_action",
           action: "dash",
@@ -6659,7 +6738,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeEffectAtom({
           kind: "grant_alternate_action_cost",
           from: { kind: "standard_action", actions: ["dash"] },
@@ -6751,8 +6830,8 @@ describe("SRD Unit catalog boundary", () => {
       expect(phase.attachment.value.kind).toBe("target");
       if (phase.attachment.value.kind !== "target") return;
       expect(
-        Either.isRight(
-          Schema.decodeUnknownEither(TargetSelectionSchema)(
+        Result.isSuccess(
+          Schema.decodeUnknownResult(Schema.toType(TargetSelectionSchema))(
             phase.attachment.value.selection,
           ),
         ),
@@ -6838,10 +6917,12 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects malformed Feather Fall mitigation facts", () => {
-    const decode = Schema.decodeUnknownEither(FeatherFallMitigationSchema);
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(FeatherFallMitigationSchema),
+    );
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "feather_fall_mitigation",
           descentRateCapFeetPerRound: 30,
@@ -6850,7 +6931,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "feather_fall_mitigation",
           descentRateCapFeetPerRound: 60,
@@ -6861,10 +6942,12 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects falling target state without creature targets", () => {
-    const decode = Schema.decodeUnknownEither(TargetSelectionSchema);
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(TargetSelectionSchema),
+    );
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           mode: "choose_up_to",
           count: 5,
@@ -6873,7 +6956,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           mode: "choose_up_to",
           count: 5,
@@ -6885,10 +6968,12 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects creature size filters without creature target selections", () => {
-    const decode = Schema.decodeUnknownEither(TargetSelectionSchema);
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(TargetSelectionSchema),
+    );
 
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decode({
           mode: "one",
           targetKinds: ["creature"],
@@ -6901,7 +6986,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           mode: "one",
           targetKinds: ["object"],
@@ -6913,7 +6998,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           mode: "one",
           creatureSizeFilter: {
@@ -6926,10 +7011,12 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects malformed Jump movement replacement facts", () => {
-    const decode = Schema.decodeUnknownEither(JumpMovementReplacementSchema);
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(JumpMovementReplacementSchema),
+    );
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "jump_movement_replacement",
           frequency: "once_per_turn",
@@ -6939,7 +7026,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "jump_movement_replacement",
           frequency: "each_turn",
@@ -6949,7 +7036,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "jump_movement_replacement",
           frequency: "once_on_each_target_turn",
@@ -6959,7 +7046,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           kind: "jump_movement_replacement",
           frequency: "once_on_each_target_turn",
@@ -6971,10 +7058,12 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects willing target disposition for non-creature target selections", () => {
-    const decode = Schema.decodeUnknownEither(TargetSelectionSchema);
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(TargetSelectionSchema),
+    );
 
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decode({
           mode: "one",
           targetKinds: ["creature"],
@@ -6983,7 +7072,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           mode: "one",
           targetKinds: ["object"],
@@ -6992,7 +7081,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           mode: "choose_up_to",
           count: 2,
@@ -7002,7 +7091,7 @@ describe("SRD Unit catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decode({
           mode: "any_number",
           disposition: "willing",
@@ -7516,15 +7605,15 @@ describe("SRD Unit catalog boundary", () => {
     };
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(ClassFeatureRecordSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(ClassFeatureRecordSchema))(
           malformedMetamagic,
         ),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(ClassFeatureRecordSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(ClassFeatureRecordSchema))(
           duplicatedMetamagic,
         ),
       ),
@@ -7563,8 +7652,8 @@ describe("SRD Unit catalog boundary", () => {
     };
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(ClassFeatureRecordSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(ClassFeatureRecordSchema))(
           malformedFontOfMagic,
         ),
       ),
@@ -8043,17 +8132,17 @@ describe("SRD Unit catalog boundary", () => {
 
     expect(result.tag).toBe("ok");
     if (result.tag === "ok") {
-      const findFamiliar = result.catalog.requireUnit("find_familiar");
+      const spawnedCompanion = result.catalog.requireUnit("find_familiar");
 
-      expect(findFamiliar.kind).toBe("spell");
-      if (findFamiliar.kind !== "spell") {
+      expect(spawnedCompanion.kind).toBe("spell");
+      if (spawnedCompanion.kind !== "spell") {
         throw new Error("Expected Find Familiar spell record.");
       }
-      expect(findFamiliar.mechanics.family).toBe("spawned_creature");
-      if (findFamiliar.mechanics.family !== "spawned_creature") {
+      expect(spawnedCompanion.mechanics.family).toBe("spawned_creature");
+      if (spawnedCompanion.mechanics.family !== "spawned_creature") {
         throw new Error("Expected spawned creature mechanics.");
       }
-      expect(findFamiliar.mechanics.creature).toEqual({
+      expect(spawnedCompanion.mechanics.creature).toEqual({
         kind: "familiar_form_catalog",
         normalForms: [
           { displayName: "Bat", formId: "bat", statBlockId: "stat_block_bat" },
@@ -8152,11 +8241,11 @@ describe("SRD Unit catalog boundary", () => {
 
   test("rejects blank Find Familiar form catalog references", () => {
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
-          ...findFamiliarInput,
+      Result.isFailure(
+        decodeUnitRecordResult({
+          ...spawnedCompanionInput,
           mechanics: {
-            ...findFamiliarInput.mechanics,
+            ...spawnedCompanionInput.mechanics,
             creature: {
               kind: "familiar_form_catalog",
               normalForms: [
@@ -8413,8 +8502,8 @@ describe("SRD Unit catalog boundary", () => {
       }
 
       expect(
-        Either.isLeft(
-          Schema.decodeUnknownEither(ClassFeatureRecordSchema)({
+        Result.isFailure(
+          Schema.decodeUnknownResult(Schema.toType(ClassFeatureRecordSchema))({
             ...unit,
             className: wrongClassName,
           }),
@@ -8822,7 +8911,9 @@ describe("SRD Unit catalog boundary", () => {
   });
 
   test("rejects mismatched on-hit trigger and effect families", () => {
-    const decode = Schema.decodeUnknownEither(OnHitTriggerMechanicsSchema);
+    const decode = Schema.decodeUnknownResult(
+      Schema.toType(OnHitTriggerMechanicsSchema),
+    );
     const addSneakAttackDice = {
       kind: "add_attack_damage_dice",
       damageType: "same_as_attack",
@@ -8981,11 +9072,11 @@ describe("SRD Unit catalog boundary", () => {
     ];
 
     for (const mechanics of invalidMechanics) {
-      expect(Either.isLeft(decode(mechanics))).toBe(true);
+      expect(Result.isFailure(decode(mechanics))).toBe(true);
     }
 
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decode({
           family: "on_hit_trigger",
           optional: false,
@@ -8996,8 +9087,8 @@ describe("SRD Unit catalog boundary", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           category: "origin",
           description: "Invalid class-level damage dice without a class owner.",
           id: "invalid_class_level_damage_feat",
@@ -9021,8 +9112,8 @@ describe("SRD Unit catalog boundary", () => {
     ).toBe(true);
 
     expect(
-      Either.isLeft(
-        decodeUnitRecordEither({
+      Result.isFailure(
+        decodeUnitRecordResult({
           acquiredAtLevel: 1,
           className: "rogue",
           description: "Invalid redundant class ownership on damage dice.",
@@ -9564,6 +9655,185 @@ describe("SRD Unit catalog boundary", () => {
       });
       expect(insectPlague.mechanics.operations).toHaveLength(3);
     }
+  });
+
+  test("retains authored execution facts for persistent and modal spell procedures", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    expect(result.catalog.requireUnit("cloudkill")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        family: "ongoing_effect",
+        initialPhase: {
+          usageLimit: {
+            kind: "once_per_turn",
+            limitGroup: "cloudkill_save_per_turn",
+          },
+        },
+        operations: [
+          { trigger: { kind: "passive" } },
+          {
+            trigger: { kind: "on_caster_turn_start" },
+            effect: {
+              kind: "move_area",
+              distanceFeet: 10,
+              direction: "away_from_caster",
+            },
+          },
+          {
+            trigger: { kind: "on_area_moves_into_creature_space" },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "cloudkill_save_per_turn",
+            },
+          },
+          {
+            trigger: { kind: "on_creature_enters_area" },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "cloudkill_save_per_turn",
+            },
+          },
+          {
+            trigger: { kind: "on_creature_ends_turn_in_area" },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "cloudkill_save_per_turn",
+            },
+          },
+        ],
+      },
+    });
+    expect(result.catalog.requireUnit("insect_plague")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        initialPhase: {
+          usageLimit: {
+            kind: "once_per_turn",
+            limitGroup: "insect_plague_save_per_turn",
+          },
+        },
+        operations: [
+          { trigger: { kind: "passive" } },
+          {
+            trigger: { kind: "on_creature_enters_area" },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "insect_plague_save_per_turn",
+            },
+          },
+          {
+            trigger: { kind: "on_creature_ends_turn_in_area" },
+            usageLimit: {
+              kind: "once_per_turn",
+              limitGroup: "insect_plague_save_per_turn",
+            },
+          },
+        ],
+      },
+    });
+    expect(result.catalog.requireUnit("grease")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        family: "ongoing_effect",
+        attachment: {
+          value: { shape: { kind: "ground_square", sideFeet: 10 } },
+        },
+        operations: [
+          {
+            trigger: { kind: "passive" },
+            effect: { kind: "area_is_difficult_terrain" },
+          },
+          { trigger: { kind: "on_creature_enters_area" } },
+          { trigger: { kind: "on_creature_ends_turn_in_area" } },
+        ],
+      },
+    });
+    expect(result.catalog.requireUnit("find_familiar")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        companionLifecycle: {
+          kind: "bound_companion",
+          touchSpellDelivery: {
+            spellRange: "touch",
+            companionWithinFeetOfCaster: 100,
+            companionCost: "reaction",
+          },
+          temporaryDismissal: {
+            recall: {
+              cost: "magic_action",
+              placement: {
+                kind: "unoccupied_space_within_feet_of_caster",
+                maxDistanceFeet: 30,
+              },
+            },
+          },
+          recast: {
+            existingCompanion: "adopt_new_eligible_form",
+            zeroHitPointDisappearance: "reappear",
+          },
+        },
+      },
+    });
+    expect(result.catalog.requireUnit("sleep")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        phases: [
+          {
+            autoSuccessIfTarget: {
+              kind: "any",
+              predicates: [
+                { kind: "does_not_sleep" },
+                {
+                  kind: "has_condition_immunity",
+                  condition: "exhaustion",
+                },
+              ],
+            },
+            onFail: {
+              kind: "composite",
+              effects: [
+                { kind: "apply_condition", condition: "incapacitated" },
+                {
+                  kind: "target_effect_escape_action",
+                  actor: "another_creature",
+                  cost: "action",
+                  method: "shake_awake",
+                  outcome: "end_current_effect",
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+    expect(result.catalog.requireUnit("thaumaturgy")).toMatchObject({
+      kind: "spell",
+      mechanics: {
+        family: "modal_ongoing_effect",
+        concurrentEffectLimit: {
+          maximumActive: 3,
+          appliesTo: "spell_duration_modes",
+        },
+        mode: {
+          options: [
+            { id: "altered_eyes", effectDuration: "spell_duration" },
+            {
+              id: "booming_voice",
+              effectDuration: "spell_duration",
+              effects: [{ kind: "modify_roll_advantage" }],
+            },
+            { id: "fire_play", effectDuration: "spell_duration" },
+            { id: "invisible_hand", effectDuration: "instantaneous" },
+            { id: "phantom_sound", effectDuration: "instantaneous" },
+            { id: "tremors", effectDuration: "spell_duration" },
+          ],
+        },
+      },
+    });
   });
 
   test("rejects class subclass choices that point at a different class subclass", () => {

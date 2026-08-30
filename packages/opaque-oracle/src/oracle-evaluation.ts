@@ -37,7 +37,7 @@ import { AMMUNITION_KINDS, type AmmunitionKind } from "@dnd/shared/game-facts";
 import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import { Hp, Index, resourceCount } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
-import { Either, Match, Option } from "effect";
+import { Result, Match, Option } from "effect";
 
 import {
   canonicalizeStringSet,
@@ -200,12 +200,12 @@ function characterCreationBatchFactOrDefect(
   result: Parameters<typeof characterCreationBatchFact>[0],
 ) {
   const projected = characterCreationBatchFact(result);
-  if (Either.isLeft(projected)) {
+  if (Result.isFailure(projected)) {
     throw new Error(
-      `Character Creation fact projection defect: ${String(projected.left)}`,
+      `Character Creation fact projection defect: ${String(projected.failure)}`,
     );
   }
-  return projected.right;
+  return projected.success;
 }
 
 function appendFreshSheetAndBattle(
@@ -232,14 +232,14 @@ function appendFreshSheetAndBattle(
         }
       : {}),
   });
-  if (Either.isLeft(freshSheet)) {
-    return { tag: "rejected", issues: freshSheet.left };
+  if (Result.isFailure(freshSheet)) {
+    return { tag: "rejected", issues: freshSheet.failure };
   }
 
-  const sheet = freshCharacterSheetProjection(freshSheet.right);
+  const sheet = freshCharacterSheetProjection(freshSheet.success);
   const rosterEntries = resolveBattleRoster({
     roster: rosterInput,
-    sheet: freshSheet.right,
+    sheet: freshSheet.success,
     unitLibrary,
     statBlockCatalog,
   });
@@ -271,17 +271,17 @@ function appendFreshSheetAndBattle(
     battleId: ORACLE_BATTLE_ID,
     combatants: composition.admissions.map(({ combatant }) => combatant),
   });
-  if (Either.isLeft(entry)) {
+  if (Result.isFailure(entry)) {
     return {
       tag: "constructed",
       sheet,
-      battle: battleEntryRejection(entry.left),
+      battle: battleEntryRejection(entry.failure),
     };
   }
 
-  const snapshot = snapshotBattle(entry.right.state);
+  const snapshot = snapshotBattle(entry.success.state);
   const checkpoint = strippedBattleEnteredCheckpoint(snapshot);
-  const frontier = battleActsFrontier(entry.right);
+  const frontier = battleActsFrontier(entry.success);
   return {
     tag: "constructed",
     sheet,
@@ -291,7 +291,7 @@ function appendFreshSheetAndBattle(
       frontier,
       segment: appendBattleAttempts(
         {
-          session: entry.right,
+          session: entry.success,
           checkpoint,
           frontier,
           rejections: [],

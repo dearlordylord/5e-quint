@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
@@ -15,6 +15,7 @@ import {
   combatantId,
   criticalRange19UnitRefs,
   discoverBattleActs,
+  elapsedTimeTicks,
   endTurn,
   fighterId,
   fighterVsGoblinBattle,
@@ -35,7 +36,7 @@ import {
   testDaggerAttack,
   testShortswordAttack,
   attackRollFill,
-  battleActiveEffectExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   battleProcedureExecutionRefForTest,
   battleCheckpointFrontierEnvelope,
   battleFrontierInterruptDecisionForState,
@@ -44,6 +45,7 @@ import {
   resolveBattleSubject,
   wizardId,
   wizardSpellcasting,
+  spellRecord,
 } from "./battle-runtime.test-support.ts";
 import {
   BattleInterruptDecisionFrontierSchema,
@@ -56,10 +58,16 @@ import {
   battleLineDirectionId,
   battleObjectId,
   battleSpellEffectOccurrenceId,
+  battleTablePositionId,
 } from "./identity.ts";
+import { parseBattleSpellEffectLevel } from "./procedure-execution/spell-effect-level.ts";
+import { battleActiveEffectOccurrenceSpatialProjection } from "./battle-reducer/creature-state-execution.ts";
 
-type EncodedHole = Schema.Schema.Encoded<typeof BattleHoleSchema>;
-type EncodedEnvelope = Schema.Schema.Encoded<
+type EncodedHole = Schema.Codec.Encoded<typeof BattleHoleSchema>;
+type EncodedSnapshot = Schema.Codec.Encoded<typeof BattleSnapshotSchema>;
+type EncodedOccurrenceLocation =
+  EncodedSnapshot["combatants"][number]["activeEffectOccurrences"][number]["location"];
+type EncodedEnvelope = Schema.Codec.Encoded<
   typeof BattleCheckpointFrontierEnvelopeSchema
 >;
 type EncodedActsFrontier = Extract<
@@ -73,7 +81,7 @@ type EncodedInterruptChoice = Extract<
 >["choices"][number];
 type CodecCase = {
   readonly name: string;
-  readonly expected: "Right" | "Left";
+  readonly expected: "Success" | "Failure";
   readonly hole: EncodedHole;
 };
 
@@ -83,10 +91,18 @@ const baseHole = (name: string) => ({
   holeInstanceKey: holeId(name),
   label: `Codec ${name}`,
 });
-const encodeHole = (input: unknown): EncodedHole =>
-  Schema.encodeSync(BattleHoleSchema)(
-    Schema.decodeUnknownSync(BattleHoleSchema)(input),
-  );
+const encodeHole = (input: unknown): EncodedHole => {
+  try {
+    return Schema.encodeSync(BattleHoleSchema)(
+      Schema.decodeUnknownSync(BattleHoleSchema)(input),
+    );
+  } catch (cause) {
+    throw new Error(
+      `Failed to encode ${typeof input === "object" && input !== null && "holeId" in input ? String(input.holeId) : "unknown hole"}.`,
+      { cause },
+    );
+  }
+};
 const hole = (name: string, input: object): EncodedHole =>
   encodeHole({ ...baseHole(name), ...input });
 
@@ -149,6 +165,67 @@ function replaceActSubject(
   };
 }
 
+function replaceCastActWithLevitateAltitudeControl(
+  envelope: EncodedEnvelope,
+  input: {
+    readonly sourceProcedureRef: string;
+    readonly subjectEffectRef: string;
+    readonly altitudeHole: EncodedHole;
+  },
+): EncodedEnvelope {
+  return replaceActSubject(
+    envelope,
+    (act) =>
+      act.subject.tag === "actionSpell" &&
+      act.subject.mode.tag === "cast" &&
+      act.subject.procedureRef === input.sourceProcedureRef,
+    (act) => ({
+      ...act,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: wizardId,
+        command: "controlledVerticalSuspensionAltitudeControl",
+        effectRef: input.subjectEffectRef,
+        targetId: skeletonId,
+      },
+      initialHoles: [input.altitudeHole],
+    }),
+  );
+}
+
+function replaceCastActWithPersistentAreaSaveDamage(
+  envelope: EncodedEnvelope,
+  input: {
+    readonly sourceProcedureRef: string;
+    readonly targetId: typeof skeletonId;
+    readonly effectRef: string;
+    readonly areaId: string;
+    readonly hole: EncodedHole;
+  },
+): EncodedEnvelope {
+  return replaceActSubject(
+    envelope,
+    (act) =>
+      act.subject.tag === "actionSpell" &&
+      act.subject.mode.tag === "cast" &&
+      act.subject.procedureRef === input.sourceProcedureRef,
+    (act) => ({
+      ...act,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: input.targetId,
+        command: "persistentAreaSaveDamageSave",
+        areaMembershipTrigger: {
+          kind: "firstEntryOnTurn",
+          areaId: input.areaId,
+          effectRef: input.effectRef,
+        },
+      },
+      initialHoles: [input.hole],
+    }),
+  );
+}
+
 function replaceActOwner(
   envelope: EncodedEnvelope,
   predicate: (act: EncodedAct) => boolean,
@@ -167,14 +244,23 @@ const encodedEnvelopeFromState = (
     battleCheckpointFrontierEnvelope(state),
   );
 
-function expectEnvelopeDecodeLeft(envelope: EncodedEnvelope): void {
-  const decoded = Schema.decodeUnknownEither(
+function expectSnapshotDecodeFailure(snapshot: EncodedSnapshot): void {
+  const decoded = Schema.decodeUnknownResult(BattleSnapshotSchema)(snapshot);
+  expect(Result.isFailure(decoded)).toBe(true);
+}
+
+function expectEnvelopeDecodeFailure(envelope: EncodedEnvelope): void {
+  const decoded = Schema.decodeUnknownResult(
     BattleCheckpointFrontierEnvelopeSchema,
   )(envelope);
-  expect(Either.isLeft(decoded)).toBe(true);
+  expect(Result.isFailure(decoded)).toBe(true);
 }
 
 function codecFixture() {
+  const glyphSpellLevel = parseBattleSpellEffectLevel(3);
+  if (glyphSpellLevel === null) {
+    throw new Error("Expected the codec Glyph spell level to be valid.");
+  }
   const session = startBattleSessionRight({
     battleId: battleId("battle-codec-boundary"),
     combatants: [
@@ -182,18 +268,28 @@ function codecFixture() {
         combatantId: wizardId,
         displayName: "Codec Caster",
         initiative: 20,
-        spellcasting: wizardSpellcasting(),
+        spellcasting: wizardSpellcasting({
+          preparedSpells: [
+            spellRecord("magic_missile"),
+            spellRecord("insect_plague"),
+            spellRecord("cloudkill"),
+          ],
+          spellSlots: [
+            { spellLevel: 1, count: 2 },
+            { spellLevel: 5, count: 2 },
+          ],
+        }),
       }),
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
-  const envelope = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
-    battleCheckpointFrontierEnvelope(session.state),
-  );
-  if (envelope.frontier.kind !== "acts") {
+  const initialEnvelope = Schema.encodeSync(
+    BattleCheckpointFrontierEnvelopeSchema,
+  )(battleCheckpointFrontierEnvelope(session.state));
+  if (initialEnvelope.frontier.kind !== "acts") {
     throw new Error("Expected an Acts frontier.");
   }
-  const wizard = envelope.checkpoint.combatants.find(
+  const wizard = initialEnvelope.checkpoint.combatants.find(
     (c) => c.combatantId === wizardId,
   );
   if (wizard?.origin.kind !== "character")
@@ -218,10 +314,532 @@ function codecFixture() {
   );
   if (sourceBinding === undefined)
     throw new Error("Expected the save-gated source to be bound.");
+  const persistentAreaSource = (spellId: "insect_plague" | "cloudkill") => {
+    const persistentSource = characterContext.spellPresentationSources.find(
+      (candidate) =>
+        candidate.invocation.procedure === "persistentAreaSaveDamage" &&
+        candidate.invocation.spell.id === spellId,
+    );
+    if (persistentSource === undefined) {
+      throw new Error(`Expected the ${spellId} presentation source.`);
+    }
+    return persistentSource;
+  };
+  const insectPlagueSource = persistentAreaSource("insect_plague");
+  const cloudkillSource = persistentAreaSource("cloudkill");
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: session.state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "spellDamageReduction",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          damageType: "cold",
+          amount: { dice: 1, dieSize: 4 },
+          usedThisTurn: false,
+          expiresAt: { kind: "untilDispelled" },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "sourceDamageRollPenalty",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          amount: { dice: 1, dieSize: 8 },
+          expiresAt: { kind: "untilDispelled" },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "spellMarkedDamageRider",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          targetCombatantId: skeletonId,
+          transfer: { kind: "available", retargetTiming: "sameTurn" },
+          abilityCheckBehavior: { kind: "none" },
+          damage: {
+            expr: { dice: 1, dieSize: 6 },
+            damageType: "cold",
+          },
+          expiresAt: { kind: "untilDispelled" },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "spellTurnStartDamageAndSave",
+          source: "turnBoundaryEffectLifecycle",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
+          save: {
+            ability: "wis",
+            dc: { kind: "caster_spell_save_dc" },
+            successEnds: "spell",
+          },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "saveGatedConditionWithRepeat",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          conditionHadNonSpellProneSource: false,
+          conditionHadNonSpellIncapacitatedSource: false,
+          repeatSaveRollMode: null,
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "possession",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "persistentAreaSaveCondition",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          areaId: battleAreaId("area:codec-grease"),
+          heightenedSpellTargetDisadvantage: null,
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "persistentAreaSaveComposite",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          areaId: battleAreaId("area:codec-sleet-storm"),
+          savedThisTurn: [],
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "spellObjectContactDamage",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          sourceSpellLevel: glyphSpellLevel,
+          objectId: battleObjectId("object:codec-contact-damage"),
+          rangeFeet: movementFeet(60),
+          damage: { expr: { dice: 2, dieSize: 8 }, damageType: "fire" },
+          startedOn: {
+            actorId: wizardId,
+            round: session.state.initiative.round,
+          },
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "glyphDurableOccurrence",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          sourceEffectId: battleSpellEffectOccurrenceId("effect:codec-glyph"),
+          sourceSpellLevel: glyphSpellLevel,
+          release: { kind: "explosiveRune", damageType: "cold" },
+          anchor: {
+            kind: "surface",
+            areaId: battleAreaId("area:codec-glyph-anchor"),
+          },
+          coveredAreaId: battleAreaId("area:codec-glyph-covered"),
+          castLocationId: battleTablePositionId("position:codec-glyph"),
+          maxCoveredDiameterFeet: movementFeet(10),
+          notice: {
+            ability: "wis",
+            skill: "perception",
+            dc: { kind: "caster_spell_save_dc" },
+            owner: "table_witnessed_glyph_notice",
+          },
+          trigger: {
+            occurrence: "table_witnessed_trigger_occurrence",
+            activationFilter: "creature_type",
+            nonTriggerExclusion: "password_or_other_condition",
+            onTriggered: "spell_ends",
+          },
+          movementInvalidation: {
+            movedSubject: "inscribed_surface_or_object",
+            distanceFrom: "cast_location",
+            moreThanFeet: movementFeet(10),
+            outcome: "glyph_breaks_spell_ends_without_triggering",
+          },
+          expiresAt: { kind: "untilDispelled" },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "persistentAreaSaveDamage",
+          lifecycle: "collisionReposition",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          areaId: battleAreaId("area:codec-flaming-sphere"),
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "spellTurnEndDamage",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
+          expiresAt: {
+            kind: "endOfTurn",
+            combatantId: skeletonId,
+            round: session.state.initiative.round,
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "persistentAreaSaveDamage",
+          lifecycle: "stationary",
+          sourceProcedureRef: insectPlagueSource.procedureRef,
+          sourceCombatantId: wizardId,
+          appearanceOccurrence: {
+            actorId: wizardId,
+            round: session.state.initiative.round,
+          },
+          areaId: battleAreaId("area:codec-insect-plague"),
+          savedThisTurn: [],
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "persistentAreaSaveDamage",
+          lifecycle: "sourceTurnTranslation",
+          sourceProcedureRef: cloudkillSource.procedureRef,
+          sourceCombatantId: wizardId,
+          appearanceOccurrence: {
+            actorId: wizardId,
+            round: session.state.initiative.round,
+          },
+          areaId: battleAreaId("area:codec-cloudkill"),
+          savedThisTurn: [],
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "areaMovementDistanceDamage",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          areaId: battleAreaId("area:codec-spike-growth"),
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "directionalPersistentArea",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          areaId: battleAreaId("area:codec-gust"),
+          directionId: battleLineDirectionId("direction:codec-gust"),
+          heightenedSpellTargetDisadvantage: null,
+          castTurn: {
+            actorId: wizardId,
+            round: session.state.initiative.round,
+          },
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "controlledVerticalSuspension",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          altitudeFeet: movementFeet(20),
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "controlledVerticalSuspension",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          altitudeFeet: movementFeet(10),
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "magicSuppressionEmanation",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          areaId: battleAreaId("area:codec-antimagic-field"),
+          auraMembership: {
+            kind: "magicSuppressionEmanationMembership",
+            originIncluded: false,
+            nonOriginCombatantIds: [],
+          },
+          suppressedOngoingSpellEffects: [],
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "storedLightEmitter",
+        ownerId: skeletonId,
+        emitter: {
+          kind: "spellLightEmitter",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          attachment: { kind: "combatant", combatantId: skeletonId },
+          emission: { kind: "dim", radiusFeet: movementFeet(10) },
+          opaqueCoverInteraction: { kind: "blocksEmission" },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "storedLightEmitter",
+        ownerId: wizardId,
+        emitter: {
+          kind: "spellLightEmitter",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          attachment: { kind: "combatant", combatantId: wizardId },
+          emission: { kind: "dim", radiusFeet: movementFeet(15) },
+          opaqueCoverInteraction: { kind: "blocksEmission" },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "nextAttackRollBySelf",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          mode: "advantage",
+          expiresAt: { kind: "untilDispelled" },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "nextAttackRollBySelf",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          mode: "advantage",
+          expiresAt: { kind: "untilDispelled" },
+        },
+      },
+    ],
+  });
+  const activeEffectRef = (kind: string) => {
+    const occurrence = allocated.occurrences.find(
+      (candidate) =>
+        candidate.kind === "activeEffect" && candidate.effect.kind === kind,
+    );
+    if (occurrence?.kind !== "activeEffect") {
+      throw new Error(`Expected a codec ${kind} occurrence.`);
+    }
+    return occurrence.effect.effectRef;
+  };
+  const persistentAreaSaveDamageEffectRef = (areaName: string) => {
+    const areaId = battleAreaId(areaName);
+    const occurrence = allocated.occurrences.find(
+      (candidate) =>
+        candidate.kind === "activeEffect" &&
+        candidate.effect.kind === "persistentAreaSaveDamage" &&
+        candidate.effect.areaId === areaId,
+    );
+    if (occurrence?.kind !== "activeEffect") {
+      throw new Error(`Expected a codec persistent area ${areaName}.`);
+    }
+    return occurrence.effect.effectRef;
+  };
+  const storedLightEmitterRef = (ownerId: typeof wizardId) => {
+    const occurrence = allocated.occurrences.find(
+      (candidate) =>
+        candidate.kind === "storedLightEmitter" &&
+        candidate.ownerId === ownerId,
+    );
+    if (occurrence?.kind !== "storedLightEmitter") {
+      throw new Error(`Expected a codec ${ownerId} stored light emitter.`);
+    }
+    return occurrence.emitter.effectRef;
+  };
+  const skeletonStoredLightEmitter = allocated.occurrences.find(
+    (occurrence) =>
+      occurrence.kind === "storedLightEmitter" &&
+      occurrence.ownerId === skeletonId,
+  );
+  if (skeletonStoredLightEmitter?.kind !== "storedLightEmitter") {
+    throw new Error("Expected a codec stored light emitter occurrence.");
+  }
+  const levitateEffectRefs = allocated.occurrences.flatMap((occurrence) =>
+    occurrence.kind === "activeEffect" &&
+    occurrence.effect.kind === "controlledVerticalSuspension"
+      ? [occurrence.effect.effectRef]
+      : [],
+  );
+  if (levitateEffectRefs.length !== 2) {
+    throw new Error("Expected two codec Levitate effect occurrences.");
+  }
+  const nextAttackEffectRef = (ownerId: typeof wizardId) => {
+    const occurrence = allocated.occurrences.find(
+      (candidate) =>
+        candidate.kind === "activeEffect" &&
+        candidate.ownerId === ownerId &&
+        candidate.effect.kind === "nextAttackRollBySelf",
+    );
+    if (occurrence?.kind !== "activeEffect") {
+      throw new Error(`Expected a codec ${ownerId} next-attack occurrence.`);
+    }
+    return occurrence.effect.effectRef;
+  };
+  const envelope = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+    battleCheckpointFrontierEnvelope(allocated.state),
+  );
+  if (envelope.frontier.kind !== "acts") {
+    throw new Error("Expected an allocated Acts frontier.");
+  }
   return {
     envelope,
-    sourceProcedureRef: sourceBinding.procedureRef,
-    effectRef: battleActiveEffectExecutionRefForTest("codec-marked-rider"),
+    snapshot: envelope.checkpoint,
+    sourceProcedureRef: source.procedureRef,
+    insectPlagueSourceProcedureRef: insectPlagueSource.procedureRef,
+    cloudkillSourceProcedureRef: cloudkillSource.procedureRef,
+    effectRef: nextAttackEffectRef(wizardId),
+    targetEffectRef: nextAttackEffectRef(skeletonId),
+    spellDamageReductionEffectRef: activeEffectRef("spellDamageReduction"),
+    sourceDamageRollPenaltyEffectRef: activeEffectRef(
+      "sourceDamageRollPenalty",
+    ),
+    markedDamageRiderEffectRef: activeEffectRef("spellMarkedDamageRider"),
+    spellTurnStartEffectRef: activeEffectRef("spellTurnStartDamageAndSave"),
+    saveGatedConditionWithRepeatEffectRef: activeEffectRef(
+      "saveGatedConditionWithRepeat",
+    ),
+    protectionRelevantEffectRef: activeEffectRef("possession"),
+    greaseEffectRef: activeEffectRef("persistentAreaSaveCondition"),
+    sleetStormEffectRef: activeEffectRef("persistentAreaSaveComposite"),
+    glyphEffectRef: activeEffectRef("glyphDurableOccurrence"),
+    movableZoneEffectRef: activeEffectRef("persistentAreaSaveDamage"),
+    insectPlagueEffectRef: persistentAreaSaveDamageEffectRef(
+      "area:codec-insect-plague",
+    ),
+    spellTurnEndEffectRef: activeEffectRef("spellTurnEndDamage"),
+    persistentAreaSaveDamageEffectRef: persistentAreaSaveDamageEffectRef(
+      "area:codec-insect-plague",
+    ),
+    cloudkillEffectRef: persistentAreaSaveDamageEffectRef(
+      "area:codec-cloudkill",
+    ),
+    spikeGrowthEffectRef: activeEffectRef("areaMovementDistanceDamage"),
+    gustOfWindEffectRef: activeEffectRef("directionalPersistentArea"),
+    levitateEffectRef: activeEffectRef("controlledVerticalSuspension"),
+    secondLevitateEffectRef: levitateEffectRefs[1]!,
+    antimagicFieldEffectRef: activeEffectRef("magicSuppressionEmanation"),
+    storedLightEmitterRef: skeletonStoredLightEmitter.emitter.effectRef,
+    wizardStoredLightEmitterRef: storedLightEmitterRef(wizardId),
+    activeEffects: allocated.occurrences.flatMap((occurrence) =>
+      occurrence.kind === "activeEffect" ? [occurrence.effect] : [],
+    ),
   };
 }
 
@@ -244,6 +862,9 @@ const saving = (
   hole(name, {
     kind: "savingThrowOutcome",
     [variant]: value,
+    ...(variant === "saveGatedConditionRepeatSave"
+      ? { damageOccurrence: { kind: "untrackedDamage" } }
+      : {}),
     ability,
     dc: { kind: "caster_spell_save_dc" },
     areaChoices: [],
@@ -252,14 +873,14 @@ const saving = (
   });
 const rolled = (name: string, value: object) =>
   hole(name, { kind: "rolledDice", ...value });
-const right = (name: string, holeValue: EncodedHole): CodecCase => ({
+const successCase = (name: string, holeValue: EncodedHole): CodecCase => ({
   name,
-  expected: "Right",
+  expected: "Success",
   hole: holeValue,
 });
-const left = (name: string, holeValue: EncodedHole): CodecCase => ({
+const failureCase = (name: string, holeValue: EncodedHole): CodecCase => ({
   name,
-  expected: "Left",
+  expected: "Failure",
   hole: holeValue,
 });
 
@@ -328,22 +949,29 @@ function staticDartSubject(
 }
 
 const savingThrowCases: readonly CodecCase[] = [
-  right(
+  successCase(
     "spellTurnStartSave",
     saving("spellTurnStartSave", "spellTurnStartSave", "wis", {
       ...source,
+      effectRef: fixture.spellTurnStartEffectRef,
       save: { ...save("wis"), successEnds: "spell" },
     }),
   ),
-  right(
-    "hideousLaughterRepeatSave",
-    saving("hideousLaughterRepeatSave", "hideousLaughterRepeatSave", "wis", {
-      ...source,
-      trigger: "endTurn",
-      save: save("wis"),
-    }),
+  successCase(
+    "saveGatedConditionRepeatSave",
+    saving(
+      "saveGatedConditionRepeatSave",
+      "saveGatedConditionRepeatSave",
+      "wis",
+      {
+        ...source,
+        effectRef: fixture.saveGatedConditionWithRepeatEffectRef,
+        trigger: "endTurn",
+        save: save("wis"),
+      },
+    ),
   ),
-  right(
+  successCase(
     "spellConditionEndTurnSave",
     saving("spellConditionEndTurnSave", "spellConditionEndTurnSave", "dex", {
       ...source,
@@ -351,46 +979,85 @@ const savingThrowCases: readonly CodecCase[] = [
       save: save("dex"),
     }),
   ),
-  right(
+  successCase(
     "protectionRelevantEffectSave",
     saving(
       "protectionRelevantEffectSave",
       "protectionRelevantEffectSave",
       "wis",
-      { ...source, relevantEffect: "frightened", save: save("wis") },
+      {
+        ...source,
+        effectRef: fixture.protectionRelevantEffectRef,
+        relevantEffect: "possession",
+        save: save("wis"),
+      },
     ),
   ),
-  ...(["greaseGroundHazard", "sleetStormAreaHazard"] as const).map((variant) =>
-    right(
+  ...(
+    [
+      [
+        "persistentAreaSaveCondition",
+        fixture.greaseEffectRef,
+        "area:codec-grease",
+      ],
+      [
+        "persistentAreaSaveComposite",
+        fixture.sleetStormEffectRef,
+        "area:codec-sleet-storm",
+      ],
+    ] as const
+  ).map(([variant, effectRef, areaId]) =>
+    successCase(
       variant,
       saving(variant, variant, "dex", {
         ...source,
-        areaId: battleAreaId(`area:${variant}`),
+        effectRef,
+        areaId: battleAreaId(areaId),
         trigger: "entersArea",
         save: save("dex"),
       }),
     ),
   ),
-  ...(["insectPlagueAreaHazard", "cloudkillAreaHazard"] as const).map(
-    (variant) =>
-      right(
-        variant,
-        saving(variant, variant, "con", {
-          ...source,
-          areaId: battleAreaId(`area:${variant}`),
-          trigger: "entersArea",
-          save: save("con"),
-        }),
-      ),
+  ...(
+    [
+      [
+        "persistentAreaSaveDamage",
+        fixture.persistentAreaSaveDamageEffectRef,
+        "stationary",
+        "area:codec-insect-plague",
+      ],
+      [
+        "persistentAreaSaveDamage",
+        fixture.cloudkillEffectRef,
+        "translating",
+        "area:codec-cloudkill",
+      ],
+    ] as const
+  ).map(([variant, effectRef, topology, areaId]) =>
+    failureCase(
+      variant,
+      saving(variant, variant, "con", {
+        ...source,
+        sourceProcedureRef:
+          topology === "stationary"
+            ? fixture.insectPlagueSourceProcedureRef
+            : fixture.cloudkillSourceProcedureRef,
+        topology,
+        effectRef,
+        areaId: battleAreaId(areaId),
+        trigger: "entersArea",
+        save: save("con"),
+      }),
+    ),
   ),
-  right(
+  successCase(
     "glyphExplosiveRune",
     hole("glyphExplosiveRune", {
       kind: "savingThrowOutcome",
       glyphExplosiveRune: {
         sourceCombatantId: wizardId,
         sourceProcedureRef: fixture.sourceProcedureRef,
-        sourceEffectId: battleSpellEffectOccurrenceId("effect:codec:glyph"),
+        effectRef: fixture.glyphEffectRef,
         radiusFeet: 20,
       },
       ability: "dex",
@@ -400,11 +1067,11 @@ const savingThrowCases: readonly CodecCase[] = [
       targetFlatBonuses: [],
     }),
   ),
-  right(
-    "wardingBondSeparation",
-    hole("wardingBondSeparation", {
+  successCase(
+    "linkedDefenseResistanceDamageShareSeparation",
+    hole("linkedDefenseResistanceDamageShareSeparation", {
       kind: "targetSpatialFacts",
-      wardingBondSeparation: {
+      linkedEffectSeparation: {
         sourceCombatantId: wizardId,
         targetId: skeletonId,
         sourceProcedureRef: fixture.sourceProcedureRef,
@@ -413,34 +1080,45 @@ const savingThrowCases: readonly CodecCase[] = [
       requiresTableSpatialFact: true,
     }),
   ),
-  right(
-    "gustOfWindLineSave",
-    saving("gustOfWindLineSave", "gustOfWindLine", "str", {
-      targetId: skeletonId,
-      sourceCombatantId: wizardId,
-      sourceProcedureRef: fixture.sourceProcedureRef,
-      areaId: battleAreaId("area:codec-gust-save"),
-      directionId: battleLineDirectionId("direction:codec-gust-save"),
-      trigger: "endsTurnInLine",
-      save: { ability: "str", dc: { kind: "caster_spell_save_dc" } },
-      pushDistanceFeet: 15,
-    }),
+  successCase(
+    "directionalPersistentAreaSave",
+    saving(
+      "directionalPersistentAreaSave",
+      "directionalPersistentArea",
+      "str",
+      {
+        targetId: skeletonId,
+        sourceCombatantId: wizardId,
+        sourceProcedureRef: fixture.sourceProcedureRef,
+        effectRef: fixture.gustOfWindEffectRef,
+        areaId: battleAreaId("area:codec-gust"),
+        directionId: battleLineDirectionId("direction:codec-gust"),
+        trigger: "endsTurnInLine",
+        save: { ability: "str", dc: { kind: "caster_spell_save_dc" } },
+        pushDistanceFeet: 15,
+      },
+    ),
   ),
-  right(
-    "dragonsBreathSave",
-    saving("dragonsBreathSave", "dragonsBreath", "dex", {
-      targetId: skeletonId,
-      sourceCombatantId: wizardId,
-      sourceProcedureRef: fixture.sourceProcedureRef,
-      lengthFeet: 15,
-    }),
+  successCase(
+    "grantedAreaSaveDamageActionSave",
+    saving(
+      "grantedAreaSaveDamageActionSave",
+      "grantedAreaSaveDamageAction",
+      "dex",
+      {
+        targetId: skeletonId,
+        sourceCombatantId: wizardId,
+        sourceProcedureRef: fixture.sourceProcedureRef,
+        lengthFeet: 15,
+      },
+    ),
   ),
 ];
 
 const damage = { expr: { dice: 1, dieSize: 6 }, damageType: "cold" };
 const markedRider = {
   sourceProcedureRef: fixture.sourceProcedureRef,
-  effectRef: fixture.effectRef,
+  effectRef: fixture.markedDamageRiderEffectRef,
   sourceCombatantId: wizardId,
   kind: "spellMarkedDamageRider",
   targetCombatantId: skeletonId,
@@ -450,7 +1128,7 @@ const markedRider = {
   expiresAt: { kind: "untilDispelled" },
 };
 const rolledDiceCases: readonly CodecCase[] = [
-  right(
+  successCase(
     "sourceProcedureRefWithMarkedRider",
     rolled("sourceProcedureRefWithMarkedRider", {
       critical: false,
@@ -458,22 +1136,23 @@ const rolledDiceCases: readonly CodecCase[] = [
       spellMarkedDamageRiders: [markedRider],
     }),
   ),
-  right(
+  successCase(
     "glyphExplosiveRuneDamage",
     rolled("glyphExplosiveRuneDamage", {
       critical: false,
       glyphExplosiveRune: {
         sourceCombatantId: wizardId,
         sourceProcedureRef: fixture.sourceProcedureRef,
-        sourceEffectId: battleSpellEffectOccurrenceId("effect:codec:glyph"),
+        effectRef: fixture.glyphEffectRef,
         damage: { expr: { dice: 1, dieSize: 6 } },
       },
     }),
   ),
-  right(
+  successCase(
     "spellDamageReduction",
     rolled("spellDamageReduction", {
       spellDamageReduction: {
+        effectRef: fixture.spellDamageReductionEffectRef,
         sourceProcedureRef: fixture.sourceProcedureRef,
         sourceCombatantId: wizardId,
         targetId: skeletonId,
@@ -482,10 +1161,11 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "sourceDamageRollPenalty",
     rolled("sourceDamageRollPenalty", {
       sourceDamageRollPenalty: {
+        effectRef: fixture.sourceDamageRollPenaltyEffectRef,
         sourceProcedureRef: fixture.sourceProcedureRef,
         sourceCombatantId: wizardId,
         affectedCombatantId: skeletonId,
@@ -494,7 +1174,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "mirrorImageDuplicateRoll",
     rolled("mirrorImageDuplicateRoll", {
       mirrorImageDuplicateRoll: {
@@ -507,72 +1187,87 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
+  successCase(
     "spellTurnStartDamage",
     rolled("spellTurnStartDamage", {
       spellTurnStartDamage: {
         ...source,
+        effectRef: fixture.spellTurnStartEffectRef,
         trigger: { kind: "condition", condition: "poisoned" },
         damage,
       },
     }),
   ),
-  right(
+  successCase(
     "spellTurnEndDamage",
-    rolled("spellTurnEndDamage", { spellTurnEndDamage: { ...source, damage } }),
+    rolled("spellTurnEndDamage", {
+      spellTurnEndDamage: {
+        ...source,
+        effectRef: fixture.spellTurnEndEffectRef,
+        damage,
+      },
+    }),
   ),
-  right(
+  successCase(
     "movableZone",
     rolled("movableZone", {
       critical: false,
       movableZone: {
         ...source,
-        areaId: battleAreaId("area:movableZone"),
+        effectRef: fixture.movableZoneEffectRef,
+        areaId: battleAreaId("area:codec-flaming-sphere"),
         trigger: "endsTurnWithinFiveFeetOfSphere",
         save: save("dex"),
       },
     }),
   ),
-  right(
+  successCase(
     "spikeGrowthMovement",
     rolled("spikeGrowthMovement", {
       critical: false,
       spikeGrowthMovement: {
         ...source,
-        areaId: battleAreaId("area:spikeGrowthMovement"),
+        effectRef: fixture.spikeGrowthEffectRef,
+        areaId: battleAreaId("area:codec-spike-growth"),
         distanceFeet: 10,
         damage: { expr: { dice: 1, dieSize: 4 }, damageType: "piercing" },
       },
     }),
   ),
-  right(
-    "insectPlagueAreaHazard",
-    rolled("insectPlagueAreaHazard", {
+  failureCase(
+    "persistentAreaSaveDamage",
+    rolled("persistentAreaSaveDamage", {
       critical: false,
-      insectPlagueAreaHazard: {
+      persistentAreaSaveDamage: {
         ...source,
-        areaId: battleAreaId("area:insectPlagueAreaHazard"),
+        sourceProcedureRef: fixture.insectPlagueSourceProcedureRef,
+        topology: "stationary",
+        effectRef: fixture.persistentAreaSaveDamageEffectRef,
+        areaId: battleAreaId("area:codec-insect-plague"),
         trigger: "entersArea",
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "piercing" },
       },
     }),
   ),
-  right(
-    "cloudkillAreaHazard",
-    rolled("cloudkillAreaHazard", {
+  failureCase(
+    "persistentAreaSaveDamage",
+    rolled("persistentAreaSaveDamage", {
       critical: false,
-      cloudkillAreaHazard: {
+      persistentAreaSaveDamage: {
         ...source,
-        areaId: battleAreaId("area:cloudkillAreaHazard"),
+        sourceProcedureRef: fixture.cloudkillSourceProcedureRef,
+        topology: "translating",
+        effectRef: fixture.cloudkillEffectRef,
+        areaId: battleAreaId("area:codec-cloudkill"),
         trigger: "entersArea",
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "poison" },
       },
     }),
   ),
-  right(
-    "dragonsBreathDamage",
-    rolled("dragonsBreathDamage", {
-      dragonsBreath: {
+  successCase(
+    "grantedAreaSaveDamageActionDamage",
+    rolled("grantedAreaSaveDamageActionDamage", {
+      grantedAreaSaveDamageAction: {
         sourceCombatantId: wizardId,
         sourceProcedureRef: fixture.sourceProcedureRef,
         damageType: "fire",
@@ -591,28 +1286,29 @@ const sourceOwningHoleCases: readonly EncodedHole[] = [
     sourceProcedureRef: invalidSource,
     choices: ["stealth"],
   }),
-  hole("thaumaturgyActiveOneMinuteEffectCount", {
-    kind: "thaumaturgyActiveOneMinuteEffectCount",
+  hole("temporaryAbilityCheckRollModeActiveEffectCount", {
+    kind: "temporaryAbilityCheckRollModeActiveEffectCount",
     sourceProcedureRef: invalidSource,
     maximumActiveOneMinuteEffects: 3,
     requiresTableSpellEffectCount: true,
   }),
-  hole("commandOptionChoice", {
-    kind: "commandOptionChoice",
+  hole("compelledBehaviorOptionChoice", {
+    kind: "compelledBehaviorOptionChoice",
     sourceProcedureRef: invalidSource,
     choices: ["approach"],
   }),
-  hole("spiritualWeaponForcePosition", {
-    kind: "spiritualWeaponForcePosition",
+  hole("spatialMeleeSpellAttackProxyPosition", {
+    kind: "spatialMeleeSpellAttackProxyPosition",
     sourceProcedureRef: invalidSource,
     mode: "cast",
     maxDistanceFeet: 60,
     requiresTableSpatialFact: true,
   }),
-  hole("gustOfWindLineDirectionChoice", {
-    kind: "gustOfWindLineDirectionChoice",
+  hole("directionalPersistentAreaDirectionChoice", {
+    kind: "directionalPersistentAreaDirectionChoice",
     sourceCombatantId: wizardId,
     sourceProcedureRef: invalidSource,
+    effectRef: fixture.effectRef,
     areaId: battleAreaId("area:codec-gust-of-wind"),
     directionId: battleLineDirectionId("direction:codec-north"),
     requiresTableSpatialFact: true,
@@ -622,6 +1318,7 @@ const sourceOwningHoleCases: readonly EncodedHole[] = [
     movableZone: {
       sourceCombatantId: wizardId,
       sourceProcedureRef: invalidSource,
+      effectRef: fixture.effectRef,
       areaId: battleAreaId("area:codec-movable-zone"),
       maxMoveFeet: 30,
     },
@@ -631,7 +1328,7 @@ const sourceOwningHoleCases: readonly EncodedHole[] = [
 const cases: readonly CodecCase[] = [
   ...savingThrowCases,
   ...rolledDiceCases,
-  left(
+  failureCase(
     "spellTurnStartSaveUnboundSource",
     encodeHole({
       ...baseHole("spellTurnStartSaveUnboundSource"),
@@ -639,6 +1336,7 @@ const cases: readonly CodecCase[] = [
       spellTurnStartSave: {
         ...source,
         sourceProcedureRef: invalidSource,
+        effectRef: fixture.effectRef,
         save: { ...save("wis"), successEnds: "spell" },
       },
       ability: "wis",
@@ -648,10 +1346,67 @@ const cases: readonly CodecCase[] = [
       targetFlatBonuses: [],
     }),
   ),
+  failureCase(
+    "saveGatedConditionRepeatSaveWrongOwner",
+    saving(
+      "saveGatedConditionRepeatSaveWrongOwner",
+      "saveGatedConditionRepeatSave",
+      "wis",
+      {
+        ...source,
+        effectRef: fixture.effectRef,
+        trigger: "damage",
+        save: save("wis"),
+      },
+    ),
+  ),
   ...sourceOwningHoleCases.map((replacement) =>
-    left(`${replacement.kind}UnboundSource`, replacement),
+    failureCase(`${replacement.kind}UnboundSource`, replacement),
   ),
 ];
+
+const canonicalPersistentAreaSaveDamageCases = [
+  ...savingThrowCases,
+  ...rolledDiceCases,
+].filter(
+  (entry) =>
+    (entry.hole.kind === "savingThrowOutcome" ||
+      entry.hole.kind === "rolledDice") &&
+    "persistentAreaSaveDamage" in entry.hole,
+);
+
+function persistentAreaSaveDamageOwner(hole: EncodedHole) {
+  if (
+    (hole.kind === "savingThrowOutcome" || hole.kind === "rolledDice") &&
+    "persistentAreaSaveDamage" in hole
+  ) {
+    return hole.persistentAreaSaveDamage;
+  }
+  return undefined;
+}
+
+function damageProtocolHoleWithEffectRef(
+  entry: CodecCase,
+  effectRef: string,
+): EncodedHole {
+  const value = entry.hole;
+  if (value.kind !== "rolledDice") {
+    throw new Error("Expected a rolled-dice damage protocol hole.");
+  }
+  if ("spellDamageReduction" in value) {
+    return {
+      ...value,
+      spellDamageReduction: { ...value.spellDamageReduction, effectRef },
+    };
+  }
+  if ("sourceDamageRollPenalty" in value) {
+    return {
+      ...value,
+      sourceDamageRollPenalty: { ...value.sourceDamageRollPenalty, effectRef },
+    };
+  }
+  throw new Error("Expected an occurrence-bound damage protocol hole.");
+}
 
 describe("battle object damage codec boundaries", () => {
   test("round-trips a table-resolved object damage outcome", () => {
@@ -668,18 +1423,674 @@ describe("battle object damage codec boundaries", () => {
   });
 });
 
+describe("battle shake-awake physical reachability codec", () => {
+  test("round-trips the exact actor-target witness and rejects the retired adjacency fact", () => {
+    const fill = {
+      kind: "targetChoice" as const,
+      holeId: holeId("codec-area-control-shake-awake-target"),
+      value: goblinId,
+      spatialFacts: [
+        {
+          kind: "areaControlShakeAwakePhysicalReachability" as const,
+          actorId: fighterId,
+          targetId: goblinId,
+        },
+      ],
+    };
+
+    const decoded = Schema.decodeUnknownSync(BattleFillSchema)(fill);
+    expect(
+      Schema.decodeUnknownSync(BattleFillSchema)(
+        Schema.encodeSync(BattleFillSchema)(decoded),
+      ),
+    ).toEqual(fill);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
+          ...fill,
+          spatialFacts: [
+            {
+              kind: "areaControlShakeAwakeActorWithin5Feet",
+              actorId: fighterId,
+              targetId: goblinId,
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+  });
+});
+
 describe("battle codec execution-reference boundaries", () => {
+  test("the exhaustive active-effect projection owns each snapshot location", () => {
+    const projectionsByEffectRef = new Map(
+      fixture.activeEffects.map((effect) => [
+        String(effect.effectRef),
+        battleActiveEffectOccurrenceSpatialProjection(effect),
+      ]),
+    );
+    const observedSpatialClasses = new Set<string>();
+
+    for (const occurrence of fixture.snapshot.combatants.flatMap(
+      (combatant) => combatant.activeEffectOccurrences,
+    )) {
+      const projection = projectionsByEffectRef.get(
+        String(occurrence.effectRef),
+      );
+      expect(projection).toBeDefined();
+      expect(occurrence.location).toEqual(projection?.location);
+      if (projection !== undefined) {
+        observedSpatialClasses.add(projection.spatialClass);
+      }
+    }
+
+    expect(observedSpatialClasses).toEqual(
+      new Set(["nonSpatial", "area", "line", "object", "anchored"]),
+    );
+
+    const glyph = fixture.activeEffects.find(
+      (effect) => effect.kind === "glyphDurableOccurrence",
+    );
+    if (glyph?.kind !== "glyphDurableOccurrence") {
+      throw new Error("Expected the codec Glyph effect occurrence.");
+    }
+    expect(
+      battleActiveEffectOccurrenceSpatialProjection({
+        ...glyph,
+        anchor: {
+          kind: "closeableObject",
+          objectId: battleObjectId("object:codec-glyph-anchor"),
+        },
+      }),
+    ).toEqual({
+      spatialClass: "anchored",
+      location: {
+        kind: "object",
+        objectId: battleObjectId("object:codec-glyph-anchor"),
+      },
+    });
+  });
+
+  test.each([
+    ["persistentAreaSaveCondition", { kind: "nonSpatial" }],
+    [
+      "directionalPersistentArea",
+      { kind: "area", areaId: battleAreaId("area:codec-wrong-class") },
+    ],
+    ["glyphDurableOccurrence", { kind: "nonSpatial" }],
+    [
+      "controlledVerticalSuspension",
+      { kind: "area", areaId: battleAreaId("area:codec-wrong-class") },
+    ],
+  ] as const)(
+    "rejects %s when its structural occurrence uses another spatial class",
+    (activeEffectKind, location) => {
+      let replacementCount = 0;
+      const snapshot: EncodedSnapshot = {
+        ...fixture.snapshot,
+        combatants: fixture.snapshot.combatants.map((combatant) => ({
+          ...combatant,
+          activeEffectOccurrences: combatant.activeEffectOccurrences.map(
+            (occurrence) => {
+              if (
+                occurrence.activeEffectKind !== activeEffectKind ||
+                replacementCount > 0
+              ) {
+                return occurrence;
+              }
+              replacementCount += 1;
+              return {
+                ...occurrence,
+                location: location as EncodedOccurrenceLocation,
+              };
+            },
+          ),
+        })),
+      };
+      expect(replacementCount).toBe(1);
+      expectSnapshotDecodeFailure(snapshot);
+    },
+  );
+
   test.each(cases)("$expected $name", ({ expected, hole: replacement }) => {
-    const decoded = Schema.decodeUnknownEither(
+    const decoded = Schema.decodeUnknownResult(
       BattleCheckpointFrontierEnvelopeSchema,
     )(
       replaceActHole(fixture.envelope, fixture.sourceProcedureRef, replacement),
     );
-    expect(Either.isRight(decoded)).toBe(expected === "Right");
+    expect(
+      Result.isSuccess(decoded),
+      Result.isFailure(decoded) ? String(decoded.failure) : undefined,
+    ).toBe(expected === "Success");
+  });
+
+  test.each(canonicalPersistentAreaSaveDamageCases)(
+    "Success canonical $name full-envelope binding",
+    ({ hole: replacement }) => {
+      const owner = persistentAreaSaveDamageOwner(replacement);
+      if (owner === undefined) {
+        throw new Error("Expected a persistent-area save-damage codec owner.");
+      }
+      const sourceProcedureRef =
+        owner.topology === "stationary"
+          ? fixture.insectPlagueSourceProcedureRef
+          : fixture.cloudkillSourceProcedureRef;
+      const decoded = Schema.decodeUnknownResult(
+        BattleCheckpointFrontierEnvelopeSchema,
+      )(
+        replaceCastActWithPersistentAreaSaveDamage(fixture.envelope, {
+          sourceProcedureRef,
+          targetId: skeletonId,
+          effectRef: owner.effectRef,
+          areaId: owner.areaId,
+          hole: replacement,
+        }),
+      );
+      expect(
+        Result.isSuccess(decoded),
+        Result.isFailure(decoded) ? String(decoded.failure) : undefined,
+      ).toBe(true);
+    },
+  );
+
+  test("accepts only the exact Cloudkill wind-strength hole pair", () => {
+    if (fixture.envelope.frontier.kind !== "acts") {
+      throw new Error("Expected the codec Acts frontier.");
+    }
+    const cloudkillAct = fixture.envelope.frontier.acts.find(
+      (act) =>
+        act.subject.tag === "runtimeCommand" &&
+        act.subject.command === "endPersistentAreaSaveDamageForEnvironment",
+    );
+    if (cloudkillAct === undefined) {
+      throw new Error("Expected the Cloudkill dispersal act.");
+    }
+    expect(cloudkillAct.initialHoles).toHaveLength(1);
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        fixture.envelope,
+      ),
+    ).not.toThrow();
+    expectEnvelopeDecodeFailure({
+      ...fixture.envelope,
+      frontier: {
+        ...fixture.envelope.frontier,
+        acts: fixture.envelope.frontier.acts.map((act) =>
+          act === cloudkillAct
+            ? {
+                ...act,
+                initialHoles: [...act.initialHoles, ...act.initialHoles],
+              }
+            : act,
+        ),
+      },
+    });
+  });
+
+  test.each([
+    [
+      "spellDamageReduction",
+      rolledDiceCases[2],
+      fixture.spellDamageReductionEffectRef,
+    ],
+    [
+      "sourceDamageRollPenalty",
+      rolledDiceCases[3],
+      fixture.sourceDamageRollPenaltyEffectRef,
+    ],
+  ] as const)(
+    "rejects %s when its effect occurrence is absent",
+    (_, entry, effectRef) => {
+      if (entry === undefined) {
+        throw new Error("Expected the damage protocol codec case.");
+      }
+      const envelope = replaceActHole(
+        fixture.envelope,
+        fixture.sourceProcedureRef,
+        entry.hole,
+      );
+      const withoutOccurrence = {
+        ...envelope,
+        checkpoint: {
+          ...envelope.checkpoint,
+          combatants: envelope.checkpoint.combatants.map((combatant) => ({
+            ...combatant,
+            activeEffectOccurrences: combatant.activeEffectOccurrences.filter(
+              (occurrence) => occurrence.effectRef !== effectRef,
+            ),
+          })),
+        },
+      };
+
+      expectEnvelopeDecodeFailure(withoutOccurrence);
+    },
+  );
+
+  test.each([
+    ["spellDamageReduction", rolledDiceCases[2]],
+    ["sourceDamageRollPenalty", rolledDiceCases[3]],
+  ] as const)(
+    "rejects %s when the occurrence belongs to another combatant",
+    (_, entry) => {
+      if (entry === undefined) {
+        throw new Error("Expected the damage protocol codec case.");
+      }
+      expectEnvelopeDecodeFailure(
+        replaceActHole(
+          fixture.envelope,
+          fixture.sourceProcedureRef,
+          damageProtocolHoleWithEffectRef(
+            entry,
+            fixture.markedDamageRiderEffectRef,
+          ),
+        ),
+      );
+    },
+  );
+
+  test.each([
+    [
+      "spellDamageReduction",
+      rolledDiceCases[2],
+      fixture.sourceDamageRollPenaltyEffectRef,
+    ],
+    [
+      "sourceDamageRollPenalty",
+      rolledDiceCases[3],
+      fixture.spellDamageReductionEffectRef,
+    ],
+  ] as const)(
+    "rejects %s when the same owner has the referenced occurrence under another subtype",
+    (_, entry, effectRef) => {
+      if (entry === undefined) {
+        throw new Error("Expected the damage protocol codec case.");
+      }
+      expectEnvelopeDecodeFailure(
+        replaceActHole(
+          fixture.envelope,
+          fixture.sourceProcedureRef,
+          damageProtocolHoleWithEffectRef(entry, effectRef),
+        ),
+      );
+    },
+  );
+
+  test.each([
+    [
+      "area",
+      battleAreaId("area:codec-wrong-gust"),
+      battleLineDirectionId("direction:codec-gust"),
+    ],
+    [
+      "direction",
+      battleAreaId("area:codec-gust"),
+      battleLineDirectionId("direction:codec-wrong-gust"),
+    ],
+  ] as const)(
+    "rejects a Gust occurrence ref with the wrong %s geometry",
+    (_, areaId, directionId) => {
+      const replacement = saving(
+        "directionalPersistentAreaSaveWrongGeometry",
+        "directionalPersistentArea",
+        "str",
+        {
+          targetId: skeletonId,
+          sourceCombatantId: wizardId,
+          sourceProcedureRef: fixture.sourceProcedureRef,
+          effectRef: fixture.gustOfWindEffectRef,
+          areaId,
+          directionId,
+          trigger: "endsTurnInLine",
+          save: { ability: "str", dc: { kind: "caster_spell_save_dc" } },
+          pushDistanceFeet: 15,
+        },
+      );
+      expectEnvelopeDecodeFailure(
+        replaceActHole(
+          fixture.envelope,
+          fixture.sourceProcedureRef,
+          replacement,
+        ),
+      );
+    },
+  );
+
+  test.each([
+    ["spellDamageReduction", rolledDiceCases[2]],
+    ["sourceDamageRollPenalty", rolledDiceCases[3]],
+  ] as const)(
+    "rejects %s when the occurrence is not an active effect",
+    (_, entry) => {
+      if (entry === undefined) {
+        throw new Error("Expected the damage protocol codec case.");
+      }
+      expectEnvelopeDecodeFailure(
+        replaceActHole(
+          fixture.envelope,
+          fixture.sourceProcedureRef,
+          damageProtocolHoleWithEffectRef(entry, fixture.storedLightEmitterRef),
+        ),
+      );
+    },
+  );
+
+  test("rejects a damage occurrence at the owner's allocation cursor", () => {
+    const envelope = replaceActHole(
+      fixture.envelope,
+      fixture.sourceProcedureRef,
+      rolledDiceCases[2]!.hole,
+    );
+    const invalidCursor = {
+      ...envelope,
+      checkpoint: {
+        ...envelope.checkpoint,
+        combatants: envelope.checkpoint.combatants.map((combatant) =>
+          combatant.combatantId === skeletonId
+            ? { ...combatant, nextEffectOrdinal: 0 }
+            : combatant,
+        ),
+      },
+    };
+
+    expectEnvelopeDecodeFailure(invalidCursor);
+  });
+
+  test("round-trips exact movement and Levitate spatial occurrence references", () => {
+    const movement = Schema.decodeUnknownSync(BattleFillSchema)({
+      kind: "movement",
+      holeId: holeId("exact-movement-occurrences"),
+      value: {
+        speedKind: "walk",
+        movementCostFeet: 20,
+        provokedOpportunityAttacks: [],
+        areaDifficultTerrain: {
+          kind: "areaDifficultTerrain",
+          sources: [
+            {
+              kind: "areaMovementDistanceDamage",
+              effectRef: fixture.spikeGrowthEffectRef,
+              sourceCombatantId: wizardId,
+              sourceProcedureRef: fixture.sourceProcedureRef,
+              areaId: battleAreaId("area:codec-spike-growth"),
+              damageDistanceFeet: 5,
+            },
+          ],
+          totalDistanceFeet: 10,
+          difficultTerrainDistanceFeet: 5,
+        },
+        directionalPersistentAreaMovement: {
+          kind: "directionalPersistentAreaMovement",
+          effectRef: fixture.gustOfWindEffectRef,
+          sourceCombatantId: wizardId,
+          sourceProcedureRef: fixture.sourceProcedureRef,
+          areaId: battleAreaId("area:codec-gust"),
+          directionId: battleLineDirectionId("direction:codec-gust"),
+          totalDistanceFeet: 10,
+          closerDistanceFeet: 5,
+        },
+        controlledVerticalSuspensionMovement: {
+          kind: "controlledVerticalSuspensionMovement",
+          effectRef: fixture.levitateEffectRef,
+          sourceCombatantId: wizardId,
+          sourceProcedureRef: fixture.sourceProcedureRef,
+          fixedObjectOrSurfaceWithinReach: true,
+        },
+      },
+    });
+    const altitudeChange = Schema.decodeUnknownSync(BattleFillSchema)({
+      kind: "controlledVerticalSuspensionAltitudeChange",
+      holeId: holeId("exact-levitate-altitude"),
+      value: { direction: "up", distanceFeet: 10 },
+      spatialFacts: [
+        {
+          kind: "controlledVerticalSuspensionTargetWithinRange",
+          effectRef: fixture.levitateEffectRef,
+          sourceCombatantId: wizardId,
+          sourceProcedureRef: fixture.sourceProcedureRef,
+          targetId: skeletonId,
+          rangeFeet: 60,
+        },
+      ],
+    });
+
+    expect(
+      Schema.decodeUnknownSync(BattleFillSchema)(
+        Schema.encodeSync(BattleFillSchema)(movement),
+      ),
+    ).toEqual(movement);
+    expect(
+      Schema.decodeUnknownSync(BattleFillSchema)(
+        Schema.encodeSync(BattleFillSchema)(altitudeChange),
+      ),
+    ).toEqual(altitudeChange);
+  });
+
+  test.each([
+    {
+      kind: "movement",
+      holeId: holeId("missing-terrain-occurrence"),
+      value: {
+        speedKind: "walk",
+        movementCostFeet: 10,
+        provokedOpportunityAttacks: [],
+        areaDifficultTerrain: {
+          kind: "areaDifficultTerrain",
+          sources: [
+            {
+              kind: "areaMovementDistanceDamage",
+              sourceCombatantId: wizardId,
+              sourceProcedureRef: fixture.sourceProcedureRef,
+              areaId: battleAreaId("area:codec-spike-growth"),
+              damageDistanceFeet: 5,
+            },
+          ],
+          totalDistanceFeet: 5,
+          difficultTerrainDistanceFeet: 5,
+        },
+      },
+    },
+    {
+      kind: "movement",
+      holeId: holeId("missing-gust-occurrence"),
+      value: {
+        speedKind: "walk",
+        movementCostFeet: 10,
+        provokedOpportunityAttacks: [],
+        directionalPersistentAreaMovement: {
+          kind: "directionalPersistentAreaMovement",
+          sourceCombatantId: wizardId,
+          sourceProcedureRef: fixture.sourceProcedureRef,
+          areaId: battleAreaId("area:codec-gust"),
+          directionId: battleLineDirectionId("direction:codec-gust"),
+          totalDistanceFeet: 5,
+          closerDistanceFeet: 5,
+        },
+      },
+    },
+    {
+      kind: "movement",
+      holeId: holeId("missing-levitate-movement-occurrence"),
+      value: {
+        speedKind: "walk",
+        movementCostFeet: 10,
+        provokedOpportunityAttacks: [],
+        controlledVerticalSuspensionMovement: {
+          kind: "controlledVerticalSuspensionMovement",
+          sourceCombatantId: wizardId,
+          sourceProcedureRef: fixture.sourceProcedureRef,
+          fixedObjectOrSurfaceWithinReach: true,
+        },
+      },
+    },
+    {
+      kind: "controlledVerticalSuspensionAltitudeChange",
+      holeId: holeId("missing-levitate-spatial-occurrence"),
+      value: { direction: "up", distanceFeet: 10 },
+      spatialFacts: [
+        {
+          kind: "controlledVerticalSuspensionTargetWithinRange",
+          sourceCombatantId: wizardId,
+          sourceProcedureRef: fixture.sourceProcedureRef,
+          targetId: skeletonId,
+          rangeFeet: 60,
+        },
+      ],
+    },
+  ])(
+    "rejects a fill missing an exact movement occurrence reference",
+    (fill) => {
+      expect(
+        Result.isFailure(Schema.decodeUnknownResult(BattleFillSchema)(fill)),
+      ).toBe(true);
+    },
+  );
+
+  test("binds a Levitate altitude act and hole to the same target-owned active effect", () => {
+    const altitudeHole = hole("controlledVerticalSuspensionAltitudeChange", {
+      kind: "controlledVerticalSuspensionAltitudeChange",
+      effectRef: fixture.levitateEffectRef,
+      actorId: wizardId,
+      targetId: skeletonId,
+      maxDistanceFeet: 20,
+      directions: ["up", "down"],
+      requiresTargetWithinRangeFact: true,
+    });
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          replaceCastActWithLevitateAltitudeControl(fixture.envelope, {
+            sourceProcedureRef: fixture.sourceProcedureRef,
+            subjectEffectRef: fixture.levitateEffectRef,
+            altitudeHole,
+          }),
+        ),
+      ),
+    ).toBe(true);
+    for (const effectRef of [
+      fixture.gustOfWindEffectRef,
+      fixture.storedLightEmitterRef,
+    ]) {
+      expectEnvelopeDecodeFailure(
+        replaceCastActWithLevitateAltitudeControl(fixture.envelope, {
+          sourceProcedureRef: fixture.sourceProcedureRef,
+          subjectEffectRef: fixture.levitateEffectRef,
+          altitudeHole: encodeHole({ ...altitudeHole, effectRef }),
+        }),
+      );
+    }
+    expectEnvelopeDecodeFailure(
+      replaceCastActWithLevitateAltitudeControl(fixture.envelope, {
+        sourceProcedureRef: fixture.sourceProcedureRef,
+        subjectEffectRef: fixture.levitateEffectRef,
+        altitudeHole: encodeHole({
+          ...altitudeHole,
+          effectRef: fixture.secondLevitateEffectRef,
+        }),
+      }),
+    );
+  });
+
+  test("binds an Antimagic Field target choice to the source-owned aura occurrence", () => {
+    const aura = {
+      kind: "magicSuppressionEmanation" as const,
+      effectRef: fixture.antimagicFieldEffectRef,
+      areaId: battleAreaId("area:codec-antimagic-field"),
+      sourceCombatantId: wizardId,
+    };
+    const targetHole = hole("ongoingSpellTargetChoice", {
+      kind: "ongoingSpellTargetChoice",
+      label: "Ongoing spell target",
+      requiresTableSpatialFact: true,
+      casterId: wizardId,
+      procedureRef: fixture.sourceProcedureRef,
+      rangeFeet: 120,
+      choices: [{ kind: "magicalEffect", effect: aura }],
+    });
+    const envelope = replaceActHole(
+      fixture.envelope,
+      fixture.sourceProcedureRef,
+      targetHole,
+    );
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
+          envelope,
+        ),
+      ),
+    ).toBe(true);
+    const { effectRef: _effectRef, ...auraWithoutEffectRef } = aura;
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
+          ...baseHole("ongoingSpellTargetChoiceWithoutAuraOccurrence"),
+          kind: "ongoingSpellTargetChoice",
+          label: "Ongoing spell target",
+          requiresTableSpatialFact: true,
+          casterId: wizardId,
+          procedureRef: fixture.sourceProcedureRef,
+          rangeFeet: 120,
+          choices: [{ kind: "magicalEffect", effect: auraWithoutEffectRef }],
+        }),
+      ),
+    ).toBe(true);
+
+    for (const effectRef of [
+      fixture.levitateEffectRef,
+      fixture.wizardStoredLightEmitterRef,
+    ]) {
+      expectEnvelopeDecodeFailure(
+        replaceActHole(
+          fixture.envelope,
+          fixture.sourceProcedureRef,
+          encodeHole({
+            ...targetHole,
+            choices: [
+              {
+                kind: "magicalEffect",
+                effect: { ...aura, effectRef },
+              },
+            ],
+          }),
+        ),
+      );
+    }
+
+    expectEnvelopeDecodeFailure({
+      ...envelope,
+      checkpoint: {
+        ...envelope.checkpoint,
+        combatants: envelope.checkpoint.combatants.map((combatant) => ({
+          ...combatant,
+          activeEffectOccurrences: combatant.activeEffectOccurrences.filter(
+            (occurrence) =>
+              occurrence.effectRef !== fixture.antimagicFieldEffectRef,
+          ),
+        })),
+      },
+    });
+  });
+
+  test("rejects a Hideous Laughter repeat-save hole without its occurrence ref", () => {
+    const decoded = Schema.decodeUnknownResult(BattleHoleSchema)({
+      ...baseHole("saveGatedConditionRepeatSaveMissingEffectRef"),
+      kind: "savingThrowOutcome",
+      damageOccurrence: { kind: "untrackedDamage" },
+      saveGatedConditionRepeatSave: {
+        ...source,
+        trigger: "damage",
+        save: save("wis"),
+      },
+      ability: "wis",
+      dc: { kind: "caster_spell_save_dc" },
+      areaChoices: [],
+      targetRollModes: [],
+      targetFlatBonuses: [],
+    });
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 
   test("rejects an empty interrupt decision choice frontier", () => {
-    const decoded = Schema.decodeUnknownEither(
+    const decoded = Schema.decodeUnknownResult(
       BattleInterruptDecisionFrontierSchema,
     )({
       kind: "interruptDecision",
@@ -695,7 +2106,7 @@ describe("battle codec execution-reference boundaries", () => {
       choices: [],
       stackDepth: 0,
     });
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 });
 
@@ -829,8 +2240,8 @@ describe("battle codec act ownership boundaries", () => {
     }
     const pendingEnvelope = encodedEnvelopeFromState(reported.state);
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           pendingEnvelope,
         ),
       ),
@@ -838,7 +2249,7 @@ describe("battle codec act ownership boundaries", () => {
     if (pendingEnvelope.frontier.kind !== "interruptDecision") {
       throw new Error("Expected a pending interrupt-decision frontier.");
     }
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...pendingEnvelope.frontier,
@@ -848,7 +2259,7 @@ describe("battle codec act ownership boundaries", () => {
         },
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...pendingEnvelope.frontier,
@@ -866,7 +2277,7 @@ describe("battle codec act ownership boundaries", () => {
     if (readiedAttackSnapshot?.response.kind !== "attack") {
       throw new Error("Expected an encoded readied-attack snapshot.");
     }
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       checkpoint: {
         ...pendingEnvelope.checkpoint,
@@ -881,7 +2292,7 @@ describe("battle codec act ownership boundaries", () => {
         },
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       checkpoint: {
         ...pendingEnvelope.checkpoint,
@@ -898,7 +2309,7 @@ describe("battle codec act ownership boundaries", () => {
         },
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       checkpoint: {
         ...pendingEnvelope.checkpoint,
@@ -984,7 +2395,7 @@ describe("battle codec act ownership boundaries", () => {
       },
       initialHoles: [],
     };
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       checkpoint: pendingEnvelope.checkpoint,
       frontier: {
         kind: "acts",
@@ -1002,7 +2413,7 @@ describe("battle codec act ownership boundaries", () => {
         ],
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       checkpoint: pendingEnvelope.checkpoint,
       frontier: {
         kind: "acts",
@@ -1086,7 +2497,7 @@ describe("battle codec act ownership boundaries", () => {
       statBlockReactionModifierChoice,
     ];
     for (const malformedChoice of malformedInterruptKindCases) {
-      const decoded = Schema.decodeUnknownEither(
+      const decoded = Schema.decodeUnknownResult(
         BattleCheckpointFrontierEnvelopeSchema,
       )({
         ...pendingEnvelope,
@@ -1095,9 +2506,9 @@ describe("battle codec act ownership boundaries", () => {
           choices: [malformedChoice],
         },
       });
-      expect(Either.isLeft(decoded)).toBe(true);
+      expect(Result.isFailure(decoded)).toBe(true);
     }
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...pendingEnvelope.frontier,
@@ -1109,7 +2520,7 @@ describe("battle codec act ownership boundaries", () => {
         choices: [statBlockRetaliationChoice],
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...pendingEnvelope.frontier,
@@ -1121,7 +2532,7 @@ describe("battle codec act ownership boundaries", () => {
         choices: [statBlockReactionModifierChoice],
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...pendingEnvelope.frontier,
@@ -1133,7 +2544,7 @@ describe("battle codec act ownership boundaries", () => {
         choices: [fighterAttackReactionModifierChoice],
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...pendingEnvelope.frontier,
@@ -1153,7 +2564,7 @@ describe("battle codec act ownership boundaries", () => {
         trigger: "opportunityAttack" as const,
       },
     };
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...opportunityFrontier,
@@ -1171,7 +2582,7 @@ describe("battle codec act ownership boundaries", () => {
         ],
       },
     });
-    expectEnvelopeDecodeLeft({
+    expectEnvelopeDecodeFailure({
       ...pendingEnvelope,
       frontier: {
         ...opportunityFrontier,
@@ -1214,7 +2625,7 @@ describe("battle codec act ownership boundaries", () => {
         ] as const,
       },
     };
-    expectEnvelopeDecodeLeft(malformedTargetEnvelope);
+    expectEnvelopeDecodeFailure(malformedTargetEnvelope);
     const targetSpatialFacts = {
       kind: "targetSpatialFacts" as const,
       holeId: ATTACK_TARGET_HOLE_ID,
@@ -1312,8 +2723,8 @@ describe("battle codec act ownership boundaries", () => {
 
     const pendingEnvelope = encodedEnvelopeFromState(reported.state);
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           pendingEnvelope,
         ),
       ),
@@ -1382,8 +2793,8 @@ describe("battle codec act ownership boundaries", () => {
     }
     const encoded = encodedEnvelopeFromState(awaitingOpportunity.state);
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           encoded,
         ),
       ),
@@ -1399,7 +2810,7 @@ describe("battle codec act ownership boundaries", () => {
         act.subject.actorId === wizardId,
       combatantId("codec-unknown"),
     );
-    expectEnvelopeDecodeLeft(malformed);
+    expectEnvelopeDecodeFailure(malformed);
   });
   test("rejects a stat-block multiattack owned by a character", () => {
     const session = startBattleSessionRight({
@@ -1430,7 +2841,7 @@ describe("battle codec act ownership boundaries", () => {
         act.subject.actorId === skeletonId,
       wizardId,
     );
-    expectEnvelopeDecodeLeft(malformed);
+    expectEnvelopeDecodeFailure(malformed);
   });
   test("rejects a character off-hand attack owned by a stat block", () => {
     const session = startBattleSessionRight({
@@ -1486,6 +2897,6 @@ describe("battle codec act ownership boundaries", () => {
         act.subject.actorId === wizardId,
       skeletonId,
     );
-    expectEnvelopeDecodeLeft(malformed);
+    expectEnvelopeDecodeFailure(malformed);
   });
 });

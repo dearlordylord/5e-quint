@@ -86,8 +86,21 @@ function contextText(delivery: ContextDelivery): string {
 
 const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
 /** The emitted declaration graph is compilation support, not an unbounded SDK. */
-export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES = 512;
-export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 5 * 1024 * 1024;
+export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE = {
+  files: 511,
+  bytes: 4_074_692,
+} as const;
+/**
+ * Effect 4's reviewed declaration graph uses every admitted file and leaves a
+ * 6,411,068-byte margin below its reviewed 10 MiB cap. Any graph growth must
+ * update the reviewed measure explicitly.
+ */
+export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES =
+  PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files;
+export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 10 * 1024 * 1024;
+export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN =
+  PUBLIC_DECLARATION_BUNDLE_MAX_BYTES -
+  PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes;
 export type PublicDeclarationBundleMeasure = {
   readonly files: number;
   readonly bytes: number;
@@ -208,7 +221,6 @@ export function emitPublicDeclarations(
     "packages/battle-runtime/src/battle-state-execution.d.ts",
     "packages/battle-runtime/src/battle-session-execution.d.ts",
     "packages/character-creation-runtime/src/index.d.ts",
-    "packages/character-battle-runtime/src/index.d.ts",
     "packages/character-sheet-runtime/src/index.d.ts",
     "packages/tactical-space/src/index.d.ts",
   ];
@@ -253,12 +265,6 @@ function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
             resolve(
               baseUrl,
               "declarations/packages/battle-runtime/src/index.d.ts",
-            ),
-          ],
-          "@dnd/character-battle-runtime": [
-            resolve(
-              baseUrl,
-              "declarations/packages/character-battle-runtime/src/index.d.ts",
             ),
           ],
           "@dnd/character-creation-runtime": [

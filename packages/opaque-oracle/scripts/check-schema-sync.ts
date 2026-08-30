@@ -11,7 +11,7 @@ import {
   formatOraclePublicationValidation,
   validateOraclePublicationSchemaBytes,
 } from "./oracle-publication-validation.ts";
-import { Either } from "effect";
+import { Result } from "effect";
 
 type PublicationDirectoryEntry = {
   readonly name: string;
@@ -23,14 +23,14 @@ export function checkOraclePublicationSync(
 ): readonly string[] {
   const issues: string[] = [];
   const entries = readPublicationDirectory(publicationDirectory);
-  if (Either.isLeft(entries)) {
+  if (Result.isFailure(entries)) {
     issues.push(
-      `publication directory cannot be read: ${safeErrorMessage(entries.left)}`,
+      `publication directory cannot be read: ${safeErrorMessage(entries.failure)}`,
     );
     return issues;
   }
 
-  for (const entry of entries.right) {
+  for (const entry of entries.success) {
     if (!isOraclePublicationArtifactFileName(entry.name)) {
       issues.push(`orphan publication entry: ${entry.name}`);
     }
@@ -39,7 +39,7 @@ export function checkOraclePublicationSync(
   for (const member of ORACLE_PUBLICATION_MEMBERS) {
     const artifact = ORACLE_PUBLICATION_ARTIFACTS[member];
     const artifactPath = join(publicationDirectory, artifact.fileName);
-    const entry = entries.right.find(
+    const entry = entries.success.find(
       (candidate) => candidate.name === artifact.fileName,
     );
     if (entry === undefined) {
@@ -52,15 +52,15 @@ export function checkOraclePublicationSync(
     }
 
     const committedBytes = readPublicationArtifact(artifactPath);
-    if (Either.isLeft(committedBytes)) {
+    if (Result.isFailure(committedBytes)) {
       issues.push(
-        `publication artifact cannot be read (${artifact.fileName}): ${safeErrorMessage(committedBytes.left)}`,
+        `publication artifact cannot be read (${artifact.fileName}): ${safeErrorMessage(committedBytes.failure)}`,
       );
       continue;
     }
     issues.push(
       ...formatOraclePublicationValidation(
-        validateOraclePublicationSchemaBytes(member, committedBytes.right),
+        validateOraclePublicationSchemaBytes(member, committedBytes.success),
       ),
     );
   }
@@ -70,23 +70,23 @@ export function checkOraclePublicationSync(
 
 function readPublicationDirectory(
   publicationDirectory: string,
-): Either.Either<readonly PublicationDirectoryEntry[], unknown> {
+): Result.Result<readonly PublicationDirectoryEntry[], unknown> {
   try {
-    return Either.right(
+    return Result.succeed(
       readdirSync(publicationDirectory, { withFileTypes: true }),
     );
   } catch (cause) {
-    return Either.left(cause);
+    return Result.fail(cause);
   }
 }
 
 function readPublicationArtifact(
   artifactPath: string,
-): Either.Either<Buffer, unknown> {
+): Result.Result<Buffer, unknown> {
   try {
-    return Either.right(readFileSync(artifactPath));
+    return Result.succeed(readFileSync(artifactPath));
   } catch (cause) {
-    return Either.left(cause);
+    return Result.fail(cause);
   }
 }
 

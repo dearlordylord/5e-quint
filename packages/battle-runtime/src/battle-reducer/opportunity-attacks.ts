@@ -51,7 +51,7 @@ import {
   applyAttackDamageAmount,
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
-  damageLifecycleHideousLaughterDamageRepeatSaveFillCheck,
+  damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
@@ -1396,29 +1396,29 @@ function resolveReactionAttackDamageTransaction(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  const hideousLaughterSaveCheck =
-    damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+  const saveGatedConditionWithRepeatSaveCheck =
+    damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
       state: spellReducedState,
       target: spellReduction.target,
       damageAmount: reducedDamageAmount,
-      fills: fillSet.hideousLaughterDamageRepeatSaves,
+      fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
     });
 
-  if (hideousLaughterSaveCheck.tag === "needsHoles") {
+  if (saveGatedConditionWithRepeatSaveCheck.tag === "needsHoles") {
     return needsHolesResult(
       preConsumptionState,
       resolutionInput.subject,
-      hideousLaughterSaveCheck.holes,
+      saveGatedConditionWithRepeatSaveCheck.holes,
     );
   }
 
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (hideousLaughterSaveCheck.tag === "invalid") {
+  if (saveGatedConditionWithRepeatSaveCheck.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       resolutionInput.state,
       "invalidFill",
-      hideousLaughterSaveCheck.message,
+      saveGatedConditionWithRepeatSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1444,8 +1444,9 @@ function resolveReactionAttackDamageTransaction(input: {
     damageDisposition: fillSet.damageDisposition,
     ...pathDamageApplication,
     concentrationSavingThrow: primaryConcentrationSavingThrow,
-    hideousLaughterDamageRepeatSaves: fillSet.hideousLaughterDamageRepeatSaves,
-    wardingBondDamageShareConcentrationSavingThrows:
+    saveGatedConditionWithRepeatDamageRepeatSaves:
+      fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+    linkedDefenseResistanceDamageShareConcentrationSavingThrows:
       fillSet.concentrationSavingThrows,
     spatialFacts: targetSpatialFacts,
     relationshipDecisions: relationshipCheck.decisions,

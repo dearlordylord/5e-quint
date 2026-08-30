@@ -77,16 +77,19 @@ import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { CharacterBuildProjectionIssue } from "@dnd/character-creation-runtime";
-import { Either, Match, Option } from "effect";
-import { isNonEmptyReadonlyArray } from "effect/Array";
+import { Result, Match, Option } from "effect";
+import { isReadonlyArrayNonEmpty } from "effect/Array";
 
 import {
   CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE,
   battleCreatureInitFromCharacterBuild,
+  type CharacterSheetBattleInit,
+  type CharacterSheetBattleInitInput,
   type CharacterBattleCreatureInitResult,
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
 import {
+  type CharacterBattleRuntimeIssueMessage,
   type BattleCreatureInitIssue,
   battleCreatureInitIssue,
   battleCreatureInitIssueMessage,
@@ -116,23 +119,22 @@ import { settleCompanionFromBattle } from "./companion-handoff.ts";
 function characterBattleHandoffValidationIssue(
   check: CharacterSheetBattleHandoffValidationCheck,
   message: string,
-): Either.Either<never, CharacterSheetBattleHandoffIssue> {
+): Result.Result<never, CharacterSheetBattleHandoffIssue> {
   return characterSheetBattleHandoffIssue(
     { handoffReason: "validation", check },
     message,
   );
 }
 
-export function characterBattleRuntimeIssueMessage(
-  issue: BattleCreatureInitIssue | BattleStateInitIssue,
-): string {
-  return issue.tag === "battleCreatureInitIssues"
-    ? battleCreatureInitIssueMessage(issue)
-    : issue.tag === "battleCreatureInitIssue" ||
-        issue.tag === "characterBattleSpellAccessProjectionIssue"
-      ? issue.message
-      : battleStateInitIssueMessage(issue);
-}
+export const characterBattleRuntimeIssueMessage: CharacterBattleRuntimeIssueMessage =
+  (issue: BattleCreatureInitIssue | BattleStateInitIssue): string => {
+    return issue.tag === "battleCreatureInitIssues"
+      ? battleCreatureInitIssueMessage(issue)
+      : issue.tag === "battleCreatureInitIssue" ||
+          issue.tag === "characterBattleSpellAccessProjectionIssue"
+        ? issue.message
+        : battleStateInitIssueMessage(issue);
+  };
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
@@ -146,6 +148,8 @@ export {
   characterBattleResourceInitsFromBuild,
   type CharacterBattleInitiativeProficiencyChoice,
   type CharacterBuildCreatureInput,
+  type CharacterSheetBattleInit,
+  type CharacterSheetBattleInitInput,
 } from "./battle-creature-init.ts";
 export {
   battleCreatureInitIssue,
@@ -169,6 +173,7 @@ export {
   type CharacterBattleInitIssueFact,
   type CharacterBattleInitIssueReason,
   type CharacterBattleSpellAccessProjectionIssue,
+  type CharacterBattleRuntimeIssueMessage,
 } from "./battle-character-build-projection.ts";
 export {
   characterBattleSupportProjection,
@@ -233,26 +238,6 @@ export {
   type CharacterSessionSheetDerivedBattleActsRouteAction,
 } from "./character-battle-route.ts";
 export { type CharacterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
-
-export type CharacterSheetBattleInitInput = Omit<
-  CharacterBuildCreatureInput,
-  | "build"
-  | "characterId"
-  | "hitPointMaximum"
-  | "currentHp"
-  | "tempHp"
-  | "conditions"
-  | "positiveHpUnconscious"
-  | "zeroHpLifecycle"
-  | "spellSlots"
-  | "bookOfShadowsPresence"
-  | "resourceExpenditures"
-  | "druidWildShapeAvailableForms"
-> & {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-  readonly statBlockCatalog: StatBlockCatalog;
-};
 
 export type CharacterBattleInitProjection = {
   readonly init: BattleRosterCharacterCombatant;
@@ -451,11 +436,11 @@ export type BattleRosterComposition =
 function characterBattleInitProjectionFromInit(
   init: CharacterBattleCreatureInitResult,
   routeEvents: readonly CharacterBattleRouteEvent[],
-): Either.Either<
+): Result.Result<
   CharacterBattleInitProjection,
   CharacterBattleInitProjectionIssue
 > {
-  return Either.right({ init, routeEvents });
+  return Result.succeed({ init, routeEvents });
 }
 
 type CharacterBattleCreatureState = BattleCreatureState & {
@@ -478,23 +463,25 @@ function characterBattleInitIssueWithoutRouteEvents(
   return routeFreeIssue;
 }
 
-export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
+export const characterSheetBattleInit: CharacterSheetBattleInit = (input) => {
   const projection = characterSheetBattleInitWithRoute(input);
-  return Either.isLeft(projection)
-    ? Either.left(characterBattleInitIssueWithoutRouteEvents(projection.left))
-    : Either.right(projection.right.init);
-}
+  return Result.isFailure(projection)
+    ? Result.fail(
+        characterBattleInitIssueWithoutRouteEvents(projection.failure),
+      )
+    : Result.succeed(projection.success.init);
+};
 
 export function characterSheetBattleInitWithRoute(
   input: CharacterSheetBattleInitInput,
-): Either.Either<
+): Result.Result<
   CharacterBattleInitProjection,
   CharacterBattleInitProjectionIssue
 > {
   const { sheet, unitLibrary, statBlockCatalog, ...battleInput } = input;
   const stableRecoveryIssue = unsupportedStableRecoveryBattleBoundary(sheet);
   if (stableRecoveryIssue !== null) {
-    return Either.left({
+    return Result.fail({
       tag: "battleCreatureInitIssue",
       message: stableRecoveryIssue,
       ...characterBattleInitIssueFactFields({
@@ -505,7 +492,7 @@ export function characterSheetBattleInitWithRoute(
     });
   }
   if (hasMixedSpellAndPactSlotState(sheet)) {
-    return Either.left({
+    return Result.fail({
       tag: "battleCreatureInitIssue",
       message: mixedSpellAndPactSlotStateMessage,
       ...characterBattleInitIssueFactFields({
@@ -520,9 +507,9 @@ export function characterSheetBattleInitWithRoute(
       build: sheet.build,
       unitLibrary,
     });
-  if (Either.isLeft(selectedReference)) {
-    return Either.left({
-      ...selectedReference.left,
+  if (Result.isFailure(selectedReference)) {
+    return Result.fail({
+      ...selectedReference.failure,
       routeEvents: rejectCharacterBattleInitProjectionRoute(),
     });
   }
@@ -535,9 +522,9 @@ export function characterSheetBattleInitWithRoute(
     sheet,
     unitLibrary,
   });
-  if (Either.isLeft(hitPointMaximum)) {
-    const issue = characterBattleHitPointMaximumIssue(hitPointMaximum.left);
-    return Either.left({
+  if (Result.isFailure(hitPointMaximum)) {
+    const issue = characterBattleHitPointMaximumIssue(hitPointMaximum.failure);
+    return Result.fail({
       ...issue,
       routeEvents: rejectBuildHitPointBattleInitRoute(),
     });
@@ -547,7 +534,7 @@ export function characterSheetBattleInitWithRoute(
     unitLibrary,
     build: sheet.build,
     characterId: sheet.characterId,
-    hitPointMaximum: hitPointMaximum.right.effectiveHitPointMaximum,
+    hitPointMaximum: hitPointMaximum.success.effectiveHitPointMaximum,
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
     ...withDefinedCharacterBattleSheetState(sheet),
@@ -555,14 +542,14 @@ export function characterSheetBattleInitWithRoute(
       ? {}
       : { druidWildShapeAvailableForms }),
   });
-  if (Either.isLeft(init)) {
-    return Either.left({
-      ...init.left,
+  if (Result.isFailure(init)) {
+    return Result.fail({
+      ...init.failure,
       routeEvents: rejectCharacterBattleInitProjectionRoute(),
     });
   }
   return characterBattleInitProjectionFromInit(
-    init.right,
+    init.success,
     acceptedCharacterSheetBattleInitRoute({ sheet }),
   );
 }
@@ -571,11 +558,11 @@ function characterBattleHitPointMaximumIssue(
   issue: CharacterSheetHitPointMaximumProjectionIssue,
 ): BattleCreatureInitIssue {
   if (isCharacterBuildProjectionIssues(issue)) {
-    return Either.merge(
+    return Result.merge(
       battleCreatureInitIssuesFromCharacterBuildProjection(issue, "hitPoints"),
     );
   }
-  return Either.merge(
+  return Result.merge(
     battleCreatureInitIssue(issue.message, {
       kind: "characterBuildProjection",
       phase: "hitPoints",
@@ -647,20 +634,20 @@ export function composeBattleRoster(
     );
 
     const projection = projectBattleRosterEntry(entry, index);
-    if (Either.isLeft(projection)) {
-      issues.push(...projection.left);
+    if (Result.isFailure(projection)) {
+      issues.push(...projection.failure);
       return;
     }
     if (duplicateCombatant || duplicateCharacter) return;
-    admissions.push(projection.right);
+    admissions.push(projection.success);
   };
 
   const [firstEntry, ...restEntries] = entries;
   const firstIdentityIssues: BattleRosterIssue[] = [];
   recordIdentity(firstEntry, 0, firstIdentityIssues);
   const firstProjection = projectBattleRosterEntry(firstEntry, 0);
-  if (Either.isLeft(firstProjection)) {
-    const [firstIssue, ...restIssues] = firstProjection.left;
+  if (Result.isFailure(firstProjection)) {
+    const [firstIssue, ...restIssues] = firstProjection.failure;
     const issues: [BattleRosterIssue, ...BattleRosterIssue[]] = [
       firstIssue,
       ...restIssues,
@@ -674,13 +661,13 @@ export function composeBattleRoster(
   }
 
   const admissions: [BattleRosterAdmission, ...BattleRosterAdmission[]] = [
-    firstProjection.right,
+    firstProjection.success,
   ];
   const issues: BattleRosterIssue[] = [];
   for (const [offset, entry] of restEntries.entries()) {
     processEntry(entry, offset + 1, issues, admissions);
   }
-  return isNonEmptyReadonlyArray(issues)
+  return isReadonlyArrayNonEmpty(issues)
     ? { tag: "rejected", admissions, issues }
     : { tag: "admitted", admissions };
 }
@@ -919,7 +906,7 @@ function battleRosterStatBlockProjectionIssues(input: {
 function projectBattleRosterEntry(
   entry: BattleRosterEntry,
   index: number,
-): Either.Either<
+): Result.Result<
   BattleRosterAdmission,
   ReadonlyNonEmptyArray<BattleRosterIssue>
 > {
@@ -927,7 +914,7 @@ function projectBattleRosterEntry(
     Match.when({ kind: "characterSheet" }, (matched) => {
       return Match.value(matched.source).pipe(
         Match.when({ kind: "missing" }, (source) =>
-          Either.left(
+          Result.fail(
             battleRosterIssueList({
               kind: "characterSheetSourceUnavailable" as const,
               index,
@@ -937,7 +924,7 @@ function projectBattleRosterEntry(
           ),
         ),
         Match.when({ kind: "inBattle" }, (source) =>
-          Either.left(
+          Result.fail(
             battleRosterIssueList({
               kind: "characterSheetSourceUnavailable" as const,
               index,
@@ -949,22 +936,22 @@ function projectBattleRosterEntry(
         ),
         Match.when({ kind: "available" }, (source) => {
           const projection = characterSheetBattleInitWithRoute(source.input);
-          if (Either.isLeft(projection)) {
-            return Either.left(
+          if (Result.isFailure(projection)) {
+            return Result.fail(
               battleRosterCharacterProjectionIssues({
                 index,
                 characterId: source.input.sheet.characterId,
                 issue: characterBattleInitIssueWithoutRouteEvents(
-                  projection.left,
+                  projection.failure,
                 ),
               }),
             );
           }
-          return Either.right({
+          return Result.succeed({
             kind: "characterSheet" as const,
             index,
-            combatant: projection.right.init,
-            routeEvents: projection.right.routeEvents,
+            combatant: projection.success.init,
+            routeEvents: projection.success.routeEvents,
           });
         }),
         Match.exhaustive,
@@ -973,7 +960,7 @@ function projectBattleRosterEntry(
     Match.when({ kind: "statBlock" }, (matched) => {
       return Match.value(matched.source).pipe(
         Match.when({ kind: "missing" }, (source) =>
-          Either.left(
+          Result.fail(
             battleRosterIssueList({
               kind: "statBlockSourceUnavailable" as const,
               index,
@@ -984,19 +971,19 @@ function projectBattleRosterEntry(
         ),
         Match.when({ kind: "available" }, (source) => {
           const projection = battleCreatureInitFromStatBlock(source.input);
-          if (Either.isLeft(projection)) {
-            return Either.left(
+          if (Result.isFailure(projection)) {
+            return Result.fail(
               battleRosterStatBlockProjectionIssues({
                 index,
                 combatantId: source.input.combatantId,
-                issue: projection.left,
+                issue: projection.failure,
               }),
             );
           }
-          return Either.right({
+          return Result.succeed({
             kind: "statBlock" as const,
             index,
-            combatant: projection.right,
+            combatant: projection.success,
             routeEvents: [] as const,
           });
         }),
@@ -1011,18 +998,18 @@ export function battleCreatureInitFromCharacterBuildWithRoute(
   input: CharacterBuildCreatureInput & {
     readonly unitLibrary: UnitCatalog;
   },
-): Either.Either<
+): Result.Result<
   CharacterBattleInitProjection,
   CharacterBattleInitProjectionIssue
 > {
   const init = battleCreatureInitFromCharacterBuild(input);
-  if (Either.isLeft(init)) {
-    return Either.left({
-      ...init.left,
-      routeEvents: characterBuildInitIssueRoute(init.left),
+  if (Result.isFailure(init)) {
+    return Result.fail({
+      ...init.failure,
+      routeEvents: characterBuildInitIssueRoute(init.failure),
     });
   }
-  return characterBattleInitProjectionFromInit(init.right, [
+  return characterBattleInitProjectionFromInit(init.success, [
     projectCharacterSheetToBattleRoute({
       subject: "sheetToBattleInit",
       owner: "characterBattleBuildProjection",
@@ -1162,7 +1149,7 @@ export function settleCharacterSheetFromBattle(input: {
   readonly combatant: BattleCreatureState;
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog?: StatBlockCatalog;
-}): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
+}): Result.Result<CharacterSheet, CharacterSheetBattleHandoffIssue> {
   const combatant = input.combatant;
   if (!isCharacterBattleCreatureState(combatant)) {
     return characterBattleHandoffValidationIssue(
@@ -1182,9 +1169,9 @@ export function settleCharacterSheetFromBattle(input: {
     combatant,
     runtimeContext,
   });
-  if (Either.isLeft(settledCharacter)) return settledCharacter;
+  if (Result.isFailure(settledCharacter)) return settledCharacter;
   return settleCompanionFromBattle({
-    sheet: settledCharacter.right,
+    sheet: settledCharacter.success,
     state: input.state,
     ownerCombatantId: input.combatant.combatantId,
     unitLibrary: input.unitLibrary,
@@ -1203,7 +1190,7 @@ function validateBattleCombatantForCharacterSheet(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: CharacterBattleCreatureState;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<Hp, CharacterSheetBattleHandoffIssue> {
+}): Result.Result<Hp, CharacterSheetBattleHandoffIssue> {
   if (input.combatant.origin.characterId !== input.sheet.characterId) {
     return characterBattleHandoffValidationIssue(
       "characterIdentityMismatch",
@@ -1214,18 +1201,18 @@ function validateBattleCombatantForCharacterSheet(input: {
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
   });
-  if (Either.isLeft(hitPointMaximum)) {
-    return Either.left(
-      characterSheetBattleHandoffIssueFromIssue(hitPointMaximum.left),
+  if (Result.isFailure(hitPointMaximum)) {
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(hitPointMaximum.failure),
     );
   }
-  if (input.combatant.maxHp !== hitPointMaximum.right) {
+  if (input.combatant.maxHp !== hitPointMaximum.success) {
     return characterBattleHandoffValidationIssue(
       "maximumHitPointMismatch",
       "Battle handoff maximum HP does not match Character Sheet.",
     );
   }
-  if (input.combatant.hp > hitPointMaximum.right) {
+  if (input.combatant.hp > hitPointMaximum.success) {
     return characterBattleHandoffValidationIssue(
       "currentHitPointsExceedMaximum",
       "Battle handoff current HP exceeds Character Sheet maximum HP.",
@@ -1249,7 +1236,7 @@ function validateBattleCombatantForCharacterSheet(input: {
       "Battle handoff while active battle effects or Concentration are present is blocked; end or resolve battle-local effects before Character Sheet handoff.",
     );
   }
-  return Either.right(hitPointMaximum.right);
+  return Result.succeed(hitPointMaximum.success);
 }
 
 function settleBattleCombatantIntoCharacterSheet(input: {
@@ -1258,37 +1245,37 @@ function settleBattleCombatantIntoCharacterSheet(input: {
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog?: StatBlockCatalog;
   readonly runtimeContext: CharacterBattleRuntimeContext;
-}): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
+}): Result.Result<CharacterSheet, CharacterSheetBattleHandoffIssue> {
   const validatedHitPointMaximum = validateBattleCombatantForCharacterSheet({
     sheet: input.sheet,
     combatant: input.combatant,
     unitLibrary: input.unitLibrary,
   });
-  if (Either.isLeft(validatedHitPointMaximum)) {
-    return Either.left(validatedHitPointMaximum.left);
+  if (Result.isFailure(validatedHitPointMaximum)) {
+    return Result.fail(validatedHitPointMaximum.failure);
   }
 
   const zeroHpLifecycle =
     input.combatant.hp === 0
       ? characterZeroHpLifecycleFromBattle(input)
       : undefined;
-  if (zeroHpLifecycle !== undefined && Either.isLeft(zeroHpLifecycle)) {
-    return Either.left(
-      characterSheetBattleHandoffIssueFromIssue(zeroHpLifecycle.left),
+  if (zeroHpLifecycle !== undefined && Result.isFailure(zeroHpLifecycle)) {
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(zeroHpLifecycle.failure),
     );
   }
   const knockedOut = combatantKnockedOutUnconscious(input.combatant);
-  if (Either.isLeft(knockedOut)) {
+  if (Result.isFailure(knockedOut)) {
     const [firstIssue] = characterSheetBattleHandoffIssuesFromStateInit(
-      knockedOut.left,
+      knockedOut.failure,
     );
-    return Either.left(firstIssue);
+    return Result.fail(firstIssue);
   }
   const pactSlots = characterSheetPactSlots(input.sheet);
   const resourceExpenditures = characterResourceExpendituresFromBattle(input);
-  if (Either.isLeft(resourceExpenditures)) {
-    return Either.left(
-      characterSheetBattleHandoffIssueFromIssue(resourceExpenditures.left),
+  if (Result.isFailure(resourceExpenditures)) {
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(resourceExpenditures.failure),
     );
   }
   const bookOfShadowsPresence = bookOfShadowsPresenceFromBattle(input);
@@ -1296,18 +1283,18 @@ function settleBattleCombatantIntoCharacterSheet(input: {
     input.sheet,
   );
   const spellSlotState = characterSheetSpellSlotSourceStateFromBattle(input);
-  if (Either.isLeft(spellSlotState)) {
-    return Either.left(
-      characterSheetBattleHandoffIssueFromIssue(spellSlotState.left),
+  if (Result.isFailure(spellSlotState)) {
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(spellSlotState.failure),
     );
   }
   const pactSlotExpenditure =
     pactSlots === undefined
-      ? Either.right(undefined)
+      ? Result.succeed(undefined)
       : characterSheetPactSlotExpenditureFromBattle(input, pactSlots);
-  if (Either.isLeft(pactSlotExpenditure)) {
-    return Either.left(
-      characterSheetBattleHandoffIssueFromIssue(pactSlotExpenditure.left),
+  if (Result.isFailure(pactSlotExpenditure)) {
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(pactSlotExpenditure.failure),
     );
   }
 
@@ -1319,18 +1306,18 @@ function settleBattleCombatantIntoCharacterSheet(input: {
     tempHp: input.combatant.tempHp,
     conditions: characterSheetConditionsFromBattle(input.combatant),
     unitLibrary: input.unitLibrary,
-    ...(knockedOut.right === null
+    ...(knockedOut.success === null
       ? {}
       : {
           positiveHpUnconscious:
             characterSheetPositiveHpUnconsciousFromBattle(),
         }),
     ...(input.combatant.hp === 0 && zeroHpLifecycle !== undefined
-      ? { zeroHpLifecycle: zeroHpLifecycle.right }
+      ? { zeroHpLifecycle: zeroHpLifecycle.success }
       : {}),
-    ...(pactSlotExpenditure.right === undefined
+    ...(pactSlotExpenditure.success === undefined
       ? {}
-      : { pactSlots: pactSlotExpenditure.right }),
+      : { pactSlots: pactSlotExpenditure.success }),
     ...(bookOfShadowsPresence === undefined ? {} : { bookOfShadowsPresence }),
     ...(druidWildShapeKnownForms === undefined
       ? {}
@@ -1340,36 +1327,39 @@ function settleBattleCombatantIntoCharacterSheet(input: {
         }),
     spentHitDice: input.sheet.spentHitDice,
     restFeatureUses: input.sheet.restFeatureUses,
-    resourceExpenditures: resourceExpenditures.right,
+    resourceExpenditures: resourceExpenditures.success,
     companion: input.sheet.companion,
     ...(input.statBlockCatalog === undefined
       ? {}
       : { statBlockCatalog: input.statBlockCatalog }),
   });
-  if (Either.isLeft(sheet)) {
-    return Either.left(characterSheetBattleHandoffIssueFromIssue(sheet.left));
+  if (Result.isFailure(sheet)) {
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(sheet.failure),
+    );
   }
-  if (spellSlotState.right === undefined) return Either.right(sheet.right);
+  if (spellSlotState.success === undefined)
+    return Result.succeed(sheet.success);
   const replaced = replaceCharacterSheetSpellSlotSourceState({
-    sheet: sheet.right,
+    sheet: sheet.success,
     unitLibrary: input.unitLibrary,
-    spellSlotState: spellSlotState.right,
+    spellSlotState: spellSlotState.success,
   });
-  return Either.isLeft(replaced)
-    ? Either.left(characterSheetBattleHandoffIssueFromIssue(replaced.left))
-    : Either.right(replaced.right);
+  return Result.isFailure(replaced)
+    ? Result.fail(characterSheetBattleHandoffIssueFromIssue(replaced.failure))
+    : Result.succeed(replaced.success);
 }
 
 function characterSheetSpellSlotSourceStateFromBattle(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: CharacterBattleCreatureState;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetSpellSlotSourceState | undefined,
   CharacterSheetBattleHandoffIssue
 > {
   const battleSpellcasting = input.combatant.origin.spellcasting;
   if (battleSpellcasting === undefined) {
-    return Either.right(undefined);
+    return Result.succeed(undefined);
   }
   const sheetSpellSlots = characterSheetSpellSlots(input.sheet);
   const sheetSlotState = characterSheetSpellSlotSourceState(input.sheet);
@@ -1377,11 +1367,11 @@ function characterSheetSpellSlotSourceStateFromBattle(input: {
     characterSheetPactSlots(input.sheet) !== undefined &&
     (sheetSpellSlots === undefined || sheetSpellSlots.length === 0)
   ) {
-    return Either.right(undefined);
+    return Result.succeed(undefined);
   }
   if (sheetSpellSlots === undefined || sheetSlotState === undefined) {
     return battleSpellcasting.spellSlots.length === 0
-      ? Either.right(undefined)
+      ? Result.succeed(undefined)
       : characterBattleHandoffValidationIssue(
           "spellSlotStateMissing",
           "Battle handoff Spell Slot state requires Character Sheet Spell Slot or Pact Slot state.",
@@ -1434,10 +1424,10 @@ function characterSheetSpellSlotSourceStateFromBattle(input: {
       ordinarySpellSlotExpenditures,
       createdSpellSlots,
     });
-    if (Either.isLeft(sourceSpend)) return Either.left(sourceSpend.left);
+    if (Result.isFailure(sourceSpend)) return Result.fail(sourceSpend.failure);
     ordinarySpellSlotExpenditures =
-      sourceSpend.right.ordinarySpellSlotExpenditures;
-    createdSpellSlots = sourceSpend.right.createdSpellSlots;
+      sourceSpend.success.ordinarySpellSlotExpenditures;
+    createdSpellSlots = sourceSpend.success.createdSpellSlots;
   }
 
   for (const battleSlot of battleSpellcasting.spellSlots) {
@@ -1453,7 +1443,7 @@ function characterSheetSpellSlotSourceStateFromBattle(input: {
     }
   }
 
-  return Either.right({
+  return Result.succeed({
     ordinarySpellSlotExpenditures,
     createdSpellSlots,
   });
@@ -1465,7 +1455,7 @@ function spellSlotSourceSpendForBattleDelta(input: {
   readonly totalCount: ResourceCount;
   readonly ordinarySpellSlotExpenditures: CharacterSheetSpellSlotSourceState["ordinarySpellSlotExpenditures"];
   readonly createdSpellSlots: CharacterSheetSpellSlotSourceState["createdSpellSlots"];
-}): Either.Either<
+}): Result.Result<
   CharacterSheetSpellSlotSourceState,
   CharacterSheetBattleHandoffIssue
 > {
@@ -1500,7 +1490,7 @@ function spellSlotSourceSpendForBattleDelta(input: {
   }
   const createdSpend = resourceCount(minimumCreatedSpend);
   const ordinarySpend = resourceCount(input.delta - createdSpend);
-  return Either.right({
+  return Result.succeed({
     ordinarySpellSlotExpenditures:
       ordinarySpend === 0
         ? input.ordinarySpellSlotExpenditures
@@ -1528,7 +1518,7 @@ function characterResourceExpendituresFromBattle(input: {
   readonly combatant: CharacterBattleCreatureState;
   readonly unitLibrary: UnitCatalog;
   readonly runtimeContext: CharacterBattleRuntimeContext;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterSheetResourceExpenditure[],
   CharacterSheetBattleHandoffIssue
 > {
@@ -1536,9 +1526,9 @@ function characterResourceExpendituresFromBattle(input: {
     input.sheet,
     input.unitLibrary,
   );
-  if (Either.isLeft(sheetResources)) {
-    return Either.left(
-      characterSheetBattleHandoffIssueFromIssue(sheetResources.left),
+  if (Result.isFailure(sheetResources)) {
+    return Result.fail(
+      characterSheetBattleHandoffIssueFromIssue(sheetResources.failure),
     );
   }
   const origin = input.combatant.origin;
@@ -1546,16 +1536,16 @@ function characterResourceExpendituresFromBattle(input: {
     resources: origin.resources,
     ownership: input.runtimeContext.resourceOwnership,
   });
-  if (Either.isLeft(ownedBattleResources)) {
-    return Either.left(ownedBattleResources.left);
+  if (Result.isFailure(ownedBattleResources)) {
+    return Result.fail(ownedBattleResources.failure);
   }
-  const battleResources = ownedBattleResources.right;
+  const battleResources = ownedBattleResources.success;
   const wildShapeResource = druidWildShapeBattleResourceProjection(
     battleResources,
     origin.classLevels,
   );
-  if (Either.isLeft(wildShapeResource)) {
-    return Either.left(wildShapeResource.left);
+  if (Result.isFailure(wildShapeResource)) {
+    return Result.fail(wildShapeResource.failure);
   }
   const battleUseCountResourceUnitIds =
     new Set<CharacterSheetUseCountResourceUnitId>();
@@ -1574,8 +1564,8 @@ function characterResourceExpendituresFromBattle(input: {
       battlePointPoolResourceUnitIds.add(pointPoolUnitId);
     }
   }
-  if (wildShapeResource.right.tag === "present") {
-    battleUseCountResourceUnitIds.add(wildShapeResource.right.unitId);
+  if (wildShapeResource.success.tag === "present") {
+    battleUseCountResourceUnitIds.add(wildShapeResource.success.unitId);
   }
   const nextExpenditures = input.sheet.resourceExpenditures.filter(
     (expenditure) =>
@@ -1591,25 +1581,25 @@ function characterResourceExpendituresFromBattle(input: {
   const druidWildShapeExpenditure = druidWildShapeResourceExpenditureFromBattle(
     {
       combatant: input.combatant,
-      sheetResources: sheetResources.right,
-      wildShapeResource: wildShapeResource.right,
+      sheetResources: sheetResources.success,
+      wildShapeResource: wildShapeResource.success,
     },
   );
-  if (Either.isLeft(druidWildShapeExpenditure)) {
-    return Either.left(druidWildShapeExpenditure.left);
+  if (Result.isFailure(druidWildShapeExpenditure)) {
+    return Result.fail(druidWildShapeExpenditure.failure);
   }
   for (const resource of battleResources) {
     const resourceUnit = resource.ownership.unit;
     const freeCastExpenditure =
       characterSheetSpellAccessFreeCastExpenditureFromBattle({
         resource,
-        sheetResources: sheetResources.right,
+        sheetResources: sheetResources.success,
       });
-    if (Either.isLeft(freeCastExpenditure)) {
-      return Either.left(freeCastExpenditure.left);
+    if (Result.isFailure(freeCastExpenditure)) {
+      return Result.fail(freeCastExpenditure.failure);
     }
-    if (freeCastExpenditure.right !== null) {
-      nextFreeCastExpenditures.push(freeCastExpenditure.right);
+    if (freeCastExpenditure.success !== null) {
+      nextFreeCastExpenditures.push(freeCastExpenditure.success);
       continue;
     }
     if (
@@ -1626,13 +1616,13 @@ function characterResourceExpendituresFromBattle(input: {
     const pointPoolExpenditure = characterSheetPointPoolExpenditureFromBattle({
       resource,
       classLevels: input.combatant.origin.classLevels,
-      sheetResources: sheetResources.right,
+      sheetResources: sheetResources.success,
     });
-    if (Either.isLeft(pointPoolExpenditure)) {
-      return Either.left(pointPoolExpenditure.left);
+    if (Result.isFailure(pointPoolExpenditure)) {
+      return Result.fail(pointPoolExpenditure.failure);
     }
-    if (pointPoolExpenditure.right !== null) {
-      nextPointPoolExpenditures.push(pointPoolExpenditure.right);
+    if (pointPoolExpenditure.success !== null) {
+      nextPointPoolExpenditures.push(pointPoolExpenditure.success);
       continue;
     }
     const profile = classFeatureSpellFreeCastProfileForResource(
@@ -1650,12 +1640,12 @@ function characterResourceExpendituresFromBattle(input: {
       }
       const fixedUses = resource.state.resource.cap.uses;
       const sheetCount = sheetFreeCastResourceCapacity({
-        sheetResources: sheetResources.right,
+        sheetResources: sheetResources.success,
         sourceUnitId: resource.ownership.unit.id,
         spellId: profile.spellId,
       });
-      if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
-      if (resource.state.resource.cap.uses !== sheetCount.right) {
+      if (Result.isFailure(sheetCount)) return Result.fail(sheetCount.failure);
+      if (resource.state.resource.cap.uses !== sheetCount.success) {
         return characterBattleHandoffValidationIssue(
           "spellAccessFreeCastCapacityMismatch",
           "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
@@ -1703,11 +1693,11 @@ function characterResourceExpendituresFromBattle(input: {
         );
       }
       const sheetCount = sheetUseCountResourceCapacity({
-        sheetResources: sheetResources.right,
+        sheetResources: sheetResources.success,
         unitId: useCountUnitId,
       });
-      if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
-      if (maxUses !== sheetCount.right) {
+      if (Result.isFailure(sheetCount)) return Result.fail(sheetCount.failure);
+      if (maxUses !== sheetCount.success) {
         return characterBattleHandoffValidationIssue(
           "classFeatureUseCountCapacityMismatch",
           "Class feature use-count battle capacity must match Character Sheet resource capacity.",
@@ -1729,14 +1719,14 @@ function characterResourceExpendituresFromBattle(input: {
       }
     }
   }
-  return Either.right([
+  return Result.succeed([
     ...nextExpenditures,
     ...nextFreeCastExpenditures,
     ...nextUseCountExpenditures,
     ...nextPointPoolExpenditures,
-    ...(druidWildShapeExpenditure.right === undefined
+    ...(druidWildShapeExpenditure.success === undefined
       ? []
-      : [druidWildShapeExpenditure.right]),
+      : [druidWildShapeExpenditure.success]),
   ]);
 }
 
@@ -1744,7 +1734,7 @@ function characterSheetPointPoolExpenditureFromBattle(input: {
   readonly resource: OwnedCharacterBattleResource;
   readonly classLevels: CharacterBattleClassLevels;
   readonly sheetResources: readonly CharacterSheetResourceState[];
-}): Either.Either<
+}): Result.Result<
   Extract<
     CharacterSheetResourceExpenditure,
     { readonly tag: "pointPoolResource" }
@@ -1757,7 +1747,7 @@ function characterSheetPointPoolExpenditureFromBattle(input: {
     pointPoolUnitId === null ||
     !characterBattleResourceIsPointPool(input.resource.state)
   ) {
-    return Either.right(null);
+    return Result.succeed(null);
   }
   const maxPoints = characterBattleResourceMaxPoints({
     unit: input.resource.ownership.unit,
@@ -1773,8 +1763,8 @@ function characterSheetPointPoolExpenditureFromBattle(input: {
     sheetResources: input.sheetResources,
     unitId: pointPoolUnitId,
   });
-  if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
-  if (maxPoints !== sheetCount.right) {
+  if (Result.isFailure(sheetCount)) return Result.fail(sheetCount.failure);
+  if (maxPoints !== sheetCount.success) {
     return characterBattleHandoffValidationIssue(
       "pointPoolCapacityMismatch",
       "Class feature point-pool battle capacity must match Character Sheet resource capacity.",
@@ -1789,18 +1779,18 @@ function characterSheetPointPoolExpenditureFromBattle(input: {
     );
   }
   return expended > 0
-    ? Either.right({
+    ? Result.succeed({
         tag: "pointPoolResource",
         unitId: pointPoolUnitId,
         expended: resourceCount(expended),
       })
-    : Either.right(null);
+    : Result.succeed(null);
 }
 
 function characterSheetSpellAccessFreeCastExpenditureFromBattle(input: {
   readonly resource: OwnedCharacterBattleResource;
   readonly sheetResources: readonly CharacterSheetResourceState[];
-}): Either.Either<
+}): Result.Result<
   Extract<
     CharacterSheetResourceExpenditure,
     { readonly tag: "spellAccessFreeCast" }
@@ -1811,7 +1801,7 @@ function characterSheetSpellAccessFreeCastExpenditureFromBattle(input: {
     input.resource.ownership.purpose.tag !== "spellAccessFreeCast" ||
     characterBattleResourceIsPointPool(input.resource.state)
   ) {
-    return Either.right(null);
+    return Result.succeed(null);
   }
   if (!isFixedUseCountBattleResourceState(input.resource.state)) {
     return characterBattleHandoffValidationIssue(
@@ -1825,8 +1815,8 @@ function characterSheetSpellAccessFreeCastExpenditureFromBattle(input: {
     sourceUnitId: input.resource.ownership.unit.id,
     spellId,
   });
-  if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
-  if (input.resource.state.resource.cap.uses !== sheetCount.right) {
+  if (Result.isFailure(sheetCount)) return Result.fail(sheetCount.failure);
+  if (input.resource.state.resource.cap.uses !== sheetCount.success) {
     return characterBattleHandoffValidationIssue(
       "spellAccessFreeCastCapacityMismatch",
       "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
@@ -1835,13 +1825,13 @@ function characterSheetSpellAccessFreeCastExpenditureFromBattle(input: {
   const expended =
     input.resource.state.resource.cap.uses - input.resource.state.usesRemaining;
   return expended > 0
-    ? Either.right({
+    ? Result.succeed({
         tag: "spellAccessFreeCast",
         sourceUnitId: input.resource.ownership.unit.id,
         spellId,
         expended: resourceCount(expended),
       })
-    : Either.right(null);
+    : Result.succeed(null);
 }
 
 function retainedCharacterSheetResourceExpenditure(
@@ -1886,7 +1876,7 @@ function isFixedUseCountBattleResourceState(
 function characterBattleResourcesWithOwnership(input: {
   readonly resources: readonly CharacterBattleResourceState[];
   readonly ownership: readonly CharacterBattleResourceOwnership[];
-}): Either.Either<
+}): Result.Result<
   readonly OwnedCharacterBattleResource[],
   CharacterSheetBattleHandoffIssue
 > {
@@ -1927,7 +1917,7 @@ function characterBattleResourcesWithOwnership(input: {
     }
     ownedResources.push({ state, ownership });
   }
-  return Either.right(ownedResources);
+  return Result.succeed(ownedResources);
 }
 
 function characterSheetPointPoolResourceUnitIdForBattleResource(
@@ -1951,7 +1941,7 @@ function characterSheetUseCountResourceUnitIdForBattleResource(
 function sheetPointPoolResourceCapacity(input: {
   readonly sheetResources: readonly CharacterSheetResourceState[];
   readonly unitId: CharacterSheetPointPoolResourceUnitId;
-}): Either.Either<ResourceCount, CharacterSheetBattleHandoffIssue> {
+}): Result.Result<ResourceCount, CharacterSheetBattleHandoffIssue> {
   const resource = input.sheetResources.find(
     (candidate) =>
       candidate.tag === "pointPoolResource" &&
@@ -1962,13 +1952,13 @@ function sheetPointPoolResourceCapacity(input: {
         "pointPoolCapacityMissing",
         "Class feature point-pool battle resource requires matching Character Sheet resource capacity.",
       )
-    : Either.right(resource.count);
+    : Result.succeed(resource.count);
 }
 
 function sheetUseCountResourceCapacity(input: {
   readonly sheetResources: readonly CharacterSheetResourceState[];
   readonly unitId: CharacterSheetUseCountResourceUnitId;
-}): Either.Either<ResourceCount, CharacterSheetBattleHandoffIssue> {
+}): Result.Result<ResourceCount, CharacterSheetBattleHandoffIssue> {
   const resource = input.sheetResources.find(
     (candidate) =>
       candidate.tag === "useCountResource" && candidate.unitId === input.unitId,
@@ -1978,14 +1968,14 @@ function sheetUseCountResourceCapacity(input: {
         "useCountCapacityMissing",
         "Class feature use-count battle resource requires matching Character Sheet resource capacity.",
       )
-    : Either.right(resource.count);
+    : Result.succeed(resource.count);
 }
 
 function sheetFreeCastResourceCapacity(input: {
   readonly sheetResources: readonly CharacterSheetResourceState[];
   readonly sourceUnitId: UnitRecord["id"];
   readonly spellId: UnitRecord["id"];
-}): Either.Either<ResourceCount, CharacterSheetBattleHandoffIssue> {
+}): Result.Result<ResourceCount, CharacterSheetBattleHandoffIssue> {
   const resource = input.sheetResources.find(
     (candidate) =>
       candidate.tag === "spellAccessFreeCast" &&
@@ -1997,7 +1987,7 @@ function sheetFreeCastResourceCapacity(input: {
         "freeCastCapacityMissing",
         "Spell Access free-cast battle resource requires matching Character Sheet resource capacity.",
       )
-    : Either.right(resource.count);
+    : Result.succeed(resource.count);
 }
 
 type DruidWildShapeBattleResourceProjection =
@@ -2011,7 +2001,7 @@ type DruidWildShapeBattleResourceProjection =
 function druidWildShapeBattleResourceProjection(
   battleResources: readonly OwnedCharacterBattleResource[],
   classLevels: CharacterBattleClassLevels,
-): Either.Either<
+): Result.Result<
   DruidWildShapeBattleResourceProjection,
   CharacterSheetBattleHandoffIssue
 > {
@@ -2027,7 +2017,7 @@ function druidWildShapeBattleResourceProjection(
     );
   }
   const resource = resources[0];
-  if (resource === undefined) return Either.right({ tag: "absent" });
+  if (resource === undefined) return Result.succeed({ tag: "absent" });
   const unitId = resource.ownership.unit.id;
   if (!isCharacterSheetUseCountResourceUnitId(unitId)) {
     return characterBattleHandoffValidationIssue(
@@ -2035,7 +2025,7 @@ function druidWildShapeBattleResourceProjection(
       "Druid Wild Shape must use a Character Sheet use-count resource during battle handoff.",
     );
   }
-  return Either.right({ tag: "present", resource, unitId });
+  return Result.succeed({ tag: "present", resource, unitId });
 }
 
 function battleDruidWildShapeAvailableFormsFromSheet(input: {
@@ -2058,11 +2048,12 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
   readonly combatant: CharacterBattleCreatureState;
   readonly sheetResources: readonly CharacterSheetResourceState[];
   readonly wildShapeResource: DruidWildShapeBattleResourceProjection;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetResourceExpenditure | undefined,
   CharacterSheetBattleHandoffIssue
 > {
-  if (input.wildShapeResource.tag === "absent") return Either.right(undefined);
+  if (input.wildShapeResource.tag === "absent")
+    return Result.succeed(undefined);
   const { resource, unitId } = input.wildShapeResource;
   if (!("usesRemaining" in resource.state)) {
     return characterBattleHandoffValidationIssue(
@@ -2078,8 +2069,8 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
     sheetResources: input.sheetResources,
     unitId,
   });
-  if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
-  if (maxUses === undefined || maxUses !== sheetCount.right) {
+  if (Result.isFailure(sheetCount)) return Result.fail(sheetCount.failure);
+  if (maxUses === undefined || maxUses !== sheetCount.success) {
     return characterBattleHandoffValidationIssue(
       "wildShapeCapacityMismatch",
       "Druid Wild Shape battle capacity must match Character Sheet resource capacity.",
@@ -2092,7 +2083,7 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
       "Druid Wild Shape remaining uses exceed the character resource cap during battle handoff.",
     );
   }
-  return Either.right(
+  return Result.succeed(
     expended === 0
       ? undefined
       : {
@@ -2207,13 +2198,13 @@ function characterSheetPactSlotExpenditureFromBattle(
     readonly combatant: CharacterBattleCreatureState;
   },
   pactSlots: CharacterSheetPactSlotState,
-): Either.Either<
+): Result.Result<
   CharacterPactSlotExpenditure,
   CharacterSheetBattleHandoffIssue
 > {
   const battleSpellcasting = input.combatant.origin.spellcasting;
   if (battleSpellcasting === undefined) {
-    return Either.right({ expended: pactSlots.expended });
+    return Result.succeed({ expended: pactSlots.expended });
   }
   if (battleSpellcasting.spellSlots.length !== 1) {
     return characterBattleHandoffValidationIssue(
@@ -2235,7 +2226,7 @@ function characterSheetPactSlotExpenditureFromBattle(
       "Battle handoff Pact Slot state must match Character Sheet Pact Slot capacity.",
     );
   }
-  return Either.right({ expended: battleSlot.expended });
+  return Result.succeed({ expended: battleSlot.expended });
 }
 
 function bookOfShadowsPresenceFromBattle(input: {
@@ -2303,7 +2294,7 @@ function characterSheetZeroHpLifecycle(
 function characterZeroHpLifecycleFromBattle(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: BattleCreatureState;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetZeroHpLifecycleInput,
   CharacterSheetBattleHandoffIssue
 > {
@@ -2315,7 +2306,7 @@ function characterZeroHpLifecycleFromBattle(input: {
   }
   const lifecycle = input.combatant.zeroHpLifecycle.deathSaves;
   if (lifecycle.dead) {
-    return Either.right({ tag: "dead", deathSaves: lifecycle.deathSaves });
+    return Result.succeed({ tag: "dead", deathSaves: lifecycle.deathSaves });
   }
   if (lifecycle.stable) {
     const stableRecoveryIssue = unsupportedStableRecoveryBattleBoundary(
@@ -2327,7 +2318,7 @@ function characterZeroHpLifecycleFromBattle(input: {
         stableRecoveryIssue,
       );
     }
-    return Either.right({
+    return Result.succeed({
       tag: "stable",
       recovery: {
         kind: "regains1HpAfter1d4Hours",
@@ -2335,7 +2326,7 @@ function characterZeroHpLifecycleFromBattle(input: {
       },
     });
   }
-  return Either.right({ tag: "unstable", deathSaves: lifecycle.deathSaves });
+  return Result.succeed({ tag: "unstable", deathSaves: lifecycle.deathSaves });
 }
 
 function unsupportedStableRecoveryBattleBoundary(

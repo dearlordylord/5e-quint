@@ -2,7 +2,7 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { describe, expect, test } from "vitest";
 import { battleActSpellPresentation } from "../battle-act-composition.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   barbarianRageUnit,
   battleId,
   characterSeed,
@@ -75,7 +75,7 @@ function familiarEligibilityBattle(): {
   });
   const companion: BattleCompanionState = {
     status: "present",
-    formAccess: "findFamiliar",
+    formAccess: "spawnedCompanion",
     ownerId: fighterId,
     identity: { tag: "battleOnly" },
     protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
@@ -286,7 +286,7 @@ describe("battle subject action eligibility", () => {
         weaponItemId: battleObjectId("synthetic-weapon"),
       },
       {
-        tag: "pactOfTheChainFamiliarAttack",
+        tag: "companionAttack",
         actorId: fighterId,
         familiarId,
         procedureRef: statBlockProcedureRef,
@@ -322,8 +322,7 @@ describe("battle subject action eligibility", () => {
         tag: "bonusActionStandardAction",
         actorId: fighterId,
         procedureRef,
-        sourceEffectRef:
-          battleActiveEffectExecutionRefForTest("synthetic-effect"),
+        sourceEffectRef: battleEffectExecutionRefForTest("synthetic-effect"),
         action: "dash",
         speedKind: "walk",
       },
@@ -339,12 +338,12 @@ describe("battle subject action eligibility", () => {
         action: "dismiss",
       },
       {
-        tag: "findFamiliarSharedSenses",
+        tag: "spawnedCompanionSharedSenses",
         actorId: fighterId,
         familiarId,
       },
       {
-        tag: "findFamiliarTouchSpell",
+        tag: "spawnedCompanionTouchSpellProxy",
         actorId: fighterId,
         procedureRef,
         companionId: familiarId,
@@ -361,7 +360,7 @@ describe("battle subject action eligibility", () => {
       "bonusActionSpell",
       "bonusActionStandardAction",
       "druidWildShape",
-      "findFamiliarSharedSenses",
+      "spawnedCompanionSharedSenses",
     ]);
 
     for (const subject of subjects) {
@@ -478,7 +477,7 @@ describe("battle subject action eligibility", () => {
         subject: {
           tag: "action" as const,
           actorId: familiarId,
-          action: "shakeAwakeFromSleep" as const,
+          action: "shakeAwakeFromStagedCondition" as const,
         },
         expectedIssue: null,
       },

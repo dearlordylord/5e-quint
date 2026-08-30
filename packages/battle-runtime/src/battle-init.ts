@@ -16,7 +16,7 @@ import type {
   StatBlockRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import type {
   AttackDamageAbilityModifierChoice,
   CharacterUnarmedStrikeActionOption,
@@ -141,12 +141,12 @@ const WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES = {
 export function battleAvailableDruidWildShapeKnownForms(input: {
   readonly forms: readonly StatBlockRecord[];
   readonly profile: BattleDruidWildShapeKnownFormSupportProfile;
-}): Either.Either<
+}): Result.Result<
   readonly BattleDruidWildShapeKnownForm[],
   BattleDruidWildShapeKnownFormIssue
 > {
   if (new Set(input.forms.map((form) => form.id)).size !== input.forms.length) {
-    return Either.left({
+    return Result.fail({
       tag: "battleDruidWildShapeKnownFormIssue",
       message:
         "Druid Wild Shape battle initialization requires distinct available known forms.",
@@ -159,20 +159,20 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
       profile: input.profile,
     });
     if (eligibilityIssue !== undefined) {
-      return Either.left({
+      return Result.fail({
         tag: "battleDruidWildShapeKnownFormIssue",
         message:
           WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES[eligibilityIssue.code],
       });
     }
     const projected = battleDruidWildShapeFormProjectionStatBlock(form);
-    if (Either.isLeft(projected)) return Either.left(projected.left);
+    if (Result.isFailure(projected)) return Result.fail(projected.failure);
     if (!statBlockActionSurfaceIsSupported(form.statBlock)) {
       continue;
     }
-    parsed.push(battleDruidWildShapeKnownForm(projected.right));
+    parsed.push(battleDruidWildShapeKnownForm(projected.success));
   }
-  return Either.right(parsed);
+  return Result.succeed(parsed);
 }
 
 function battleDruidWildShapeKnownForm(
@@ -185,41 +185,41 @@ function battleDruidWildShapeKnownForm(
 
 function battleDruidWildShapeFormProjectionStatBlock(
   form: StatBlockRecord,
-): Either.Either<
+): Result.Result<
   BattleDruidWildShapeKnownFormProjection,
   BattleDruidWildShapeKnownFormIssue
 > {
   const armorClass = form.statBlock.ac;
   if (armorClass.kind !== "literal") {
-    return Either.left({
+    return Result.fail({
       tag: "battleDruidWildShapeKnownFormIssue",
       message: "Druid Wild Shape battle forms require literal Armor Class.",
     });
   }
   const creatureSize = form.statBlock.size;
   if (typeof creatureSize !== "string") {
-    return Either.left({
+    return Result.fail({
       tag: "battleDruidWildShapeKnownFormIssue",
       message: "Druid Wild Shape battle forms require literal Size.",
     });
   }
   const speeds = battleDruidWildShapeFormProjectionSpeeds(form);
-  if (Either.isLeft(speeds)) return Either.left(speeds.left);
-  return Either.right({
+  if (Result.isFailure(speeds)) return Result.fail(speeds.failure);
+  return Result.succeed({
     id: form.id,
     challengeRating: form.challengeRating,
     statBlock: {
       ...form.statBlock,
       ac: armorClass,
       size: creatureSize,
-      speeds: speeds.right,
+      speeds: speeds.success,
     },
   });
 }
 
 function battleDruidWildShapeFormProjectionSpeeds(
   form: StatBlockRecord,
-): Either.Either<
+): Result.Result<
   BattleDruidWildShapeFormSpeeds,
   BattleDruidWildShapeKnownFormIssue
 > {
@@ -229,7 +229,7 @@ function battleDruidWildShapeFormProjectionSpeeds(
       speed.feet.kind !== "literal" ||
       speed.requiresSlotLevel !== undefined
     ) {
-      return Either.left({
+      return Result.fail({
         tag: "battleDruidWildShapeKnownFormIssue",
         message:
           "Druid Wild Shape battle forms require unconditional literal Speeds.",
@@ -241,12 +241,12 @@ function battleDruidWildShapeFormProjectionSpeeds(
     (speed): speed is LiteralWalkStatBlockSpeed => speed.kind === "walk",
   );
   if (walkSpeed === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "battleDruidWildShapeKnownFormIssue",
       message: "Druid Wild Shape battle forms require literal Walk Speed.",
     });
   }
-  return Either.right([
+  return Result.succeed([
     walkSpeed,
     ...literalSpeeds.filter((speed) => speed !== walkSpeed),
   ]);
@@ -345,28 +345,28 @@ export type BattleStatBlockCreatureInitResult = Omit<
 
 export function battleCreatureInitFromStatBlock(
   input: StatBlockBattleInitInput,
-): Either.Either<
+): Result.Result<
   BattleStatBlockCreatureInitResult,
   BattleStatBlockInitializationIssue
 > {
   const source = battleStatBlockCombatantSource(input.statBlock);
-  if (Either.isLeft(source)) return Either.left(source.left);
+  if (Result.isFailure(source)) return Result.fail(source.failure);
   const initialConditionImmunityIssue = statBlockInitialConditionImmunityIssue(
-    source.right,
+    source.success,
     input.conditions,
     input.combatantId,
   );
   if (initialConditionImmunityIssue !== null) {
-    return Either.left(initialConditionImmunityIssue);
+    return Result.fail(initialConditionImmunityIssue);
   }
-  const maxHp = toHp(source.right.statBlock.hp.value);
-  return Either.right({
+  const maxHp = toHp(source.success.statBlock.hp.value);
+  return Result.succeed({
     combatantId: input.combatantId,
     displayName: input.statBlock.statBlock.displayName,
     initiative: input.initiative,
     creatureInit: {
       kind: "statBlock",
-      source: source.right,
+      source: source.success,
       currentHp: input.currentHp ?? maxHp,
       tempHp: input.tempHp ?? toHp(0),
       ammunitionStocks: input.ammunitionStocks,

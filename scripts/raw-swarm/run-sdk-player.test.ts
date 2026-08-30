@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
 import { describe, expect, test } from "vitest";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   finalizeSdkPlayerExecution,
@@ -56,10 +56,10 @@ describe("SDK player invocation lifecycle", () => {
         },
       },
     );
-    expect(Either.isRight(result)).toBe(true);
+    expect(Result.isSuccess(result)).toBe(true);
     expect(result).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         tag: "obstructed",
         recordedContinuations: 128,
       },
@@ -88,13 +88,13 @@ describe("SDK player invocation lifecycle", () => {
         tag: "active",
         recordedContinuations: 2,
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       reconcilePlayerInvocation(lifecycle, {
         tag: "concluded",
         recordedContinuations: 2,
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
   });
 
   test("bounds TERM-ignoring supervisor cleanup with KILL escalation", async () => {
