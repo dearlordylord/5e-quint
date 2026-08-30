@@ -7386,14 +7386,9 @@ export type BattleCreatureSnapshot = BattleCreatureSnapshotCommon &
       }
   );
 
-type WithBattleCreatureDisplayName<T> = T extends BattleCreatureSnapshot
-  ? Omit<T, "displayName"> & {
-      readonly displayName: import("./battle-creature-display-name.ts").BattleCreatureDisplayName;
-    }
-  : never;
-
-export type BattlePresentedCreatureSnapshot =
-  WithBattleCreatureDisplayName<BattleCreatureSnapshot>;
+export type BattlePresentedCreatureSnapshot = BattleCreatureSnapshot & {
+  readonly displayName: import("./battle-creature-display-name.ts").BattleCreatureDisplayName;
+};
 
 export type BattlePresentedSnapshot = Omit<BattleSnapshot, "combatants"> & {
   readonly combatants: readonly BattlePresentedCreatureSnapshot[];

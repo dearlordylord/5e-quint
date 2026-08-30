@@ -4190,6 +4190,9 @@ export function attackTargetFill(subject: JsonObject, value: string) {
     ...(typeof subject.attackDamageType === "string"
       ? { attackDamageType: subject.attackDamageType }
       : {}),
+    ...(Array.isArray(subject.statBlockDamageSelection)
+      ? { statBlockDamageSelection: subject.statBlockDamageSelection }
+      : {}),
   };
   return {
     kind: "targetChoice",

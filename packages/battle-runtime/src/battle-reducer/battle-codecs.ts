@@ -35,7 +35,9 @@ import {
   COVER_TYPES,
   CreatureId,
   ResourceCount,
+  SIZES,
 } from "@dnd/shared/types";
+import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
 import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import {
@@ -50,6 +52,7 @@ import {
   SpellMarkedDamageRiderSchema,
   SpellWeaponDamageRiderSchema,
 } from "../active-effect/codecs.ts";
+import { BattleRoundSchema } from "../active-effect/round-codec.ts";
 import {
   BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
   CUNNING_STRIKE_END_TURN_COVER_DEGREES,
@@ -122,6 +125,7 @@ import {
   battleStatBlockExecutionScopeRefIsWellFormed,
   BattleSpellEffectOccurrenceId,
   BattleTablePositionId,
+  CharacterIdSchema,
   CombatantId,
 } from "../identity.ts";
 import type { BattleExecutionScopeRef } from "../identity.ts";
@@ -165,10 +169,13 @@ import {
 } from "../unit-feature-support.ts";
 import {
   type BattleFill,
+  type BattleCreatureOriginSnapshot,
   type BattleHole,
   type BattleMovementFillValue,
+  type BattlePresentedSnapshot,
+  type BattleSnapshot,
 } from "../battle-state-execution.ts";
-const BattleCompanionResolvedStatBlockIdSchema = Schema.NonEmptyTrimmedString;
+const BattleCompanionResolvedStatBlockIdSchema = StatBlockId;
 const BattleCompanionDurableIdSchema = Schema.NonEmptyTrimmedString;
 const BattleCompanionIdentitySchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("battleOnly") }),
@@ -250,18 +257,18 @@ const AttackDamageAbilityModifierChoiceSelectionSchema = Schema.Literal(
 const OngoingFeatureExpirationSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("startOfTurn"),
-    combatantId: Schema.String,
+    combatantId: CombatantId,
   }),
   Schema.Struct({
     kind: Schema.Literal("endOfTurn"),
-    combatantId: Schema.String,
-    round: Schema.Number,
+    combatantId: CombatantId,
+    round: BattleRoundSchema,
   }),
 );
 const EndOfTurnOngoingFeatureExpirationSchema = Schema.Struct({
   kind: Schema.Literal("endOfTurn"),
-  combatantId: Schema.String,
-  round: Schema.Number,
+  combatantId: CombatantId,
+  round: BattleRoundSchema,
 });
 
 export const ActiveOngoingFeatureOccurrenceSnapshotSchema = Schema.Union(
@@ -5425,8 +5432,8 @@ const BattleTurnSnapshotSchema = Schema.Struct({
   recklessAttackWhileRagingUsedThisTurn: Schema.Array(
     Schema.Struct({
       attackerId: CombatantId,
-      recklessAttackSourceKey: Schema.String,
-      rageSourceKey: Schema.String,
+      recklessAttackSourceKey: BattleProcedureExecutionRef,
+      rageSourceKey: BattleProcedureExecutionRef,
     }),
   ),
   weaponDamageDiceRollChoicesUsedThisTurn: Schema.Array(
@@ -5461,7 +5468,7 @@ const BattleTurnSnapshotSchema = Schema.Struct({
       expires: Schema.Literal("endOfCarrierTurn"),
     }),
   ),
-  dashMovementBonusFeet: Schema.Number,
+  dashMovementBonusFeet: MovementFeet,
   disengaged: Schema.Boolean,
 });
 
@@ -5988,51 +5995,55 @@ function multiattackDispatchesRespectLimitedUse(
   return true;
 }
 
+const CharacterUnitProcedureSourceSchema = Schema.Union(
+  Schema.Struct({ kind: Schema.Literal("intrinsic") }),
+  Schema.Struct({
+    kind: Schema.Literal("resourcePool"),
+    resourcePoolRef: BattleResourcePoolExecutionRef,
+  }),
+);
+
+const CharacterProcedureBindingSnapshotSchema = Schema.Union(
+  Schema.Struct({
+    procedureRef: BattleProcedureExecutionRef,
+    procedure: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("unitFeature"),
+        source: CharacterUnitProcedureSourceSchema,
+        execution: UnitFeatureProcedureExecutionSchema,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("unitSupportProfile"),
+        source: CharacterUnitProcedureSourceSchema,
+        execution: UnitSupportProcedureExecutionSchema,
+      }),
+    ),
+  }),
+  Schema.Struct({
+    procedureRef: BattleProcedureExecutionRef,
+    procedure: Schema.Struct({
+      kind: Schema.Literal("spellInvocation"),
+      executionFacts: SpellExecutionFactsSchema,
+    }),
+  }),
+  Schema.Struct({
+    procedureRef: BattleProcedureExecutionRef,
+    procedure: Schema.Struct({
+      kind: Schema.Literal("unavailableSpellInvocation"),
+    }),
+  }),
+);
+
 const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
   kind: Schema.Literal("character"),
-  characterId: Schema.String,
+  characterId: CharacterIdSchema,
   execution: Schema.Struct({
     scopeRef: BattleCharacterExecutionScopeRef,
     // Procedure allocation is runtime state, never part of a durable
     // checkpoint. The exact optional field rejects legacy cursor payloads
     // instead of silently accepting a second snapshot shape.
     nextProcedureOrdinal: Schema.optionalWith(Schema.Never, { exact: true }),
-    procedureBindings: Schema.Array(
-      Schema.Struct({
-        procedureRef: BattleProcedureExecutionRef,
-        procedure: Schema.Union(
-          Schema.Struct({
-            kind: Schema.Literal("unitFeature"),
-            source: Schema.Union(
-              Schema.Struct({ kind: Schema.Literal("intrinsic") }),
-              Schema.Struct({
-                kind: Schema.Literal("resourcePool"),
-                resourcePoolRef: BattleResourcePoolExecutionRef,
-              }),
-            ),
-            execution: UnitFeatureProcedureExecutionSchema,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("unitSupportProfile"),
-            source: Schema.Union(
-              Schema.Struct({ kind: Schema.Literal("intrinsic") }),
-              Schema.Struct({
-                kind: Schema.Literal("resourcePool"),
-                resourcePoolRef: BattleResourcePoolExecutionRef,
-              }),
-            ),
-            execution: UnitSupportProcedureExecutionSchema,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("spellInvocation"),
-            executionFacts: SpellExecutionFactsSchema,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("unavailableSpellInvocation"),
-          }),
-        ),
-      }),
-    ),
+    procedureBindings: Schema.Array(CharacterProcedureBindingSnapshotSchema),
   }),
   attackExecution: Schema.Struct({
     scopeRef: BattleAttackExecutionScopeRef,
@@ -6058,8 +6069,8 @@ const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
       spellSlots: Schema.Array(
         Schema.Struct({
           spellLevel: SpellSlotLevel,
-          count: Schema.Number,
-          expended: Schema.Number,
+          count: ResourceCount,
+          expended: ResourceCount,
         }),
       ),
     }),
@@ -6082,16 +6093,16 @@ const StatBlockBattleCreatureOriginSnapshotSchema = Schema.Struct({
 
 const BattleCreatureSnapshotCommonFields = {
   combatantId: CombatantId,
-  initiative: Schema.Number,
-  hp: Schema.Number,
-  maxHp: Schema.Number,
-  tempHp: Schema.Number,
+  initiative: InitiativeScoreSchema,
+  hp: HpSchema,
+  maxHp: HpSchema,
+  tempHp: HpSchema,
   // Active-effect allocation is runtime state, never part of a durable
   // checkpoint. The exact optional field rejects legacy cursor payloads.
   nextActiveEffectOrdinal: Schema.optionalWith(Schema.Never, { exact: true }),
   activeEffectRefs: Schema.Array(BattleActiveEffectExecutionRef),
-  armorClass: Schema.Number,
-  size: Schema.String,
+  armorClass: BattleArmorClassSchema,
+  size: Schema.Literal(...SIZES),
   zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshotSchema,
   conditions: Schema.Array(Schema.Literal(...ALL_CONDITIONS)),
   concentrating: Schema.Boolean,
@@ -6099,14 +6110,14 @@ const BattleCreatureSnapshotCommonFields = {
   reactionAvailable: Schema.Boolean,
   ammunitionStocks: BattleAmmunitionStocksSchema,
   movement: Schema.Struct({
-    speedFeet: Schema.Number,
-    spentFeet: Schema.Number,
-    remainingFeet: Schema.Number,
+    speedFeet: MovementFeet,
+    spentFeet: MovementFeet,
+    remainingFeet: MovementFeet,
     speedKinds: Schema.Array(
       Schema.Struct({
         kind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
-        speedFeet: Schema.Number,
-        remainingFeet: Schema.Number,
+        speedFeet: MovementFeet,
+        remainingFeet: MovementFeet,
       }),
     ),
   }),
@@ -6125,9 +6136,13 @@ type BattleCreatureSnapshotInvariantShapeSchema = Schema.Struct<
 
 type BattleCreatureSnapshotInvariantInput =
   Schema.Schema.Type<BattleCreatureSnapshotInvariantShapeSchema>;
-type EncodedCharacterBattleCreatureOrigin = Extract<
-  BattleCreatureSnapshotInvariantInput["origin"],
-  { readonly kind: "character" }
+type AssignableTo<Expected, Actual extends Expected> = Actual;
+type EncodedCharacterBattleCreatureOrigin = AssignableTo<
+  Extract<BattleCreatureOriginSnapshot, { readonly kind: "character" }>,
+  Extract<
+    BattleCreatureSnapshotInvariantInput["origin"],
+    { readonly kind: "character" }
+  >
 >;
 
 function battleCreatureSnapshotInvariantsHold(
@@ -6604,7 +6619,7 @@ const BattleDimLightEmissionSchema = Schema.Struct({
 const BattleLightEmitterEndOfTurnExpirationSchema = Schema.Struct({
   kind: Schema.Literal("endOfTurn"),
   combatantId: CombatantId,
-  round: Schema.Number,
+  round: BattleRoundSchema,
 });
 
 const BattleSpellLightEmitterFields = {
@@ -6683,11 +6698,11 @@ const BattlePointOriginCylinderAreaSchema = Schema.Struct({
 const BattleConcentrationWithDurationExpirationSchema = Schema.Struct({
   kind: Schema.Literal("concentration"),
   combatantId: CombatantId,
-  durationTicks: Schema.Number,
+  durationTicks: ElapsedTimeTicksSchema,
 });
 const BattleDurationExpirationSchema = Schema.Struct({
   kind: Schema.Literal("duration"),
-  durationTicks: Schema.Number,
+  durationTicks: ElapsedTimeTicksSchema,
 });
 const BattleConcentrationOrDurationExpirationSchema = Schema.Union(
   BattleConcentrationWithDurationExpirationSchema,
@@ -6730,7 +6745,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     formAccess: Schema.Literal("findFamiliar"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
-    initiative: Schema.Number,
+    initiative: InitiativeScoreSchema,
     placement: BattleCompanionPlacementSchema,
   }),
   Schema.Struct({
@@ -6742,7 +6757,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     formAccess: Schema.Literal("pactOfTheChain"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
-    initiative: Schema.Number,
+    initiative: InitiativeScoreSchema,
     placement: BattleCompanionPlacementSchema,
   }),
   Schema.Struct({
@@ -7636,7 +7651,7 @@ function serializedReadiedActionChoiceOwnsResponse(
 
 const BattleSnapshotCommonFields = {
   battleId: BattleId,
-  round: Schema.Number,
+  round: BattleRoundSchema,
   currentActorId: CombatantId,
   turnOrder: Schema.Array(CombatantId),
   companions: Schema.Array(BattleCompanionSnapshotSchema),
@@ -7793,7 +7808,7 @@ type BattlePresentedSnapshotShapeSchema = Schema.Struct<
 >;
 
 export const BattlePresentedSnapshotSchema: Schema.Schema<
-  Schema.Schema.Type<BattlePresentedSnapshotShapeSchema>,
+  BattlePresentedSnapshot,
   Schema.Schema.Encoded<BattlePresentedSnapshotShapeSchema>,
   never
 > = Schema.Struct({
@@ -7817,7 +7832,7 @@ type BattleSnapshotShapeSchema = Schema.Struct<
 >;
 
 export const BattleSnapshotSchema: Schema.Schema<
-  Schema.Schema.Type<BattleSnapshotShapeSchema>,
+  BattleSnapshot,
   Schema.Schema.Encoded<BattleSnapshotShapeSchema>,
   never
 > = Schema.Struct({
