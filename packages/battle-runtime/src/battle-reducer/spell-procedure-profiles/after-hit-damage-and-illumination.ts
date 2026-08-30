@@ -166,11 +166,13 @@ function afterHitDamageAndIlluminationSpellProjection(
   const operationEffects = spell.mechanics.operations.map(
     (operation) => operation.effect,
   );
-  const light = operationEffects.find((effect) => effect.kind === "emit_light");
+  const illuminationEffect = operationEffects.find(
+    (effect) => effect.kind === "emit_light",
+  );
   const illumination =
-    light?.kind === "emit_light"
+    illuminationEffect?.kind === "emit_light"
       ? illuminationEmissionFactsFromSurface({
-          effect: light,
+          effect: illuminationEffect,
           opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
         })
       : null;

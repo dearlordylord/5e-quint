@@ -6,13 +6,13 @@ import type {
   BattleLightEmitterOpaqueCoverInteraction,
 } from "../../procedure-execution/spell-execution-vocabulary.ts";
 
-type SurfaceLightEmission = Extract<
+type SurfaceIlluminationEmission = Extract<
   EffectAtom,
   { readonly kind: "emit_light" }
 >;
 
 export function illuminationEmissionFactsFromSurface(input: {
-  readonly effect: SurfaceLightEmission;
+  readonly effect: SurfaceIlluminationEmission;
   readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
 }): BattleIlluminationEmissionFacts | null {
   const brightRadiusFeet = input.effect.brightRadiusFeet;
