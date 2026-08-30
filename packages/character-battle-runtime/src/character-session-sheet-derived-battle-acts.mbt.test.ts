@@ -33,7 +33,7 @@ import {
 import {
   characterSheetId,
   characterSheetSpellSlots,
-  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  rebuildCharacterSheet as rebuildCharacterSheetCore,
   type CharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import {
@@ -599,12 +599,13 @@ function startSheetDerivedSession(
 ): SheetDerivedSession {
   const levelOneSlotsExpended = input?.levelOneSlotsExpended ?? 0;
   const sheet = expectRight(
-    createFreshCharacterSheetCore({
+    rebuildCharacterSheetCore({
       characterId: characterSheetId("character:sheet-derived-caster"),
       build,
       currentHp: Hp(7),
       tempHp: Hp(0),
       conditions: [],
+      companion: { tag: "none" },
       hitPointMaximumReduction: Hp(0),
       spellSlotExpenditures:
         build.spellcasting === undefined
