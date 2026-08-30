@@ -5,6 +5,8 @@ import { Schema } from "effect";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
+import { walkSurfaceSchemaValue } from "./surface-relations.ts";
+
 const require = createRequire(import.meta.url);
 const traversal = require("../../../../scripts/srd521-surface-authored-corpus-audit.cjs");
 const {
@@ -63,6 +65,21 @@ const unionFieldSchema = (schema: { readonly ast: AST.AST }, name: string) => {
     if (field !== undefined) return field.type;
   }
   throw new Error(`missing schema field: ${name}`);
+};
+
+const inspectSurfaceSchemaValue = <A, I, R>(
+  schema: Schema.Schema<A, I, R>,
+  value: A,
+) => {
+  const visits: Array<{
+    readonly path: string;
+    readonly value: unknown;
+    readonly role: SurfaceSchemaFieldRole;
+  }> = [];
+  const issues = walkSurfaceSchemaValue(schema, value, (path, current, role) =>
+    visits.push({ path, value: current, role }),
+  );
+  return { issues, visits };
 };
 
 describe("Surface authored string role traversal", () => {
@@ -238,6 +255,30 @@ describe("Surface authored string role traversal", () => {
         targetRecordId: "synthetic_spell_beta",
       },
     ]);
+
+    const productionTraversal = inspectSurfaceSchemaValue(referenceArray, [
+      "synthetic_spell_alpha",
+      "synthetic_spell_beta",
+    ]);
+    expect(productionTraversal.issues).toEqual([]);
+    expect(
+      productionTraversal.visits.map(({ path, value, role }) => ({
+        path,
+        value,
+        category: role.category,
+      })),
+    ).toEqual([
+      {
+        path: "value[0]",
+        value: "synthetic_spell_alpha",
+        category: "reference",
+      },
+      {
+        path: "value[1]",
+        value: "synthetic_spell_beta",
+        category: "reference",
+      },
+    ]);
   });
 
   it("rejects excess string-bearing content at the production decode boundary", () => {
@@ -306,6 +347,156 @@ describe("Surface authored string role traversal", () => {
       0,
     );
   }, 15_000);
+
+  it("reports schema traversal contract violations as typed issues", () => {
+    const unowned = inspectSurfaceSchemaValue(Schema.String, "unowned");
+    const conflicting = inspectSurfaceSchemaValue(
+      Schema.Struct({
+        target: surfaceSchemaRole(Schema.String, {
+          category: "reference",
+          relation: "unit-reference",
+          targetKind: "unit",
+        }),
+      }).annotations({
+        [SURFACE_SCHEMA_ROLE_ANNOTATION]: {
+          category: "prose",
+          evidence: "summary",
+        },
+      }),
+      { target: "synthetic_unit" },
+    );
+    const unsupported = inspectSurfaceSchemaValue(
+      Schema.instanceOf(Date),
+      new Date(0),
+    );
+
+    expect(unowned.issues).toEqual([
+      expect.objectContaining({ code: "unownedString", path: "value" }),
+    ]);
+    expect(conflicting.issues).toEqual([
+      expect.objectContaining({
+        code: "conflictingRole",
+        path: "value.target",
+      }),
+    ]);
+    expect(unsupported.issues).toEqual([
+      expect.objectContaining({ code: "unsupportedSchemaAst", path: "value" }),
+    ]);
+  });
+
+  it("selects primitive, object, and tuple union branches by decoded shape", () => {
+    const primitive = Schema.Union(
+      surfaceSchemaRole(Schema.String, {
+        category: "identity",
+        kind: "label",
+      }),
+      Schema.Number,
+      Schema.Boolean,
+    );
+    expect(inspectSurfaceSchemaValue(primitive, "label").visits).toHaveLength(
+      1,
+    );
+    expect(inspectSurfaceSchemaValue(primitive, 1).visits).toEqual([]);
+    expect(inspectSurfaceSchemaValue(primitive, true).visits).toEqual([]);
+    expect(
+      inspectSurfaceSchemaValue(
+        Schema.Union(Schema.Unknown, Schema.Literal("literal")),
+        null,
+      ),
+    ).toEqual({ issues: [], visits: [] });
+
+    const objectOrString = Schema.Union(
+      Schema.Struct({ required: Schema.Number }),
+      surfaceSchemaRole(Schema.String, {
+        category: "prose",
+        evidence: "summary",
+      }),
+    );
+    expect(
+      inspectSurfaceSchemaValue(objectOrString, "decoded string").visits[0],
+    ).toMatchObject({ path: "value", value: "decoded string" });
+
+    const tupleOrString = Schema.Union(
+      Schema.Tuple(
+        surfaceSchemaRole(Schema.String, {
+          category: "prose",
+          evidence: "summary",
+        }),
+      ),
+      surfaceSchemaRole(Schema.String, {
+        category: "identity",
+        kind: "label",
+      }),
+    );
+    expect(
+      inspectSurfaceSchemaValue(tupleOrString, "decoded scalar").visits,
+    ).toEqual([
+      expect.objectContaining({ path: "value", value: "decoded scalar" }),
+    ]);
+  });
+
+  it("visits a shared decoded object once for the same schema and role", () => {
+    const schema = Schema.Array(
+      Schema.Struct({
+        label: surfaceSchemaRole(Schema.String, {
+          category: "identity",
+          kind: "label",
+        }),
+      }),
+    );
+    const shared = { label: "shared label" };
+    const result = inspectSurfaceSchemaValue(schema, [shared, shared]);
+
+    expect(result.issues).toEqual([]);
+    expect(result.visits).toEqual([
+      expect.objectContaining({
+        path: "value[0].label",
+        value: "shared label",
+      }),
+    ]);
+  });
+
+  it("traverses refinement, transformation, and suspension output shapes", () => {
+    const refined = surfaceSchemaRole(Schema.String.pipe(Schema.minLength(1)), {
+      category: "prose",
+      evidence: "summary",
+    });
+    const transformedText = surfaceSchemaRole(Schema.String, {
+      category: "prose",
+      evidence: "summary",
+    });
+    const transformed = Schema.transform(
+      transformedText,
+      Schema.Struct({ text: transformedText }),
+      {
+        strict: true,
+        decode: (value) => ({ text: value }),
+        encode: (value) => value.text,
+      },
+    );
+    const suspended = Schema.suspend(() =>
+      Schema.Struct({
+        text: surfaceSchemaRole(Schema.String, {
+          category: "identity",
+          kind: "label",
+        }),
+      }),
+    );
+
+    expect(inspectSurfaceSchemaValue(refined, "refined").visits).toEqual([
+      expect.objectContaining({ path: "value", value: "refined" }),
+    ]);
+    expect(
+      inspectSurfaceSchemaValue(transformed, { text: "decoded" }).visits,
+    ).toEqual([
+      expect.objectContaining({ path: "value.text", value: "decoded" }),
+    ]);
+    expect(
+      inspectSurfaceSchemaValue(suspended, { text: "suspended" }).visits,
+    ).toEqual([
+      expect.objectContaining({ path: "value.text", value: "suspended" }),
+    ]);
+  });
 
   it("does not traverse an incompatible tagged branch", () => {
     const schema = Schema.Union(

@@ -141,7 +141,7 @@ const invalidRelationTargetIssue = (input: {
   message: `Surface ${input.role.category} ${input.role.targetKind} relation target at ${input.path} is not a valid non-empty trimmed id`,
 });
 
-const makeSurfaceAuthoredRelation = (input: {
+export const decodeSurfaceAuthoredRelation = (input: {
   readonly record: SurfaceRecord;
   readonly role: SurfaceRelationRole;
   readonly fieldPath: string;
@@ -363,28 +363,14 @@ const isObjectValue = (value: unknown): value is object =>
   typeof value === "object" && value !== null;
 
 const roleEqual = (
-  left: SurfaceSchemaFieldRole | undefined,
-  right: SurfaceSchemaFieldRole | undefined,
-): boolean => {
-  if (left === undefined || right === undefined) return left === right;
-  return surfaceSchemaRolesEqual(left, right);
-};
-
-const schemaChild = (ast: AST.AST): AST.AST | undefined => {
-  if (ast._tag === "Transformation") return ast.to;
-  if (ast._tag === "Refinement") return ast.from;
-  return undefined;
-};
-
-const suspendedAst = (ast: AST.AST): AST.AST | undefined =>
-  ast._tag === "Suspend" ? ast.f() : undefined;
+  left: SurfaceSchemaFieldRole,
+  right: SurfaceSchemaFieldRole,
+): boolean => surfaceSchemaRolesEqual(left, right);
 
 const structuralAst = (ast: AST.AST): AST.AST => {
   let current = ast;
   while (current._tag === "Transformation" || current._tag === "Refinement") {
-    const next = schemaChild(current);
-    if (next === undefined) break;
-    current = next;
+    current = current._tag === "Transformation" ? current.to : current.from;
   }
   return current;
 };
@@ -397,36 +383,20 @@ const isStringLikeAst = (ast: AST.AST): boolean => {
   );
 };
 
-const literalValues = (ast: AST.AST): readonly unknown[] => {
+const literalValues = (ast: AST.AST): readonly unknown[] | undefined => {
   const values: unknown[] = [];
   const pending: AST.AST[] = [ast];
-  const seen = new WeakSet<object>();
-  while (pending.length > 0) {
-    const next = pending.pop();
-    if (next === undefined) continue;
+  for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
     const current = structuralAst(next);
-    if (seen.has(current)) continue;
-    seen.add(current);
     if (current._tag === "Literal") {
       values.push(current.literal);
     } else if (current._tag === "Union") {
       pending.push(...current.types);
-    } else if (current._tag === "Suspend") {
-      const child = suspendedAst(current);
-      if (child !== undefined) pending.push(child);
+    } else {
+      return undefined;
     }
   }
   return values;
-};
-
-const isLiteralSchema = (ast: AST.AST): boolean => {
-  const current = structuralAst(ast);
-  if (current._tag === "Literal") return true;
-  return (
-    current._tag === "Union" &&
-    current.types.length > 0 &&
-    current.types.every(isLiteralSchema)
-  );
 };
 
 /**
@@ -448,8 +418,7 @@ const primitiveBranchMayContainValue = (
 const branchMayContainValue = (ast: AST.AST, value: unknown): boolean => {
   const current = structuralAst(ast);
   if (current._tag === "Suspend") {
-    const child = suspendedAst(current);
-    return child === undefined ? false : branchMayContainValue(child, value);
+    return branchMayContainValue(current.f(), value);
   }
   if (current._tag === "Union") {
     return current.types.some((member) => branchMayContainValue(member, value));
@@ -493,11 +462,10 @@ const typeLiteralPropertyMayContainValue = (
     return property.isOptional;
   }
   const propertyValue = value[String(property.name)];
+  const values = literalValues(property.type);
   return (
-    !isLiteralSchema(property.type) ||
-    literalValues(property.type).some(
-      (candidate) => candidate === propertyValue,
-    )
+    values === undefined ||
+    values.some((candidate) => candidate === propertyValue)
   );
 };
 
@@ -521,7 +489,6 @@ const tupleElementForIndex = (
   index: number,
 ): AST.Type | undefined => {
   if (index < ast.elements.length) return ast.elements[index];
-  if (ast.rest.length === 0) return undefined;
   return ast.rest[Math.min(index - ast.elements.length, ast.rest.length - 1)];
 };
 
@@ -562,19 +529,10 @@ const typeLiteralAstChildren = (
   );
 };
 
-const wrappedAstChildren = (
-  ast: AST.AST,
-  value: unknown,
-): readonly AstChild[] => {
-  const child = schemaChild(ast);
-  return child === undefined ? [] : [{ ast: child, value, path: "" }];
-};
-
 const astChildren = (ast: AST.AST, value: unknown): readonly AstChild[] => {
   const current = structuralAst(ast);
   if (current._tag === "Suspend") {
-    const child = suspendedAst(current);
-    return child === undefined ? [] : [{ ast: child, value, path: "" }];
+    return [{ ast: current.f(), value, path: "" }];
   }
   if (current._tag === "Union") {
     return unionBranchesForValue(current.types, value).map((member) => ({
@@ -589,7 +547,7 @@ const astChildren = (ast: AST.AST, value: unknown): readonly AstChild[] => {
   if (current._tag === "TypeLiteral") {
     return typeLiteralAstChildren(current, value);
   }
-  return wrappedAstChildren(current, value);
+  return [];
 };
 
 type SurfaceWalkCollections = {
@@ -597,16 +555,18 @@ type SurfaceWalkCollections = {
   readonly issues: SurfaceRelationTraversalIssue[];
 };
 
-type SurfaceWalkContext = SurfaceWalkCollections & {
-  readonly record: SurfaceRecord;
+export type SurfaceSchemaStringVisitor = (
+  fieldPath: string,
+  value: unknown,
+  role: SurfaceSchemaFieldRole,
+) => void;
+
+type SurfaceWalkContext = {
+  readonly issues: SurfaceRelationTraversalIssue[];
+  readonly visitString: SurfaceSchemaStringVisitor;
   readonly pending: WalkTask[];
   readonly seen: WeakMap<object, WeakMap<object, Set<string>>>;
 };
-
-const surfaceRecordAst = (record: SurfaceRecord): AST.AST =>
-  record.sourceKind === "unit"
-    ? UnitRecordSchema.ast
-    : StatBlockRecordSchema.ast;
 
 const walkTaskRole = (
   task: WalkTask,
@@ -643,24 +603,13 @@ const isUnownedStringTask = (
   role === undefined &&
   structuralAst(task.ast)._tag === "StringKeyword";
 
-const collectWalkTaskRelation = (
+const visitWalkTaskString = (
   context: SurfaceWalkContext,
   task: WalkTask,
   role: SurfaceSchemaFieldRole | undefined,
 ): void => {
-  if (isSurfaceRelationRole(role) && isStringLikeAst(task.ast)) {
-    const relationResult = makeSurfaceAuthoredRelation({
-      record: context.record,
-      role,
-      fieldPath: task.path.replace(/^value\.?/, ""),
-      issuePath: task.path,
-      targetRecordId: task.current,
-    });
-    if (Either.isLeft(relationResult)) {
-      context.issues.push(relationResult.left);
-    } else {
-      context.relations.push(relationResult.right);
-    }
+  if (role !== undefined && isStringLikeAst(task.ast)) {
+    context.visitString(task.path, task.current, role);
   } else if (isUnownedStringTask(task, role)) {
     context.issues.push({
       tag: "surfaceRelationTraversalIssue",
@@ -723,16 +672,13 @@ const appendWalkChildren = (
   role: SurfaceSchemaFieldRole | undefined,
   children: readonly AstChild[],
 ): void => {
-  for (let index = children.length - 1; index >= 0; index -= 1) {
-    const child = children[index];
-    if (child !== undefined) {
-      context.pending.push({
-        ast: child.ast,
-        current: child.value,
-        path: `${task.path}${child.path}`,
-        inheritedRole: role,
-      });
-    }
+  for (const child of [...children].reverse()) {
+    context.pending.push({
+      ast: child.ast,
+      current: child.value,
+      path: `${task.path}${child.path}`,
+      inheritedRole: role,
+    });
   }
 };
 
@@ -743,7 +689,7 @@ const walkSurfaceTask = (context: SurfaceWalkContext, task: WalkTask): void => {
     return;
   }
   const role = roleResult.right;
-  collectWalkTaskRelation(context, task, role);
+  visitWalkTaskString(context, task, role);
   if (markWalkTaskSeen(context, task, role)) return;
   const children = astChildren(task.ast, task.current);
   const unsupportedIssue = unsupportedSurfaceWalkIssue(task, children);
@@ -751,27 +697,63 @@ const walkSurfaceTask = (context: SurfaceWalkContext, task: WalkTask): void => {
   appendWalkChildren(context, task, role, children);
 };
 
-const walkSurfaceRecord = (
-  record: SurfaceRecord,
-  collections: SurfaceWalkCollections,
-): void => {
+/** Visit schema-owned strings in one already-decoded Surface value. */
+export function walkSurfaceSchemaValue<A, I, R>(
+  schema: Schema.Schema<A, I, R>,
+  value: A,
+  visitString: SurfaceSchemaStringVisitor,
+): readonly SurfaceRelationTraversalIssue[] {
   const context: SurfaceWalkContext = {
-    ...collections,
-    record,
+    issues: [],
+    visitString,
     pending: [
       {
-        ast: surfaceRecordAst(record),
-        current: record.value,
+        ast: schema.ast,
+        current: value,
         path: "value",
         inheritedRole: undefined,
       },
     ],
     seen: new WeakMap(),
   };
-  while (context.pending.length > 0) {
-    const task = context.pending.pop();
-    if (task !== undefined) walkSurfaceTask(context, task);
+  for (
+    let task = context.pending.pop();
+    task !== undefined;
+    task = context.pending.pop()
+  ) {
+    walkSurfaceTask(context, task);
   }
+  return context.issues;
+}
+
+const walkSurfaceRecord = (
+  record: SurfaceRecord,
+  collections: SurfaceWalkCollections,
+): void => {
+  const visitString: SurfaceSchemaStringVisitor = (path, value, role) => {
+    if (!isSurfaceRelationRole(role)) return;
+    const relationResult = decodeSurfaceAuthoredRelation({
+      record,
+      role,
+      fieldPath: path.replace(/^value\.?/, ""),
+      issuePath: path,
+      targetRecordId: value,
+    });
+    if (Either.isLeft(relationResult)) {
+      collections.issues.push(relationResult.left);
+    } else {
+      collections.relations.push(relationResult.right);
+    }
+  };
+  const walkIssues =
+    record.sourceKind === "unit"
+      ? walkSurfaceSchemaValue(UnitRecordSchema, record.value, visitString)
+      : walkSurfaceSchemaValue(
+          StatBlockRecordSchema,
+          record.value,
+          visitString,
+        );
+  collections.issues.push(...walkIssues);
 };
 
 const surfaceWalkResult = (
@@ -1004,9 +986,12 @@ const visitSurfaceRecord = (
 };
 
 const closeSurfaceReachability = (context: SurfaceClosureContext): void => {
-  while (context.pending.length > 0) {
-    const current = context.pending.pop();
-    if (current !== undefined) visitSurfaceRecord(context, current);
+  for (
+    let current = context.pending.pop();
+    current !== undefined;
+    current = context.pending.pop()
+  ) {
+    visitSurfaceRecord(context, current);
   }
 };
 

@@ -10,6 +10,7 @@ import {
   collectSurfaceAuthoredRelations,
   srdSurface,
 } from "./surface-catalog.ts";
+import { decodeSurfaceAuthoredRelation } from "./surface-relations.ts";
 
 const require = createRequire(import.meta.url);
 const corpusAudit: {
@@ -62,7 +63,97 @@ const arrayValue = (value: unknown, label: string): unknown[] => {
   throw new Error(`${label} must be an array in the synthetic relation test`);
 };
 
+const mutablePublishedSurface = () => structuredClone(srdSurface);
+
+const mutableUnit = (
+  surface: ReturnType<typeof mutablePublishedSurface>,
+  id: string,
+): Record<string, unknown> => {
+  const unit = surface.units.find((record) => record.id === id);
+  if (unit === undefined) throw new Error(`Missing published Unit ${id}`);
+  return objectValue(unit, id);
+};
+
 describe("canonical Surface authored relations", () => {
+  it("decodes every Stat Block source relation family", () => {
+    const source = srdSurface.statBlocks.find(
+      (record) => record.id === "stat_block_skeleton",
+    );
+    if (source === undefined) {
+      throw new Error("Missing the skeleton Stat Block relation source");
+    }
+    const relations = [
+      {
+        role: {
+          category: "reference",
+          relation: "unit-reference",
+          targetKind: "unit",
+        },
+        targetRecordId: "synthetic_unit_target",
+      },
+      {
+        role: {
+          category: "dependency",
+          relation: "spell-reference",
+          targetKind: "unit",
+        },
+        targetRecordId: "synthetic_unit_dependency",
+      },
+      {
+        role: {
+          category: "reference",
+          relation: "recommended-stat-block-reference",
+          targetKind: "statBlock",
+        },
+        targetRecordId: "synthetic_stat_block_target",
+      },
+      {
+        role: {
+          category: "dependency",
+          relation: "monster-reference",
+          targetKind: "statBlock",
+        },
+        targetRecordId: "synthetic_stat_block_dependency",
+      },
+    ] as const;
+
+    for (const relation of relations) {
+      const decoded = decodeSurfaceAuthoredRelation({
+        record: { sourceKind: "statBlock", value: source },
+        role: relation.role,
+        fieldPath: "syntheticRelation",
+        issuePath: "value.syntheticRelation",
+        targetRecordId: relation.targetRecordId,
+      });
+      const rejected = decodeSurfaceAuthoredRelation({
+        record: { sourceKind: "statBlock", value: source },
+        role: relation.role,
+        fieldPath: "syntheticRelation",
+        issuePath: "value.syntheticRelation",
+        targetRecordId: " ",
+      });
+
+      expect(Either.isRight(decoded)).toBe(true);
+      if (Either.isRight(decoded)) {
+        expect(decoded.right).toMatchObject({
+          sourceKind: "statBlock",
+          sourceRecordId: source.id,
+          relationKind: relation.role.category,
+          relation: relation.role.relation,
+          targetKind: relation.role.targetKind,
+          targetRecordId: relation.targetRecordId,
+        });
+      }
+      expect(Either.isLeft(rejected)).toBe(true);
+      if (Either.isLeft(rejected)) {
+        expect(rejected.left).toMatchObject({
+          code: "invalidRecord",
+          path: "value.syntheticRelation",
+        });
+      }
+    }
+  });
+
   it("collects relation metadata from decoded records without source scans", () => {
     const result = collectSurfaceAuthoredRelations(srdSurface);
 
@@ -216,6 +307,57 @@ describe("canonical Surface authored relations", () => {
     );
   });
 
+  it("reports malformed stat-block reference and dependency targets", () => {
+    const malformedSurface = mutablePublishedSurface();
+    const wildShapeMechanics = objectValue(
+      mutableUnit(malformedSurface, "druid_wild_shape").mechanics,
+      "wild shape mechanics",
+    );
+    const wildShapePhase = objectValue(
+      arrayValue(wildShapeMechanics.phases, "wild shape phases")[0],
+      "wild shape phase",
+    );
+    const wildShapeEffect = objectValue(
+      arrayValue(wildShapePhase.effects, "wild shape effects")[0],
+      "wild shape effect",
+    );
+    const newForm = objectValue(wildShapeEffect.newForm, "wild shape new form");
+    arrayValue(
+      newForm.recommendedFormStatBlockIds,
+      "recommended wild shape forms",
+    )[0] = "";
+
+    const familiarMechanics = objectValue(
+      mutableUnit(malformedSurface, "find_familiar").mechanics,
+      "find familiar mechanics",
+    );
+    const familiarCreature = objectValue(
+      familiarMechanics.creature,
+      "find familiar creature",
+    );
+    objectValue(
+      arrayValue(familiarCreature.normalForms, "familiar forms")[0],
+      "familiar form",
+    ).statBlockId = " ";
+
+    const result = collectSurfaceAuthoredRelations(malformedSurface);
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "invalidRecord",
+          path: "value.mechanics.phases[0].effects[0].newForm.recommendedFormStatBlockIds[0]",
+        }),
+        expect.objectContaining({
+          code: "invalidRecord",
+          path: "value.mechanics.creature.normalForms[0].statBlockId",
+        }),
+      ]),
+    );
+  });
+
   it("closes complete dependency graphs while admitting selected references", () => {
     const result = closeSrdSurface({
       surface: srdSurface,
@@ -253,6 +395,64 @@ describe("canonical Surface authored relations", () => {
     );
   });
 
+  it("lets a workflow reject dependencies through the selection policy", () => {
+    const result = closeSrdSurface({
+      surface: srdSurface,
+      rootUnitIds: [UnitId.make("class_fighter")],
+      rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
+      relationSelection: {
+        includeDependency: () => false,
+      },
+    });
+
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isLeft(result)) return;
+    expect(result.right.units.map((record) => String(record.id))).toEqual([
+      "class_fighter",
+    ]);
+  });
+
+  it("reports missing Unit and Stat Block relation targets", () => {
+    const units = srdSurface.units.filter(
+      (record) => record.id !== "fighter_action_surge",
+    );
+    const statBlocks = srdSurface.statBlocks.filter(
+      (record) => record.id !== "stat_block_bat",
+    );
+    const firstUnit = units[0];
+    const firstStatBlock = statBlocks[0];
+    if (firstUnit === undefined || firstStatBlock === undefined) {
+      throw new Error("Removing relation targets emptied a Surface family");
+    }
+    const surfaceWithoutTargets = {
+      ...srdSurface,
+      units: [firstUnit, ...units.slice(1)] as const,
+      statBlocks: [firstStatBlock, ...statBlocks.slice(1)] as const,
+    };
+    const result = closeSrdSurface({
+      surface: surfaceWithoutTargets,
+      rootUnitIds: [UnitId.make("class_fighter"), UnitId.make("find_familiar")],
+      rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "missingTarget",
+          targetKind: "unit",
+          targetRecordId: "fighter_action_surge",
+        }),
+        expect.objectContaining({
+          code: "missingTarget",
+          targetKind: "statBlock",
+          targetRecordId: "stat_block_bat",
+        }),
+      ]),
+    );
+  });
+
   it("reports an absent root as a typed closure issue", () => {
     const result = closeSrdSurface({
       surface: srdSurface,
@@ -266,6 +466,94 @@ describe("canonical Surface authored relations", () => {
       tag: "surfaceRelationClosureIssue",
       code: "missingRoot",
       fieldPath: "<root>",
+    });
+  });
+
+  it("reports an absent Stat Block root with its record family", () => {
+    const result = closeSrdSurface({
+      surface: srdSurface,
+      rootUnitIds: [UnitId.make("weapon_club")],
+      rootStatBlockIds: [StatBlockId.make("synthetic_missing_stat_block")],
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left[0]).toMatchObject({
+      tag: "surfaceRelationClosureIssue",
+      code: "missingRoot",
+      rootKind: "statBlock",
+      rootId: "synthetic_missing_stat_block",
+      fieldPath: "<root>",
+    });
+  });
+
+  it("requires a closed projection to retain both record families", () => {
+    const withoutUnit = closeSrdSurface({
+      surface: srdSurface,
+      rootUnitIds: [],
+      rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
+    });
+    const withoutStatBlock = closeSrdSurface({
+      surface: srdSurface,
+      rootUnitIds: [UnitId.make("weapon_club")],
+      rootStatBlockIds: [],
+    });
+
+    expect(Either.isLeft(withoutUnit)).toBe(true);
+    expect(Either.isLeft(withoutStatBlock)).toBe(true);
+    if (Either.isRight(withoutUnit) || Either.isRight(withoutStatBlock)) return;
+    expect(withoutUnit.left[0]).toMatchObject({
+      code: "emptyProjection",
+      missingFamily: "unit",
+    });
+    expect(withoutStatBlock.left[0]).toMatchObject({
+      code: "emptyProjection",
+      missingFamily: "statBlock",
+    });
+  });
+
+  it("deduplicates repeated Stat Block roots", () => {
+    const result = closeSrdSurface({
+      surface: srdSurface,
+      rootUnitIds: [UnitId.make("weapon_club")],
+      rootStatBlockIds: [
+        StatBlockId.make("stat_block_skeleton"),
+        StatBlockId.make("stat_block_skeleton"),
+      ],
+    });
+
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isLeft(result)) return;
+    expect(result.right.statBlocks).toHaveLength(1);
+    expect(result.right.statBlocks[0]?.id).toBe("stat_block_skeleton");
+  });
+
+  it("passes traversal issues through the closure boundary", () => {
+    const malformedSurface = mutablePublishedSurface();
+    const familiarMechanics = objectValue(
+      mutableUnit(malformedSurface, "find_familiar").mechanics,
+      "find familiar mechanics",
+    );
+    const familiarCreature = objectValue(
+      familiarMechanics.creature,
+      "find familiar creature",
+    );
+    objectValue(
+      arrayValue(familiarCreature.normalForms, "familiar forms")[0],
+      "familiar form",
+    ).statBlockId = "";
+
+    const result = closeSrdSurface({
+      surface: malformedSurface,
+      rootUnitIds: [UnitId.make("find_familiar")],
+      rootStatBlockIds: [StatBlockId.make("stat_block_skeleton")],
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left[0]).toMatchObject({
+      tag: "surfaceRelationTraversalIssue",
+      code: "invalidRecord",
     });
   });
 });
