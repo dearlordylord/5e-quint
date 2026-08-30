@@ -26,7 +26,7 @@ import type {
   CombatantId,
 } from "./identity.ts";
 
-export const FIND_FAMILIAR_TELEPATHY_RANGE_FEET = movementFeet(100);
+export const COMPANION_TELEPATHY_RANGE_FEET = movementFeet(100);
 
 export type SpawnedCompanionWithin100FeetFact = {
   readonly kind: "companionWithinCommunicationRangeOfOwner";
@@ -75,7 +75,7 @@ export function spawnedCompanionTelepathicConnection(
   return {
     ownerId: fact.ownerId,
     familiarId: fact.familiarId,
-    rangeFeet: FIND_FAMILIAR_TELEPATHY_RANGE_FEET,
+    rangeFeet: COMPANION_TELEPATHY_RANGE_FEET,
     sharedLanguageRequired: false,
   };
 }
@@ -92,13 +92,13 @@ export function shareSpawnedCompanionSenses(input: {
   if (connection === null || connection.ownerId !== input.casterId) {
     return invalidTransition(
       "invalidFill",
-      "Find Familiar shared senses require a present familiar within 100 feet of its caster.",
+      "Shared senses require a present companion within 100 feet of its owner.",
     );
   }
   if (currentActorId(input.state) !== input.casterId) {
     return invalidTransition(
       "staleSubject",
-      "Find Familiar shared senses are available only on the caster's turn.",
+      "Shared senses are available only on the companion owner's turn.",
     );
   }
   const caster = input.state.combatants.get(input.casterId);
@@ -107,7 +107,7 @@ export function shareSpawnedCompanionSenses(input: {
   if (caster === undefined || familiar === undefined) {
     return invalidTransition(
       "missingCombatant",
-      "Find Familiar shared senses require caster and familiar combatants.",
+      "Shared senses require owner and companion combatants.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -115,7 +115,7 @@ export function shareSpawnedCompanionSenses(input: {
   if (familiar.origin.kind !== "statBlock") {
     return invalidTransition(
       "invalidFill",
-      "Find Familiar shared senses require a familiar Stat Block.",
+      "Shared senses require a companion Stat Block.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -125,7 +125,7 @@ export function shareSpawnedCompanionSenses(input: {
   if (Result.isFailure(spent)) {
     return invalidTransition(
       "staleSubject",
-      "Find Familiar shared senses require an available Bonus Action.",
+      "Shared senses require an available Bonus Action.",
     );
   }
   const allocation = allocateBattleEffectExecutionRefForCreature({
@@ -208,7 +208,7 @@ export function prepareTouchSpellDeliveryThroughSpawnedCompanion(input: {
   if (procedure.spellRuleFacts.range.kind !== "touch") {
     return invalidTransition(
       "invalidFill",
-      "Find Familiar can deliver only spells with a range of Touch.",
+      "Companion touch delivery supports only spells with a range of Touch.",
     );
   }
   const connection = spawnedCompanionTelepathicConnection(

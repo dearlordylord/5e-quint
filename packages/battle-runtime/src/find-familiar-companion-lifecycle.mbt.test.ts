@@ -390,7 +390,7 @@ function observeFamiliarDismissalReappearanceRoute(): readonly ReducerRouteEvent
   });
   return [
     battleReducerStartRouteEvent(),
-    ...routeEventsOf(reappeared, "Find Familiar reappearance"),
+    ...routeEventsOf(reappeared, "Companion reappearance"),
   ];
 }
 

@@ -61,7 +61,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { boundSaveGatedConditionWithRepeatEffect } from "./battle-reducer/spell-modifier-binding.ts";
 
-function requireBoundHideousLaughterEffect(
+function requireBoundStagedConditionEffect(
   state: BattleState,
   effect: Extract<
     BattleActiveEffect,
@@ -75,7 +75,7 @@ function requireBoundHideousLaughterEffect(
   return bound;
 }
 
-function heightenedHideousLaughterFixture() {
+function heightenedStagedConditionFixture() {
   const spell = spellRecord(saveGatedConditionWithRepeatUnitId);
   const session = spellBattle({
     preparedSpells: [spell],
@@ -124,9 +124,9 @@ function heightenedHideousLaughterFixture() {
   return { session, act, targetFill, heightenedFill };
 }
 
-function castHeightenedHideousLaughter() {
+function castHeightenedStagedCondition() {
   const { session, act, targetFill, heightenedFill } =
-    heightenedHideousLaughterFixture();
+    heightenedStagedConditionFixture();
   const needsSave = resolveBattleSubject({
     state: session.state,
     subject: act.subject,
@@ -308,7 +308,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const damageSaveHole =
       saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
         spellTargetId,
-        requireBoundHideousLaughterEffect(
+        requireBoundStagedConditionEffect(
           cast.state,
           saveGatedConditionWithRepeatEffect,
         ),
@@ -385,7 +385,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const expiringRepeatSaveHole =
       saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
         spellTargetId,
-        requireBoundHideousLaughterEffect(
+        requireBoundStagedConditionEffect(
           expiringTargetTurn.state,
           expiringEffect,
         ),
@@ -622,7 +622,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
   });
 
   test("Heightened Hideous Laughter carries Disadvantage from failed initial save to end-turn repeat save", () => {
-    const resolved = castHeightenedHideousLaughter();
+    const resolved = castHeightenedStagedCondition();
     const laughed = requireCombatant(resolved.state, spellTargetId);
     const effect = laughed.activeEffects.find(
       (
@@ -668,7 +668,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
   });
 
   test("Heightened Hideous Laughter requests its target before the saving throw", () => {
-    const { session, act, targetFill } = heightenedHideousLaughterFixture();
+    const { session, act, targetFill } = heightenedStagedConditionFixture();
     const needsHeightenedTarget = resolveBattleSubject({
       state: session.state,
       subject: act.subject,
@@ -693,7 +693,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
   });
 
   test("Heightened Hideous Laughter damage repeat save cancels damage Advantage to normal", () => {
-    const resolved = castHeightenedHideousLaughter();
+    const resolved = castHeightenedStagedCondition();
     const laughed = requireCombatant(resolved.state, spellTargetId);
     const effect = laughed.activeEffects.find(
       (
@@ -710,7 +710,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const damageSaveHole =
       saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
         spellTargetId,
-        requireBoundHideousLaughterEffect(resolved.state, effect),
+        requireBoundStagedConditionEffect(resolved.state, effect),
         "damage",
       );
     expect(damageSaveHole.targetRollModes).toEqual([
@@ -937,7 +937,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const damageSaveHole =
       saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
         spellTargetId,
-        requireBoundHideousLaughterEffect(state, firstEffect),
+        requireBoundStagedConditionEffect(state, firstEffect),
         "damage",
       );
     const afterDamage = applyBattleHitPointDamage({
@@ -963,7 +963,7 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const secondDamageSaveHole =
       saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
         spellTargetId,
-        requireBoundHideousLaughterEffect(state, secondEffect),
+        requireBoundStagedConditionEffect(state, secondEffect),
         "damage",
       );
     const afterAllDamageSaves = applyBattleHitPointDamage({
@@ -1001,13 +1001,13 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     const firstEndTurnHole =
       saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
         spellTargetId,
-        requireBoundHideousLaughterEffect(state, firstEffect),
+        requireBoundStagedConditionEffect(state, firstEffect),
         "endTurn",
       );
     const secondEndTurnHole =
       saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
         spellTargetId,
-        requireBoundHideousLaughterEffect(state, secondEffect),
+        requireBoundStagedConditionEffect(state, secondEffect),
         "endTurn",
       );
     const afterEndTurn = endTurn({

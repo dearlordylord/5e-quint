@@ -2457,13 +2457,13 @@ describe("Find Familiar lifecycle", () => {
       }),
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
     expect(presentSpawnedCompanionHitPoints(withoutFamiliar, undefined)).toBe(
-      "Present Find Familiar combatant identity is missing.",
+      "Present companion combatant identity is missing.",
     );
     expect(
       presentSpawnedCompanionHitPoints(withoutFamiliar, otherCombatantId),
     ).toBe("Present companion combatant is missing.");
     expect(spawnedCompanionCurrentHitPoints(Hp(0))).toBe(
-      "Present Find Familiar current HP must be above 0.",
+      "Present companion current HP must be above 0.",
     );
 
     const cast = castCatFamiliar(withoutFamiliar);
@@ -2482,12 +2482,10 @@ describe("Find Familiar lifecycle", () => {
           hp: { kind: "caster_derived", source: "spell_save_dc" },
         },
       }),
-    ).toBe("Find Familiar form Stat Block must use literal HP.");
+    ).toBe("Companion form Stat Block must use literal HP.");
     expect(
       spawnedCompanionIdentityIssue(cast.state, otherCombatantId, familiarId),
-    ).toBe(
-      "Find Familiar familiar identity is already owned by another caster.",
-    );
+    ).toBe("Companion identity is already owned by another owner.");
     const withoutMagicAction = {
       ...cast.state,
       currentTurnResources: {
@@ -2603,7 +2601,7 @@ describe("Find Familiar lifecycle", () => {
     expect(Result.isFailure(admitted)).toBe(true);
     if (Result.isSuccess(admitted)) return;
     expect(battleStateInitIssueMessage(admitted.failure)).toBe(
-      "Find Familiar familiar identity must not identify an ordinary combatant.",
+      "Companion identity must not identify an ordinary combatant.",
     );
   });
 
@@ -4978,8 +4976,7 @@ describe("Find Familiar lifecycle", () => {
         tag: "battleStateInitIssue",
         kind: "duplicateCombatantId",
         combatantId: enemyId,
-        message:
-          "Find Familiar familiar identity must not identify an ordinary combatant.",
+        message: "Companion identity must not identify an ordinary combatant.",
       }),
     );
   });

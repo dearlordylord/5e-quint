@@ -58,14 +58,14 @@ type AttackRollTargetingSaveInterdictionCheck =
           ];
     };
 
-type SanctuaryAttackRollReplacementTarget = Extract<
+type AttackRollInterdictionReplacementTarget = Extract<
   AttackRollTargetingSaveInterdictionCheck,
   { readonly tag: "newTarget" }
 >;
 
 export function targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(input: {
   readonly fill: Extract<BattleFill, { readonly kind: "targetChoice" }>;
-  readonly replacement: SanctuaryAttackRollReplacementTarget;
+  readonly replacement: AttackRollInterdictionReplacementTarget;
 }): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   const replacementFill = {
     ...input.fill,
@@ -283,7 +283,7 @@ function targetingSaveInterdictionOutcomeHole(
 ): BattleTargetingSaveInterdictionOutcomeHole {
   const holeKey = [
     "battle",
-    "sanctuary-interdiction",
+    "targeting-save-interdiction",
     input.effect.sourceProcedureRef,
     input.effect.sourceCombatantId,
     input.wardedCombatantId,
@@ -336,21 +336,24 @@ export function battleStateAfterTargetActionEarlyEndForActor(
   if (actor === undefined) {
     return state;
   }
-  const sanctuaryActiveEffects = actor.activeEffects.filter(
+  const remainingTargetingInterdictionEffects = actor.activeEffects.filter(
     (effect) => effect.kind !== "targetingSaveInterdiction",
   );
-  const sanctuaryEnded =
-    sanctuaryActiveEffects.length === actor.activeEffects.length
+  const stateAfterTargetingInterdictionEnd =
+    remainingTargetingInterdictionEffects.length === actor.activeEffects.length
       ? state
       : {
           ...state,
           combatants: new Map(state.combatants).set(
             actorId,
-            battleCreatureWithSpellActiveEffects(actor, sanctuaryActiveEffects),
+            battleCreatureWithSpellActiveEffects(
+              actor,
+              remainingTargetingInterdictionEffects,
+            ),
           ),
         };
   return battleStateAfterDirectConditionTargetActionEarlyEndForActor(
-    sanctuaryEnded,
+    stateAfterTargetingInterdictionEnd,
     actorId,
   );
 }

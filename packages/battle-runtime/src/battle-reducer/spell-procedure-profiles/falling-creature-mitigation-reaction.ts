@@ -199,7 +199,8 @@ function resolveFallingCreatureMitigationReaction(
     fillSet: input.fillSet,
     actorId: input.input.subject.reactorId,
     invocation: input.invocation,
-    invalidFillMessage: "Feather Fall uses only falling target-list fills.",
+    invalidFillMessage:
+      "Falling-creature mitigation reaction uses only falling target-list fills.",
   });
   if (targetSelection.tag !== "selected") {
     return targetSelection;

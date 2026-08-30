@@ -84,8 +84,8 @@ export function magicSuppressionInterdictionMessage(
 ): string {
   return magicSuppressionSubjectInterdiction(state, subject)?.kind ===
     "magicAction"
-    ? "Magic Action is blocked inside an Antimagic Field aura."
-    : "Spellcasting is blocked inside an Antimagic Field aura.";
+    ? "Magic Action is blocked inside a magic-suppression area."
+    : "Spellcasting is blocked inside a magic-suppression area.";
 }
 
 export function spellInvocationActInterdictedByMagicSuppressionEmanation(

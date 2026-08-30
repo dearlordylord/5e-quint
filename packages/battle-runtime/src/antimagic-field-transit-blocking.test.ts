@@ -8,7 +8,7 @@ import {
 } from "./antimagic-field.test-support.ts";
 import { battleStateWithAllocatedEffectForTest } from "./battle-runtime.test-support.ts";
 import {
-  ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE,
+  MAGIC_SUPPRESSION_TRANSIT_BLOCKING_MESSAGE,
   magicSuppressionTransitInvalidReason,
 } from "./battle-reducer/magic-suppression-transit-blocking.ts";
 import {
@@ -161,7 +161,7 @@ describe("Antimagic Field teleport transit witnesses", () => {
             }),
           ],
         }),
-      ).toBe(ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE);
+      ).toBe(MAGIC_SUPPRESSION_TRANSIT_BLOCKING_MESSAGE);
     },
   );
 });

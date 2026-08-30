@@ -12,10 +12,10 @@ import type {
   BattleSpawnedCompanionConnectionHole,
   BattleHeldObjectFactsHole,
 } from "./battle-state-execution.ts";
-import { FIND_FAMILIAR_TELEPATHY_RANGE_FEET } from "./companion-communication.ts";
+import { COMPANION_TELEPATHY_RANGE_FEET } from "./companion-communication.ts";
 import type { CombatantId } from "./identity.ts";
 
-export const FIND_FAMILIAR_TOUCH_DELIVERY_TARGET_LABEL =
+export const COMPANION_TOUCH_DELIVERY_TARGET_LABEL =
   "Familiar touch delivery target";
 
 export function spawnedCompanionTouchDeliveryTargetHoles(
@@ -25,7 +25,7 @@ export function spawnedCompanionTouchDeliveryTargetHoles(
     hole.kind === "targetChoice"
       ? {
           ...hole,
-          label: FIND_FAMILIAR_TOUCH_DELIVERY_TARGET_LABEL,
+          label: COMPANION_TOUCH_DELIVERY_TARGET_LABEL,
           requiresTableSpatialFact: true,
         }
       : hole,
@@ -36,7 +36,7 @@ export function spawnedCompanionConnectionHole(input: {
   readonly ownerId: CombatantId;
   readonly companionId: CombatantId;
 }): BattleSpawnedCompanionConnectionHole {
-  const key = `battle:find-familiar:connection:${input.ownerId}:${input.companionId}`;
+  const key = `battle:companion:connection:${input.ownerId}:${input.companionId}`;
   return {
     holeInstanceKey: holeInstanceKey(key),
     holeId: holeId(key),
@@ -44,7 +44,7 @@ export function spawnedCompanionConnectionHole(input: {
     label: "Familiar within 100 feet",
     ownerId: input.ownerId,
     companionId: input.companionId,
-    rangeFeet: FIND_FAMILIAR_TELEPATHY_RANGE_FEET,
+    rangeFeet: COMPANION_TELEPATHY_RANGE_FEET,
     requiresTableSpatialFact: true,
   };
 }

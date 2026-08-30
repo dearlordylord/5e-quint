@@ -331,7 +331,7 @@ function dismissAndReappearSpawnedCompanionProjection(): SpawnedCompanionSelecte
   });
   if (dismissed.tag !== "resolved") {
     throw new Error(
-      `Expected Find Familiar temporary dismissal, got ${dismissed.tag}.`,
+      `Expected Companion temporary dismissal, got ${dismissed.tag}.`,
     );
   }
   const reappeared = reappearTemporarilyDismissedSpawnedCompanion({
@@ -342,9 +342,7 @@ function dismissAndReappearSpawnedCompanionProjection(): SpawnedCompanionSelecte
     placement: { kind: "unoccupiedSpaceWithin30Feet" },
   });
   if (reappeared.tag !== "resolved") {
-    throw new Error(
-      `Expected Find Familiar reappearance, got ${reappeared.tag}.`,
-    );
+    throw new Error(`Expected Companion reappearance, got ${reappeared.tag}.`);
   }
   return projectBattleCompanionState(
     reappeared.state,

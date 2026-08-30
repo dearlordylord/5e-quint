@@ -474,7 +474,7 @@ describe("spell target-selection public boundaries", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Magical effects can't target or otherwise affect things inside an Antimagic Field aura.",
+        "Magical effects can't target or otherwise affect things inside a magic-suppression area.",
     });
   });
 

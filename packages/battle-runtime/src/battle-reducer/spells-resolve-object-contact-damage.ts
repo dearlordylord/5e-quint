@@ -831,7 +831,7 @@ function resolveObjectContactDamage(input: {
       ...missingDamageDispositionHoles,
     ]);
   }
-  const hideousLaughterSaveChecks = resolvedDamageTargets.map(
+  const stagedConditionSaveChecks = resolvedDamageTargets.map(
     ({ target, damage }) => {
       const holes =
         damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
@@ -852,36 +852,36 @@ function resolveObjectContactDamage(input: {
       );
     },
   );
-  const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
+  const invalidStagedConditionSaveCheck = stagedConditionSaveChecks.find(
     (check) => check.tag === "invalid",
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (invalidHideousLaughterSaveCheck?.tag === "invalid") {
+  if (invalidStagedConditionSaveCheck?.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.errorState,
       "invalidFill",
-      invalidHideousLaughterSaveCheck.message,
+      invalidStagedConditionSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingHideousLaughterSaveHoles = hideousLaughterSaveChecks.flatMap(
+  const missingStagedConditionSaveHoles = stagedConditionSaveChecks.flatMap(
     (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
   );
-  if (missingHideousLaughterSaveHoles.length > 0) {
+  if (missingStagedConditionSaveHoles.length > 0) {
     return needsHolesResult(needsHolesState, input.subject, [
-      ...missingHideousLaughterSaveHoles,
+      ...missingStagedConditionSaveHoles,
     ]);
   }
-  const hideousLaughterSaveHoleIds = new Set<BattleHoleId>(
-    hideousLaughterSaveChecks.flatMap((check) =>
+  const stagedConditionSaveHoleIds = new Set<BattleHoleId>(
+    stagedConditionSaveChecks.flatMap((check) =>
       check.tag === "invalid" ? [] : check.holes.map((hole) => hole.holeId),
     ),
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves.some(
-      (fill) => !hideousLaughterSaveHoleIds.has(fill.holeId),
+      (fill) => !stagedConditionSaveHoleIds.has(fill.holeId),
     )
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -1084,15 +1084,15 @@ function resolveObjectContactDamage(input: {
       input.fillSet.concentrationSavingThrows,
       concentrationLifecycleHoles,
     );
-    const hideousLaughterLifecycleHoles =
+    const stagedConditionLifecycleHoles =
       damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state,
         target,
         damageAmount,
       });
-    const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
+    const stagedConditionLifecycleFills = fillsMatchingHoleIds(
       input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-      hideousLaughterLifecycleHoles,
+      stagedConditionLifecycleHoles,
     );
     return applyPreparedSlotSpellDamage(state, targetId, damageAmount, {
       concentrationSavingThrow:
@@ -1106,7 +1106,7 @@ function resolveObjectContactDamage(input: {
         concentrationLifecycleFills,
       damageDisposition: damageDispositionByTargetId.get(targetId),
       saveGatedConditionWithRepeatDamageRepeatSaves:
-        hideousLaughterLifecycleFills,
+        stagedConditionLifecycleFills,
       damageSourceId: input.actorId,
       spatialFacts: input.fillSet.targetSpatialFacts,
       ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),

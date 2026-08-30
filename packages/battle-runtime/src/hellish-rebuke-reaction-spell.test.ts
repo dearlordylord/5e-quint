@@ -370,7 +370,7 @@ describe("Hellish Rebuke Reaction spell", () => {
 
   test("Hellish Rebuke requests an advantaged Hideous Laughter save after the affected creature's delayed damage", () => {
     const hellishRebuke = srdSpellRecord(hellishRebukeUnitId);
-    const session = battleWithThirdPartyHideousLaughter(hellishRebuke);
+    const session = battleWithThirdPartyStagedCondition(hellishRebuke);
     const laughterAct = spellAct({
       session,
       spellId: saveGatedConditionWithRepeatUnitId,
@@ -1232,7 +1232,7 @@ function battleWithHellishRebukeOnCasterTurn(
   ]);
 }
 
-function battleWithThirdPartyHideousLaughter(
+function battleWithThirdPartyStagedCondition(
   hellishRebuke: SpellRecord,
 ): BattleRuntimeSession {
   return startDirectSpellLaneBattle([

@@ -707,13 +707,13 @@ describe("Chromatic Orb chained spell attack", () => {
       concentrationHole,
       true,
     );
-    const awaitingHideousLaughter = resolveNeedsHoles(state, damage.subject, [
+    const awaitingStagedCondition = resolveNeedsHoles(state, damage.subject, [
       ...damage.fills,
       concentrationFill,
     ]);
     const saveGatedConditionWithRepeatHole =
-      requireHideousLaughterRepeatSaveHole(
-        requireHole(awaitingHideousLaughter.holes, "savingThrowOutcome"),
+      requireStagedConditionRepeatSaveHole(
+        requireHole(awaitingStagedCondition.holes, "savingThrowOutcome"),
       );
     expect(
       saveGatedConditionWithRepeatHole.saveGatedConditionRepeatSave,
@@ -1669,7 +1669,7 @@ function requireHole<K extends BattleHole["kind"]>(
   return hole;
 }
 
-function requireHideousLaughterRepeatSaveHole(
+function requireStagedConditionRepeatSaveHole(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
 ): Extract<BattleHole, { readonly saveGatedConditionRepeatSave: unknown }> {
   if (!("saveGatedConditionRepeatSave" in hole)) {

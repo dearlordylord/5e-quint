@@ -564,18 +564,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     ),
   ),
   ...[
-    "Attack-hit Bonus Action spell command requires a supported prepared after-hit spell.",
-    "Triggered Reaction spell command requires a supported prepared Reaction spell.",
-    "Triggered Reaction spell command requires a prepared slotted Reaction spell.",
-  ].flatMap((identifier) =>
-    exactCollision(
-      "command",
-      identifier,
-      ["execution-diagnostic"],
-      "command names the generic runtime request protocol",
-    ),
-  ),
-  ...[
     "characterLightExtraAttackDamageAbilityModifierSupportProcedureRefs",
     "isObjectLightDiscoverySubject",
     "applyHeldLightEffect",
@@ -598,32 +586,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
       "light",
       identifier,
       ["declaration-identifier"],
-      "light names the illumination mechanic",
-    ),
-  ),
-  ...[
-    "Held light spells do not use target, roll, damage, or save fills.",
-    "Movable-light creation is no longer available.",
-    "Movable-light reposition is no longer available.",
-    "Object light spells use only an object target fill.",
-    "Object light target does not satisfy the selected spell's object targeting requirements.",
-    "Object light caster is not in this battle.",
-    "Darkness spell-light overlap must reference a tracked ongoing spell light.",
-    "Darkness can only dispel overlapping spell-created light at or below its supported spell level limit.",
-    "Movable-light manifestation uses only a movable-light placement fill.",
-    "Movable-light reposition requires an active manifestation from this spell.",
-    "Movable-light placement does not match the selected form.",
-    "Movable-light placement must be within spell range.",
-    "Movable-light separate form requires one to four lights.",
-    "Movable-light movement requires reposition placement.",
-    "Movable-light movement form does not match the active manifestation.",
-    "Movable-light reposition exceeds its movement limit.",
-    "Movable-light movement must place each active light identity.",
-  ].flatMap((identifier) =>
-    exactCollision(
-      "light",
-      identifier,
-      ["execution-diagnostic"],
       "light names the illumination mechanic",
     ),
   ),
@@ -690,30 +652,6 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
       ["execution-diagnostic"],
       "fly names the movement mode",
     ),
-  ),
-  ...exactCollision(
-    "jump",
-    "distance-multiplier effect movement replacement requires caller-supplied jump distance and landing facts.",
-    ["execution-diagnostic"],
-    "jump names the movement operation",
-  ),
-  ...exactCollision(
-    "creation",
-    "Movable-light creation is no longer available.",
-    ["execution-diagnostic"],
-    "creation names the manifestation lifecycle operation",
-  ),
-  ...exactCollision(
-    "identify",
-    "weapon attack enhancement target item must identify a held nonmagical weapon item.",
-    ["execution-diagnostic"],
-    "identify is the validation verb",
-  ),
-  ...exactCollision(
-    "sleep",
-    "hit-point-budget condition targets that do not sleep or have Exhaustion Immunity automatically succeed and must not receive a rolled Saving Throw outcome.",
-    ["execution-diagnostic"],
-    "sleep names a biological creature-state predicate",
   ),
   ...[
     "BattleMovableLight",
@@ -872,6 +810,43 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "light_dex",
     ["discriminant-literal"],
     "light names the armor category",
+  ),
+  ...exactCollision(
+    "light",
+    "Light Property Bonus Action Attack requires a prior Attack action attack with a different Light weapon.",
+    ["execution-diagnostic"],
+    "Light Property is the canonical weapon-property mechanic",
+  ),
+  ...exactCollision(
+    "shield",
+    "Acrobatic Movement requires the mover to be unarmored and not wielding a Shield.",
+    ["execution-diagnostic"],
+    "Shield is the canonical equipment category",
+  ),
+  ...[
+    "Chosen damage Resistance spell target must be a willing combatant within the selected spell's supported range.",
+    "Chosen damage Resistance spell damage type must be one of the selected spell's choices.",
+  ].flatMap((identifier) =>
+    exactCollision(
+      "resistance",
+      identifier,
+      ["execution-diagnostic"],
+      "Resistance is the canonical damage relationship",
+    ),
+  ),
+  ...["shield", "magic_missile"].flatMap((spellId) =>
+    exactCollision(
+      spellId,
+      "SHIELD_MAGIC_MISSILE_SPELL_ID",
+      ["declaration-identifier"],
+      "the authored rule names this exact cross-record interaction",
+    ),
+  ),
+  ...exactCollision(
+    "magic_missile",
+    "magic_missile",
+    ["execution-diagnostic"],
+    "the authored rule names this exact cross-record interaction",
   ),
 ];
 
@@ -2563,6 +2538,12 @@ function spellLexiconMatches(text, spellLexicon) {
   return matches;
 }
 
+function textContainsExactAuthoredTitle(text, spell) {
+  return new RegExp(
+    `(?:^|[^A-Za-z0-9])${escapeForRegExp(spell.name)}(?:$|[^A-Za-z0-9])`,
+  ).test(text);
+}
+
 function executionIdentityBoundaryReason(relativePath) {
   if (
     /(?:\.test\.[cm]?tsx?$|\.mbt\.test\.[cm]?tsx?$|\.test-support\.[cm]?tsx?$|\/test-support\/|\/fixtures?\/)/.test(
@@ -2589,6 +2570,10 @@ function declarationName(node) {
   const variableStatement = ts.isVariableDeclaration(node)
     ? node.parent?.parent
     : undefined;
+  const variableIsExported =
+    variableStatement !== undefined &&
+    ts.isVariableStatement(variableStatement) &&
+    hasExportModifier(variableStatement);
   const isExportedDeclaration =
     !ts.isVariableDeclaration(node) && hasExportModifier(node);
   const isExecutionContractDeclaration =
@@ -2597,10 +2582,7 @@ function declarationName(node) {
     ts.isInterfaceDeclaration(node) ||
     ts.isTypeAliasDeclaration(node) ||
     ts.isFunctionDeclaration(node) ||
-    (ts.isVariableDeclaration(node) &&
-      variableStatement !== undefined &&
-      ts.isVariableStatement(variableStatement) &&
-      hasExportModifier(variableStatement));
+    (ts.isVariableDeclaration(node) && variableIsExported);
   if (
     isExecutionContractDeclaration &&
     node.name !== undefined &&
@@ -2613,6 +2595,141 @@ function declarationName(node) {
     return node.name.text;
   }
   return undefined;
+}
+
+function exportedVariableAuthoredValue(node, spellLexicon) {
+  if (!ts.isVariableDeclaration(node) || node.initializer === undefined) {
+    return false;
+  }
+  const variableStatement = node.parent?.parent;
+  if (
+    variableStatement === undefined ||
+    !ts.isVariableStatement(variableStatement) ||
+    variableStatement.modifiers?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+    ) !== true
+  ) {
+    return false;
+  }
+  let hasAuthoredValue = false;
+  const visit = (candidate) => {
+    if (hasAuthoredValue) return;
+    const text = runtimeTextExpression(candidate);
+    if (
+      text !== undefined &&
+      !isNestedRuntimeTextExpression(candidate) &&
+      spellLexiconMatches(text, spellLexicon).some(
+        (spell) =>
+          spell.phraseWords.some((phrase) => phrase.length > 1) ||
+          textContainsExactAuthoredTitle(text, spell),
+      )
+    ) {
+      hasAuthoredValue = true;
+      return;
+    }
+    ts.forEachChild(candidate, visit);
+  };
+  visit(node.initializer);
+  return hasAuthoredValue;
+}
+
+function sourceContainsMultiwordAuthoredRuntimeText(source, spellLexicon) {
+  let found = false;
+  const visit = (node) => {
+    if (found) return;
+    const text = runtimeTextExpression(node);
+    if (
+      text !== undefined &&
+      !isNestedRuntimeTextExpression(node) &&
+      runtimeTextExpressionHasExecutionRole(node) &&
+      spellLexiconMatches(text, spellLexicon).some((spell) =>
+        spell.phraseWords.some((phrase) => phrase.length > 1),
+      )
+    ) {
+      found = true;
+      return;
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return found;
+}
+
+function coupledExecutionIdentifier(node) {
+  if (
+    (ts.isVariableDeclaration(node) ||
+      ts.isParameter(node) ||
+      ts.isPropertyDeclaration(node) ||
+      ts.isPropertySignature(node) ||
+      ts.isTypeAliasDeclaration(node) ||
+      ts.isFunctionDeclaration(node) ||
+      ts.isInterfaceDeclaration(node) ||
+      ts.isClassDeclaration(node)) &&
+    node.name !== undefined &&
+    ts.isIdentifier(node.name)
+  ) {
+    return node.name;
+  }
+  if (ts.isImportSpecifier(node)) return node.name;
+  if (ts.isImportClause(node) && node.name !== undefined) return node.name;
+  return undefined;
+}
+
+function runtimeTextExpression(node) {
+  if (ts.isTaggedTemplateExpression(node)) {
+    return runtimeTextExpression(node.template);
+  }
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+    return node.text;
+  }
+  if (ts.isTemplateExpression(node)) {
+    return [
+      node.head.text,
+      ...node.templateSpans.map((span) => span.literal.text),
+    ].join(" ");
+  }
+  if (
+    ts.isBinaryExpression(node) &&
+    node.operatorToken.kind === ts.SyntaxKind.PlusToken
+  ) {
+    const left = runtimeTextExpression(node.left);
+    const right = runtimeTextExpression(node.right);
+    if (left === undefined && right === undefined) return undefined;
+    return `${left ?? ""} ${right ?? ""}`;
+  }
+  return undefined;
+}
+
+function isNestedRuntimeTextExpression(node) {
+  const parent = node.parent;
+  return (
+    ts.isTaggedTemplateExpression(parent) ||
+    ts.isTemplateExpression(parent) ||
+    (ts.isTemplateSpan(parent) && parent.literal === node) ||
+    (ts.isBinaryExpression(parent) &&
+      parent.operatorToken.kind === ts.SyntaxKind.PlusToken)
+  );
+}
+
+function runtimeTextExpressionHasExecutionRole(node) {
+  let current = node;
+  while (
+    ts.isParenthesizedExpression(current.parent) ||
+    ts.isAsExpression(current.parent) ||
+    ts.isSatisfiesExpression(current.parent) ||
+    ts.isArrayLiteralExpression(current.parent)
+  ) {
+    current = current.parent;
+  }
+  const parent = current.parent;
+  return (
+    (ts.isVariableDeclaration(parent) && parent.initializer === current) ||
+    (ts.isPropertyAssignment(parent) && parent.initializer === current) ||
+    (ts.isReturnStatement(parent) && parent.expression === current) ||
+    (ts.isArrowFunction(parent) && parent.body === current) ||
+    ((ts.isCallExpression(parent) || ts.isNewExpression(parent)) &&
+      parent.arguments?.some((argument) => argument === current) === true)
+  );
 }
 
 function nearestNamedFunction(node) {
@@ -2790,6 +2907,8 @@ function executionIdentityViolationsForFile(
     true,
     relativePath.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   );
+  const sourceHasAuthoredRuntimeText =
+    sourceContainsMultiwordAuthoredRuntimeText(source, spellLexicon);
   const violations = [];
   const addMatches = (node, role, identifier) => {
     for (const spell of spellLexiconMatches(identifier, spellLexicon)) {
@@ -2805,10 +2924,45 @@ function executionIdentityViolationsForFile(
       );
     }
   };
+  const addAuthoredTitleTextMatches = (node, identifier) => {
+    for (const spell of spellLexiconMatches(identifier, spellLexicon)) {
+      if (
+        !spell.phraseWords.some((phrase) => phrase.length > 1) &&
+        !textContainsExactAuthoredTitle(identifier, spell)
+      ) {
+        continue;
+      }
+      violations.push(
+        executionIdentityViolation(
+          source,
+          relativePath,
+          node,
+          "execution-diagnostic",
+          identifier,
+          spell,
+        ),
+      );
+    }
+  };
   const visit = (node) => {
     const declared = declarationName(node);
     if (declared !== undefined) {
       addMatches(node.name, "declaration-identifier", declared);
+    }
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      exportedVariableAuthoredValue(node, spellLexicon)
+    ) {
+      addMatches(node.name, "declaration-identifier", node.name.text);
+    }
+    const coupledIdentifier = coupledExecutionIdentifier(node);
+    if (sourceHasAuthoredRuntimeText && coupledIdentifier !== undefined) {
+      addMatches(
+        coupledIdentifier,
+        "declaration-identifier",
+        coupledIdentifier.text,
+      );
     }
 
     if (
@@ -2824,7 +2978,8 @@ function executionIdentityViolationsForFile(
       }
     }
 
-    if (ts.isStringLiteralLike(node)) {
+    const runtimeText = runtimeTextExpression(node);
+    if (runtimeText !== undefined && !isNestedRuntimeTextExpression(node)) {
       const propertyRole = nearestPropertyRole(node);
       if (
         propertyRole !== undefined &&
@@ -2835,18 +2990,13 @@ function executionIdentityViolationsForFile(
           isSchemaLiteralNode(node)
             ? "schema-discriminant-literal"
             : "discriminant-literal",
-          node.text,
+          runtimeText,
         );
       } else if (
         propertyRole !== undefined &&
         EXECUTION_DIAGNOSTIC_FIELDS.has(propertyRole)
       ) {
-        addMatches(node, "execution-diagnostic", node.text);
-      } else if (
-        isPositionalDiagnosticString(node) ||
-        isReturnedValidationString(node)
-      ) {
-        addMatches(node, "execution-diagnostic", node.text);
+        addMatches(node, "execution-diagnostic", runtimeText);
       } else {
         const containerName = nearestVariableName(node);
         if (
@@ -2854,7 +3004,13 @@ function executionIdentityViolationsForFile(
           (EXECUTION_IDENTITY_ARRAY_NAME_PATTERN.test(containerName) ||
             EXECUTION_PROTOCOL_DECLARATION_NAME_PATTERN.test(containerName))
         ) {
-          addMatches(node, "protocol-array-member", node.text);
+          addMatches(node, "protocol-array-member", runtimeText);
+        } else if (
+          isPositionalDiagnosticString(node) ||
+          isReturnedValidationString(node) ||
+          runtimeTextExpressionHasExecutionRole(node)
+        ) {
+          addAuthoredTitleTextMatches(node, runtimeText);
         }
       }
     }
@@ -2918,6 +3074,9 @@ function runExecutionIdentityCohortSelfTest() {
   const { lexicon, malformed } = collectSurfaceSpellLexicon([
     { kind: "spell", id: "cloudkill", name: "Cloudkill" },
     { kind: "spell", id: "magic_missile", name: "Magic Missile" },
+    { kind: "spell", id: "mirror_image", name: "Mirror Image" },
+    { kind: "spell", id: "find_familiar", name: "Find Familiar" },
+    { kind: "spell", id: "sanctuary", name: "Sanctuary" },
     { kind: "spell", id: "light", name: "Light" },
     { kind: "unit", id: "cloudkill_unit", name: "Cloudkill Unit" },
   ]);
@@ -2937,6 +3096,12 @@ function runExecutionIdentityCohortSelfTest() {
     function validateReplay() { return "Cloudkill replay is invalid." }
     invalidResult(state, "invalidFill", "Cloudkill positional diagnostic.")
     throw new Error("Cloudkill constructor diagnostic.")
+    export const MIRROR_IMAGE_HOLE_PREFIX = "battle:mirror-image:duplicate:"
+    export function occurrenceMessage() { return "Find Familiar lifecycle failed." }
+    export function resolve(input) {
+      const sanctuaryCheck = input
+      return invalidTransition("invalidFill", \`Spell \${input.part} Mirror Image duplicate roll is invalid.\`)
+    }
   `;
   const fixtureViolations = executionIdentityViolationsForFile(
     fixturePath,
@@ -2962,6 +3127,11 @@ function runExecutionIdentityCohortSelfTest() {
     "Cloudkill replay is invalid.",
     "Cloudkill positional diagnostic.",
     "Cloudkill constructor diagnostic.",
+    "MIRROR_IMAGE_HOLE_PREFIX",
+    "battle:mirror-image:duplicate:",
+    "Find Familiar lifecycle failed.",
+    "sanctuaryCheck",
+    "Spell   Mirror Image duplicate roll is invalid.",
   ]) {
     assert.ok(
       fixtureViolations.some(

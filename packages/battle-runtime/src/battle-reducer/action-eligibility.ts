@@ -22,7 +22,8 @@ import {
 const ACTION_ELIGIBILITY_ISSUES = {
   unavailable:
     "The selected action is no longer available for the current actor.",
-  familiarCannotAttack: "Find Familiar familiars can't attack.",
+  familiarCannotAttack:
+    "Spawned companions without an admitted attack procedure can't attack.",
   heldWeaponActivationUnavailable:
     "Attack action feature is no longer available for the current actor.",
   bonusActionUnavailable:

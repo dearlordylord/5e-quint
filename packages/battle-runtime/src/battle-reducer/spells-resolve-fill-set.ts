@@ -111,16 +111,16 @@ import {
 
 type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
 
-const MIRROR_IMAGE_DUPLICATE_ROLL_PROCEDURES = [
+const DUPLICATE_HIT_INTERCEPTION_ROLL_PROCEDURES = [
   "spellAttackSequence",
   "spellAttackDamage",
   "heldLightHurl",
   "attackBurstSaveDamage",
   "spatialMeleeSpellAttackProxy",
 ] as const satisfies readonly RuntimeSpellProcedure["procedure"][];
-const MIRROR_IMAGE_DUPLICATE_ROLL_PROCEDURE_SET: ReadonlySet<
+const DUPLICATE_HIT_INTERCEPTION_ROLL_PROCEDURE_SET: ReadonlySet<
   RuntimeSpellProcedure["procedure"]
-> = new Set(MIRROR_IMAGE_DUPLICATE_ROLL_PROCEDURES);
+> = new Set(DUPLICATE_HIT_INTERCEPTION_ROLL_PROCEDURES);
 
 export type SpellAttackSequencePartTargetFill =
   | {
@@ -1900,7 +1900,9 @@ export function spellFillSet(
       if (isDuplicateHitInterceptionDuplicateRollFill(fill)) {
         /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (
-          !MIRROR_IMAGE_DUPLICATE_ROLL_PROCEDURE_SET.has(invocation.procedure)
+          !DUPLICATE_HIT_INTERCEPTION_ROLL_PROCEDURE_SET.has(
+            invocation.procedure,
+          )
         ) {
           /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
@@ -1911,10 +1913,11 @@ export function spellFillSet(
         }
         /* v8 ignore stop -- @preserve */
         if (invocation.procedure === "spellAttackSequence") {
-          const partIndex = spellAttackSequencePartIndexForMirrorImageRoll(
-            invocation,
-            fill.holeId,
-          );
+          const partIndex =
+            spellAttackSequencePartIndexForDuplicateInterceptionRoll(
+              invocation,
+              fill.holeId,
+            );
           /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
           if (partIndex === null) {
             /* v8 ignore next -- @preserve -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
@@ -2265,7 +2268,7 @@ export function spellFillSet(
   };
 }
 
-function spellAttackSequencePartIndexForMirrorImageRoll(
+function spellAttackSequencePartIndexForDuplicateInterceptionRoll(
   invocation: Extract<
     RuntimeSpellProcedure,
     { readonly procedure: "spellAttackSequence" }

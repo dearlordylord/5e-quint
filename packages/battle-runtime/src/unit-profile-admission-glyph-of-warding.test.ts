@@ -4605,7 +4605,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       targetHp: 50,
       targetMaxHp: 50,
     });
-    const baseState = stateWithTargetHideousLaughter(
+    const baseState = stateWithTargetStagedCondition(
       stateWithGlyphEffect(
         requireCompletedGlyphEffect({
           anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
@@ -5570,7 +5570,7 @@ function stateWithTargetConcentration(
   };
 }
 
-function stateWithTargetHideousLaughter(
+function stateWithTargetStagedCondition(
   state: BattleState,
   combatantId: typeof spellTargetId,
   sourceProcedureRef: BattleProcedureExecutionRef,

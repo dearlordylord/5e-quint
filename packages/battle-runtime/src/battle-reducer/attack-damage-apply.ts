@@ -240,9 +240,11 @@ export function attackBurstDamageDispositionHoleKey(
   readonly label: string;
 } {
   return {
-    holeId: holeId(`battle:ice-knife:${part}:damage-disposition:${targetId}`),
+    holeId: holeId(
+      `battle:attack-burst:${part}:damage-disposition:${targetId}`,
+    ),
     holeInstanceKey: holeInstanceKey(
-      `battle:ice-knife:${part}:damage-disposition:${targetId}`,
+      `battle:attack-burst:${part}:damage-disposition:${targetId}`,
     ),
     label:
       part === "attack"

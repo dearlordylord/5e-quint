@@ -18,7 +18,7 @@ import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
-  ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
+  MAGIC_SUPPRESSION_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
   MAGIC_ITEM_MAGICAL_EFFECT_SOURCE,
   OTHER_MAGICAL_EFFECT_SOURCE,
   SPELL_MAGICAL_EFFECT_SOURCE,
@@ -165,7 +165,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
+      message: MAGIC_SUPPRESSION_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
     });
   });
 
@@ -220,7 +220,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
+      message: MAGIC_SUPPRESSION_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
     });
   });
 
@@ -305,7 +305,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
+      message: MAGIC_SUPPRESSION_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
     });
   });
 
@@ -345,7 +345,7 @@ describe("Antimagic Field magical-effect interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
-      message: ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
+      message: MAGIC_SUPPRESSION_MAGICAL_EFFECT_INTERDICTION_MESSAGE,
     });
   });
 });

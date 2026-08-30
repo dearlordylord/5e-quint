@@ -40,10 +40,10 @@ import {
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import {
-  MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
-  MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
-  MIRROR_IMAGE_INITIAL_DUPLICATES,
-  MIRROR_IMAGE_UNAFFECTED_BY,
+  DUPLICATE_HIT_INTERCEPTION_DIE_SIZE,
+  DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST,
+  DUPLICATE_HIT_INTERCEPTION_INITIAL_DUPLICATES,
+  DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_BY,
 } from "../domain-constants.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
@@ -80,11 +80,13 @@ function duplicateHitInterceptionShape(
     spell.mechanics.duration.value.unit !== "minute" ||
     spell.mechanics.duration.value.amount !== 1 ||
     spell.mechanics.attachment.kind !== "self" ||
-    spell.mechanics.duplicatePool.count !== MIRROR_IMAGE_INITIAL_DUPLICATES ||
+    spell.mechanics.duplicatePool.count !==
+      DUPLICATE_HIT_INTERCEPTION_INITIAL_DUPLICATES ||
     spell.mechanics.duplicatePool.dicePerRemainingDuplicate !== 1 ||
-    spell.mechanics.duplicatePool.dieSize !== MIRROR_IMAGE_DUPLICATE_DIE_SIZE ||
+    spell.mechanics.duplicatePool.dieSize !==
+      DUPLICATE_HIT_INTERCEPTION_DIE_SIZE ||
     spell.mechanics.duplicatePool.successAtLeast !==
-      MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST ||
+      DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST ||
     spell.mechanics.duplicatePool.onHit !==
       "duplicate_hit_instead_and_destroyed" ||
     spell.mechanics.duplicatePool.onFailure !== "caster_hit_normally" ||
@@ -92,7 +94,7 @@ function duplicateHitInterceptionShape(
     spell.mechanics.duplicatePool.endsWhen !== "all_duplicates_destroyed" ||
     !sameStringSet(
       spell.mechanics.duplicatePool.unaffectedBy,
-      MIRROR_IMAGE_UNAFFECTED_BY,
+      DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_BY,
     )
   ) {
     return null;
@@ -106,7 +108,7 @@ function duplicateHitInterceptionShape(
         activeEffect: {
           kind: "duplicateHitInterception",
           sourceCombatantId: actorId,
-          remainingDuplicates: MIRROR_IMAGE_INITIAL_DUPLICATES,
+          remainingDuplicates: DUPLICATE_HIT_INTERCEPTION_INITIAL_DUPLICATES,
           expiresAt: {
             kind: "duration",
             durationTicks: durationTicks.success,
@@ -205,7 +207,9 @@ const DuplicateHitInterceptionInvocationSchema = spellProcedureExecutionSchema(
       ...BattleEffectOccurrenceTemplateSchemaFields,
       kind: Schema.Literal("duplicateHitInterception"),
       sourceCombatantId: CombatantId,
-      remainingDuplicates: Schema.Literal(MIRROR_IMAGE_INITIAL_DUPLICATES),
+      remainingDuplicates: Schema.Literal(
+        DUPLICATE_HIT_INTERCEPTION_INITIAL_DUPLICATES,
+      ),
       expiresAt: DurationBattleActiveEffectExpirationSchema,
     }),
   }),

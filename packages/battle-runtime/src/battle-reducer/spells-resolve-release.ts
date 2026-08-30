@@ -1720,11 +1720,11 @@ type TargetedSpellConcentrationPreparation =
       readonly concentrationLifecycleFills: TargetedSpellReleaseFillSet["concentrationSavingThrows"];
     };
 
-type TargetedSpellHideousLaughterPreparation =
+type TargetedSpellStagedConditionPreparation =
   | { readonly tag: "result"; readonly result: BattleResolutionResult }
   | {
       readonly tag: "ready";
-      readonly hideousLaughterLifecycleFills: TargetedSpellReleaseFillSet["saveGatedConditionWithRepeatDamageRepeatSaves"];
+      readonly stagedConditionLifecycleFills: TargetedSpellReleaseFillSet["saveGatedConditionWithRepeatDamageRepeatSaves"];
     };
 
 type TargetedSpellDamageDispositionPreparation =
@@ -1751,7 +1751,7 @@ type TargetedSpellDamageResolvedLifecycleInput =
     >;
     readonly concentrationLifecycleFills: TargetedSpellReleaseFillSet["concentrationSavingThrows"];
     readonly damageDisposition: ReturnType<typeof damageDispositionForTarget>;
-    readonly hideousLaughterLifecycleFills: TargetedSpellReleaseFillSet["saveGatedConditionWithRepeatDamageRepeatSaves"];
+    readonly stagedConditionLifecycleFills: TargetedSpellReleaseFillSet["saveGatedConditionWithRepeatDamageRepeatSaves"];
     readonly relationshipDecisions: TargetedSpellRelationshipDecisions;
     readonly invocation: TargetedSpellReleaseInvocation;
   };
@@ -1815,42 +1815,42 @@ function resolveTargetedSpellConcentrationLifecycle(
   };
 }
 
-function resolveTargetedSpellHideousLaughterLifecycle(
+function resolveTargetedSpellStagedConditionLifecycle(
   input: TargetedSpellDamageAmountInput,
-): TargetedSpellHideousLaughterPreparation {
-  const hideousLaughterSaveCheck =
+): TargetedSpellStagedConditionPreparation {
+  const stagedConditionSaveCheck =
     damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
       state: input.releaseDamageBaseState,
       target: input.target,
       damageAmount: input.spellDamageAmount,
       fills: input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
     });
-  if (hideousLaughterSaveCheck.tag === "needsHoles") {
+  if (stagedConditionSaveCheck.tag === "needsHoles") {
     return {
       tag: "result",
       result: needsHolesResult(input.input.state, input.input.subject, [
-        ...hideousLaughterSaveCheck.holes,
+        ...stagedConditionSaveCheck.holes,
       ]),
     };
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (hideousLaughterSaveCheck.tag === "invalid") {
+  if (stagedConditionSaveCheck.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return {
       tag: "result",
       result: invalidResult(
         input.input.state,
         "invalidFill",
-        hideousLaughterSaveCheck.message,
+        stagedConditionSaveCheck.message,
       ),
     };
   }
   /* v8 ignore stop -- @preserve */
   return {
     tag: "ready",
-    hideousLaughterLifecycleFills: fillsMatchingHoleIds(
+    stagedConditionLifecycleFills: fillsMatchingHoleIds(
       input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-      hideousLaughterSaveCheck.holes,
+      stagedConditionSaveCheck.holes,
     ),
   };
 }
@@ -1997,10 +1997,10 @@ function resolveTargetedSpellDamageLifecycle(
   if (dispositionPreparation.tag === "result") {
     return dispositionPreparation.result;
   }
-  const hideousLaughterPreparation =
-    resolveTargetedSpellHideousLaughterLifecycle(damageAmountInput);
-  if (hideousLaughterPreparation.tag === "result") {
-    return hideousLaughterPreparation.result;
+  const stagedConditionPreparation =
+    resolveTargetedSpellStagedConditionLifecycle(damageAmountInput);
+  if (stagedConditionPreparation.tag === "result") {
+    return stagedConditionPreparation.result;
   }
   const relationshipPreparation = resolveTargetedSpellDamageRelationship({
     ...damageAmountInput,
@@ -2019,8 +2019,8 @@ function resolveTargetedSpellDamageLifecycle(
     concentrationLifecycleFills:
       concentrationPreparation.concentrationLifecycleFills,
     damageDisposition: dispositionPreparation.damageDisposition,
-    hideousLaughterLifecycleFills:
-      hideousLaughterPreparation.hideousLaughterLifecycleFills,
+    stagedConditionLifecycleFills:
+      stagedConditionPreparation.stagedConditionLifecycleFills,
     relationshipDecisions: relationshipPreparation.relationshipDecisions,
   });
 }
@@ -2042,7 +2042,7 @@ function applyTargetedSpellDamageLifecycle(
       spellMarkedDamageRiders: input.spellMarkedDamageRiders,
       sourceDamageRollPenaltyRoll: input.sourceDamageRollPenaltyRoll,
       saveGatedConditionWithRepeatDamageRepeatSaves:
-        input.hideousLaughterLifecycleFills,
+        input.stagedConditionLifecycleFills,
       damageSourceId: input.input.subject.actorId,
       spatialFacts: input.fillSet.targetSpatialFacts,
       ...optionalProperty("relationshipDecisions", input.relationshipDecisions),

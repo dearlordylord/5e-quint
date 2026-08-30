@@ -1794,7 +1794,7 @@ export function resolveSelectedAttackProcedure<
   }
   /* v8 ignore stop -- @preserve */
 
-  const sanctuaryCheck = targetingSaveInterdictionCheck({
+  const interdictionCheck = targetingSaveInterdictionCheck({
     state: input.state,
     triggeringProcedureRef: input.subject.procedureRef,
     triggeringCombatantId: attackerId,
@@ -1803,23 +1803,25 @@ export function resolveSelectedAttackProcedure<
     replacementTargetKind: "attackRoll",
     fills: input.fills,
   });
-  if (sanctuaryCheck.tag === "needsHoles") {
-    return needsHolesResult(input.state, input.subject, [sanctuaryCheck.hole]);
+  if (interdictionCheck.tag === "needsHoles") {
+    return needsHolesResult(input.state, input.subject, [
+      interdictionCheck.hole,
+    ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (sanctuaryCheck.tag === "invalid") {
+  if (interdictionCheck.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", sanctuaryCheck.message);
+    return invalidResult(input.state, "invalidFill", interdictionCheck.message);
   }
   /* v8 ignore stop -- @preserve */
-  if (sanctuaryCheck.tag === "lost") {
+  if (interdictionCheck.tag === "lost") {
     return spendAttackProcedure(input.state, attackerId, attack, {
       kind: "attackPreventedBeforeRoll",
     });
   }
-  if (sanctuaryCheck.tag === "newTarget") {
+  if (interdictionCheck.tag === "newTarget") {
     const replacementTarget = input.state.combatants.get(
-      sanctuaryCheck.targetId,
+      interdictionCheck.targetId,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
@@ -1830,7 +1832,7 @@ export function resolveSelectedAttackProcedure<
         attackerId,
         replacementTarget.combatantId,
         attack,
-        sanctuaryCheck.spatialFacts,
+        interdictionCheck.spatialFacts,
       )
     ) {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -1866,7 +1868,7 @@ export function resolveSelectedAttackProcedure<
                 ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
                     {
                       fill,
-                      replacement: sanctuaryCheck,
+                      replacement: interdictionCheck,
                     },
                   )
                 : fill,
@@ -2311,9 +2313,10 @@ export function resolveSelectedAttackProcedure<
   }
   /* v8 ignore stop -- @preserve */
   if (hit) {
-    const mirrorImageAttacker = attackRolledState.combatants.get(attackerId);
+    const duplicateInterceptionAttacker =
+      attackRolledState.combatants.get(attackerId);
     /* v8 ignore start -- @preserve -- Defensive inconsistent-state guard: attackRolledState is produced from the admitted state by resource/effect updates that preserve the already-resolved attacker entry. */
-    if (mirrorImageAttacker === undefined) {
+    if (duplicateInterceptionAttacker === undefined) {
       return invalidResult(
         input.state,
         "missingCombatant",
@@ -2321,30 +2324,30 @@ export function resolveSelectedAttackProcedure<
       );
     }
     /* v8 ignore stop -- @preserve */
-    const mirrorImageCheck = duplicateHitInterceptionCheck({
+    const duplicateInterceptionCheck = duplicateHitInterceptionCheck({
       state: attackRolledState,
-      attacker: mirrorImageAttacker,
+      attacker: duplicateInterceptionAttacker,
       target: requireCurrentAttackTarget(attackRolledState, target),
       targetSpatialFacts: fillSet.targetSpatialFacts,
       triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
       fill: fillSet.duplicateHitInterceptionRoll,
     });
-    if (mirrorImageCheck.tag === "needsHoles") {
+    if (duplicateInterceptionCheck.tag === "needsHoles") {
       return needsHolesResult(attackRolledState, input.subject, [
-        mirrorImageCheck.hole,
+        duplicateInterceptionCheck.hole,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (mirrorImageCheck.tag === "invalid") {
+    if (duplicateInterceptionCheck.tag === "invalid") {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
-        mirrorImageCheck.message,
+        duplicateInterceptionCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
-    if (mirrorImageCheck.tag === "hitDuplicate") {
+    if (duplicateInterceptionCheck.tag === "hitDuplicate") {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (attackPostDuplicateHitInterceptionFillsArePresent(fillSet)) {
         /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -2357,7 +2360,7 @@ export function resolveSelectedAttackProcedure<
       /* v8 ignore stop -- @preserve */
       return spendAttackProcedure(
         battleStateAfterBrutalStrikeAttackCompletion(
-          mirrorImageCheck.state,
+          duplicateInterceptionCheck.state,
           brutalStrikePending,
         ),
         attackerId,

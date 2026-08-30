@@ -237,7 +237,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
   let targeted: readonly CombatantId[] = [];
   const afterDamageEvents: BattleAfterDamageEvent[] = [];
   const concentrationHoles: BattleConcentrationSavingThrowHole[] = [];
-  const hideousLaughterDamageRepeatSaveHoleIds = new Set<string>();
+  const stagedConditionDamageRepeatSaveHoleIds = new Set<string>();
   const damageDispositionHoles: BattleAttackDamageDispositionHole[] = [];
   const maxLeaps = Number(spellInvocationCastLevel(input.invocation));
 
@@ -305,7 +305,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     targeted = [...targeted, target.combatantId];
 
     const targetEventId = chainedSpellTargetHoleId(input.invocation, stepIndex);
-    const sanctuaryCheck = targetingSaveInterdictionCheck({
+    const interdictionCheck = targetingSaveInterdictionCheck({
       state: replayState,
       triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
@@ -314,22 +314,22 @@ export function resolveChainedSpellAttackDamageAct(input: {
       replacementTargetKind: "attackRoll",
       fills: input.input.fills,
     });
-    if (sanctuaryCheck.tag === "needsHoles") {
+    if (interdictionCheck.tag === "needsHoles") {
       return needsHolesResult(replayState, input.input.subject, [
-        sanctuaryCheck.hole,
+        interdictionCheck.hole,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (sanctuaryCheck.tag === "invalid") {
+    if (interdictionCheck.tag === "invalid") {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
-        sanctuaryCheck.message,
+        interdictionCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
-    if (sanctuaryCheck.tag === "lost") {
+    if (interdictionCheck.tag === "lost") {
       if (input.spendsCastResources === false) {
         return {
           tag: "resolved",
@@ -349,9 +349,9 @@ export function resolveChainedSpellAttackDamageAct(input: {
         ),
       });
     }
-    if (sanctuaryCheck.tag === "newTarget") {
+    if (interdictionCheck.tag === "newTarget") {
       const replacementTarget = replayState.combatants.get(
-        sanctuaryCheck.targetId,
+        interdictionCheck.targetId,
       );
       const replacementIsLegal =
         replacementTarget !== undefined &&
@@ -361,13 +361,13 @@ export function resolveChainedSpellAttackDamageAct(input: {
               input.actorId,
               replacementTarget.combatantId,
               input.invocation,
-              sanctuaryCheck.spatialFacts,
+              interdictionCheck.spatialFacts,
             )
           : chainedSpellLeapTargetIsLegal(
               input.invocation,
               targeted[stepIndex - 1],
               replacementTarget.combatantId,
-              sanctuaryCheck.spatialFacts,
+              interdictionCheck.spatialFacts,
             ));
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (replacementTarget === undefined || !replacementIsLegal) {
@@ -405,7 +405,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
               ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(
                   {
                     fill,
-                    replacement: sanctuaryCheck,
+                    replacement: interdictionCheck,
                   },
                 )
               : fill,
@@ -626,8 +626,8 @@ export function resolveChainedSpellAttackDamageAct(input: {
       const extraFillValidation = validateChainedSpellFollowUpFills({
         concentrationHoles,
         concentrationFills: fillSet.concentrationSavingThrows,
-        hideousLaughterDamageRepeatSaveHoleIds,
-        hideousLaughterDamageRepeatSaveFills:
+        stagedConditionDamageRepeatSaveHoleIds,
+        stagedConditionDamageRepeatSaveFills:
           fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
         damageDispositionHoles,
         damageDispositionFills: fillSet.damageDispositions,
@@ -805,42 +805,42 @@ export function resolveChainedSpellAttackDamageAct(input: {
         ]);
       }
     }
-    const hideousLaughterLifecycleHoles =
+    const stagedConditionLifecycleHoles =
       damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles({
         state: replayState,
         target,
         damageAmount,
         damageEventKey,
       });
-    const hideousLaughterLifecycleFills = matchingHoleIdFills(
+    const stagedConditionLifecycleFills = matchingHoleIdFills(
       fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-      hideousLaughterLifecycleHoles,
+      stagedConditionLifecycleHoles,
     );
-    const hideousLaughterSaveCheck =
+    const stagedConditionSaveCheck =
       damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
         state: replayState,
         target,
         damageAmount,
-        fills: hideousLaughterLifecycleFills,
+        fills: stagedConditionLifecycleFills,
         damageEventKey,
       });
-    if (hideousLaughterSaveCheck.tag === "needsHoles") {
+    if (stagedConditionSaveCheck.tag === "needsHoles") {
       return needsHolesResult(replayState, input.input.subject, [
-        ...hideousLaughterSaveCheck.holes,
+        ...stagedConditionSaveCheck.holes,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (hideousLaughterSaveCheck.tag === "invalid") {
+    if (stagedConditionSaveCheck.tag === "invalid") {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
-        hideousLaughterSaveCheck.message,
+        stagedConditionSaveCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
-    for (const hole of hideousLaughterSaveCheck.holes) {
-      hideousLaughterDamageRepeatSaveHoleIds.add(String(hole.holeId));
+    for (const hole of stagedConditionSaveCheck.holes) {
+      stagedConditionDamageRepeatSaveHoleIds.add(String(hole.holeId));
     }
     const damageDisposition = damageDispositionForTarget(
       dispositionHole === null ? [] : [dispositionHole],
@@ -892,7 +892,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         linkedDefenseResistanceDamageShareConcentrationSavingThrows:
           concentrationLifecycleFills,
         saveGatedConditionWithRepeatDamageRepeatSaves:
-          hideousLaughterLifecycleFills,
+          stagedConditionLifecycleFills,
         saveGatedConditionWithRepeatDamageRepeatSaveEventKey: damageEventKey,
         damageSourceId: input.actorId,
         spatialFacts: step.target.spatialFacts,
@@ -930,8 +930,8 @@ export function resolveChainedSpellAttackDamageAct(input: {
       const extraFillValidation = validateChainedSpellFollowUpFills({
         concentrationHoles,
         concentrationFills: fillSet.concentrationSavingThrows,
-        hideousLaughterDamageRepeatSaveHoleIds,
-        hideousLaughterDamageRepeatSaveFills:
+        stagedConditionDamageRepeatSaveHoleIds,
+        stagedConditionDamageRepeatSaveFills:
           fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
         damageDispositionHoles,
         damageDispositionFills: fillSet.damageDispositions,
@@ -1455,8 +1455,8 @@ export function validateChainedSpellFollowUpFills(input: {
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[];
-  readonly hideousLaughterDamageRepeatSaveHoleIds: ReadonlySet<string>;
-  readonly hideousLaughterDamageRepeatSaveFills: readonly Extract<
+  readonly stagedConditionDamageRepeatSaveHoleIds: ReadonlySet<string>;
+  readonly stagedConditionDamageRepeatSaveFills: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[];
@@ -1480,9 +1480,9 @@ export function validateChainedSpellFollowUpFills(input: {
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: replay accepts Hideous Laughter repeat saves only for event-scoped holes derived while applying chained damage. */
   if (
-    input.hideousLaughterDamageRepeatSaveFills.some(
+    input.stagedConditionDamageRepeatSaveFills.some(
       (fill) =>
-        !input.hideousLaughterDamageRepeatSaveHoleIds.has(String(fill.holeId)),
+        !input.stagedConditionDamageRepeatSaveHoleIds.has(String(fill.holeId)),
     )
   ) {
     return "damage-triggered repeat-save condition repeat save fills are only valid for a damaged target affected by damage-triggered repeat-save condition.";

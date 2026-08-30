@@ -1357,8 +1357,7 @@ describe("Character Sheet battle handoff", () => {
           handoffReason: "battleInitialization",
           reason: "duplicateCombatantId",
           combatantId: init.success.combatantId,
-          message:
-            "Find Familiar familiar identity must be distinct from its caster.",
+          message: "Companion identity must be distinct from its owner.",
         },
       ],
     });
