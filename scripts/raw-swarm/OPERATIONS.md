@@ -200,14 +200,17 @@ role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
 The Effect 4 public declaration graph is a reviewed deterministic measurement:
-511 declaration files and 4,075,316 bytes. The file gate admits exactly those
-511 files, so any added file requires review. The reviewed byte gate is 10 MiB,
-leaving 6,410,444 bytes of explicit margin. Deterministic verification asserts
+523 declaration files and 3,962,445 bytes. The file gate admits exactly those
+523 files, so any added file requires review. The reviewed byte gate is 10 MiB,
+leaving 6,523,315 bytes of explicit margin. Deterministic verification asserts
 the measured graph, exact-at-cap acceptance, and cap-plus-one rejection for
 both limits; raising either bound requires a new measured graph and review. The
 canonical measurement is owned beside the declaration emitter in
 `sdk-player/consumer-distribution.ts` and is reproduced by the clean-consumer
-distribution test.
+distribution test. The
+[master-reconciliation declaration certificate](../../docs/migrations/effect-4/final-parity-report.md#master-reconciliation-declaration-certificate)
+records the reviewed 12-path growth from the previous package-runtime
+certificate and its owning reachability.
 
 The current tracer post-play review keeps this bounded context inline and is
 commandless; its review-invocation manifest intentionally does not admit a
