@@ -1,5 +1,26 @@
 # `@dnd/opaque-oracle`
 
+## Purpose
+
+The Opaque Oracle is the behavioral calibration instrument used by independent
+Target SDK conformance tests. Target-owned tests submit reproducible
+`OracleCase` values to the source-free distribution and compare their SDK's
+observations with the returned `OracleTrace`, without receiving the TypeScript
+source or depending on the Oracle at product runtime.
+
+It addresses composed-workflow drift: an independent SDK can implement the
+individual rules yet disagree at the boundaries between Character Creation,
+fresh Character Sheet construction, Battle entry, and Battle continuation. The
+Oracle makes those production observations reproducible without handing the
+Target a second implementation to copy.
+
+The Oracle is neither a reference SDK nor rules authority, and a difference is
+evidence rather than an automatic Oracle verdict. RAW and calibrated QNT remain
+authoritative; the Target implementer diagnoses an
+[`Oracle Discrepancy`](../../docs/cleanroom/CONTEXT.md#oracle-discrepancy) against
+them. The canonical Cleanroom role is defined under
+[`Opaque Oracle`](../../docs/cleanroom/CONTEXT.md#opaque-oracle).
+
 The Opaque Oracle is a strict Case/Trace contract over one call-local
 production evaluation. Its workflow outcomes and continuation frontiers are
 presentation-free; a selected `CharacterBuildFact` may retain authored

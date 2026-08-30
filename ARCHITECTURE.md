@@ -188,12 +188,16 @@ Character-creation terms live in
 `packages/character-creation-runtime/VOCABULARY.md`.
 
 `@dnd/opaque-oracle` owns the language-neutral, strict Case/Trace boundary for
-call-local production evaluation. It composes the Character Creation reducer
-through `CharacterBuild`, fresh Character Sheet construction, and the existing
-arbitrary mixed-origin Character Battle handoff. It supplies deterministic
-call-local identities, projects mechanics-relevant owner facts, validates the
-stripped Battle checkpoint's surviving identity and cross-reference invariants,
-and returns typed workflow or owner rejections for exhausted or surplus
+call-local production evaluation. Its Cleanroom role is a source-free
+behavioral calibration instrument for independent Target SDK conformance tests,
+as defined by the canonical [`Opaque
+Oracle`](docs/cleanroom/CONTEXT.md#opaque-oracle) term. It composes the Character
+Creation reducer through `CharacterBuild`, fresh Character Sheet construction,
+and the existing arbitrary mixed-origin Character Battle handoff. It supplies
+deterministic call-local identities, projects mechanics-relevant owner facts,
+validates the stripped Battle checkpoint's surviving identity and
+cross-reference invariants, and returns typed workflow or owner rejections for
+exhausted or surplus
 creation input and invalid Battle entry. Its successful initial Battle frontier
 contains only typed subjects from production Act discovery; it does not publish
 presentation, Runtime Holes, continuation fills, interrupt state, sessions,

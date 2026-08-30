@@ -86,6 +86,11 @@ export const ORACLE_CHARACTER_SHEET_ID: CharacterSheetId =
   characterSheetId("oracle:character");
 export const ORACLE_BATTLE_ID = battleId("oracle:battle");
 
+/**
+ * Evaluate one reproducible calibration case through the production workflow.
+ * The returned trace is a mechanics-relevant observation for Target-owned
+ * conformance tests, not a conformance verdict or replacement for RAW and QNT.
+ */
 export function evaluateOracleCase(
   input: OracleCaseEvaluationInput,
 ): OracleTrace {

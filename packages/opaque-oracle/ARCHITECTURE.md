@@ -1,5 +1,13 @@
 # Opaque Oracle architecture
 
+This package implements the Cleanroom
+[`Opaque Oracle`](../../docs/cleanroom/CONTEXT.md#opaque-oracle) role: it exposes
+calibrated observations of the main production workflow to independent Target
+SDK conformance tests without exposing source or becoming a Target runtime
+dependency. It owns the production-side observation boundary, not Target-side
+comparison, discrepancy reporting, or a conformance verdict. RAW and calibrated
+QNT remain rules authority.
+
 `@dnd/opaque-oracle` owns the language-neutral Case, Trace, and Evaluation
 Batch boundary over one call-local production evaluation. It also owns one
 source-free application distribution and its thin executable adapters. It does

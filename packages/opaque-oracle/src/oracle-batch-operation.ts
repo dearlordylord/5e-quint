@@ -14,6 +14,10 @@ export type OracleBatchOperation = (
   input: OracleBatchOperationInput,
 ) => Effect.Effect<OracleBatchResponse>;
 
-/** The canonical raw-text operation used by every transport adapter. */
+/**
+ * The canonical raw-text observation operation used by every transport
+ * adapter. Keeping one operation makes CLI and HTTP expose the same calibrated
+ * production behavior to Target-owned conformance tests.
+ */
 export const evaluateOracleBatchJson =
   makeOracleBatchOperationInternal(evaluateOracleBatch);
