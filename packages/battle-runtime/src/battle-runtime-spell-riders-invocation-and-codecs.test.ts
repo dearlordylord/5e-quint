@@ -1007,9 +1007,9 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     });
     expect(Result.isFailure(ordinaryMovementWithSegments)).toBe(true);
     if (Result.isFailure(ordinaryMovementWithSegments)) {
-      expect(String(ordinaryMovementWithSegments.failure)).toContain(
-        "Additional speed segments require Forceful Blow movement and cannot carry another movement-replacement or compelled-movement protocol.",
-      );
+      const structuralError = String(ordinaryMovementWithSegments.failure);
+      expect(structuralError).toContain("additionalSpeedSegments");
+      expect(structuralError).toContain("brutalStrikeForcefulBlow");
     }
     expect(
       Result.isFailure(
