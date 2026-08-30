@@ -497,10 +497,7 @@ function validateRequiredStringArray(value, context) {
 }
 
 function validFollowUpTaskId(taskId) {
-  return (
-    /^GH-[1-9][0-9]*$/.test(taskId) ||
-    /^RKBC-[A-Z0-9-]+$/.test(taskId)
-  );
+  return /^GH-[1-9][0-9]*$/.test(taskId) || /^RKBC-[A-Z0-9-]+$/.test(taskId);
 }
 
 function validateFollowUpTaskIds(taskIds, context, canonicalFollowUpTaskIds) {
