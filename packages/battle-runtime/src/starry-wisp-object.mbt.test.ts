@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { sameBattleSubject } from "./battle-subjects.ts";
 import { Match } from "effect";
 import { describe, expect, it } from "vitest";
@@ -42,7 +41,7 @@ import {
   fighterId,
   resolveBattleSubject,
   skeletonCreatureInit,
-  startBattleRight,
+  startBattleSessionRight,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -50,6 +49,7 @@ import {
   battleObjectId,
   battleReducerStartRouteEvent,
   characterId,
+  discoverBattleActs,
   discoverBattleActCandidates,
   initiativeScore,
   objectInvisibleBenefitDenied,
@@ -59,7 +59,9 @@ import {
   type BattleHole,
   type BattleLightEmitter,
   type BattleLightEmitterAttachment,
+  type BattleProcedureExecutionRef,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
 } from "./index.ts";
@@ -269,7 +271,9 @@ function createStarryWispObjectDriver() {
           holes,
           "objectTargetChoice",
         );
-        submit([starryWispObjectTargetFill(objectTarget)]);
+        submit([
+          starryWispObjectTargetFill(objectTarget, subject.procedureRef),
+        ]);
       },
       doRejectObjectWithoutFact: () => {
         const objectTarget = requireStarryWispObjectHole(
@@ -277,7 +281,9 @@ function createStarryWispObjectDriver() {
           "objectTargetChoice",
         );
         submit([
-          starryWispObjectTargetFill(objectTarget, { spatialFacts: [] }),
+          starryWispObjectTargetFill(objectTarget, subject.procedureRef, {
+            spatialFacts: [],
+          }),
         ]);
       },
       doFillObjectAttackRollMiss: () => {
@@ -311,6 +317,7 @@ function createStarryWispObjectDriver() {
           state,
           holes,
           objectDamage,
+          sourceProcedureRef: subject.procedureRef,
           lastResult,
           lastInvalidReason,
         }),
@@ -549,9 +556,18 @@ function publicObjectTargetBoundaryRoute(input: {
   readonly result: BattleResolutionResult;
   readonly fills: readonly BattleFill[];
 } {
-  const state = starryWispObjectBattle();
+  const session = starryWispObjectSession();
+  const state = session.state;
   const subject = starryWispSubject(state);
-  const act = discoverStarryWispAct(state, subject);
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === subject.actorId &&
+      sameBattleSubject(candidate.subject, subject),
+  );
+  if (act?.subject.tag !== "actionSpell") {
+    throw new Error("Expected public Starry Wisp spell act.");
+  }
   const objectTarget = requireStarryWispObjectHole(
     act.initialHoles,
     "objectTargetChoice",
@@ -559,6 +575,7 @@ function publicObjectTargetBoundaryRoute(input: {
   const fills = [
     starryWispObjectTargetFill(
       objectTarget,
+      act.subject.procedureRef,
       input.spatialFacts === "missing" ? { spatialFacts: [] } : {},
     ),
   ];
@@ -674,6 +691,7 @@ function projectStarryWispObjectMbtState(input: {
   readonly state: BattleState;
   readonly holes: readonly BattleHole[];
   readonly objectDamage: ObjectDamageMbtProjection;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly lastResult: StarryWispObjectMbtProjection["lastResult"];
   readonly lastInvalidReason: StarryWispObjectMbtProjection["lastInvalidReason"];
 }): StarryWispObjectMbtProjection {
@@ -685,7 +703,7 @@ function projectStarryWispObjectMbtState(input: {
     holes: projectStarryWispObjectHoles(input.holes),
     objectDamage: input.objectDamage,
     lightEmitters: snapshot.lightEmitters
-      .map(projectLightEmitter)
+      .map((emitter) => projectLightEmitter(emitter, input.sourceProcedureRef))
       .sort(compareJsonStable),
     objectInvisibleBenefitDenied: objectInvisibleBenefitDenied(
       input.state,
@@ -697,7 +715,11 @@ function projectStarryWispObjectMbtState(input: {
 }
 
 function starryWispObjectBattle(): BattleState {
-  return startBattleRight({
+  return starryWispObjectSession().state;
+}
+
+function starryWispObjectSession(): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("battle-runtime-mbt-starry-wisp-object"),
     combatants: [
       starryWispCasterCreatureInit({ initiative: 20 }),
@@ -829,6 +851,7 @@ type ObjectTargetChoiceFill = Extract<
 
 function starryWispObjectTargetFill(
   hole: BattleHole,
+  sourceProcedureRef: BattleProcedureExecutionRef,
   input: {
     readonly spatialFacts?: ObjectTargetChoiceFill["spatialFacts"];
   } = {},
@@ -846,9 +869,7 @@ function starryWispObjectTargetFill(
         kind: "spellObjectTarget",
         casterId: fighterId,
         objectId: starryWispObjectId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String("starry_wisp"),
-        ),
+        sourceProcedureRef,
         rangeFeet: movementFeet(60),
         armorClass: armorClass(13),
         damageDisposition: {
@@ -922,12 +943,14 @@ function projectObjectDamage(
 
 function projectLightEmitter(
   emitter: BattleLightEmitter,
+  selectedProcedureRef: BattleProcedureExecutionRef,
 ): LightEmitterMbtProjection {
   return Match.value(emitter).pipe(
     Match.when({ kind: "spellLightEmitter" }, (spellEmitter) => ({
       kind: "spellLightEmitter" as const,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(spellEmitter.sourceProcedureRef),
+      sourceProcedureRef: selectedStarryWispProcedure(
+        spellEmitter.sourceProcedureRef,
+        selectedProcedureRef,
       ),
       sourceCombatantId: spellEmitter.sourceCombatantId,
       attachment: projectLightEmitterAttachment(spellEmitter.attachment),
@@ -937,8 +960,9 @@ function projectLightEmitter(
     })),
     Match.when({ kind: "unitFeatureLightEmitter" }, (unitFeatureEmitter) => ({
       kind: "unitFeatureLightEmitter" as const,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        String(unitFeatureEmitter.sourceProcedureRef),
+      sourceProcedureRef: selectedStarryWispProcedure(
+        unitFeatureEmitter.sourceProcedureRef,
+        selectedProcedureRef,
       ),
       sourceCombatantId: unitFeatureEmitter.sourceCombatantId,
       attachment: projectLightEmitterAttachment(unitFeatureEmitter.attachment),
@@ -950,8 +974,9 @@ function projectLightEmitter(
       { kind: "objectInvisibleRevealLightEmitter" },
       (objectRevealEmitter) => ({
         kind: "objectInvisibleRevealLightEmitter" as const,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(objectRevealEmitter.sourceProcedureRef),
+        sourceProcedureRef: selectedStarryWispProcedure(
+          objectRevealEmitter.sourceProcedureRef,
+          selectedProcedureRef,
         ),
         sourceCombatantId: objectRevealEmitter.sourceCombatantId,
         objectId: objectRevealEmitter.objectId,
@@ -968,6 +993,18 @@ function projectLightEmitter(
     ),
     Match.exhaustive,
   );
+}
+
+function selectedStarryWispProcedure(
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  selectedProcedureRef: BattleProcedureExecutionRef,
+): "starry_wisp" {
+  if (sourceProcedureRef !== selectedProcedureRef) {
+    throw new Error(
+      "Expected Starry Wisp light emitter to retain the selected procedure reference.",
+    );
+  }
+  return "starry_wisp";
 }
 
 function projectLightEmitterAttachment(
