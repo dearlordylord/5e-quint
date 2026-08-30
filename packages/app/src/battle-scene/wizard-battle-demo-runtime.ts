@@ -11,7 +11,6 @@ import {
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattleSubject,
-  battleSubjectPresentation,
   type CombatantId,
   discoverBattleActs,
   SPELL_CAST_REACTION_FACTS_HOLE_ID
@@ -21,9 +20,11 @@ import { Match } from "effect"
 
 type ReadonlyNonEmptyArray<T> = readonly [T, ...ReadonlyArray<T>]
 
+const SPELL_CAST_INTERRUPTION_REACTION_PROCEDURE = "spellCastInterruptionReaction"
+
 export type CounterspellTriggerFact = Extract<
   Extract<BattleFill, { readonly kind: "targetSpatialFacts" }>["spatialFacts"][number],
-  { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
+  { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >
 
 type CounterspellReactionChoice = Extract<
@@ -58,31 +59,27 @@ export function requireCounterspellChoice(
   input: {
     readonly reactorId: CombatantId
     readonly slotLevel: number
-    readonly spellId: string
   }
 ): CounterspellReactionChoice {
   const frontier = result.envelope.frontier
-  const choice =
+  const reactorChoices =
     frontier.kind === "interruptDecision"
-      ? frontier.choices.find((candidate): candidate is CounterspellReactionChoice => {
-          if (candidate.kind !== "castTriggeredReactionSpell" || candidate.reactorId !== input.reactorId) {
-            return false
-          }
-          const presentation = battleSubjectPresentation(result.session, candidate.subject)
-          return (
-            presentation?.kind === "spell" &&
-            presentation.invocation.tag === "spellSlot" &&
-            presentation.invocation.procedure === "counterspell" &&
-            presentation.invocation.spellId === input.spellId &&
-            Number(presentation.invocation.slotLevel) === input.slotLevel
-          )
-        })
-      : undefined
+      ? frontier.choices.filter(
+          (candidate): candidate is CounterspellReactionChoice =>
+            candidate.kind === "castTriggeredReactionSpell" && candidate.reactorId === input.reactorId
+        )
+      : []
   /* v8 ignore next -- @preserve -- defensive failure after the pending interrupt narrows available choices */
-  if (choice === undefined) {
+  if (reactorChoices.length === 0) {
     throw new Error("Expected Counterspell Reaction choice.")
   }
-  return choice
+  const procedureRef = requireCounterspellProcedureRef(result.session.context, input.reactorId, input.slotLevel)
+  const choices = reactorChoices.filter((candidate) => candidate.subject.procedureRef === procedureRef)
+  /* v8 ignore next -- @preserve -- defensive failure after the pending interrupt narrows available choices */
+  if (choices.length !== 1) {
+    throw new Error(`Expected exactly one Counterspell Reaction choice; got ${choices.length}.`)
+  }
+  return choices[0]
 }
 
 export function counterspellDecision(
@@ -118,7 +115,7 @@ export function counterspellTriggerFact(input: {
   readonly rangeFeet: number
 }): CounterspellTriggerFact {
   return {
-    kind: "counterspellTriggerCasterVisibleWithinRange",
+    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange",
     reactorId: input.reactorId,
     casterId: input.casterId,
     sourceProcedureRef: input.sourceProcedureRef,
@@ -129,24 +126,24 @@ export function counterspellTriggerFact(input: {
 export function requireCounterspellProcedureRef(
   context: BattleRuntimeContext,
   reactorId: CombatantId,
-  spellId: string,
   slotLevel: number
 ): CounterspellTriggerFact["sourceProcedureRef"] {
-  const source = context.characters.get(reactorId)?.spellPresentationSources.find(
-    (candidate) =>
-      candidate.invocation.procedure === "counterspell" &&
-      candidate.invocation.spell.id === spellId &&
-      Match.value(candidate.invocation.resource).pipe(
-        Match.when({ tag: "spellSlot" }, ({ slotLevel: selectedSlotLevel }) => Number(selectedSlotLevel) === slotLevel),
-        Match.when({ tag: "spellAccessFreeCast" }, ({ castLevel }) => Number(castLevel) === slotLevel),
-        Match.exhaustive
-      )
-  )
+  const sources =
+    context.characters.get(reactorId)?.spellPresentationSources.filter(
+      (candidate) =>
+        candidate.invocation.procedure === SPELL_CAST_INTERRUPTION_REACTION_PROCEDURE &&
+        Match.value(candidate.invocation.resource).pipe(
+          Match.discriminatorsExhaustive("tag")({
+            spellSlot: ({ slotLevel: selectedSlotLevel }) => Number(selectedSlotLevel) === slotLevel,
+            spellAccessFreeCast: ({ castLevel }) => Number(castLevel) === slotLevel
+          })
+        )
+    ) ?? []
   /* v8 ignore next -- @preserve -- defensive failure after fixture-authored spell presentation setup */
-  if (source === undefined) {
-    throw new Error("Expected Counterspell procedure presentation source.")
+  if (sources.length !== 1) {
+    throw new Error(`Expected exactly one Counterspell procedure presentation source; got ${sources.length}.`)
   }
-  return source.procedureRef
+  return sources[0].procedureRef
 }
 
 export function interruptDecisionFill(
@@ -192,7 +189,7 @@ export function fireballSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "fireballArea",
+        kind: "pointOriginSphereSaveDamageArea",
         originAnchorId: input.originAnchorId,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         objectIgnitionFacts: [
@@ -226,7 +223,7 @@ export function shatterSavingThrowOutcomeFill(
     holeId: hole.holeId,
     value: {
       area: {
-        kind: "shatterArea",
+        kind: "pointOriginSphereObjectDamageArea",
         originAnchorId: input.originAnchorId,
         affectedTargetIds: input.outcomes.map((outcome) => outcome.targetId),
         nonmagicalUnattendedObjectDamageFacts: input.nonmagicalUnattendedObjectDamageFacts
