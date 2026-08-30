@@ -201,12 +201,11 @@ results remain the authorities.
 
 The Effect 4 public declaration graph is a reviewed deterministic measurement:
 511 declaration files and 4,074,692 bytes. The file gate admits exactly those
-511 files, so any added file requires review. The byte gate is the smallest
-round binary-megabyte bound above the measurement, 10 MiB, leaving 6,411,068
-bytes of explicit margin. Deterministic verification asserts the measured
-graph, exact-at-cap acceptance, and cap-plus-one rejection for both limits;
-raising either bound requires a new measured graph and review. The canonical
-measurement is owned beside the declaration emitter in
+511 files, so any added file requires review. The reviewed byte gate is 10 MiB,
+leaving 6,411,068 bytes of explicit margin. Deterministic verification asserts
+the measured graph, exact-at-cap acceptance, and cap-plus-one rejection for
+both limits; raising either bound requires a new measured graph and review. The
+canonical measurement is owned beside the declaration emitter in
 `sdk-player/consumer-distribution.ts` and is reproduced by the clean-consumer
 distribution test.
 

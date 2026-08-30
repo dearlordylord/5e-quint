@@ -92,8 +92,8 @@ export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE = {
 } as const;
 /**
  * Effect 4's reviewed declaration graph uses every admitted file and leaves a
- * 6,411,068-byte margin below the smallest round binary-megabyte bound that
- * contains it. Any graph growth must update the reviewed measure explicitly.
+ * 6,411,068-byte margin below its reviewed 10 MiB cap. Any graph growth must
+ * update the reviewed measure explicitly.
  */
 export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files;
