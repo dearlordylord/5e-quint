@@ -7,9 +7,9 @@
     "occurrenceCount": 2602
   },
   "stateCounts": {
-    "executable": 1142,
+    "executable": 1150,
     "missingOwner": 494,
-    "textOnly": 912,
+    "textOnly": 904,
     "tableOwned": 54,
     "malformed": 0
   },
@@ -5676,7 +5676,7 @@
     },
     {
       "rowId": "stat-block-206:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-      "familyId": "stat-block.text-only.trait"
+      "familyId": "stat-block.attack-procedure"
     },
     {
       "rowId": "stat-block-206:{\"kind\":\"section\",\"section\":\"actions\"}",
@@ -5776,7 +5776,7 @@
     },
     {
       "rowId": "stat-block-210:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-      "familyId": "stat-block.text-only.trait"
+      "familyId": "stat-block.attack-procedure"
     },
     {
       "rowId": "stat-block-210:{\"kind\":\"section\",\"section\":\"actions\"}",
@@ -6088,7 +6088,7 @@
     },
     {
       "rowId": "stat-block-221:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-      "familyId": "stat-block.text-only.trait"
+      "familyId": "stat-block.attack-procedure"
     },
     {
       "rowId": "stat-block-221:{\"kind\":\"trait\",\"traitOrdinal\":2}",
@@ -9464,7 +9464,7 @@
     },
     {
       "rowId": "stat-block-300:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-      "familyId": "stat-block.text-only.trait"
+      "familyId": "stat-block.attack-procedure"
     },
     {
       "rowId": "stat-block-300:{\"kind\":\"section\",\"section\":\"actions\"}",
@@ -9480,7 +9480,7 @@
     },
     {
       "rowId": "stat-block-301:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-      "familyId": "stat-block.text-only.trait"
+      "familyId": "stat-block.attack-procedure"
     },
     {
       "rowId": "stat-block-301:{\"kind\":\"section\",\"section\":\"actions\"}",
@@ -9848,7 +9848,7 @@
     },
     {
       "rowId": "stat-block-310:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-      "familyId": "stat-block.text-only.trait"
+      "familyId": "stat-block.attack-procedure"
     },
     {
       "rowId": "stat-block-310:{\"kind\":\"section\",\"section\":\"actions\"}",
@@ -10036,7 +10036,7 @@
     },
     {
       "rowId": "stat-block-317:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-      "familyId": "stat-block.text-only.trait"
+      "familyId": "stat-block.attack-procedure"
     },
     {
       "rowId": "stat-block-317:{\"kind\":\"section\",\"section\":\"actions\"}",
@@ -10304,7 +10304,7 @@
     },
     {
       "rowId": "stat-block-324:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-      "familyId": "stat-block.text-only.trait"
+      "familyId": "stat-block.attack-procedure"
     },
     {
       "rowId": "stat-block-324:{\"kind\":\"section\",\"section\":\"actions\"}",
@@ -10883,8 +10883,8 @@
       ],
       "profileId": "stat-block.attack-procedure",
       "obligationId": "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
-      "occurrenceCount": 252,
-      "statBlockCount": 213,
+      "occurrenceCount": 260,
+      "statBlockCount": 216,
       "memberRowIds": [
         "stat-block-1:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
         "stat-block-2:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
@@ -11049,10 +11049,12 @@
         "stat-block-197:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-200:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
         "stat-block-203:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
+        "stat-block-206:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-206:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-207:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-208:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-209:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
+        "stat-block-210:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-213:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-214:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-215:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
@@ -11060,6 +11062,7 @@
         "stat-block-218:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-219:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-220:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
+        "stat-block-221:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-231:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-231:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
         "stat-block-231:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
@@ -11107,8 +11110,10 @@
         "stat-block-298:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-299:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
         "stat-block-299:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
+        "stat-block-300:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-300:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
         "stat-block-300:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
+        "stat-block-301:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-301:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
         "stat-block-302:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-302:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
@@ -11117,6 +11122,7 @@
         "stat-block-305:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-305:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
         "stat-block-309:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
+        "stat-block-310:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-311:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-311:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
         "stat-block-312:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
@@ -11125,6 +11131,7 @@
         "stat-block-315:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
         "stat-block-316:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
         "stat-block-316:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
+        "stat-block-317:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-317:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":3}",
         "stat-block-317:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":4}",
         "stat-block-318:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
@@ -11132,6 +11139,7 @@
         "stat-block-320:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-321:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-323:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
+        "stat-block-324:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-324:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":1}",
         "stat-block-327:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
         "stat-block-328:{\"kind\":\"procedure\",\"section\":\"actions\",\"procedureOrdinal\":2}",
@@ -12857,8 +12865,8 @@
       "id": "stat-block.text-only.trait",
       "title": "Text-only Stat Block trait presentation",
       "state": "textOnly",
-      "occurrenceCount": 327,
-      "statBlockCount": 196,
+      "occurrenceCount": 319,
+      "statBlockCount": 189,
       "memberRowIds": [
         "stat-block-4:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-10:{\"kind\":\"trait\",\"traitOrdinal\":1}",
@@ -13028,12 +13036,10 @@
         "stat-block-197:{\"kind\":\"trait\",\"traitOrdinal\":3}",
         "stat-block-201:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-204:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-        "stat-block-206:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-207:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-207:{\"kind\":\"trait\",\"traitOrdinal\":2}",
         "stat-block-207:{\"kind\":\"trait\",\"traitOrdinal\":3}",
         "stat-block-209:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-        "stat-block-210:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-211:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-212:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-213:{\"kind\":\"trait\",\"traitOrdinal\":1}",
@@ -13050,7 +13056,6 @@
         "stat-block-219:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-219:{\"kind\":\"trait\",\"traitOrdinal\":2}",
         "stat-block-219:{\"kind\":\"trait\",\"traitOrdinal\":3}",
-        "stat-block-221:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-221:{\"kind\":\"trait\",\"traitOrdinal\":2}",
         "stat-block-222:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-222:{\"kind\":\"trait\",\"traitOrdinal\":2}",
@@ -13140,8 +13145,6 @@
         "stat-block-299:{\"kind\":\"trait\",\"traitOrdinal\":2}",
         "stat-block-299:{\"kind\":\"trait\",\"traitOrdinal\":3}",
         "stat-block-299:{\"kind\":\"trait\",\"traitOrdinal\":4}",
-        "stat-block-300:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-        "stat-block-301:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-302:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-303:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-303:{\"kind\":\"trait\",\"traitOrdinal\":2}",
@@ -13166,10 +13169,8 @@
         "stat-block-308:{\"kind\":\"trait\",\"traitOrdinal\":8}",
         "stat-block-309:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-309:{\"kind\":\"trait\",\"traitOrdinal\":2}",
-        "stat-block-310:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-312:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-312:{\"kind\":\"trait\",\"traitOrdinal\":2}",
-        "stat-block-317:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-318:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-319:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-320:{\"kind\":\"trait\",\"traitOrdinal\":1}",
@@ -13180,7 +13181,6 @@
         "stat-block-323:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-323:{\"kind\":\"trait\",\"traitOrdinal\":2}",
         "stat-block-323:{\"kind\":\"trait\",\"traitOrdinal\":3}",
-        "stat-block-324:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-326:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-326:{\"kind\":\"trait\",\"traitOrdinal\":2}",
         "stat-block-328:{\"kind\":\"trait\",\"traitOrdinal\":1}",

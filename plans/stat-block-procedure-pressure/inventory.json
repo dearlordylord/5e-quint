@@ -3976,8 +3976,8 @@
     "procedureReference": 45
   },
   "dispositionCounts": {
-    "executable": 1142,
-    "textOnly": 912,
+    "executable": 1150,
+    "textOnly": 904,
     "tableOwned": 54,
     "missingOwner": 494,
     "malformed": 0
@@ -38709,8 +38709,12 @@
     {
       "rowId": "stat-block-206:{\"kind\":\"trait\",\"traitOrdinal\":1}",
       "kind": "trait",
-      "structuralShape": "{}",
-      "disposition": { "kind": "textOnly", "reason": "untypedTrait" },
+      "structuralShape": "{\"effect\":{\"kind\":\"attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target\"}}",
+      "disposition": {
+        "kind": "executable",
+        "owner": "battle-runtime Stat Block trait attack-roll mode",
+        "runtimeShape": "conditionalAttackRollMode"
+      },
       "witness": {
         "recordOrdinal": 206,
         "statBlockId": "stat_block_hell_hound",
@@ -39301,8 +39305,12 @@
     {
       "rowId": "stat-block-210:{\"kind\":\"trait\",\"traitOrdinal\":1}",
       "kind": "trait",
-      "structuralShape": "{}",
-      "disposition": { "kind": "textOnly", "reason": "untypedTrait" },
+      "structuralShape": "{\"effect\":{\"kind\":\"attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target\"}}",
+      "disposition": {
+        "kind": "executable",
+        "owner": "battle-runtime Stat Block trait attack-roll mode",
+        "runtimeShape": "conditionalAttackRollMode"
+      },
       "witness": {
         "recordOrdinal": 210,
         "statBlockId": "stat_block_hobgoblin_warrior",
@@ -41127,8 +41135,12 @@
     {
       "rowId": "stat-block-221:{\"kind\":\"trait\",\"traitOrdinal\":1}",
       "kind": "trait",
-      "structuralShape": "{}",
-      "disposition": { "kind": "textOnly", "reason": "untypedTrait" },
+      "structuralShape": "{\"effect\":{\"kind\":\"attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target\"}}",
+      "disposition": {
+        "kind": "executable",
+        "owner": "battle-runtime Stat Block trait attack-roll mode",
+        "runtimeShape": "conditionalAttackRollMode"
+      },
       "witness": {
         "recordOrdinal": 221,
         "statBlockId": "stat_block_kobold_warrior",
@@ -62190,8 +62202,12 @@
     {
       "rowId": "stat-block-300:{\"kind\":\"trait\",\"traitOrdinal\":1}",
       "kind": "trait",
-      "structuralShape": "{}",
-      "disposition": { "kind": "textOnly", "reason": "untypedTrait" },
+      "structuralShape": "{\"effect\":{\"kind\":\"attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target\"}}",
+      "disposition": {
+        "kind": "executable",
+        "owner": "battle-runtime Stat Block trait attack-roll mode",
+        "runtimeShape": "conditionalAttackRollMode"
+      },
       "witness": {
         "recordOrdinal": 300,
         "statBlockId": "stat_block_tough",
@@ -62282,8 +62298,12 @@
     {
       "rowId": "stat-block-301:{\"kind\":\"trait\",\"traitOrdinal\":1}",
       "kind": "trait",
-      "structuralShape": "{}",
-      "disposition": { "kind": "textOnly", "reason": "untypedTrait" },
+      "structuralShape": "{\"effect\":{\"kind\":\"attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target\"}}",
+      "disposition": {
+        "kind": "executable",
+        "owner": "battle-runtime Stat Block trait attack-roll mode",
+        "runtimeShape": "conditionalAttackRollMode"
+      },
       "witness": {
         "recordOrdinal": 301,
         "statBlockId": "stat_block_tough_boss",
@@ -64369,8 +64389,12 @@
     {
       "rowId": "stat-block-310:{\"kind\":\"trait\",\"traitOrdinal\":1}",
       "kind": "trait",
-      "structuralShape": "{}",
-      "disposition": { "kind": "textOnly", "reason": "untypedTrait" },
+      "structuralShape": "{\"effect\":{\"kind\":\"attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target\"}}",
+      "disposition": {
+        "kind": "executable",
+        "owner": "battle-runtime Stat Block trait attack-roll mode",
+        "runtimeShape": "conditionalAttackRollMode"
+      },
       "witness": {
         "recordOrdinal": 310,
         "statBlockId": "stat_block_warrior_infantry",
@@ -65497,8 +65521,12 @@
     {
       "rowId": "stat-block-317:{\"kind\":\"trait\",\"traitOrdinal\":1}",
       "kind": "trait",
-      "structuralShape": "{}",
-      "disposition": { "kind": "textOnly", "reason": "untypedTrait" },
+      "structuralShape": "{\"effect\":{\"kind\":\"attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target\"}}",
+      "disposition": {
+        "kind": "executable",
+        "owner": "battle-runtime Stat Block trait attack-roll mode",
+        "runtimeShape": "conditionalAttackRollMode"
+      },
       "witness": {
         "recordOrdinal": 317,
         "statBlockId": "stat_block_werewolf",
@@ -67074,8 +67102,12 @@
     {
       "rowId": "stat-block-324:{\"kind\":\"trait\",\"traitOrdinal\":1}",
       "kind": "trait",
-      "structuralShape": "{}",
-      "disposition": { "kind": "textOnly", "reason": "untypedTrait" },
+      "structuralShape": "{\"effect\":{\"kind\":\"attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target\"}}",
+      "disposition": {
+        "kind": "executable",
+        "owner": "battle-runtime Stat Block trait attack-roll mode",
+        "runtimeShape": "conditionalAttackRollMode"
+      },
       "witness": {
         "recordOrdinal": 324,
         "statBlockId": "stat_block_winter_wolf",
@@ -78314,8 +78346,8 @@
         "owner": "battle-runtime Stat Block trait attack-roll mode",
         "runtimeShape": "conditionalAttackRollMode"
       },
-      "occurrenceCount": 10,
-      "statBlockCount": 10,
+      "occurrenceCount": 18,
+      "statBlockCount": 18,
       "memberRowIds": [
         "stat-block-5:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-9:{\"kind\":\"trait\",\"traitOrdinal\":1}",
@@ -78326,7 +78358,15 @@
         "stat-block-60:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-75:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-92:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-        "stat-block-95:{\"kind\":\"trait\",\"traitOrdinal\":1}"
+        "stat-block-95:{\"kind\":\"trait\",\"traitOrdinal\":1}",
+        "stat-block-206:{\"kind\":\"trait\",\"traitOrdinal\":1}",
+        "stat-block-210:{\"kind\":\"trait\",\"traitOrdinal\":1}",
+        "stat-block-221:{\"kind\":\"trait\",\"traitOrdinal\":1}",
+        "stat-block-300:{\"kind\":\"trait\",\"traitOrdinal\":1}",
+        "stat-block-301:{\"kind\":\"trait\",\"traitOrdinal\":1}",
+        "stat-block-310:{\"kind\":\"trait\",\"traitOrdinal\":1}",
+        "stat-block-317:{\"kind\":\"trait\",\"traitOrdinal\":1}",
+        "stat-block-324:{\"kind\":\"trait\",\"traitOrdinal\":1}"
       ],
       "exampleWitnesses": [
         {
@@ -79209,8 +79249,8 @@
       "kind": "trait",
       "structuralShape": "{}",
       "disposition": { "kind": "textOnly", "reason": "untypedTrait" },
-      "occurrenceCount": 327,
-      "statBlockCount": 196,
+      "occurrenceCount": 319,
+      "statBlockCount": 189,
       "memberRowIds": [
         "stat-block-4:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-10:{\"kind\":\"trait\",\"traitOrdinal\":1}",
@@ -79380,12 +79420,10 @@
         "stat-block-197:{\"kind\":\"trait\",\"traitOrdinal\":3}",
         "stat-block-201:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-204:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-        "stat-block-206:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-207:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-207:{\"kind\":\"trait\",\"traitOrdinal\":2}",
         "stat-block-207:{\"kind\":\"trait\",\"traitOrdinal\":3}",
         "stat-block-209:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-        "stat-block-210:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-211:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-212:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-213:{\"kind\":\"trait\",\"traitOrdinal\":1}",
@@ -79402,7 +79440,6 @@
         "stat-block-219:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-219:{\"kind\":\"trait\",\"traitOrdinal\":2}",
         "stat-block-219:{\"kind\":\"trait\",\"traitOrdinal\":3}",
-        "stat-block-221:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-221:{\"kind\":\"trait\",\"traitOrdinal\":2}",
         "stat-block-222:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-222:{\"kind\":\"trait\",\"traitOrdinal\":2}",
@@ -79492,8 +79529,6 @@
         "stat-block-299:{\"kind\":\"trait\",\"traitOrdinal\":2}",
         "stat-block-299:{\"kind\":\"trait\",\"traitOrdinal\":3}",
         "stat-block-299:{\"kind\":\"trait\",\"traitOrdinal\":4}",
-        "stat-block-300:{\"kind\":\"trait\",\"traitOrdinal\":1}",
-        "stat-block-301:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-302:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-303:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-303:{\"kind\":\"trait\",\"traitOrdinal\":2}",
@@ -79518,10 +79553,8 @@
         "stat-block-308:{\"kind\":\"trait\",\"traitOrdinal\":8}",
         "stat-block-309:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-309:{\"kind\":\"trait\",\"traitOrdinal\":2}",
-        "stat-block-310:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-312:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-312:{\"kind\":\"trait\",\"traitOrdinal\":2}",
-        "stat-block-317:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-318:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-319:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-320:{\"kind\":\"trait\",\"traitOrdinal\":1}",
@@ -79532,7 +79565,6 @@
         "stat-block-323:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-323:{\"kind\":\"trait\",\"traitOrdinal\":2}",
         "stat-block-323:{\"kind\":\"trait\",\"traitOrdinal\":3}",
-        "stat-block-324:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-326:{\"kind\":\"trait\",\"traitOrdinal\":1}",
         "stat-block-326:{\"kind\":\"trait\",\"traitOrdinal\":2}",
         "stat-block-328:{\"kind\":\"trait\",\"traitOrdinal\":1}",
