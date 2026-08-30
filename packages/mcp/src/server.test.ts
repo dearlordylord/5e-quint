@@ -5281,9 +5281,9 @@ describe("MCP server route", () => {
       }),
     );
 
-    const deliveryAct = readPayload(
+    const deliveryActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
-    ).envelope.frontier.acts.find(
+    ).envelope.frontier.acts.filter(
       (act: {
         readonly subject: {
           readonly tag: string;
@@ -5291,13 +5291,13 @@ describe("MCP server route", () => {
         };
         readonly presentation: {
           readonly kind: string;
-          readonly invocation?: { readonly spellId?: string };
         };
       }) =>
-        act.subject.tag === "spawnedCompanionTouchSpell" &&
-        act.presentation.kind === "spell" &&
-        act.presentation.invocation?.spellId === "cure_wounds",
+        act.subject.tag === "spawnedCompanionTouchSpellProxy" &&
+        act.presentation.kind === "spell",
     );
+    expect(deliveryActs).toHaveLength(1);
+    const deliveryAct = deliveryActs[0];
     expect(deliveryAct).toBeDefined();
     if (deliveryAct === undefined) return;
     expect(deliveryAct.subject.procedureRef).toEqual(expect.any(String));

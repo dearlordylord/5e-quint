@@ -287,7 +287,7 @@ describe("recoverable Play Session protocol", () => {
                 holeId: stringField(factsHole, "holeId"),
                 spatialFacts: secondProcedureRefCandidates.map(
                   (sourceProcedureRef) => ({
-                    kind: "counterspellTriggerCasterVisibleWithinRange" as const,
+                    kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" as const,
                     reactorId: "multi-shield-two",
                     casterId: "multi-shield-one",
                     sourceProcedureRef,
