@@ -98,7 +98,9 @@ function startFighterOpportunityAttackAfterMovement(
   }
   const rawOpportunityChoice = pendingInterrupt.choices.find(
     (choice) =>
-      choice.kind === "opportunityAttack" && choice.reactorId === fighterId,
+      choice.kind === "nestedProcedure" &&
+      choice.subject.command === "opportunityAttack" &&
+      choice.subject.reactorId === fighterId,
   );
   if (rawOpportunityChoice === undefined) {
     throw new Error("Expected fighter Opportunity Attack choice.");

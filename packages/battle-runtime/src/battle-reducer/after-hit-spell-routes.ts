@@ -11,6 +11,8 @@ import type {
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
+import { interruptChoiceResponderId } from "../battle-state-execution.ts";
+import type { BattleInterruptSubject } from "../battle-subjects.ts";
 import { currentInterruptCheckpoint } from "./battle-snapshot.ts";
 import {
   battleReducerRouteFill,
@@ -37,8 +39,13 @@ import { isEndTurnSubject } from "./reducer-route-subject-query.ts";
 
 type AfterHitSpellChoice = Extract<
   BattleInterruptCheckpoint["choices"][number],
-  { readonly kind: "castAttackHitBonusActionSpell" }
->;
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castAttackHitBonusActionSpell" }
+  >;
+};
 type AfterHitSpellSelection = Extract<
   BattleInterruptProcedureSelection,
   { readonly kind: "castAttackHitBonusActionSpell" }
@@ -71,7 +78,7 @@ export function afterHitSpellDiscoveryRoutesForResolution(
     }
     const invocation = spellInvocationForInterruptChoice(
       result.state,
-      choice.reactorId,
+      interruptChoiceResponderId(choice),
       choice.subject.procedureRef,
     );
     /* v8 ignore next -- @preserve -- Every admitted after-hit choice retains its executable procedure binding. */
@@ -153,7 +160,7 @@ export function afterHitSpellRouteForInterrupt(input: {
       ? undefined
       : spellInvocationForInterruptChoice(
           input.before,
-          selectedChoice.reactorId,
+          interruptChoiceResponderId(selectedChoice),
           selectedChoice.subject.procedureRef,
         );
   /* v8 ignore next -- @preserve -- The selected after-hit choice is admitted from the same procedure binding retained by the frame. */
@@ -352,7 +359,11 @@ function isAfterHitSpellConcentrationTeardownSubject(
 function isAfterHitSpellChoice(
   choice: BattleInterruptCheckpoint["choices"][number],
 ): choice is AfterHitSpellChoice {
-  return choice.kind === "castAttackHitBonusActionSpell";
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castAttackHitBonusActionSpell"
+  );
 }
 
 function isAfterHitSpellSelection(

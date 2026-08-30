@@ -1,9 +1,7 @@
 import type { CharacterDraftId } from "@dnd/character-creation-runtime";
 import type {
-  BattleFill,
   BattleId,
   BattleRuntimeSession,
-  BattleSubject,
   InitialInitiativeSetup,
   snapshotBattle,
 } from "@dnd/battle-runtime";
@@ -65,10 +63,10 @@ export type CharacterSessionRegistry = {
   keys(): IterableIterator<CharacterId>;
 };
 
-export type PendingBattleFillSession = {
-  readonly baseSession: BattleRuntimeSession;
-  readonly subject: BattleSubject;
-  readonly fills: readonly BattleFill[];
+export type McpBattleTransactionStorageIssue = {
+  readonly tag: "battleStatePendingTransactionInvalid";
+  readonly battleId: BattleId;
+  readonly reason: "foreignTransaction" | "transactionSessionMismatch";
 };
 
 export type McpBattleState =
@@ -80,6 +78,7 @@ export type McpBattleState =
   | { readonly tag: "activeBattle"; readonly session: BattleRuntimeSession };
 
 export type McpBattleStateTransitionIssue =
+  | McpBattleTransactionStorageIssue
   | {
       readonly tag: "invalidBattleStateTransition";
       readonly from: McpBattleState["tag"];

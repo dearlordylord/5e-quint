@@ -253,6 +253,55 @@ describe("Character Sheet runtime / resources", () => {
     }
   });
 
+  test("increments a multi-use free-cast expenditure without duplicating it", () => {
+    const sheet = requireSuccess(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:ranger-free-cast-spend"),
+        build: armorClassBuild({ startingClass: "class_ranger" }),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const resource = {
+      sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+      spellId: authoredUnitId("hunters_mark"),
+    };
+
+    const once = requireSuccess(
+      spendCharacterSheetSpellAccessFreeCast({
+        sheet,
+        unitLibrary,
+        resource,
+      }),
+    );
+    const twice = requireSuccess(
+      spendCharacterSheetSpellAccessFreeCast({
+        sheet: once,
+        unitLibrary,
+        resource,
+      }),
+    );
+
+    expect(twice.resourceExpenditures).toEqual([
+      {
+        tag: "spellAccessFreeCast",
+        ...resource,
+        expended: resourceCount(2),
+      },
+    ]);
+    expect(characterSheetResources(twice, unitLibrary)).toMatchObject({
+      _tag: "Success",
+      success: [
+        expect.objectContaining({
+          ...resource,
+          count: 2,
+          expended: 2,
+        }),
+      ],
+    });
+  });
+
   const overCapacityResourceCases = [
     {
       name: "Lay On Hands healing pool",

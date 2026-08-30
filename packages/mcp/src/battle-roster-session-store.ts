@@ -1,22 +1,21 @@
 import type {
   BattleCreatureState,
+  BattlePendingTransaction,
   BattleRuntimeSession,
   CombatantId,
 } from "@dnd/battle-runtime";
 import {
   addBattleRuntimeCombatant,
   battleStateInitIssueMessage,
+  battlePendingTransactionView,
   removeBattleRuntimeCombatants,
 } from "@dnd/battle-runtime";
 import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Match, Result } from "effect";
+import { Result, Match, Option } from "effect";
 
-import type {
-  CharacterSessionRegistry,
-  PendingBattleFillSession,
-} from "./session-store.ts";
+import type { CharacterSessionRegistry } from "./session-store.ts";
 import {
   createActiveBattleRosterTransitionPlan,
   type ActiveBattleRosterTransitionPlan,
@@ -37,7 +36,7 @@ export type BattleRosterTransitionPlanner = {
   plan(
     operation: McpBattleRosterOperation,
     activeBattle: BattleRuntimeSession,
-    pendingBattleFills: PendingBattleFillSession | null,
+    pendingBattleTransaction: BattlePendingTransaction | null,
   ): Result.Result<
     ActiveBattleRosterTransitionPreview,
     McpBattleRosterTransitionIssue
@@ -45,7 +44,7 @@ export type BattleRosterTransitionPlanner = {
   commit(
     plan: ActiveBattleRosterTransitionPlan,
     activeBattle: BattleRuntimeSession,
-    pendingBattleFills: PendingBattleFillSession | null,
+    pendingBattleTransaction: BattlePendingTransaction | null,
   ): Result.Result<BattleRuntimeSession, McpBattleRosterTransitionIssue>;
 };
 
@@ -56,11 +55,17 @@ export function createBattleRosterTransitionPlanner(input: {
   readonly storeIdentity: object;
 }): BattleRosterTransitionPlanner {
   return {
-    plan(operation, activeBattle, pendingBattleFills) {
-      if (pendingBattleFills !== null) {
+    plan(operation, activeBattle, pendingBattleTransaction) {
+      if (pendingBattleTransaction !== null) {
+        const pendingView = battlePendingTransactionView(
+          pendingBattleTransaction,
+        );
+        if (Option.isNone(pendingView)) {
+          return Result.fail({ tag: "battleRosterUnknownPendingTransaction" });
+        }
         return Result.fail({
           tag: "battleRosterPendingBattleFills",
-          pendingSubject: pendingBattleFills.subject,
+          pendingSubject: pendingView.value.subject,
         });
       }
       return planActiveBattleRosterTransition({
@@ -69,7 +74,7 @@ export function createBattleRosterTransitionPlanner(input: {
         activeBattle,
       });
     },
-    commit(plan, activeBattle, pendingBattleFills) {
+    commit(plan, activeBattle, pendingBattleTransaction) {
       const data = activeBattleRosterTransitionPlanData.get(plan);
       if (data === undefined || data.storeIdentity !== input.storeIdentity) {
         return Result.fail({ tag: "battleRosterUnknownPlan" });
@@ -80,7 +85,7 @@ export function createBattleRosterTransitionPlanner(input: {
           battleId: data.activeBattle.state.battleId,
         });
       }
-      if (pendingBattleFills !== data.pendingBattleFills) {
+      if (pendingBattleTransaction !== data.pendingBattleTransaction) {
         return Result.fail({ tag: "battleRosterPlanFillsChanged" });
       }
       const misalignedCharacterIds = data.characterSessionTransitions
@@ -203,7 +208,7 @@ function planAddCharacterBattleCombatant(input: {
           }),
         },
       ],
-      pendingBattleFills: null,
+      pendingBattleTransaction: null,
       result: { kind: "add", prospectiveBattle: admitted.success },
     }),
   );
@@ -237,7 +242,7 @@ function planAddStatBlockBattleCombatant(input: {
       storeIdentity: input.storeIdentity,
       activeBattle: input.activeBattle,
       characterSessionTransitions: [],
-      pendingBattleFills: null,
+      pendingBattleTransaction: null,
       result: { kind: "add", prospectiveBattle: admitted.success },
     }),
   );
@@ -298,7 +303,7 @@ function planRemoveBattleCombatant(input: {
       storeIdentity: input.storeIdentity,
       activeBattle: input.activeBattle,
       characterSessionTransitions: settled.success,
-      pendingBattleFills: null,
+      pendingBattleTransaction: null,
       result: {
         kind: "remove",
         prospectiveBattle: removed.success,

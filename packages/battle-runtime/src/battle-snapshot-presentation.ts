@@ -15,6 +15,7 @@ import type {
   BattleSnapshotPresentationIssue,
   BattleSnapshotPresentationIssues,
 } from "./battle-state-execution.ts";
+import { interruptChoiceResponderId } from "./battle-state-execution.ts";
 import {
   type BattleCheckpointFrontierEnvelope,
   currentBattleCheckpointFrontierEnvelope,
@@ -77,13 +78,13 @@ export type BattlePresentedInterruptChoice =
   | {
       readonly choice: Extract<
         BattleInterruptProcedureChoice,
-        { readonly kind: "reactionRollOrDamageReduction" }
+        { readonly kind: "reactionModifier" }
       >;
     }
   | {
       readonly choice: Exclude<
         BattleInterruptProcedureChoice,
-        { readonly kind: "reactionRollOrDamageReduction" }
+        { readonly kind: "reactionModifier" }
       >;
       readonly presentation: BattleActPresentation;
     };
@@ -194,7 +195,7 @@ function presentBattleInterruptChoice(
   BattlePresentedInterruptChoice,
   BattleInterruptChoicePresentationIssue
 > {
-  if (choice.kind === "reactionRollOrDamageReduction") {
+  if (choice.kind === "reactionModifier") {
     // Modifier-only choices are mechanics-owned and have no authored act
     // presentation to join. They must remain visible in the frontier.
     return Result.succeed({ choice });
@@ -204,7 +205,7 @@ function presentBattleInterruptChoice(
     return Result.fail({
       tag: "battleInterruptChoicePresentationIssue",
       reason: "missingSubjectPresentation",
-      reactorId: choice.reactorId,
+      responderId: interruptChoiceResponderId(choice),
       choiceKind: choice.kind,
       subject: choice.subject,
     });

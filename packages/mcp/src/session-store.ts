@@ -3,13 +3,17 @@ import type {
   CharacterDraftId,
 } from "@dnd/character-creation-runtime";
 import type {
+  BattlePendingTransaction,
   BattleRuntimeSession,
+  BattleRuntimeTransactionResult,
   InitialInitiativeSetup,
   InitiativeSwapCandidateWitness,
 } from "@dnd/battle-runtime";
 import {
   applyInitiativeSwap,
   battleStateInitIssueMessage,
+  battlePendingTransactionViewForSession,
+  battleRuntimeSessionDescendsFrom,
   finishInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
 import {
@@ -26,7 +30,7 @@ import type {
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import { Option, Result } from "effect";
+import { Result, Match, Option } from "effect";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import { createBattleRosterTransitionPlanner } from "./battle-roster-session-store.ts";
 import type {
@@ -36,6 +40,7 @@ import type {
   McpBattleRosterTransitionIssue,
 } from "./battle-roster-session-types.ts";
 import { createCharacterSessionRegistry } from "./character-session-registry.ts";
+import { invalidBattleStateTransition } from "./session-store-state-transition.ts";
 import {
   commitBattleEndTransition,
   commitBattleStartTransition,
@@ -46,10 +51,10 @@ import type {
   AvailableCharacterSessionInput,
   CharacterSessionRegistry,
   CharacterSessionIssue,
+  McpBattleTransactionStorageIssue,
   McpBattleState,
   McpBattleStateTransitionIssue,
   McpSessionSnapshot,
-  PendingBattleFillSession,
 } from "./session-store-types.ts";
 
 export type {
@@ -77,6 +82,13 @@ export type McpSessionStore = {
   storeActiveBattle(
     session: BattleRuntimeSession,
   ): Result.Result<void, McpBattleStateTransitionIssue>;
+  storeBattleTransactionResult(
+    expectedSession: BattleRuntimeSession,
+    result: BattleRuntimeTransactionResult,
+  ): Result.Result<
+    void,
+    McpBattleStateTransitionIssue | McpBattleTransactionStorageIssue
+  >;
   planActiveBattleRosterTransition(
     operation: Extract<McpBattleRosterOperation, { readonly kind: "remove" }>,
   ): Result.Result<
@@ -109,7 +121,7 @@ export type McpSessionStore = {
     BattleRuntimeSession,
     McpBattleStateTransitionIssue
   >;
-  pendingBattleFills: PendingBattleFillSession | null;
+  getPendingBattleTransaction(): BattlePendingTransaction | null;
   clearSelectedStatBlock(): void;
   getSelectedStatBlock(): StatBlockRecord | null;
   selectStatBlock(
@@ -167,7 +179,7 @@ export function createMcpSessionStore(input: {
     storeIdentity,
   });
   let selectedStatBlockId: StatBlockId | null = null;
-  let pendingBattleFills: PendingBattleFillSession | null = null;
+  let pendingBattleTransaction: BattlePendingTransaction | null = null;
   let battleState: McpBattleState = { tag: "none" };
 
   function planActiveBattleRosterTransition(
@@ -192,16 +204,58 @@ export function createMcpSessionStore(input: {
     McpBattleRosterTransitionIssue
   > {
     if (battleState.tag !== "activeBattle") {
-      return invalidBattleRosterStateTransition(
-        battleState.tag,
-        "activeBattle",
-      );
+      return invalidBattleStateTransition(battleState.tag, "activeBattle");
     }
     return battleRosterPlanner.plan(
       operation,
       battleState.session,
-      pendingBattleFills,
+      pendingBattleTransaction,
     );
+  }
+
+  function storeActiveBattleSession(
+    session: BattleRuntimeSession,
+  ): Result.Result<void, McpBattleStateTransitionIssue> {
+    if (battleState.tag === "initialInitiativeSetup") {
+      return invalidBattleStateTransition(battleState.tag, "activeBattle");
+    }
+    if (
+      battleState.tag === "activeBattle" &&
+      session.state.battleId !== battleState.session.state.battleId
+    ) {
+      return Result.fail({
+        tag: "battleStateBattleOwnershipConflict",
+        expectedBattleId: battleState.session.state.battleId,
+        actualBattleId: session.state.battleId,
+      });
+    }
+    battleState = { tag: "activeBattle", session };
+    pendingBattleTransaction = null;
+    return Result.succeed(undefined);
+  }
+
+  function requireExpectedActiveBattleSession(
+    expectedSession: BattleRuntimeSession,
+  ): Result.Result<void, McpBattleStateTransitionIssue> {
+    return battleState.tag === "activeBattle" &&
+      battleState.session === expectedSession
+      ? Result.succeed(undefined)
+      : Result.fail({
+          tag: "battleStateSessionChanged",
+          battleId: expectedSession.state.battleId,
+        });
+  }
+
+  function requireResultSessionDescendant(
+    expectedSession: BattleRuntimeSession,
+    resultSession: BattleRuntimeSession,
+  ): Result.Result<void, McpBattleStateTransitionIssue> {
+    return battleRuntimeSessionDescendsFrom(resultSession, expectedSession)
+      ? Result.succeed(undefined)
+      : Result.fail({
+          tag: "battleStateSessionChanged",
+          battleId: expectedSession.state.battleId,
+        });
   }
 
   const store: McpSessionStore = {
@@ -222,7 +276,7 @@ export function createMcpSessionStore(input: {
       });
       if (Result.isFailure(committed)) return Result.fail(committed.failure);
       battleState = committed.success;
-      pendingBattleFills = null;
+      pendingBattleTransaction = null;
       return Result.succeed(undefined);
     },
     commitBattleEnd({ battleSession, characterSettlements }) {
@@ -234,41 +288,66 @@ export function createMcpSessionStore(input: {
       });
       if (Result.isFailure(committed)) return Result.fail(committed.failure);
       battleState = committed.success;
-      pendingBattleFills = null;
+      pendingBattleTransaction = null;
       return Result.succeed(undefined);
     },
     storeActiveBattle(session) {
-      if (battleState.tag === "initialInitiativeSetup") {
-        return invalidBattleStateTransition(battleState.tag, "activeBattle");
-      }
-      if (
-        battleState.tag === "activeBattle" &&
-        session.state.battleId !== battleState.session.state.battleId
-      ) {
-        return Result.fail({
-          tag: "battleStateBattleOwnershipConflict",
-          expectedBattleId: battleState.session.state.battleId,
-          actualBattleId: session.state.battleId,
-        });
-      }
-      battleState = { tag: "activeBattle", session };
-      return Result.succeed(undefined);
+      return storeActiveBattleSession(session);
+    },
+    storeBattleTransactionResult(expectedSession, result) {
+      return Match.value(result).pipe(
+        Match.when({ tag: "invalid" }, () => Result.succeed(undefined)),
+        Match.when({ tag: "defect" }, () => Result.succeed(undefined)),
+        Match.when({ tag: "settled" }, ({ session }) => {
+          const current = requireExpectedActiveBattleSession(expectedSession);
+          if (Result.isFailure(current)) return current;
+          const lineage = requireResultSessionDescendant(
+            expectedSession,
+            session,
+          );
+          if (Result.isFailure(lineage)) return lineage;
+          return storeActiveBattleSession(session);
+        }),
+        Match.when({ tag: "needsHoles" }, ({ resolution, transaction }) => {
+          const current = requireExpectedActiveBattleSession(expectedSession);
+          if (Result.isFailure(current)) return current;
+          const lineage = requireResultSessionDescendant(
+            expectedSession,
+            resolution.session,
+          );
+          if (Result.isFailure(lineage)) return lineage;
+          const transactionCheck = battlePendingTransactionViewForSession(
+            transaction,
+            resolution.session,
+          );
+          if (transactionCheck.tag !== "valid") {
+            return Result.fail({
+              tag: "battleStatePendingTransactionInvalid" as const,
+              battleId: resolution.session.state.battleId,
+              reason: transactionCheck.tag,
+            });
+          }
+          const stored = storeActiveBattleSession(resolution.session);
+          if (Result.isFailure(stored)) return stored;
+          pendingBattleTransaction = transaction;
+          return Result.succeed(undefined);
+        }),
+        Match.exhaustive,
+      );
     },
     planActiveBattleRosterTransition,
     commitActiveBattleRosterTransition(plan) {
       if (battleState.tag !== "activeBattle") {
-        return invalidBattleRosterStateTransition(
-          battleState.tag,
-          "activeBattle",
-        );
+        return invalidBattleStateTransition(battleState.tag, "activeBattle");
       }
       const committed = battleRosterPlanner.commit(
         plan,
         battleState.session,
-        pendingBattleFills,
+        pendingBattleTransaction,
       );
       if (Result.isFailure(committed)) return Result.fail(committed.failure);
       battleState = { tag: "activeBattle", session: committed.success };
+      pendingBattleTransaction = null;
       return committed;
     },
     storeInitialInitiativeSetup(setup) {
@@ -279,6 +358,7 @@ export function createMcpSessionStore(input: {
         );
       }
       battleState = { tag: "initialInitiativeSetup", setup };
+      pendingBattleTransaction = null;
       return Result.succeed(undefined);
     },
     applyInitialInitiativeSwap(input) {
@@ -306,13 +386,11 @@ export function createMcpSessionStore(input: {
       }
       const session = finishInitialInitiativeSetup(battleState.setup);
       battleState = { tag: "activeBattle", session };
+      pendingBattleTransaction = null;
       return Result.succeed(session);
     },
-    get pendingBattleFills(): PendingBattleFillSession | null {
-      return pendingBattleFills;
-    },
-    set pendingBattleFills(value: PendingBattleFillSession | null) {
-      pendingBattleFills = value;
+    getPendingBattleTransaction(): BattlePendingTransaction | null {
+      return pendingBattleTransaction;
     },
     clearSelectedStatBlock(): void {
       selectedStatBlockId = null;
@@ -342,28 +420,4 @@ export function createMcpSessionStore(input: {
   } satisfies McpSessionStore;
 
   return store;
-}
-
-function invalidBattleStateTransition(
-  from: McpBattleState["tag"],
-  to: McpBattleState["tag"],
-): Result.Result<never, McpBattleStateTransitionIssue> {
-  return Result.fail({
-    tag: "invalidBattleStateTransition",
-    from,
-    to,
-  });
-}
-
-function invalidBattleRosterStateTransition(
-  from: McpBattleState["tag"],
-  to: McpBattleState["tag"],
-): Result.Result<
-  never,
-  Extract<
-    McpBattleRosterTransitionIssue,
-    { readonly tag: "invalidBattleStateTransition" }
-  >
-> {
-  return Result.fail({ tag: "invalidBattleStateTransition", from, to });
 }

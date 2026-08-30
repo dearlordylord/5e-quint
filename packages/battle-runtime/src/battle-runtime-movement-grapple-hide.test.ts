@@ -1916,21 +1916,30 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       awaitingReaction.state,
     )?.choices.find(
       (choice) =>
-        choice.kind === "releaseReadiedMovement" &&
-        choice.readiedMovementActorId === fighterId,
+        choice.kind === "nestedProcedure" &&
+        choice.subject.tag === "runtimeCommand" &&
+        choice.subject.command === "releaseReadiedMovement" &&
+        choice.subject.readiedMovementActorId === fighterId,
     );
     expect(
       battleFrontierInterruptDecisionForState(awaitingReaction.state)?.choices,
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "releaseReadiedMovement",
-          reactorId: fighterId,
-          readiedMovementActorId: fighterId,
+          kind: "nestedProcedure",
+          subject: expect.objectContaining({
+            command: "releaseReadiedMovement",
+            readiedMovementActorId: fighterId,
+          }),
         }),
       ]),
     );
-    if (readiedChoice === undefined) {
+    if (
+      readiedChoice === undefined ||
+      readiedChoice.kind !== "nestedProcedure" ||
+      readiedChoice.subject.tag !== "runtimeCommand" ||
+      readiedChoice.subject.command !== "releaseReadiedMovement"
+    ) {
       throw new Error("Expected a readied movement Reaction choice.");
     }
     expect(() =>
@@ -1964,7 +1973,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           responderId: fighterId,
           choice: {
             kind: "releaseReadiedMovement",
-            readiedMovementActorId: fighterId,
             fills: [readiedMove],
           },
         }),
@@ -1993,7 +2001,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         responderId: fighterId,
         choice: {
           kind: "releaseReadiedMovement",
-          readiedMovementActorId: fighterId,
           fills: [provokingReadiedMove],
         },
       }),
@@ -2013,7 +2020,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         responderId: fighterId,
         choice: {
           kind: "releaseReadiedMovement",
-          readiedMovementActorId: fighterId,
           fills: [readiedMove],
         },
       }),
@@ -2084,10 +2090,16 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       reported.state,
     )?.choices.find(
       (candidate) =>
-        candidate.kind === "releaseReadiedAttack" &&
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "releaseReadiedAttack" &&
         candidate.subject.targetId === goblinId,
     );
-    if (choice?.kind !== "releaseReadiedAttack") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.tag !== "runtimeCommand" ||
+      choice.subject.command !== "releaseReadiedAttack"
+    ) {
       throw new Error("Expected the chosen readied Attack response.");
     }
     const targetSpatialFacts = {
@@ -2109,7 +2121,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         responderId: fighterId,
         choice: {
           kind: "releaseReadiedAttack",
-          reactorId: fighterId,
           targetId: goblinId,
           procedureRef: attackResponse.selection.procedureRef,
           fills: [targetSpatialFacts],
@@ -2189,7 +2200,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         responderId: fighterId,
         choice: {
           kind: "releaseReadiedAction",
-          reactorId: fighterId,
           fills: [],
         },
       }),
@@ -2268,7 +2278,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         responderId: fighterId,
         choice: {
           kind: "releaseReadiedAction",
-          reactorId: fighterId,
           fills: [],
         },
       }),
@@ -2361,7 +2370,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         responderId: fighterId,
         choice: {
           kind: "releaseReadiedAttack",
-          reactorId: fighterId,
           targetId: goblinId,
           procedureRef: attackResponse.selection.procedureRef,
           fills: [targetSpatialFacts],

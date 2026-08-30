@@ -95,7 +95,10 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import type { CharacterProcedureBattleSubject } from "./battle-subjects.ts";
+import type {
+  BattleInterruptSubject,
+  CharacterProcedureBattleSubject,
+} from "./battle-subjects.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -112,6 +115,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  interruptChoiceResponderId,
   isCharacterProcedureBattleSubject,
   resolveBattleInterrupt,
   sameBattleSubject,
@@ -9594,7 +9598,6 @@ export function createInterruptStackResumeRouteDriver() {
               responderId: interruptWizardId,
               choice: {
                 kind: "releaseReadiedSpell",
-                readiedSpellCasterId: interruptWizardId,
                 procedureRef: releaseChoice.subject.procedureRef,
                 fills: [],
               },
@@ -9757,10 +9760,11 @@ function publicReplayContinuationAfterAttackDeclines(): {
     result.holes.some((hole) => hole.kind === "interruptDecision")
   ) {
     const pending = battleFrontierInterruptDecisionForState(result.state);
-    const responderId = pending?.choices[0]?.reactorId;
-    if (pending == null || responderId === undefined) {
+    const firstChoice = pending?.choices[0];
+    if (pending == null || firstChoice === undefined) {
       throw new Error("Expected public interrupt decision responder.");
     }
+    const responderId = interruptChoiceResponderId(firstChoice);
     result = resolveBattleInterrupt({
       state: result.state,
       fill: interruptDecisionFillSupport(pending.decisionHole, {
@@ -16031,8 +16035,16 @@ function requireInterruptShieldReactionChoice(
   context: BattleRuntimeSession["context"],
 ): Extract<
   BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
+  >;
+} {
   const choice = battleFrontierInterruptDecisionForState(
     result.state,
   )?.choices.find(
@@ -16040,16 +16052,26 @@ function requireInterruptShieldReactionChoice(
       candidate,
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
+      { readonly kind: "nestedProcedure" }
+    > & {
+      readonly subject: Extract<
+        BattleInterruptSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "castTriggeredReactionSpell";
+        }
+      >;
+    } => {
       if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== interruptShieldCasterId
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.tag !== "runtimeCommand" ||
+        candidate.subject.command !== "castTriggeredReactionSpell" ||
+        candidate.subject.reactorId !== interruptShieldCasterId
       )
         return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
         battleRuntimeSessionForTest({ state: result.state, context }),
-        candidate.reactorId,
+        candidate.subject.reactorId,
         candidate.subject.procedureRef,
       );
       return (

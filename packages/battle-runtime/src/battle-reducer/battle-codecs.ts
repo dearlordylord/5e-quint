@@ -67,8 +67,8 @@ import {
 } from "./procedure-execution-codecs.ts";
 import { SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS } from "./battle-runtime-protocol.ts";
 import {
-  grantedAreaSaveDamageActionHoleKey,
   escapeSpellRestraintAbilityCheckHoleKey,
+  grantedAreaSaveDamageActionHoleKey,
 } from "./selected-effect-hole-key.ts";
 import { characterAttackExecutionRefsMatchLayout } from "../attack-execution.ts";
 import {
@@ -90,6 +90,7 @@ import {
   BattleReadyResponseSnapshotSchema,
   BattleReadyResponseSchema,
   BattleInterruptAttackExecutionSelectionSchema,
+  BattleInterruptSubjectSchema,
   battleInterruptAttackExecutionSelectionWithFields,
   ReadyTriggerDescription,
   SpellInvocationRefSchema,
@@ -160,6 +161,7 @@ import {
   DcSourceSchema,
   DifficultyClass,
   MovementFeet,
+  MechanicalSupportedAttackActionOptionSchema,
   SpellSlotLevel,
   SupportedAttackActionOptionSchema,
 } from "./codec-building-blocks.ts";
@@ -168,11 +170,7 @@ import {
   BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
 } from "../unit-feature-support.ts";
-import type {
-  BattleFill,
-  BattleHole,
-  BattleMovementFillValue,
-} from "../battle-state-execution.ts";
+import type { BattleFill, BattleHole } from "../battle-state-execution.ts";
 import {
   BATTLE_START_TURN_OCCURRENCE_KINDS,
   BATTLE_TEMPORARY_HIT_POINT_CHOICES,
@@ -318,7 +316,10 @@ const BattleStartTurnOccurrenceOptionSchema = Schema.Struct({
   kind: Schema.Literals(BATTLE_START_TURN_OCCURRENCE_KINDS),
   label: Schema.String,
 });
-
+const BattleMechanicalStartTurnOccurrenceOptionSchema = Schema.Struct({
+  occurrenceId: BattleStartTurnOccurrenceId,
+  kind: Schema.Literals(BATTLE_START_TURN_OCCURRENCE_KINDS),
+});
 const BattleAreaWindStrengthSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("strong") }),
   Schema.Struct({ kind: Schema.Literal("notStrong") }),
@@ -340,17 +341,6 @@ const BattleMovementHoleCommonSchema = {
       kind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
       movementBudgetFeet: MovementFeet,
     }),
-  ),
-} as const;
-
-const D20TestNaturalOneRerollHoleOptionsSchema = {
-  d20TestNaturalOneRerolls: Schema.optionalKey(
-    Schema.Array(
-      Schema.Struct({
-        effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-        label: Schema.String,
-      }),
-    ),
   ),
 } as const;
 
@@ -1394,10 +1384,6 @@ const BattleOngoingSpellMagicalEffectTargetSchema = Schema.Struct({
   kind: Schema.Literal("magicalEffect"),
   effect: BattleOngoingSpellEffectRefSchema,
 });
-const BattleOngoingSpellOccurrenceTargetSchema = Schema.Struct({
-  kind: Schema.Literal("magicalEffect"),
-  effect: BattleOngoingSpellOccurrenceRefSchema,
-});
 const BattleOngoingSpellTargetSchema = Schema.Union([
   BattleOngoingSpellCombatantTargetSchema,
   BattleOngoingSpellObjectTargetSchema,
@@ -1457,723 +1443,298 @@ const SpellConditionRepeatSaveSchema = Schema.Struct({
 
 const EmptySpellAreaChoicesSchema = Schema.Tuple([]);
 
-function exhaustiveBattleHoleSchema<
-  S extends Schema.Codec<BattleHole, unknown, unknown, unknown>,
->(
+function exhaustiveBattleHoleSchema<S extends Schema.Top>(
   schema: S &
     ([BattleHole] extends [S["Type"]]
       ? unknown
       : {
           readonly missingBattleHoleVariants: Exclude<BattleHole, S["Type"]>;
+        }) &
+    ([S["Type"]] extends [BattleHole]
+      ? unknown
+      : {
+          readonly unsupportedBattleHoleVariants: Exclude<
+            S["Type"],
+            BattleHole
+          >;
         }),
 ): S {
   return schema;
 }
 
-const BattleHolePayloadUnionSchema = Schema.Union([
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("readyDeclaration"),
-    label: Schema.String,
-    actorId: CombatantId,
-    responseChoices: Schema.Array(BattleReadyResponseSchema),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("helpAttackAllyDecision"),
-    label: Schema.String,
-    helperId: CombatantId,
-    choices: Schema.Array(CombatantId),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("helpAttackEnemyDecision"),
-    label: Schema.String,
-    helperId: CombatantId,
-    allyId: CombatantId,
-    choices: Schema.Array(CombatantId),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("damageRelationshipDecisions"),
-    label: Schema.String,
-    damageEventHoleId: BattleHoleIdSchema,
-    damageSourceId: CombatantId,
-    questions: Schema.NonEmptyArray(BattleDamageRelationshipQuestionSchema),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("targetChoice"),
-    choices: Schema.Array(CombatantId),
-    procedureRef: Schema.optionalKey(BattleProcedureExecutionRef),
-    requiresTableSpatialFact: Schema.optionalKey(Schema.Boolean),
-    relationshipFactRequest: Schema.optionalKey(
-      BattleTargetChoiceRelationshipFactRequestSchema,
-    ),
-    spellTargetSpatialFactRequest: Schema.optionalKey(
-      Schema.Struct({
-        casterId: CombatantId,
-        sourceProcedureRef: BattleProcedureExecutionRef,
-        rangeFeet: MovementFeet,
-        visibility: Schema.Literals([
-          "requiresSight",
-          "notSpecifiedByProcedure",
-        ]),
-        requiresKnownWillingTarget: Schema.optionalKey(Schema.Literal(true)),
-      }),
-    ),
-    attack: Schema.optionalKey(
-      Schema.Struct({
-        actorId: CombatantId,
-        selection: BattleAttackExecutionSelectionSchema,
-        targetConstraint: Schema.Union([
-          Schema.Struct({
-            kind: Schema.Literal("meleeReach"),
-            reachFeet: MovementFeet,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("rangedRange"),
-            normalFeet: MovementFeet,
-            longFeet: MovementFeet,
-          }),
-        ]),
-        acceptsObjectTarget: Schema.optionalKey(Schema.Literal(true)),
-      }),
-    ),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("targetSpatialFacts"),
-    label: Schema.String,
-    linkedEffectSeparation: Schema.Struct({
-      sourceCombatantId: CombatantId,
-      targetId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      rangeFeet: MovementFeet,
+type BattleHoleFieldSchemas = Schema.Struct.Fields & {
+  readonly label?: never;
+};
+
+function pairedBattleHoleNestedMember<
+  const Fields extends Schema.Struct.Fields,
+>(fields: Fields) {
+  return {
+    labeled: Schema.Struct({ ...fields, label: Schema.String }),
+    mechanical: Schema.Struct(fields).annotate({
+      parseOptions: { onExcessProperty: "error" },
     }),
-    requiresTableSpatialFact: Schema.Literal(true),
-    requiresKnownWillingTargets: Schema.optionalKey(Schema.Literal(true)),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("targetSpatialFacts"),
-    label: Schema.String,
-    spellBeingCast: Schema.Struct({
-      casterId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      castLevel: Schema.Number,
-      components: Schema.Array(Schema.Literals(["V", "S", "M"])),
+  };
+}
+
+function pairedBattleHoleNestedMemberVariants<
+  const LabeledFields extends Schema.Struct.Fields,
+  const MechanicalFields extends Schema.Struct.Fields,
+>(labeledFields: LabeledFields, mechanicalFields: MechanicalFields) {
+  return {
+    labeled: Schema.Struct(labeledFields),
+    mechanical: Schema.Struct(mechanicalFields).annotate({
+      parseOptions: { onExcessProperty: "error" },
     }),
-    requiresTableSpatialFact: Schema.Literal(true),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("areaWindStrength"),
-    areaId: BattleAreaId,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("turnConstraintSomaticSpellFailureOutcome"),
-    actorId: CombatantId,
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    failurePercent: Schema.Literal(
-      SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
+  };
+}
+
+function pairedBattleHoleNestedArrayField<
+  const Fields extends Schema.Struct.Fields,
+>(fields: Fields) {
+  const member = pairedBattleHoleNestedMember(fields);
+  return {
+    labeled: Schema.optionalKey(Schema.Array(member.labeled)),
+    mechanical: Schema.optionalKey(Schema.Array(member.mechanical)),
+  };
+}
+
+function mergeBattleHoleFieldPairs<
+  const LeftLabeledFields extends Schema.Struct.Fields,
+  const LeftMechanicalFields extends Schema.Struct.Fields,
+  const RightLabeledFields extends Schema.Struct.Fields,
+  const RightMechanicalFields extends Schema.Struct.Fields,
+>(
+  left: {
+    readonly labeled: LeftLabeledFields;
+    readonly mechanical: LeftMechanicalFields;
+  },
+  right: {
+    readonly labeled: RightLabeledFields;
+    readonly mechanical: RightMechanicalFields;
+  },
+): {
+  readonly labeled: LeftLabeledFields & RightLabeledFields;
+  readonly mechanical: LeftMechanicalFields & RightMechanicalFields;
+} {
+  return {
+    labeled: { ...left.labeled, ...right.labeled },
+    mechanical: { ...left.mechanical, ...right.mechanical },
+  };
+}
+
+function pairedBattleHoleMember<const Fields extends BattleHoleFieldSchemas>(
+  fields: Fields,
+) {
+  return pairedBattleHoleMemberVariants(fields, fields);
+}
+
+function pairedBattleHoleMemberVariants<
+  const LabeledFields extends BattleHoleFieldSchemas,
+  const MechanicalFields extends BattleHoleFieldSchemas,
+>(labeledFields: LabeledFields, mechanicalFields: MechanicalFields) {
+  return {
+    labeled: Schema.Struct({ ...labeledFields, label: Schema.String }),
+    mechanical: Schema.Struct(mechanicalFields).annotate({
+      parseOptions: { onExcessProperty: "error" },
+    }),
+  };
+}
+
+function pairedBattleHoleMemberWithFields<
+  const Fields extends BattleHoleFieldSchemas,
+  const LabeledFields extends Schema.Struct.Fields,
+  const MechanicalFields extends Schema.Struct.Fields,
+>(
+  fields: Fields,
+  pairedFields: {
+    readonly labeled: LabeledFields;
+    readonly mechanical: MechanicalFields;
+  },
+) {
+  return {
+    labeled: Schema.Struct({ ...fields, label: Schema.String }).pipe(
+      Schema.fieldsAssign(pairedFields.labeled),
     ),
-    activeEffectSources: Schema.Array(
-      Schema.Struct({
-        sourceProcedureRef: BattleProcedureExecutionRef,
-        sourceCombatantId: CombatantId,
-      }),
+    mechanical: Schema.Struct(fields).pipe(
+      Schema.fieldsAssign(pairedFields.mechanical),
+      Schema.annotate({ parseOptions: { onExcessProperty: "error" } }),
     ),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("objectTargetChoice"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    requiresTableSpatialFact: Schema.Literal(true),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("wildShapeEquipmentDisposition"),
-    actorId: CombatantId,
-    formExecutionRef: BattleStatBlockExecutionScopeRef,
-    candidates: Schema.Array(WildShapeLoadoutObjectRefSchema),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("hitPointHealingDistribution"),
-    label: Schema.String,
-    requiresTableSpatialFact: Schema.Literal(true),
-    healingPool: Schema.Struct({
-      sourceCombatantId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
+  };
+}
+
+function withoutBattleHoleLabel<
+  const Fields extends Schema.Struct.Fields & {
+    readonly label: Schema.Top;
+  },
+>(fields: Fields) {
+  const { label, ...fieldsWithoutLabel } = fields;
+  void label;
+  return fieldsWithoutLabel;
+}
+
+function mechanicalBattleHoleSchemaFromLabeled<
+  const Fields extends Schema.Struct.Fields & {
+    readonly label: Schema.Top;
+  },
+>(schema: Schema.Struct<Fields>) {
+  return Schema.Struct(withoutBattleHoleLabel(schema.fields)).annotate({
+    parseOptions: { onExcessProperty: "error" },
+  });
+}
+
+const BattleHoleBaseFieldsSchema = withoutBattleHoleLabel(BattleHoleBaseSchema);
+const BattleMovementHoleCommonFieldsSchema = withoutBattleHoleLabel(
+  BattleMovementHoleCommonSchema,
+);
+
+const D20TestNaturalOneRerollHoleOptionsFields = (() => {
+  const schemas = pairedBattleHoleNestedArrayField({
+    effectKind: Schema.Literal("d20_test_natural_one_reroll"),
+  });
+  return {
+    labeled: { d20TestNaturalOneRerolls: schemas.labeled },
+    mechanical: { d20TestNaturalOneRerolls: schemas.mechanical },
+  };
+})();
+
+const AttackRollFeatureActivationFields = (() => {
+  const schemas = pairedBattleHoleNestedMemberVariants(
+    {
+      procedureRef: BattleProcedureExecutionRef,
       unitId: Schema.optionalKey(Schema.Never),
-      rangeFeet: MovementFeet,
-      poolHitPoints: HpSchema,
-      perTargetCap: Schema.Literal("halfHitPointMaximum"),
-    }),
-    choices: Schema.Array(CombatantId),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("ongoingSpellTargetChoice"),
-    label: Schema.String,
-    requiresTableSpatialFact: Schema.Literal(true),
-    casterId: CombatantId,
+      label: Schema.optionalKey(Schema.Never),
+      rollMode: Schema.Literals(ATTACK_ROLL_MODES),
+    },
+    {
+      procedureRef: BattleProcedureExecutionRef,
+      rollMode: Schema.Literals(ATTACK_ROLL_MODES),
+    },
+  );
+  return {
+    labeled: {
+      ongoingFeatureActivations: Schema.optionalKey(
+        Schema.NonEmptyArray(schemas.labeled),
+      ),
+    },
+    mechanical: {
+      ongoingFeatureActivations: Schema.optionalKey(
+        Schema.NonEmptyArray(schemas.mechanical),
+      ),
+    },
+  };
+})();
+
+const AttackRollMissToHitReplacementFields = (() => {
+  const schemas = pairedBattleHoleNestedMemberVariants(
+    {
+      procedureRef: BattleProcedureExecutionRef,
+      unitId: Schema.optionalKey(Schema.Never),
+      label: Schema.optionalKey(Schema.Never),
+    },
+    { procedureRef: BattleProcedureExecutionRef },
+  );
+  return {
+    labeled: {
+      missToHitReplacements: Schema.optionalKey(
+        Schema.NonEmptyArray(schemas.labeled),
+      ),
+    },
+    mechanical: {
+      missToHitReplacements: Schema.optionalKey(
+        Schema.NonEmptyArray(schemas.mechanical),
+      ),
+    },
+  };
+})();
+
+const AttackDamageAbilityModifierChoiceHoleFields = (() => {
+  const schemas = pairedBattleHoleNestedMemberVariants(
+    {
+      procedureRefs: Schema.NonEmptyArray(BattleProcedureExecutionRef),
+      unitIds: Schema.optionalKey(Schema.Never),
+      appliedDamageAbilityModifier: AbilityModifier,
+      declinedDamageAbilityModifier: AbilityModifier,
+    },
+    {
+      procedureRefs: Schema.NonEmptyArray(BattleProcedureExecutionRef),
+      appliedDamageAbilityModifier: AbilityModifier,
+      declinedDamageAbilityModifier: AbilityModifier,
+    },
+  );
+  return {
+    labeled: {
+      attackDamageAbilityModifierChoice: Schema.optionalKey(schemas.labeled),
+    },
+    mechanical: {
+      attackDamageAbilityModifierChoice: Schema.optionalKey(schemas.mechanical),
+    },
+  };
+})();
+
+const AttackDamageDispositionChoiceFields = (() => {
+  const labeled = Schema.Struct({
+    kind: Schema.Literal("zeroHitPointReplacement"),
     procedureRef: BattleProcedureExecutionRef,
-    rangeFeet: MovementFeet,
-    choices: Schema.Array(BattleOngoingSpellTargetSchema),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("objectContactTargets"),
-    objectContact: Schema.Struct({
-      sourceCombatantId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      objectId: BattleObjectId,
-      rangeFeet: MovementFeet,
-      requiresObjectWithinRange: Schema.Boolean,
-    }),
-    choices: Schema.Array(CombatantId),
-    requiresTableSpatialFact: Schema.Literal(true),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    outcomeTargeting: Schema.Literal("targetList"),
-    objectContactSave: Schema.Struct({
-      sourceCombatantId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      objectId: BattleObjectId,
-      targetIds: Schema.Array(CombatantId),
-    }),
-    ability: Schema.Literal("con"),
-    dc: Schema.Struct({ kind: Schema.Literal("caster_spell_save_dc") }),
-    areaChoices: Schema.Tuple([]),
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("objectDropResolution"),
-    objectDrop: Schema.Struct({
-      sourceCombatantId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      objectId: BattleObjectId,
-      targetIds: Schema.Array(CombatantId),
-    }),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("heldObjectFacts"),
-    actorId: CombatantId,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("toolPossessionFacts"),
-    actorId: CombatantId,
-    toolIds: Schema.Tuple([Schema.Literal("poisoners_kit")]),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("cunningStrikeEndTurnCoverFacts"),
-    actorId: CombatantId,
-    coverDegrees: Schema.Array(
-      Schema.Literals(CUNNING_STRIKE_END_TURN_COVER_DEGREES),
-    ),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("spawnedCompanionConnection"),
-    ownerId: CombatantId,
-    companionId: CombatantId,
-    rangeFeet: MovementFeet,
-    requiresTableSpatialFact: Schema.Literal(true),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("companionReappearancePlacement"),
-    ownerId: CombatantId,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("companionReappearanceInitiative"),
-    ownerId: CombatantId,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("weaponAttackDamageEnhancementTargetItem"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    requiresTableItemFact: Schema.Literal(true),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("damageTypeChoice"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    choices: Schema.Array(DamageTypeSchema),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("spellTargetAllocation"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    allocationCount: Schema.Number,
-    choices: Schema.Array(CombatantId),
-    requiresTableSpatialFact: Schema.Literal(true),
-    spellTargetSpatialFactRequest: Schema.Struct({
-      casterId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      rangeFeet: MovementFeet,
-      visibility: Schema.Literal("requiresSight"),
-    }),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("spellTargetList"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    procedure: Schema.optionalKey(Schema.Never),
-    minTargets: Schema.Literal(1),
-    maxTargets: Schema.Number,
-    spatialTargeting: Schema.Union([
-      Schema.Struct({ kind: Schema.Literal("individualTargets") }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginSphere"),
-        radiusFeet: MovementFeet,
-      }),
-    ]),
-    choices: Schema.Array(CombatantId),
-    requiresTableSpatialFact: Schema.Literal(true),
-    spellTargetSpatialFactRequest: Schema.optionalKey(
-      Schema.Struct({
-        casterId: CombatantId,
-        sourceProcedureRef: BattleProcedureExecutionRef,
-        rangeFeet: MovementFeet,
-        visibility: Schema.Literal("notSpecifiedByProcedure"),
-      }),
-    ),
-    requiresKnownWillingTargets: Schema.optionalKey(Schema.Literal(true)),
-    relationshipFactRequest: Schema.optionalKey(
-      BattleSpellTargetListRelationshipFactRequestSchema,
-    ),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("attackRoll"),
-    attack: SupportedAttackActionOptionSchema,
-    attackBonus: AttackBonus,
-    rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
-    ongoingFeatureActivations: Schema.optionalKey(
-      Schema.Array(
-        Schema.Struct({
-          procedureRef: BattleProcedureExecutionRef,
-          unitId: Schema.optionalKey(Schema.Never),
-          label: Schema.optionalKey(Schema.Never),
-          rollMode: Schema.Literals(ATTACK_ROLL_MODES),
-        }),
+    unitId: Schema.optionalKey(Schema.Never),
+  });
+  const mechanical = Schema.Struct({
+    kind: Schema.Literal("zeroHitPointReplacement"),
+    procedureRef: BattleProcedureExecutionRef,
+  }).annotate({ parseOptions: { onExcessProperty: "error" } });
+  return {
+    labeled: {
+      choices: Schema.Array(
+        Schema.Union([
+          Schema.Struct({ kind: Schema.Literal("ordinaryDamage") }),
+          Schema.Struct({ kind: Schema.Literal("knockOut") }),
+          labeled,
+        ]),
       ),
-    ),
-    missToHitReplacements: Schema.optionalKey(
-      Schema.Array(
-        Schema.Struct({
-          procedureRef: BattleProcedureExecutionRef,
-          unitId: Schema.optionalKey(Schema.Never),
-          label: Schema.optionalKey(Schema.Never),
-        }),
+    },
+    mechanical: {
+      choices: Schema.Array(
+        Schema.Union([
+          Schema.Struct({ kind: Schema.Literal("ordinaryDamage") }),
+          Schema.Struct({ kind: Schema.Literal("knockOut") }),
+          mechanical,
+        ]),
       ),
-    ),
-    d20TestNaturalOneRerolls: Schema.optionalKey(
-      Schema.Array(
-        Schema.Struct({
-          effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-          label: Schema.String,
-        }),
-      ),
-    ),
-    relationshipFactRequest: Schema.optionalKey(
-      BattleAttackRollRelationshipFactRequestSchema,
-    ),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("attackRoll"),
-    attackBonus: AttackBonus,
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
-    missToHitReplacements: Schema.optionalKey(
-      Schema.Array(
-        Schema.Struct({
-          procedureRef: BattleProcedureExecutionRef,
-          unitId: Schema.optionalKey(Schema.Never),
-          label: Schema.optionalKey(Schema.Never),
-        }),
-      ),
-    ),
-    spellAttackRerolls: Schema.optionalKey(
-      Schema.Array(
-        Schema.Struct({
-          effectKind: Schema.Literal("missed_spell_attack_reroll"),
-          label: Schema.String,
-          sorceryPointCost: ResourceCount,
-        }),
-      ),
-    ),
-    d20TestNaturalOneRerolls: Schema.optionalKey(
-      Schema.Array(
-        Schema.Struct({
-          effectKind: Schema.Literal("d20_test_natural_one_reroll"),
-          label: Schema.String,
-        }),
-      ),
-    ),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    attack: SupportedAttackActionOptionSchema,
-    critical: Schema.Boolean,
-    attackDamageRiders: Schema.optionalKey(
-      Schema.Array(
-        Schema.Struct({
-          attackerId: CombatantId,
-          procedureRef: BattleProcedureExecutionRef,
-          optional: Schema.Boolean,
-          damage: Schema.Struct({
-            dice: Schema.Number,
-            dieSize: Schema.Number,
-            damageType: DamageTypeSchema,
-          }),
-        }),
-      ),
-    ),
-    spellWeaponDamageRiders: Schema.optionalKey(
-      Schema.Array(SpellWeaponDamageRiderSchema),
-    ),
-    spellMarkedDamageRiders: Schema.optionalKey(
-      Schema.Array(SpellMarkedDamageRiderSchema),
-    ),
-    cunningStrikeOptions: Schema.optionalKey(
-      Schema.Array(
-        Schema.Struct({
-          procedureRef: BattleProcedureExecutionRef,
-          optionId: Schema.Literals(BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS),
-          sourceDamageRiderProcedureRef: BattleProcedureExecutionRef,
-          dieCost: Schema.Struct({
-            dice: Schema.Literal(1),
-            dieSize: Schema.Literal(6),
-          }),
-        }),
-      ),
-    ),
-    weaponDamageDiceRollChoiceProcedureRefs: Schema.optionalKey(
-      Schema.Array(BattleProcedureExecutionRef),
-    ),
-    attackDamageDieFloorChoiceProcedureRefs: Schema.optionalKey(
-      Schema.NonEmptyArray(BattleProcedureExecutionRef),
-    ),
-    attackDamageAbilityModifierChoice: Schema.optionalKey(
-      Schema.Struct({
-        procedureRefs: Schema.NonEmptyArray(BattleProcedureExecutionRef),
-        unitIds: Schema.optionalKey(Schema.Never),
-        appliedDamageAbilityModifier: AbilityModifier,
-        declinedDamageAbilityModifier: AbilityModifier,
-      }),
-    ),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    critical: Schema.Boolean,
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    spellMarkedDamageRiders: Schema.optionalKey(
-      Schema.Array(SpellMarkedDamageRiderSchema),
-    ),
-    spellDamageRerolls: Schema.optionalKey(
-      Schema.Array(
-        Schema.Struct({
-          effectKind: Schema.Literal("damage_dice_reroll"),
-          label: Schema.String,
-          sorceryPointCost: ResourceCount,
-          maximumSelectedDice: Schema.Number.pipe(Schema.check(Schema.isInt())),
-        }),
-      ),
-    ),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    grantedAreaSaveDamageAction: Schema.Struct({
-      sourceCombatantId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      damageType: DamageTypeSchema,
-      expr: DiceExprSchema,
-    }),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    glyphExplosiveRune: Schema.Struct({
-      sourceCombatantId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      effectRef: BattleEffectExecutionRef,
-      damage: Schema.Struct({
-        expr: DiceExprSchema,
-      }),
-    }),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    spellDamageReduction: Schema.Struct({
-      effectRef: BattleEffectExecutionRef,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      sourceCombatantId: CombatantId,
-      targetId: CombatantId,
-      damageType: DamageTypeSchema,
-      amount: Schema.Struct({
-        dice: Schema.Literal(1),
-        dieSize: Schema.Literal(4),
-      }),
-    }),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    sourceDamageRollPenalty: Schema.Struct({
-      effectRef: BattleEffectExecutionRef,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      sourceCombatantId: CombatantId,
-      affectedCombatantId: CombatantId,
-      damageRollHoleId: BattleHoleIdSchema,
-      amount: Schema.Struct({
-        dice: Schema.Literal(1),
-        dieSize: Schema.Literal(8),
-      }),
-    }),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    duplicateHitInterceptionRoll: Schema.Struct({
-      targetId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      sourceCombatantId: CombatantId,
-      remainingDuplicates: Schema.Literals(
-        DUPLICATE_HIT_INTERCEPTION_DUPLICATE_COUNTS,
-      ),
-      dieSize: Schema.Literal(DUPLICATE_HIT_INTERCEPTION_DIE_SIZE),
-      successAtLeast: Schema.Literal(
-        DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST,
-      ),
-    }),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    spellTurnStartDamage: BattleSpellTurnStartDamageSourceSchema,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    spellTurnEndDamage: BattleSpellTurnEndDamageSourceSchema,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    movableZone: Schema.Struct({
-      ...BattleProcedureSourceSchema,
-      effectRef: BattleEffectExecutionRef,
-      areaId: BattleAreaId,
-      trigger: Schema.Literals([
-        "endsTurnWithinFiveFeetOfSphere",
-        "rammedBySphere",
-      ]),
-      save: Schema.Struct({
-        ability: Schema.Literal("dex"),
-        dc: DcSourceSchema,
-      }),
-    }),
-    critical: Schema.Literal(false),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    areaMovementDistanceDamage: Schema.Struct({
-      targetId: CombatantId,
-      effectRef: BattleEffectExecutionRef,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      sourceCombatantId: CombatantId,
-      areaId: BattleAreaId,
-      distanceFeet: MovementFeet,
-      damage: Schema.Struct({
-        expr: DiceExprSchema,
-        damageType: Schema.Literal("piercing"),
-      }),
-    }),
-    critical: Schema.Literal(false),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    persistentAreaSaveDamage: Schema.Struct({
-      topology: Schema.Literal("stationary"),
-      ...BattleProcedureSourceSchema,
-      effectRef: BattleEffectExecutionRef,
-      areaId: BattleAreaId,
-      trigger: Schema.Literals([
-        "appearsInArea",
-        "entersArea",
-        "endsTurnInArea",
-      ]),
-      damage: Schema.Struct({
-        expr: DiceExprSchema,
-        damageType: Schema.Literal("piercing"),
-      }),
-    }),
-    critical: Schema.Literal(false),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    persistentAreaSaveDamage: Schema.Struct({
-      topology: Schema.Literal("translating"),
-      ...BattleProcedureSourceSchema,
-      effectRef: BattleEffectExecutionRef,
-      areaId: BattleAreaId,
-      trigger: Schema.Literals([
-        "appearsInArea",
-        "movesIntoSpace",
-        "entersArea",
-        "endsTurnInArea",
-      ]),
-      damage: Schema.Struct({
-        expr: DiceExprSchema,
-        damageType: Schema.Literal("poison"),
-      }),
-    }),
-    critical: Schema.Literal(false),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("skillChoice"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    label: Schema.String,
-    choices: Schema.Array(Schema.Literals(BATTLE_SURFACE_SKILLS)),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("abilityChoice"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    label: Schema.String,
-    choices: Schema.Array(AbilitySchema),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("targetAbilityChoices"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    label: Schema.String,
-    choices: Schema.Array(AbilitySchema),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("conditionChoice"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    label: Schema.String,
-    choices: Schema.NonEmptyArray(Schema.Literals(ALL_CONDITIONS)),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("temporaryAbilityCheckRollModeActiveEffectCount"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    label: Schema.String,
-    maximumActiveOneMinuteEffects: Schema.Literal(
-      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
-    ),
-    requiresTableSpellEffectCount: Schema.Literal(true),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("compelledBehaviorOptionChoice"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    label: Schema.String,
-    choices: Schema.Array(Schema.Literals(COMPELLED_BEHAVIOR_OPTIONS)),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("selfTransformationModeChoice"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    label: Schema.String,
-    choices: Schema.NonEmptyArray(
-      Schema.Literals(SELF_TRANSFORMATION_MODE_KINDS),
-    ),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("movableLightPlacement"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    label: Schema.String,
-    mode: Schema.Literals(["cast", "reposition"]),
-    form: Schema.Literals(["separateLights", "combinedMediumForm"]),
-    activeLightIds: Schema.Array(BattleMovableLightId),
-    rangeFeet: MovementFeet,
-    maxMoveFeet: MovementFeet,
-    spacingFeet: MovementFeet,
-    requiresTableSpatialFact: Schema.Literal(true),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("spellAreaChoice"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    label: Schema.String,
-    area: Schema.Union([
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginSphere"),
-        radiusFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginSphereDiameter"),
-        diameterFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginCylinder"),
-        radiusFeet: MovementFeet,
-        heightFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginCube"),
-        sideFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pointOriginGroundSquare"),
-        sideFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("selfOriginEmanation"),
-        radiusFeet: MovementFeet,
-      }),
-    ]),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("teleportDestination"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    label: Schema.String,
-    actorId: CombatantId,
-    maxDistanceFeet: MovementFeet,
-    requiresTableSpatialFact: Schema.Literal(true),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("spatialMeleeSpellAttackProxyPosition"),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    label: Schema.String,
-    mode: Schema.Literals(["cast", "reposition"]),
-    maxDistanceFeet: MovementFeet,
-    requiresTableSpatialFact: Schema.Literal(true),
-  }),
+    },
+  };
+})();
+
+const SpellAttackRerollHoleOptionsFields = (() => {
+  const schemas = pairedBattleHoleNestedArrayField({
+    effectKind: Schema.Literal("missed_spell_attack_reroll"),
+    sorceryPointCost: ResourceCount,
+  });
+  return {
+    labeled: { spellAttackRerolls: schemas.labeled },
+    mechanical: { spellAttackRerolls: schemas.mechanical },
+  };
+})();
+
+const SpellDamageRerollHoleOptionsFields = (() => {
+  const schemas = pairedBattleHoleNestedArrayField({
+    effectKind: Schema.Literal("damage_dice_reroll"),
+    sorceryPointCost: ResourceCount,
+    maximumSelectedDice: Schema.Number.pipe(Schema.check(Schema.isInt())),
+  });
+  return {
+    labeled: { spellDamageRerolls: schemas.labeled },
+    mechanical: { spellDamageRerolls: schemas.mechanical },
+  };
+})();
+
+const BattleInterruptDecisionHolePayloadMember = pairedBattleHoleMember({
+  ...BattleHoleBaseFieldsSchema,
+  kind: Schema.Literal("interruptDecision"),
+  trigger: Schema.Literals(BATTLE_INTERRUPT_TRIGGERS),
+  eligibleResponders: Schema.Array(CombatantId),
+});
+
+const GenericSavingThrowHolePayloadMembers = [
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
@@ -2461,89 +2022,57 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    label: Schema.String,
-    movableZone: Schema.Struct({
-      ...BattleProcedureSourceSchema,
-      effectRef: BattleEffectExecutionRef,
-      areaId: BattleAreaId,
-      trigger: Schema.Literals([
-        "endsTurnWithinFiveFeetOfSphere",
-        "rammedBySphere",
-      ]),
-      save: Schema.Struct({
-        ability: Schema.Literal("dex"),
-        dc: DcSourceSchema,
-      }),
-    }),
-    ability: Schema.Literal("dex"),
-    dc: DcSourceSchema,
-    areaChoices: EmptySpellAreaChoicesSchema,
-    targetRollModes: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
-        rollMode: Schema.Literals(ATTACK_ROLL_MODES),
-      }),
-    ),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    label: Schema.String,
-    movableZone: Schema.Struct({
-      ...BattleProcedureSourceSchema,
-      effectRef: BattleEffectExecutionRef,
-      areaId: BattleAreaId,
-      trigger: Schema.Literals([
-        "appearsInArea",
-        "areaMovesIntoSpace",
-        "entersArea",
-        "endsTurnInArea",
-      ]),
-      save: Schema.Struct({
-        ability: Schema.Literal("con"),
-        dc: DcSourceSchema,
-      }),
-    }),
-    ability: Schema.Literal("con"),
-    dc: DcSourceSchema,
-    areaChoices: EmptySpellAreaChoicesSchema,
-    targetRollModes: Schema.Array(
-      Schema.Struct({
-        targetId: CombatantId,
-        rollMode: Schema.Literals(ATTACK_ROLL_MODES),
-      }),
-    ),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("movableZoneRamMovement"),
-    label: Schema.String,
-    movableZone: Schema.Struct({
-      ...BattleProcedureSourceSchema,
-      effectRef: BattleEffectExecutionRef,
-      areaId: BattleAreaId,
-      maxMoveFeet: MovementFeet,
-    }),
-    requiresTableSpatialFact: Schema.Literal(true),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("movableZoneRepositionMovement"),
-    label: Schema.String,
-    movableZone: Schema.Struct({
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      sourceCombatantId: CombatantId,
-      effectRef: BattleEffectExecutionRef,
-      areaId: BattleAreaId,
-      maxMoveFeet: MovementFeet,
-    }),
-    requiresTableSpatialFact: Schema.Literal(true),
-  }),
+] as const;
+
+const GenericSavingThrowMechanicalHolePayloadMembers = [
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[0],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[1],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[2],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[3],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[4],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[5],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[6],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[7],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[8],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[9],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[10],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[11],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[12],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[13],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    GenericSavingThrowHolePayloadMembers[14],
+  ),
+] as const;
+
+const AdditionalStructuralHolePayloadMembers = [
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("startTurnOccurrenceOrder"),
@@ -2581,10 +2110,875 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     directionRequirement: Schema.Literal("awayFromSource"),
     requiresTableSpatialFact: Schema.Literal(true),
   }),
+] as const;
+
+const AdditionalStructuralMechanicalHolePayloadMembers = [
   Schema.Struct({
-    ...BattleHoleBaseSchema,
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("startTurnOccurrenceOrder"),
+    actorId: CombatantId,
+    occurrences: Schema.TupleWithRest(
+      Schema.Tuple([
+        BattleMechanicalStartTurnOccurrenceOptionSchema,
+        BattleMechanicalStartTurnOccurrenceOptionSchema,
+      ]),
+      [BattleMechanicalStartTurnOccurrenceOptionSchema],
+    ),
+  }).annotate({ parseOptions: { onExcessProperty: "error" } }),
+  mechanicalBattleHoleSchemaFromLabeled(
+    AdditionalStructuralHolePayloadMembers[1],
+  ),
+  mechanicalBattleHoleSchemaFromLabeled(
+    AdditionalStructuralHolePayloadMembers[2],
+  ),
+] as const;
+
+const BattleHolePayloadMembers = [
+  BattleInterruptDecisionHolePayloadMember,
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("readyDeclaration"),
+    actorId: CombatantId,
+    responseChoices: Schema.Array(BattleReadyResponseSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("helpAttackAllyDecision"),
+    helperId: CombatantId,
+    choices: Schema.Array(CombatantId),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("helpAttackEnemyDecision"),
+    helperId: CombatantId,
+    allyId: CombatantId,
+    choices: Schema.Array(CombatantId),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("damageRelationshipDecisions"),
+    damageEventHoleId: BattleHoleIdSchema,
+    damageSourceId: CombatantId,
+    questions: Schema.NonEmptyArray(BattleDamageRelationshipQuestionSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("targetChoice"),
+    choices: Schema.Array(CombatantId),
+    procedureRef: Schema.optionalKey(BattleProcedureExecutionRef),
+    requiresTableSpatialFact: Schema.optionalKey(Schema.Boolean),
+    relationshipFactRequest: Schema.optionalKey(
+      BattleTargetChoiceRelationshipFactRequestSchema,
+    ),
+    spellTargetSpatialFactRequest: Schema.optionalKey(
+      Schema.Struct({
+        casterId: CombatantId,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        rangeFeet: MovementFeet,
+        visibility: Schema.Literals([
+          "requiresSight",
+          "notSpecifiedByProcedure",
+        ]),
+        requiresKnownWillingTarget: Schema.optionalKey(Schema.Literal(true)),
+      }),
+    ),
+    attack: Schema.optionalKey(
+      Schema.Struct({
+        actorId: CombatantId,
+        selection: BattleAttackExecutionSelectionSchema,
+        targetConstraint: Schema.Union([
+          Schema.Struct({
+            kind: Schema.Literal("meleeReach"),
+            reachFeet: MovementFeet,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("rangedRange"),
+            normalFeet: MovementFeet,
+            longFeet: MovementFeet,
+          }),
+        ]),
+        acceptsObjectTarget: Schema.optionalKey(Schema.Literal(true)),
+      }),
+    ),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("targetSpatialFacts"),
+    linkedEffectSeparation: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      targetId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      rangeFeet: MovementFeet,
+    }),
+    requiresTableSpatialFact: Schema.Literal(true),
+    requiresKnownWillingTargets: Schema.optionalKey(Schema.Literal(true)),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("targetSpatialFacts"),
+    spellBeingCast: Schema.Struct({
+      casterId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      castLevel: Schema.Number,
+      components: Schema.Array(Schema.Literals(["V", "S", "M"])),
+    }),
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("areaWindStrength"),
+    areaId: BattleAreaId,
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("turnConstraintSomaticSpellFailureOutcome"),
+    actorId: CombatantId,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    failurePercent: Schema.Literal(
+      SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
+    ),
+    activeEffectSources: Schema.Array(
+      Schema.Struct({
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        sourceCombatantId: CombatantId,
+      }),
+    ),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("objectTargetChoice"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("wildShapeEquipmentDisposition"),
+    actorId: CombatantId,
+    formExecutionRef: BattleStatBlockExecutionScopeRef,
+    candidates: Schema.Array(WildShapeLoadoutObjectRefSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("hitPointHealingDistribution"),
+    requiresTableSpatialFact: Schema.Literal(true),
+    healingPool: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      unitId: Schema.optionalKey(Schema.Never),
+      rangeFeet: MovementFeet,
+      poolHitPoints: HpSchema,
+      perTargetCap: Schema.Literal("halfHitPointMaximum"),
+    }),
+    choices: Schema.Array(CombatantId),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("ongoingSpellTargetChoice"),
+    requiresTableSpatialFact: Schema.Literal(true),
+    casterId: CombatantId,
+    procedureRef: BattleProcedureExecutionRef,
+    rangeFeet: MovementFeet,
+    choices: Schema.Array(BattleOngoingSpellTargetSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("objectContactTargets"),
+    objectContact: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      objectId: BattleObjectId,
+      rangeFeet: MovementFeet,
+      requiresObjectWithinRange: Schema.Boolean,
+    }),
+    choices: Schema.Array(CombatantId),
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("savingThrowOutcome"),
-    label: Schema.String,
+    outcomeTargeting: Schema.Literal("targetList"),
+    objectContactSave: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      objectId: BattleObjectId,
+      targetIds: Schema.Array(CombatantId),
+    }),
+    ability: Schema.Literal("con"),
+    dc: Schema.Struct({ kind: Schema.Literal("caster_spell_save_dc") }),
+    areaChoices: Schema.Tuple([]),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("objectDropResolution"),
+    objectDrop: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      objectId: BattleObjectId,
+      targetIds: Schema.Array(CombatantId),
+    }),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("heldObjectFacts"),
+    actorId: CombatantId,
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("toolPossessionFacts"),
+    actorId: CombatantId,
+    toolIds: Schema.Tuple([Schema.Literal("poisoners_kit")]),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("cunningStrikeEndTurnCoverFacts"),
+    actorId: CombatantId,
+    coverDegrees: Schema.Array(
+      Schema.Literals(CUNNING_STRIKE_END_TURN_COVER_DEGREES),
+    ),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("spawnedCompanionConnection"),
+    ownerId: CombatantId,
+    companionId: CombatantId,
+    rangeFeet: MovementFeet,
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("companionReappearancePlacement"),
+    ownerId: CombatantId,
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("companionReappearanceInitiative"),
+    ownerId: CombatantId,
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("weaponAttackDamageEnhancementTargetItem"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    requiresTableItemFact: Schema.Literal(true),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("damageTypeChoice"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    choices: Schema.Array(DamageTypeSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("spellTargetAllocation"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    allocationCount: Schema.Number,
+    choices: Schema.Array(CombatantId),
+    requiresTableSpatialFact: Schema.Literal(true),
+    spellTargetSpatialFactRequest: Schema.Struct({
+      casterId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      rangeFeet: MovementFeet,
+      visibility: Schema.Literal("requiresSight"),
+    }),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("spellTargetList"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    procedure: Schema.optionalKey(Schema.Never),
+    minTargets: Schema.Literal(1),
+    maxTargets: Schema.Number,
+    spatialTargeting: Schema.Union([
+      Schema.Struct({ kind: Schema.Literal("individualTargets") }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+    ]),
+    choices: Schema.Array(CombatantId),
+    requiresTableSpatialFact: Schema.Literal(true),
+    spellTargetSpatialFactRequest: Schema.optionalKey(
+      Schema.Struct({
+        casterId: CombatantId,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        rangeFeet: MovementFeet,
+        visibility: Schema.Literal("notSpecifiedByProcedure"),
+      }),
+    ),
+    requiresKnownWillingTargets: Schema.optionalKey(Schema.Literal(true)),
+    relationshipFactRequest: Schema.optionalKey(
+      BattleSpellTargetListRelationshipFactRequestSchema,
+    ),
+  }),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("attackRoll"),
+      attack: SupportedAttackActionOptionSchema,
+      attackBonus: AttackBonus,
+      rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
+      relationshipFactRequest: Schema.optionalKey(
+        BattleAttackRollRelationshipFactRequestSchema,
+      ),
+    },
+    mergeBattleHoleFieldPairs(
+      mergeBattleHoleFieldPairs(
+        {
+          labeled: {},
+          mechanical: { attack: MechanicalSupportedAttackActionOptionSchema },
+        },
+        AttackRollFeatureActivationFields,
+      ),
+      mergeBattleHoleFieldPairs(
+        AttackRollMissToHitReplacementFields,
+        D20TestNaturalOneRerollHoleOptionsFields,
+      ),
+    ),
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("attackRoll"),
+      attackBonus: AttackBonus,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
+    },
+    mergeBattleHoleFieldPairs(
+      AttackRollMissToHitReplacementFields,
+      mergeBattleHoleFieldPairs(
+        SpellAttackRerollHoleOptionsFields,
+        D20TestNaturalOneRerollHoleOptionsFields,
+      ),
+    ),
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("rolledDice"),
+      attack: SupportedAttackActionOptionSchema,
+      critical: Schema.Boolean,
+      attackDamageRiders: Schema.optionalKey(
+        Schema.Array(
+          Schema.Struct({
+            attackerId: CombatantId,
+            procedureRef: BattleProcedureExecutionRef,
+            optional: Schema.Boolean,
+            damage: Schema.Struct({
+              dice: Schema.Number,
+              dieSize: Schema.Number,
+              damageType: DamageTypeSchema,
+            }),
+          }),
+        ),
+      ),
+      spellWeaponDamageRiders: Schema.optionalKey(
+        Schema.Array(SpellWeaponDamageRiderSchema),
+      ),
+      spellMarkedDamageRiders: Schema.optionalKey(
+        Schema.Array(SpellMarkedDamageRiderSchema),
+      ),
+      cunningStrikeOptions: Schema.optionalKey(
+        Schema.Array(
+          Schema.Struct({
+            procedureRef: BattleProcedureExecutionRef,
+            optionId: Schema.Literals(
+              BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
+            ),
+            sourceDamageRiderProcedureRef: BattleProcedureExecutionRef,
+            dieCost: Schema.Struct({
+              dice: Schema.Literal(1),
+              dieSize: Schema.Literal(6),
+            }),
+          }),
+        ),
+      ),
+      weaponDamageDiceRollChoiceProcedureRefs: Schema.optionalKey(
+        Schema.Array(BattleProcedureExecutionRef),
+      ),
+      attackDamageDieFloorChoiceProcedureRefs: Schema.optionalKey(
+        Schema.NonEmptyArray(BattleProcedureExecutionRef),
+      ),
+    },
+    mergeBattleHoleFieldPairs(
+      {
+        labeled: {},
+        mechanical: { attack: MechanicalSupportedAttackActionOptionSchema },
+      },
+      AttackDamageAbilityModifierChoiceHoleFields,
+    ),
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("rolledDice"),
+      critical: Schema.Boolean,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      spellMarkedDamageRiders: Schema.optionalKey(
+        Schema.Array(SpellMarkedDamageRiderSchema),
+      ),
+    },
+    SpellDamageRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    grantedAreaSaveDamageAction: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      damageType: DamageTypeSchema,
+      expr: DiceExprSchema,
+    }),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    glyphExplosiveRune: Schema.Struct({
+      sourceCombatantId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      effectRef: BattleEffectExecutionRef,
+      damage: Schema.Struct({
+        expr: DiceExprSchema,
+      }),
+    }),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    spellDamageReduction: Schema.Struct({
+      effectRef: BattleEffectExecutionRef,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      sourceCombatantId: CombatantId,
+      targetId: CombatantId,
+      damageType: DamageTypeSchema,
+      amount: Schema.Struct({
+        dice: Schema.Literal(1),
+        dieSize: Schema.Literal(4),
+      }),
+    }),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    sourceDamageRollPenalty: Schema.Struct({
+      effectRef: BattleEffectExecutionRef,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      sourceCombatantId: CombatantId,
+      affectedCombatantId: CombatantId,
+      damageRollHoleId: BattleHoleIdSchema,
+      amount: Schema.Struct({
+        dice: Schema.Literal(1),
+        dieSize: Schema.Literal(8),
+      }),
+    }),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    duplicateHitInterceptionRoll: Schema.Struct({
+      targetId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      sourceCombatantId: CombatantId,
+      remainingDuplicates: Schema.Literals(
+        DUPLICATE_HIT_INTERCEPTION_DUPLICATE_COUNTS,
+      ),
+      dieSize: Schema.Literal(DUPLICATE_HIT_INTERCEPTION_DIE_SIZE),
+      successAtLeast: Schema.Literal(
+        DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST,
+      ),
+    }),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    spellTurnStartDamage: BattleSpellTurnStartDamageSourceSchema,
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    spellTurnEndDamage: BattleSpellTurnEndDamageSourceSchema,
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    movableZone: Schema.Struct({
+      ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
+      areaId: BattleAreaId,
+      trigger: Schema.Literals([
+        "endsTurnWithinFiveFeetOfSphere",
+        "rammedBySphere",
+      ]),
+      save: Schema.Struct({
+        ability: Schema.Literal("dex"),
+        dc: DcSourceSchema,
+      }),
+    }),
+    critical: Schema.Literal(false),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    areaMovementDistanceDamage: Schema.Struct({
+      targetId: CombatantId,
+      effectRef: BattleEffectExecutionRef,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      sourceCombatantId: CombatantId,
+      areaId: BattleAreaId,
+      distanceFeet: MovementFeet,
+      damage: Schema.Struct({
+        expr: DiceExprSchema,
+        damageType: Schema.Literal("piercing"),
+      }),
+    }),
+    critical: Schema.Literal(false),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    persistentAreaSaveDamage: Schema.Struct({
+      topology: Schema.Literal("stationary"),
+      ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
+      areaId: BattleAreaId,
+      trigger: Schema.Literals([
+        "appearsInArea",
+        "entersArea",
+        "endsTurnInArea",
+      ]),
+      damage: Schema.Struct({
+        expr: DiceExprSchema,
+        damageType: Schema.Literal("piercing"),
+      }),
+    }),
+    critical: Schema.Literal(false),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    persistentAreaSaveDamage: Schema.Struct({
+      topology: Schema.Literal("translating"),
+      ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
+      areaId: BattleAreaId,
+      trigger: Schema.Literals([
+        "appearsInArea",
+        "movesIntoSpace",
+        "entersArea",
+        "endsTurnInArea",
+      ]),
+      damage: Schema.Struct({
+        expr: DiceExprSchema,
+        damageType: Schema.Literal("poison"),
+      }),
+    }),
+    critical: Schema.Literal(false),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("rolledDice"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("skillChoice"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    choices: Schema.Array(Schema.Literals(BATTLE_SURFACE_SKILLS)),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("abilityChoice"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    choices: Schema.Array(AbilitySchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("targetAbilityChoices"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    choices: Schema.Array(AbilitySchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("conditionChoice"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    choices: Schema.NonEmptyArray(Schema.Literals(ALL_CONDITIONS)),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("temporaryAbilityCheckRollModeActiveEffectCount"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    maximumActiveOneMinuteEffects: Schema.Literal(
+      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
+    ),
+    requiresTableSpellEffectCount: Schema.Literal(true),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("compelledBehaviorOptionChoice"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    choices: Schema.Array(Schema.Literals(COMPELLED_BEHAVIOR_OPTIONS)),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("selfTransformationModeChoice"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    choices: Schema.NonEmptyArray(
+      Schema.Literals(SELF_TRANSFORMATION_MODE_KINDS),
+    ),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("movableLightPlacement"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    mode: Schema.Literals(["cast", "reposition"]),
+    form: Schema.Literals(["separateLights", "combinedMediumForm"]),
+    activeLightIds: Schema.Array(BattleMovableLightId),
+    rangeFeet: MovementFeet,
+    maxMoveFeet: MovementFeet,
+    spacingFeet: MovementFeet,
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("spellAreaChoice"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    area: Schema.Union([
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginSphere"),
+        radiusFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginSphereDiameter"),
+        diameterFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginCylinder"),
+        radiusFeet: MovementFeet,
+        heightFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginCube"),
+        sideFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pointOriginGroundSquare"),
+        sideFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("selfOriginEmanation"),
+        radiusFeet: MovementFeet,
+      }),
+    ]),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("teleportDestination"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    actorId: CombatantId,
+    maxDistanceFeet: MovementFeet,
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("spatialMeleeSpellAttackProxyPosition"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    mode: Schema.Literals(["cast", "reposition"]),
+    maxDistanceFeet: MovementFeet,
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    spellTurnStartSave: Schema.Struct({
+      targetId: CombatantId,
+      effectRef: BattleEffectExecutionRef,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      sourceCombatantId: CombatantId,
+      save: Schema.Struct({
+        ability: AbilitySchema,
+        dc: DcSourceSchema,
+        successEnds: Schema.Literal("spell"),
+      }),
+    }),
+    ability: AbilitySchema,
+    dc: DcSourceSchema,
+    areaChoices: Schema.Tuple([]),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    directionalPersistentArea: Schema.Struct({
+      ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
+      areaId: BattleAreaId,
+      directionId: BattleLineDirectionId,
+      trigger: Schema.Literal("endsTurnInLine"),
+      save: Schema.Struct({
+        ability: Schema.Literal("str"),
+        dc: DcSourceSchema,
+      }),
+      pushDistanceFeet: MovementFeet,
+    }),
+    ability: Schema.Literal("str"),
+    dc: DcSourceSchema,
+    areaChoices: EmptySpellAreaChoicesSchema,
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("directionalPersistentAreaDirectionChoice"),
+    sourceCombatantId: CombatantId,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    effectRef: BattleEffectExecutionRef,
+    areaId: BattleAreaId,
+    directionId: BattleLineDirectionId,
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    spellConditionEndTurnSave: Schema.Struct({
+      ...BattleProcedureSourceSchema,
+      condition: Schema.Literals(ALL_CONDITIONS),
+      save: SpellConditionRepeatSaveSchema,
+    }),
+    ability: AbilitySchema,
+    dc: DcSourceSchema,
+    areaChoices: EmptySpellAreaChoicesSchema,
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    spellConditionCountedEndTurnSave: Schema.Struct({
+      ...BattleProcedureSourceSchema,
+      condition: Schema.Literals(ALL_CONDITIONS),
+      save: SpellConditionRepeatSaveSchema,
+      successes: Schema.Number,
+      failures: Schema.Number,
+      successThreshold: Schema.Number,
+      failureThreshold: Schema.Number,
+    }),
+    ability: AbilitySchema,
+    dc: DcSourceSchema,
+    areaChoices: EmptySpellAreaChoicesSchema,
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    unitFeatureConditionEndTurnSave: Schema.Struct({
+      ...BattleProcedureSourceSchema,
+      condition: Schema.Literals(ALL_CONDITIONS),
+      save: SpellConditionRepeatSaveSchema,
+    }),
+    ability: AbilitySchema,
+    dc: DcSourceSchema,
+    areaChoices: EmptySpellAreaChoicesSchema,
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    abilityD20TestRollModeEndTurnSave: Schema.Struct({
+      ...BattleProcedureSourceSchema,
+      affectedAbility: AbilitySchema,
+      save: SpellConditionRepeatSaveSchema,
+    }),
+    ability: AbilitySchema,
+    dc: DcSourceSchema,
+    areaChoices: EmptySpellAreaChoicesSchema,
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    movableZone: Schema.Struct({
+      ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
+      areaId: BattleAreaId,
+      trigger: Schema.Literals([
+        "endsTurnWithinFiveFeetOfSphere",
+        "rammedBySphere",
+      ]),
+      save: Schema.Struct({
+        ability: Schema.Literal("dex"),
+        dc: DcSourceSchema,
+      }),
+    }),
+    ability: Schema.Literal("dex"),
+    dc: DcSourceSchema,
+    areaChoices: EmptySpellAreaChoicesSchema,
+    targetRollModes: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        rollMode: Schema.Literals(ATTACK_ROLL_MODES),
+      }),
+    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    movableZone: Schema.Struct({
+      ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
+      areaId: BattleAreaId,
+      trigger: Schema.Literals([
+        "appearsInArea",
+        "areaMovesIntoSpace",
+        "entersArea",
+        "endsTurnInArea",
+      ]),
+      save: Schema.Struct({
+        ability: Schema.Literal("con"),
+        dc: DcSourceSchema,
+      }),
+    }),
+    ability: Schema.Literal("con"),
+    dc: DcSourceSchema,
+    areaChoices: EmptySpellAreaChoicesSchema,
+    targetRollModes: Schema.Array(
+      Schema.Struct({
+        targetId: CombatantId,
+        rollMode: Schema.Literals(ATTACK_ROLL_MODES),
+      }),
+    ),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("movableZoneRamMovement"),
+    movableZone: Schema.Struct({
+      ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
+      areaId: BattleAreaId,
+      maxMoveFeet: MovementFeet,
+    }),
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("movableZoneRepositionMovement"),
+    movableZone: Schema.Struct({
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      sourceCombatantId: CombatantId,
+      effectRef: BattleEffectExecutionRef,
+      areaId: BattleAreaId,
+      maxMoveFeet: MovementFeet,
+    }),
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
     protectionRelevantEffectSave: Schema.Struct({
       ...BattleProcedureSourceSchema,
       effectRef: BattleEffectExecutionRef,
@@ -2597,80 +2991,90 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
     targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
   }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    label: Schema.String,
-    grantedAreaSaveDamageAction: Schema.Struct({
-      sourceCombatantId: CombatantId,
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      grantedAreaSaveDamageAction: Schema.Struct({
+        sourceCombatantId: CombatantId,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        lengthFeet: Schema.Literal(15),
+      }),
+      ability: Schema.Literal("dex"),
+      dc: DcSourceSchema,
+      areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
+      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+      relationshipFactRequest: Schema.optionalKey(
+        BattleSavingThrowRelationshipFactRequestSchema,
+      ),
+    },
+    D20TestNaturalOneRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      glyphExplosiveRune: Schema.Struct({
+        sourceCombatantId: CombatantId,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        effectRef: BattleEffectExecutionRef,
+      }),
+      ability: Schema.Literal("dex"),
+      dc: DcSourceSchema,
+      targetIds: Schema.Array(CombatantId),
+      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+    },
+    D20TestNaturalOneRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      outcomeTargeting: Schema.Literals(["singleTarget", "targetList", "area"]),
       sourceProcedureRef: BattleProcedureExecutionRef,
-      lengthFeet: Schema.Literal(15),
-    }),
-    ability: Schema.Literal("dex"),
-    dc: DcSourceSchema,
-    areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-    relationshipFactRequest: Schema.optionalKey(
-      BattleSavingThrowRelationshipFactRequestSchema,
-    ),
-    ...D20TestNaturalOneRerollHoleOptionsSchema,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    label: Schema.String,
-    glyphExplosiveRune: Schema.Struct({
-      sourceCombatantId: CombatantId,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      effectRef: BattleEffectExecutionRef,
-      radiusFeet: Schema.Literal(20),
-    }),
-    ability: Schema.Literal("dex"),
-    dc: DcSourceSchema,
-    targetIds: Schema.Array(CombatantId),
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-    ...D20TestNaturalOneRerollHoleOptionsSchema,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    label: Schema.String,
-    outcomeTargeting: Schema.Literals(["singleTarget", "targetList", "area"]),
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    ability: AbilitySchema,
-    dc: DcSourceSchema,
-    areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-    relationshipFactRequest: Schema.optionalKey(
-      BattleSavingThrowRelationshipFactRequestSchema,
-    ),
-    ...D20TestNaturalOneRerollHoleOptionsSchema,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("savingThrowOutcome"),
-    label: Schema.String,
-    ability: AbilitySchema,
-    dc: DcSourceSchema,
-    targetIds: Schema.Array(CombatantId),
-    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-    relationshipFactRequest: Schema.optionalKey(
-      BattleSavingThrowRelationshipFactRequestSchema,
-    ),
-    ...D20TestNaturalOneRerollHoleOptionsSchema,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      areaChoices: Schema.Array(BattleSpellAreaChoiceSchema),
+      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+      relationshipFactRequest: Schema.optionalKey(
+        BattleSavingThrowRelationshipFactRequestSchema,
+      ),
+    },
+    D20TestNaturalOneRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("savingThrowOutcome"),
+      ability: AbilitySchema,
+      dc: DcSourceSchema,
+      targetIds: Schema.Array(CombatantId),
+      targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+      relationshipFactRequest: Schema.optionalKey(
+        BattleSavingThrowRelationshipFactRequestSchema,
+      ),
+    },
+    D20TestNaturalOneRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("rolledDice"),
   }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("unitFeatureDecision"),
-    label: Schema.String,
     choices: Schema.Union([
       Schema.Tuple([Schema.Literal("use"), Schema.Literal("decline")]),
       Schema.Tuple([Schema.Literal("attempt"), Schema.Literal("decline")]),
@@ -2693,112 +3097,110 @@ const BattleHolePayloadUnionSchema = Schema.Union([
       ]),
     ]),
   }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("deathSavingThrow"),
-    label: Schema.String,
-    combatantId: CombatantId,
-    rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
-    ...D20TestNaturalOneRerollHoleOptionsSchema,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("deathSavingThrow"),
+      combatantId: CombatantId,
+      rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
+    },
+    D20TestNaturalOneRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("statBlockRechargeRoll"),
-    label: Schema.String,
     combatantId: CombatantId,
     rechargeTargets: Schema.Array(BattleResourcePoolExecutionRef),
   }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("concentrationSavingThrow"),
-    label: Schema.String,
-    damageOccurrence: BattleDamageOccurrenceSourceSchema,
-    combatantId: CombatantId,
-    dc: DifficultyClass,
-    damageAmount: DamageAmount,
-    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
-    rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
-    ...D20TestNaturalOneRerollHoleOptionsSchema,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("interruptDecision"),
-    label: Schema.String,
-    trigger: Schema.Literals(BATTLE_INTERRUPT_TRIGGERS),
-    eligibleResponders: Schema.Array(CombatantId),
-  }),
-  Schema.Struct({
-    ...BattleMovementHoleCommonSchema,
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("concentrationSavingThrow"),
+      damageOccurrence: BattleDamageOccurrenceSourceSchema,
+      combatantId: CombatantId,
+      dc: DifficultyClass,
+      damageAmount: DamageAmount,
+      targetFlatBonuses: Schema.Array(
+        BattleSavingThrowFlatBonusProjectionSchema,
+      ),
+      rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
+    },
+    D20TestNaturalOneRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMember({
+    ...BattleMovementHoleCommonFieldsSchema,
     brutalStrikeForcefulBlow: Schema.optionalKey(Schema.Never),
   }),
-  Schema.Struct({
-    ...BattleMovementHoleCommonSchema,
+  pairedBattleHoleMember({
+    ...BattleMovementHoleCommonFieldsSchema,
     brutalStrikeForcefulBlow: BattleBrutalStrikeForcefulBlowMovementFactSchema,
   }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("controlledVerticalSuspensionAltitudeChange"),
     effectRef: BattleEffectExecutionRef,
-    label: Schema.String,
     actorId: CombatantId,
     targetId: CombatantId,
     maxDistanceFeet: MovementFeet,
     directions: Schema.Array(Schema.Literals(["up", "down"])),
     requiresTargetWithinRangeFact: Schema.Literal(true),
   }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("controlledVerticalSuspensionInitialRise"),
-    label: Schema.String,
     actorId: CombatantId,
     targetId: CombatantId,
     maxDistanceFeet: MovementFeet,
   }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("abilityCheck"),
-    label: Schema.String,
-    ability: AbilitySchema,
-    skill: Schema.Literals(BATTLE_SURFACE_SKILLS),
-    dc: DifficultyClass,
-    rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
-    ...D20TestNaturalOneRerollHoleOptionsSchema,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("spellcastingAbilityCheck"),
-    label: Schema.String,
-    dc: DifficultyClass,
-    rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
-    spellcastingAbilityCheck: Schema.Union([
-      Schema.Struct({
-        casterId: CombatantId,
-        sourceProcedureRef: BattleProcedureExecutionRef,
-        target: BattleOngoingSpellOccurrenceTargetSchema,
-        checkedOccurrence: Schema.optionalKey(Schema.Never),
-        contestedSpellLevel: BattleSpellEffectLevel,
-      }),
-      Schema.Struct({
-        casterId: CombatantId,
-        sourceProcedureRef: BattleProcedureExecutionRef,
-        target: Schema.Union([
-          BattleOngoingSpellCombatantTargetSchema,
-          BattleOngoingSpellObjectTargetSchema,
-        ]),
-        checkedOccurrence: Schema.Struct({
-          ownerId: CombatantId,
-          effect: BattleOngoingSpellOccurrenceRefSchema,
-          target: Schema.optionalKey(Schema.Never),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("abilityCheck"),
+      ability: AbilitySchema,
+      skill: Schema.Literals(BATTLE_SURFACE_SKILLS),
+      dc: DifficultyClass,
+      rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
+    },
+    D20TestNaturalOneRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("spellcastingAbilityCheck"),
+      dc: DifficultyClass,
+      rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
+      spellcastingAbilityCheck: Schema.Union([
+        Schema.Struct({
+          casterId: CombatantId,
+          sourceProcedureRef: BattleProcedureExecutionRef,
+          target: Schema.Struct({
+            kind: Schema.Literal("magicalEffect"),
+            effect: BattleOngoingSpellOccurrenceRefSchema,
+          }),
+          checkedOccurrence: Schema.optionalKey(Schema.Never),
+          contestedSpellLevel: BattleSpellEffectLevel,
         }),
-        contestedSpellLevel: BattleSpellEffectLevel,
-      }),
-    ]),
-    ...D20TestNaturalOneRerollHoleOptionsSchema,
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
+        Schema.Struct({
+          casterId: CombatantId,
+          sourceProcedureRef: BattleProcedureExecutionRef,
+          target: Schema.Union([
+            BattleOngoingSpellCombatantTargetSchema,
+            BattleOngoingSpellObjectTargetSchema,
+          ]),
+          checkedOccurrence: Schema.Struct({
+            ownerId: CombatantId,
+            effect: BattleOngoingSpellOccurrenceRefSchema,
+            target: Schema.optionalKey(Schema.Never),
+          }),
+          contestedSpellLevel: BattleSpellEffectLevel,
+        }),
+      ]),
+    },
+    D20TestNaturalOneRerollHoleOptionsFields,
+  ),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("grappleOutcome"),
-    label: Schema.String,
     actorId: CombatantId,
     targetId: CombatantId,
     dc: DifficultyClass,
@@ -2808,10 +3210,9 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     mode: Schema.Literals(["grappleSave", "escapeCheck"]),
     rollMode: Schema.optionalKey(Schema.Literals(ATTACK_ROLL_MODES)),
   }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
     kind: Schema.Literal("shoveOutcome"),
-    label: Schema.String,
     actorId: CombatantId,
     targetId: CombatantId,
     dc: DifficultyClass,
@@ -2819,63 +3220,63 @@ const BattleHolePayloadUnionSchema = Schema.Union([
       BattleSavingThrowRelationshipFactRequestSchema,
     ),
   }),
-  Schema.Union([
-    Schema.Struct({
-      ...BattleHoleBaseSchema,
-      kind: Schema.Literal("targetingSaveInterdictionOutcome"),
-      label: Schema.String,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      triggeringProcedureRef: BattleProcedureExecutionRef,
-      sourceCombatantId: CombatantId,
-      wardedCombatantId: CombatantId,
-      triggeringCombatantId: CombatantId,
-      triggeringTargetEventId: BattleHoleIdSchema,
-      ability: Schema.Literal("wis"),
-      dc: DcSourceSchema,
-      choices: Schema.Array(CombatantId),
-      replacementTargetKind: Schema.Literal("attackRoll"),
-      relationshipFactRequest: Schema.optionalKey(
-        Schema.Struct({
-          kind: Schema.Literal("attackRollTargetIsEnemy"),
-          attackerId: CombatantId,
-        }),
-      ),
-    }),
-    Schema.Struct({
-      ...BattleHoleBaseSchema,
-      kind: Schema.Literal("targetingSaveInterdictionOutcome"),
-      label: Schema.String,
-      sourceProcedureRef: BattleProcedureExecutionRef,
-      triggeringProcedureRef: BattleProcedureExecutionRef,
-      sourceCombatantId: CombatantId,
-      wardedCombatantId: CombatantId,
-      triggeringCombatantId: CombatantId,
-      triggeringTargetEventId: BattleHoleIdSchema,
-      ability: Schema.Literal("wis"),
-      dc: DcSourceSchema,
-      choices: Schema.Array(CombatantId),
-      replacementTargetKind: Schema.Literal("nonAttack"),
-    }),
-  ]),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("attackDamageDisposition"),
-    label: Schema.String,
-    damageOccurrence: BattleDamageOccurrenceSourceSchema,
-    attackerId: CombatantId,
-    targetId: CombatantId,
-    choices: Schema.Array(
-      Schema.Union([
-        Schema.Struct({ kind: Schema.Literal("ordinaryDamage") }),
-        Schema.Struct({ kind: Schema.Literal("knockOut") }),
-        Schema.Struct({
-          kind: Schema.Literal("zeroHitPointReplacement"),
-          procedureRef: BattleProcedureExecutionRef,
-          unitId: Schema.optionalKey(Schema.Never),
-        }),
-      ]),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("targetingSaveInterdictionOutcome"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    triggeringProcedureRef: BattleProcedureExecutionRef,
+    sourceCombatantId: CombatantId,
+    wardedCombatantId: CombatantId,
+    triggeringCombatantId: CombatantId,
+    triggeringTargetEventId: BattleHoleIdSchema,
+    ability: Schema.Literal("wis"),
+    dc: DcSourceSchema,
+    choices: Schema.Array(CombatantId),
+    replacementTargetKind: Schema.Literal("attackRoll"),
+    relationshipFactRequest: Schema.optionalKey(
+      Schema.Struct({
+        kind: Schema.Literal("attackRollTargetIsEnemy"),
+        attackerId: CombatantId,
+      }),
     ),
   }),
+  pairedBattleHoleMember({
+    ...BattleHoleBaseFieldsSchema,
+    kind: Schema.Literal("targetingSaveInterdictionOutcome"),
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    triggeringProcedureRef: BattleProcedureExecutionRef,
+    sourceCombatantId: CombatantId,
+    wardedCombatantId: CombatantId,
+    triggeringCombatantId: CombatantId,
+    triggeringTargetEventId: BattleHoleIdSchema,
+    ability: Schema.Literal("wis"),
+    dc: DcSourceSchema,
+    choices: Schema.Array(CombatantId),
+    replacementTargetKind: Schema.Literal("nonAttack"),
+  }),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("attackDamageDisposition"),
+      damageOccurrence: BattleDamageOccurrenceSourceSchema,
+      attackerId: CombatantId,
+      targetId: CombatantId,
+    },
+    AttackDamageDispositionChoiceFields,
+  ),
+] as const;
+
+const [
+  BattleInterruptDecisionHolePayloadMemberFromTuple,
+  FirstBattleHolePayloadMember,
+  ...RemainingBattleHolePayloadMembers
+] = BattleHolePayloadMembers;
+const BattleHolePayloadUnionSchema = Schema.Union([
+  BattleInterruptDecisionHolePayloadMemberFromTuple.labeled,
+  FirstBattleHolePayloadMember.labeled,
+  ...RemainingBattleHolePayloadMembers.map(({ labeled }) => labeled),
+  ...GenericSavingThrowHolePayloadMembers,
+  ...AdditionalStructuralHolePayloadMembers,
 ]);
 
 const BattleHolePayloadSchema = exhaustiveBattleHoleSchema(
@@ -2885,6 +3286,30 @@ const BattleHolePayloadSchema = exhaustiveBattleHoleSchema(
 export const BattleHoleSchema = BattleHolePayloadSchema.pipe(
   Schema.annotate({ identifier: "BattleHole" }),
 );
+
+const [
+  FirstBattleMechanicalOrdinaryHoleMember,
+  ...RemainingBattleMechanicalOrdinaryHoleMembers
+] = [
+  FirstBattleHolePayloadMember,
+  ...RemainingBattleHolePayloadMembers,
+] as const;
+export const BattleMechanicalOrdinaryHoleSchema = Schema.Union([
+  FirstBattleMechanicalOrdinaryHoleMember.mechanical,
+  ...RemainingBattleMechanicalOrdinaryHoleMembers.map(
+    ({ mechanical }) => mechanical,
+  ),
+  ...GenericSavingThrowMechanicalHolePayloadMembers,
+  ...AdditionalStructuralMechanicalHolePayloadMembers,
+]).annotate({ identifier: "BattleMechanicalOrdinaryHole" });
+export const BattleMechanicalInterruptDecisionHoleSchema =
+  BattleInterruptDecisionHolePayloadMemberFromTuple.mechanical.annotate({
+    identifier: "BattleMechanicalInterruptDecisionHole",
+  });
+export const BattleMechanicalHoleSchema = Schema.Union([
+  BattleMechanicalInterruptDecisionHoleSchema,
+  BattleMechanicalOrdinaryHoleSchema,
+]).annotate({ identifier: "BattleMechanicalHole" });
 
 const BattleDieRollResultSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt()),
@@ -3327,6 +3752,62 @@ type BattleSpellTargetListRelationshipFactsEncoded =
 type BattleMovementFillValueCommonEncoded = Schema.Codec.Encoded<
   typeof BattleMovementFillValueCommonSchema
 >;
+
+type BattleOrdinaryMovementFillValueEncoded =
+  BattleMovementFillValueCommonEncoded & {
+    readonly compelledApproach?: {
+      readonly kind: "compelledApproachShortestDirectRouteTowardSource";
+      readonly movedWithinFiveFeetOfSource: boolean;
+    };
+    readonly compelledFlee?: {
+      readonly kind: "compelledFleeFastestAvailableRouteAwayFromSource";
+    };
+    readonly fixedCostMovementReplacement?: {
+      readonly kind: "fixedCostMovementReplacement";
+      readonly distanceFeet: number;
+      readonly landing:
+        | {
+            readonly kind: "legalLanding";
+            readonly difficultTerrainAcrobatics: "notRequired";
+          }
+        | {
+            readonly kind: "legalLanding";
+            readonly difficultTerrainAcrobatics: "passed";
+          }
+        | {
+            readonly kind: "legalLanding";
+            readonly difficultTerrainAcrobatics: "failed";
+          };
+    };
+    readonly controlledVerticalSuspensionMovement?: {
+      readonly kind: "controlledVerticalSuspensionMovement";
+      readonly effectRef: string;
+      readonly sourceCombatantId: string;
+      readonly sourceProcedureRef: string;
+      readonly fixedObjectOrSurfaceWithinReach: true;
+      readonly altitudeChange?: {
+        readonly direction: "up" | "down";
+        readonly distanceFeet: number;
+      };
+    };
+    readonly brutalStrikeForcefulBlow?: never;
+    readonly additionalSpeedSegments?: never;
+  };
+type BattleBrutalStrikeForcefulBlowMovementValueEncoded =
+  BattleMovementFillValueCommonEncoded & {
+    readonly compelledApproach?: never;
+    readonly compelledFlee?: never;
+    readonly fixedCostMovementReplacement?: never;
+    readonly controlledVerticalSuspensionMovement?: never;
+    readonly brutalStrikeForcefulBlow: {
+      readonly kind: "brutalStrikeForcefulBlowStraightTowardTarget";
+      readonly targetId: string;
+    };
+    readonly additionalSpeedSegments: readonly BattleMovementFillValueCommonEncoded[];
+  };
+type BattleMovementFillValueEncoded =
+  | BattleOrdinaryMovementFillValueEncoded
+  | BattleBrutalStrikeForcefulBlowMovementValueEncoded;
 
 type BattleReadyResponseEncoded = Schema.Codec.Encoded<
   typeof BattleReadyResponseSchema
@@ -4175,23 +4656,19 @@ type BattleFillEncoded =
             readonly choice:
               | {
                   readonly kind: "releaseReadiedSpell";
-                  readonly readiedSpellCasterId: string;
                   readonly procedureRef: string;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
                   readonly kind: "releaseReadiedMovement";
-                  readonly readiedMovementActorId: string;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
                   readonly kind: "releaseReadiedAction";
-                  readonly reactorId: string;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
                   readonly kind: "releaseReadiedAttack";
-                  readonly reactorId: string;
                   readonly targetId: string;
                   readonly procedureRef: string;
                   readonly fills: readonly BattleFillEncoded[];
@@ -4208,13 +4685,11 @@ type BattleFillEncoded =
                 }
               | {
                   readonly kind: "opportunityAttack";
-                  readonly reactorId: string;
                   readonly selection: BattleInterruptAttackExecutionSelectionEncoded;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
                   readonly kind: "retaliationAttack";
-                  readonly reactorId: string;
                   readonly selection: BattleInterruptAttackExecutionSelectionEncoded;
                   readonly fills: readonly BattleFillEncoded[];
                 }
@@ -4234,48 +4709,7 @@ type BattleFillEncoded =
   | {
       readonly kind: "movement";
       readonly holeId: string;
-      readonly value: BattleMovementFillValueCommonEncoded & {
-        readonly compelledApproach?: {
-          readonly kind: "compelledApproachShortestDirectRouteTowardSource";
-          readonly movedWithinFiveFeetOfSource: boolean;
-        };
-        readonly compelledFlee?: {
-          readonly kind: "compelledFleeFastestAvailableRouteAwayFromSource";
-        };
-        readonly brutalStrikeForcefulBlow?: {
-          readonly kind: "brutalStrikeForcefulBlowStraightTowardTarget";
-          readonly targetId: string;
-        };
-        readonly additionalSpeedSegments?: readonly BattleMovementFillValueCommonEncoded[];
-        readonly fixedCostMovementReplacement?: {
-          readonly kind: "fixedCostMovementReplacement";
-          readonly distanceFeet: number;
-          readonly landing:
-            | {
-                readonly kind: "legalLanding";
-                readonly difficultTerrainAcrobatics: "notRequired";
-              }
-            | {
-                readonly kind: "legalLanding";
-                readonly difficultTerrainAcrobatics: "passed";
-              }
-            | {
-                readonly kind: "legalLanding";
-                readonly difficultTerrainAcrobatics: "failed";
-              };
-        };
-        readonly controlledVerticalSuspensionMovement?: {
-          readonly kind: "controlledVerticalSuspensionMovement";
-          readonly effectRef: string;
-          readonly sourceCombatantId: string;
-          readonly sourceProcedureRef: string;
-          readonly fixedObjectOrSurfaceWithinReach: true;
-          readonly altitudeChange?: {
-            readonly direction: "up" | "down";
-            readonly distanceFeet: number;
-          };
-        };
-      };
+      readonly value: BattleMovementFillValueEncoded;
     }
   | {
       readonly kind: "controlledVerticalSuspensionAltitudeChange";
@@ -4460,6 +4894,149 @@ const BattleMovementFillValueCommonSchemaFields = {
 const BattleMovementFillValueCommonSchema = Schema.Struct(
   BattleMovementFillValueCommonSchemaFields,
 );
+
+const BattleOrdinaryMovementFillValueSchema = Schema.Struct({
+  ...BattleMovementFillValueCommonSchemaFields,
+  compelledApproach: Schema.optionalKey(
+    Schema.Struct({
+      kind: Schema.Literal("compelledApproachShortestDirectRouteTowardSource"),
+      movedWithinFiveFeetOfSource: Schema.Boolean,
+    }),
+  ),
+  compelledFlee: Schema.optionalKey(
+    Schema.Struct({
+      kind: Schema.Literal("compelledFleeFastestAvailableRouteAwayFromSource"),
+    }),
+  ),
+  fixedCostMovementReplacement: Schema.optionalKey(
+    Schema.Struct({
+      kind: Schema.Literal("fixedCostMovementReplacement"),
+      distanceFeet: MovementFeet,
+      landing: Schema.Union([
+        Schema.Struct({
+          kind: Schema.Literal("legalLanding"),
+          difficultTerrainAcrobatics: Schema.Literal("notRequired"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("legalLanding"),
+          difficultTerrainAcrobatics: Schema.Literal("passed"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("legalLanding"),
+          difficultTerrainAcrobatics: Schema.Literal("failed"),
+        }),
+      ]),
+    }),
+  ),
+  controlledVerticalSuspensionMovement: Schema.optionalKey(
+    Schema.Struct({
+      kind: Schema.Literal("controlledVerticalSuspensionMovement"),
+      effectRef: BattleEffectExecutionRef,
+      sourceCombatantId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      fixedObjectOrSurfaceWithinReach: Schema.Literal(true),
+      altitudeChange: Schema.optionalKey(
+        Schema.Struct({
+          direction: Schema.Literals(["up", "down"]),
+          distanceFeet: MovementFeet,
+        }),
+      ),
+    }),
+  ),
+  brutalStrikeForcefulBlow: Schema.optionalKey(Schema.Never),
+  additionalSpeedSegments: Schema.optionalKey(Schema.Never),
+});
+
+const BattleBrutalStrikeForcefulBlowMovementValueSchema = Schema.Struct({
+  ...BattleMovementFillValueCommonSchemaFields,
+  compelledApproach: Schema.optionalKey(Schema.Never),
+  compelledFlee: Schema.optionalKey(Schema.Never),
+  fixedCostMovementReplacement: Schema.optionalKey(Schema.Never),
+  controlledVerticalSuspensionMovement: Schema.optionalKey(Schema.Never),
+  brutalStrikeForcefulBlow: BattleBrutalStrikeForcefulBlowMovementFactSchema,
+  additionalSpeedSegments: Schema.Array(BattleMovementFillValueCommonSchema),
+});
+
+const BattleMovementFillValueSchema = Schema.Union([
+  BattleOrdinaryMovementFillValueSchema,
+  BattleBrutalStrikeForcefulBlowMovementValueSchema,
+]);
+
+export const BattleInterruptDecisionFillSchema = Schema.suspend(() =>
+  Schema.Struct({
+    kind: Schema.Literal("interruptDecision"),
+    holeId: BattleHoleIdSchema,
+    value: Schema.Union([
+      Schema.Struct({
+        kind: Schema.Literal("decline"),
+        responderId: CombatantId,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("resolve"),
+        responderId: CombatantId,
+        choice: Schema.Union([
+          Schema.Struct({
+            kind: Schema.Literal("releaseReadiedSpell"),
+            procedureRef: BattleProcedureExecutionRef,
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("releaseReadiedMovement"),
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("releaseReadiedAction"),
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("releaseReadiedAttack"),
+            targetId: CombatantId,
+            procedureRef: Schema.Union([
+              BattleAttackProcedureExecutionRef,
+              BattleStatBlockProcedureExecutionRef,
+            ]),
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("castTriggeredReactionSpell"),
+            procedureRef: BattleProcedureExecutionRef,
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("castAttackHitBonusActionSpell"),
+            procedureRef: BattleProcedureExecutionRef,
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("opportunityAttack"),
+            selection: BattleInterruptAttackExecutionSelectionSchema,
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("retaliationAttack"),
+            selection: BattleInterruptAttackExecutionSelectionSchema,
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("reactionRollOrDamageReduction"),
+            procedureRef: BattleProcedureExecutionRef,
+            modifierKind: Schema.Literals([
+              "attackRollReduction",
+              "abilityCheckReduction",
+              "damageRollReduction",
+              "attackDamageReduction",
+              "fallDamageReduction",
+            ]),
+            fills: Schema.Array(BattleFillSchema),
+          }),
+        ]),
+      }),
+    ]),
+  }).annotate({
+    identifier: "BattleInterruptDecisionFill",
+    parseOptions: { onExcessProperty: "error" },
+  }),
+).annotate({ identifier: "BattleInterruptDecisionFill" });
 
 export const BattleFillSchema: Schema.Codec<
   BattleFill,
@@ -5166,159 +5743,11 @@ export const BattleFillSchema: Schema.Codec<
         }),
       ]),
     }),
-    Schema.Struct({
-      kind: Schema.Literal("interruptDecision"),
-      holeId: BattleHoleIdSchema,
-      value: Schema.Union([
-        Schema.Struct({
-          kind: Schema.Literal("decline"),
-          responderId: CombatantId,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("resolve"),
-          responderId: CombatantId,
-          choice: Schema.Union([
-            Schema.Struct({
-              kind: Schema.Literal("releaseReadiedSpell"),
-              readiedSpellCasterId: CombatantId,
-              procedureRef: BattleProcedureExecutionRef,
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("releaseReadiedMovement"),
-              readiedMovementActorId: CombatantId,
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("releaseReadiedAction"),
-              reactorId: CombatantId,
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("releaseReadiedAttack"),
-              reactorId: CombatantId,
-              targetId: CombatantId,
-              procedureRef: Schema.Union([
-                BattleAttackProcedureExecutionRef,
-                BattleStatBlockProcedureExecutionRef,
-              ]),
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("castTriggeredReactionSpell"),
-              procedureRef: BattleProcedureExecutionRef,
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("castAttackHitBonusActionSpell"),
-              procedureRef: BattleProcedureExecutionRef,
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("opportunityAttack"),
-              reactorId: CombatantId,
-              selection: BattleInterruptAttackExecutionSelectionSchema,
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("retaliationAttack"),
-              reactorId: CombatantId,
-              selection: BattleInterruptAttackExecutionSelectionSchema,
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("reactionRollOrDamageReduction"),
-              procedureRef: BattleProcedureExecutionRef,
-              modifierKind: Schema.Literals([
-                "attackRollReduction",
-                "abilityCheckReduction",
-                "damageRollReduction",
-                "attackDamageReduction",
-                "fallDamageReduction",
-              ]),
-              fills: Schema.Array(BattleFillSchema),
-            }),
-          ]),
-        }),
-      ]),
-    }),
+    BattleInterruptDecisionFillSchema,
     Schema.Struct({
       kind: Schema.Literal("movement"),
       holeId: BattleHoleIdSchema,
-      value: Schema.Struct({
-        ...BattleMovementFillValueCommonSchemaFields,
-        compelledApproach: Schema.optionalKey(
-          Schema.Struct({
-            kind: Schema.Literal(
-              "compelledApproachShortestDirectRouteTowardSource",
-            ),
-            movedWithinFiveFeetOfSource: Schema.Boolean,
-          }),
-        ),
-        compelledFlee: Schema.optionalKey(
-          Schema.Struct({
-            kind: Schema.Literal(
-              "compelledFleeFastestAvailableRouteAwayFromSource",
-            ),
-          }),
-        ),
-        brutalStrikeForcefulBlow: Schema.optionalKey(
-          BattleBrutalStrikeForcefulBlowMovementFactSchema,
-        ),
-        additionalSpeedSegments: Schema.optionalKey(
-          Schema.Array(BattleMovementFillValueCommonSchema),
-        ),
-        fixedCostMovementReplacement: Schema.optionalKey(
-          Schema.Struct({
-            kind: Schema.Literal("fixedCostMovementReplacement"),
-            distanceFeet: MovementFeet,
-            landing: Schema.Union([
-              Schema.Struct({
-                kind: Schema.Literal("legalLanding"),
-                difficultTerrainAcrobatics: Schema.Literal("notRequired"),
-              }),
-              Schema.Struct({
-                kind: Schema.Literal("legalLanding"),
-                difficultTerrainAcrobatics: Schema.Literal("passed"),
-              }),
-              Schema.Struct({
-                kind: Schema.Literal("legalLanding"),
-                difficultTerrainAcrobatics: Schema.Literal("failed"),
-              }),
-            ]),
-          }),
-        ),
-        controlledVerticalSuspensionMovement: Schema.optionalKey(
-          Schema.Struct({
-            kind: Schema.Literal("controlledVerticalSuspensionMovement"),
-            effectRef: BattleEffectExecutionRef,
-            sourceCombatantId: CombatantId,
-            sourceProcedureRef: BattleProcedureExecutionRef,
-            fixedObjectOrSurfaceWithinReach: Schema.Literal(true),
-            altitudeChange: Schema.optionalKey(
-              Schema.Struct({
-                direction: Schema.Literals(["up", "down"]),
-                distanceFeet: MovementFeet,
-              }),
-            ),
-          }),
-        ),
-      }).pipe(
-        Schema.refine(
-          (value): value is BattleMovementFillValue =>
-            value.brutalStrikeForcefulBlow === undefined
-              ? value.additionalSpeedSegments === undefined
-              : value.additionalSpeedSegments !== undefined &&
-                value.fixedCostMovementReplacement === undefined &&
-                value.controlledVerticalSuspensionMovement === undefined &&
-                value.compelledApproach === undefined &&
-                value.compelledFlee === undefined,
-          {
-            message:
-              "Additional speed segments require Forceful Blow movement and cannot carry another movement-replacement or compelled-movement protocol.",
-          },
-        ),
-      ),
+      value: BattleMovementFillValueSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("controlledVerticalSuspensionAltitudeChange"),
@@ -6281,7 +6710,6 @@ const BattleReactionModifierChoiceSchema = Schema.Union([
       "damageRollReduction",
     ]),
     procedureRef: BattleProcedureExecutionRef,
-    label: Schema.optionalKey(Schema.Never),
     reduction: Schema.Struct({
       kind: Schema.Literal("rolled"),
       dice: Schema.Literal(1),
@@ -6289,7 +6717,6 @@ const BattleReactionModifierChoiceSchema = Schema.Union([
       dieSize: Schema.Literals([6, 8, 10, 12]),
       spends: Schema.Struct({
         resourcePoolRef: BattleResourcePoolExecutionRef,
-        resourceUnitId: Schema.optionalKey(Schema.Never),
         amount: Schema.Literal(1),
       }),
     }),
@@ -6297,7 +6724,6 @@ const BattleReactionModifierChoiceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("attackDamageReduction"),
     procedureRef: BattleProcedureExecutionRef,
-    label: Schema.optionalKey(Schema.Never),
     reduction: Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("halfDamage"),
@@ -6312,7 +6738,6 @@ const BattleReactionModifierChoiceSchema = Schema.Union([
       Schema.Struct({
         spends: Schema.Struct({
           resourcePoolRef: BattleResourcePoolExecutionRef,
-          resourceUnitId: Schema.optionalKey(Schema.Never),
           amount: Schema.Literal(1),
         }),
         saveAbility: Schema.Literal("dex"),
@@ -6334,7 +6759,6 @@ const BattleReactionModifierChoiceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("fallDamageReduction"),
     procedureRef: BattleProcedureExecutionRef,
-    label: Schema.optionalKey(Schema.Never),
     reduction: Schema.Struct({
       kind: Schema.Literal("flat"),
       amount: DamageAmount,
@@ -6342,128 +6766,72 @@ const BattleReactionModifierChoiceSchema = Schema.Union([
   }),
 ]);
 
-const BattleInterruptProcedureChoiceWithSubjectPayloadSchema = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("releaseReadiedSpell"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
-    readiedSpellCasterId: CombatantId,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("releaseReadiedMovement"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
-    readiedMovementActorId: CombatantId,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("releaseReadiedAction"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("releaseReadiedAttack"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("castTriggeredReactionSpell"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("castAttackHitBonusActionSpell"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("opportunityAttack"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("retaliationAttack"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
-  }),
-]);
-
-export const BattleInterruptProcedureModifierChoiceSchema = Schema.Struct({
-  kind: Schema.Literal("reactionRollOrDamageReduction"),
-  reactorId: CombatantId,
-  choice: BattleReactionModifierChoiceSchema,
-  initialHoles: Schema.Array(BattleHoleSchema),
-});
-
-const battleInterruptProcedureChoiceInvariantAnnotations = {
-  message:
-    "Interrupt choices must own the matching reference-bearing runtime subject.",
+type BattleInterruptProcedureChoiceFields = Schema.Struct.Fields & {
+  readonly initialHoles?: never;
 };
 
-function battleInterruptProcedureChoiceInvariantHolds(
-  choice: typeof BattleInterruptProcedureChoiceWithSubjectPayloadSchema.Type,
-): boolean {
-  return Match.value(choice).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      releaseReadiedSpell: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "releaseReadiedSpell" &&
-        value.reactorId === value.readiedSpellCasterId &&
-        value.reactorId === value.subject.readiedSpellCasterId,
-      releaseReadiedMovement: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "releaseReadiedMovement" &&
-        value.reactorId === value.readiedMovementActorId &&
-        value.reactorId === value.subject.readiedMovementActorId,
-      releaseReadiedAction: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "releaseReadiedAction" &&
-        value.reactorId === value.subject.reactorId,
-      releaseReadiedAttack: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "releaseReadiedAttack" &&
-        value.reactorId === value.subject.reactorId,
-      castTriggeredReactionSpell: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "castTriggeredReactionSpell" &&
-        value.reactorId === value.subject.reactorId,
-      castAttackHitBonusActionSpell: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "castAttackHitBonusActionSpell" &&
-        value.reactorId === value.subject.casterId,
-      opportunityAttack: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "opportunityAttack" &&
-        value.reactorId === value.subject.reactorId,
-      retaliationAttack: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "retaliationAttack" &&
-        value.reactorId === value.subject.reactorId,
+function pairedBattleInterruptProcedureChoiceMember<
+  const Fields extends BattleInterruptProcedureChoiceFields,
+>(fields: Fields) {
+  return {
+    labeled: Schema.Struct({
+      ...fields,
+      initialHoles: Schema.Array(BattleHoleSchema),
     }),
-  );
+    mechanical: Schema.Struct({
+      ...fields,
+      initialHoles: Schema.Array(BattleMechanicalHoleSchema),
+    }),
+  };
 }
 
-export const BattleInterruptProcedureChoiceWithSubjectSchema =
-  BattleInterruptProcedureChoiceWithSubjectPayloadSchema.pipe(
-    Schema.check(
-      Schema.makeFilter(
-        battleInterruptProcedureChoiceInvariantHolds,
-        battleInterruptProcedureChoiceInvariantAnnotations,
-      ),
-    ),
-  );
-
-export const BattleInterruptProcedureChoiceSchema = Schema.Union([
-  BattleInterruptProcedureChoiceWithSubjectSchema,
-  BattleInterruptProcedureModifierChoiceSchema,
+const BattleInterruptProcedureChoiceMembers = [
+  pairedBattleInterruptProcedureChoiceMember({
+    kind: Schema.Literal("nestedProcedure"),
+    subject: BattleInterruptSubjectSchema,
+  }),
+  pairedBattleInterruptProcedureChoiceMember({
+    kind: Schema.Literal("reactionModifier"),
+    responderId: CombatantId,
+    modifier: BattleReactionModifierChoiceSchema,
+  }),
+] as const;
+const [
+  FirstBattleInterruptProcedureChoiceMember,
+  ...RemainingBattleInterruptProcedureChoiceMembers
+] = BattleInterruptProcedureChoiceMembers;
+const BattleInterruptProcedureChoiceUnfilteredSchema = Schema.Union([
+  FirstBattleInterruptProcedureChoiceMember.labeled,
+  ...RemainingBattleInterruptProcedureChoiceMembers.map(
+    ({ labeled }) => labeled,
+  ),
 ]);
+
+const MechanicalBattleInterruptChoiceMembers =
+  RemainingBattleInterruptProcedureChoiceMembers.map(
+    ({ mechanical }) => mechanical,
+  );
+const BattleMechanicalInterruptProcedureChoiceUnfilteredSchema = Schema.Union([
+  FirstBattleInterruptProcedureChoiceMember.mechanical,
+  ...MechanicalBattleInterruptChoiceMembers,
+]);
+export const BattleInterruptProcedureChoiceSchema =
+  BattleInterruptProcedureChoiceUnfilteredSchema.annotate({
+    parseOptions: { onExcessProperty: "error" },
+  });
+export const BattleMechanicalInterruptProcedureChoiceSchema =
+  BattleMechanicalInterruptProcedureChoiceUnfilteredSchema.annotate({
+    parseOptions: { onExcessProperty: "error" },
+  });
+
+export const BattleInterruptProcedureChoiceWithSubjectSchema =
+  FirstBattleInterruptProcedureChoiceMember.labeled.annotate({
+    parseOptions: { onExcessProperty: "error" },
+  });
+export const BattleInterruptProcedureModifierChoiceSchema =
+  RemainingBattleInterruptProcedureChoiceMembers[0].labeled.annotate({
+    parseOptions: { onExcessProperty: "error" },
+  });
 
 const BattleLightEmitterEndOfTurnExpirationSchema = Schema.Struct({
   kind: Schema.Literal("endOfTurn"),
@@ -6684,6 +7052,12 @@ const BattleCompanionSnapshotSchema = Schema.Union([
 ]);
 
 type EncodedBattleCreatureSnapshot = BattleCreatureSnapshotInvariantInput;
+type EncodedBattleInterruptChoice =
+  typeof BattleInterruptProcedureChoiceSchema.Type;
+type EncodedNestedInterruptChoice = Extract<
+  EncodedBattleInterruptChoice,
+  { readonly kind: "nestedProcedure" }
+>;
 type EncodedBattleReadiedSpellSnapshot =
   typeof BattleReadiedSpellSnapshotSchema.Type;
 type EncodedBattleReadiedResponseSnapshot =
@@ -7742,6 +8116,32 @@ function characterProcedureBinding(
   );
 }
 
+function serializedUnitProcedureExecutionKind(procedure: {
+  readonly execution: string | { readonly kind: string };
+}): string {
+  return typeof procedure.execution === "string"
+    ? procedure.execution
+    : procedure.execution.kind;
+}
+
+function serializedReactionModifierProcedureRefIsBound(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  combatantId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): boolean {
+  const binding = characterProcedureBinding(
+    combatants,
+    combatantId,
+    procedureRef,
+  );
+  return (
+    (binding?.procedure.kind === "unitFeature" ||
+      binding?.procedure.kind === "unitSupportProfile") &&
+    serializedUnitProcedureExecutionKind(binding.procedure) ===
+      REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE
+  );
+}
+
 function serializedReadiedSpellOwnsInvocation(
   combatants: readonly EncodedBattleCreatureSnapshot[],
   readied: EncodedBattleReadiedSpellSnapshot,
@@ -7975,25 +8375,6 @@ function serializedSpellcastingAbilityCheckTargetMatchesOccurrence(
   );
 }
 
-function serializedActiveEffectLocationMatchesExpectation(
-  actual: Schema.Schema.Type<typeof BattleActiveEffectOccurrenceLocationSchema>,
-  expected: SerializedActiveEffectLocationExpectation,
-): boolean {
-  return Match.value(expected).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      identityOnly: () => true,
-      nonSpatial: () => actual.kind === "nonSpatial",
-      area: ({ areaId }) => actual.kind === "area" && actual.areaId === areaId,
-      line: ({ areaId, directionId }) =>
-        actual.kind === "line" &&
-        actual.areaId === areaId &&
-        actual.directionId === directionId,
-      object: ({ objectId }) =>
-        actual.kind === "object" && actual.objectId === objectId,
-    }),
-  );
-}
-
 function serializedActiveEffectMatchesExpectation(
   occurrence: EncodedBattleCreatureSnapshot["activeEffectOccurrences"][number],
   reference: Extract<
@@ -8058,18 +8439,6 @@ function serializedEffectOccurrenceReferenceIsOwned(
   );
 }
 
-function serializedSubjectProcedureReferenceIsExpected(
-  reference: SerializedExecutionReferenceOwnership,
-  expectedProcedureRefs: ReadonlySet<BattleProcedureExecutionRef> | undefined,
-): boolean {
-  return (
-    reference.kind !== "subjectProcedure" ||
-    expectedProcedureRefs === undefined ||
-    expectedProcedureRefs.size === 0 ||
-    expectedProcedureRefs.has(reference.ref)
-  );
-}
-
 function serializedBattleHoleOwnsBoundExecutionReferences(input: {
   readonly hole: EncodedBattleHole;
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
@@ -8095,6 +8464,10 @@ function serializedBattleHoleOwnsBoundExecutionReferences(input: {
   ) {
     return false;
   }
+  const expectedProcedureRefStrings =
+    expectedProcedureRefs === undefined
+      ? undefined
+      : new Set<string>(expectedProcedureRefs);
   return serializedBattleHoleExecutionReferences(hole).every((reference) => {
     if (!boundExecutionRefs.has(reference.ref)) return false;
     if (reference.kind === "effectOccurrence") {
@@ -8105,10 +8478,10 @@ function serializedBattleHoleOwnsBoundExecutionReferences(input: {
       );
     }
     if (
-      !serializedSubjectProcedureReferenceIsExpected(
-        reference,
-        expectedProcedureRefs,
-      )
+      reference.kind === "subjectProcedure" &&
+      expectedProcedureRefStrings !== undefined &&
+      expectedProcedureRefStrings.size > 0 &&
+      !expectedProcedureRefStrings.has(reference.ref)
     ) {
       return false;
     }
@@ -8141,6 +8514,25 @@ function serializedBattleHolesOwnBoundExecutionReferences(input: {
       storedLightEmitters: input.storedLightEmitters,
       boundExecutionRefs: input.boundExecutionRefs,
       expectedProcedureRefs: input.expectedProcedureRefs,
+    }),
+  );
+}
+
+function serializedActiveEffectLocationMatchesExpectation(
+  actual: Schema.Schema.Type<typeof BattleActiveEffectOccurrenceLocationSchema>,
+  expected: SerializedActiveEffectLocationExpectation,
+): boolean {
+  return Match.value(expected).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      identityOnly: () => true,
+      nonSpatial: () => actual.kind === "nonSpatial",
+      area: ({ areaId }) => actual.kind === "area" && actual.areaId === areaId,
+      line: ({ areaId, directionId }) =>
+        actual.kind === "line" &&
+        actual.areaId === areaId &&
+        actual.directionId === directionId,
+      object: ({ objectId }) =>
+        actual.kind === "object" && actual.objectId === objectId,
     }),
   );
 }
@@ -8185,7 +8577,7 @@ function serializedSubjectHolesMatchSelectedOccurrence(
       reference.kind === "effectOccurrence" ? [reference.ref] : [],
     ),
   );
-  const matches =
+  return (
     selectedOccurrenceRefs.length === 1 &&
     (holeOccurrenceRefs.length > 0
       ? holeOccurrenceRefs.every(
@@ -8193,8 +8585,8 @@ function serializedSubjectHolesMatchSelectedOccurrence(
         )
       : holes.length === 0
         ? selectedOccurrenceSubjectRequiresNoOccurrenceHole(subject)
-        : selectedOccurrenceSubjectAllowsReferenceFreeHoles(subject, holes));
-  return matches;
+        : selectedOccurrenceSubjectAllowsReferenceFreeHoles(subject, holes))
+  );
 }
 
 function selectedOccurrenceSubjectAllowsReferenceFreeHoles(
@@ -8608,7 +9000,10 @@ function serializedInterruptChoiceOwnsBoundProcedure(input: {
 }): boolean {
   const { choice, combatants, readiedSpells, readiedResponses } = input;
   const subjectChoiceOwnsBoundProcedure = (
-    subjectChoice: EncodedBattleSubjectInterruptProcedureChoice,
+    subjectChoice: Extract<
+      EncodedBattleInterruptProcedureChoice,
+      { readonly kind: "nestedProcedure" }
+    >,
   ): boolean =>
     serializedBattleSubjectOwnsBoundProcedure(
       subjectChoice.subject,
@@ -8622,103 +9017,75 @@ function serializedInterruptChoiceOwnsBoundProcedure(input: {
     );
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({
-      castAttackHitBonusActionSpell: subjectChoiceOwnsBoundProcedure,
-      castTriggeredReactionSpell: subjectChoiceOwnsBoundProcedure,
-      opportunityAttack: subjectChoiceOwnsBoundProcedure,
-      reactionRollOrDamageReduction: (reaction) =>
-        serializedReactionReductionChoiceOwnsBoundProcedure(
-          reaction,
+      nestedProcedure: subjectChoiceOwnsBoundProcedure,
+      reactionModifier: (reaction) =>
+        serializedReactionModifierProcedureRefIsBound(
           combatants,
+          reaction.responderId,
+          reaction.modifier.procedureRef,
         ),
-      releaseReadiedAction: subjectChoiceOwnsBoundProcedure,
-      releaseReadiedAttack: subjectChoiceOwnsBoundProcedure,
-      releaseReadiedMovement: subjectChoiceOwnsBoundProcedure,
-      releaseReadiedSpell: subjectChoiceOwnsBoundProcedure,
-      retaliationAttack: subjectChoiceOwnsBoundProcedure,
     }),
   );
 }
-
-function serializedReactionReductionChoiceOwnsBoundProcedure(
-  choice: Extract<
-    EncodedBattleInterruptProcedureChoice,
-    { readonly kind: "reactionRollOrDamageReduction" }
-  >,
-  combatants: readonly EncodedBattleCreatureSnapshot[],
-): boolean {
-  const reactor = combatants.find(
-    (combatant) => combatant.combatantId === choice.reactorId,
-  );
-  if (reactor?.origin.kind !== "character") return false;
-  const binding = reactor.origin.execution.procedureBindings.find(
-    (candidate) => candidate.procedureRef === choice.choice.procedureRef,
-  );
-  return (
-    binding !== undefined &&
-    (binding.procedure.kind === "unitFeature" ||
-      binding.procedure.kind === "unitSupportProfile") &&
-    (typeof binding.procedure.execution === "string"
-      ? binding.procedure.execution
-      : binding.procedure.execution.kind) ===
-      REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE
-  );
-}
-
-type EncodedBattleSubjectInterruptProcedureChoice = Exclude<
-  EncodedBattleInterruptProcedureChoice,
-  { readonly kind: "reactionRollOrDamageReduction" }
->;
 
 function serializedReadiedInterruptChoiceOwnsResponse(
   choice: EncodedBattleSubjectInterruptProcedureChoice,
   readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
 ): boolean {
-  return Match.value(choice).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      castAttackHitBonusActionSpell: () => true,
-      castTriggeredReactionSpell: () => true,
-      opportunityAttack: () => true,
-      releaseReadiedAction: (release) =>
-        serializedReadiedActionChoiceOwnsResponse(release, readiedResponses),
-      releaseReadiedAttack: () => true,
-      releaseReadiedMovement: (release) =>
-        serializedReadiedMovementChoiceOwnsResponse(release, readiedResponses),
+  return Match.value(choice.subject).pipe(
+    Match.discriminatorsExhaustive("command")({
       releaseReadiedSpell: () => true,
+      releaseReadiedMovement: () =>
+        pendingReadiedMovementChoiceOwnsBoundResponse(choice, readiedResponses),
+      releaseReadiedAction: () =>
+        pendingReadiedActionChoiceOwnsBoundResponse(choice, readiedResponses),
+      releaseReadiedAttack: () => true,
+      castTriggeredReactionSpell: () => true,
+      castAttackHitBonusActionSpell: () => true,
+      opportunityAttack: () => true,
       retaliationAttack: () => true,
     }),
   );
 }
 
-function serializedReadiedMovementChoiceOwnsResponse(
-  choice: Extract<
-    EncodedBattleInterruptProcedureChoice,
-    { readonly kind: "releaseReadiedMovement" }
-  >,
+type EncodedBattleSubjectInterruptProcedureChoice = Extract<
+  EncodedBattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+>;
+
+function pendingReadiedMovementChoiceOwnsBoundResponse(
+  choice: EncodedNestedInterruptChoice,
   readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
 ): boolean {
+  if (
+    choice.subject.tag !== "runtimeCommand" ||
+    choice.subject.command !== "releaseReadiedMovement"
+  ) {
+    return false;
+  }
+  const subject = choice.subject;
   return readiedResponses.some(
     (readied) =>
-      readied.actorId === choice.readiedMovementActorId &&
+      readied.actorId === subject.readiedMovementActorId &&
       readied.response.kind === "movement",
   );
 }
 
-function serializedReadiedActionChoiceOwnsResponse(
-  choice: Extract<
-    EncodedBattleInterruptProcedureChoice,
-    { readonly kind: "releaseReadiedAction" }
-  >,
+function pendingReadiedActionChoiceOwnsBoundResponse(
+  choice: EncodedNestedInterruptChoice,
   readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
 ): boolean {
-  return (
-    choice.subject.tag === "runtimeCommand" &&
-    choice.subject.command === "releaseReadiedAction" &&
-    choice.subject.reactorId === choice.reactorId &&
-    readiedResponses.some(
-      (readied) =>
-        readied.actorId === choice.reactorId &&
-        readied.response.kind === "action",
-    )
+  if (
+    choice.subject.tag !== "runtimeCommand" ||
+    choice.subject.command !== "releaseReadiedAction"
+  ) {
+    return false;
+  }
+  const subject = choice.subject;
+  return readiedResponses.some(
+    (readied) =>
+      readied.actorId === subject.reactorId &&
+      readied.response.kind === "action",
   );
 }
 
@@ -9014,23 +9381,11 @@ type EncodedBattleCheckpointFrontierEnvelope = {
 function serializedInterruptChoiceSubject(
   choice: EncodedBattleInterruptProcedureChoice,
 ): EncodedRuntimeCommandBattleSubject | undefined {
-  const runtimeCommandSubject = (
-    subjectChoice: EncodedBattleSubjectInterruptProcedureChoice,
-  ): EncodedRuntimeCommandBattleSubject | undefined =>
-    subjectChoice.subject.tag === "runtimeCommand"
-      ? subjectChoice.subject
-      : undefined;
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({
-      castAttackHitBonusActionSpell: runtimeCommandSubject,
-      castTriggeredReactionSpell: runtimeCommandSubject,
-      opportunityAttack: runtimeCommandSubject,
-      reactionRollOrDamageReduction: () => undefined,
-      releaseReadiedAction: runtimeCommandSubject,
-      releaseReadiedAttack: runtimeCommandSubject,
-      releaseReadiedMovement: runtimeCommandSubject,
-      releaseReadiedSpell: runtimeCommandSubject,
-      retaliationAttack: runtimeCommandSubject,
+      nestedProcedure: ({ subject }) =>
+        subject.tag === "runtimeCommand" ? subject : undefined,
+      reactionModifier: () => undefined,
     }),
   );
 }
@@ -9068,14 +9423,30 @@ function serializedInterruptChoiceMatchesTrigger(
 ): boolean {
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({
-      castAttackHitBonusActionSpell: () => trigger === "attackHit",
-      castTriggeredReactionSpell: () =>
-        trigger === "attackHit" ||
-        trigger === "spellCast" ||
-        trigger === "afterDamage" ||
-        trigger === "creatureFalls",
-      opportunityAttack: () => trigger === "opportunityAttack",
-      reactionRollOrDamageReduction: ({ choice: modifier }) =>
+      nestedProcedure: ({ subject }) =>
+        Match.value(subject).pipe(
+          Match.discriminatorsExhaustive("command")({
+            releaseReadiedSpell: (release) =>
+              readiedSpells.some(
+                (readied) =>
+                  readied.casterId === release.readiedSpellCasterId &&
+                  readied.procedureRef === release.procedureRef &&
+                  readied.trigger === trigger,
+              ),
+            releaseReadiedMovement: () => trigger === "reportedReadyTrigger",
+            releaseReadiedAction: () => trigger === "reportedReadyTrigger",
+            releaseReadiedAttack: () => trigger === "reportedReadyTrigger",
+            castTriggeredReactionSpell: () =>
+              trigger === "attackHit" ||
+              trigger === "spellCast" ||
+              trigger === "afterDamage" ||
+              trigger === "creatureFalls",
+            castAttackHitBonusActionSpell: () => trigger === "attackHit",
+            opportunityAttack: () => trigger === "opportunityAttack",
+            retaliationAttack: () => trigger === "afterDamage",
+          }),
+        ),
+      reactionModifier: ({ modifier }) =>
         Match.value(modifier.kind).pipe(
           Match.when("abilityCheckReduction", () => false),
           Match.when("attackDamageReduction", () => trigger === "attackHit"),
@@ -9084,62 +9455,18 @@ function serializedInterruptChoiceMatchesTrigger(
           Match.when("fallDamageReduction", () => trigger === "creatureFalls"),
           Match.exhaustive,
         ),
-      releaseReadiedAction: () => trigger === "reportedReadyTrigger",
-      releaseReadiedAttack: () => trigger === "reportedReadyTrigger",
-      releaseReadiedMovement: () => trigger === "reportedReadyTrigger",
-      releaseReadiedSpell: (release) =>
-        serializedReadiedSpellChoiceMatchesTrigger(
-          release,
-          trigger,
-          readiedSpells,
-        ),
-      retaliationAttack: () => trigger === "afterDamage",
     }),
-  );
-}
-
-function serializedReadiedSpellChoiceMatchesTrigger(
-  choice: Extract<
-    EncodedBattleInterruptProcedureChoice,
-    { readonly kind: "releaseReadiedSpell" }
-  >,
-  trigger: (typeof BATTLE_INTERRUPT_TRIGGERS)[number],
-  readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[],
-): boolean {
-  const subject = choice.subject;
-  if (
-    subject.tag !== "runtimeCommand" ||
-    subject.command !== "releaseReadiedSpell"
-  ) {
-    return false;
-  }
-  return readiedSpells.some(
-    (readied) =>
-      readied.casterId === choice.readiedSpellCasterId &&
-      readied.procedureRef === subject.procedureRef &&
-      readied.trigger === trigger,
   );
 }
 
 function serializedInterruptChoiceExpectedProcedureRefs(
   choice: EncodedBattleInterruptProcedureChoice,
 ): ReadonlySet<BattleProcedureExecutionRef> {
-  const subjectProcedureRefs = (
-    subjectChoice: EncodedBattleSubjectInterruptProcedureChoice,
-  ): ReadonlySet<BattleProcedureExecutionRef> =>
-    new Set(battleSubjectProcedureRefs(subjectChoice.subject));
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({
-      castAttackHitBonusActionSpell: subjectProcedureRefs,
-      castTriggeredReactionSpell: subjectProcedureRefs,
-      opportunityAttack: subjectProcedureRefs,
-      reactionRollOrDamageReduction: (reaction) =>
-        new Set([reaction.choice.procedureRef]),
-      releaseReadiedAction: subjectProcedureRefs,
-      releaseReadiedAttack: subjectProcedureRefs,
-      releaseReadiedMovement: subjectProcedureRefs,
-      releaseReadiedSpell: subjectProcedureRefs,
-      retaliationAttack: subjectProcedureRefs,
+      nestedProcedure: ({ subject }) =>
+        new Set(battleSubjectProcedureRefs(subject)),
+      reactionModifier: ({ modifier }) => new Set([modifier.procedureRef]),
     }),
   );
 }

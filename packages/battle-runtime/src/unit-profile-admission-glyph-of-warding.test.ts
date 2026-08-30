@@ -2616,8 +2616,11 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "releaseReadiedSpell",
-          readiedSpellCasterId: spellCasterId,
+          kind: "nestedProcedure",
+          subject: expect.objectContaining({
+            command: "releaseReadiedSpell",
+            readiedSpellCasterId: spellCasterId,
+          }),
         }),
       ]),
     );

@@ -9,9 +9,12 @@
     "./surface/druid-wild-shape-readers": "./src/surface/druid-wild-shape-readers.ts",
     "./surface/find-familiar-forms": "./src/surface/find-familiar-forms.ts",
     "./surface/stat-block-catalog": "./src/surface/stat-block-catalog.ts",
+    "./surface/stat-block-catalog-core": "./src/surface/stat-block-catalog-core.ts",
     "./surface/unit-catalog": "./src/surface/unit-catalog.ts",
+    "./surface/unit-catalog-core": "./src/surface/unit-catalog-core.ts",
     "./surface/types": "./src/surface/types.ts",
     "./surface/schema": "./src/surface/schema.ts",
+    "./surface/surface-relations": "./src/surface/surface-relations.ts",
     "./surface/surface-catalog": "./src/surface/surface-catalog.ts"
   },
   "imports": {

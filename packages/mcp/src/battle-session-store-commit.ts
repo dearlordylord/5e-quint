@@ -1,5 +1,5 @@
 import type { BattleRuntimeSession } from "@dnd/battle-runtime";
-import { Match, Result } from "effect";
+import { Result, Match } from "effect";
 
 import type { BattleCharacterSessionSettlement } from "./battle-handoff.ts";
 import { projectCharacterSessionInBattle } from "./character-session-occupancy.ts";
@@ -9,6 +9,7 @@ import type {
   McpBattleState,
   McpBattleStateTransitionIssue,
 } from "./session-store-types.ts";
+import { invalidBattleStateTransition } from "./session-store-state-transition.ts";
 
 type CharacterId = AvailableCharacterSession["characterId"];
 
@@ -140,13 +141,6 @@ export function commitBattleEndTransition(input: {
     });
   }
   return Result.succeed({ tag: "none" });
-}
-
-function invalidBattleStateTransition(
-  from: McpBattleState["tag"],
-  to: McpBattleState["tag"],
-): Result.Result<never, McpBattleStateTransitionIssue> {
-  return Result.fail({ tag: "invalidBattleStateTransition", from, to });
 }
 
 function battleCharacterIdsFromState(

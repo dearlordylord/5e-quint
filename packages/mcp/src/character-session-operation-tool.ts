@@ -41,7 +41,9 @@ import { rebuildCharacterSheetForOperation } from "./character-session-sheet-reb
 import {
   characterSessionDetailForAvailableSheet,
   characterSessionDetailOutput,
+  type CharacterSessionProjectionIssue,
 } from "./character-session-rows.ts";
+import { characterBuildDisplayNameIssueMessage } from "./character-display.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
@@ -261,9 +263,9 @@ function commitAvailableCharacterSheetOperation(
   }
   const detail = characterSessionDetailForAvailableSheet(root, rebuilt.success);
   if (Result.isFailure(detail)) {
-    return characterSessionOperationInvalid(
+    return characterSessionOperationProjectionInvalid(
       input.characterId,
-      detail.failure.message,
+      detail.failure,
     );
   }
   root.sessionStore.characters.set(rebuilt.success);
@@ -281,6 +283,36 @@ function characterSessionOperationInvalid(
     code: "CHARACTER_SESSION_OPERATION_INVALID",
     characterId,
     message,
+  });
+}
+
+function characterSessionOperationProjectionInvalid(
+  characterId: CharacterSheetId,
+  issue: CharacterSessionProjectionIssue,
+) {
+  const message = Match.value(issue).pipe(
+    Match.when(
+      { tag: "hitPointMaximumUnavailable" },
+      ({ issue: characterSheetIssue }) => characterSheetIssue.message,
+    ),
+    Match.when(
+      { tag: "hitDiceUnavailable" },
+      ({ issue: characterSheetIssue }) => characterSheetIssue.message,
+    ),
+    Match.when(
+      { tag: "resourcesUnavailable" },
+      ({ issue: characterSheetIssue }) => characterSheetIssue.message,
+    ),
+    Match.when({ tag: "characterDisplayUnavailable" }, ({ issues }) =>
+      characterBuildDisplayNameIssueMessage(issues),
+    ),
+    Match.exhaustive,
+  );
+  return errorContent("Character session operation failed.", {
+    code: "CHARACTER_SESSION_OPERATION_INVALID",
+    characterId,
+    message,
+    issue,
   });
 }
 

@@ -46,7 +46,7 @@ export function recoverableOperationResult(
   isError: boolean,
 ): unknown {
   if (
-    root.sessionStore.pendingBattleFills === null ||
+    root.sessionStore.getPendingBattleTransaction() === null ||
     root.sessionStore.battleState.tag !== "activeBattle"
   ) {
     return operationResult;

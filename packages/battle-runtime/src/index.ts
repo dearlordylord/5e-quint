@@ -1,4 +1,20 @@
 export {
+  BattleMechanicalFrontierSchema,
+  BattleMechanicalHoleSchema,
+  BattleMechanicalInterruptDecisionHoleSchema,
+  BattleMechanicalInterruptChoiceSchema,
+  BattleMechanicalOrdinaryHoleSchema,
+  battleMechanicalFrontier,
+  type BattleMechanicalFrontier,
+  type BattleMechanicalFrontierResult,
+  type BattleMechanicalFrontierIssue,
+  type BattleMechanicalHole,
+  type BattleMechanicalInterruptDecisionHole,
+  type BattleMechanicalInterruptChoice,
+  type BattleMechanicalOrdinaryHole,
+} from "./battle-mechanical-frontier.ts";
+
+export {
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
@@ -22,6 +38,7 @@ export {
   battleCompanionFormId,
   battleExecutionScopeOrdinal,
   battleProcedureExecutionRef,
+  battleProcedureExecutionRefBelongsToCombatant,
   battleStatBlockExecutionScopeRef,
   battleResourcePoolExecutionRef,
   battleSpellAccessExecutionRef,
@@ -60,6 +77,7 @@ export type {
 
 export {
   battleRuntimeSessionFollows,
+  battleRuntimeSessionDescendsFrom,
   emptyBattleRuntimeContext,
   isBattleRuntimeSession,
   type BattleRuntimeContext,
@@ -135,6 +153,7 @@ export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
 
 export {
   BattleActPresentationSchema,
+  BattleInterruptDecisionFillSchema,
   BattleCheckpointFrontierEnvelopeSchema,
   BattleFallingCreatureMitigationTriggerFactSchema,
   BattleInterruptProcedureChoiceSchema,
@@ -142,6 +161,8 @@ export {
   BattleSpellPresentationSchema,
   BattleUnitSupportSourceSchema,
 } from "./battle-reducer/battle-codecs.ts";
+
+export { interruptChoiceResponderId } from "./battle-state-execution.ts";
 
 export {
   spellActiveEffectExecutionRef,
@@ -336,6 +357,7 @@ export {
   BATTLE_SUBJECT_ACTIONS,
   BATTLE_SUBJECT_BONUS_ACTIONS,
   CANTRIP_SPELL_PROCEDURES,
+  BattleInterruptSubjectSchema,
   BattleSubjectSchema,
   BattleReadyResponseSchema,
   ReadyTriggerDescription,
@@ -348,12 +370,16 @@ export {
   cantripSpellInvocationRef,
   spellAccessFreeCastSpellInvocationRef,
   isCharacterProcedureBattleSubject,
+  battleSubjectProcedureRefsBelongToOwners,
   sameBattleSubject,
   spellSlotInvocationRef,
+  isBattleReadyTriggerReportSubject,
   type BattleRuntimeCommand,
   type BattleMovementSpeedKind,
+  type BattleInterruptSubject,
   type BattleReadyResponse,
   type BattleSubject,
+  type BattleReadyTriggerReportSubject,
   type BattleSubjectAction,
   type BattleSubjectBonusAction,
   type CantripSpellProcedure,
@@ -735,6 +761,24 @@ export {
   type BattleRuntimeResolutionResult,
   type BattleRuntimeTableD20TestResolutionResult,
 } from "./battle-session-execution.ts";
+
+export {
+  settleBattleRuntimeTransaction,
+  settleCreatureFallsRuntimeTransaction,
+  admitBattleRuntimeTransactionOperation,
+  battlePendingTransactionView,
+  battlePendingTransactionViewForSession,
+  battlePendingTransactionEnvelopeForSession,
+  type BattlePendingTransaction,
+  type BattlePendingTransactionEnvelopeSessionView,
+  type BattlePendingTransactionSessionView,
+  type BattlePendingTransactionView,
+  type BattleRuntimeTransactionDefect,
+  type BattleRuntimeTransactionOperationAdmission,
+  type BattleRuntimeTransactionOperationAdmissionIssue,
+  type BattleRuntimeTransactionOperation,
+  type BattleRuntimeTransactionResult,
+} from "./battle-runtime-transaction.ts";
 
 export {
   resolveBattlePossessionAttempt,

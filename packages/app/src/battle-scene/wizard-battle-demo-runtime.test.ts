@@ -1,8 +1,13 @@
 import {
   type BattleRuntimeResolutionResult,
-  combatantId,
-  currentBattleCheckpointFrontierEnvelope
+  battleCharacterExecutionScopeRef,
+  battleCheckpointFrontierEnvelope,
+  battleExecutionScopeOrdinal,
+  battleId,
+  battleProcedureExecutionRef,
+  combatantId
 } from "@dnd/battle-runtime"
+import { NonNegativeInteger } from "@dnd/shared/types"
 import { describe, expect, test } from "vitest"
 
 import { WIZARD_BATTLE_DEMO_STEPS } from "./wizard-battle-demo.ts"
@@ -15,6 +20,16 @@ import {
   requireNeedsReaction,
   requireResultHole
 } from "./wizard-battle-demo-runtime.ts"
+
+function replaceNonEmptyAt<T>(
+  values: readonly [T, ...ReadonlyArray<T>],
+  index: number,
+  replacement: T
+): readonly [T, ...ReadonlyArray<T>] {
+  const [first, ...rest] = values
+  if (index === 0) return [replacement, ...rest]
+  return [first, ...rest.map((value, restIndex) => (restIndex === index - 1 ? replacement : value))]
+}
 
 describe("wizard battle demo runtime guards", () => {
   test("reports stale authored fixture selections at their boundary", () => {
@@ -120,17 +135,23 @@ describe("wizard battle demo runtime guards", () => {
 
   test("rejects duplicate Counterspell choices for the same admitted procedure", () => {
     const counterspellStep = WIZARD_BATTLE_DEMO_STEPS.find(
-      (step) => currentBattleCheckpointFrontierEnvelope(step.session).frontier.kind === "interruptDecision"
+      (step) => battleCheckpointFrontierEnvelope(step.session.state).frontier.kind === "interruptDecision"
     )
     if (counterspellStep === undefined) {
       throw new Error("Expected a Counterspell frontier in the demo fixture.")
     }
-    const envelope = currentBattleCheckpointFrontierEnvelope(counterspellStep.session)
+    const envelope = battleCheckpointFrontierEnvelope(counterspellStep.session.state)
     if (envelope.frontier.kind !== "interruptDecision") {
       throw new Error("Expected the selected demo frontier to be an interrupt decision.")
     }
-    const counterspellChoice = envelope.frontier.choices.find((choice) => choice.kind === "castTriggeredReactionSpell")
-    if (counterspellChoice === undefined) {
+    const counterspellChoice = envelope.frontier.choices.find(
+      (choice) => choice.kind === "nestedProcedure" && choice.subject.command === "castTriggeredReactionSpell"
+    )
+    if (
+      counterspellChoice === undefined ||
+      counterspellChoice.kind !== "nestedProcedure" ||
+      counterspellChoice.subject.command !== "castTriggeredReactionSpell"
+    ) {
       throw new Error("Expected a Counterspell choice in the demo frontier.")
     }
     const duplicateResult = {
@@ -147,9 +168,76 @@ describe("wizard battle demo runtime guards", () => {
 
     expect(() =>
       requireCounterspellChoice(duplicateResult, {
-        reactorId: counterspellChoice.reactorId,
+        reactorId: counterspellChoice.subject.reactorId,
         slotLevel: 3
       })
     ).toThrow("Expected exactly one Counterspell Reaction choice; got 2.")
+  })
+
+  test("rejects a reaction choice whose procedure has no presentation", () => {
+    const reactorId = combatantId("E")
+    const step = WIZARD_BATTLE_DEMO_STEPS.find((candidate) => {
+      const frontier = battleCheckpointFrontierEnvelope(candidate.session.state).frontier
+      return (
+        frontier.kind === "interruptDecision" &&
+        frontier.choices.some(
+          (choice) =>
+            choice.kind === "nestedProcedure" &&
+            choice.subject.command === "castTriggeredReactionSpell" &&
+            choice.subject.reactorId === reactorId
+        )
+      )
+    })
+    if (step === undefined) {
+      throw new Error("Expected a Counterspell interrupt demo step.")
+    }
+    const envelope = battleCheckpointFrontierEnvelope(step.session.state)
+    if (envelope.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected a Counterspell interrupt frontier.")
+    }
+    const choiceIndex = envelope.frontier.choices.findIndex(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "castTriggeredReactionSpell" &&
+        choice.subject.reactorId === reactorId
+    )
+    if (choiceIndex < 0) {
+      throw new Error("Expected a Counterspell interrupt choice.")
+    }
+    const selectedChoice = envelope.frontier.choices[choiceIndex]
+    if (selectedChoice.kind !== "nestedProcedure" || selectedChoice.subject.command !== "castTriggeredReactionSpell") {
+      throw new Error("Expected a Counterspell reaction spell choice.")
+    }
+    const unboundProcedureRef = battleProcedureExecutionRef(
+      battleCharacterExecutionScopeRef(
+        battleId("battle:synthetic-unbound-procedure"),
+        selectedChoice.subject.actorId,
+        battleExecutionScopeOrdinal(0)
+      ),
+      NonNegativeInteger(0)
+    )
+    const unboundChoice = {
+      ...selectedChoice,
+      subject: {
+        ...selectedChoice.subject,
+        procedureRef: unboundProcedureRef
+      }
+    }
+    const choices = replaceNonEmptyAt(envelope.frontier.choices, choiceIndex, unboundChoice)
+    const result = {
+      tag: "needsHoles",
+      session: step.session,
+      envelope: {
+        ...envelope,
+        frontier: {
+          ...envelope.frontier,
+          choices
+        }
+      }
+    } satisfies Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }>
+
+    expect(() => requireCounterspellChoice(result, { reactorId, slotLevel: 3 })).toThrow(
+      "Expected exactly one Counterspell Reaction choice; got 0."
+    )
   })
 })

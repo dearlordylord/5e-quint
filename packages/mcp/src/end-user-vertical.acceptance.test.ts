@@ -2003,9 +2003,12 @@ function requireSpellAct(
 }
 
 type TriggeredSpellChoiceView = {
-  readonly kind: string;
-  readonly reactorId: string;
-  readonly subject: { readonly procedureRef: string };
+  readonly kind: "nestedProcedure";
+  readonly subject: {
+    readonly command: "castTriggeredReactionSpell";
+    readonly reactorId: string;
+    readonly procedureRef: string;
+  };
 };
 
 function requireTriggeredSpellChoice(
@@ -2031,8 +2034,9 @@ function requireTriggeredSpellChoice(
   const matchingChoices = payload.envelope.frontier.choices.filter(
     ({ choice, presentation }) => {
       if (
-        choice.kind !== "castTriggeredReactionSpell" ||
-        choice.reactorId !== reactorId
+        choice.kind !== "nestedProcedure" ||
+        choice.subject.command !== "castTriggeredReactionSpell" ||
+        choice.subject.reactorId !== reactorId
       ) {
         return false;
       }

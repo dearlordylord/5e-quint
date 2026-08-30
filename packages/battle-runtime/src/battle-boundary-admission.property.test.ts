@@ -344,7 +344,7 @@ describe("battle boundary admission owners", () => {
         frontier: {
           ...encodedPendingInterrupt,
           choices: encodedPendingInterrupt.choices.map((choice) =>
-            choice.kind === "releaseReadiedAttack" &&
+            choice.kind === "nestedProcedure" &&
             choice.subject.tag === "runtimeCommand" &&
             choice.subject.command === "releaseReadiedAttack"
               ? {
@@ -362,7 +362,7 @@ describe("battle boundary admission owners", () => {
         frontier: {
           ...encodedPendingInterrupt,
           choices: encodedPendingInterrupt.choices.map((choice) =>
-            choice.kind === "releaseReadiedAttack" &&
+            choice.kind === "nestedProcedure" &&
             choice.subject.tag === "runtimeCommand" &&
             choice.subject.command === "releaseReadiedAttack"
               ? {
@@ -1553,16 +1553,18 @@ describe("battle boundary admission owners", () => {
       "uncanny",
       "attackDamageReduction",
     );
-    expect(reactionModifierReductionRoll(choice.choice, [])).toMatchObject({
+    expect(reactionModifierReductionRoll(choice.modifier, [])).toMatchObject({
       tag: "ok",
       value: 0,
     });
     const roll = damageRollFill(reactionModifierRollHole(), 3);
-    expect(reactionModifierReductionRoll(choice.choice, [roll])).toMatchObject({
+    expect(
+      reactionModifierReductionRoll(choice.modifier, [roll]),
+    ).toMatchObject({
       tag: "invalid",
     });
     const rolledChoice = {
-      ...choice.choice,
+      ...choice.modifier,
       reduction: {
         kind: "rolled" as const,
         dice: 1,
@@ -1634,7 +1636,7 @@ describe("battle boundary admission owners", () => {
       reactionModifierProcedureSource(
         setup.result.state,
         goblinId,
-        choice.choice.procedureRef,
+        choice.modifier.procedureRef,
       ),
     ).toBeUndefined();
     const frame = currentInterruptCheckpoint(setup.result.state);
@@ -1649,7 +1651,7 @@ describe("battle boundary admission owners", () => {
     const source = reactionModifierProcedureSource(
       setup.result.state,
       fighterId,
-      choice.choice.procedureRef,
+      choice.modifier.procedureRef,
     );
     if (source === undefined)
       throw new Error("Expected reaction modifier source.");
@@ -1671,7 +1673,7 @@ describe("battle boundary admission owners", () => {
         setup.result.state,
         frame,
         fighterId,
-        choice.choice.procedureRef,
+        choice.modifier.procedureRef,
         source.source,
         source.execution,
         modifier,
@@ -1682,7 +1684,7 @@ describe("battle boundary admission owners", () => {
         setup.result.state,
         fighterId,
         source.source,
-        choice.choice,
+        choice.modifier,
       ),
     ).not.toBe(setup.result.state);
     expect(
@@ -1690,7 +1692,7 @@ describe("battle boundary admission owners", () => {
         setup.result.state,
         goblinId,
         source.source,
-        choice.choice,
+        choice.modifier,
       ),
     ).toBe(setup.result.state);
     const fallFrame = {
@@ -1708,7 +1710,7 @@ describe("battle boundary admission owners", () => {
         setup.result.state,
         fallFrame,
         fighterId,
-        choice.choice.procedureRef,
+        choice.modifier.procedureRef,
         source.source,
         { ...source.execution, classLevel: 5 } as never,
         fallModifier,
@@ -1719,7 +1721,7 @@ describe("battle boundary admission owners", () => {
         setup.result.state,
         fallFrame,
         goblinId,
-        choice.choice.procedureRef,
+        choice.modifier.procedureRef,
         source.source,
         { ...source.execution, classLevel: 5 } as never,
         fallModifier,
@@ -1828,17 +1830,17 @@ describe("battle boundary admission owners", () => {
       "deflect",
       "attackDamageReduction",
     );
-    if (!("zeroDamageRedirect" in monkChoice.choice)) {
+    if (!("zeroDamageRedirect" in monkChoice.modifier)) {
       throw new Error("Expected Deflect Attacks redirect choice.");
     }
-    const monkRedirect = monkChoice.choice.zeroDamageRedirect;
+    const monkRedirect = monkChoice.modifier.zeroDamageRedirect;
     if (monkRedirect === undefined) {
       throw new Error("Expected Deflect Attacks redirect offer.");
     }
     const monkSource = reactionModifierProcedureSource(
       monkSetup.result.state,
       fighterId,
-      monkChoice.choice.procedureRef,
+      monkChoice.modifier.procedureRef,
     );
     if (monkSource === undefined)
       throw new Error("Expected Monk modifier source.");
@@ -1906,8 +1908,8 @@ describe("battle boundary admission owners", () => {
         reductions: [
           {
             reactorId: fighterId,
-            procedureRef: monkChoice.choice.procedureRef,
-            reduction: monkChoice.choice.reduction,
+            procedureRef: monkChoice.modifier.procedureRef,
+            reduction: monkChoice.modifier.reduction,
             reductionAmount: 0,
             zeroDamageRedirect: monkRedirect,
           },
@@ -2038,9 +2040,12 @@ describe("battle boundary admission owners", () => {
       ]),
     ).toMatchObject([
       {
-        kind: "opportunityAttack",
-        reactorId: fighterId,
-        subject: { targetId: goblinId },
+        kind: "nestedProcedure",
+        subject: {
+          command: "opportunityAttack",
+          reactorId: fighterId,
+          targetId: goblinId,
+        },
       },
     ]);
     expect(
@@ -2496,8 +2501,11 @@ describe("battle boundary admission owners", () => {
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "castTriggeredReactionSpell",
-          reactorId: wizardId,
+          kind: "nestedProcedure",
+          subject: expect.objectContaining({
+            command: "castTriggeredReactionSpell",
+            reactorId: wizardId,
+          }),
         }),
       ]),
     );

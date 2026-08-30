@@ -22,7 +22,9 @@ import {
   characterListRows,
   characterSessionDetail,
   characterSessionDetailOutput,
+  type CharacterSessionProjectionIssue,
 } from "./character-session-rows.ts";
+import { characterBuildDisplayNameIssueMessage } from "./character-display.ts";
 import {
   queryCharacterSession,
   type CharacterSessionQueryIssue,
@@ -187,6 +189,7 @@ export function handleCharacterToolCall(
           hitPointMaximumReduction: Hp(0),
           conditions: [],
           unitLibrary: root.unitLibrary,
+          statBlockCatalog: root.statBlockCatalog,
           ...(matched.args.druidWildShapeKnownFormStatBlockIds === undefined
             ? {}
             : {
@@ -221,7 +224,8 @@ export function handleCharacterToolCall(
       if (Result.isFailure(rows)) {
         return errorContent("Character list projection failed.", {
           code: "CHARACTER_LIST_INVALID",
-          message: rows.failure,
+          message: characterSessionProjectionIssueMessage(rows.failure),
+          issue: rows.failure,
         });
       }
       return schemaJsonContent(ListCharactersOutputSchema, {
@@ -244,12 +248,29 @@ export function handleCharacterToolCall(
                 },
               ),
             ),
-            Match.when({ tag: "characterSessionDetailInvalid" }, (issue) =>
-              errorContent("Character Session detail projection failed.", {
-                code: "CHARACTER_SESSION_DETAIL_INVALID",
-                characterId: matched.args.characterId,
-                message: issue.message,
-              }),
+            Match.when({ tag: "hitPointMaximumUnavailable" }, (issue) =>
+              characterSessionDetailProjectionError(
+                matched.args.characterId,
+                issue,
+              ),
+            ),
+            Match.when({ tag: "hitDiceUnavailable" }, (issue) =>
+              characterSessionDetailProjectionError(
+                matched.args.characterId,
+                issue,
+              ),
+            ),
+            Match.when({ tag: "resourcesUnavailable" }, (issue) =>
+              characterSessionDetailProjectionError(
+                matched.args.characterId,
+                issue,
+              ),
+            ),
+            Match.when({ tag: "characterDisplayUnavailable" }, (issue) =>
+              characterSessionDetailProjectionError(
+                matched.args.characterId,
+                issue,
+              ),
             ),
             Match.exhaustive,
           );
@@ -276,6 +297,41 @@ export function handleCharacterToolCall(
           session: mcpSessionSummary(root.sessionStore.snapshot()),
         });
       },
+    ),
+    Match.exhaustive,
+  );
+}
+
+function characterSessionDetailProjectionError(
+  characterId: string,
+  issue: CharacterSessionProjectionIssue,
+) {
+  return errorContent("Character Session detail projection failed.", {
+    code: "CHARACTER_SESSION_DETAIL_INVALID",
+    characterId,
+    message: characterSessionProjectionIssueMessage(issue),
+    issue,
+  });
+}
+
+function characterSessionProjectionIssueMessage(
+  issue: CharacterSessionProjectionIssue,
+): string {
+  return Match.value(issue).pipe(
+    Match.when(
+      { tag: "hitPointMaximumUnavailable" },
+      ({ issue: characterSheetIssue }) => characterSheetIssue.message,
+    ),
+    Match.when(
+      { tag: "hitDiceUnavailable" },
+      ({ issue: characterSheetIssue }) => characterSheetIssue.message,
+    ),
+    Match.when(
+      { tag: "resourcesUnavailable" },
+      ({ issue: characterSheetIssue }) => characterSheetIssue.message,
+    ),
+    Match.when({ tag: "characterDisplayUnavailable" }, ({ issues }) =>
+      characterBuildDisplayNameIssueMessage(issues),
     ),
     Match.exhaustive,
   );

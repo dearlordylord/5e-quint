@@ -1553,4 +1553,63 @@ describe("Character Build advancement typed boundaries", () => {
       },
     });
   });
+
+  test("keeps Sorcerer choices on a level without a new option and reports a Warlock cantrip gain", () => {
+    const sorcererAtLevelTwo = buildForClass(sorcererUnitId, [
+      {
+        kind: "selectedSorcererMetamagicOption",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
+        optionId: parsedSorcererMetamagicOption("sorcerer_empowered_spell"),
+      },
+      {
+        kind: "selectedSorcererMetamagicOption",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
+        optionId: parsedSorcererMetamagicOption("sorcerer_subtle_spell"),
+      },
+    ]);
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: {
+          ...sorcererAtLevelTwo,
+          progression: {
+            ...sorcererAtLevelTwo.progression,
+            advancements: classAdvancementEntries(sorcererUnitId, 2),
+          },
+        },
+        unitLibrary,
+        levelGain: {
+          tag: "classLevelGain",
+          classUnitId: sorcererUnitId,
+          hitPointRule: fixedHitPoints,
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Success",
+      success: { features: sorcererAtLevelTwo.features },
+    });
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: spellcastingBuild({
+          classUnitId: warlockUnitId,
+          classLevel: 3,
+        }),
+        unitLibrary,
+        levelGain: {
+          tag: "classLevelGain",
+          classUnitId: warlockUnitId,
+          hitPointRule: fixedHitPoints,
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        code: "invalidWarlockPactMagicCantripGainCount",
+        warlockLevel: 4,
+        expectedGains: 1,
+        actualGains: 0,
+      },
+    });
+  });
 });

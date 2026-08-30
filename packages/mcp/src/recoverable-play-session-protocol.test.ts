@@ -211,14 +211,17 @@ describe("recoverable Play Session protocol", () => {
           (candidate) =>
             isJsonObject(candidate) &&
             isJsonObject(candidate.choice) &&
-            candidate.choice.reactorId === reactorId &&
-            candidate.choice.kind === "castTriggeredReactionSpell",
+            candidate.choice.kind === "nestedProcedure" &&
+            isJsonObject(candidate.choice.subject) &&
+            candidate.choice.subject.reactorId === reactorId &&
+            candidate.choice.subject.command === "castTriggeredReactionSpell",
         );
         if (!isJsonObject(presented) || !isJsonObject(presented.choice)) {
           throw new Error(`Expected a Shield choice for ${reactorId}.`);
         }
         const choiceSubject = objectField(presented.choice, "subject");
         return {
+          subject: choiceSubject,
           procedureRef: stringField(choiceSubject, "procedureRef"),
           initialHoles: arrayField(presented.choice, "initialHoles"),
           fill: {
@@ -380,7 +383,7 @@ describe("recoverable Play Session protocol", () => {
           name: "fill_battle_hole",
           arguments: {
             playSessionId,
-            subject,
+            subject: firstChoice.subject,
             fill: secondFill,
           },
         },

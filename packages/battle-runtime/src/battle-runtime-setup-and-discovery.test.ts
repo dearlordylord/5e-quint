@@ -47,6 +47,7 @@ import {
   battlePresentedSnapshot,
   BattlePresentedSnapshotSchema,
   battleRuntimeSessionFollows,
+  battleRuntimeSessionDescendsFrom,
   isBattleRuntimeSession,
 } from "./index.ts";
 import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
@@ -96,6 +97,14 @@ describe("battle runtime: setup and discovery", () => {
     expect(battleRuntimeSessionFollows(session, successor)).toBe(false);
     expect(battleRuntimeSessionFollows(laterSuccessor, session)).toBe(false);
     expect(battleRuntimeSessionFollows(unrelated, session)).toBe(false);
+
+    expect(battleRuntimeSessionDescendsFrom(session, session)).toBe(true);
+    expect(battleRuntimeSessionDescendsFrom(successor, session)).toBe(true);
+    expect(battleRuntimeSessionDescendsFrom(laterSuccessor, session)).toBe(
+      true,
+    );
+    expect(battleRuntimeSessionDescendsFrom(session, successor)).toBe(false);
+    expect(battleRuntimeSessionDescendsFrom(unrelated, session)).toBe(false);
   });
 
   test("battle ids must be non-empty trimmed strings", () => {

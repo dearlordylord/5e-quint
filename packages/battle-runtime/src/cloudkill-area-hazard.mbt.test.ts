@@ -56,6 +56,7 @@ import {
   combatantId,
   discoverBattleActs,
   endTurn,
+  interruptChoiceResponderId,
   resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
@@ -1036,7 +1037,7 @@ function declineCloudkillFailedSaveInterrupt(
     state: result.state,
     fill: interruptDecisionFill(decisionHole, {
       kind: "decline",
-      responderId: responder.reactorId,
+      responderId: interruptChoiceResponderId(responder),
     }),
   });
   requireNeedsHoles(declined, "Expected damage after declining the reaction.");

@@ -82,6 +82,7 @@ import {
   type BattleFill,
   type BattleFallingCreatureMitigationTriggerFact,
   type BattleHole,
+  type BattleInterruptProcedureChoice,
   type BattleIllumination,
   type BattleLightEmitter,
   type BattleAreaId,
@@ -103,6 +104,7 @@ import {
 } from "./index.ts";
 import type { BattleEffectExecutionRef } from "./identity.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
+import type { BattleInterruptSubject } from "./battle-subjects.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
@@ -419,6 +421,30 @@ type ThunderwaveAreaChoice = Extract<
   BattleSpellAreaChoice,
   { readonly kind: "selfOriginCubePushArea" }
 >;
+type NestedProcedureChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+>;
+type TriggeredReactionSpellChoice = NestedProcedureChoice & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
+  >;
+};
+
+function isTriggeredReactionSpellChoice(
+  choice: BattleInterruptProcedureChoice,
+): choice is TriggeredReactionSpellChoice {
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castTriggeredReactionSpell"
+  );
+}
+
 type ThunderwavePushDisposition =
   ThunderwaveAreaChoice["creaturePushes"][number]["disposition"];
 type ThunderwaveSavingThrowOutcome = {
@@ -4170,9 +4196,9 @@ function featherFallReactionChoice(
 ) {
   const choice = battleFrontierInterruptDecisionForState(
     result.state,
-  )?.choices.find((candidate) => {
-    if (candidate.kind !== "castTriggeredReactionSpell") return false;
-    const reactor = result.state.combatants.get(candidate.reactorId);
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (!isTriggeredReactionSpellChoice(candidate)) return false;
+    const reactor = result.state.combatants.get(candidate.subject.reactorId);
     return (
       reactor?.origin.kind === "character" &&
       characterSpellProcedureExecution(
@@ -4181,7 +4207,7 @@ function featherFallReactionChoice(
       )?.procedure === "fallingCreatureMitigationReaction"
     );
   });
-  if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
+  if (choice === undefined) {
     throw new Error("Expected Feather Fall Reaction choice.");
   }
   return choice;

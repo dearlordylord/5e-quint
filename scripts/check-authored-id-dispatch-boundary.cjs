@@ -1614,10 +1614,15 @@ function assertBattleReplayExecutionBoundary() {
       ],
     },
     {
-      relativePath: "packages/mcp/src/session-store.ts",
+      relativePath: "packages/battle-runtime/src/battle-runtime-transaction.ts",
       patterns: [
-        /export type BattleFillSession[\s\S]{0,300}readonly label:/,
-        /export type BattleFillSession[\s\S]{0,300}readonly summary:/,
+        /export type BattlePendingTransactionView[\s\S]{0,300}readonly label:/,
+        /export type BattlePendingTransactionView[\s\S]{0,300}readonly summary:/,
+      ],
+    },
+    {
+      relativePath: "packages/mcp/src/session-store-types.ts",
+      patterns: [
         /export type McpSessionSnapshot[\s\S]{0,500}readonly label:/,
         /export type McpSessionSnapshot[\s\S]{0,500}readonly summary:/,
       ],

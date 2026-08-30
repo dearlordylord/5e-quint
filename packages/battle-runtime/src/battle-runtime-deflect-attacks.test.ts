@@ -150,7 +150,7 @@ describe("battle runtime: Deflect Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -259,7 +259,7 @@ describe("battle runtime: Deflect Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 4)],
           },
@@ -338,7 +338,7 @@ describe("battle runtime: Deflect Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -443,7 +443,7 @@ describe("battle runtime: Deflect Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -544,7 +544,7 @@ describe("battle runtime: Deflect Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -668,7 +668,7 @@ describe("battle runtime: Deflect Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -727,10 +727,10 @@ describe("battle runtime: Deflect Attacks", () => {
 function redirectResourcePoolRef(
   choice: ReturnType<typeof reactionModifierChoice>,
 ) {
-  if (!("zeroDamageRedirect" in choice.choice)) {
+  if (!("zeroDamageRedirect" in choice.modifier)) {
     throw new Error("Expected a redirect-capable reaction modifier choice.");
   }
-  const redirect = choice.choice.zeroDamageRedirect;
+  const redirect = choice.modifier.zeroDamageRedirect;
   if (redirect === undefined) {
     throw new Error("Expected Deflect Attacks redirect resource spend.");
   }

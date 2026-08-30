@@ -1,5 +1,6 @@
 import type {
   BattleId,
+  BattlePendingTransaction,
   BattleRuntimeSession,
   BattleSubject,
   CombatantId,
@@ -14,7 +15,6 @@ import type {
   AvailableCharacterSession,
   InBattleCharacterSession,
   McpBattleStateTransitionIssue,
-  PendingBattleFillSession,
 } from "./session-store-types.ts";
 
 type CharacterId = CharacterSheetId;
@@ -75,7 +75,7 @@ export type ActiveBattleRosterTransitionPlanData = {
   readonly storeIdentity: object;
   readonly activeBattle: BattleRuntimeSession;
   readonly characterSessionTransitions: readonly CharacterSessionBattleTransition[];
-  readonly pendingBattleFills: PendingBattleFillSession | null;
+  readonly pendingBattleTransaction: BattlePendingTransaction | null;
   readonly result: ActiveBattleRosterTransitionPlanResult;
 };
 
@@ -103,6 +103,9 @@ export type McpBattleRosterTransitionIssue =
   | {
       readonly tag: "battleRosterPendingBattleFills";
       readonly pendingSubject: BattleSubject;
+    }
+  | {
+      readonly tag: "battleRosterUnknownPendingTransaction";
     }
   | {
       readonly tag: "battleRosterCombatantAdmissionFailed";

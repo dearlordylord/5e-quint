@@ -131,10 +131,12 @@ describe("BattleSnapshot durable checkpoint", () => {
 
     if (frontier === null) return;
     const releaseChoice = frontier.choices.find(
-      (choice) => choice.kind === "releaseReadiedSpell",
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "releaseReadiedSpell",
     );
     if (
-      releaseChoice?.kind !== "releaseReadiedSpell" ||
+      releaseChoice?.kind !== "nestedProcedure" ||
       releaseChoice.subject.tag !== "runtimeCommand" ||
       releaseChoice.subject.command !== "releaseReadiedSpell"
     ) {
@@ -147,7 +149,6 @@ describe("BattleSnapshot durable checkpoint", () => {
         responderId: wizardId,
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: wizardId,
           procedureRef: releaseChoice.subject.procedureRef,
           fills: [],
         },

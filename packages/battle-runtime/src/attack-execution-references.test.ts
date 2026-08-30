@@ -41,6 +41,8 @@ import {
   battleAttackExecutionScopeRefBelongsToBattle,
   battleAttackExecutionScopeRefBelongsToCombatant,
   battleProcedureExecutionRefBelongsToScope,
+  battleProcedureExecutionRefBelongsToCombatant,
+  combatantId,
   battleEffectExecutionRef,
 } from "./identity.ts";
 import { boundAttackExecutionSelectionKey } from "./battle-action-options.ts";
@@ -391,6 +393,23 @@ describe("character attack execution references", () => {
     expect(
       Number(first.executionScopeCursors.get(fighterId)?.nextScopeOrdinal),
     ).toBe(2);
+  });
+
+  test("checks procedure reference ownership by combatant", () => {
+    const state = identicalDaggerBattle();
+    const procedureRef = fighterOrigin(state).attack?.procedureRef;
+    expect(procedureRef).toBeDefined();
+    if (procedureRef === undefined) return;
+
+    expect(
+      battleProcedureExecutionRefBelongsToCombatant(procedureRef, fighterId),
+    ).toBe(true);
+    expect(
+      battleProcedureExecutionRefBelongsToCombatant(
+        procedureRef,
+        combatantId("another-combatant"),
+      ),
+    ).toBe(false);
   });
 
   test("keeps presentation names outside the reducer protocol", () => {

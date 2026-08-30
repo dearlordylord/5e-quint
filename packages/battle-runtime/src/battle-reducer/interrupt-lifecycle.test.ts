@@ -146,7 +146,9 @@ describe("interrupt lifecycle", () => {
     if (
       frame === null ||
       decisionHole.kind !== "interruptDecision" ||
-      choice?.kind !== "releaseReadiedSpell"
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.tag !== "runtimeCommand" ||
+      choice.subject.command !== "releaseReadiedSpell"
     ) {
       throw new Error("Expected an admitted readied-spell procedure choice.");
     }
@@ -191,25 +193,30 @@ describe("interrupt lifecycle", () => {
       holeId: decisionHole.holeId,
       value: {
         kind: "resolve" as const,
-        responderId: choice.reactorId,
+        responderId: choice.subject.readiedSpellCasterId,
         choice: {
           kind: "releaseReadiedSpell" as const,
-          readiedSpellCasterId: choice.readiedSpellCasterId,
+          readiedSpellCasterId: choice.subject.readiedSpellCasterId,
           procedureRef: choice.subject.procedureRef,
           fills: [],
         },
       },
     };
-    const responder = opened.state.combatants.get(choice.reactorId);
+    const responder = opened.state.combatants.get(
+      choice.subject.readiedSpellCasterId,
+    );
     if (responder === undefined || responder.positiveHpUnconscious !== null) {
       throw new Error("Expected a conscious admitted interrupt responder.");
     }
     const ineligibleState: BattleState = {
       ...opened.state,
-      combatants: new Map(opened.state.combatants).set(choice.reactorId, {
-        ...responder,
-        conditions: applyCondition(responder.conditions, "incapacitated"),
-      }),
+      combatants: new Map(opened.state.combatants).set(
+        choice.subject.readiedSpellCasterId,
+        {
+          ...responder,
+          conditions: applyCondition(responder.conditions, "incapacitated"),
+        },
+      ),
     };
     expect(
       resolveInterruptLifecycleDecision({
@@ -236,7 +243,8 @@ describe("interrupt lifecycle", () => {
       throw new Error("Expected the active interrupt procedure to need holes.");
     }
     expect(
-      started.result.state.combatants.get(choice.reactorId)?.reactionAvailable,
+      started.result.state.combatants.get(choice.subject.readiedSpellCasterId)
+        ?.reactionAvailable,
     ).toBe(false);
     expect(
       currentInterruptCheckpoint(started.result.state)?.activeInterrupt,

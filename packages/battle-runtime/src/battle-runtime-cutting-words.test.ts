@@ -154,12 +154,12 @@ describe("battle runtime: Cutting Words", () => {
             ...encodedAttackRollFrontier.frontier,
             choices: encodedAttackRollFrontier.frontier.choices.map(
               (candidate) =>
-                candidate.kind === "reactionRollOrDamageReduction" &&
-                candidate.choice.kind === "attackRollReduction"
+                candidate.kind === "reactionModifier" &&
+                candidate.modifier.kind === "attackRollReduction"
                   ? {
                       ...candidate,
-                      choice: {
-                        ...candidate.choice,
+                      modifier: {
+                        ...candidate.modifier,
                         kind: "abilityCheckReduction",
                       },
                     }
@@ -178,7 +178,7 @@ describe("battle runtime: Cutting Words", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackRollReduction",
             fills: [
               {
@@ -329,7 +329,7 @@ describe("battle runtime: Cutting Words", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "damageRollReduction",
             fills: [
               {

@@ -1033,10 +1033,14 @@ function createRuleCoreSpellDriver() {
           attackHit.state,
         )?.choices.find(
           (candidate) =>
-            candidate.kind === "releaseReadiedSpell" &&
-            candidate.readiedSpellCasterId === casterId,
+            candidate.kind === "nestedProcedure" &&
+            candidate.subject.command === "releaseReadiedSpell" &&
+            candidate.subject.readiedSpellCasterId === casterId,
         );
-        if (releaseChoice?.kind !== "releaseReadiedSpell") {
+        if (
+          releaseChoice?.kind !== "nestedProcedure" ||
+          releaseChoice.subject.command !== "releaseReadiedSpell"
+        ) {
           throw new Error("Expected Readied Spell release choice.");
         }
         recordResult(
@@ -1049,7 +1053,6 @@ function createRuleCoreSpellDriver() {
                 responderId: casterId,
                 choice: {
                   kind: "releaseReadiedSpell",
-                  readiedSpellCasterId: casterId,
                   procedureRef: releaseChoice.subject.procedureRef,
                   fills: [
                     allocation,

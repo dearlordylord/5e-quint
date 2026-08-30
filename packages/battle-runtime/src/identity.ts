@@ -5,6 +5,7 @@ import {
   NonNegativeInteger,
   ResourceCount,
 } from "@dnd/shared/types";
+import { semanticRefinement } from "@dnd/shared/semantic-refinement";
 
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
@@ -74,6 +75,7 @@ export const BattleEffectExecutionRef = NonEmptyTrimmedStringSchema.pipe(
   Schema.check(
     Schema.makeFilter(battleEffectExecutionReferenceIsCanonical, {
       message: "Invalid canonical Battle effect execution ref.",
+      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
     }),
   ),
   Schema.brand("BattleEffectExecutionRef"),
@@ -133,6 +135,7 @@ export const BattleProcedureExecutionRef = NonEmptyTrimmedStringSchema.pipe(
       {
         /* v8 ignore next -- @preserve -- Only a malformed externally decoded reference requests this diagnostic; constructors emit the canonical nested identity shape. */
         message: "Invalid canonical Battle procedure execution ref.",
+        ...semanticRefinement("canonicalExecutionReferenceSyntax"),
       },
     ),
   ),
@@ -159,6 +162,7 @@ export const BattleAttackProcedureExecutionRef =
     Schema.check(
       Schema.makeFilter(attackProcedureExecutionReferenceIsCanonical, {
         message: "Invalid canonical Battle attack procedure execution ref.",
+        ...semanticRefinement("canonicalExecutionReferenceSyntax"),
       }),
     ),
     Schema.brand("BattleAttackProcedureExecutionRef"),
@@ -175,6 +179,7 @@ export const BattleStatBlockProcedureExecutionRef =
       Schema.makeFilter(statBlockProcedureExecutionReferenceIsCanonical, {
         /* v8 ignore next -- @preserve -- Only a malformed externally decoded Stat Block reference requests this diagnostic; the scoped constructor is canonical. */
         message: "Invalid canonical Battle Stat Block procedure execution ref.",
+        ...semanticRefinement("canonicalExecutionReferenceSyntax"),
       }),
     ),
     Schema.brand("BattleStatBlockProcedureExecutionRef"),
@@ -189,6 +194,7 @@ export const BattleResourcePoolExecutionRef = NonEmptyTrimmedStringSchema.pipe(
   Schema.check(
     Schema.makeFilter(battleResourcePoolExecutionReferenceIsCanonical, {
       message: "Invalid canonical Battle resource-pool execution ref.",
+      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
     }),
   ),
   Schema.brand("BattleResourcePoolExecutionRef"),
@@ -211,6 +217,7 @@ export const BattleStatBlockExecutionScopeRef =
     Schema.check(
       Schema.makeFilter(battleStatBlockExecutionScopeReferenceIsCanonical, {
         message: "Invalid canonical Battle Stat Block execution scope ref.",
+        ...semanticRefinement("canonicalExecutionReferenceSyntax"),
       }),
     ),
     Schema.brand("BattleStatBlockExecutionScopeRef"),
@@ -223,6 +230,7 @@ export const BattleCharacterExecutionScopeRef =
     Schema.check(
       Schema.makeFilter(battleCharacterExecutionScopeReferenceIsCanonical, {
         message: "Invalid canonical Battle character execution scope ref.",
+        ...semanticRefinement("canonicalExecutionReferenceSyntax"),
       }),
     ),
     Schema.brand("BattleCharacterExecutionScopeRef"),
@@ -239,7 +247,10 @@ export const BattleAttackExecutionScopeRef = NonEmptyTrimmedStringSchema.pipe(
           "attackExecution",
         ),
       /* v8 ignore next -- @preserve -- Only a malformed externally decoded attack scope requests this diagnostic; the battle-owned scope constructor is canonical. */
-      { message: "Invalid canonical Battle attack execution scope ref." },
+      {
+        message: "Invalid canonical Battle attack execution scope ref.",
+        ...semanticRefinement("canonicalExecutionReferenceSyntax"),
+      },
     ),
   ),
   Schema.brand("BattleAttackExecutionScopeRef"),
@@ -507,6 +518,71 @@ export function battleProcedureExecutionRefBelongsToScope(
   scopeRef: BattleExecutionScopeRef,
 ): boolean {
   return executionReferenceBelongsToScope(procedureRef, "procedure", scopeRef);
+}
+
+export function battleProcedureExecutionRefBelongsToCombatant(
+  procedureRef: BattleProcedureExecutionRef,
+  combatantId: CombatantId,
+): boolean {
+  const decoded = parseExecutionReference(procedureRef);
+  if (
+    decoded === null ||
+    !hasExactKeys(decoded, ["scopeRef", "kind", "ordinal"]) ||
+    decoded.kind !== "procedure"
+  ) {
+    return false;
+  }
+  const scopeRef = decoded.scopeRef;
+  return battleProcedureScopeRefBelongsToCombatant(
+    procedureRef,
+    scopeRef,
+    combatantId,
+  );
+}
+
+function battleProcedureScopeRefBelongsToCombatant(
+  procedureRef: BattleProcedureExecutionRef,
+  scopeRef: unknown,
+  combatantId: CombatantId,
+): boolean {
+  if (Schema.is(BattleAttackExecutionScopeRef)(scopeRef)) {
+    return battleProcedureScopeAndCombatant(
+      procedureRef,
+      scopeRef,
+      combatantId,
+      battleAttackExecutionScopeRefBelongsToCombatant,
+    );
+  }
+  if (Schema.is(BattleStatBlockExecutionScopeRef)(scopeRef)) {
+    return battleProcedureScopeAndCombatant(
+      procedureRef,
+      scopeRef,
+      combatantId,
+      battleStatBlockExecutionScopeRefBelongsToCombatant,
+    );
+  }
+  return Schema.is(BattleCharacterExecutionScopeRef)(scopeRef)
+    ? battleProcedureScopeAndCombatant(
+        procedureRef,
+        scopeRef,
+        combatantId,
+        battleCharacterExecutionScopeRefBelongsToCombatant,
+      )
+    : false;
+}
+
+function battleProcedureScopeAndCombatant<
+  Scope extends BattleExecutionScopeRef,
+>(
+  procedureRef: BattleProcedureExecutionRef,
+  scopeRef: Scope,
+  combatantId: CombatantId,
+  belongsToCombatant: (scopeRef: Scope, combatantId: CombatantId) => boolean,
+): boolean {
+  return (
+    battleProcedureExecutionRefBelongsToScope(procedureRef, scopeRef) &&
+    belongsToCombatant(scopeRef, combatantId)
+  );
 }
 
 export function battleProcedureExecutionRefIsAtOrdinal(

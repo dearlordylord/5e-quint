@@ -25,6 +25,7 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptSubject,
   type BattleInterruptProcedureChoice,
   type BattleObjectIgnitionDisposition,
   type BattleProcedureExecutionRef,
@@ -367,10 +368,29 @@ type OngoingSpellTargetChoiceFill = Extract<
 type OngoingSpellTarget = OngoingSpellTargetChoiceFill["value"];
 type OngoingSpellTargetWithinRangeFact =
   OngoingSpellTargetChoiceFill["spatialFacts"][number];
-type ReactionRollOrDamageReductionChoice = Extract<
+type NestedProcedureChoice = Extract<
   BattleInterruptProcedureChoice,
-  { readonly kind: "reactionRollOrDamageReduction" }
+  { readonly kind: "nestedProcedure" }
 >;
+type CounterspellReactionChoice = NestedProcedureChoice & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
+  >;
+};
+type ReactionModifierChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "reactionModifier" }
+>;
+type ReactionRollOrDamageReductionChoice = ReactionModifierChoice & {
+  readonly modifier: Extract<
+    ReactionModifierChoice["modifier"],
+    { readonly kind: "attackDamageReduction" }
+  >;
+};
 
 describe("level 5 SDK tracer bullets", () => {
   test("Barbarian Fast Movement projects through sheet handoff and increases Speed plus Dash without Heavy armor", () => {
@@ -856,7 +876,7 @@ describe("level 5 SDK tracer bullets", () => {
       rogueId,
     );
     expect(choice.initialHoles).toEqual([]);
-    expect(choice.choice.reduction).toEqual({ kind: "halfDamage" });
+    expect(choice.modifier.reduction).toEqual({ kind: "halfDamage" });
 
     const afterReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
@@ -867,7 +887,7 @@ describe("level 5 SDK tracer bullets", () => {
           responderId: rogueId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [],
           },
@@ -3534,11 +3554,6 @@ function spellCastReactionFactsFill(
   };
 }
 
-type CounterspellReactionChoice = Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
->;
-
 function requireCounterspellChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
   reactorId: CombatantId,
@@ -3548,8 +3563,10 @@ function requireCounterspellChoice(
     result.state,
   )?.choices.find((candidate): candidate is CounterspellReactionChoice => {
     if (
-      candidate.kind !== "castTriggeredReactionSpell" ||
-      candidate.reactorId !== reactorId ||
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.tag !== "runtimeCommand" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== reactorId ||
       reactor?.origin.kind !== "character"
     ) {
       return false;
@@ -3583,16 +3600,16 @@ function requireUncannyDodgeAttackDamageChoice(
   )?.choices.find(
     (candidate): candidate is ReactionRollOrDamageReductionChoice => {
       if (
-        candidate.kind !== "reactionRollOrDamageReduction" ||
-        candidate.reactorId !== reactorId ||
-        candidate.choice.kind !== "attackDamageReduction" ||
+        candidate.kind !== "reactionModifier" ||
+        candidate.responderId !== reactorId ||
+        candidate.modifier.kind !== "attackDamageReduction" ||
         reactor?.origin.kind !== "character"
       ) {
         return false;
       }
       const binding = characterProcedureBinding(
         reactor.origin.execution,
-        candidate.choice.procedureRef,
+        candidate.modifier.procedureRef,
       );
       return (
         binding?.procedure.kind === "unitFeature" &&

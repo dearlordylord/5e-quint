@@ -1650,7 +1650,7 @@ function createRuleCoreFeatureDriver(
             responderId: actorId,
             choice: {
               kind: "reactionRollOrDamageReduction",
-              procedureRef: choice.choice.procedureRef,
+              procedureRef: choice.modifier.procedureRef,
               modifierKind: input.modifierKind,
               fills: reductionFills,
             },
@@ -2843,10 +2843,10 @@ function reactionModifierChoice(
 ) {
   const choice = choices.find(
     (candidate) =>
-      candidate.kind === "reactionRollOrDamageReduction" &&
-      candidate.choice.kind === modifierKind,
+      candidate.kind === "reactionModifier" &&
+      candidate.modifier.kind === modifierKind,
   );
-  if (choice?.kind !== "reactionRollOrDamageReduction") {
+  if (choice?.kind !== "reactionModifier") {
     throw new Error(`Expected ${unitId} ${modifierKind} choice.`);
   }
   return choice;

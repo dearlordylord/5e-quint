@@ -1,6 +1,9 @@
 import { Effect, Result, Schema } from "effect";
 
-import { characterListRows } from "./character-session-rows.ts";
+import {
+  characterListRows,
+  type CharacterSessionProjectionIssue,
+} from "./character-session-rows.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import { battlePresentationEnvelopeForSession } from "./battle-tool-payloads.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -120,7 +123,9 @@ export function adminProjection(
   root: McpPlaySessionRoot,
 ): Result.Result<
   AdminSessionProjection,
-  string | import("@dnd/battle-runtime").BattlePresentationIssues
+  | string
+  | CharacterSessionProjectionIssue
+  | import("@dnd/battle-runtime").BattlePresentationIssues
 > {
   const characters = characterListRows(root);
   if (Result.isFailure(characters)) return Result.fail(characters.failure);

@@ -4,8 +4,8 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { describe, expect, test } from "vitest";
 import { Result } from "effect";
 import {
-  characterAttackSubjectForTest,
   battleFrontierInterruptDecisionForState,
+  characterAttackSubjectForTest,
   requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -202,16 +202,21 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Peerless Aim hit to open Shield reaction.");
     }
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state),
+    ).toMatchObject({ trigger: "attackHit" });
     const shieldChoice = battleFrontierInterruptDecisionForState(
       awaitingReaction.state,
     )?.choices.find(
       (choice) =>
-        choice.kind === "castTriggeredReactionSpell" &&
-        choice.reactorId === spellTargetId,
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "castTriggeredReactionSpell" &&
+        choice.subject.reactorId === spellTargetId,
     );
     if (
       shieldChoice === undefined ||
-      shieldChoice.kind !== "castTriggeredReactionSpell"
+      shieldChoice.kind !== "nestedProcedure" ||
+      shieldChoice.subject.command !== "castTriggeredReactionSpell"
     ) {
       throw new Error("Expected Shield reaction choice.");
     }
@@ -237,6 +242,9 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     if (afterShield.tag !== "needsHoles") {
       throw new Error("Expected replayed Peerless Aim attack to need damage.");
     }
+    expect(
+      battleFrontierInterruptDecisionForState(afterShield.state),
+    ).toBeNull();
     const damage = requireHole(afterShield.holes, "rolledDice");
     const resolved = resolveBattleSubject({
       state: afterShield.state,

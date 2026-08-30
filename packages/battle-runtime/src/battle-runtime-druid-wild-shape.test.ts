@@ -396,9 +396,15 @@ test("roundtrips a runtime-produced Wild Shape Opportunity Attack frontier", () 
   );
   const choice = frontier?.choices.find(
     (candidate) =>
-      candidate.kind === "opportunityAttack" && candidate.reactorId === druidId,
+      candidate.kind === "nestedProcedure" &&
+      candidate.subject.command === "opportunityAttack" &&
+      candidate.subject.reactorId === druidId,
   );
-  if (choice?.kind !== "opportunityAttack") {
+  if (
+    choice === undefined ||
+    choice.kind !== "nestedProcedure" ||
+    choice.subject.command !== "opportunityAttack"
+  ) {
     throw new Error("Expected the Wild Shape Opportunity Attack choice.");
   }
   expect(choice.subject.procedureRef).toBe(

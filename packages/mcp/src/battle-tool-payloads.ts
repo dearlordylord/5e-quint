@@ -1,8 +1,9 @@
 import {
+  battlePendingTransactionEnvelopeForSession,
   currentBattleCheckpointFrontierEnvelope,
   presentBattleCheckpointFrontierEnvelope,
-  resolveBattleRuntimeSubject,
   type BattleCheckpointFrontierEnvelope,
+  type BattlePendingTransactionView,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattlePresentationIssues,
@@ -11,7 +12,6 @@ import {
 import { Result } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
-import type { PendingBattleFillSession } from "./session-store.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import {
   mcpSessionSummary,
@@ -60,7 +60,7 @@ export function noStoredBattleContent() {
 }
 
 export function pendingBattleFillsContent(
-  pendingFills: Pick<PendingBattleFillSession, "subject">,
+  pendingFills: Pick<BattlePendingTransactionView, "subject">,
   message: string,
 ) {
   return errorContent(message, {
@@ -194,27 +194,28 @@ function battleEnvelopeSourceForSession(
   readonly session: BattleRuntimeSession;
   readonly envelope: BattleCheckpointFrontierEnvelope;
 } {
-  const pending = root.sessionStore.pendingBattleFills;
-  if (pending === null) {
-    return {
-      session,
-      envelope: currentBattleCheckpointFrontierEnvelope(session),
-    };
+  // The battle state and its checkpoint/frontier are runtime-owned. A pending
+  // transaction is only an opaque continuation token, so presentation reads
+  // the canonical envelope from the stored session rather than replaying a
+  // second copy of the continuation in MCP.
+  const ownedSession =
+    root.sessionStore.battleState.tag === "activeBattle"
+      ? root.sessionStore.battleState.session
+      : session;
+  const pending = root.sessionStore.getPendingBattleTransaction();
+  if (pending !== null) {
+    const projected = battlePendingTransactionEnvelopeForSession(
+      pending,
+      ownedSession,
+    );
+    if (projected.tag === "valid") {
+      return { session: ownedSession, envelope: projected.envelope };
+    }
   }
-  const current = currentBattleCheckpointFrontierEnvelope(session);
-  if (
-    current.frontier.kind === "interruptDecision" &&
-    pending.fills.length === 0
-  ) {
-    return { session, envelope: current };
-  }
-  const replay = resolveBattleRuntimeSubject({
-    session: pending.baseSession,
-    subject: pending.subject,
-    fills: pending.fills,
-    statBlockCatalog: root.statBlockCatalog,
-  });
-  return { session: replay.session, envelope: replay.envelope };
+  return {
+    session: ownedSession,
+    envelope: currentBattleCheckpointFrontierEnvelope(ownedSession),
+  };
 }
 
 export function battlePresentationIssueContent(

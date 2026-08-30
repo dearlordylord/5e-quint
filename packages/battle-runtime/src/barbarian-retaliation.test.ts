@@ -53,8 +53,16 @@ describe("battle runtime: Barbarian Retaliation", () => {
     }
     const retaliationChoice = battleFrontierInterruptDecisionForState(
       awaitingRetaliation.state,
-    )?.choices.find((choice) => choice.kind === "retaliationAttack");
-    if (retaliationChoice === undefined) {
+    )?.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "retaliationAttack",
+    );
+    if (
+      retaliationChoice === undefined ||
+      retaliationChoice.kind !== "nestedProcedure" ||
+      retaliationChoice.subject.command !== "retaliationAttack"
+    ) {
       throw new Error("Expected a Retaliation codec fixture.");
     }
     const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
@@ -77,13 +85,42 @@ describe("battle runtime: Barbarian Retaliation", () => {
         Schema.encodeSync(BattleSnapshotSchema)(awaitingRetaliation.snapshot),
       ),
     ).not.toThrow();
+    const malformedRetaliationChoice = {
+      ...retaliationChoice,
+      subject: {
+        ...retaliationChoice.subject,
+        reactorId: goblinId,
+      },
+    };
     expect(() =>
       Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)({
-        ...retaliationChoice,
-        reactorId: goblinId,
+        ...malformedRetaliationChoice,
+      }),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
+        ...encoded,
+        frontier:
+          encoded.frontier.kind === "interruptDecision"
+            ? {
+                ...encoded.frontier,
+                choices: encoded.frontier.choices.map((choice) =>
+                  choice.kind === "nestedProcedure" &&
+                  choice.subject.command === "retaliationAttack"
+                    ? {
+                        ...choice,
+                        subject: {
+                          ...choice.subject,
+                          reactorId: goblinId,
+                        },
+                      }
+                    : choice,
+                ),
+              }
+            : encoded.frontier,
       }),
     ).toThrow(
-      "Interrupt choices must own the matching reference-bearing runtime subject.",
+      "Battle checkpoint frontier references must be bound to the checkpoint and its subjects.",
     );
     const longswordSelection = attackExecutionSelectionForSubjectForTest(
       fighterAttackSubject(awaitingRetaliation.state, "Longsword"),
@@ -98,7 +135,6 @@ describe("battle runtime: Barbarian Retaliation", () => {
           responderId: fighterId,
           choice: {
             kind: "retaliationAttack",
-            reactorId: fighterId,
             selection: longswordSelection,
             fills: [
               {

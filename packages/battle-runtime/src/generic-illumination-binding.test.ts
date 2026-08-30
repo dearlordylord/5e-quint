@@ -132,19 +132,26 @@ describe("generic illumination procedure bindings", () => {
     const choice = battleFrontierInterruptDecisionForState(
       awaitingInterrupt.state,
     )?.choices.find((candidate) => {
-      if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
+      if (
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.command !== "castAttackHitBonusActionSpell"
+      )
+        return false;
       return (
         characterSpellInvocationRefForProcedureRefForTest(
           battleRuntimeSessionForTest({
             ...session,
             state: awaitingInterrupt.state,
           }),
-          candidate.reactorId,
+          candidate.subject.casterId,
           candidate.subject.procedureRef,
         ).spellId === syntheticAfterHitSpellId
       );
     });
-    if (choice?.kind !== "castAttackHitBonusActionSpell") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castAttackHitBonusActionSpell"
+    ) {
       throw new Error("Expected the synthetic after-hit spell choice.");
     }
     const afterSpell = resolveBattleInterrupt({

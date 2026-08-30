@@ -152,9 +152,9 @@ describe("battle snapshot frontier presentation", () => {
 
   test("retains modifier-only interrupt choices without an authored join", () => {
     const choice = {
-      kind: "reactionRollOrDamageReduction",
-      reactorId: fighterId,
-      choice: {
+      kind: "reactionModifier",
+      responderId: fighterId,
+      modifier: {
         kind: "attackDamageReduction",
         procedureRef: battleProcedureExecutionRefForTest(
           "snapshot-presentation-modifier",
@@ -200,9 +200,9 @@ describe("battle snapshot frontier presentation", () => {
 
   test("round-trips a modifier-only interrupt choice without presentation", () => {
     const choice = {
-      kind: "reactionRollOrDamageReduction",
-      reactorId: fighterId,
-      choice: {
+      kind: "reactionModifier",
+      responderId: fighterId,
+      modifier: {
         kind: "attackDamageReduction",
         procedureRef: battleProcedureExecutionRefForTest(
           "snapshot-presentation-modifier-codec",
@@ -274,8 +274,7 @@ describe("battle snapshot frontier presentation", () => {
 
   test("requires and round-trips presentation for a subject-bearing interrupt choice", () => {
     const choice = {
-      kind: "releaseReadiedAction",
-      reactorId: fighterId,
+      kind: "nestedProcedure",
       initialHoles: [],
       subject: {
         tag: "runtimeCommand",
@@ -353,8 +352,7 @@ describe("battle snapshot frontier presentation", () => {
 
   test("returns a typed failure instead of dropping a choice without presentation", () => {
     const choice = {
-      kind: "castTriggeredReactionSpell",
-      reactorId: fighterId,
+      kind: "nestedProcedure",
       initialHoles: [],
       subject: {
         tag: "runtimeCommand",
@@ -373,8 +371,8 @@ describe("battle snapshot frontier presentation", () => {
         {
           tag: "battleInterruptChoicePresentationIssue",
           reason: "missingSubjectPresentation",
-          reactorId: fighterId,
-          choiceKind: "castTriggeredReactionSpell",
+          responderId: fighterId,
+          choiceKind: "nestedProcedure",
           subject: choice.subject,
         },
       ]),

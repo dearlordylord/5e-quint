@@ -8,6 +8,7 @@ import {
   Hp,
   build,
   characterSheetId,
+  createFreshCharacterSheet,
   druidCircleLandBuild,
   druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
   resourceCount,
@@ -18,7 +19,6 @@ import {
   FreshCharacterSheetProjectionSchema,
   CharacterSheetConstructionIssuesSchema,
   characterSheetConstructionIssuesSummary,
-  createFreshCharacterSheet,
   freshCharacterSheetProjection,
   isFreshSpellcastingCharacterSheet,
   parseFreshCharacterSheet,
@@ -101,6 +101,13 @@ describe("fresh Character Sheet construction", () => {
     }
 
     expect(
+      parseFreshCharacterSheet(
+        JSON.parse(JSON.stringify(result.success)),
+        unitLibrary,
+      ),
+    ).toEqual(Result.succeed(result.success));
+
+    expect(
       freshCharacterSheetFromParsedState({
         ...result.success,
         conditions: ["blinded"],
@@ -174,6 +181,15 @@ describe("fresh Character Sheet construction", () => {
       Result.fail({
         tag: "characterSheetIssue",
         message: "Fresh Character Sheet requires full current Hit Points.",
+      }),
+    );
+  });
+
+  test("propagates malformed stored input through the fresh-sheet boundary", () => {
+    expect(parseFreshCharacterSheet(null, unitLibrary)).toEqual(
+      Result.fail({
+        tag: "characterSheetIssue",
+        message: "Expected Character Sheet.",
       }),
     );
   });
@@ -330,6 +346,43 @@ describe("fresh Character Sheet construction", () => {
           druidWildShapeKnownForms: { statBlockIds: [] },
         }),
       ),
+    ).toBe(true);
+  });
+
+  test("rejects empty or duplicate known-form ids at the projection boundary", () => {
+    const result = createFreshCharacterSheet({
+      characterId: characterSheetId("character:fresh-druid-schema-boundary"),
+      build: druidCircleLandBuild({ druidLevel: 5 }),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      unitLibrary,
+      druidCircleLand: { land: "temperate" },
+      druidWildShapeKnownFormStatBlockIds:
+        druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
+    });
+    if (Result.isFailure(result)) {
+      throw new Error(
+        `Valid fresh Druid fixture must construct: ${JSON.stringify(result.failure)}`,
+      );
+    }
+    const projection = freshCharacterSheetProjection(result.success);
+    const knownForms = projection.druidWildShapeKnownForms;
+    expect(knownForms).toBeDefined();
+    if (knownForms === undefined) return;
+    const decodeProjection = (statBlockIds: readonly string[]) =>
+      Schema.decodeUnknownResult(FreshCharacterSheetProjectionSchema, {
+        onExcessProperty: "error",
+      })({
+        ...projection,
+        druidWildShapeKnownForms: { statBlockIds },
+      });
+    expect(Result.isFailure(decodeProjection([]))).toBe(true);
+    const firstKnownForm = knownForms.statBlockIds[0];
+    expect(firstKnownForm).toBeDefined();
+    if (firstKnownForm === undefined) return;
+    expect(
+      Result.isFailure(decodeProjection([firstKnownForm, firstKnownForm])),
     ).toBe(true);
   });
 

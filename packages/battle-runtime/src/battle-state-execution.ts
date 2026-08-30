@@ -255,11 +255,13 @@ import {
   type BattleInterruptTrigger,
   type BattleReadiedSpellTrigger,
 } from "./battle-interrupt-triggers.ts";
+import { Match } from "effect";
 import {
   type ActionHideSubject,
   type ActionSearchSubject,
   type BattleAttackExecutionSelection,
   type BattleInterruptAttackExecutionSelection,
+  type BattleInterruptSubject,
   type BattleMovementSpeedKind,
   type BattleSubject,
   type BonusActionStandardActionSubject,
@@ -1031,97 +1033,6 @@ export type AttackDamageReductionZeroDamageRedirectSelection = {
   readonly savingThrowSucceeded: boolean;
   readonly redirectedDamageRoll: number;
 };
-type BattleInterruptProcedureChoiceBase = {
-  readonly reactorId: CombatantId;
-  readonly initialHoles: readonly BattleHole[];
-};
-type BattleInterruptProcedureChoiceWithSubject =
-  | {
-      readonly reactorId: CombatantId;
-      readonly initialHoles: readonly BattleHole[];
-      readonly kind: "releaseReadiedSpell";
-      readonly readiedSpellCasterId: CombatantId;
-      readonly subject: Extract<
-        BattleSubject,
-        {
-          readonly tag: "runtimeCommand";
-          readonly command: "releaseReadiedSpell";
-        }
-      >;
-    }
-  | {
-      readonly reactorId: CombatantId;
-      readonly initialHoles: readonly BattleHole[];
-      readonly kind: "releaseReadiedMovement";
-      readonly readiedMovementActorId: CombatantId;
-      readonly subject: Extract<
-        BattleSubject,
-        {
-          readonly tag: "runtimeCommand";
-          readonly command: "releaseReadiedMovement";
-        }
-      >;
-    }
-  | (BattleInterruptProcedureChoiceBase & {
-      readonly kind: "castTriggeredReactionSpell";
-      readonly subject: Extract<
-        BattleSubject,
-        {
-          readonly tag: "runtimeCommand";
-          readonly command: "castTriggeredReactionSpell";
-        }
-      >;
-    })
-  | (BattleInterruptProcedureChoiceBase & {
-      readonly kind: "releaseReadiedAction";
-      readonly subject: Extract<
-        BattleSubject,
-        {
-          readonly tag: "runtimeCommand";
-          readonly command: "releaseReadiedAction";
-        }
-      >;
-    })
-  | (BattleInterruptProcedureChoiceBase & {
-      readonly kind: "releaseReadiedAttack";
-      readonly subject: Extract<
-        BattleSubject,
-        {
-          readonly tag: "runtimeCommand";
-          readonly command: "releaseReadiedAttack";
-        }
-      >;
-    })
-  | (BattleInterruptProcedureChoiceBase & {
-      readonly kind: "castAttackHitBonusActionSpell";
-      readonly subject: Extract<
-        BattleSubject,
-        {
-          readonly tag: "runtimeCommand";
-          readonly command: "castAttackHitBonusActionSpell";
-        }
-      >;
-    })
-  | (BattleInterruptProcedureChoiceBase & {
-      readonly kind: "opportunityAttack";
-      readonly subject: Extract<
-        BattleSubject,
-        {
-          readonly tag: "runtimeCommand";
-          readonly command: "opportunityAttack";
-        }
-      >;
-    })
-  | (BattleInterruptProcedureChoiceBase & {
-      readonly kind: "retaliationAttack";
-      readonly subject: Extract<
-        BattleSubject,
-        {
-          readonly tag: "runtimeCommand";
-          readonly command: "retaliationAttack";
-        }
-      >;
-    });
 type BattleAttackDamageContinuation = Extract<
   BattleInterruptedProcedure,
   { readonly kind: "attackDamage" }
@@ -1196,34 +1107,71 @@ export type BattleAttackDamageDisposition =
       readonly kind: "zeroHitPointReplacement";
       readonly procedureRef: BattleProcedureExecutionRef;
     };
-export type BattleInterruptProcedureModifierChoice = {
-  readonly kind: "reactionRollOrDamageReduction";
-  readonly reactorId: CombatantId;
-  readonly choice: BattleReactionModifierChoice;
-  readonly initialHoles: readonly BattleHole[];
-};
 export type BattleInterruptProcedureChoice =
-  | BattleInterruptProcedureChoiceWithSubject
-  | BattleInterruptProcedureModifierChoice;
+  | {
+      readonly kind: "nestedProcedure";
+      readonly subject: BattleInterruptSubject;
+      readonly initialHoles: readonly BattleHole[];
+    }
+  | {
+      readonly kind: "reactionModifier";
+      readonly responderId: CombatantId;
+      readonly modifier: BattleReactionModifierChoice;
+      readonly initialHoles: readonly BattleHole[];
+    };
+
+type BattleInterruptChoiceResponderInput =
+  | {
+      readonly kind: "nestedProcedure";
+      readonly subject: BattleInterruptSubject;
+    }
+  | {
+      readonly kind: "reactionModifier";
+      readonly responderId: CombatantId;
+    };
+
+export function interruptChoiceResponderId(
+  choice: BattleInterruptChoiceResponderInput,
+): CombatantId {
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      nestedProcedure: ({ subject }) =>
+        Match.value(subject).pipe(
+          Match.discriminatorsExhaustive("command")({
+            releaseReadiedSpell: (value) => value.readiedSpellCasterId,
+            releaseReadiedMovement: (value) => value.readiedMovementActorId,
+            releaseReadiedAction: (value) => value.reactorId,
+            releaseReadiedAttack: (value) => value.reactorId,
+            castTriggeredReactionSpell: (value) => value.reactorId,
+            castAttackHitBonusActionSpell: (value) => value.casterId,
+            opportunityAttack: (value) => value.reactorId,
+            retaliationAttack: (value) => value.reactorId,
+          }),
+        ),
+      reactionModifier: ({ responderId }) => responderId,
+    }),
+  );
+}
+
+export type BattleInterruptProcedureModifierChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "reactionModifier" }
+>;
 export type BattleInterruptProcedureSelection = {
   readonly fills: readonly BattleFill[];
 } & (
   | {
       readonly kind: "releaseReadiedSpell";
-      readonly readiedSpellCasterId: CombatantId;
       readonly procedureRef: BattleProcedureExecutionRef;
     }
   | {
       readonly kind: "releaseReadiedMovement";
-      readonly readiedMovementActorId: CombatantId;
     }
   | {
       readonly kind: "releaseReadiedAction";
-      readonly reactorId: CombatantId;
     }
   | {
       readonly kind: "releaseReadiedAttack";
-      readonly reactorId: CombatantId;
       readonly procedureRef: BattleInterruptAttackExecutionSelection["procedureRef"];
       readonly targetId: CombatantId;
     }
@@ -1237,12 +1185,10 @@ export type BattleInterruptProcedureSelection = {
     }
   | {
       readonly kind: "opportunityAttack";
-      readonly reactorId: CombatantId;
       readonly selection: BattleOpportunityAttackSelection;
     }
   | {
       readonly kind: "retaliationAttack";
-      readonly reactorId: CombatantId;
       readonly selection: BattleInterruptAttackExecutionSelection;
     }
   | {
@@ -1253,7 +1199,7 @@ export type BattleInterruptProcedureSelection = {
 );
 type BattleActiveInterruptProcedure = {
   readonly responderId: CombatantId;
-  readonly subject: BattleInterruptProcedureChoiceWithSubject["subject"];
+  readonly subject: BattleInterruptSubject;
   readonly fills: readonly BattleFill[];
   readonly handledInterruptOccurrence?: BattleHandledInterruptOccurrence;
   readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: BattleSpatialMeleeSpellAttackProxyCommitCheckpoint;
@@ -5216,8 +5162,8 @@ export type BattleAttackRollHole = Extract<
   readonly attack: SupportedAttackActionOption;
   readonly attackBonus: AttackBonus;
   readonly rollMode?: AttackRollMode;
-  readonly ongoingFeatureActivations?: readonly AttackRollFeatureActivation[];
-  readonly missToHitReplacements?: readonly AttackRollMissToHitReplacement[];
+  readonly ongoingFeatureActivations?: ReadonlyNonEmptyArray<AttackRollFeatureActivation>;
+  readonly missToHitReplacements?: ReadonlyNonEmptyArray<AttackRollMissToHitReplacement>;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
   readonly relationshipFactRequest?: BattleAttackRollRelationshipFactRequest;
 };
@@ -5338,7 +5284,7 @@ export type BattleSpellAttackRollHole = Extract<
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly attackBonus: AttackBonus;
   readonly rollMode?: AttackRollMode;
-  readonly missToHitReplacements?: readonly AttackRollMissToHitReplacement[];
+  readonly missToHitReplacements?: ReadonlyNonEmptyArray<AttackRollMissToHitReplacement>;
   readonly spellAttackRerolls?: readonly BattleSpellAttackRerollOption[];
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
@@ -7791,10 +7737,10 @@ export type BattleSnapshotPresentationIssue = {
 export type BattleInterruptChoicePresentationIssue = {
   readonly tag: "battleInterruptChoicePresentationIssue";
   readonly reason: "missingSubjectPresentation";
-  readonly reactorId: CombatantId;
+  readonly responderId: CombatantId;
   readonly choiceKind: Exclude<
     BattleInterruptProcedureChoice,
-    { readonly kind: "reactionRollOrDamageReduction" }
+    { readonly kind: "reactionModifier" }
   >["kind"];
   readonly subject: BattleSubject;
 };

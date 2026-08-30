@@ -142,8 +142,7 @@ export function triggeredReactionSpellChoices(
                   : spellCastReactionFactsHoles;
           return [
             {
-              kind: "castTriggeredReactionSpell" as const,
-              reactorId,
+              kind: "nestedProcedure" as const,
               initialHoles,
               subject: {
                 tag: "runtimeCommand" as const,

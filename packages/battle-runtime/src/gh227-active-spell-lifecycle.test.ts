@@ -137,11 +137,12 @@ describe("GH-227 active spell lifecycle coverage", () => {
     }
     const releaseChoice = pending.choices.find(
       (choice) =>
-        choice.kind === "releaseReadiedSpell" &&
-        choice.readiedSpellCasterId === spellTargetId,
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "releaseReadiedSpell" &&
+        choice.subject.readiedSpellCasterId === spellTargetId,
     );
     if (
-      releaseChoice?.kind !== "releaseReadiedSpell" ||
+      releaseChoice?.kind !== "nestedProcedure" ||
       releaseChoice.subject.tag !== "runtimeCommand" ||
       releaseChoice.subject.command !== "releaseReadiedSpell"
     ) {
@@ -155,7 +156,6 @@ describe("GH-227 active spell lifecycle coverage", () => {
         responderId: spellTargetId,
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: spellTargetId,
           procedureRef: releaseChoice.subject.procedureRef,
           fills: [],
         },

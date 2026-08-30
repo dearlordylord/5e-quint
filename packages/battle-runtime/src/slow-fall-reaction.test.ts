@@ -67,8 +67,9 @@ describe("Slow Fall Reaction", () => {
     );
 
     expect(choice).toMatchObject({
-      reactorId: monkId,
-      choice: {
+      kind: "reactionModifier",
+      responderId: monkId,
+      modifier: {
         kind: "fallDamageReduction",
         reduction: { kind: "flat", amount: damageAmount(20) },
       },
@@ -256,7 +257,7 @@ function resolveSlowFallReaction(state: BattleState): BattleState {
         responderId: monkId,
         choice: {
           kind: "reactionRollOrDamageReduction",
-          procedureRef: choice.choice.procedureRef,
+          procedureRef: choice.modifier.procedureRef,
           modifierKind: "fallDamageReduction",
           fills: [],
         },

@@ -5,6 +5,7 @@ import {
   type BattleHole,
   type BattleInterruptDecisionHole,
   type BattleInterruptProcedureChoice,
+  type BattleInterruptSubject,
   type BattleObjectDamageDisposition,
   type BattleObjectId,
   type BattleRuntimeContext,
@@ -27,10 +28,9 @@ export type CounterspellTriggerFact = Extract<
   { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >
 
-type CounterspellReactionChoice = Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
->
+type CounterspellReactionChoice = Extract<BattleInterruptProcedureChoice, { readonly kind: "nestedProcedure" }> & {
+  readonly subject: Extract<BattleInterruptSubject, { readonly command: "castTriggeredReactionSpell" }>
+}
 
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>
@@ -66,7 +66,9 @@ export function requireCounterspellChoice(
     frontier.kind === "interruptDecision"
       ? frontier.choices.filter(
           (candidate): candidate is CounterspellReactionChoice =>
-            candidate.kind === "castTriggeredReactionSpell" && candidate.reactorId === input.reactorId
+            candidate.kind === "nestedProcedure" &&
+            candidate.subject.command === "castTriggeredReactionSpell" &&
+            candidate.subject.reactorId === input.reactorId
         )
       : []
   /* v8 ignore next -- @preserve -- defensive failure after the pending interrupt narrows available choices */

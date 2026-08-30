@@ -1,6 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE sorcerer_metamagic
-// UNIT-IDENTITY-REPLAY: L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic doResolveHeightenedSaveGatedDamage doResolveHeightenedStagedCondition doResolveHeightenedGreaseEntrySave doResolveHeightenedGustOfWindEndTurnSave doResolveHeightenedSaveGatedConditionEndTurnSave
+// UNIT-IDENTITY-REPLAY: L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic doResolveHeightenedSaveGatedDamage doResolveHeightenedHideousLaughter doResolveHeightenedGreaseEntrySave doResolveHeightenedGustOfWindEndTurnSave doResolveHeightenedSaveGatedConditionEndTurnSave
 // UNIT-IDENTITY-REPLAY: L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE sorcerer_metamagic doResolveHeightenedSaveGatedConditionEndTurnSave
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE
@@ -77,7 +77,7 @@ defineSelectedIdentityReplayAndQntReplay({
     lastResult: {
       Init: "init",
       HeightenedSaveGatedDamage: "heightenedSaveGatedDamage",
-      HeightenedStagedCondition: "heightenedStagedCondition",
+      HeightenedHideousLaughter: "heightenedStagedCondition",
       HeightenedGreaseEntrySave: "heightenedGreaseEntrySave",
       HeightenedGustOfWindEndTurnSave: "heightenedGustOfWindEndTurnSave",
       HeightenedSaveGatedConditionEndTurnSave:
@@ -115,7 +115,7 @@ defineSelectedIdentityReplayAndQntReplay({
             ),
         },
         {
-          actionName: "doResolveHeightenedStagedCondition",
+          actionName: "doResolveHeightenedHideousLaughter",
           discover: () =>
             projectBattleState(
               resolveHeightenedStagedCondition(

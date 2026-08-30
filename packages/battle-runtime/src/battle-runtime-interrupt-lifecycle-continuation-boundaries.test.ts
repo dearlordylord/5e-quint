@@ -1,10 +1,19 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
+
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { classLevel, damageAmount, DieRollResult } from "@dnd/shared/types";
+import {
+  classLevel,
+  damageAmount,
+  DieRollResult,
+  movementFeet,
+} from "@dnd/shared/types";
 import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import {
   maybeOpenInterruptWindow,
+  interruptCheckpointFrame,
   openPrimaryAttackAfterDamageSequenceInterruptWindow,
+  spendReaction,
 } from "./battle-reducer/interrupt-execution.ts";
 import { currentInterruptCheckpoint } from "./battle-reducer/battle-snapshot.ts";
 import { battleCheckpointFrontierEnvelope } from "./battle-session-execution.ts";
@@ -24,10 +33,13 @@ import type { BattleAttackRouteResolvers } from "./battle-reducer/attack-resolve
 import type {
   BattleFallDamageLandingMitigationFrame,
   BattleFlySpeedGrantEndFallCleanupFrame,
+  BattleState,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
   InterruptLifecycleExecution,
+  isInactiveInterruptCheckpoint,
+  reconcileInterruptCheckpointAfterStateChange,
   resolveActiveInterruptProcedure,
   resolveInterruptLifecycleDecision,
 } from "./battle-reducer/interrupt-lifecycle.ts";
@@ -36,6 +48,7 @@ import {
   attackDamageHoleAfterHit,
   attackRollFill,
   attackRollHoleAfterTarget,
+  attackExecutionSelectionForSubjectForTest,
   battleProcedureExecutionRefForTest,
   battleFrontierInterruptDecisionForState,
   battleId,
@@ -49,6 +62,7 @@ import {
   damageRollFill,
   fighterAttackSubject,
   fighterId,
+  fighterVsGoblinBattle,
   fighterTurnWithReadiedRay,
   findHole,
   goblinAttackSubject,
@@ -59,6 +73,9 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
   rolledDiceGroup,
+  skeletonCreatureInit,
+  skeletonId,
+  statBlockAttackSubjectForTest,
   statBlockCreatureInit,
   startBattleRight,
   snapshotBattle,
@@ -82,6 +99,274 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 
 describe("battle runtime: interrupt lifecycle and continuation boundaries", () => {
+  test("closes an inactive checkpoint when its only responder spent a Reaction", () => {
+    const state = fighterVsGoblinBattle();
+    const opened = maybeOpenInterruptWindow(
+      state,
+      {
+        trigger: "opportunityAttack",
+        moverId: goblinId,
+        threats: [
+          {
+            reactorId: fighterId,
+            distanceFeet: movementFeet(5),
+            ...attackExecutionSelectionForSubjectForTest(
+              fighterAttackSubject(state),
+            ),
+          },
+        ],
+        continuation: {
+          kind: "resolved",
+          subject: {
+            tag: "runtimeCommand",
+            actorId: fighterId,
+            command: "endTurn",
+          },
+        },
+      },
+      undefined,
+    );
+    if (opened === null) {
+      throw new Error("Expected an Opportunity Attack checkpoint.");
+    }
+    const frame = currentInterruptCheckpoint(opened.state);
+    if (frame === null || !isInactiveInterruptCheckpoint(frame)) {
+      throw new Error("Expected an inactive Opportunity Attack checkpoint.");
+    }
+    const resumedStates: BattleState[] = [];
+    const execution = InterruptLifecycleExecution.fromResolvers(
+      () => {
+        throw new Error("The synthetic checkpoint has no active procedure.");
+      },
+      ({ state: resumedState }) => {
+        resumedStates.push(resumedState);
+        return {
+          tag: "resolved" as const,
+          state: resumedState,
+          snapshot: snapshotBattle(resumedState),
+        };
+      },
+    );
+
+    const reconciliation = reconcileInterruptCheckpointAfterStateChange({
+      state: spendReaction(opened.state, fighterId),
+      frame,
+      execution,
+    });
+
+    expect(reconciliation.tag).toBe("closed");
+    if (reconciliation.tag === "closed") {
+      expect(resumedStates).toHaveLength(1);
+      expect(reconciliation.result.tag).toBe("resolved");
+      if (reconciliation.result.tag === "resolved") {
+        expect(
+          currentInterruptCheckpoint(reconciliation.result.state),
+        ).toBeNull();
+      }
+    }
+  });
+
+  test("retains a distinct responder after another responder spends a Reaction", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-interrupt-reconciliation-distinct-responder"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+        skeletonCreatureInit({ initiative: 5 }),
+      ],
+    });
+    const opened = maybeOpenInterruptWindow(
+      state,
+      {
+        trigger: "opportunityAttack",
+        moverId: goblinId,
+        threats: [
+          {
+            reactorId: fighterId,
+            distanceFeet: movementFeet(5),
+            ...attackExecutionSelectionForSubjectForTest(
+              fighterAttackSubject(state),
+            ),
+          },
+          {
+            reactorId: skeletonId,
+            distanceFeet: movementFeet(5),
+            ...attackExecutionSelectionForSubjectForTest(
+              statBlockAttackSubjectForTest(
+                state,
+                skeletonId,
+                "Shortsword",
+                "actions",
+              ),
+            ),
+          },
+        ],
+        continuation: {
+          kind: "resolved",
+          subject: {
+            tag: "runtimeCommand",
+            actorId: fighterId,
+            command: "endTurn",
+          },
+        },
+      },
+      undefined,
+    );
+    if (opened === null) {
+      throw new Error("Expected an Opportunity Attack checkpoint.");
+    }
+    const frame = currentInterruptCheckpoint(opened.state);
+    if (frame === null || !isInactiveInterruptCheckpoint(frame)) {
+      throw new Error("Expected an inactive Opportunity Attack checkpoint.");
+    }
+    const reconciliation = reconcileInterruptCheckpointAfterStateChange({
+      state: spendReaction(opened.state, fighterId),
+      frame,
+      execution: InterruptLifecycleExecution.fromResolvers(
+        () => {
+          throw new Error("The synthetic checkpoint has no active procedure.");
+        },
+        ({ state: resumedState }) => ({
+          tag: "resolved" as const,
+          state: resumedState,
+          snapshot: snapshotBattle(resumedState),
+        }),
+      ),
+    });
+
+    expect(reconciliation.tag).toBe("retained");
+    if (reconciliation.tag === "retained") {
+      expect(reconciliation.frame.eligibleResponders).toEqual([skeletonId]);
+      expect(reconciliation.frame.choices).toHaveLength(1);
+      expect(reconciliation.frame.offeredResponders).toEqual([]);
+    }
+  });
+
+  test("preserves a declined responder while reconciliation retains an unoffered responder", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-interrupt-reconciliation-declined-history"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+        skeletonCreatureInit({ initiative: 5 }),
+      ],
+    });
+    const opened = maybeOpenInterruptWindow(
+      state,
+      {
+        trigger: "opportunityAttack",
+        moverId: goblinId,
+        threats: [
+          {
+            reactorId: fighterId,
+            distanceFeet: movementFeet(5),
+            ...attackExecutionSelectionForSubjectForTest(
+              fighterAttackSubject(state),
+            ),
+          },
+          {
+            reactorId: skeletonId,
+            distanceFeet: movementFeet(5),
+            ...attackExecutionSelectionForSubjectForTest(
+              statBlockAttackSubjectForTest(
+                state,
+                skeletonId,
+                "Shortsword",
+                "actions",
+              ),
+            ),
+          },
+        ],
+        continuation: {
+          kind: "resolved",
+          subject: {
+            tag: "runtimeCommand",
+            actorId: fighterId,
+            command: "endTurn",
+          },
+        },
+      },
+      undefined,
+    );
+    if (opened === null) {
+      throw new Error("Expected an Opportunity Attack checkpoint.");
+    }
+    const frame = currentInterruptCheckpoint(opened.state);
+    if (frame === null || !isInactiveInterruptCheckpoint(frame)) {
+      throw new Error("Expected an inactive Opportunity Attack checkpoint.");
+    }
+    const declinedFrame = {
+      ...frame,
+      offeredResponders: [fighterId],
+    };
+    const declinedState: BattleState = {
+      ...opened.state,
+      interruptStack: [
+        ...opened.state.interruptStack.slice(0, -1),
+        interruptCheckpointFrame(declinedFrame),
+      ],
+    };
+    const execution = InterruptLifecycleExecution.fromResolvers(
+      () => {
+        throw new Error("The synthetic checkpoint has no active procedure.");
+      },
+      ({ state: resumedState }) => ({
+        tag: "resolved" as const,
+        state: resumedState,
+        snapshot: snapshotBattle(resumedState),
+      }),
+    );
+
+    const afterSpent = reconcileInterruptCheckpointAfterStateChange({
+      state: spendReaction(declinedState, fighterId),
+      frame: declinedFrame,
+      execution,
+    });
+    expect(afterSpent.tag).toBe("retained");
+    if (afterSpent.tag !== "retained") return;
+    expect(afterSpent.frame.offeredResponders).toEqual([fighterId]);
+    expect(afterSpent.frame.eligibleResponders).toEqual([skeletonId]);
+    expect(
+      afterSpent.frame.choices.some(
+        (choice) =>
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "opportunityAttack" &&
+          choice.subject.reactorId === fighterId,
+      ),
+    ).toBe(false);
+
+    const fighter = afterSpent.state.combatants.get(fighterId);
+    if (fighter === undefined) {
+      throw new Error("Expected the Fighter combatant.");
+    }
+    const restoredState: BattleState = {
+      ...afterSpent.state,
+      combatants: new Map(afterSpent.state.combatants).set(fighterId, {
+        ...fighter,
+        reactionAvailable: true,
+      }),
+    };
+    const afterRestored = reconcileInterruptCheckpointAfterStateChange({
+      state: restoredState,
+      frame: afterSpent.frame,
+      execution,
+    });
+    expect(afterRestored.tag).toBe("retained");
+    if (afterRestored.tag === "retained") {
+      expect(afterRestored.frame.offeredResponders).toEqual([fighterId]);
+      expect(afterRestored.frame.eligibleResponders).toEqual([skeletonId]);
+      expect(afterRestored.frame.choices).toHaveLength(1);
+      expect(
+        afterRestored.frame.choices.some(
+          (choice) =>
+            choice.kind === "nestedProcedure" &&
+            choice.subject.command === "opportunityAttack" &&
+            choice.subject.reactorId === fighterId,
+        ),
+      ).toBe(false);
+    }
+  });
+
   test("opens a primary-attack follow-up continuation through an after-damage Reaction", () => {
     const state = fighterTurnWithReadiedRay("afterDamage");
     const subject = fighterAttackSubject(state);
@@ -144,9 +429,14 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
 
     const checkpoint = currentInterruptCheckpoint(result.state);
     const choice = checkpoint?.choices.find(
-      (candidate) => candidate.kind === "releaseReadiedSpell",
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "releaseReadiedSpell",
     );
-    if (choice?.kind !== "releaseReadiedSpell") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "releaseReadiedSpell"
+    ) {
       throw new Error("Expected a readied spell choice.");
     }
     const objectOutcomeExecution = InterruptLifecycleExecution.fromResolvers(
@@ -167,10 +457,9 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       state: result.state,
       fill: interruptDecisionFill(requireHole(result, "interruptDecision"), {
         kind: "resolve",
-        responderId: choice.reactorId,
+        responderId: choice.subject.readiedSpellCasterId,
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: choice.readiedSpellCasterId,
           procedureRef: choice.subject.procedureRef,
           fills: [],
         },
@@ -247,19 +536,23 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       "interruptDecision",
     );
     const choice = currentInterruptCheckpoint(replay.state)?.choices.find(
-      (candidate) => candidate.kind === "releaseReadiedSpell",
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "releaseReadiedSpell",
     );
-    if (choice?.kind !== "releaseReadiedSpell") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "releaseReadiedSpell"
+    ) {
       throw new Error("Expected a readied spell choice.");
     }
     const started = resolveBattleInterrupt({
       state: replay.state,
       fill: interruptDecisionFill(requireHole(replay, "interruptDecision"), {
         kind: "resolve",
-        responderId: choice.reactorId,
+        responderId: choice.subject.readiedSpellCasterId,
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: choice.readiedSpellCasterId,
           procedureRef: choice.subject.procedureRef,
           fills: [],
         },
@@ -492,7 +785,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
         responderId: fighterId,
         choice: {
           kind: "reactionRollOrDamageReduction",
-          procedureRef: choice.choice.procedureRef,
+          procedureRef: choice.modifier.procedureRef,
           modifierKind: "attackRollReduction",
           fills: [
             {
@@ -573,7 +866,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
         responderId: fighterId,
         choice: {
           kind: "reactionRollOrDamageReduction",
-          procedureRef: choice.choice.procedureRef,
+          procedureRef: choice.modifier.procedureRef,
           modifierKind: "attackRollReduction",
           fills: [
             {
@@ -656,7 +949,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "damageRollReduction",
             fills: [
               {

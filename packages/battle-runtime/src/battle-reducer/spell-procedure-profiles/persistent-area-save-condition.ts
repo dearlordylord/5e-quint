@@ -1,6 +1,6 @@
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-profileShape-ground-hazard unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
 // The persistentAreaSaveCondition Spell Procedure Profile: action-time Spell Slot

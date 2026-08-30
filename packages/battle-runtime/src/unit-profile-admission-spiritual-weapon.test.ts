@@ -9,8 +9,8 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY
 import { describe, expect, test } from "vitest";
 import {
-  requireCharacterSpellProcedureRefForTest,
   battleFrontierInterruptDecisionForState,
+  requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
@@ -25,6 +25,7 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import type {
+  BattleInterruptSubject,
   BattleInterruptProcedureChoice,
   BattleProcedureExecutionRef,
   BattleResolutionResult,
@@ -690,6 +691,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     if (countered.tag !== "resolved") {
       throw new Error("Expected Counterspell to resolve Spiritual Weapon.");
     }
+    expect(battleFrontierInterruptDecisionForState(countered.state)).toBeNull();
     expect(
       requireCombatant(countered.state, spellCasterId).activeEffects,
     ).not.toContainEqual(
@@ -935,6 +937,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         turn: { bonusActionQuotaAvailable: false },
       },
     });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Shielded Spiritual Weapon cast to resolve.");
+    }
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
     expect(requireCombatant(resolved.state, spellTargetId).hp).toStrictEqual(
       Hp(20),
     );
@@ -1885,6 +1891,10 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         turn: { bonusActionQuotaAvailable: false },
       },
     });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Shielded Spiritual Weapon repeat to resolve.");
+    }
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
     expect(requireCombatant(resolved.state, spellTargetId).hp).toStrictEqual(
       Hp(30),
     );
@@ -2062,6 +2072,16 @@ type CounterspellTriggerFact = Extract<
   >["spatialFacts"][number],
   { readonly kind: "spellCastInterruptionTriggerCasterVisibleWithinRange" }
 >;
+
+type TriggeredReactionSpellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
 function requireNeedsHoles(result: BattleResolutionResult): NeedsHolesResult {
   expect(result).toMatchObject({ tag: "needsHoles" });
   if (result.tag !== "needsHoles") {
@@ -2101,40 +2121,31 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly spellId: string;
   readonly procedure: string;
   readonly slotLevel: number;
-}): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+}): TriggeredReactionSpellChoice {
   const choice = battleFrontierInterruptDecisionForState(
     input.result.state,
-  )?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
-      if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== input.reactorId
-      )
-        return false;
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        battleRuntimeSessionForTest({
-          ...input.session,
-          state: input.result.state,
-        }),
-        candidate.reactorId,
-        candidate.subject.procedureRef,
-      );
-      return (
-        invocation.tag === "spellSlot" &&
-        invocation.spellId === input.spellId &&
-        invocation.procedure === input.procedure &&
-        Number(invocation.slotLevel) === input.slotLevel
-      );
-    },
-  );
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== input.reactorId
+    )
+      return false;
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      battleRuntimeSessionForTest({
+        ...input.session,
+        state: input.result.state,
+      }),
+      candidate.subject.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.tag === "spellSlot" &&
+      invocation.spellId === input.spellId &&
+      invocation.procedure === input.procedure &&
+      Number(invocation.slotLevel) === input.slotLevel
+    );
+  });
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction spell choice.`);
   }
@@ -2143,10 +2154,7 @@ function requireTriggeredReactionSpellChoice(input: {
 
 function triggeredReactionSpellDecision(
   reactorId: typeof spellTargetId,
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+  choice: TriggeredReactionSpellChoice,
   fills: readonly BattleFill[],
 ): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return {

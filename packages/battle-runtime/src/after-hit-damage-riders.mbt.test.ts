@@ -1969,10 +1969,15 @@ function requireAfterHitChoice(
   const choice = battleFrontierInterruptDecisionForState(
     session.state,
   )?.choices.find((candidate) => {
-    if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.tag !== "runtimeCommand" ||
+      candidate.subject.command !== "castAttackHitBonusActionSpell"
+    )
+      return false;
     const invocationRef = characterSpellInvocationRefForProcedureRefForTest(
       session,
-      candidate.reactorId,
+      candidate.subject.casterId,
       candidate.subject.procedureRef,
     );
     return (
@@ -1981,14 +1986,19 @@ function requireAfterHitChoice(
         invocationRef.tag === options.invocationTag)
     );
   });
-  if (choice === undefined || choice.kind !== "castAttackHitBonusActionSpell") {
+  if (
+    choice === undefined ||
+    choice.kind !== "nestedProcedure" ||
+    choice.subject.tag !== "runtimeCommand" ||
+    choice.subject.command !== "castAttackHitBonusActionSpell"
+  ) {
     throw new Error(`Expected ${spellId} after-hit spell choice.`);
   }
   return {
     procedureRef: choice.subject.procedureRef,
     invocation: characterSpellInvocationForProcedureRefForTest(
       session,
-      choice.reactorId,
+      choice.subject.casterId,
       choice.subject.procedureRef,
     ),
     initialHoles: choice.initialHoles,

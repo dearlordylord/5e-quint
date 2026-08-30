@@ -10,6 +10,7 @@ import type {
   BattleSnapshot,
   BattleState,
   BattleAcceptedAttackAmmunitionSpend,
+  BattleInterruptRouteOptions,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
@@ -61,16 +62,20 @@ const BATTLE_ATTACK_ROUTE_RESOLVERS = {
 
 export function resolveAdmittedBattleSubject(
   input: AdmittedBattleResolutionInput,
-  handledInterruptTrigger?: BattleInterruptTrigger,
+  options: BattleInterruptRouteOptions = {},
 ): BattleResolutionResult {
   const executionRegistry = spellProcedureExecutionRegistry();
+  const handledInterruptTrigger =
+    options.replayingInterruptedProcedure === true
+      ? options.handledInterruptOccurrence?.trigger
+      : options.handledInterruptTrigger;
   return battleResolutionWithExecutionSnapshot(
     input.state,
     resolveAdmittedBattleSubjectWithRegistry(
       input,
       executionRegistry,
       BATTLE_ATTACK_ROUTE_RESOLVERS,
-      handledInterruptTrigger === undefined ? {} : { handledInterruptTrigger },
+      options,
     ),
     handledInterruptTrigger,
   );

@@ -210,10 +210,10 @@ export function attackRollHole(
     attack: unboundAttackActionOption(attack),
     attackBonus: attackActionBonusWithPassiveFeatureBonus(attacker, attack),
     ...optionalProperty("rollMode", rollMode),
-    ...(ongoingFeatureActivations === undefined ||
-    ongoingFeatureActivations.length === 0
-      ? {}
-      : { ongoingFeatureActivations }),
+    ...nonEmptyArrayProperty(
+      "ongoingFeatureActivations",
+      ongoingFeatureActivations ?? [],
+    ),
     ...(attacker === undefined
       ? {}
       : attackRollMissToHitReplacementHolePayloadForAttacker(attacker)),

@@ -1317,6 +1317,7 @@ function featureResourceSheetFixture(
       ...(input.druidWildShapeKnownFormStatBlockIds === undefined
         ? {}
         : {
+            statBlockCatalog,
             druidWildShapeKnownFormStatBlockIds:
               input.druidWildShapeKnownFormStatBlockIds,
           }),
@@ -1342,6 +1343,7 @@ function featureResourceSheetFixture(
     ...(input.druidWildShapeKnownFormStatBlockIds === undefined
       ? {}
       : {
+          statBlockCatalog,
           druidWildShapeKnownFormStatBlockIds:
             input.druidWildShapeKnownFormStatBlockIds,
         }),

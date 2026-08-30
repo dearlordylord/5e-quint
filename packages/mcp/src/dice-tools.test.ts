@@ -235,7 +235,7 @@ describe("structured MCP bulk dice roller", () => {
       disposition: "sampled",
     });
     expect(root.sessionStore.snapshot()).toEqual(before);
-    expect(root.sessionStore.pendingBattleFills).toBeNull();
+    expect(root.sessionStore.getPendingBattleTransaction()).toBeNull();
   });
 
   test("is advertised and validated through the real in-memory MCP protocol", async () => {

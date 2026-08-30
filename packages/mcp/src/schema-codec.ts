@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 
+import { stripNestedJsonSchemaIds } from "@dnd/shared/json-schema";
 import { Effect, Result, Schema } from "effect";
 
 import {
@@ -220,10 +221,11 @@ export function schemaJsonContent<T, E, RD>(
 function jsonSchemaFromCodec<A, I>(
   schema: Schema.Codec<A, I, never>,
 ): McpOutputSchema {
-  return stripSchemaIds(
+  return stripNestedJsonSchemaIds(
     Schema.toStandardJSONSchemaV1(schema)["~standard"].jsonSchema.input({
       target: "draft-2020-12",
     }),
+    { preserveRootId: false },
   );
 }
 
@@ -313,23 +315,6 @@ function objectSchemaBranch(
   return anyOf.find(
     (entry): entry is Readonly<Record<string, unknown>> =>
       isJsonObject(entry) && entry.type === "object",
-  );
-}
-
-function stripSchemaIds(value: object): McpOutputSchema;
-function stripSchemaIds(value: unknown): unknown;
-function stripSchemaIds(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((entry) => stripSchemaIds(entry));
-  }
-  if (typeof value !== "object" || value === null) {
-    return value;
-  }
-
-  return Object.fromEntries(
-    Object.entries(value)
-      .filter(([key]) => key !== "$id")
-      .map(([key, entry]) => [key, stripSchemaIds(entry)]),
   );
 }
 

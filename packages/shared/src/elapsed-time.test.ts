@@ -71,6 +71,13 @@ describe("elapsed time algebra", () => {
         unit: "second",
       });
     }
+    expect(
+      Number(
+        requireSuccess(
+          elapsedTimeTicksFromTimeSpanDuration({ unit: "minute", amount: 2 }),
+        ),
+      ),
+    ).toBe(2 * ELAPSED_TIME_TICKS_PER_MINUTE);
   });
 
   test("parses positive elapsed-time ticks without admitting expired timers", () => {

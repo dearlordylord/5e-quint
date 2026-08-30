@@ -1846,8 +1846,10 @@ describe("MCP protocol server", () => {
           const presentation = presented.presentation;
           return (
             isJsonObject(choice) &&
-            choice.kind === "castTriggeredReactionSpell" &&
-            choice.reactorId === "row-shield-wizard" &&
+            choice.kind === "nestedProcedure" &&
+            isJsonObject(choice.subject) &&
+            choice.subject.command === "castTriggeredReactionSpell" &&
+            choice.subject.reactorId === "row-shield-wizard" &&
             isJsonObject(presentation) &&
             presentation.kind === "spell" &&
             isJsonObject(presentation.invocation) &&
@@ -2531,7 +2533,8 @@ describe("MCP protocol server", () => {
               ),
               battleState: root.sessionStore.battleState,
               battleSession: root.sessionStore.battleSession,
-              pendingBattleFills: root.sessionStore.pendingBattleFills,
+              pendingBattleFills:
+                root.sessionStore.getPendingBattleTransaction(),
             });
           },
         );
@@ -3412,6 +3415,7 @@ async function installCharacterRowCoverageSessions(
             : {
                 druidWildShapeKnownFormStatBlockIds:
                   input.druidWildShapeKnownFormStatBlockIds,
+                statBlockCatalog: root.statBlockCatalog,
               }),
           ...(input.zeroHpLifecycle === undefined
             ? {}

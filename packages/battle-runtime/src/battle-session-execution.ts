@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 import { optionalProperty } from "./optional-property.ts";
 import { Match, Result } from "effect";
+import type { BattleInterruptTrigger } from "./battle-interrupt-triggers.ts";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
 import { battleReducerRouteForResolution } from "./battle-reducer/reducer-route.ts";
 import {
@@ -21,7 +22,11 @@ import {
   type BattleRuntimeSession,
 } from "./battle-runtime-context.ts";
 import type { CombatantId } from "./identity.ts";
-import { sameBattleSubject, type BattleSubject } from "./battle-subjects.ts";
+import {
+  isBattleReadyTriggerReportSubject,
+  sameBattleSubject,
+  type BattleSubject,
+} from "./battle-subjects.ts";
 import {
   currentInterruptFrame,
   interruptDecisionFrontier,
@@ -33,6 +38,7 @@ import type {
   BattleFallingCreatureMitigationTriggerFact,
   BattleHole,
   BattleInterruptDecisionFrontier,
+  BattleInterruptRouteOptions,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleSnapshot,
@@ -312,19 +318,33 @@ function battleHolesEnvelope(
   };
 }
 
-function precedingBattleFrontierEnvelope(
+type BattleRetryFrontier = {
+  readonly session: BattleRuntimeSession;
+  readonly envelope: BattleCheckpointFrontierEnvelope;
+};
+
+function precedingBattleRetryFrontier(
   input: BattleRuntimeResolutionInput,
-): BattleCheckpointFrontierEnvelope {
+): BattleRetryFrontier {
   if (input.fills.length === 0) {
-    return battleCurrentFrontierEnvelope(input.session.state);
+    return {
+      session: input.session,
+      envelope: battleCurrentFrontierEnvelope(input.session.state),
+    };
   }
   const preceding = resolveBattleRuntimeSubject({
     ...input,
     fills: input.fills.slice(0, -1),
   });
   return preceding.tag === "resolved"
-    ? battleResolvedFrontierEnvelope(input.session.state)
-    : preceding.envelope;
+    ? {
+        // A rejected fill does not commit a resolved prefix. Keep its retry
+        // frontier on the incoming session so the result is one correlated
+        // session/envelope pair and remains directly presentable by MCP.
+        session: input.session,
+        envelope: battleResolvedFrontierEnvelope(input.session.state),
+      }
+    : { session: preceding.session, envelope: preceding.envelope };
 }
 
 function invalidBattleRuntimeResult(
@@ -335,12 +355,13 @@ function invalidBattleRuntimeResult(
   >["reason"],
   message: string,
 ): Extract<BattleRuntimeResolutionResult, { readonly tag: "invalid" }> {
+  const retry = precedingBattleRetryFrontier(input);
   return {
     tag: "invalid",
-    session: input.session,
+    session: retry.session,
     reason,
     message,
-    envelope: precedingBattleFrontierEnvelope(input),
+    envelope: retry.envelope,
   };
 }
 
@@ -370,6 +391,29 @@ function rolledD20TestRequests(
 
 export function resolveBattleRuntimeSubject(
   input: BattleRuntimeResolutionInput,
+): BattleRuntimeResolutionResult {
+  return resolveBattleRuntimeSubjectWithHandledInterruptTrigger(input);
+}
+
+/**
+ * Replay a transaction layer after an interrupt decision. The reducer needs
+ * the trigger that was just handled in order to advance the checkpoint rather
+ * than reject the replay as a new subject selection.
+ */
+export function resolveBattleRuntimeSubjectForReplay(input: {
+  readonly session: BattleRuntimeSession;
+  readonly subject: BattleSubject;
+  readonly fills: BattleResolutionInput["fills"];
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
+}): BattleRuntimeResolutionResult {
+  return resolveBattleRuntimeSubjectWithHandledInterruptTrigger(input);
+}
+
+function resolveBattleRuntimeSubjectWithHandledInterruptTrigger(
+  input: BattleRuntimeResolutionInput & {
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  },
 ): BattleRuntimeResolutionResult {
   if (
     input.subject.tag === "companionLifecycle" &&
@@ -408,11 +452,14 @@ export function resolveBattleRuntimeSubject(
   }
   return battleRuntimeResolutionFromMechanical(
     input.session,
-    resolveBattleSubject({
-      state: input.session.state,
-      subject: input.subject,
-      fills: input.fills,
-    }),
+    resolveBattleSubjectWithHandledInterruptTrigger(
+      {
+        state: input.session.state,
+        subject: input.subject,
+        fills: input.fills,
+      },
+      input.handledInterruptTrigger,
+    ),
     "ordinary",
     input,
   );
@@ -639,14 +686,18 @@ function battleRuntimeResolutionFromMechanical(
                 frontier: interruptFrontier,
               };
         if (envelope === null) {
+          const retry = retryInput
+            ? precedingBattleRetryFrontier(retryInput)
+            : {
+                session,
+                envelope: battleCurrentFrontierEnvelope(session.state),
+              };
           return {
             tag: "invalid" as const,
-            session,
+            session: retry.session,
             reason: "invalidFill" as const,
             message: "Battle continuation requires a non-empty Hole frontier.",
-            envelope: retryInput
-              ? precedingBattleFrontierEnvelope(retryInput)
-              : battleCurrentFrontierEnvelope(session.state),
+            envelope: retry.envelope,
             ...optionalProperty("routeEvents", outcome.routeEvents),
           };
         }
@@ -658,13 +709,19 @@ function battleRuntimeResolutionFromMechanical(
         };
       },
     ),
-    byBattleResolutionTag("invalid", ({ snapshot: _snapshot, ...outcome }) => ({
-      ...outcome,
-      session,
-      envelope: retryInput
-        ? precedingBattleFrontierEnvelope(retryInput)
-        : battleCurrentFrontierEnvelope(session.state),
-    })),
+    byBattleResolutionTag("invalid", ({ snapshot: _snapshot, ...outcome }) => {
+      const retry = retryInput
+        ? precedingBattleRetryFrontier(retryInput)
+        : {
+            session,
+            envelope: battleCurrentFrontierEnvelope(session.state),
+          };
+      return {
+        ...outcome,
+        session: retry.session,
+        envelope: retry.envelope,
+      };
+    }),
     Match.exhaustive,
   );
 }
@@ -758,15 +815,22 @@ export function endBattleRuntimeTurnWithTableD20TestCircumstances(
       actorId: input.actorId,
       fills: input.fills,
     });
+    const retryFrontier =
+      retry.tag === "resolved"
+        ? {
+            session: input.session,
+            envelope: battleResolvedFrontierEnvelope(input.session.state),
+          }
+        : {
+            session: retry.session,
+            envelope: retry.envelope,
+          };
     return {
       tag: "invalid",
-      session: input.session,
+      session: retryFrontier.session,
       reason: "invalidFill",
       message: admission.failure.issues.map(({ message }) => message).join(" "),
-      envelope:
-        retry.tag === "resolved"
-          ? battleResolvedFrontierEnvelope(input.session.state)
-          : retry.envelope,
+      envelope: retryFrontier.envelope,
       tableD20TestCircumstanceDecisionIssue: admission.failure,
     };
   }
@@ -805,10 +869,15 @@ export function openCreatureFallsRuntimeInterruptWindow(input: {
 export function resolveBattleSubject(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
+  return resolveBattleSubjectWithHandledInterruptTrigger(input);
+}
+
+function resolveBattleSubjectWithHandledInterruptTrigger(
+  input: BattleResolutionInput,
+  handledInterruptTrigger?: BattleInterruptTrigger,
+): BattleResolutionResult {
   const phase = input.state.subjectResolutionPhase;
-  const reportsReadyTrigger =
-    input.subject.tag === "runtimeCommand" &&
-    input.subject.command === "reportReadyTrigger";
+  const reportsReadyTrigger = isBattleReadyTriggerReportSubject(input.subject);
   if (hasStaleSubjectContinuation(phase, reportsReadyTrigger, input.subject)) {
     return {
       tag: "invalid",
@@ -832,9 +901,11 @@ export function resolveBattleSubject(
   }
   const mechanical = resolveAdmittedBattleSubject(
     admission.input,
-    phase.kind === "subjectContinuation" && !reportsReadyTrigger
-      ? phase.handledInterruptTrigger
-      : undefined,
+    interruptRouteOptionsForSubjectResolution({
+      phase,
+      reportsReadyTrigger,
+      ...optionalProperty("handledInterruptTrigger", handledInterruptTrigger),
+    }),
   );
   const result = reportsReadyTrigger
     ? mechanicalResultWithPreservedSubjectPhase(
@@ -844,6 +915,23 @@ export function resolveBattleSubject(
     : mechanical;
   const routeEvents = battleReducerRouteForResolution(admission.input, result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
+}
+
+function interruptRouteOptionsForSubjectResolution(input: {
+  readonly phase: BattleResolutionInput["state"]["subjectResolutionPhase"];
+  readonly reportsReadyTrigger: boolean;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+}): BattleInterruptRouteOptions {
+  const effectiveHandledInterruptTrigger =
+    input.handledInterruptTrigger ??
+    (input.phase.kind === "subjectContinuation" && !input.reportsReadyTrigger
+      ? input.phase.handledInterruptTrigger
+      : undefined);
+  return effectiveHandledInterruptTrigger === undefined
+    ? {}
+    : {
+        handledInterruptTrigger: effectiveHandledInterruptTrigger,
+      };
 }
 
 function hasStaleSubjectContinuation(

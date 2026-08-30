@@ -3156,7 +3156,13 @@ describe("Cloudkill source-turn movement", () => {
     ).toMatchObject({
       trigger: "saveFailed",
       choices: [
-        expect.objectContaining({ readiedSpellCasterId: spellTargetId }),
+        expect.objectContaining({
+          kind: "nestedProcedure",
+          subject: expect.objectContaining({
+            command: "releaseReadiedSpell",
+            readiedSpellCasterId: spellTargetId,
+          }),
+        }),
       ],
     });
   });
@@ -4006,7 +4012,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const choice = reactionChoiceWithSubject(pending.choices);
     if (
-      choice.kind !== "releaseReadiedSpell" ||
+      choice.kind !== "nestedProcedure" ||
       choice.subject.command !== "releaseReadiedSpell"
     ) {
       throw new Error("Expected the readied Ray of Frost choice.");
@@ -4018,7 +4024,6 @@ describe("Cloudkill source-turn movement", () => {
         responderId: spellTargetId,
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: spellTargetId,
           procedureRef: choice.subject.procedureRef,
           fills: [],
         },
@@ -4174,7 +4179,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const choice = reactionChoiceWithSubject(pending.choices);
     if (
-      choice.kind !== "releaseReadiedSpell" ||
+      choice.kind !== "nestedProcedure" ||
       choice.subject.command !== "releaseReadiedSpell"
     ) {
       throw new Error("Expected the readied Ray of Frost choice.");
@@ -4186,7 +4191,6 @@ describe("Cloudkill source-turn movement", () => {
         responderId: spellTargetId,
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: spellTargetId,
           procedureRef: choice.subject.procedureRef,
           fills: [],
         },

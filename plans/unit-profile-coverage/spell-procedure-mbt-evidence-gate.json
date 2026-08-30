@@ -224,6 +224,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -752,6 +760,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -1139,6 +1155,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -1403,6 +1427,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -1616,6 +1648,22 @@
               "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
             }
           ],
           "profileId": "spell.invocation-condition-save",
@@ -2034,6 +2082,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -2400,6 +2456,22 @@
               "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
             }
           ],
           "profileId": "spell.invocation-condition-save",
@@ -2722,6 +2794,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -3338,6 +3418,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -3858,6 +3946,22 @@
               "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
             }
           ],
           "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
@@ -4363,6 +4467,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -4971,6 +5083,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -5358,6 +5478,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -5744,6 +5872,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -6392,6 +6528,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -6778,6 +6922,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -7212,6 +7364,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -7863,6 +8023,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -8930,6 +9098,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -9347,6 +9523,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -9876,6 +10060,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -10263,6 +10455,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -10527,6 +10727,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -10740,6 +10948,22 @@
               "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
             }
           ],
           "profileId": "spell.invocation-condition-save",
@@ -11158,6 +11382,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -11524,6 +11756,22 @@
               "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
             }
           ],
           "profileId": "spell.invocation-condition-save",
@@ -11846,6 +12094,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -12462,6 +12718,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -12982,6 +13246,22 @@
               "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-save-condition-spells.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts"
             }
           ],
           "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
@@ -13487,6 +13767,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -14095,6 +14383,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -14481,6 +14777,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -14936,6 +15240,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -15583,6 +15895,14 @@
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
@@ -15969,6 +16289,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -16403,6 +16731,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -17054,6 +17390,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
@@ -18120,6 +18464,14 @@
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",

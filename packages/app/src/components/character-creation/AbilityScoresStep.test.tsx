@@ -15,6 +15,14 @@ const STANDARD_ARRAY_BY_ABILITY = {
   wis: 12
 } as const
 
+function fillAllAbilityScores(score: number): void {
+  for (const ability of Object.keys(STANDARD_ARRAY_BY_ABILITY)) {
+    fireEvent.change(screen.getByRole("spinbutton", { name: new RegExp(ability, "i") }), {
+      target: { value: String(score) }
+    })
+  }
+}
+
 describe("AbilityScoresStep", () => {
   it("builds and submits a complete runtime ability-score fill", () => {
     const holes = assessCharacterDraft(createCharacterDraft({})).holes
@@ -62,6 +70,23 @@ describe("AbilityScoresStep", () => {
       target: { value: "" }
     })
     expect(screen.getByText(/complete all six scores/i)).toBeTruthy()
+  })
+
+  it("does not submit an invalid point-buy fill", () => {
+    const holes = assessCharacterDraft(createCharacterDraft({})).holes
+    const onFill = vi.fn()
+    render(<AbilityScoresStep holes={holes} onFill={onFill} />)
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Generation method" }), {
+      target: { value: "pointBuy" }
+    })
+    fillAllAbilityScores(31)
+
+    const submit = screen.getByRole("button", { name: "Submit Ability Scores" })
+    expect(submit).toHaveProperty("disabled", true)
+    fireEvent.click(submit)
+
+    expect(onFill).not.toHaveBeenCalled()
   })
 
   it("renders the accepted state when no ability-score hole remains", () => {

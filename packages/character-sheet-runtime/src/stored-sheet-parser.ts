@@ -73,7 +73,7 @@ import {
   allCantripsFromAnyClassSpellList,
   allCantripsFromClassSpellList,
   allLeveledSpellsFromAnyClassSpellList,
-} from "@dnd/surface/surface/unit-catalog";
+} from "@dnd/surface/surface/unit-catalog-core";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import { spellHasTopLevelRitualTag } from "@dnd/surface/surface/types";
 import type {

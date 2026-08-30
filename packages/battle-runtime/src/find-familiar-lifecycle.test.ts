@@ -81,6 +81,7 @@ import {
   temporarilyDismissSpawnedCompanion,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptProcedureChoice,
   type BattleCreatureInit,
   type BattleState,
   type BattleRuntimeSession,
@@ -104,7 +105,10 @@ import {
   battleFrontierInterruptDecisionForState,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
-import { spellSlotInvocationRef } from "./battle-subjects.ts";
+import {
+  spellSlotInvocationRef,
+  type BattleInterruptSubject,
+} from "./battle-subjects.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
@@ -213,6 +217,30 @@ function halflingLuckUnit() {
 const firstTypeOverride = familiarEligibility.creatureTypeOverrideChoices[0];
 if (firstTypeOverride === undefined) {
   throw new Error("Expected Find Familiar creature type override choices.");
+}
+
+type NestedProcedureChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+>;
+type TriggeredReactionSpellChoice = NestedProcedureChoice & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
+  >;
+};
+
+function isTriggeredReactionSpellChoice(
+  choice: BattleInterruptProcedureChoice,
+): choice is TriggeredReactionSpellChoice {
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castTriggeredReactionSpell"
+  );
 }
 
 function druidWildShapeKnownForms() {
@@ -4411,15 +4439,16 @@ describe("Find Familiar lifecycle", () => {
     ]);
     const shieldChoice = battleFrontierInterruptDecisionForState(
       awaitingReaction.state,
-    )?.choices.find((choice) => choice.kind === "castTriggeredReactionSpell");
+    )?.choices.find(isTriggeredReactionSpellChoice);
     expect(shieldChoice).toMatchObject({
-      kind: "castTriggeredReactionSpell",
-      reactorId: enemyId,
+      kind: "nestedProcedure",
+      subject: {
+        tag: "runtimeCommand",
+        command: "castTriggeredReactionSpell",
+        reactorId: enemyId,
+      },
     });
-    if (
-      shieldChoice === undefined ||
-      shieldChoice.kind !== "castTriggeredReactionSpell"
-    ) {
+    if (shieldChoice === undefined) {
       throw new Error("Expected Shield Reaction choice.");
     }
 
@@ -4532,7 +4561,7 @@ describe("Find Familiar lifecycle", () => {
     if (awaitingAttackRoll.tag !== "needsHoles") {
       throw new Error("Expected Pact attack roll hole.");
     }
-    const pendingInterrupt = resolveBattleSubject({
+    const awaitingReaction = resolveBattleSubject({
       state: shieldCast.state,
       subject,
       fills: [
@@ -4543,13 +4572,13 @@ describe("Find Familiar lifecycle", () => {
         }),
       ],
     });
-    expect(pendingInterrupt).toMatchObject({
+    expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
     });
-    if (pendingInterrupt.tag !== "needsHoles") return;
+    if (awaitingReaction.tag !== "needsHoles") return;
     const blockedByInterrupt = resolveBattleSubject({
-      state: pendingInterrupt.state,
-      subject: pactScratchSubject(pendingInterrupt.state),
+      state: awaitingReaction.state,
+      subject: pactScratchSubject(awaitingReaction.state),
       fills: [],
     });
     expect(blockedByInterrupt).toMatchObject({
@@ -4557,7 +4586,7 @@ describe("Find Familiar lifecycle", () => {
       reason: "staleSubject",
     });
     expect(
-      pendingInterrupt.state.combatants.get(familiarId)?.reactionAvailable,
+      awaitingReaction.state.combatants.get(familiarId)?.reactionAvailable,
     ).toBe(true);
   });
 

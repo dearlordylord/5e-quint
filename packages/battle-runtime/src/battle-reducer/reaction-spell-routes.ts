@@ -5,6 +5,8 @@ import type {
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
+import { interruptChoiceResponderId } from "../battle-state-execution.ts";
+import type { BattleInterruptSubject } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
 import { currentInterruptCheckpoint } from "./battle-snapshot.ts";
 import {
@@ -26,8 +28,13 @@ import { spellInvocationForInterruptChoice } from "./reducer-route-spell-query.t
 
 type TriggeredReactionSpellChoice = Extract<
   BattleInterruptCheckpoint["choices"][number],
-  { readonly kind: "castTriggeredReactionSpell" }
->;
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
 type TriggeredReactionSpellSelection = Extract<
   BattleInterruptProcedureSelection,
   { readonly kind: "castTriggeredReactionSpell" }
@@ -127,9 +134,19 @@ function selectedTriggeredReactionSpellChoice(input: {
 }): TriggeredReactionSpellChoice | undefined {
   return input.frame.choices.find(
     (choice): choice is TriggeredReactionSpellChoice =>
-      choice.kind === "castTriggeredReactionSpell" &&
-      choice.reactorId === input.responderId &&
+      isTriggeredReactionSpellChoice(choice) &&
+      interruptChoiceResponderId(choice) === input.responderId &&
       choice.subject.procedureRef === input.selection.procedureRef,
+  );
+}
+
+function isTriggeredReactionSpellChoice(
+  choice: BattleInterruptCheckpoint["choices"][number],
+): choice is TriggeredReactionSpellChoice {
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castTriggeredReactionSpell"
   );
 }
 
@@ -140,7 +157,7 @@ function reactionInterruptPayloadRouteSubjectForChoice(
 ): ReactionInterruptPayloadRouteSubject | undefined {
   const invocation = spellInvocationForInterruptChoice(
     state,
-    choice.reactorId,
+    interruptChoiceResponderId(choice),
     choice.subject.procedureRef,
   );
   if (invocation?.procedure === "triggeredArmorDefense") {
@@ -299,7 +316,7 @@ export function reactionSpellRouteSubjectForInterruptFrame(
   const subjects = new Set(
     frame.choices.flatMap(
       (choice): readonly ReactionInterruptPayloadRouteSubject[] => {
-        if (choice.kind !== "castTriggeredReactionSpell") {
+        if (!isTriggeredReactionSpellChoice(choice)) {
           return [];
         }
         const subject = reactionInterruptPayloadRouteSubjectForChoice(

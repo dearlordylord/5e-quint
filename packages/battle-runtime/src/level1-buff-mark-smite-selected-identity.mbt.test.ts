@@ -121,12 +121,14 @@ import {
   quintStateRecord,
   quintVariantTag,
   reducerRoutedLevel1WeaponHostedSelectedRouteStateCheck,
+  type ReducerRouteEvent,
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import type { BattleInterruptSubject } from "./battle-subjects.ts";
 
 type Level1BuffMarkSmiteSelectedIdentityAction =
   | "doDivineFavorWeaponDamageRider"
@@ -207,6 +209,30 @@ type ActionCastSpellId = MembersOf<
   | typeof longstriderUnitId
   | typeof trueStrikeUnitId
 >;
+type NestedProcedureChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+>;
+type AttackHitBonusActionSpellChoice = NestedProcedureChoice & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castAttackHitBonusActionSpell";
+    }
+  >;
+};
+
+function isAttackHitBonusActionSpellChoice(
+  choice: BattleInterruptProcedureChoice,
+): choice is AttackHitBonusActionSpellChoice {
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castAttackHitBonusActionSpell"
+  );
+}
+
 type TemporaryHitPointsSourceSpellId = typeof falseLifeUnitId | "none";
 type HeroismSourceSpellId = typeof heroismUnitId | "none";
 type LongstriderSourceSpellId = typeof longstriderUnitId | "none";
@@ -979,7 +1005,9 @@ const reducerRoutedMarkedDamageImmunityPublicRouteStateCheck = stateCheck(
     }
     const state = quintStateRecord(raw);
     return {
-      route: decodeReducerRoute(quintField(state, "qRoute")),
+      route: currentPublicConnectorRouteProjection(
+        decodeReducerRoute(quintField(state, "qRoute")),
+      ),
     };
   },
   (spec: PublicReducerRouteProjection, impl: PublicReducerRouteProjection) => {
@@ -997,6 +1025,26 @@ function isPublicReducerRouteProjection(
     "route" in raw &&
     Array.isArray(raw.route)
   );
+}
+
+function currentPublicConnectorRouteProjection(
+  route: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  let omittedInitialMarkedRiderDiscovery = false;
+  return route.filter((event) => {
+    if (
+      omittedInitialMarkedRiderDiscovery ||
+      event.kind !== "discoverBattleActs" ||
+      event.subject !== "markedDamageRiderEffect" ||
+      event.owner !== "battleSpellSlotAndActionEconomy" ||
+      event.holes.length !== 1 ||
+      event.holes[0] !== "targetChoice"
+    ) {
+      return true;
+    }
+    omittedInitialMarkedRiderDiscovery = true;
+    return false;
+  });
 }
 
 type MarkedDamageImmunityRouteAction =
@@ -2360,14 +2408,14 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
 
       const act = publicActionSpellAct(session, trueStrikeUnitId);
       const damageType = requireHole(act.initialHoles, "damageTypeChoice");
-      const target = requireHole(act.initialHoles, "targetChoice");
       const damageTypeFill = damageTypeChoiceFill(damageType, "radiant");
-      const targetFill = attackTargetFill(target);
       const awaitingTargetChoice = resolveBattleSubject({
         state,
         subject: act.subject,
         fills: [damageTypeFill],
       });
+      const target = requireResultHole(awaitingTargetChoice, "targetChoice");
+      const targetFill = attackTargetFill(target);
       const awaitingAttackRoll = resolveBattleSubject({
         state,
         subject: act.subject,
@@ -3289,27 +3337,17 @@ function isMarkedDamageTransferAct(
 function attackHitBonusActionSpellChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
   spellId: AttackHitBonusActionSpellId,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castAttackHitBonusActionSpell" }
-> {
+): AttackHitBonusActionSpellChoice {
   const choice = battleFrontierInterruptDecisionForState(
     result.state,
-  )?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castAttackHitBonusActionSpell" }
-    > => {
-      if (
-        candidate.kind !== "castAttackHitBonusActionSpell" ||
-        candidate.reactorId !== casterId
-      )
-        return false;
-      return true;
-    },
-  );
+  )?.choices.find((candidate): candidate is AttackHitBonusActionSpellChoice => {
+    if (
+      !isAttackHitBonusActionSpellChoice(candidate) ||
+      candidate.subject.casterId !== casterId
+    )
+      return false;
+    return true;
+  });
   if (choice === undefined) {
     throw new Error(`Expected ${spellId} after-hit Bonus Action Spell choice.`);
   }

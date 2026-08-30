@@ -11,6 +11,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  settleBattleRuntimeTransaction,
   startBattle,
   startBattleWithInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
@@ -25,10 +26,14 @@ import {
 import { Hp } from "@dnd/shared/types";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
+import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Option, Result } from "effect";
+import { Result, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -41,10 +46,14 @@ import { createMcpPlaySessionRoot } from "./composition-root.ts";
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
-if (unitCatalogResult.tag !== "ok") {
-  throw new Error("MCP session store test Unit catalog must build.");
+const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
+  throw new Error("MCP session store test catalogs must build.");
 }
 const unitLibrary = unitCatalogResult.catalog;
+const statBlockCatalog = statBlockCatalogResult.catalog;
 const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
   statBlockId("stat_block_rat"),
   statBlockId("stat_block_riding_horse"),
@@ -103,6 +112,7 @@ describe("MCP character sessions", () => {
       conditions: [],
       companion: { tag: "none" },
       unitLibrary,
+      statBlockCatalog,
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
     });
 
@@ -130,6 +140,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -143,6 +154,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -168,6 +180,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -197,6 +210,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -304,6 +318,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -616,6 +631,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -672,6 +688,7 @@ describe("MCP character sessions", () => {
         conditions: [],
         companion: { tag: "none" },
         unitLibrary,
+        statBlockCatalog,
         druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       }),
     );
@@ -687,7 +704,7 @@ describe("MCP character sessions", () => {
     expect(deepStoreState(store)).toEqual(beforeCommit);
   });
 
-  test("rejects a roster plan after pending-fill session identity changes", () => {
+  test("rejects a roster plan after atomic battle transaction advancement", () => {
     const root = createMcpPlaySessionRoot();
     const store = createMcpSessionStore({
       statBlockCatalog: root.statBlockCatalog,
@@ -738,15 +755,29 @@ describe("MCP character sessions", () => {
     if (subjectAct === undefined) {
       throw new Error("Expected an active battle subject for pending fills.");
     }
-    store.pendingBattleFills = {
-      subject: subjectAct.subject,
-      fills: [],
-      baseSession: active,
-    };
+    const pending = settleBattleRuntimeTransaction({
+      session: active,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject: subjectAct.subject,
+        fills: [],
+      },
+      statBlockCatalog: root.statBlockCatalog,
+    });
+    if (pending.tag !== "needsHoles") {
+      throw new Error("Expected a pending battle transaction for the plan.");
+    }
+    expect(pending.transaction).toBeDefined();
+    expect(store.storeBattleTransactionResult(active, pending)).toEqual(
+      Result.succeed(undefined),
+    );
     const beforeCommit = deepStoreState(store);
 
     expect(store.commitActiveBattleRosterTransition(planned.plan)).toEqual(
-      Result.fail({ tag: "battleRosterPlanFillsChanged" }),
+      Result.fail({
+        tag: "battleRosterPlanFillsChanged",
+      }),
     );
     expect(deepStoreState(store)).toEqual(beforeCommit);
   });
@@ -758,7 +789,7 @@ function deepStoreState(store: ReturnType<typeof createMcpSessionStore>) {
     battleState: store.battleState,
     battleSession: store.battleSession,
     characters: Array.from(store.characters.entries()),
-    pendingBattleFills: store.pendingBattleFills,
+    pendingBattleTransaction: store.getPendingBattleTransaction(),
   });
 }
 

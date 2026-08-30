@@ -81,6 +81,15 @@ Local SRD corpus + ASSUMPTIONS.md + UBIQUITOUS_LANGUAGE.md
 | - character -> battle-init       | /
 +----------------------------------+
 
++----------------------------------+
+| @dnd/opaque-oracle               |
+| - strict Case/Trace contract     |
+| - creation -> sheet -> Battle    |
+| - minimal checkpoint/frontier    |
+| - immutable application/distribution |
+| - identity + stream + HTTP       |
++----------------------------------+
+
 @dnd/shared and @dnd/shared-algebras (incl. rule-core slices) sit below all
 runtime packages.
 
@@ -177,6 +186,36 @@ content language between Surface and runtime.
 drafts, holes, batch fills, finalization, and the finalized `CharacterBuild`.
 Character-creation terms live in
 `packages/character-creation-runtime/VOCABULARY.md`.
+
+`@dnd/opaque-oracle` owns the language-neutral, strict Case/Trace boundary for
+call-local production evaluation. Its Cleanroom role is a source-free
+behavioral calibration instrument for independent Target SDK conformance tests,
+as defined by the canonical [`Opaque
+Oracle`](docs/cleanroom/CONTEXT.md#opaque-oracle) term. It composes the Character
+Creation reducer through `CharacterBuild`, fresh Character Sheet construction,
+and the existing arbitrary mixed-origin Character Battle handoff. It supplies
+deterministic call-local identities, projects mechanics-relevant owner facts,
+validates the stripped Battle checkpoint's surviving identity and
+cross-reference invariants, and returns typed workflow or owner rejections for
+exhausted or surplus
+creation input and invalid Battle entry. Its successful initial Battle frontier
+contains only typed subjects from production Act discovery; it does not publish
+presentation, Runtime Holes, continuation fills, interrupt state, sessions,
+caches, transport envelopes, Battle state ownership, or MCP composition. A
+selected production `CharacterBuildFact` may retain authored selection identity
+such as an authored starting-item name; that is not an Oracle presentation
+field. Raw duplicate-aware scanning, structural Document decoding, semantic
+admission, and evaluation are distinct stages. The package publishes compact
+Draft 2020-12 Document schemas from the canonical structural graphs; raw JSON
+duplicates and arbitrary cross-record correlations remain scanner/admission
+responsibilities. See `packages/opaque-oracle/ARCHITECTURE.md` for the detailed
+boundary. It also owns one immutable application composition and one
+source-free executable distribution with identity lookup, persistent stream,
+and loopback-only HTTP adapters. Those adapters use the shared operation and
+resolve staged assets relative to the executable; they do not introduce
+transport-owned rules state. HTTP binds only `127.0.0.1`, owns request framing
+and lifecycle, and keeps request bodies and evaluation state local to each
+request.
 
 `@dnd/battle-runtime` owns the battle reducer state:
 `BattleState`, `BattleCreatureState`, battle subjects, replay-from-root holes
@@ -355,13 +394,14 @@ weapon, feature, or Stat Block.
 
 ## Package Ownership
 
-| Package                           | Owns                                                                                                                                                                                                                                                                             | Does not own                                                                                                                                                                                                                        |
-| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@dnd/surface`                    | Provenance-bearing authored Unit and Stat Block records, structural readers, SRD collections, and decode/catalog boundaries.                                                                                                                                                     | Runtime state, reducer legality, character draft sessions, battle sessions, or projected executable IR.                                                                                                                             |
-| `@dnd/shared-algebras`            | Reusable reducer algebras such as action economy, Initiative, Armor Class, attack rolls, conditions, Death Saving Throw counters, runtime dice, and runtime hole identity.                                                                                                       | Unit support gates, act subjects, authored-content catalogs, MCP sessions, or complete character/battle reducers.                                                                                                                   |
-| `@dnd/character-creation-runtime` | Character Draft mutation, creation holes/fills, support gates, finalization, and `CharacterBuild` projection from Surface Unit facts.                                                                                                                                            | Battle initialization, battle state, current HP, in-play resource expenditure, or authored content provenance.                                                                                                                      |
-| `@dnd/battle-runtime`             | Battle initialization from caller-built creature inputs, durable battle state, act discovery, replay fills, action resources, damage/HP mutation, supported feature/spell/attack resolution, table-supplied spatial facts consumed or stored by those procedures, and snapshots. | Character draft legality, catalog installation, MCP transient fill storage, post-battle character-session persistence, or geometry inference such as grids, coordinates, LOS, pathfinding, cover calculation, and adjacency caches. |
-| `@dnd/mcp`                        | Tool schemas, session storage, installed Surface catalogs, Character Build to battle-init projection, selected Stat Block identity, transient battle fills, table/caller-provided spatial facts for tool calls, and cross-runtime workflow tests.                                | Reducer semantics, authored content rules, runtime QNT authority, duplicated executable content, or private geometry state that substitutes for table-supplied spatial facts.                                                       |
+| Package                           | Owns                                                                                                                                                                                                                                                                                                                                       | Does not own                                                                                                                                                                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@dnd/surface`                    | Provenance-bearing authored Unit and Stat Block records, structural readers, SRD collections, and decode/catalog boundaries.                                                                                                                                                                                                               | Runtime state, reducer legality, character draft sessions, battle sessions, or projected executable IR.                                                                                                                             |
+| `@dnd/shared-algebras`            | Reusable reducer algebras such as action economy, Initiative, Armor Class, attack rolls, conditions, Death Saving Throw counters, runtime dice, and runtime hole identity.                                                                                                                                                                 | Unit support gates, act subjects, authored-content catalogs, MCP sessions, or complete character/battle reducers.                                                                                                                   |
+| `@dnd/character-creation-runtime` | Character Draft mutation, creation holes/fills, support gates, finalization, and `CharacterBuild` projection from Surface Unit facts.                                                                                                                                                                                                      | Battle initialization, battle state, current HP, in-play resource expenditure, or authored content provenance.                                                                                                                      |
+| `@dnd/battle-runtime`             | Battle initialization from caller-built creature inputs, durable battle state, act discovery, replay fills, action resources, damage/HP mutation, supported feature/spell/attack resolution, table-supplied spatial facts consumed or stored by those procedures, and snapshots.                                                           | Character draft legality, catalog installation, MCP transient fill storage, post-battle character-session persistence, or geometry inference such as grids, coordinates, LOS, pathfinding, cover calculation, and adjacency caches. |
+| `@dnd/opaque-oracle`              | Language-neutral Case/Trace validation, call-local creation and fresh-sheet evaluation, typed mixed-roster Battle entry, its minimal mechanics-relevant Battle checkpoint projection, canonical Draft 2020-12 artifacts, one immutable application composition, and the source-free identity/stream/loopback-HTTP executable distribution. | Battle reducer state, replay holes/fills, interrupt/session state, durable sessions, MCP composition, or raw duplicate/cross-record semantic guarantees that standard JSON Schema cannot express.                                   |
+| `@dnd/mcp`                        | Tool schemas, session storage, installed Surface catalogs, Character Build to battle-init projection, selected Stat Block identity, transient battle fills, table/caller-provided spatial facts for tool calls, and cross-runtime workflow tests.                                                                                          | Reducer semantics, authored content rules, runtime QNT authority, duplicated executable content, or private geometry state that substitutes for table-supplied spatial facts.                                                       |
 
 The composition rule is direct use of owned package APIs, not an adapter layer.
 If a future task needs a lower layer to expose a stronger fact, change that
@@ -502,24 +542,24 @@ The runtime path uses this dependency direction:
 
 ## Reference Authority
 
-| Document                                                                | Scope                                                               | Authority                                                                                                          |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `.references/srd-5.2.1/`                                                | Rules text                                                          | Ground truth for modeled SRD rules                                                                                 |
-| `UBIQUITOUS_LANGUAGE.md`                                                | Canonical D&D domain terminology                                    | Naming authority for domain terms                                                                                  |
-| `ASSUMPTIONS.md`                                                        | Explicit modeling choices where SRD is underspecified               | Sole record of intentional RAW assumptions                                                                         |
-| `docs/adr/0001-forest-of-qnt-slices.md`                                 | QNT verification shape                                              | Architectural decision authority for the QNT corpus structure                                                      |
-| `docs/adr/0002-character-creature-monster-ownership.md`                 | Character/creature/monster domain ownership                         | Architectural decision authority for the character→creature projection and Quint-owns-semantics boundary           |
-| `docs/adr/0003-monster-stat-blocks-authored-data-provenance.md`         | Monster Stat Block authoring and provenance                         | Architectural decision authority for Stat Blocks as authored data with explicit provenance                         |
-| `docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md`   | Light/obscurement/cover/sight boundary                              | Architectural decision authority for runtime source-facts plus table-supplied witnesses                            |
-| `docs/adr/0009-battle-continuation-checkpoints-and-frontiers.md`       | Battle continuation checkpoints and frontiers                       | Architectural decision authority for ordinary replay, durable interrupt checkpoints, and separate frontiers        |
-| `docs/adr/0007-public-play-session-tenure-and-ownership.md`             | Public Play Session tenure, retention, and ownership                | Architectural decision authority for guest access and principal-owned saved sessions                               |
-| `docs/adr/0008-public-mcp-runs-in-a-provider-neutral-node-container.md` | Public MCP hosting model                                            | Architectural decision authority for the provider-neutral container host and development transports                |
-| `packages/character-creation-runtime/VOCABULARY.md`                     | Character-creation runtime terms                                    | Character-creation package vocabulary                                                                              |
-| `plans/rules-kernel-coverage/`                                          | Reducer semantic obligation coverage and generator-readiness ledger | Coverage authority for TS-current reducer semantics                                                                |
-| `plans/unit-profile-coverage/`                                          | Authored Surface Unit/profile support breadth                       | Coverage authority for authored-content support and the generated rules-kernel join view                           |
-| `plans/raw-coverage/`                                                   | Local SRD span classification and implementation traceability       | Coverage authority linking reviewed RAW spans to requirements, executable owners, and delivery claims              |
-| `plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`                           | Battle-runtime QNT/TS connectivity map                              | Reference map for how battle-runtime QNT bridges into rule-core and connects to TypeScript via MBT                 |
-| Package READMEs                                                         | Package-owned APIs and local invariants                             | Local package contracts                                                                                            |
+| Document                                                                | Scope                                                               | Authority                                                                                                   |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `.references/srd-5.2.1/`                                                | Rules text                                                          | Ground truth for modeled SRD rules                                                                          |
+| `UBIQUITOUS_LANGUAGE.md`                                                | Canonical D&D domain terminology                                    | Naming authority for domain terms                                                                           |
+| `ASSUMPTIONS.md`                                                        | Explicit modeling choices where SRD is underspecified               | Sole record of intentional RAW assumptions                                                                  |
+| `docs/adr/0001-forest-of-qnt-slices.md`                                 | QNT verification shape                                              | Architectural decision authority for the QNT corpus structure                                               |
+| `docs/adr/0002-character-creature-monster-ownership.md`                 | Character/creature/monster domain ownership                         | Architectural decision authority for the character→creature projection and Quint-owns-semantics boundary    |
+| `docs/adr/0003-monster-stat-blocks-authored-data-provenance.md`         | Monster Stat Block authoring and provenance                         | Architectural decision authority for Stat Blocks as authored data with explicit provenance                  |
+| `docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md`   | Light/obscurement/cover/sight boundary                              | Architectural decision authority for runtime source-facts plus table-supplied witnesses                     |
+| `docs/adr/0009-battle-continuation-checkpoints-and-frontiers.md`        | Battle continuation checkpoints and frontiers                       | Architectural decision authority for ordinary replay, durable interrupt checkpoints, and separate frontiers |
+| `docs/adr/0007-public-play-session-tenure-and-ownership.md`             | Public Play Session tenure, retention, and ownership                | Architectural decision authority for guest access and principal-owned saved sessions                        |
+| `docs/adr/0008-public-mcp-runs-in-a-provider-neutral-node-container.md` | Public MCP hosting model                                            | Architectural decision authority for the provider-neutral container host and development transports         |
+| `packages/character-creation-runtime/VOCABULARY.md`                     | Character-creation runtime terms                                    | Character-creation package vocabulary                                                                       |
+| `plans/rules-kernel-coverage/`                                          | Reducer semantic obligation coverage and generator-readiness ledger | Coverage authority for TS-current reducer semantics                                                         |
+| `plans/unit-profile-coverage/`                                          | Authored Surface Unit/profile support breadth                       | Coverage authority for authored-content support and the generated rules-kernel join view                    |
+| `plans/raw-coverage/`                                                   | Local SRD span classification and implementation traceability       | Coverage authority linking reviewed RAW spans to requirements, executable owners, and delivery claims       |
+| `plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`                           | Battle-runtime QNT/TS connectivity map                              | Reference map for how battle-runtime QNT bridges into rule-core and connects to TypeScript via MBT          |
+| Package READMEs                                                         | Package-owned APIs and local invariants                             | Local package contracts                                                                                     |
 
 ## Choosing The Right Owner
 

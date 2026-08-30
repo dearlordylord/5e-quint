@@ -188,7 +188,7 @@ function resolveSlowFallReaction(state: BattleState): BattleState {
         responderId: monkId,
         choice: {
           kind: "reactionRollOrDamageReduction",
-          procedureRef: choice.choice.procedureRef,
+          procedureRef: choice.modifier.procedureRef,
           modifierKind: "fallDamageReduction",
           fills: [],
         },

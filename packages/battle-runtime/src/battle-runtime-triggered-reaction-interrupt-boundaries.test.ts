@@ -4,6 +4,7 @@ import type {
   AvailableBattleAct,
   BattleProcedureExecutionRef,
   BattleHole,
+  BattleInterruptSubject,
   BattleFill,
   BattleInterruptProcedureChoice,
   BattleSubject,
@@ -39,6 +40,19 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { statBlockWithCreatureType } from "./unit-profile-admission-creature-fixture.test-support.ts";
+
+type TriggeredReactionSpellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
+  >;
+};
 
 const spellCasterId = combatantId("triggered-reaction-spell-caster");
 const reactionCasterId = combatantId("triggered-reaction-reaction-caster");
@@ -499,21 +513,15 @@ function requireReactionSpellChoice(
     { readonly tag: "needsHoles" }
   >,
   reactorId: ReturnType<typeof combatantId>,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): Extract<TriggeredReactionSpellChoice, { readonly kind: "nestedProcedure" }> {
   const choice = battleFrontierInterruptDecisionForState(
     result.state,
   )?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === reactorId,
+    (candidate): candidate is TriggeredReactionSpellChoice =>
+      candidate.kind === "nestedProcedure" &&
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "castTriggeredReactionSpell" &&
+      candidate.subject.reactorId === reactorId,
   );
   if (choice === undefined) {
     throw new Error("Expected triggered Reaction spell choice.");

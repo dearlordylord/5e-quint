@@ -1188,14 +1188,17 @@ type BattleInterruptFrontier = Extract<
 type PresentedInterruptChoice = BattleInterruptFrontier["choices"][number];
 type TriggeredSpellChoiceBase = Extract<
   PresentedInterruptChoice["choice"],
-  { readonly kind: "castTriggeredReactionSpell" }
+  { readonly kind: "nestedProcedure" }
 >;
 type TriggeredSpellChoice = Omit<TriggeredSpellChoiceBase, "subject"> & {
   readonly subject: Extract<
     TriggeredSpellChoiceBase["subject"],
-    { readonly procedureRef: unknown }
+    {
+      readonly command: "castTriggeredReactionSpell";
+    }
   >;
 };
+
 type NeedsHolesResult = Extract<
   BattleResolutionOutput["result"],
   { readonly tag: "needsHoles" }
@@ -1233,8 +1236,9 @@ function requireTriggeredSpellChoice(
   ).choices.filter((presented) => {
     const choice = presented.choice;
     if (
-      choice.kind !== "castTriggeredReactionSpell" ||
-      choice.reactorId !== reactorId
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castTriggeredReactionSpell" ||
+      choice.subject.reactorId !== reactorId
     ) {
       return false;
     }
@@ -1256,11 +1260,11 @@ function requireTriggeredSpellChoice(
   if (matchingChoices.length !== 1 || presented === undefined) {
     throw new Error(`Expected one ${spellId} triggered spell choice.`);
   }
-  if (presented.choice.kind !== "castTriggeredReactionSpell") {
+  if (
+    presented.choice.kind !== "nestedProcedure" ||
+    presented.choice.subject.command !== "castTriggeredReactionSpell"
+  ) {
     throw new Error(`Expected one ${spellId} triggered spell choice.`);
-  }
-  if (!("procedureRef" in presented.choice.subject)) {
-    throw new Error(`Expected ${spellId} choice procedure.`);
   }
   return { ...presented.choice, subject: presented.choice.subject };
 }

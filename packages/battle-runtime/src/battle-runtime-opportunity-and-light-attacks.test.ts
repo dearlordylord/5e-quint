@@ -1108,7 +1108,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           responderId: rogueTargetId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: damageReductionChoice.choice.procedureRef,
+            procedureRef: damageReductionChoice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [],
           },
@@ -2088,11 +2088,17 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     }
     const choices = battleFrontierInterruptDecisionForState(
       awaitingReaction.state,
-    )?.choices.filter((choice) => choice.kind === "opportunityAttack");
+    )?.choices.filter(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.tag === "runtimeCommand" &&
+        choice.subject.command === "opportunityAttack",
+    );
     expect(choices).toHaveLength(2);
     const secondChoice = choices?.find(
       (choice) =>
-        choice.kind === "opportunityAttack" &&
+        choice.kind === "nestedProcedure" &&
+        choice.subject.tag === "runtimeCommand" &&
         choice.subject.command === "opportunityAttack" &&
         choice.subject.procedureRef === secondProcedureRef,
     );
@@ -2363,7 +2369,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: damageChoice.choice.procedureRef,
+            procedureRef: damageChoice.modifier.procedureRef,
             modifierKind: "damageRollReduction",
             fills: [
               {
@@ -2489,7 +2495,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: damageReductionChoice.choice.procedureRef,
+            procedureRef: damageReductionChoice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [],
           },
@@ -2613,7 +2619,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: damageReductionChoice.choice.procedureRef,
+            procedureRef: damageReductionChoice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [],
           },

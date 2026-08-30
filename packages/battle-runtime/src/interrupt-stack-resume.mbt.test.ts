@@ -86,6 +86,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import type { BattleInterruptSubject } from "./battle-subjects.ts";
 
 const interruptStackResumeDriverSchema = {
   init: {},
@@ -125,6 +126,30 @@ type InterruptStackResumeProjection = {
   readonly targetHp: number;
   readonly lastResult: InterruptStackResumeLastResult;
 };
+
+type NestedProcedureChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+>;
+type TriggeredReactionSpellChoice = NestedProcedureChoice & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
+  >;
+};
+
+function isTriggeredReactionSpellChoice(
+  choice: BattleInterruptProcedureChoice,
+): choice is TriggeredReactionSpellChoice {
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castTriggeredReactionSpell"
+  );
+}
 
 type InterruptStackResumeRuntimeState = {
   readonly battle: BattleState;
@@ -317,7 +342,6 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
       responderId: wizardId,
       choice: {
         kind: "releaseReadiedSpell",
-        readiedSpellCasterId: wizardId,
         procedureRef: releaseChoice.subject.procedureRef,
         fills: [],
       },
@@ -650,36 +674,26 @@ function requireHoleFromArray<K extends BattleHole["kind"]>(
 
 function requireShieldReactionChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): TriggeredReactionSpellChoice {
   const choice = battleFrontierInterruptDecisionForState(
     result.state,
-  )?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
-      if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== shieldCasterId
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (
+      !isTriggeredReactionSpellChoice(candidate) ||
+      candidate.subject.reactorId !== shieldCasterId
+    )
+      return false;
+    const reactor = result.state.combatants.get(candidate.subject.reactorId);
+    return (
+      reactor?.origin.kind === "character" &&
+      reactor.origin.execution.procedureBindings.some(
+        (binding) =>
+          binding.procedureRef === candidate.subject.procedureRef &&
+          binding.procedure.kind === "spellInvocation" &&
+          binding.procedure.execution.procedure === "triggeredArmorDefense",
       )
-        return false;
-      const reactor = result.state.combatants.get(candidate.reactorId);
-      return (
-        reactor?.origin.kind === "character" &&
-        reactor.origin.execution.procedureBindings.some(
-          (binding) =>
-            binding.procedureRef === candidate.subject.procedureRef &&
-            binding.procedure.kind === "spellInvocation" &&
-            binding.procedure.execution.procedure === "triggeredArmorDefense",
-        )
-      );
-    },
-  );
+    );
+  });
   if (choice === undefined) {
     throw new Error("Expected Shield Reaction choice.");
   }

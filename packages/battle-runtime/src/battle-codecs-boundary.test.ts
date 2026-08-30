@@ -2228,10 +2228,14 @@ describe("battle codec act ownership boundaries", () => {
       reported.state,
     )?.choices.find(
       (candidate) =>
-        candidate.kind === "releaseReadiedAttack" &&
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "releaseReadiedAttack" &&
         candidate.subject.targetId === fighterId,
     );
-    if (choice?.kind !== "releaseReadiedAttack") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "releaseReadiedAttack"
+    ) {
       throw new Error("Expected a fixed-target readied attack choice.");
     }
     const pendingEnvelope = encodedEnvelopeFromState(reported.state);
@@ -2324,20 +2328,19 @@ describe("battle codec act ownership boundaries", () => {
     });
     const encodedReadiedAttack = pendingEnvelope.frontier.choices.find(
       (candidate) =>
-        candidate.kind === "releaseReadiedAttack" &&
+        candidate.kind === "nestedProcedure" &&
         candidate.subject.tag === "runtimeCommand" &&
         candidate.subject.command === "releaseReadiedAttack",
     );
     if (
-      encodedReadiedAttack?.kind !== "releaseReadiedAttack" ||
+      encodedReadiedAttack?.kind !== "nestedProcedure" ||
       encodedReadiedAttack.subject.tag !== "runtimeCommand" ||
       encodedReadiedAttack.subject.command !== "releaseReadiedAttack"
     ) {
       throw new Error("Expected the encoded readied-attack choice.");
     }
     const statBlockRetaliationChoice: EncodedInterruptChoice = {
-      kind: "retaliationAttack",
-      reactorId: goblinId,
+      kind: "nestedProcedure",
       subject: {
         ...encodedReadiedAttack.subject,
         command: "retaliationAttack",
@@ -2345,9 +2348,9 @@ describe("battle codec act ownership boundaries", () => {
       initialHoles: [],
     };
     const statBlockReactionModifierChoice: EncodedInterruptChoice = {
-      kind: "reactionRollOrDamageReduction",
-      reactorId: goblinId,
-      choice: {
+      kind: "reactionModifier",
+      responderId: goblinId,
+      modifier: {
         kind: "attackDamageReduction",
         procedureRef: encodedReadiedAttack.subject.procedureRef,
         reduction: { kind: "halfDamage" },
@@ -2364,9 +2367,9 @@ describe("battle codec act ownership boundaries", () => {
       fighter.origin.attackExecution.attackProcedureRef ??
       fighter.origin.attackExecution.unarmedStrikeProcedureRef;
     const fighterAttackReactionModifierChoice: EncodedInterruptChoice = {
-      kind: "reactionRollOrDamageReduction",
-      reactorId: fighterId,
-      choice: {
+      kind: "reactionModifier",
+      responderId: fighterId,
+      modifier: {
         kind: "attackDamageReduction",
         procedureRef: fighterAttackProcedureRef,
         reduction: { kind: "halfDamage" },
@@ -2383,9 +2386,9 @@ describe("battle codec act ownership boundaries", () => {
       throw new Error("Expected the encoded string support binding.");
     }
     const unrelatedStringSupportReactionChoice: EncodedInterruptChoice = {
-      kind: "reactionRollOrDamageReduction",
-      reactorId: fighterId,
-      choice: {
+      kind: "reactionModifier",
+      responderId: fighterId,
+      modifier: {
         kind: "attackDamageReduction",
         procedureRef: stringSupportBinding.procedureRef,
         reduction: { kind: "halfDamage" },
@@ -2429,8 +2432,7 @@ describe("battle codec act ownership boundaries", () => {
     });
     const malformedInterruptKindCases: readonly EncodedInterruptChoice[] = [
       {
-        kind: "castAttackHitBonusActionSpell",
-        reactorId: goblinId,
+        kind: "nestedProcedure",
         subject: {
           tag: "runtimeCommand",
           actorId: fighterId,
@@ -2441,8 +2443,7 @@ describe("battle codec act ownership boundaries", () => {
         initialHoles: [],
       },
       {
-        kind: "castTriggeredReactionSpell",
-        reactorId: goblinId,
+        kind: "nestedProcedure",
         subject: {
           tag: "runtimeCommand",
           actorId: fighterId,
@@ -2453,8 +2454,7 @@ describe("battle codec act ownership boundaries", () => {
         initialHoles: [],
       },
       {
-        kind: "opportunityAttack",
-        reactorId: goblinId,
+        kind: "nestedProcedure",
         subject: {
           ...encodedReadiedAttack.subject,
           command: "opportunityAttack",
@@ -2464,9 +2464,7 @@ describe("battle codec act ownership boundaries", () => {
       },
       statBlockRetaliationChoice,
       {
-        kind: "releaseReadiedMovement",
-        reactorId: goblinId,
-        readiedMovementActorId: goblinId,
+        kind: "nestedProcedure",
         subject: {
           tag: "runtimeCommand",
           actorId: fighterId,
@@ -2476,9 +2474,7 @@ describe("battle codec act ownership boundaries", () => {
         initialHoles: [],
       },
       {
-        kind: "releaseReadiedSpell",
-        reactorId: goblinId,
-        readiedSpellCasterId: goblinId,
+        kind: "nestedProcedure",
         subject: {
           tag: "runtimeCommand",
           actorId: fighterId,
@@ -2489,9 +2485,9 @@ describe("battle codec act ownership boundaries", () => {
         initialHoles: [],
       },
       {
-        kind: "reactionRollOrDamageReduction",
-        reactorId: fighterId,
-        choice: {
+        kind: "reactionModifier",
+        responderId: fighterId,
+        modifier: {
           kind: "attackDamageReduction",
           procedureRef: encodedReadiedAttack.subject.procedureRef,
           reduction: { kind: "halfDamage" },
@@ -2574,8 +2570,7 @@ describe("battle codec act ownership boundaries", () => {
         ...opportunityFrontier,
         choices: [
           {
-            kind: "opportunityAttack",
-            reactorId: combatantId("codec-missing-opportunity-reactor"),
+            kind: "nestedProcedure",
             subject: {
               ...encodedReadiedAttack.subject,
               command: "opportunityAttack",
@@ -2593,8 +2588,7 @@ describe("battle codec act ownership boundaries", () => {
         ...opportunityFrontier,
         choices: [
           {
-            kind: "opportunityAttack",
-            reactorId: goblinId,
+            kind: "nestedProcedure",
             subject: {
               ...encodedReadiedAttack.subject,
               command: "opportunityAttack",
@@ -2609,7 +2603,7 @@ describe("battle codec act ownership boundaries", () => {
     const replaceTarget = (
       candidate: EncodedInterruptChoice,
     ): EncodedInterruptChoice =>
-      candidate.kind === "releaseReadiedAttack" &&
+      candidate.kind === "nestedProcedure" &&
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "releaseReadiedAttack"
         ? {
@@ -2666,7 +2660,6 @@ describe("battle codec act ownership boundaries", () => {
             responderId: goblinId,
             choice: {
               kind: "releaseReadiedAttack",
-              reactorId: goblinId,
               targetId: fighterId,
               procedureRef: attackResponse.selection.procedureRef,
               fills: [decoded],
@@ -2750,7 +2743,6 @@ describe("battle codec act ownership boundaries", () => {
           responderId: fighterId,
           choice: {
             kind: "releaseReadiedAction",
-            reactorId: fighterId,
             fills: [],
           },
         }),

@@ -4,6 +4,7 @@ packages:
   - "packages/character-battle-runtime"
   - "packages/character-creation-runtime"
   - "packages/character-sheet-runtime"
+  - "packages/opaque-oracle"
   - "packages/mcp"
   - "packages/shared"
   - "packages/shared-algebras"

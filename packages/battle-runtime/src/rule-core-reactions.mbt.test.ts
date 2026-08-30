@@ -253,8 +253,9 @@ function createRuleCoreReactionDriver() {
         const pendingInterrupt = battleFrontierInterruptDecisionForState(state);
         const rawOpportunityChoice = pendingInterrupt?.choices.find(
           (candidate) =>
-            candidate.kind === "opportunityAttack" &&
-            candidate.reactorId === reactorId &&
+            candidate.kind === "nestedProcedure" &&
+            candidate.subject.command === "opportunityAttack" &&
+            candidate.subject.reactorId === reactorId &&
             candidate.subject.targetId === interruptedId,
         );
         if (pendingInterrupt === null || rawOpportunityChoice === undefined) {
@@ -377,10 +378,15 @@ function createRuleCoreReactionDriver() {
         state,
       )?.choices.find(
         (candidate) =>
-          candidate.kind === "releaseReadiedMovement" &&
-          candidate.readiedMovementActorId === reactorId,
+          candidate.kind === "nestedProcedure" &&
+          candidate.subject.command === "releaseReadiedMovement" &&
+          candidate.subject.readiedMovementActorId === reactorId,
       );
-      if (choice === undefined) {
+      if (
+        choice === undefined ||
+        choice.kind !== "nestedProcedure" ||
+        choice.subject.command !== "releaseReadiedMovement"
+      ) {
         throw new Error("Expected Readied Movement Reaction choice.");
       }
       const movementHole = choice.initialHoles.find(
@@ -397,7 +403,6 @@ function createRuleCoreReactionDriver() {
             responderId: reactorId,
             choice: {
               kind: "releaseReadiedMovement",
-              readiedMovementActorId: reactorId,
               fills: [
                 movementFill(movementHole, {
                   movementCostFeet,

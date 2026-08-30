@@ -4,6 +4,11 @@ export {
   isPactMagicSpellcastingCreation,
   isWizardSpellcastingCreation,
 } from "./class-spellcasting.ts";
+export {
+  characterBuildDisplayName,
+  type CharacterBuildDisplayNameIssue,
+  type CharacterBuildDisplayNameIssues,
+} from "./character-display.ts";
 
 export {
   characterBuildSpeciesOriginFeatUnitIds,
@@ -478,3 +483,12 @@ export {
   supportedHoleOptionIds,
   type CharacterCreationSupportProfile,
 } from "./support-gates.ts";
+export {
+  CHARACTER_CREATION_WORKFLOW_HORIZON,
+  characterCreationWorkflowProgressions,
+  deriveCharacterCreationWorkflowRoots,
+  type CharacterCreationWorkflowHorizon,
+  type CharacterCreationWorkflowRootIssue,
+  type CharacterCreationWorkflowRootIssues,
+  type CharacterCreationWorkflowRoots,
+} from "./workflow-horizon.ts";

@@ -96,7 +96,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       unit.id,
       "attackDamageReduction",
     );
-    expect(choice.choice).toMatchObject({
+    expect(choice.modifier).toMatchObject({
       zeroDamageRedirect: { originalDamageType: "slashing" },
     });
     const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
@@ -138,7 +138,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -210,7 +210,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -270,7 +270,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },
@@ -344,7 +344,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },

@@ -39,6 +39,11 @@ import {
   srdUnitCollection,
   type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+  type StatBlockCatalog,
+} from "@dnd/surface/surface/stat-block-catalog";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
 
@@ -89,6 +94,7 @@ import {
   completeShortRest as completeShortRestCore,
   convertFontOfMagicSpellSlotToSorceryPoints,
   convertFontOfMagicSorceryPointsToSpellSlot,
+  createFreshCharacterSheet as createFreshCharacterSheetCore,
   rebuildCharacterSheet as rebuildCharacterSheetCore,
   replaceCharacterSheetSpellSlotSourceState,
   finishLongRest,
@@ -97,7 +103,8 @@ import {
   characterSheetTempHp,
   interruptLongRest as interruptLongRestCore,
   interruptShortRest as interruptShortRestCore,
-  parseCharacterSheet,
+  parseCharacterSheet as parseCharacterSheetCore,
+  parseFreshCharacterSheet as parseFreshCharacterSheetCore,
   startLongRest,
   startShortRest,
   timePassed,
@@ -322,7 +329,6 @@ export {
   characterSheetTreeStrideTreeKind,
   characterSheetTempHp,
   AWAKEN_MATERIAL_COMPONENTS,
-  parseCharacterSheet,
   removeSelfRestorationConditionAtTurnEnd,
   resolveTreeStrideTransit,
   startLongRest,
@@ -359,7 +365,39 @@ if (unitCatalogResult.tag !== "ok") {
   throw new Error("Character Sheet runtime test Unit catalog must build.");
 }
 export const unitLibrary = unitCatalogResult.catalog;
+export const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+if (statBlockCatalogResult.tag !== "ok") {
+  throw new Error(
+    "Character Sheet runtime test Stat Block catalog must build.",
+  );
+}
+export const statBlockCatalog = statBlockCatalogResult.catalog;
 export const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
+
+export function parseCharacterSheet(
+  value: unknown,
+  catalog: UnitCatalog,
+  statBlocks: StatBlockCatalog = statBlockCatalog,
+) {
+  return parseCharacterSheetCore(value, catalog, statBlocks);
+}
+
+export function createFreshCharacterSheet(input: CharacterSheetInput) {
+  return createFreshCharacterSheetCore({
+    ...input,
+    statBlockCatalog: input.statBlockCatalog ?? statBlockCatalog,
+  });
+}
+
+export function parseFreshCharacterSheet(
+  value: unknown,
+  catalog: UnitCatalog,
+  statBlocks: StatBlockCatalog = statBlockCatalog,
+) {
+  return parseFreshCharacterSheetCore(value, catalog, statBlocks);
+}
 
 export function characterSheetHitPointMaximum(sheet: CharacterSheet) {
   return requireSuccess(
@@ -486,6 +524,7 @@ export function rebuildCharacterSheetFixture(input: CharacterSheetTestInput) {
     companion: { tag: "none" },
     conditions: [],
     hitPointMaximumReduction: Hp(0),
+    statBlockCatalog,
     ...input,
   });
 }
@@ -517,7 +556,13 @@ export function completeLongRest(
     readonly timing?: CharacterSheetLongRestStartTiming;
   },
 ) {
-  const { sheet, restedTicks, timing, ...benefits } = input;
+  const {
+    sheet,
+    restedTicks,
+    timing,
+    statBlockCatalog: inputStatBlockCatalog,
+    ...benefits
+  } = input;
   const rest = requireSuccess(
     startLongRest({
       sheet,
@@ -533,6 +578,7 @@ export function completeLongRest(
   return completeLongRestCore({
     ...benefits,
     completion,
+    statBlockCatalog: inputStatBlockCatalog ?? statBlockCatalog,
   });
 }
 
@@ -566,7 +612,13 @@ export function completeLongRestArcaneRecoveryResetWithRoute(
     readonly timing?: CharacterSheetLongRestStartTiming;
   },
 ) {
-  const { sheet, restedTicks, timing, ...benefits } = input;
+  const {
+    sheet,
+    restedTicks,
+    timing,
+    statBlockCatalog: inputStatBlockCatalog,
+    ...benefits
+  } = input;
   const rest = requireSuccess(
     startLongRest({
       sheet,
@@ -582,6 +634,7 @@ export function completeLongRestArcaneRecoveryResetWithRoute(
   return completeLongRestArcaneRecoveryResetWithRouteCore({
     ...benefits,
     completion,
+    statBlockCatalog: inputStatBlockCatalog ?? statBlockCatalog,
   });
 }
 
@@ -595,7 +648,13 @@ export function completeLongRestWeaponMasteryReselectionWithRoute(
     readonly timing?: CharacterSheetLongRestStartTiming;
   },
 ) {
-  const { sheet, restedTicks, timing, ...benefits } = input;
+  const {
+    sheet,
+    restedTicks,
+    timing,
+    statBlockCatalog: inputStatBlockCatalog,
+    ...benefits
+  } = input;
   const rest = requireSuccess(
     startLongRest({
       sheet,
@@ -611,6 +670,7 @@ export function completeLongRestWeaponMasteryReselectionWithRoute(
   return completeLongRestWeaponMasteryReselectionWithRouteCore({
     ...benefits,
     completion,
+    statBlockCatalog: inputStatBlockCatalog ?? statBlockCatalog,
   });
 }
 

@@ -1,4 +1,3 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hitPointBudgetConditionProfileShape-target-admission
 //
 // The stagedSaveCondition Spell Procedure Profile: action-time Spell Slot
 // casting where creatures chosen in a point-origin Sphere make a Wisdom Saving

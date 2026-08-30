@@ -17,6 +17,7 @@ import {
   characterDraconicAncestrySelection,
   characterCreationBatchFact,
   characterCreationIssueMessage,
+  CreationFillFactSchema,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   creationChoiceOptionId,
@@ -755,6 +756,17 @@ describe("Character Creation owner facts", () => {
       parseErrorMessage(
         decodeCharacterBuildFact({
           ...buildFact,
+          equipment: {
+            ...buildFact.equipment,
+            startingEquipmentCurrencyRemainderCp: 0.5,
+          },
+        }),
+      ),
+    ).toContain("invalid copper-piece amount");
+    expect(
+      parseErrorMessage(
+        decodeCharacterBuildFact({
+          ...buildFact,
           originLanguages: ["Dwarvish", "Elvish", "Giant"],
         }),
       ),
@@ -948,6 +960,14 @@ describe("Character Creation owner facts", () => {
     expect(
       decodeCreationFillFact({ ...fact, label: "presentation" })._tag,
     ).toBe("Failure");
+    expect(
+      parseErrorMessage(
+        Schema.decodeUnknownResult(CreationFillFactSchema)({
+          ...fact,
+          optionIds: [fact.optionIds[0], fact.optionIds[0]],
+        }),
+      ),
+    ).toContain("choice optionIds must not contain duplicate members");
   });
 
   test("projects owner rejections without draft protocol state or prose", () => {

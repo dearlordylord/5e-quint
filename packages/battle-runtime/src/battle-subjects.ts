@@ -38,6 +38,7 @@ import {
   CombatantId,
   BattleStatBlockProcedureExecutionRef,
   BattleStatBlockExecutionScopeRef,
+  battleProcedureExecutionRefBelongsToCombatant,
   SpellId,
   spellId as makeSpellId,
 } from "./identity.ts";
@@ -594,6 +595,160 @@ export const battleInterruptAttackExecutionSelectionWithFields = <
     ),
   ]);
 
+const BattleInterruptReleaseReadiedSpellSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("releaseReadiedSpell"),
+  readiedSpellCasterId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+});
+
+const BattleInterruptReleaseReadiedMovementSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("releaseReadiedMovement"),
+  readiedMovementActorId: CombatantId,
+});
+
+const BattleInterruptReleaseReadiedActionSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("releaseReadiedAction"),
+  reactorId: CombatantId,
+});
+
+const BattleInterruptReleaseReadiedAttackSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("releaseReadiedAttack"),
+  reactorId: CombatantId,
+  targetId: CombatantId,
+  procedureRef: Schema.Union([
+    BattleAttackProcedureExecutionRef,
+    BattleStatBlockProcedureExecutionRef,
+  ]),
+  attackAbility: Schema.optionalKey(Schema.Never),
+  attackDamageType: Schema.optionalKey(Schema.Never),
+});
+
+const BattleInterruptCastTriggeredReactionSpellSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("castTriggeredReactionSpell"),
+  reactorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+});
+
+const BattleInterruptCastAttackHitBonusActionSpellSubjectSchema = Schema.Struct(
+  {
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("castAttackHitBonusActionSpell"),
+    casterId: CombatantId,
+    procedureRef: BattleProcedureExecutionRef,
+  },
+);
+
+const BattleInterruptOpportunityAttackSubjectSchema =
+  battleInterruptAttackExecutionSelectionWithFields({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("opportunityAttack"),
+    reactorId: CombatantId,
+    targetId: CombatantId,
+    distanceFeet: MovementFeet,
+  });
+
+const BattleInterruptRetaliationAttackSubjectSchema =
+  battleInterruptAttackExecutionSelectionWithFields({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("retaliationAttack"),
+    reactorId: CombatantId,
+    targetId: CombatantId,
+  });
+
+export const BattleInterruptSubjectSchema = Schema.Union([
+  BattleInterruptReleaseReadiedSpellSubjectSchema,
+  BattleInterruptReleaseReadiedMovementSubjectSchema,
+  BattleInterruptReleaseReadiedActionSubjectSchema,
+  BattleInterruptReleaseReadiedAttackSubjectSchema,
+  BattleInterruptCastTriggeredReactionSpellSubjectSchema,
+  BattleInterruptCastAttackHitBonusActionSpellSubjectSchema,
+  BattleInterruptOpportunityAttackSubjectSchema,
+  BattleInterruptRetaliationAttackSubjectSchema,
+]);
+export type BattleInterruptSubject = typeof BattleInterruptSubjectSchema.Type;
+
+export const BattleReadyActionSubjectSchema = Schema.Union([
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("dash"),
+    speedKind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("disengage"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("dodge"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("helpAttack"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("hide"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("search"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("grapple"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("shove"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("escapeGrapple"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("escapeSpellRestraint"),
+    ...RejectRedundantSpellProcedureSourceFields,
+    targetId: CombatantId,
+    effectRef: BattleEffectExecutionRef,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("shakeAwakeFromStagedCondition"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("shakeAwakeFromAreaControl"),
+  }),
+]);
+export type BattleReadyActionSubject =
+  typeof BattleReadyActionSubjectSchema.Type;
+
 // BattleSubject is a replay key returned by discoverBattleActs and copied back
 // by callers. It identifies one discovered runtime act; it is not Surface
 // authored content, provenance, or a complete taxonomy of D&D actions.
@@ -638,32 +793,7 @@ export const BattleSubjectSchema = Schema.Union([
     procedureRef: BattleStatBlockProcedureExecutionRef,
     statBlockDamageNotation: Schema.optionalKey(Schema.Literal("static")),
   }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("dash"),
-    speedKind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("disengage"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("dodge"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("helpAttack"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("hide"),
-  }),
+  BattleReadyActionSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
@@ -673,45 +803,7 @@ export const BattleSubjectSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
-    action: Schema.Literal("search"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
     action: Schema.Literal("ready"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("grapple"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("shove"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("escapeGrapple"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("escapeSpellRestraint"),
-    ...RejectRedundantSpellProcedureSourceFields,
-    targetId: CombatantId,
-    effectRef: BattleEffectExecutionRef,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("shakeAwakeFromStagedCondition"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("shakeAwakeFromAreaControl"),
   }),
   Schema.Union([
     Schema.Struct({
@@ -899,79 +991,26 @@ export const BattleSubjectSchema = Schema.Union([
     actorId: CombatantId,
     command: Schema.Literal("standFromProne"),
   }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedSpell"),
-    readiedSpellCasterId: CombatantId,
-    procedureRef: BattleProcedureExecutionRef,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedMovement"),
-    readiedMovementActorId: CombatantId,
-  }),
+  BattleInterruptReleaseReadiedSpellSubjectSchema,
+  BattleInterruptReleaseReadiedMovementSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("reportReadyTrigger"),
     readiedActorId: CombatantId,
   }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedAction"),
-    reactorId: CombatantId,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedAttack"),
-    reactorId: CombatantId,
-    targetId: CombatantId,
-    procedureRef: Schema.Union([
-      BattleAttackProcedureExecutionRef,
-      BattleStatBlockProcedureExecutionRef,
-    ]),
-    attackAbility: Schema.optionalKey(Schema.Never),
-    attackDamageType: Schema.optionalKey(Schema.Never),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("castTriggeredReactionSpell"),
-    reactorId: CombatantId,
-    procedureRef: BattleProcedureExecutionRef,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("castAttackHitBonusActionSpell"),
-    casterId: CombatantId,
-    procedureRef: BattleProcedureExecutionRef,
-  }),
+  BattleInterruptReleaseReadiedActionSubjectSchema,
+  BattleInterruptReleaseReadiedAttackSubjectSchema,
+  BattleInterruptCastTriggeredReactionSpellSubjectSchema,
+  BattleInterruptCastAttackHitBonusActionSpellSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("releaseGrapple"),
     targetId: CombatantId,
   }),
-  battleInterruptAttackExecutionSelectionWithFields({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("opportunityAttack"),
-    reactorId: CombatantId,
-    targetId: CombatantId,
-    distanceFeet: MovementFeet,
-  }),
-  battleInterruptAttackExecutionSelectionWithFields({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("retaliationAttack"),
-    reactorId: CombatantId,
-    targetId: CombatantId,
-  }),
+  BattleInterruptOpportunityAttackSubjectSchema,
+  BattleInterruptRetaliationAttackSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
@@ -1224,21 +1263,6 @@ export const BattleSubjectSchema = Schema.Union([
 type BattleSubjectWireValue = typeof BattleSubjectSchema.Type;
 export type BattleSubject = BattleSubjectWireValue;
 
-export type BattleReadyActionSubject = Exclude<
-  Extract<BattleSubject, { readonly tag: "action" }>,
-  { readonly action: "attack" | "multiattack" | "ready" }
->;
-
-export const BattleReadyActionSubjectSchema = BattleSubjectSchema.pipe(
-  Schema.refine(
-    (subject): subject is BattleReadyActionSubject =>
-      subject.tag === "action" &&
-      subject.action !== "attack" &&
-      subject.action !== "multiattack" &&
-      subject.action !== "ready",
-  ),
-);
-
 export const BattleReadyResponseSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("movement") }),
   Schema.Struct({
@@ -1382,6 +1406,83 @@ export function battleSubjectProcedureRefs(
       spawnedCompanionTouchSpellProxy: (value) => [value.procedureRef],
       runtimeCommand: battleRuntimeCommandProcedureRefs,
     }),
+  );
+}
+
+export function battleSubjectProcedureRefsBelongToOwners(
+  subject: BattleSubject,
+): boolean {
+  const runtimeRequestOwner = (
+    value: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>,
+  ): CombatantId =>
+    Match.value(value).pipe(
+      Match.discriminatorsExhaustive("command")({
+        endTurn: (v) => v.actorId,
+        endConcentration: (v) => v.actorId,
+        move: (v) => v.actorId,
+        standFromProne: (v) => v.actorId,
+        releaseReadiedSpell: (v) => v.readiedSpellCasterId,
+        releaseReadiedMovement: (v) => v.actorId,
+        reportReadyTrigger: (v) => v.actorId,
+        releaseReadiedAction: (v) => v.actorId,
+        releaseReadiedAttack: (v) => v.reactorId,
+        castTriggeredReactionSpell: (v) => v.reactorId,
+        castAttackHitBonusActionSpell: (v) => v.casterId,
+        releaseGrapple: (v) => v.actorId,
+        opportunityAttack: (v) => v.reactorId,
+        retaliationAttack: (v) => v.reactorId,
+        persistentAreaSaveConditionSave: (v) => v.actorId,
+        persistentAreaSaveConditionEscapeSave: (v) => v.actorId,
+        persistentAreaSaveCompositeSave: (v) => v.actorId,
+        persistentAreaSaveDamageSave: (v) => v.actorId,
+        endPersistentAreaSaveDamageForEnvironment: (v) => v.actorId,
+        endPersistentAreaSaveConditionEscapeForDeparture: (v) => v.actorId,
+        endPersistentAreaSaveConditionEscapeForAreaRemoval: (v) => v.actorId,
+        directionalPersistentAreaSave: (v) => v.actorId,
+        directionalPersistentAreaDirectionChange: (v) => v.actorId,
+        movableZoneSave: (v) => v.actorId,
+        persistentAreaSaveDamageExit: (v) => v.actorId,
+        movableZoneReposition: (v) => v.actorId,
+        movableZoneRam: (v) => v.actorId,
+        releaseSpellCreatedHeldObject: (v) => v.actorId,
+        protectionRelevantEffectSave: (v) => v.actorId,
+        creatureTypeProtectionConditionAttempt: (v) => v.actorId,
+        creatureTypeProtectionPossessionAttempt: (v) => v.actorId,
+        endPersistentAreaTraitForEnvironment: (v) => v.actorId,
+        linkedDefenseResistanceDamageShareSeparation: (v) => v.actorId,
+        fixedCostMovementReplacement: (v) => v.actorId,
+        grantedAreaSaveDamageAction: (v) => v.actorId,
+        replaceSelfTransformationMode: (v) => v.actorId,
+        executeCompelledGrovel: (v) => v.actorId,
+        executeCompelledDrop: (v) => v.actorId,
+        executeCompelledApproach: (v) => v.actorId,
+        executeCompelledFlee: (v) => v.actorId,
+        controlledVerticalSuspensionAltitudeControl: (v) => v.actorId,
+        creatureFalls: (v) => v.fallingCreatureId,
+      }),
+    );
+  const ownerId = Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      action: (value) => value.actorId,
+      companionAttack: (value) => value.familiarId,
+      bonusAction: (value) => value.actorId,
+      bonusActionStandardAction: (value) => value.actorId,
+      monkFocusOption: (value) => value.actorId,
+      monkFocusFlurryOfBlowsStrike: (value) => value.actorId,
+      actionSpell: (value) => value.actorId,
+      bonusActionSpell: (value) => value.actorId,
+      bonusActionDashSpell: (value) => value.actorId,
+      unitFeature: (value) => value.actorId,
+      unitFeatureHeldWeaponActivation: (value) => value.actorId,
+      druidWildShape: (value) => value.actorId,
+      companionLifecycle: (value) => value.actorId,
+      spawnedCompanionSharedSenses: (value) => value.actorId,
+      spawnedCompanionTouchSpellProxy: (value) => value.actorId,
+      runtimeCommand: runtimeRequestOwner,
+    }),
+  );
+  return battleSubjectProcedureRefs(subject).every((procedureRef) =>
+    battleProcedureExecutionRefBelongsToCombatant(procedureRef, ownerId),
   );
 }
 
@@ -1612,6 +1713,22 @@ export function isCharacterProcedureBattleSubject(
     subject.tag === "druidWildShape" ||
     subject.tag === "bonusActionStandardAction" ||
     subject.tag === "monkFocusOption"
+  );
+}
+
+export type BattleReadyTriggerReportSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "reportReadyTrigger";
+  }
+>;
+
+export function isBattleReadyTriggerReportSubject(
+  subject: BattleSubject,
+): subject is BattleReadyTriggerReportSubject {
+  return (
+    subject.tag === "runtimeCommand" && subject.command === "reportReadyTrigger"
   );
 }
 

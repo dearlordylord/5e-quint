@@ -1186,15 +1186,23 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     if (fallWitness.reaction.tag !== "needsHoles") {
       throw new Error("Expected Feather Fall Reaction window.");
     }
+    expect(
+      battleFrontierInterruptDecisionForState(fallWitness.reaction.state),
+    ).toMatchObject({ trigger: "creatureFalls" });
     const reactionState = fallWitness.reaction.state;
 
     const featherFallChoice = battleFrontierInterruptDecisionForState(
       reactionState,
     )?.choices.find((candidate) => {
-      if (candidate.kind !== "castTriggeredReactionSpell") return false;
+      if (
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.command !== "castTriggeredReactionSpell"
+      ) {
+        return false;
+      }
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
         battleRuntimeSessionForTest({ ...session, state: reactionState }),
-        candidate.reactorId,
+        candidate.subject.reactorId,
         candidate.subject.procedureRef,
       );
       return (
@@ -1205,7 +1213,8 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     });
     if (
       featherFallChoice === undefined ||
-      featherFallChoice.kind !== "castTriggeredReactionSpell"
+      featherFallChoice.kind !== "nestedProcedure" ||
+      featherFallChoice.subject.command !== "castTriggeredReactionSpell"
     ) {
       throw new Error("Expected Feather Fall Reaction choice.");
     }
@@ -1338,6 +1347,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       endedEffect,
       reason: "hovering",
     });
+    expect(battleFrontierInterruptDecisionForState(witness.state)).toBeNull();
     expect(
       witness.state.combatants.get(spellCasterId)?.activeEffects,
     ).toContainEqual(
@@ -1401,6 +1411,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     expect(grounded).toMatchObject({
       tag: "notAloft",
     });
+    expect(battleFrontierInterruptDecisionForState(grounded.state)).toBeNull();
     expect(cannotStop).toMatchObject({
       tag: "falls",
       reaction: { tag: "resolved" },

@@ -2446,6 +2446,7 @@ describe("Character Sheet battle handoff", () => {
       currentHp: Hp(15),
       tempHp: Hp(0),
       unitLibrary,
+      statBlockCatalog,
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
     });
     expect(Result.isSuccess(sheet)).toBe(true);
@@ -2454,6 +2455,7 @@ describe("Character Sheet battle handoff", () => {
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.success,
       unitLibrary,
+      statBlockCatalog,
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -4768,6 +4770,7 @@ describe("Character Sheet battle handoff", () => {
       settleHandoffBranchToCharacterSheet({
         sheet: sheet.success,
         unitLibrary,
+        statBlockCatalog,
         context: state.context,
         combatant: requireCombatant(dismissed.state, combatantId("druid")),
       }),
@@ -4812,6 +4815,7 @@ describe("Character Sheet battle handoff", () => {
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.success,
       unitLibrary,
+      statBlockCatalog,
       resourceOwnership: [
         {
           resourcePoolRef,
@@ -4856,6 +4860,7 @@ describe("Character Sheet battle handoff", () => {
       settleHandoffBranchToCharacterSheet({
         sheet: sheet.success,
         unitLibrary,
+        statBlockCatalog,
         resourceOwnership: [
           {
             resourcePoolRef,
@@ -4907,6 +4912,7 @@ describe("Character Sheet battle handoff", () => {
       settleHandoffBranchToCharacterSheet({
         sheet: sheet.success,
         unitLibrary,
+        statBlockCatalog,
         resourceOwnership: [
           {
             resourcePoolRef,
@@ -4965,6 +4971,7 @@ describe("Character Sheet battle handoff", () => {
       settleHandoffBranchToCharacterSheet({
         sheet: sheet.success,
         unitLibrary,
+        statBlockCatalog,
         resourceOwnership: [
           {
             resourcePoolRef: mismatchedResourcePoolRef,

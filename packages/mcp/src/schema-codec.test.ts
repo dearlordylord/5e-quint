@@ -59,6 +59,24 @@ describe("MCP output JSON Schema identity", () => {
     expect(different.$id).not.toBe(first.$id);
   });
 
+  test("preserves data properties named $id while assigning the MCP identity", () => {
+    const codec = Schema.Struct({
+      $id: Schema.String,
+      value: Schema.String,
+    }).annotate({ jsonSchema: { $id: "urn:source-schema" } });
+
+    const advertised = mcpOutputJsonSchema(codec);
+
+    expect(advertised.$id).toMatch(
+      /^urn:dnd:mcp:output-schema:sha256:[a-f0-9]{64}$/,
+    );
+    expect(advertised.$id).not.toBe("urn:source-schema");
+    expect(advertised).toMatchObject({
+      properties: { $id: { type: "string" }, value: { type: "string" } },
+      required: ["$id", "value"],
+    });
+  });
+
   test("extracts an object branch and rejects schemas with no object input", () => {
     expect(
       mcpObjectJsonSchema(

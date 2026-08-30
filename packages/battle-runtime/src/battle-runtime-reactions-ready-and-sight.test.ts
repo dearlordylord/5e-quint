@@ -194,7 +194,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
             responderId: wizardId,
             choice: {
               kind: "releaseReadiedSpell",
-              readiedSpellCasterId: wizardId,
               procedureRef: subject.procedureRef,
               fills: [],
             },
@@ -213,7 +212,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           responderId: wizardId,
           choice: {
             kind: "releaseReadiedSpell",
-            readiedSpellCasterId: wizardId,
             procedureRef: choice.subject.procedureRef,
             fills: [],
           },
@@ -320,7 +318,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           responderId: wizardId,
           choice: {
             kind: "releaseReadiedSpell",
-            readiedSpellCasterId: wizardId,
             procedureRef: releaseChoice.subject.procedureRef,
             fills: [],
           },
@@ -690,7 +687,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           responderId: wizardId,
           choice: {
             kind: "releaseReadiedSpell",
-            readiedSpellCasterId: wizardId,
             procedureRef: choice.subject.procedureRef,
             fills: [],
           },
@@ -768,7 +764,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         responderId: "wizard",
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: "wizard",
           fills: [
             {
               kind: "notARealFill",
@@ -814,7 +809,14 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     expect(encoded.frontier).toMatchObject({
       trigger: "attackHit",
       decisionHole: { trigger: "attackHit" },
-      choices: [expect.objectContaining({ kind: "releaseReadiedSpell" })],
+      choices: [
+        expect.objectContaining({
+          kind: "nestedProcedure",
+          subject: expect.objectContaining({
+            command: "releaseReadiedSpell",
+          }),
+        }),
+      ],
     });
     expect(
       Result.isSuccess(
@@ -850,10 +852,13 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     }
     const pendingInterrupt = encoded.frontier;
     const releaseChoice = pendingInterrupt.choices.find(
-      (choice) => choice.kind === "releaseReadiedSpell",
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.tag === "runtimeCommand" &&
+        choice.subject.command === "releaseReadiedSpell",
     );
     if (
-      releaseChoice?.kind !== "releaseReadiedSpell" ||
+      releaseChoice?.kind !== "nestedProcedure" ||
       releaseChoice.subject.tag !== "runtimeCommand" ||
       releaseChoice.subject.command !== "releaseReadiedSpell"
     ) {
@@ -892,25 +897,22 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     }
     const replaceReleaseChoice = (input: {
       readonly procedureRef: string;
-      readonly reactorId?: string;
-      readonly casterId?: string;
+      readonly readiedSpellCasterId?: string;
     }) => ({
       ...encoded,
       frontier: {
         ...pendingInterrupt,
         choices: pendingInterrupt.choices.map((choice) =>
-          choice.kind === "releaseReadiedSpell" &&
+          choice.kind === "nestedProcedure" &&
           choice.subject.tag === "runtimeCommand" &&
           choice.subject.command === "releaseReadiedSpell"
             ? {
                 ...choice,
-                reactorId: input.reactorId ?? choice.reactorId,
-                readiedSpellCasterId:
-                  input.casterId ?? choice.readiedSpellCasterId,
                 subject: {
                   ...choice.subject,
                   readiedSpellCasterId:
-                    input.casterId ?? choice.subject.readiedSpellCasterId,
+                    input.readiedSpellCasterId ??
+                    choice.subject.readiedSpellCasterId,
                   procedureRef: input.procedureRef,
                 },
               }
@@ -1017,7 +1019,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         Schema.decodeUnknownResult(BattleCheckpointFrontierEnvelopeSchema)(
           replaceReleaseChoice({
             procedureRef: releaseChoice.subject.procedureRef,
-            reactorId: goblinId,
+            readiedSpellCasterId: goblinId,
           }),
         ),
       ),
@@ -1062,7 +1064,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         responderId: "synthetic-retaliator",
         choice: {
           kind: "retaliationAttack",
-          reactorId: "synthetic-retaliator",
           selection,
           fills: [targetSpatialFacts],
         },

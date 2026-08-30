@@ -170,6 +170,28 @@ export function battleRuntimeSessionFollows(
   );
 }
 
+/**
+ * True when a runtime session is the same session or any descendant produced
+ * by this package's reducer/session transitions. This is distinct from
+ * battleRuntimeSessionFollows, which intentionally checks only one step for
+ * transition-local callers.
+ */
+export function battleRuntimeSessionDescendsFrom(
+  candidate: BattleRuntimeSession,
+  ancestor: BattleRuntimeSession,
+): boolean {
+  const visited = new Set<RuntimeSession>();
+  let current: RuntimeSession | undefined = candidate;
+  while (current !== undefined) {
+    if (current === ancestor) return true;
+    if (visited.has(current)) return false;
+    visited.add(current);
+    const predecessor = runtimeSessionPredecessors.get(current);
+    current = predecessor instanceof RuntimeSession ? predecessor : undefined;
+  }
+  return false;
+}
+
 /** Package-internal construction after state/context admission. */
 export function battleRuntimeSessionFromAdmittedContext(
   state: import("./battle-state-execution.ts").BattleState,

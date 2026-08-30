@@ -185,7 +185,7 @@ function presentationIssueKey(issue: BattlePresentationIssue | BattleScenePresen
     Match.when({ tag: "battleScenePresentationIssue" }, (matched) => `${matched.combatantId}:${matched.reason}`),
     Match.when(
       { tag: "battleInterruptChoicePresentationIssue" },
-      (matched) => `${matched.reactorId}:${matched.choiceKind}:${matched.reason}`
+      (matched) => `${matched.responderId}:${matched.choiceKind}:${matched.reason}`
     ),
     Match.exhaustive
   )
@@ -204,7 +204,7 @@ function presentationIssueMessage(issue: BattlePresentationIssue | BattleScenePr
     Match.when(
       { tag: "battleInterruptChoicePresentationIssue" },
       (matched) =>
-        `Battle interrupt choice presentation is unavailable for reactor ${matched.reactorId}: ${matched.reason}.`
+        `Battle interrupt choice presentation is unavailable for responder ${matched.responderId}: ${matched.reason}.`
     ),
     Match.exhaustive
   )

@@ -89,6 +89,7 @@ import {
   type AvailableBattleAct,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptSubject,
   type BattleInterruptProcedureChoice,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
@@ -1828,41 +1829,42 @@ function spellCastReactionFactsFill(
   };
 }
 
+type CounterspellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
+
 function requireCounterspellChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
   session: BattleRuntimeSession,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): CounterspellChoice {
   const choice = battleFrontierInterruptDecisionForState(
     result.state,
-  )?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
-      if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== fighterId
-      ) {
-        return false;
-      }
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        session,
-        candidate.reactorId,
-        candidate.subject.procedureRef,
-      );
-      return (
-        invocation.tag === "spellSlot" &&
-        invocation.spellId === "spellCastInterruptionReaction" &&
-        invocation.procedure === "spellCastInterruptionReaction" &&
-        Number(invocation.slotLevel) === 3
-      );
-    },
-  );
+  )?.choices.find((candidate): candidate is CounterspellChoice => {
+    if (
+      candidate.kind !== "nestedProcedure" ||
+      candidate.subject.command !== "castTriggeredReactionSpell" ||
+      candidate.subject.reactorId !== fighterId
+    ) {
+      return false;
+    }
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      session,
+      candidate.subject.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.tag === "spellSlot" &&
+      invocation.spellId === "spellCastInterruptionReaction" &&
+      invocation.procedure === "spellCastInterruptionReaction" &&
+      Number(invocation.slotLevel) === 3
+    );
+  });
   if (choice === undefined) {
     throw new Error("Expected Counterspell Reaction choice.");
   }

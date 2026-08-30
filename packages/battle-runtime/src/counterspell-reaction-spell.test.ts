@@ -25,11 +25,13 @@ import {
   battleId,
   characterId,
   combatantId,
+  battlePendingTransactionView,
   discoverBattleActCandidates,
   initiativeScore,
   resolveBattleInterrupt,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   startBattle,
+  settleBattleRuntimeTransaction,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
@@ -47,6 +49,7 @@ import {
   cantripSpellInvocationRef,
   spellSlotInvocationRef,
   spellAccessFreeCastSpellInvocationRef,
+  type BattleInterruptSubject,
 } from "./battle-subjects.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
@@ -77,6 +80,30 @@ const spellCastInterruptionReactionerId = combatantId(
 const secondCounterspellerId = combatantId(
   "spellCastInterruptionReaction-second-reactor",
 );
+
+type NestedProcedureChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+>;
+type TriggeredReactionSpellChoice = NestedProcedureChoice & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "castTriggeredReactionSpell";
+    }
+  >;
+};
+
+function isTriggeredReactionSpellChoice(
+  choice: BattleInterruptProcedureChoice,
+): choice is TriggeredReactionSpellChoice {
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "castTriggeredReactionSpell"
+  );
+}
 
 describe("Counterspell Reaction spell", () => {
   test("does not admit a Counterspell reactor without an available spell slot", () => {
@@ -808,6 +835,150 @@ describe("Counterspell Reaction spell", () => {
         }),
       }),
     });
+  });
+
+  test("retains the triggering spell fills when nested Counterspell responders unwind through a transaction", () => {
+    const session = battleWithCounterspell({
+      casterSlots: [{ spellLevel: 1, count: 1 }],
+      includeSecondCounterspeller: true,
+    });
+    const subject = magicMissileSubject(session, 1);
+    const targetAllocationResult = resolveBattleSubject({
+      state: session.state,
+      subject,
+      fills: [],
+    });
+    if (targetAllocationResult.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile target allocation hole.");
+    }
+    const targetAllocation = requireHole(
+      targetAllocationResult.holes,
+      "spellTargetAllocation",
+    );
+    const firstCounterspellFact = spellCastInterruptionReactionTriggerFact({
+      session,
+      reactorId: spellCastInterruptionReactionerId,
+      casterId,
+    });
+    const first = settleBattleRuntimeTransaction({
+      session,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject,
+        fills: [
+          magicMissileTargetAllocationFill({
+            hole: targetAllocation,
+            casterId,
+            targetId: spellCastInterruptionReactionerId,
+            dartCount: targetAllocation.allocationCount,
+          }),
+          spellCastReactionFactsFill([firstCounterspellFact]),
+        ],
+      },
+    });
+    if (first.tag !== "needsHoles") {
+      throw new Error("Expected the first Counterspell transaction window.");
+    }
+    const firstFrontier = battleFrontierInterruptDecisionForState(
+      first.resolution.session.state,
+    );
+    const firstChoice = firstFrontier?.choices.find(
+      (choice): choice is TriggeredReactionSpellChoice =>
+        isTriggeredReactionSpellChoice(choice) &&
+        choice.subject.reactorId === spellCastInterruptionReactionerId,
+    );
+    if (firstChoice === undefined) {
+      throw new Error("Expected the first Counterspell choice.");
+    }
+    const secondCounterspellFact = spellCastInterruptionReactionTriggerFact({
+      session,
+      reactorId: secondCounterspellerId,
+      casterId: spellCastInterruptionReactionerId,
+    });
+    const second = settleBattleRuntimeTransaction({
+      session: first.resolution.session,
+      transaction: first.transaction,
+      operation: {
+        kind: "interruptDecision",
+        fill: interruptDecisionFill(
+          requireHole(
+            first.resolution.envelope.frontier.kind === "interruptDecision"
+              ? [first.resolution.envelope.frontier.decisionHole]
+              : [],
+            "interruptDecision",
+          ),
+          spellCastInterruptionReactionDecision(
+            spellCastInterruptionReactionerId,
+            firstChoice,
+            spellCastInterruptionReactionSavingThrowFills(
+              firstChoice,
+              casterId,
+              false,
+              [spellCastReactionFactsFill([secondCounterspellFact])],
+            ),
+          ),
+        ),
+      },
+    });
+    if (second.tag !== "needsHoles") {
+      throw new Error("Expected the nested Counterspell transaction window.");
+    }
+    const secondFrontier = battleFrontierInterruptDecisionForState(
+      second.resolution.session.state,
+    );
+    const secondChoice = secondFrontier?.choices.find(
+      (choice): choice is TriggeredReactionSpellChoice =>
+        isTriggeredReactionSpellChoice(choice) &&
+        choice.subject.reactorId === secondCounterspellerId,
+    );
+    if (secondChoice === undefined) {
+      throw new Error("Expected the second Counterspell choice.");
+    }
+    const resumed = settleBattleRuntimeTransaction({
+      session: second.resolution.session,
+      transaction: second.transaction,
+      operation: {
+        kind: "interruptDecision",
+        fill: interruptDecisionFill(
+          requireHole(
+            second.resolution.envelope.frontier.kind === "interruptDecision"
+              ? [second.resolution.envelope.frontier.decisionHole]
+              : [],
+            "interruptDecision",
+          ),
+          spellCastInterruptionReactionDecision(
+            secondCounterspellerId,
+            secondChoice,
+            spellCastInterruptionReactionSavingThrowFills(
+              secondChoice,
+              spellCastInterruptionReactionerId,
+              false,
+            ),
+          ),
+        ),
+      },
+    });
+    if (resumed.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile to resume after Counterspell.");
+    }
+    if (resumed.frontier.kind !== "ordinaryHoles") {
+      throw new Error("Expected Magic Missile's ordinary damage frontier.");
+    }
+    const transactionView = battlePendingTransactionView(resumed.transaction);
+    expect(transactionView).toMatchObject({
+      _tag: "Some",
+      value: {
+        subject,
+        fills: [
+          expect.objectContaining({ kind: "spellTargetAllocation" }),
+          expect.objectContaining({ kind: "targetSpatialFacts" }),
+        ],
+      },
+    });
+    expect(resumed.frontier.holes).toEqual(
+      expect.arrayContaining([expect.objectContaining({ kind: "rolledDice" })]),
+    );
   });
 
   test("allows Counterspell to end Shield before Shield affects the triggering spell", () => {
@@ -1866,10 +2037,7 @@ function requireCounterspellChoice(
   slotLevel: number,
   session: BattleRuntimeSession,
   resource?: CounterspellFreeCastChoiceResource,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): TriggeredReactionSpellChoice {
   return requireTriggeredReactionSpellChoice({
     session,
     result,
@@ -1899,46 +2067,36 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly procedure: string;
   readonly slotLevel: number;
   readonly resource?: CounterspellFreeCastChoiceResource;
-}): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+}): TriggeredReactionSpellChoice {
   const expectedFreeCastResource = input.resource;
   const choice = battleFrontierInterruptDecisionForState(
     input.result.state,
-  )?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
-      if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== input.reactorId
-      ) {
-        return false;
-      }
-      const invocation = characterSpellInvocationRefForProcedureRefForTest(
-        battleRuntimeSessionForTest({
-          state: input.result.state,
-          context: input.session.context,
-        }),
-        candidate.reactorId,
-        candidate.subject.procedureRef,
-      );
-      return (
-        invocation.spellId === input.spellId &&
-        invocation.procedure === input.procedure &&
-        (expectedFreeCastResource === undefined
-          ? invocation.tag === "spellSlot" &&
-            Number(invocation.slotLevel) === input.slotLevel
-          : invocation.tag === "spellAccessFreeCast" &&
-            invocation.resourcePoolRef ===
-              expectedFreeCastResource.resourcePoolRef)
-      );
-    },
-  );
+  )?.choices.find((candidate): candidate is TriggeredReactionSpellChoice => {
+    if (
+      !isTriggeredReactionSpellChoice(candidate) ||
+      candidate.subject.reactorId !== input.reactorId
+    ) {
+      return false;
+    }
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      battleRuntimeSessionForTest({
+        state: input.result.state,
+        context: input.session.context,
+      }),
+      candidate.subject.reactorId,
+      candidate.subject.procedureRef,
+    );
+    return (
+      invocation.spellId === input.spellId &&
+      invocation.procedure === input.procedure &&
+      (expectedFreeCastResource === undefined
+        ? invocation.tag === "spellSlot" &&
+          Number(invocation.slotLevel) === input.slotLevel
+        : invocation.tag === "spellAccessFreeCast" &&
+          invocation.resourcePoolRef ===
+            expectedFreeCastResource.resourcePoolRef)
+    );
+  });
   if (choice === undefined) {
     throw new Error(`Expected ${input.spellId} Reaction choice.`);
   }
@@ -1947,20 +2105,14 @@ function requireTriggeredReactionSpellChoice(input: {
 
 function spellCastInterruptionReactionDecision(
   reactorId: CombatantId,
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+  choice: TriggeredReactionSpellChoice,
   fills: readonly BattleFill[],
 ): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return triggeredReactionSpellDecision(reactorId, choice, fills);
 }
 
 function spellCastInterruptionReactionSavingThrowFills(
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+  choice: TriggeredReactionSpellChoice,
   triggeringCasterId: CombatantId,
   succeeded: boolean,
   additionalFills: readonly BattleFill[] = [],
@@ -1976,10 +2128,7 @@ function spellCastInterruptionReactionSavingThrowFills(
 
 function triggeredReactionSpellDecision(
   reactorId: CombatantId,
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+  choice: TriggeredReactionSpellChoice,
   fills: readonly BattleFill[],
 ): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return {

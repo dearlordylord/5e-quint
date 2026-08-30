@@ -534,6 +534,50 @@ describe("public Play Session boundary", () => {
     }
   }, 30_000);
 
+  test("returns typed invalid arguments for authenticated saved-session listing", async () => {
+    const repository = openRepository();
+    const host = createDndMcpProtocolServer(undefined, undefined, {
+      playSessionRepository: repository,
+      requestIdentity: {
+        tag: "authenticated",
+        principalId: principal("principal:list-invalid-arguments"),
+      },
+    });
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const client = new Client({
+      name: "public-list-invalid-arguments",
+      version: "0.1.0",
+    });
+    try {
+      await host.server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const rejected = await client.callTool({
+        name: "list_saved_play_sessions",
+        arguments: { unexpected: true },
+      });
+      expect(rejected.isError).toBe(true);
+      if (!Array.isArray(rejected.content)) {
+        throw new Error("Expected a typed invalid-arguments response.");
+      }
+      const content = rejected.content[0];
+      if (
+        !isJsonObject(content) ||
+        content.type !== "text" ||
+        typeof content.text !== "string"
+      ) {
+        throw new Error("Expected a typed invalid-arguments response.");
+      }
+      expect(JSON.parse(content.text)).toEqual({
+        error: "list_saved_play_sessions expects valid arguments.",
+        details: { code: "INVALID_ARGUMENTS" },
+      });
+    } finally {
+      await Promise.allSettled([client.close(), host.server.close()]);
+      repository.close();
+    }
+  }, 30_000);
+
   test("does not advertise OAuth-only capabilities without an OAuth provider", async () => {
     const repository = openRepository();
     const host = createDndMcpProtocolServer(undefined, undefined, {

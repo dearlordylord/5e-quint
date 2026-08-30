@@ -15,6 +15,7 @@ import {
   type ResourceCount,
 } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog-core";
 import { Result } from "effect";
 
 import {
@@ -564,9 +565,14 @@ function bookOfShadowsPresenceFromInput(
   return Result.succeed(input.bookOfShadowsPresence ?? { tag: "onPerson" });
 }
 
+function statBlockCatalogState(statBlockCatalog: StatBlockCatalog | undefined) {
+  return statBlockCatalog === undefined ? {} : { statBlockCatalog };
+}
+
 export function parseCharacterSheet(
   value: unknown,
   unitLibrary: UnitCatalog,
+  statBlockCatalog?: StatBlockCatalog,
 ): Result.Result<CharacterSheet, CharacterSheetIssue> {
   /* v8 ignore next -- @preserve -- Malformed stored sheet: the raw persistence boundary requires a record before any field parsing. */
   if (!isRecord(value)) return characterSheetIssue("Expected Character Sheet.");
@@ -702,6 +708,7 @@ export function parseCharacterSheet(
       resourceExpenditures: resourceExpenditures.success,
       heroicInspiration: heroicInspiration.success,
       companion: companion.success,
+      ...statBlockCatalogState(statBlockCatalog),
       ...(druidWildShapeKnownForms.success === undefined
         ? {}
         : {
@@ -722,8 +729,9 @@ export function parseCharacterSheet(
 export function parseFreshCharacterSheet(
   value: unknown,
   unitLibrary: UnitCatalog,
+  statBlockCatalog?: StatBlockCatalog,
 ): Result.Result<FreshCharacterSheet, CharacterSheetIssue> {
-  const parsed = parseCharacterSheet(value, unitLibrary);
+  const parsed = parseCharacterSheet(value, unitLibrary, statBlockCatalog);
   if (Result.isFailure(parsed)) return Result.fail(parsed.failure);
   const sheet = parsed.success;
   const maximum = characterSheetHitPointCapacity({
