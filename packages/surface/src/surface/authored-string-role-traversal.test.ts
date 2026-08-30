@@ -202,26 +202,42 @@ describe("Surface authored string role traversal", () => {
   });
 
   it("traverses primitive reference-array members", () => {
-    const references = traversal.collectAuthoredRelations(
-      traversal.readSurfaceRecords(),
+    const referenceArray = Schema.Array(
+      surfaceSchemaRole(Schema.String, {
+        category: "reference",
+        relation: "spell-list",
+        targetKind: "unit",
+      }),
     );
-    expect(
-      references.some((reference: { readonly fieldPath: string }) =>
-        /\[\d+\]$/.test(reference.fieldPath),
-      ),
-    ).toBe(true);
-    expect(
-      references.some(
-        (reference: { readonly targetRecordId: string }) =>
-          reference.targetRecordId === "find_familiar",
-      ),
-    ).toBe(true);
-    expect(
-      references.some(
-        (reference: { readonly targetRecordId: string }) =>
-          reference.targetRecordId === "sorcerer_font_of_magic",
-      ),
-    ).toBe(true);
+    const references: Array<{
+      readonly fieldPath: string;
+      readonly targetRecordId: string;
+    }> = [];
+
+    traversal.walkSurfaceValue(
+      referenceArray,
+      ["synthetic_spell_alpha", "synthetic_spell_beta"],
+      (
+        fieldPath: string,
+        targetRecordId: string,
+        role: SurfaceSchemaFieldRole,
+      ) => {
+        if (role.category === "reference") {
+          references.push({ fieldPath, targetRecordId });
+        }
+      },
+    );
+
+    expect(references).toEqual([
+      {
+        fieldPath: "value[0]",
+        targetRecordId: "synthetic_spell_alpha",
+      },
+      {
+        fieldPath: "value[1]",
+        targetRecordId: "synthetic_spell_beta",
+      },
+    ]);
   });
 
   it("rejects excess string-bearing content at the production decode boundary", () => {
