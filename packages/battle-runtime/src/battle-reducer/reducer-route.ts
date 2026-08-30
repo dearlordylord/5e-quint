@@ -290,7 +290,7 @@ export function battleReducerRouteForResolution(
   input: AdmittedBattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
-  const sleepRepeatSaveRoute =
+  const hitPointBudgetConditionRepeatSaveRoute =
     hitPointBudgetConditionRepeatSaveRouteForResolution(input, result);
   const firstExclusiveRoute = composeReducerRouteCandidates([
     terminalRouteCandidate(() =>
@@ -326,8 +326,9 @@ export function battleReducerRouteForResolution(
       rollModifierConcentrationBreakRouteForResolution(input, result),
     ),
     terminalRouteCandidate(() =>
-      sleepRepeatSaveRoute !== undefined && !isEndTurnSubject(input.subject)
-        ? sleepRepeatSaveRoute
+      hitPointBudgetConditionRepeatSaveRoute !== undefined &&
+      !isEndTurnSubject(input.subject)
+        ? hitPointBudgetConditionRepeatSaveRoute
         : undefined,
     ),
     terminalRouteCandidate(() =>
@@ -361,7 +362,7 @@ export function battleReducerRouteForResolution(
   const spellBaseArmorClassTurnBoundaryRoute =
     spellBaseArmorClassEffectTurnBoundaryRouteForResolution(input, result);
   const turnBoundaryRoutes = composeReducerRouteCandidates([
-    composableRouteCandidate(() => sleepRepeatSaveRoute),
+    composableRouteCandidate(() => hitPointBudgetConditionRepeatSaveRoute),
     composableRouteCandidate(() => repeatSaveConditionEffectRoute),
     composableRouteCandidate(() => deathSavingThrowRoute),
     composableRouteCandidate(() => turnBoundaryEffectLifecycleRoute),

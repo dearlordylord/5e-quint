@@ -12,7 +12,7 @@ import type {
 } from "../identity.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
-  COMMAND_OPTIONS as COMPELLED_BEHAVIOR_OPTIONS,
+  COMPELLED_BEHAVIOR_OPTIONS,
 } from "../battle-reducer/domain-constants.ts";
 
 export const WEAPON_ATTACK_DAMAGE_ENHANCEMENT_BONUSES = [

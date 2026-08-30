@@ -320,7 +320,7 @@ describe("Feather Fall Reaction spell", () => {
       effectiveFallDamage: damageAmount(0),
       fallDamagePrevented: true,
       fallingPronePrevented: true,
-      slowFallReductionAmount: damageAmount(0),
+      fallDamageReductionAmount: damageAmount(0),
     });
     if (landing.tag !== "landed") {
       throw new Error("Expected Feather Fall landing mitigation.");

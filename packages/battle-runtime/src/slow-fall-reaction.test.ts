@@ -144,7 +144,7 @@ describe("Slow Fall Reaction", () => {
       effectiveFallDamage: damageAmount(3),
       fallDamagePrevented: false,
       fallingPronePrevented: false,
-      slowFallReductionAmount: damageAmount(25),
+      fallDamageReductionAmount: damageAmount(25),
     });
     if (landing.tag !== "landed") {
       throw new Error("Expected Slow Fall landing resolution.");
@@ -169,7 +169,7 @@ describe("Slow Fall Reaction", () => {
       effectiveFallDamage: damageAmount(0),
       fallDamagePrevented: true,
       fallingPronePrevented: true,
-      slowFallReductionAmount: damageAmount(20),
+      fallDamageReductionAmount: damageAmount(20),
     });
     if (landing.tag !== "landed") {
       throw new Error("Expected Slow Fall landing resolution.");

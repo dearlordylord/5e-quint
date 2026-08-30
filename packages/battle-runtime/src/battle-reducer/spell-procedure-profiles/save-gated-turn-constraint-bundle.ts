@@ -46,10 +46,10 @@ import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecy
 import { allocateBattleEffectOccurrenceForCreature } from "../../effect-execution-ref.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
-  SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA,
-  SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA,
-  SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
-  SLOW_ACTIVE_PENALTIES_SPEED_RATIO,
+  SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA,
+  SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA,
+  SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
+  SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO,
 } from "../domain-constants.ts";
 import { extendSavingThrowOngoingFeatures } from "../attack-roll.ts";
 import { resolveAreaSaveMetamagicFills } from "../spells-resolve-save-gates.ts";
@@ -234,7 +234,7 @@ function isSaveGatedTurnConstraintBundlePhase(
     failedEffects.some(
       (effect) =>
         effect.kind === "somatic_spell_failure_chance" &&
-        effect.percent === SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
+        effect.percent === SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
     ) &&
     repeatSave !== undefined &&
     repeatSave.cadence === "end_of_target_turn" &&
@@ -247,8 +247,8 @@ function isSaveGatedTurnConstraintBundlePhase(
 function isTurnHinderingSpeedRatioEffect(effect: EffectAtom): boolean {
   return (
     effect.kind === "set_speed_ratio" &&
-    effect.numerator === SLOW_ACTIVE_PENALTIES_SPEED_RATIO.numerator &&
-    effect.denominator === SLOW_ACTIVE_PENALTIES_SPEED_RATIO.denominator
+    effect.numerator === SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.numerator &&
+    effect.denominator === SAVE_GATED_TURN_CONSTRAINT_SPEED_RATIO.denominator
   );
 }
 
@@ -257,7 +257,8 @@ function isTurnHinderingArmorClassPenaltyEffect(effect: EffectAtom): boolean {
     effect.kind === "modify_ac" &&
     effect.delta.kind === "fixed_number" &&
     effect.delta.sign === "-" &&
-    effect.delta.amount === Math.abs(SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA)
+    effect.delta.amount ===
+      Math.abs(SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA)
   );
 }
 
@@ -277,7 +278,7 @@ function isTurnHinderingDexteritySavingThrowPenaltyEffect(
     effect.count === undefined &&
     effect.delta.kind === "fixed_number" &&
     effect.delta.sign === "-" &&
-    effect.delta.amount === Math.abs(SLOW_ACTIVE_PENALTIES_DEX_SAVE_DELTA)
+    effect.delta.amount === Math.abs(SAVE_GATED_TURN_CONSTRAINT_DEX_SAVE_DELTA)
   );
 }
 

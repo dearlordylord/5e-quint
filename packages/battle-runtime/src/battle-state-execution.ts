@@ -7655,7 +7655,7 @@ export type BattleFallDamageLandingResult =
       readonly effectiveFallDamage: DamageAmount;
       readonly fallDamagePrevented: boolean;
       readonly fallingPronePrevented: boolean;
-      readonly slowFallReductionAmount: DamageAmount;
+      readonly fallDamageReductionAmount: DamageAmount;
       readonly fallingCreatureMitigated: boolean;
     }
   | {

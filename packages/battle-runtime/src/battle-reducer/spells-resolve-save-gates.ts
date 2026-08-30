@@ -3926,9 +3926,13 @@ function validateStagedSaveConditionSavingThrowOutcomes(input: {
   }
   const autoSuccessTargetIds = new Set(
     input.area.affectedTargetIds.filter((targetId) =>
-      sleepTargetAutomaticallySucceeds(input.state, targetId, {
-        doesNotSleep: nonSleeperTargetIds.has(targetId),
-      }),
+      hitPointBudgetConditionTargetAutomaticallySucceeds(
+        input.state,
+        targetId,
+        {
+          doesNotSleep: nonSleeperTargetIds.has(targetId),
+        },
+      ),
     ),
   );
   const nonAutomaticTargetIds = input.area.affectedTargetIds.filter(
@@ -3999,17 +4003,18 @@ function validatePersistentAreaSaveConditionSavingThrowOutcomes(input: {
   return "ground-area prone hazard Saving Throw outcomes must cover every table-supplied ground-area affected target.";
 }
 
-function sleepTargetAutomaticallySucceeds(
+function hitPointBudgetConditionTargetAutomaticallySucceeds(
   state: BattleState,
   targetId: CombatantId,
   facts: { readonly doesNotSleep: boolean },
 ): boolean {
   return (
-    facts.doesNotSleep || sleepTargetHasExhaustionImmunity(state, targetId)
+    facts.doesNotSleep ||
+    hitPointBudgetConditionTargetHasExhaustionImmunity(state, targetId)
   );
 }
 
-function sleepTargetHasExhaustionImmunity(
+function hitPointBudgetConditionTargetHasExhaustionImmunity(
   state: BattleState,
   targetId: CombatantId,
 ): boolean {

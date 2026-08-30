@@ -134,14 +134,14 @@ import {
   BATTLE_MAGIC_SUPPRESSION_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
   BATTLE_ATTACK_RANGE_BANDS,
   BLUR_ATTACK_ROLL_BYPASS_SENSES,
-  COMMAND_OPTIONS,
+  COMPELLED_BEHAVIOR_OPTIONS,
   DUPLICATE_HIT_INTERCEPTION_DUPLICATE_COUNTS,
   DUPLICATE_HIT_INTERCEPTION_DIE_SIZE,
   DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST,
   DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES,
   OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
   SELF_TRANSFORMATION_MODE_KINDS,
-  SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
+  SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
   TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
 } from "./domain-constants.ts";
 import { BattleDamageRelationshipQuestionIdSchema } from "./damage-relationship-question-id.ts";
@@ -1570,7 +1570,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     actorId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     failurePercent: Schema.Literal(
-      SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
+      SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
     ),
     activeEffectSources: Schema.Array(
       Schema.Struct({
@@ -2092,7 +2092,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("compelledBehaviorOptionChoice"),
     sourceProcedureRef: BattleProcedureExecutionRef,
     label: Schema.String,
-    choices: Schema.Array(Schema.Literals(COMMAND_OPTIONS)),
+    choices: Schema.Array(Schema.Literals(COMPELLED_BEHAVIOR_OPTIONS)),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -3926,7 +3926,7 @@ type BattleFillEncoded =
   | {
       readonly kind: "compelledBehaviorOptionChoice";
       readonly holeId: string;
-      readonly value: (typeof COMMAND_OPTIONS)[number];
+      readonly value: (typeof COMPELLED_BEHAVIOR_OPTIONS)[number];
     }
   | {
       readonly kind: "selfTransformationModeChoice";
@@ -5010,7 +5010,7 @@ export const BattleFillSchema: Schema.Codec<
     Schema.Struct({
       kind: Schema.Literal("compelledBehaviorOptionChoice"),
       holeId: BattleHoleIdSchema,
-      value: Schema.Literals(COMMAND_OPTIONS),
+      value: Schema.Literals(COMPELLED_BEHAVIOR_OPTIONS),
     }),
     Schema.Struct({
       kind: Schema.Literal("selfTransformationModeChoice"),

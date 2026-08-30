@@ -40,7 +40,7 @@ import {
   ATTACK_TARGET_HOLE_INSTANCE,
 } from "./battle-runtime-protocol.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
-import { COMMAND_OPTIONS } from "./domain-constants.ts";
+import { COMPELLED_BEHAVIOR_OPTIONS } from "./domain-constants.ts";
 import {
   distantSpellRangeModifierForApplications,
   type SpellMetamagicApplicationFact,
@@ -680,7 +680,7 @@ export function compelledBehaviorOptionChoiceHole(
     holeInstanceKey: holeInstanceKey(holeKey),
     label: `Compelled-behavior option`,
     sourceProcedureRef: invocation.sourceProcedureRef,
-    choices: COMMAND_OPTIONS,
+    choices: COMPELLED_BEHAVIOR_OPTIONS,
   };
 }
 
