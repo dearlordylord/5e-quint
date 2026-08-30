@@ -31,6 +31,13 @@
     },
     {
       "sourceKind": "unit",
+      "path": "mechanics.menu[].options[].monsterId",
+      "fieldName": "monsterId",
+      "targetKind": "statBlock",
+      "relation": "monster-reference"
+    },
+    {
+      "sourceKind": "unit",
       "path": "mechanics.modifiers[].zeroDamageRedirect.spends.resourceUnitId",
       "fieldName": "resourceUnitId",
       "targetKind": "unit",

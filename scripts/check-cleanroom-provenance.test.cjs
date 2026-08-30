@@ -315,7 +315,7 @@ test("source-evidenced class spell-list selections remain nonblocking", () => {
       (warning) =>
         warning.code === "source-visible-reference" &&
         warning.relation === "spell-list" &&
-        warning.targetRecordId === "mage_hand",
+        warning.targetRecordId === "message",
     ),
     JSON.stringify(result.warnings, null, 2),
   );
@@ -339,15 +339,6 @@ test("missing fixed-spell and creature-menu dependencies fail closed", () => {
   const reanimationMenu = structuredClone(
     records.find((candidate) => candidate.id === "animate_dead"),
   );
-  const animateDeadExcerpt = auditModule.rulesExcerptForSection(
-    reanimationMenu.value.provenance.section,
-    auditModule.buildReferenceIndex(),
-  );
-  assert.equal(animateDeadExcerpt.tag, "ok");
-  const publishedAnimateDead = {
-    ...reanimationMenu.value,
-    rulesExcerpt: animateDeadExcerpt.rulesExcerpt,
-  };
   const cases = [
     {
       record: fixedSpellGrant,
@@ -360,11 +351,13 @@ test("missing fixed-spell and creature-menu dependencies fail closed", () => {
     },
     {
       record: reanimationMenu,
-      targetRecordId: "zombie",
-      expectedCode: "missing-authored-dependency",
+      targetRecordId: "stat_block_zombie",
+      expectedCode: "unadmitted-authored-dependency",
       publication: {
         ...publishedSurface,
-        units: [...publishedSurface.units, publishedAnimateDead],
+        statBlocks: publishedSurface.statBlocks.filter(
+          (statBlock) => statBlock.id !== "stat_block_zombie",
+        ),
       },
     },
   ];
@@ -392,10 +385,7 @@ test("missing fixed-spell and creature-menu dependencies fail closed", () => {
   const legacyResult = auditModule.auditRecordDelta(
     auditModule.createAuditContext({
       records,
-      publication: {
-        ...publishedSurface,
-        units: [...publishedSurface.units, publishedAnimateDead],
-      },
+      publication: publishedSurface,
     }),
     legacyCreatureIdentity,
   );

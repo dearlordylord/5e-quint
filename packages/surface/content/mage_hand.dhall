@@ -24,7 +24,7 @@ let mageHand =
               [ { kind = "direct"
                 , attachment =
                     { kind = "location"
-                    , description = "an unoccupied space within range"
+                    , description = "a point you choose within range"
                     }
                 , effects = [ { kind = "none" } ]
                 }
