@@ -1015,12 +1015,12 @@ const seededSdkScenarioRows = [
         needles: [
           "cantripCastActionSpellAct(",
           "thaumaturgySpellId",
-          '"thaumaturgyBoomingVoice"',
-          '"thaumaturgyActiveOneMinuteEffectCount"',
+          '"temporaryAbilityCheckRollMode"',
+          '"temporaryAbilityCheckRollModeActiveEffectCount"',
           "maximumActiveOneMinuteEffects: 3",
           "requiresTableSpellEffectCount: true",
           "noActiveThaumaturgyOneMinuteEffectsFill(countHole)",
-          'kind: "thaumaturgyBoomingVoice"',
+          'kind: "temporaryAbilityCheckRollMode"',
           "sourceProcedureRef: act.subject.procedureRef",
           "sourceCombatantId: input.casterId",
           'kind: "duration"',
@@ -1029,7 +1029,7 @@ const seededSdkScenarioRows = [
           "expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([]);",
           "expect(caster.concentration).toBeNull();",
           "input.expectedSpellSlots",
-          "thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(",
+          "temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(",
           "difficultyClass(13)",
           'ability: "cha"',
           'skill: "intimidation"',
@@ -1039,7 +1039,7 @@ const seededSdkScenarioRows = [
       {
         anchor: "function noActiveThaumaturgyOneMinuteEffectsFill",
         needles: [
-          'kind: "thaumaturgyActiveOneMinuteEffectCount"',
+          'kind: "temporaryAbilityCheckRollModeActiveEffectCount"',
           "value: { activeOneMinuteEffectCount: 0 }",
         ],
       },
@@ -1257,7 +1257,7 @@ const seededSdkScenarioRows = [
         anchor: "function assertLevelOneSanctuary",
         needles: [
           "sanctuaryBonusActionSpellSlotAct(",
-          '"sanctuaryTargetingInterdiction"',
+          '"targetingSaveInterdiction"',
           '"spellTargetList"',
           "minTargets: 1",
           "maxTargets: 1",
@@ -1268,7 +1268,7 @@ const seededSdkScenarioRows = [
           'actionCost: "bonusAction"',
           'targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 }',
           "rangeFeet: movementFeet(30)",
-          'kind: "sanctuaryWard"',
+          'kind: "targetingSaveInterdiction"',
           "sourceProcedureRef: act.subject.procedureRef",
           "sourceCombatantId: input.casterId",
           'save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } }',
@@ -1288,7 +1288,7 @@ const seededSdkScenarioRows = [
           'battleActSpellPresentation(candidate)?.invocation.tag === "spellSlot"',
           "battleActSpellPresentation(candidate)?.invocation.spellId",
           "battleActSpellSlotPresentation(candidate)?.invocation.slotLevel === 1",
-          '"sanctuaryTargetingInterdiction"',
+          '"targetingSaveInterdiction"',
           "return act;",
         ],
       },
@@ -3019,7 +3019,7 @@ const seededSdkScenarioRows = [
       {
         anchor: "function thunderwaveSavingThrowOutcomeFill",
         needles: [
-          "area: selfOriginCubePushArea(",
+          "area: thunderwaveArea(",
           "outcomes.flatMap(",
           "originAnchorId",
         ],
@@ -3034,7 +3034,7 @@ const seededSdkScenarioRows = [
         ],
       },
       {
-        anchor: "function selfOriginCubePushArea",
+        anchor: "function thunderwaveArea",
         needles: [
           'kind: "selfOriginCubePushArea"',
           "creaturePushes:",
@@ -3115,7 +3115,7 @@ const seededSdkScenarioRows = [
       {
         anchor: "function thunderwaveSavingThrowOutcomeFill",
         needles: [
-          "area: selfOriginCubePushArea(",
+          "area: thunderwaveArea(",
           "outcomes.flatMap(",
           "originAnchorId",
         ],
@@ -3130,7 +3130,7 @@ const seededSdkScenarioRows = [
         ],
       },
       {
-        anchor: "function selfOriginCubePushArea",
+        anchor: "function thunderwaveArea",
         needles: [
           'kind: "selfOriginCubePushArea"',
           "creaturePushes:",
