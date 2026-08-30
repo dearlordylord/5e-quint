@@ -8,7 +8,7 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet, proficiencyBonus, Round } from "@dnd/shared/types";
+import { proficiencyBonus, Round } from "@dnd/shared/types";
 import { describe, expect, it } from "vitest";
 
 import { ongoingSpellEffectSuppressedByMagicSuppressionEmanation } from "./battle-reducer/magic-suppression-ongoing-effect.ts";
@@ -535,7 +535,6 @@ function assertSuppressionActiveEffectShape(
     kind: "magicSuppressionEmanation",
     sourceCombatantId: spellTargetId,
     areaId: antimagicFieldAreaId,
-    radiusFeet: movementFeet(10),
     suppressedOngoingSpellEffects: expectedSuppressedEffects,
     expiresAt: {
       kind: "concentration",
