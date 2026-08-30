@@ -1,4 +1,6 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
+
 module spellSleepRepeatSaveLifecycleCore {
   import spellStagedSaveConditionLifecycleCore.* from "./spell-staged-save-condition-lifecycle-core"
   // RAW anchors:

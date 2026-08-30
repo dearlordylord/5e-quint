@@ -20,6 +20,86 @@ const DEFAULT_MAX_LINES = 12_500;
 
 const PURE_VOCABULARY_LEAVES = new Map([
   [
+    "packages/battle-runtime/battle-runtime-after-damage-save-reaction.qnt",
+    "identity-free pure after-damage Reaction semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt",
+    "identity-free pure compelled-behavior semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-controlled-vertical-suspension.qnt",
+    "identity-free pure vertical-suspension semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-duplicate-hit-interception.qnt",
+    "identity-free pure duplicate-interception semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-falling-creature-mitigation-reaction.qnt",
+    "identity-free pure falling-mitigation semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-fixed-cost-movement-replacement.qnt",
+    "identity-free pure movement-replacement semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-granted-area-save-damage.qnt",
+    "identity-free pure granted-area save-damage semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-linked-defense-damage-share.qnt",
+    "identity-free pure linked-defense semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-observer-sight-grant.qnt",
+    "identity-free pure observer-sight semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-perception-gated-attack-roll-defense.qnt",
+    "identity-free pure perception-gated defense semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+    "identity-free pure repeated-save control semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
+    "identity-free pure save-gated immunity semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+    "identity-free pure simultaneous-damage semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-spatial-melee-spell-attack-proxy.qnt",
+    "identity-free pure positioned attack-proxy semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-spawned-companion-lifecycle.qnt",
+    "identity-free pure spawned-companion semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-spell-cast-interruption-reaction.qnt",
+    "identity-free pure spell-interruption semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-targeting-save-interdiction.qnt",
+    "identity-free pure targeting-interdiction semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+    "identity-free pure temporary roll-mode semantic leaf",
+  ],
+  [
+    "packages/battle-runtime/battle-runtime-triggered-armor-defense.qnt",
+    "identity-free pure triggered-defense semantic leaf",
+  ],
+  [
+    "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt",
+    "identity-free pure staged-condition semantic leaf",
+  ],
+  [
     "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
     "saving-throw roll-mode vocabulary and cancellation",
   ],

@@ -2,7 +2,8 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
 
 module battleRuntimeLinkedDefenseDamageShare {
-  import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
+  pure def linkedDefenseNonnegative(value: int): int =
+    if (value < 0) 0 else value
 
   type LinkedDefenseDamageShareState = {
     sourceHitPoints: int,
@@ -25,17 +26,17 @@ module battleRuntimeLinkedDefenseDamageShare {
     targetHitPoints: int,
     linkPresent: bool,
   ): LinkedDefenseDamageShareState = {
-    sourceHitPoints: nonnegative(sourceHitPoints),
-    targetHitPoints: nonnegative(targetHitPoints),
+    sourceHitPoints: linkedDefenseNonnegative(sourceHitPoints),
+    targetHitPoints: linkedDefenseNonnegative(targetHitPoints),
     linkPresent: linkPresent and sourceHitPoints > 0,
     sourceTookSharedDamage: false,
   }
 
   pure def linkedDefenseDamageAfterResistance(incomingDamage: int): int =
-    nonnegative(incomingDamage) / 2
+    linkedDefenseNonnegative(incomingDamage) / 2
 
   pure def hitPointsAfterLinkedDamage(hitPoints: int, damage: int): int =
-    nonnegative(hitPoints - nonnegative(damage))
+    linkedDefenseNonnegative(hitPoints - linkedDefenseNonnegative(damage))
 
   pure def linkedDefenseStateAfterCleanup(
     state: LinkedDefenseDamageShareState,
@@ -57,7 +58,7 @@ module battleRuntimeLinkedDefenseDamageShare {
       if (state.linkPresent)
         linkedDefenseDamageAfterResistance(fill.incomingDamage)
       else
-        nonnegative(fill.incomingDamage)
+        linkedDefenseNonnegative(fill.incomingDamage)
     val sourceSharesDamage =
       state.linkPresent and state.sourceHitPoints > 0 and targetDamage > 0
     val damaged = {
