@@ -15,6 +15,7 @@ import {
   type BattleHole,
   type BattleInvalidReasonCode,
 } from "../../../packages/battle-runtime/src/battle-state-execution.ts";
+import { BattleSubjectSchema } from "../../../packages/battle-runtime/src/battle-subjects.ts";
 import {
   Hp,
   ResourceCount,
@@ -263,11 +264,7 @@ export type PlayerSubjectProjection =
       readonly command: string;
     })
   | (PlayerSubjectProjectionCommon & {
-      readonly tag:
-        | "actionSpell"
-        | "bonusActionSpell"
-        | "bonusActionDashSpell"
-        | "spawnedCompanionTouchSpellProxy";
+      readonly tag: "actionSpell" | "bonusActionSpell" | "bonusActionDashSpell";
       readonly mode: PlayerSubjectProjectionMode;
     })
   | (PlayerSubjectProjectionCommon & {
@@ -276,11 +273,25 @@ export type PlayerSubjectProjection =
     })
   | (PlayerSubjectProjectionCommon & {
       readonly tag:
-        | "companionAttack"
         | "monkFocusFlurryOfBlowsStrike"
         | "unitFeature"
-        | "unitFeatureHeldWeaponActivation"
-        | "spawnedCompanionSharedSenses";
+        | "unitFeatureHeldWeaponActivation";
+    })
+  | (PlayerSubjectProjectionCommon & {
+      readonly tag: "companionAttack";
+      readonly familiarId: string;
+      readonly procedureRef: string;
+    })
+  | (PlayerSubjectProjectionCommon & {
+      readonly tag: "spawnedCompanionSharedSenses";
+      readonly familiarId: string;
+    })
+  | (PlayerSubjectProjectionCommon & {
+      readonly tag: "spawnedCompanionTouchSpellProxy";
+      readonly companionId: string;
+      readonly procedureRef: string;
+      readonly spellAction: "action" | "bonusAction";
+      readonly mode: PlayerSubjectProjectionMode;
     });
 
 export type PlayerCombatantProjection = {
@@ -1071,6 +1082,14 @@ export function projectPlayerSubject(
   };
   const action = typeof value.action === "string" ? value.action : undefined;
   const command = typeof value.command === "string" ? value.command : undefined;
+  const decodedCompanionSubject =
+    value.tag === "companionAttack" ||
+    value.tag === "spawnedCompanionSharedSenses" ||
+    value.tag === "spawnedCompanionTouchSpellProxy"
+      ? Schema.decodeUnknownResult(BattleSubjectSchema, {
+          onExcessProperty: "ignore",
+        })(value)
+      : undefined;
   switch (value.tag) {
     case "action":
     case "bonusAction":
@@ -1087,7 +1106,6 @@ export function projectPlayerSubject(
     case "actionSpell":
     case "bonusActionSpell":
     case "bonusActionDashSpell":
-    case "spawnedCompanionTouchSpellProxy":
       return mode === undefined
         ? undefined
         : { ...common, tag: value.tag, mode };
@@ -1097,12 +1115,45 @@ export function projectPlayerSubject(
         tag: value.tag,
         ...(mode === undefined ? {} : { mode }),
       };
-    case "companionAttack":
     case "monkFocusFlurryOfBlowsStrike":
     case "unitFeature":
     case "unitFeatureHeldWeaponActivation":
-    case "spawnedCompanionSharedSenses":
       return { ...common, tag: value.tag };
+    case "companionAttack":
+      return decodedCompanionSubject !== undefined &&
+        Result.isSuccess(decodedCompanionSubject) &&
+        decodedCompanionSubject.success.tag === "companionAttack"
+        ? {
+            ...common,
+            tag: decodedCompanionSubject.success.tag,
+            familiarId: decodedCompanionSubject.success.familiarId,
+            procedureRef: decodedCompanionSubject.success.procedureRef,
+          }
+        : undefined;
+    case "spawnedCompanionSharedSenses":
+      return decodedCompanionSubject !== undefined &&
+        Result.isSuccess(decodedCompanionSubject) &&
+        decodedCompanionSubject.success.tag === "spawnedCompanionSharedSenses"
+        ? {
+            ...common,
+            tag: decodedCompanionSubject.success.tag,
+            familiarId: decodedCompanionSubject.success.familiarId,
+          }
+        : undefined;
+    case "spawnedCompanionTouchSpellProxy":
+      return decodedCompanionSubject !== undefined &&
+        Result.isSuccess(decodedCompanionSubject) &&
+        decodedCompanionSubject.success.tag ===
+          "spawnedCompanionTouchSpellProxy"
+        ? {
+            ...common,
+            tag: decodedCompanionSubject.success.tag,
+            companionId: decodedCompanionSubject.success.companionId,
+            procedureRef: decodedCompanionSubject.success.procedureRef,
+            spellAction: decodedCompanionSubject.success.spellAction,
+            mode: decodedCompanionSubject.success.mode,
+          }
+        : undefined;
   }
 }
 

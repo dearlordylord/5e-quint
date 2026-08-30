@@ -83,10 +83,13 @@ import { isReadonlyArrayNonEmpty } from "effect/Array";
 import {
   CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE,
   battleCreatureInitFromCharacterBuild,
+  type CharacterSheetBattleInit,
+  type CharacterSheetBattleInitInput,
   type CharacterBattleCreatureInitResult,
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
 import {
+  type CharacterBattleRuntimeIssueMessage,
   type BattleCreatureInitIssue,
   battleCreatureInitIssue,
   battleCreatureInitIssueMessage,
@@ -123,16 +126,15 @@ function characterBattleHandoffValidationIssue(
   );
 }
 
-export function characterBattleRuntimeIssueMessage(
-  issue: BattleCreatureInitIssue | BattleStateInitIssue,
-): string {
-  return issue.tag === "battleCreatureInitIssues"
-    ? battleCreatureInitIssueMessage(issue)
-    : issue.tag === "battleCreatureInitIssue" ||
-        issue.tag === "characterBattleSpellAccessProjectionIssue"
-      ? issue.message
-      : battleStateInitIssueMessage(issue);
-}
+export const characterBattleRuntimeIssueMessage: CharacterBattleRuntimeIssueMessage =
+  (issue: BattleCreatureInitIssue | BattleStateInitIssue): string => {
+    return issue.tag === "battleCreatureInitIssues"
+      ? battleCreatureInitIssueMessage(issue)
+      : issue.tag === "battleCreatureInitIssue" ||
+          issue.tag === "characterBattleSpellAccessProjectionIssue"
+        ? issue.message
+        : battleStateInitIssueMessage(issue);
+  };
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
@@ -146,6 +148,8 @@ export {
   characterBattleResourceInitsFromBuild,
   type CharacterBattleInitiativeProficiencyChoice,
   type CharacterBuildCreatureInput,
+  type CharacterSheetBattleInit,
+  type CharacterSheetBattleInitInput,
 } from "./battle-creature-init.ts";
 export {
   battleCreatureInitIssue,
@@ -169,6 +173,7 @@ export {
   type CharacterBattleInitIssueFact,
   type CharacterBattleInitIssueReason,
   type CharacterBattleSpellAccessProjectionIssue,
+  type CharacterBattleRuntimeIssueMessage,
 } from "./battle-character-build-projection.ts";
 export {
   characterBattleSupportProjection,
@@ -233,26 +238,6 @@ export {
   type CharacterSessionSheetDerivedBattleActsRouteAction,
 } from "./character-battle-route.ts";
 export { type CharacterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
-
-export type CharacterSheetBattleInitInput = Omit<
-  CharacterBuildCreatureInput,
-  | "build"
-  | "characterId"
-  | "hitPointMaximum"
-  | "currentHp"
-  | "tempHp"
-  | "conditions"
-  | "positiveHpUnconscious"
-  | "zeroHpLifecycle"
-  | "spellSlots"
-  | "bookOfShadowsPresence"
-  | "resourceExpenditures"
-  | "druidWildShapeAvailableForms"
-> & {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-  readonly statBlockCatalog: StatBlockCatalog;
-};
 
 export type CharacterBattleInitProjection = {
   readonly init: BattleRosterCharacterCombatant;
@@ -478,14 +463,14 @@ function characterBattleInitIssueWithoutRouteEvents(
   return routeFreeIssue;
 }
 
-export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
+export const characterSheetBattleInit: CharacterSheetBattleInit = (input) => {
   const projection = characterSheetBattleInitWithRoute(input);
   return Result.isFailure(projection)
     ? Result.fail(
         characterBattleInitIssueWithoutRouteEvents(projection.failure),
       )
     : Result.succeed(projection.success.init);
-}
+};
 
 export function characterSheetBattleInitWithRoute(
   input: CharacterSheetBattleInitInput,

@@ -8,10 +8,8 @@ import type {
   initiativeScore,
   startBattle,
 } from "@dnd/battle-runtime";
-import type {
-  characterBattleRuntimeIssueMessage,
-  characterSheetBattleInit,
-} from "@dnd/character-battle-runtime";
+import type { CharacterSheetBattleInit } from "../../../packages/character-battle-runtime/src/battle-creature-init.ts";
+import type { CharacterBattleRuntimeIssueMessage } from "../../../packages/character-battle-runtime/src/battle-character-build-projection.ts";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { FreshCharacterSheet } from "@dnd/character-sheet-runtime";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
@@ -70,8 +68,8 @@ export type ScenarioSetupSdk = {
   readonly battleId: typeof battleId;
   readonly battleObjectId: typeof battleObjectId;
   readonly battleStateInitIssueMessage: typeof battleStateInitIssueMessage;
-  readonly characterBattleRuntimeIssueMessage: typeof characterBattleRuntimeIssueMessage;
-  readonly characterSheetBattleInit: typeof characterSheetBattleInit;
+  readonly characterBattleRuntimeIssueMessage: CharacterBattleRuntimeIssueMessage;
+  readonly characterSheetBattleInit: CharacterSheetBattleInit;
   readonly combatantId: typeof combatantId;
   readonly initiativeScore: typeof initiativeScore;
   readonly startBattle: typeof startBattle;

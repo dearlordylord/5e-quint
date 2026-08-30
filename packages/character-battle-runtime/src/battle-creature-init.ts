@@ -38,6 +38,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   characterSheetSpellAccessesForBuild,
+  type CharacterSheet,
   type CharacterSheetArmorClassBaseChoice,
   type CharacterSheetResourceExpenditure,
 } from "@dnd/character-sheet-runtime";
@@ -59,6 +60,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { Option, Result } from "effect";
 import {
   battleCreatureInitIssue,
@@ -135,6 +137,30 @@ export type CharacterBattleCreatureInitResult = Omit<
     { readonly kind: "character" }
   >;
 };
+
+export type CharacterSheetBattleInitInput = Omit<
+  CharacterBuildCreatureInput,
+  | "build"
+  | "characterId"
+  | "hitPointMaximum"
+  | "currentHp"
+  | "tempHp"
+  | "conditions"
+  | "positiveHpUnconscious"
+  | "zeroHpLifecycle"
+  | "spellSlots"
+  | "bookOfShadowsPresence"
+  | "resourceExpenditures"
+  | "druidWildShapeAvailableForms"
+> & {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog: StatBlockCatalog;
+};
+
+export type CharacterSheetBattleInit = (
+  input: CharacterSheetBattleInitInput,
+) => Result.Result<CharacterBattleCreatureInitResult, BattleCreatureInitIssue>;
 
 export const CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE =
   "Character battle initialization max HP exceeds build-derived max HP.";

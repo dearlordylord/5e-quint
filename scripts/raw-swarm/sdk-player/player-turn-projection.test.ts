@@ -149,6 +149,17 @@ const attackProcedureRef = JSON.stringify({
   ordinal: 0,
 });
 
+const statBlockProcedureRef = JSON.stringify({
+  scopeRef: JSON.stringify({
+    battleId: "battle",
+    combatantId: "fighter",
+    kind: "statBlockExecution",
+    ordinal: 1,
+  }),
+  kind: "procedure",
+  ordinal: 0,
+});
+
 describe("player current-turn projection", () => {
   test("projects limited, unlimited, and point-pool character resources", () => {
     const before = mutableClone(beforeSession);
@@ -609,22 +620,65 @@ describe("player current-turn projection", () => {
       projectPlayerSubject({
         tag: "companionAttack",
         actorId: "fighter",
-        procedureRef: attackProcedureRef,
+        familiarId: "familiar",
+        procedureRef: statBlockProcedureRef,
       }),
     ).toEqual({
       tag: "companionAttack",
       actorId: "fighter",
-      procedureRef: attackProcedureRef,
+      familiarId: "familiar",
+      procedureRef: statBlockProcedureRef,
     });
     expect(
       projectPlayerSubject({
         tag: "spawnedCompanionSharedSenses",
         actorId: "fighter",
+        familiarId: "familiar",
       }),
     ).toEqual({
       tag: "spawnedCompanionSharedSenses",
       actorId: "fighter",
+      familiarId: "familiar",
     });
+    expect(
+      projectPlayerSubject({
+        tag: "spawnedCompanionTouchSpellProxy",
+        actorId: "fighter",
+        companionId: "familiar",
+        procedureRef: statBlockProcedureRef,
+        spellAction: "action",
+        mode: { tag: "cast" },
+      }),
+    ).toEqual({
+      tag: "spawnedCompanionTouchSpellProxy",
+      actorId: "fighter",
+      companionId: "familiar",
+      procedureRef: statBlockProcedureRef,
+      spellAction: "action",
+      mode: { tag: "cast" },
+    });
+    expect(
+      projectPlayerSubject({
+        tag: "companionAttack",
+        actorId: "fighter",
+        procedureRef: statBlockProcedureRef,
+      }),
+    ).toBeUndefined();
+    expect(
+      projectPlayerSubject({
+        tag: "spawnedCompanionSharedSenses",
+        actorId: "fighter",
+      }),
+    ).toBeUndefined();
+    expect(
+      projectPlayerSubject({
+        tag: "spawnedCompanionTouchSpellProxy",
+        actorId: "fighter",
+        companionId: "familiar",
+        procedureRef: attackProcedureRef,
+        mode: { tag: "cast" },
+      }),
+    ).toBeUndefined();
     expect(projectPlayerSubject({ tag: "action", actorId: "fighter" })).toBe(
       undefined,
     );

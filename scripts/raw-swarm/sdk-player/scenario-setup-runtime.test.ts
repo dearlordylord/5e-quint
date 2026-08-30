@@ -6,7 +6,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import fc from "fast-check";
-import { describe, expect, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import { Result } from "effect";
 import {
   GRAPPLE_TARGET_REACH_FEET,
@@ -41,6 +41,10 @@ import { initiativeEntries } from "../../../packages/shared-algebras/src/initiat
 import { FIGHTER_EXAMPLE_DRAFT } from "../../../packages/app/src/components/character-creation/characterCreationPresets.ts";
 import { finalizeCharacterDraft } from "../../../packages/character-creation-runtime/src/index.ts";
 import {
+  characterBattleRuntimeIssueMessage,
+  characterSheetBattleInit,
+} from "../../../packages/character-battle-runtime/src/index.ts";
+import {
   characterSheetId,
   createFreshCharacterSheet,
 } from "../../../packages/character-sheet-runtime/src/index.ts";
@@ -59,6 +63,7 @@ import {
 import { repoRoot, sha256Canonical } from "../transcript.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
+import type { ScenarioSetupSdk } from "./scenario-setup-contract.ts";
 import { jsonValue } from "./json-value.ts";
 import {
   createScenarioSession,
@@ -175,6 +180,15 @@ const spatialFactBoundaryCases: readonly {
 ];
 
 describe("scenario setup public-SDK boundary", () => {
+  test("keeps setup SDK function protocols equal to their runtime owners", () => {
+    expectTypeOf(characterSheetBattleInit).toEqualTypeOf<
+      ScenarioSetupSdk["characterSheetBattleInit"]
+    >();
+    expectTypeOf(characterBattleRuntimeIssueMessage).toEqualTypeOf<
+      ScenarioSetupSdk["characterBattleRuntimeIssueMessage"]
+    >();
+  });
+
   test.each(spatialFactBoundaryCases)(
     "$name accepts exactly 5 feet and rejects 6 feet",
     ({ accepts }) => {
@@ -613,7 +627,7 @@ export const setupScenario = (context) =>
           combatantId("external-fighter"),
           readySetup.session.battle.state,
           {
-            formAccess: "findFamiliar",
+            formAccess: "spawnedCompanion",
             selectedForm: { tag: "normalNamedForm", formId: "cat" },
           },
         );

@@ -1,5 +1,22 @@
+import { createHash } from "node:crypto";
 import type { JsonValue } from "./continuation-contract.ts";
-import { canonicalJson } from "../transcript.ts";
+
+export function canonicalJson(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value) ?? "undefined";
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => canonicalJson(entry)).join(",")}]`;
+  }
+  const entries = Object.entries(value)
+    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+    .map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`);
+  return `{${entries.join(",")}}`;
+}
+
+export function sha256Canonical(value: unknown): string {
+  return createHash("sha256").update(canonicalJson(value)).digest("hex");
+}
 
 function fail(message: string): never {
   throw new Error(message);

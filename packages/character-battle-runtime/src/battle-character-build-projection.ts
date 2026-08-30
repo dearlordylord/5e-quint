@@ -20,6 +20,7 @@ import {
   type BattleCreatureInit,
   type CharacterBattleLoadoutRef,
   type CharacterBattleCreatureInitWeaponAttack,
+  type BattleStateInitIssue,
   martialArtsAttackProjectionProfileForUnit,
   passiveArmorClassBonusProfileForUnit,
   unitIsSupportedClassFeatureSpellFreeCastResource,
@@ -94,6 +95,10 @@ import {
   omitRuntimeDetachedClassSpellChoices,
   type ClassSpellChoiceKind,
 } from "./class-spell-choice-projection.ts";
+
+export type CharacterBattleRuntimeIssueMessage = (
+  issue: BattleCreatureInitIssue | BattleStateInitIssue,
+) => string;
 
 type CharacterBattleBuildProjectionPhase =
   | "derivedState"

@@ -92,7 +92,6 @@ import {
   type SpatialState,
 } from "../../../packages/tactical-space/src/index.ts";
 import { Result, Match } from "effect";
-import { sha256Canonical } from "../transcript.ts";
 import type { PlayerBattleFill } from "./continuation-contract.ts";
 import {
   scenarioTableSpatialFingerprint,
@@ -114,7 +113,7 @@ import {
   type ScenarioTableSpatialPostMoveState,
   type ScenarioTokenId,
 } from "./scenario-spatial-decisions.ts";
-import { jsonValue } from "./json-value.ts";
+import { jsonValue, sha256Canonical } from "./json-value.ts";
 
 export type {
   ScenarioDirection,
