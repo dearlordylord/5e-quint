@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "293c1d79bf7dacb377311c0612efd857b4d32041",
+    "registryCommit": "a73e67dc5cf4758508c9c7b45249300643976160",
     "generator": {
       "path": "scripts/gh381-registry-path-manifest.cjs",
       "sha256": "d48ee1ce403362f49f7f03c55f0be276dd5337740cea5f3512367c167d3ad9d5"
@@ -16,7 +16,7 @@
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
-        "sha256": "cc4da48b4a0334b180129a5c13459fa49a39cdef32d61ce14866d0f4266f3a05"
+        "sha256": "12cdf9baed90708ed364c88b2bfdb6d59f78149f6128452efb1813e564e439b4"
       }
     ]
   },
