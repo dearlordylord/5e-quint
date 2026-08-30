@@ -11414,9 +11414,9 @@
       "role": "proof-only"
     },
     {
-      "evidence": "Stateful reachability proof model whose transitions preserve coherent active-effect and projected-zone area identities.",
+      "evidence": "Stateful inductive proof model whose transitions preserve coherent active-effect and projected-zone area identities.",
       "obligationIds": [],
-      "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-identity-proof.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt",
       "role": "proof-only"
     },
     {
@@ -12275,7 +12275,7 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-identity-proof.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt",
       "role": "proof-only"
     },
     {
@@ -14244,7 +14244,7 @@
         "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt",
         "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard-tests.qnt",
         "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
-        "packages/battle-runtime/battle-runtime-persistent-area-identity-proof.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
@@ -14276,7 +14276,7 @@
         "packages/battle-runtime/battle-runtime-insect-plague-area-hazard.qnt",
         "packages/battle-runtime/battle-runtime-insect-plague-area-hazard-tests.qnt",
         "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
-        "packages/battle-runtime/battle-runtime-persistent-area-identity-proof.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
@@ -14315,7 +14315,7 @@
         "packages/battle-runtime/battle-runtime-cloudkill-area-hazard.qnt",
         "packages/battle-runtime/battle-runtime-cloudkill-area-hazard-tests.qnt",
         "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
-        "packages/battle-runtime/battle-runtime-persistent-area-identity-proof.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
@@ -14920,7 +14920,7 @@
         "packages/battle-runtime/battle-runtime-web-restraint-lifecycle-tests.qnt",
         "packages/battle-runtime/battle-runtime-web-restraint-recurring-save-tests.qnt",
         "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
-        "packages/battle-runtime/battle-runtime-persistent-area-identity-proof.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
@@ -15006,7 +15006,7 @@
         "packages/battle-runtime/battle-runtime-gust-of-wind.qnt",
         "packages/battle-runtime/battle-runtime-gust-of-wind-tests.qnt",
         "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
-        "packages/battle-runtime/battle-runtime-persistent-area-identity-proof.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
@@ -15517,7 +15517,7 @@
         "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
         "packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt",
         "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
-        "packages/battle-runtime/battle-runtime-persistent-area-identity-proof.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
@@ -15554,7 +15554,7 @@
       "proofOnly": [
         "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt",
         "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
-        "packages/battle-runtime/battle-runtime-persistent-area-identity-proof.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
@@ -15662,7 +15662,7 @@
         "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end-tests.qnt",
         "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage-tests.qnt",
         "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
-        "packages/battle-runtime/battle-runtime-persistent-area-identity-proof.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
@@ -15975,7 +15975,7 @@
         "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider-tests.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-turn-end-tests.qnt",
         "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
-        "packages/battle-runtime/battle-runtime-persistent-area-identity-proof.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
@@ -17704,7 +17704,7 @@
         "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt",
         "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard-tests.qnt",
         "packages/battle-runtime/battle-runtime-persistent-area-core-tests.qnt",
-        "packages/battle-runtime/battle-runtime-persistent-area-identity-proof.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-identity-inductive.qnt"
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"

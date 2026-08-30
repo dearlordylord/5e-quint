@@ -117,6 +117,13 @@ function isSharedInductiveProof(repoPath) {
   );
 }
 
+function isBattleInductiveProof(repoPath) {
+  return (
+    isPackageRootQnt(repoPath, "battle-runtime") &&
+    repoPath.endsWith("-inductive.qnt")
+  );
+}
+
 function resolveImport(importerRepoPath, importPath, qntPaths) {
   if (!importPath.startsWith(".")) return { tag: "external" };
 
@@ -235,6 +242,7 @@ function qntRole(repoPath, source, qntReferences) {
   if (repoPath.endsWith(".mbt.qnt") && qntReferences.has(repoPath)) {
     return "referenced-mbt-driver";
   }
+  if (isBattleInductiveProof(repoPath)) return "battle-inductive-proof";
   if (isSharedInductiveProof(repoPath)) return "shared-inductive-proof";
   if (hasSupportedRunBlockProof(repoPath, source)) return "run-block-proof";
   if (qntReferences.has(repoPath)) return "package-or-source-referenced-qnt";
@@ -354,7 +362,7 @@ if (findings.length > 0) {
   console.error(
     "QNT inventory check failed. Every packages/**/*.qnt file must be an " +
       "executable root or imported by one. Executable roots are MBT drivers, " +
-      "discovered run-block proof files, shared inductive proofs, QNT files " +
+      "discovered run-block proof files, package inductive proofs, QNT files " +
       "referenced by package/source files, or explicit QNT root classifications.",
   );
   for (const finding of findings) {
