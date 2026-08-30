@@ -1113,7 +1113,7 @@ describe("Stat Block execution references", () => {
             ? {
                 ...binding,
                 procedure: {
-                  kind: "multiattack",
+                  ...binding.procedure,
                   dispatchProcedureRefs: [
                     limitedBinding.procedureRef,
                     limitedBinding.procedureRef,
@@ -1462,6 +1462,61 @@ describe("Stat Block execution references", () => {
       Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)(
         malformedTopLevelResourceBinding,
       ),
+    ).toThrow();
+
+    const atWillGroup = spellcastingBinding.procedure.groups.find(
+      (group) => group.kind === "at_will",
+    );
+    if (atWillGroup === undefined) {
+      throw new Error("Expected an at-will spellcasting group.");
+    }
+    const schemaMalformedGroups = [
+      spellcastingBinding.procedure.groups.map((group) =>
+        group === atWillGroup
+          ? {
+              ...group,
+              resourcePoolRefs: [legendaryPool.resourcePoolRef],
+            }
+          : group,
+      ),
+      spellcastingBinding.procedure.groups.map((group) =>
+        group === limitedGroup ? { ...group, resourcePoolRefs: [] } : group,
+      ),
+    ];
+    for (const groups of schemaMalformedGroups) {
+      expect(() =>
+        Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)({
+          ...snapshot,
+          procedureBindings: snapshot.procedureBindings.map((binding) =>
+            binding.procedureRef === spellcastingBinding.procedureRef
+              ? {
+                  ...binding,
+                  procedure: { ...spellcastingBinding.procedure, groups },
+                }
+              : binding,
+          ),
+        }),
+      ).toThrow();
+    }
+
+    const dailyPool = snapshot.resourcePools.find(
+      (pool) => pool.kind === "daily",
+    );
+    if (dailyPool === undefined) {
+      throw new Error("Expected a daily spellcasting resource pool.");
+    }
+    expect(() =>
+      Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)({
+        ...snapshot,
+        resourcePools: snapshot.resourcePools.map((pool) =>
+          pool === dailyPool
+            ? {
+                ...pool,
+                usesRemaining: resourceCount(Number(pool.usesMax) + 1),
+              }
+            : pool,
+        ),
+      }),
     ).toThrow();
   });
 

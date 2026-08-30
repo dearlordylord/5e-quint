@@ -5,8 +5,13 @@ import { describe, expect, it } from "vitest";
 
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { decodeStatBlockRecordSync } from "@dnd/surface/surface/schema";
+import {
+  resolveAuthoredUnitReference,
+  srdUnitCollection,
+} from "@dnd/surface/surface/unit-catalog";
 import type {
   AuthoredExecutableProcedure,
+  SpellRecord,
   StatBlockRecord,
   StatBlockSpellReference,
 } from "@dnd/surface/surface/types";
@@ -18,10 +23,13 @@ import {
 
 import {
   analyzeStatBlockProcedurePressure,
+  classifyUnrestrictedStatBlockSpellReferences,
+  countUnrestrictedStatBlockSpellReferenceDefinitions,
   statBlockProcedurePressureOccurrences,
   type StatBlockProcedurePressureCapabilityProposal,
   type StatBlockProcedurePressureGroup,
   type StatBlockProcedurePressureSourceAuthority,
+  type StatBlockSpellReferenceClassificationSource,
 } from "./stat-block-procedure-pressure.ts";
 
 const EXPECTED_OCCURRENCE_COUNTS = {
@@ -478,6 +486,251 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     });
   });
 
+  it("classifies typed support, nested reaction, trait, and reference pressure", () => {
+    const source = srdStatBlockCollection.statBlocks.find((record) =>
+      record.statBlock.actions?.some(
+        (entry) =>
+          entry.kind === "executable" &&
+          entry.procedure.kind === "attack_roll" &&
+          entry.resourceRefs.kind === "none",
+      ),
+    );
+    const attack = source?.statBlock.actions?.find(
+      (entry) =>
+        entry.kind === "executable" &&
+        entry.procedure.kind === "attack_roll" &&
+        entry.resourceRefs.kind === "none",
+    );
+    if (source === undefined || attack?.kind !== "executable") {
+      throw new Error("Expected one resource-free executable attack.");
+    }
+    const { resources: _resources, ...statBlockWithoutResources } =
+      source.statBlock;
+    const decodedSynthetic = decodeStatBlockRecordSync({
+      ...source,
+      id: "stat_block_synthetic_nested_pressure",
+      name: "Synthetic Nested Pressure",
+      statBlock: {
+        ...statBlockWithoutResources,
+        resources: [
+          {
+            ordinal: 1,
+            ownership: "shared",
+            limit: { kind: "daily", uses: 1 },
+          },
+        ],
+        traits: [
+          {
+            name: "Synthetic Unsupported Trait",
+            description: "A synthetic unsupported trait.",
+            effect: {
+              kind: "caster_shared_resistance",
+              chosenFrom: "resistances_list",
+            },
+          },
+        ],
+        actions: [
+          {
+            ...attack,
+            procedureOrdinal: 1,
+            resourceRefs: { kind: "some", ordinals: [1] },
+          },
+          {
+            kind: "executable",
+            procedureOrdinal: 2,
+            procedure: {
+              kind: "support",
+              name: "Synthetic Support",
+              target: "self",
+              effect: {
+                kind: "apply_condition",
+                condition: "blinded",
+                expiresAt: { kind: "target_next_turn_end" },
+              },
+            },
+            resourceRefs: { kind: "none" },
+          },
+          {
+            kind: "executable",
+            procedureOrdinal: 3,
+            procedure: {
+              kind: "multiattack",
+              name: "Synthetic Unsupported Dispatch",
+              dispatches: [
+                {
+                  procedureOrdinal: 2,
+                  count: { kind: "literal", value: 1 },
+                },
+              ],
+            },
+            resourceRefs: { kind: "none" },
+          },
+          {
+            kind: "textOnly",
+            procedureOrdinal: 4,
+            name: "Synthetic Table Procedure",
+            description: "A synthetic table-owned procedure.",
+            reason: "required_table_adjudication",
+            resourceRefs: { kind: "none" },
+          },
+        ],
+        reactions: [
+          {
+            ...attack,
+            procedureOrdinal: 1,
+            trigger: {
+              kind: "any_of",
+              triggers: [
+                { kind: "hit_by_attack_roll" },
+                { kind: "takes_damage_from_creature", rangeFeet: 5 },
+                { kind: "self_or_visible_creature_falls", rangeFeet: 60 },
+                {
+                  kind: "targeted_by_named_spell",
+                  spellId: "unit_spell_synthetic_trigger",
+                },
+                { kind: "creature_casts_spell", components: ["V"] },
+                { kind: "spell_save_outcome", outcome: "success" },
+              ],
+            },
+          },
+        ],
+      },
+    });
+    const decodedResource = decodedSynthetic.statBlock.resources?.[0];
+    if (decodedResource === undefined) {
+      throw new Error("Expected the decoded resource fixture.");
+    }
+    const {
+      resources: _decodedResources,
+      ...decodedStatBlockWithoutResources
+    } = decodedSynthetic.statBlock;
+    const synthetic: StatBlockRecord = {
+      ...decodedSynthetic,
+      statBlock: decodedStatBlockWithoutResources,
+    };
+    const sourceIdentity = SOURCE_AUTHORITY.identities.find(
+      ({ name }) => name === source.name,
+    );
+    if (sourceIdentity === undefined) {
+      throw new Error("Expected the source record's canonical authority.");
+    }
+    const report = analyzeStatBlockProcedurePressure([synthetic], {
+      identities: [{ ...sourceIdentity, name: synthetic.name }],
+    });
+
+    expect(
+      report.occurrences.find(
+        ({ kind, witness }) =>
+          kind === "reactionTrigger" &&
+          witness.location.kind === "reactionTrigger",
+      )?.disposition,
+    ).toEqual({
+      kind: "tableOwned",
+      explicitTableFact: {
+        kind: "reactionTrigger",
+        trigger: {
+          kind: "any_of",
+          triggers: [
+            { kind: "hit_by_attack_roll" },
+            { kind: "takes_damage_from_creature" },
+            { kind: "self_or_visible_creature_falls" },
+            { kind: "targeted_by_named_spell" },
+            { kind: "creature_casts_spell" },
+            { kind: "spell_save_outcome" },
+          ],
+        },
+      },
+    });
+    expect(
+      report.occurrences.find(
+        ({ kind, witness }) =>
+          kind === "resourceReference" &&
+          witness.location.kind === "resourceReference",
+      )?.disposition,
+    ).toMatchObject({
+      kind: "malformed",
+      stage: "resourceReference",
+    });
+    expect(
+      report.occurrences.find(
+        ({ kind, witness }) =>
+          kind === "procedureReference" &&
+          witness.location.kind === "procedureReference",
+      )?.disposition,
+    ).toMatchObject({
+      kind: "missingOwner",
+      failedFacts: ["referencedProcedureNotExecutable"],
+    });
+    expect(report.dispositionCounts).toMatchObject({
+      tableOwned: 2,
+      malformed: 1,
+    });
+
+    const unlinkedReport = analyzeStatBlockProcedurePressure([synthetic], {
+      identities: [],
+    });
+    expect(
+      unlinkedReport.occurrences.every(
+        ({ disposition }) =>
+          disposition.kind === "malformed" &&
+          disposition.stage === "sourceLink",
+      ),
+    ).toBe(true);
+
+    if (decodedResource.limit.kind !== "daily") {
+      throw new Error("Expected a daily resource fixture.");
+    }
+    const invalidResourceSynthetic: StatBlockRecord = {
+      ...decodedSynthetic,
+      statBlock: {
+        ...decodedSynthetic.statBlock,
+        resources: [
+          {
+            ...decodedResource,
+            limit: { ...decodedResource.limit, uses: 0 },
+          },
+        ],
+      },
+    };
+    const invalidResourceReport = analyzeStatBlockProcedurePressure(
+      [invalidResourceSynthetic],
+      {
+        identities: [
+          { ...sourceIdentity, name: invalidResourceSynthetic.name },
+        ],
+      },
+    );
+    expect(
+      invalidResourceReport.occurrences
+        .filter(
+          ({ kind }) =>
+            kind === "resourceDeclaration" || kind === "resourceReference",
+        )
+        .map(({ disposition }) => disposition),
+    ).toEqual([
+      {
+        kind: "malformed",
+        stage: "resourceDeclaration",
+        issues: [
+          {
+            kind: "invalidResourceDeclaration",
+            reason: "invalidDailyUses",
+          },
+        ],
+      },
+      {
+        kind: "malformed",
+        stage: "resourceReference",
+        issues: [
+          {
+            kind: "invalidResourceDeclaration",
+            reason: "invalidDailyUses",
+          },
+        ],
+      },
+    ]);
+  });
+
   it("keeps generated planning evidence out of production package imports", () => {
     const packagesRoot = resolve(process.cwd(), "../..");
     const productionSources = typeScriptFiles(join(packagesRoot, "packages"))
@@ -491,6 +744,125 @@ describe("complete-catalog Stat Block procedure pressure", () => {
         ),
       ),
     ).toEqual([]);
+  });
+
+  it("classifies the unrestricted spell-reference denominator against shipped and unresolved definitions", () => {
+    const definitions = new Map<string, SpellRecord>();
+    for (const unit of srdUnitCollection.units) {
+      if (unit.kind === "spell") definitions.set(unit.id, unit);
+    }
+    const profiledDefinitionIds = new Set(
+      [...definitions.keys()].filter((_, index) => index % 2 === 0),
+    );
+    const source: StatBlockSpellReferenceClassificationSource = {
+      definitions,
+      profiledDefinitionIds,
+      resolveUnitReference: (authoredReference) =>
+        resolveAuthoredUnitReference(authoredReference, srdUnitCollection.units)
+          ?.canonicalUnitId,
+    };
+
+    const shipped = classifyUnrestrictedStatBlockSpellReferences(
+      srdStatBlockCollection.statBlocks,
+      SOURCE_AUTHORITY,
+      source,
+    );
+    const shippedCounts = countUnrestrictedStatBlockSpellReferenceDefinitions(
+      srdStatBlockCollection.statBlocks,
+      SOURCE_AUTHORITY,
+      source,
+    );
+    const unresolvedSource: StatBlockSpellReferenceClassificationSource = {
+      ...source,
+      definitions: new Map(),
+      profiledDefinitionIds: new Set(),
+    };
+    const unresolved = classifyUnrestrictedStatBlockSpellReferences(
+      srdStatBlockCollection.statBlocks,
+      SOURCE_AUTHORITY,
+      unresolvedSource,
+    );
+    const unresolvedCounts =
+      countUnrestrictedStatBlockSpellReferenceDefinitions(
+        srdStatBlockCollection.statBlocks,
+        SOURCE_AUTHORITY,
+        unresolvedSource,
+      );
+    const identityFallbackSource: StatBlockSpellReferenceClassificationSource =
+      {
+        ...source,
+        resolveUnitReference: () => undefined,
+      };
+    const identityFallback = classifyUnrestrictedStatBlockSpellReferences(
+      srdStatBlockCollection.statBlocks,
+      SOURCE_AUTHORITY,
+      identityFallbackSource,
+    );
+    const identityFallbackCounts =
+      countUnrestrictedStatBlockSpellReferenceDefinitions(
+        srdStatBlockCollection.statBlocks,
+        SOURCE_AUTHORITY,
+        identityFallbackSource,
+      );
+    const noCastingTimeDefinition = [...definitions.values()].find(
+      (definition) => !("castingTime" in definition.mechanics),
+    );
+    if (noCastingTimeDefinition === undefined) {
+      throw new Error("Expected a shipped spell without a casting time fact.");
+    }
+    const noCastingTime = classifyUnrestrictedStatBlockSpellReferences(
+      srdStatBlockCollection.statBlocks,
+      SOURCE_AUTHORITY,
+      {
+        ...source,
+        definitions: new Map(
+          [...definitions.keys()].map((id) => [id, noCastingTimeDefinition]),
+        ),
+      },
+    );
+
+    expect(shipped).toHaveLength(286);
+    expect(shippedCounts).toEqual({
+      total: 101,
+      shipped: 101,
+      unresolved: 0,
+    });
+    expect(
+      new Set(shipped.map(({ definitionStatus }) => definitionStatus)),
+    ).toEqual(new Set(["shipped"]));
+    expect(new Set(shipped.map(({ profileStatus }) => profileStatus))).toEqual(
+      new Set(["profiled", "unprofiled"]),
+    );
+    expect(
+      shipped.every(
+        ({ castingTimeKind, durationKind }) =>
+          castingTimeKind !== "unresolved" && durationKind !== "unresolved",
+      ),
+    ).toBe(true);
+
+    expect(unresolved).toHaveLength(286);
+    expect(unresolvedCounts).toEqual({
+      total: 101,
+      shipped: 0,
+      unresolved: 101,
+    });
+    expect(
+      unresolved.every(
+        ({ definitionStatus, profileStatus, castingTimeKind, durationKind }) =>
+          definitionStatus === "unresolved" &&
+          profileStatus === "unprofiled" &&
+          castingTimeKind === "unresolved" &&
+          durationKind === "unresolved",
+      ),
+    ).toBe(true);
+    expect(identityFallback).toHaveLength(286);
+    expect(identityFallbackCounts.total).toBe(101);
+    expect(
+      noCastingTime.every(
+        ({ definitionStatus, castingTimeKind }) =>
+          definitionStatus === "shipped" && castingTimeKind === "unresolved",
+      ),
+    ).toBe(true);
   });
 });
 

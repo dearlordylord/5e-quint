@@ -9,6 +9,7 @@ import {
   SrdStatBlockRecordSchema,
   decodeSrdSurfaceSync,
 } from "@dnd/surface/surface/schema";
+import { srdSurface } from "@dnd/surface/surface/surface-catalog";
 import type { StatBlockMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 import {
   installSrdSurface,
@@ -50,6 +51,33 @@ function surfaceWithStatBlock(statBlock: SrdStatBlockRecord): SrdSurface {
 }
 
 describe("complete Stat Block mechanics admission", () => {
+  test("classifies every shipped Stat Block against the complete Surface graph", () => {
+    const results = srdSurface.statBlocks.map((statBlock) =>
+      admitCompleteStatBlockMechanicsGraph({
+        statBlock,
+        surface: srdSurface,
+      }),
+    );
+    const admitted = results.filter(({ tag }) => tag === "admitted");
+    const rejected = results.filter(({ tag }) => tag === "rejected");
+    const issueReasonCounts = results
+      .flatMap((result) => (result.tag === "rejected" ? result.issues : []))
+      .reduce<Record<string, number>>((counts, { reason }) => {
+        counts[reason] = (counts[reason] ?? 0) + 1;
+        return counts;
+      }, {});
+
+    expect(results).toHaveLength(330);
+    expect(admitted).toHaveLength(41);
+    expect(rejected).toHaveLength(289);
+    expect(issueReasonCounts).toEqual({
+      unsupported_mechanics: 1466,
+      no_admitted_procedure: 118,
+      ambiguous_mechanics: 72,
+      incomplete_graph: 15,
+    });
+  });
+
   test("admits an executable graph and is independent of authored identity", () => {
     const renamed = {
       ...source,
@@ -221,6 +249,217 @@ describe("complete Stat Block mechanics admission", () => {
         "unsupported_mechanics|statBlock|occurrence:trait:1",
       ].sort(),
     );
+  });
+
+  test("rejects unresolved support, reaction trigger, and resource graph edges", () => {
+    const originalAction = source.statBlock.actions?.[0];
+    if (originalAction?.kind !== "executable") {
+      throw new Error("Expected an executable action fixture.");
+    }
+    const decodedRecord = decode({
+      ...source,
+      statBlock: {
+        ...source.statBlock,
+        resources: [
+          {
+            ordinal: 1,
+            ownership: "shared",
+            limit: { kind: "daily", uses: 1 },
+          },
+        ],
+        bonusActions: [
+          {
+            kind: "executable",
+            procedureOrdinal: 1,
+            procedure: {
+              kind: "support",
+              name: "Synthetic Unsupported Support",
+              target: "self",
+              effect: {
+                kind: "apply_condition",
+                condition: "blinded",
+                expiresAt: { kind: "target_next_turn_end" },
+              },
+            },
+            resourceRefs: { kind: "none" },
+          },
+        ],
+        reactions: [
+          {
+            kind: "executable",
+            procedureOrdinal: 1,
+            procedure: originalAction.procedure,
+            resourceRefs: { kind: "none" },
+            trigger: {
+              kind: "any_of",
+              triggers: [
+                { kind: "hit_by_attack_roll" },
+                {
+                  kind: "hit_by_attack_roll",
+                  weaponFilter: {
+                    kind: "specific_item",
+                    itemId: armorChainMailInput.id,
+                  },
+                },
+                {
+                  kind: "takes_damage_from_creature",
+                  requiresVisibleCreature: true,
+                  rangeFeet: 5,
+                },
+                {
+                  kind: "creature_casts_spell",
+                  components: ["V"],
+                  requiresVisibleCaster: true,
+                },
+                {
+                  kind: "spell_save_outcome",
+                  outcome: "success",
+                  spellTargetsOnlySelf: true,
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+    const decodedResource = decodedRecord.statBlock.resources?.[0];
+    if (decodedResource === undefined) {
+      throw new Error("Expected the decoded resource fixture.");
+    }
+    const record: SrdStatBlockRecord = {
+      ...decodedRecord,
+      statBlock: {
+        ...decodedRecord.statBlock,
+        resources: [decodedResource, decodedResource],
+      },
+    };
+
+    const result = admitCompleteStatBlockMechanicsGraph({
+      statBlock: record,
+      surface: surfaceWithStatBlock(record),
+    });
+    expect(result.tag).toBe("rejected");
+    if (result.tag !== "rejected") return;
+
+    expect(
+      result.issues
+        .map(({ reason }) => reason)
+        .reduce<Record<string, number>>((counts, reason) => {
+          counts[reason] = (counts[reason] ?? 0) + 1;
+          return counts;
+        }, {}),
+    ).toEqual({
+      incomplete_graph: 1,
+      unsupported_mechanics: 10,
+    });
+
+    if (decodedResource.limit.kind !== "daily") {
+      throw new Error("Expected a daily resource fixture.");
+    }
+    const invalidResourceRecord: SrdStatBlockRecord = {
+      ...decodedRecord,
+      id: statBlockId("stat_block_synthetic_invalid_resource"),
+      name: "Synthetic Invalid Resource",
+      statBlock: {
+        ...decodedRecord.statBlock,
+        resources: [
+          {
+            ...decodedResource,
+            limit: { ...decodedResource.limit, uses: 0 },
+          },
+        ],
+      },
+    };
+    const invalidResourceAdmission = admitCompleteStatBlockMechanicsGraph({
+      statBlock: invalidResourceRecord,
+      surface: surfaceWithStatBlock(invalidResourceRecord),
+    });
+    expect(invalidResourceAdmission.tag).toBe("rejected");
+    if (invalidResourceAdmission.tag !== "rejected") return;
+    expect(
+      invalidResourceAdmission.issues.some(
+        ({ message }) =>
+          message ===
+          "The Stat Block resource limit has no executable interpretation.",
+      ),
+    ).toBe(true);
+
+    const procedureChildrenRecord = decode({
+      ...source,
+      id: "stat_block_synthetic_procedure_children",
+      name: "Synthetic Procedure Children",
+      statBlock: {
+        ...source.statBlock,
+        actions: [
+          ...(source.statBlock.actions ?? []),
+          {
+            kind: "executable",
+            procedureOrdinal: 3,
+            procedure: {
+              kind: "support",
+              name: "Synthetic Unsupported Action Support",
+              target: "self",
+              effect: {
+                kind: "apply_condition",
+                condition: "blinded",
+                expiresAt: { kind: "target_next_turn_end" },
+              },
+            },
+            resourceRefs: { kind: "none" },
+          },
+          {
+            kind: "executable",
+            procedureOrdinal: 4,
+            procedure: {
+              kind: "multiattack",
+              name: "Synthetic Unsupported Multiattack Dispatch",
+              dispatches: [
+                {
+                  procedureOrdinal: 3,
+                  count: { kind: "literal", value: 1 },
+                },
+              ],
+            },
+            resourceRefs: { kind: "none" },
+          },
+          {
+            kind: "executable",
+            procedureOrdinal: 5,
+            procedure: {
+              kind: "save",
+              name: "Synthetic Save With Success Effect",
+              ability: "dex",
+              dc: { kind: "fixed", dc: 12 },
+              target: { kind: "one_creature_in_range", rangeFeet: 5 },
+              onFail: {
+                kind: "damage",
+                damageType: "bludgeoning",
+                amount: { kind: "fixed", static: 1 },
+              },
+              onSuccess: {
+                kind: "apply_condition",
+                condition: "blinded",
+                expiresAt: { kind: "target_next_turn_end" },
+              },
+            },
+            resourceRefs: { kind: "none" },
+          },
+        ],
+      },
+    });
+    const procedureChildrenAdmission = admitCompleteStatBlockMechanicsGraph({
+      statBlock: procedureChildrenRecord,
+      surface: surfaceWithStatBlock(procedureChildrenRecord),
+    });
+    expect(procedureChildrenAdmission.tag).toBe("rejected");
+    if (procedureChildrenAdmission.tag !== "rejected") return;
+    expect(
+      procedureChildrenAdmission.issues.some(
+        ({ message }) =>
+          message ===
+          "The Multiattack dispatch does not resolve to a supported attack procedure.",
+      ),
+    ).toBe(true);
   });
 
   test("rejects a text-only graph while canonical installation may retain textOnly", () => {

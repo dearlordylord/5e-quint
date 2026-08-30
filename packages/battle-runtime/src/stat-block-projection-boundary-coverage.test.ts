@@ -596,6 +596,7 @@ describe("Stat Block projection boundary coverage", () => {
 
     const cases = [
       {
+        reason: "unsupportedLairConditionalLegendaryActionUses" as const,
         record: {
           ...source,
           statBlock: {
@@ -613,6 +614,47 @@ describe("Stat Block projection boundary coverage", () => {
         message:
           "Druid Wild Shape battle forms cannot select lair-conditional Legendary Action uses without lair context.",
       },
+      {
+        reason: "unsupportedFormRestrictedSpeed" as const,
+        record: {
+          ...source,
+          statBlock: {
+            ...source.statBlock,
+            speeds: [
+              source.statBlock.speeds[0],
+              {
+                kind: "climb",
+                feet: { kind: "literal", value: 30 },
+                availability: {
+                  kind: "forms_only",
+                  forms: ["synthetic climbing form"],
+                },
+              },
+            ],
+          },
+        },
+        message:
+          "Druid Wild Shape battle forms require an active form before selecting form-restricted Speeds.",
+      },
+      {
+        reason: "unsupportedQualifiedConditionImmunity" as const,
+        record: {
+          ...source,
+          statBlock: {
+            ...source.statBlock,
+            immunities: decodeCreatureImmunityDeclarationSync({
+              qualifiedConditions: [
+                {
+                  condition: "charmed",
+                  qualifier: "while the synthetic sigil glows",
+                },
+              ],
+            }),
+          },
+        },
+        message:
+          "Druid Wild Shape battle forms cannot apply a qualified condition Immunity without its qualifying state.",
+      },
     ] as const;
     const profile = druidWildShapeKnownFormProfile();
 
@@ -628,7 +670,7 @@ describe("Stat Block projection boundary coverage", () => {
             {
               tag: "battleDruidWildShapeKnownFormIssue",
               statBlockId: projectionCase.record.id,
-              reason: "unsupportedLairConditionalLegendaryActionUses",
+              reason: projectionCase.reason,
             },
           ],
         }),

@@ -5845,15 +5845,7 @@ function statBlockProcedurePoolShapeIsValid(
     return legendaryPoolCount === 0;
   }
   if (binding.procedure.kind === "spellcasting") {
-    return (
-      binding.resourcePoolRefs.length === 0 &&
-      legendaryPoolCount === 0 &&
-      binding.procedure.groups.every((group) =>
-        group.kind === "at_will"
-          ? group.resourcePoolRefs.length === 0
-          : group.resourcePoolRefs.length > 0,
-      )
-    );
+    return legendaryPoolCount === 0;
   }
   return legendaryPoolCount <= 1 && limitedUsePoolCount <= 1;
 }
@@ -5879,13 +5871,9 @@ function statBlockProcedureResourceRefsAreUnique(
       new Set(binding.resourcePoolRefs).size === binding.resourcePoolRefs.length
     );
   }
-  return (
-    new Set(binding.resourcePoolRefs).size ===
-      binding.resourcePoolRefs.length &&
-    binding.procedure.groups.every(
-      (group) =>
-        new Set(group.resourcePoolRefs).size === group.resourcePoolRefs.length,
-    )
+  return binding.procedure.groups.every(
+    (group) =>
+      new Set(group.resourcePoolRefs).size === group.resourcePoolRefs.length,
   );
 }
 

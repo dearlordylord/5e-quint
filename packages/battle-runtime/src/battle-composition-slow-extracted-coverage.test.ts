@@ -1,4 +1,5 @@
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import type { RuntimeActionResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { NonNegativeInteger, resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
@@ -8,6 +9,7 @@ import {
 } from "./battle-act-composition.ts";
 import {
   battleId,
+  battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   characterSeed,
   fighterId,
@@ -28,6 +30,12 @@ import type {
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import { battleStatBlockProcedureExecutionRef } from "./identity.ts";
+import {
+  actionResourceCollectionOwnershipActivityAndUniquenessAreValid,
+  hasStatBlockMultiattackContinuationResource,
+  statBlockMultiattackActionResourceMatchesProcedure,
+  statBlockMultiattackContinuationActionResourcesAreValid,
+} from "./battle-reducer/action-resource-kinds.ts";
 import { isStatBlockBattleCreatureState } from "./battle-reducer/battle-discovery.ts";
 import { subtleSpellComponentProjectionFact } from "./battle-reducer/metamagic-support.ts";
 import { slowActivePenaltiesEffects } from "./battle-reducer/slow-active-penalties-effects.ts";
@@ -204,6 +212,192 @@ describe("extracted battle composition and Slow coverage", () => {
 });
 
 describe("Stat Block extracted composition coverage", () => {
+  test("validates every Multiattack continuation resource shape and owner", () => {
+    const state = statBlockMultiattackBattle();
+    const actor = requireStatBlockActor(state);
+    const binding = statBlockMultiattackBindings(actor.origin.execution)[0];
+    if (binding?.procedure.kind !== "multiattack") {
+      throw new Error("Expected an admitted Multiattack binding.");
+    }
+    const [firstAttackProcedureRef, ...remainingAttackProcedureRefs] =
+      binding.procedure.dispatchProcedureRefs;
+    if (firstAttackProcedureRef === undefined) {
+      throw new Error("Expected a listed Multiattack dispatch.");
+    }
+    const listedResources = binding.procedure.dispatchProcedureRefs.map(
+      (attackProcedureRef) =>
+        ({
+          kind: "action",
+          source: "statBlockMultiattack",
+          sourceOwnerId: goblinId,
+          sourceProcedureRef: binding.procedureRef,
+          dispatch: { kind: "listedOccurrence", attackProcedureRef },
+        }) satisfies RuntimeActionResource,
+    );
+    const firstListedResource = listedResources[0];
+    if (firstListedResource === undefined) {
+      throw new Error("Expected a listed Multiattack resource.");
+    }
+    const choiceResource = {
+      kind: "action",
+      source: "statBlockMultiattack",
+      sourceOwnerId: goblinId,
+      sourceProcedureRef: binding.procedureRef,
+      dispatch: {
+        kind: "oneListedChoice",
+        attackProcedureRefs: [
+          firstAttackProcedureRef,
+          ...remainingAttackProcedureRefs,
+        ],
+      },
+    } as const satisfies RuntimeActionResource;
+    const effectRef = battleActiveEffectExecutionRefForTest(
+      "multiattack-resource-coverage",
+    );
+    const otherResources = {
+      turn: { kind: "action", source: "turn" },
+      unit: {
+        kind: "action",
+        source: "unit",
+        sourceOwnerId: goblinId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "multiattack-unit-resource",
+        ),
+        restriction: { kind: "none" },
+      },
+      spellEffect: {
+        kind: "action",
+        source: "spellEffect",
+        sourceEffectRef: effectRef,
+        restriction: {
+          kind: "allow_only",
+          actions: [
+            {
+              action: "attack",
+              attackLimit: { kind: "attack_count", count: 1 },
+            },
+            { action: "dash" },
+            { action: "disengage" },
+            { action: "hide" },
+            { action: "utilize" },
+          ],
+        },
+      },
+      classFeatureExtraAttack: {
+        kind: "action",
+        source: "classFeatureExtraAttack",
+        sourceOwnerId: goblinId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "multiattack-extra-attack-resource",
+        ),
+        restriction: { kind: "none" },
+      },
+      monkFocusFlurryOfBlows: {
+        kind: "action",
+        source: "monkFocusFlurryOfBlows",
+        sourceOwnerId: goblinId,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "multiattack-flurry-resource",
+        ),
+      },
+    } as const satisfies Record<string, RuntimeActionResource>;
+
+    expect(
+      statBlockMultiattackContinuationActionResourcesAreValid(
+        [],
+        goblinId,
+        actor.origin.execution,
+      ),
+    ).toBe(true);
+    expect(
+      hasStatBlockMultiattackContinuationResource(
+        listedResources,
+        goblinId,
+        actor.origin.execution,
+      ),
+    ).toBe(true);
+    expect(
+      statBlockMultiattackActionResourceMatchesProcedure(
+        firstListedResource,
+        goblinId,
+        actor.origin.execution,
+        firstAttackProcedureRef,
+      ),
+    ).toBe(true);
+    expect(
+      statBlockMultiattackActionResourceMatchesProcedure(
+        choiceResource,
+        goblinId,
+        actor.origin.execution,
+        firstAttackProcedureRef,
+      ),
+    ).toBe(true);
+    expect(
+      statBlockMultiattackContinuationActionResourcesAreValid(
+        listedResources,
+        goblinId,
+        actor.origin.execution,
+      ),
+    ).toBe(true);
+    expect(
+      statBlockMultiattackContinuationActionResourcesAreValid(
+        [choiceResource],
+        goblinId,
+        actor.origin.execution,
+      ),
+    ).toBe(true);
+    expect(
+      statBlockMultiattackContinuationActionResourcesAreValid(
+        [choiceResource, choiceResource],
+        goblinId,
+        actor.origin.execution,
+      ),
+    ).toBe(false);
+    expect(
+      statBlockMultiattackContinuationActionResourcesAreValid(
+        [firstListedResource, choiceResource],
+        goblinId,
+        actor.origin.execution,
+      ),
+    ).toBe(false);
+    for (const resource of Object.values(otherResources)) {
+      expect(
+        statBlockMultiattackContinuationActionResourcesAreValid(
+          [...listedResources, resource],
+          goblinId,
+          actor.origin.execution,
+        ),
+      ).toBe(resource.source === "spellEffect");
+    }
+
+    expect(
+      actionResourceCollectionOwnershipActivityAndUniquenessAreValid(
+        Object.values(otherResources),
+        goblinId,
+        [effectRef],
+      ),
+    ).toBe(true);
+    expect(
+      actionResourceCollectionOwnershipActivityAndUniquenessAreValid(
+        [
+          {
+            ...otherResources.unit,
+            sourceOwnerId: fighterId,
+          },
+        ],
+        goblinId,
+        [effectRef],
+      ),
+    ).toBe(false);
+    expect(
+      actionResourceCollectionOwnershipActivityAndUniquenessAreValid(
+        [otherResources.spellEffect],
+        goblinId,
+        [],
+      ),
+    ).toBe(false);
+  });
+
   test("limits a slowed Multiattack to one chosen listed dispatch", () => {
     const state = statBlockMultiattackBattle();
     const actor = requireStatBlockActor(state);
