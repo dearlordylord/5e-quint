@@ -122,16 +122,15 @@ module battleRuntimeWebRestraintAreaHazard {
     savingThrowSucceeded: bool,
     areaId: int,
   ): Combatant =
-    if (savingThrowSucceeded)
-      target
-    else {
+    if (persistentAreaConditionApplies(savingThrowSucceeded)) {
       val durationTicks = webRestraintHazardDurationTicks(state, areaId)
       {
         ...target,
         activeEffects: activeEffectsWithoutWebRestrainedFrom(target.activeEffects, Fighter)
           .union(Set(WebRestrained({ source: Fighter, durationTicks: durationTicks }))),
       }
-    }
+    } else
+      target
 
   pure def resolveWebRestraintSave(
     state: BattleState,

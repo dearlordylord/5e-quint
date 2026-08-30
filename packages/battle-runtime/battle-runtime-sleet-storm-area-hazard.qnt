@@ -110,10 +110,10 @@ module battleRuntimeSleetStormAreaHazard {
     target: Combatant,
     savingThrowSucceeded: bool,
   ): Combatant =
-    if (savingThrowSucceeded)
-      target
-    else
+    if (persistentAreaConditionApplies(savingThrowSucceeded))
       { ...breakConcentration(target), prone: true }
+    else
+      target
 
   pure def resolveSleetStormAreaHazardSave(
     state: BattleState,

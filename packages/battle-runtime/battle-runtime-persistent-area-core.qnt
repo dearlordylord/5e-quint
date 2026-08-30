@@ -17,6 +17,8 @@
 //   Movement, Saving Throw, Damage Type, and Boundary Crossing.
 
 module battleRuntimePersistentAreaCore {
+  import spellSaveGate.* from "../shared-algebras/proofs/rule-core/spell-save-gate"
+
   type PersistentAreaIdentity[a] = {
     activeEffectAreaId: a,
     projectedZoneAreaId: a,
@@ -108,8 +110,11 @@ module battleRuntimePersistentAreaCore {
   pure def persistentAreaDamageAfterSave(
     rolledDamage: int,
     savingThrowSucceeded: bool,
-  ): int =
-    if (savingThrowSucceeded) rolledDamage / 2 else rolledDamage
+  ): int = {
+    val branch = spellSaveGateBranch(savingThrowSucceeded)
+    val damageResult = spellSaveGateDamageResult(branch, SpellSaveGateHalfDamageOnSuccess)
+    spellSaveGateDamageAmount(rolledDamage, damageResult)
+  }
 
   pure def persistentAreaMoveDistanceAccepted(
     moveFeet: int,

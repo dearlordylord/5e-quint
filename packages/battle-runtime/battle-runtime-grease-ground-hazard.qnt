@@ -45,10 +45,10 @@ module battleRuntimeGreaseGroundHazard {
     })
 
   pure def combatantAfterGreaseSave(target: Combatant, savingThrowSucceeded: bool): Combatant =
-    if (savingThrowSucceeded)
-      target
-    else
+    if (persistentAreaConditionApplies(savingThrowSucceeded))
       { ...target, prone: true }
+    else
+      target
 
   pure def greaseGroundHazard(
     areaId: int,
