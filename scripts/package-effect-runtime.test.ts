@@ -1,5 +1,11 @@
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -9,8 +15,12 @@ import { describe, expect, it } from "vitest";
 import {
   assertSharedPackageEffectRuntime,
   resolvePackageEffectRuntimePaths,
-  validatedPackageEffectRuntimeBundleDefine,
 } from "./package-effect-runtime.ts";
+import { repoRoot } from "./raw-swarm/transcript.ts";
+import {
+  buildConsumerDistribution,
+  buildPackageEffectRuntimeBundle,
+} from "./raw-swarm/sdk-player/consumer-distribution.ts";
 
 describe("package-owned Effect runtime", () => {
   it.each([
@@ -139,9 +149,9 @@ describe("package-owned Effect runtime", () => {
     );
     const output = join(directory, "consumer.mjs");
     try {
-      buildSync({
+      buildPackageEffectRuntimeBundle(["surface", "battle-runtime"], {
         stdin: {
-          contents: `import { effectRuntimeForPackageOwners } from ${JSON.stringify(resolve("scripts/package-effect-runtime.ts"))};
+          contents: `import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
 const { Schema, Result } = effectRuntimeForPackageOwners(["surface", "battle-runtime"]).effect;
 const decoded = Schema.decodeUnknownResult(Schema.Struct({ value: Schema.Literal("ok") }))({ value: "ok" });
 if (Result.isFailure(decoded)) throw new Error(decoded.failure.message);
@@ -155,10 +165,6 @@ console.log(decoded.success.value);`,
         platform: "node",
         format: "esm",
         target: "node24",
-        define: validatedPackageEffectRuntimeBundleDefine([
-          "surface",
-          "battle-runtime",
-        ]),
         logLevel: "silent",
       });
 
@@ -170,13 +176,48 @@ console.log(decoded.success.value);`,
     }
   });
 
+  it("does not accept a forged bundle-validation define", () => {
+    const directory = mkdtempSync(join(tmpdir(), "dnd-package-effect-forged-"));
+    const output = join(directory, "consumer.mjs");
+    try {
+      buildSync({
+        stdin: {
+          contents: `import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
+effectRuntimeForPackageOwners(["surface", "battle-runtime"]);
+console.log("forged bypass accepted");`,
+          resolveDir: process.cwd(),
+          sourcefile: "forged-package-effect-runtime-consumer.ts",
+          loader: "ts",
+        },
+        outfile: output,
+        bundle: true,
+        platform: "node",
+        format: "esm",
+        target: "node24",
+        define: { PACKAGE_EFFECT_RUNTIME_BUNDLE_VALIDATED: "true" },
+        logLevel: "silent",
+      });
+
+      const execution = spawnSync(process.execPath, [output], {
+        encoding: "utf8",
+      });
+      expect(execution.status).not.toBe(0);
+      expect(execution.stderr).toContain(
+        "Workspace package-local Effect installation is required",
+      );
+      expect(execution.stdout).not.toContain("forged bypass accepted");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("loads the relocated Raw Swarm supervisor through the validated bundle", () => {
     const directory = mkdtempSync(
       join(tmpdir(), "dnd-package-effect-supervisor-"),
     );
     const output = join(directory, "supervisor.mjs");
     try {
-      buildSync({
+      buildPackageEffectRuntimeBundle(["surface", "battle-runtime"], {
         entryPoints: [
           resolve("scripts/raw-swarm/sdk-player/supervisor-cli.ts"),
         ],
@@ -185,36 +226,103 @@ console.log(decoded.success.value);`,
         platform: "node",
         format: "esm",
         target: "node24",
-        define: validatedPackageEffectRuntimeBundleDefine([
-          "surface",
-          "battle-runtime",
-        ]),
         sourcemap: false,
         logLevel: "silent",
       });
 
-      let stderr = "";
-      try {
-        execFileSync(process.execPath, [output], {
-          encoding: "utf8",
-          stdio: ["ignore", "pipe", "pipe"],
-        });
-      } catch (error) {
-        if (
-          typeof error === "object" &&
-          error !== null &&
-          "stderr" in error &&
-          typeof error.stderr === "string"
-        ) {
-          stderr = error.stderr;
-        }
-      }
-      expect(stderr).toContain(
+      const execution = spawnSync(process.execPath, [output], {
+        encoding: "utf8",
+      });
+      expect(execution.status).not.toBe(0);
+      expect(execution.stderr).toContain(
         "Usage: supervisor.mjs <init|attempt|replay|serve> ...",
       );
-      expect(stderr).not.toContain("Dynamic require");
+      expect(execution.stderr).not.toContain("Dynamic require");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  it(
+    "initializes and replays the relocated Raw Swarm supervisor",
+    () => {
+      const destination = mkdtempSync(
+        join(tmpdir(), "dnd-package-effect-player-"),
+      );
+      const trustedDestination = mkdtempSync(
+        join(tmpdir(), "dnd-package-effect-supervisor-lifecycle-"),
+      );
+      try {
+        buildConsumerDistribution({
+          destination,
+          trustedDestination,
+          scenarioPath: resolve(
+            repoRoot,
+            "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
+          ),
+          contextDelivery: {
+            tag: "canonicalRoleProjection",
+            role: "player",
+          },
+        });
+        mkdirSync(join(trustedDestination, "evidence"), { recursive: true });
+        copyFileSync(
+          resolve(
+            repoRoot,
+            "scripts/raw-swarm/sdk-player/test-fixtures/ready-fighter.characters.ts",
+          ),
+          join(trustedDestination, "evidence/characters.ts"),
+        );
+        copyFileSync(
+          resolve(
+            repoRoot,
+            "scripts/raw-swarm/sdk-player/test-fixtures/table-authored-movement.setup.ts",
+          ),
+          join(trustedDestination, "evidence/setup.ts"),
+        );
+
+        const supervisor = join(trustedDestination, "supervisor.mjs");
+        const supervisorEncoding: BufferEncoding = "utf8";
+        const supervisorOptions = {
+          cwd: trustedDestination,
+          env: { ...process.env, RAW_SWARM_PLAYER_ROOT: destination },
+          encoding: supervisorEncoding,
+        };
+        execFileSync(
+          process.execPath,
+          [
+            supervisor,
+            "init",
+            "package-effect-runtime-lifecycle",
+            "a".repeat(40),
+            "instructionalFallback",
+            "2026-08-21T08:00:00.000Z",
+            "b".repeat(64),
+            "c".repeat(64),
+            "d".repeat(64),
+          ],
+          supervisorOptions,
+        );
+        const transcript = readFileSync(
+          join(trustedDestination, "evidence/sdk-calls.jsonl"),
+          "utf8",
+        )
+          .trim()
+          .split("\n")
+          .map((line): unknown => JSON.parse(line));
+        expect(transcript).toHaveLength(1);
+        expect(
+          execFileSync(
+            process.execPath,
+            [supervisor, "replay"],
+            supervisorOptions,
+          ),
+        ).toContain("0 call(s) matched");
+      } finally {
+        rmSync(destination, { recursive: true, force: true });
+        rmSync(trustedDestination, { recursive: true, force: true });
+      }
+    },
+    10 * 60 * 1_000,
+  );
 });

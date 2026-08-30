@@ -9,7 +9,7 @@ import {
 import { dirname, relative, resolve } from "node:path";
 
 import { BattleInterruptProcedureChoiceSchema } from "../../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
-import { effectRuntimeForPackageOwners } from "../../package-effect-runtime.ts";
+import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
 
 import {
   canonicalJson,

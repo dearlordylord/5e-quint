@@ -8,7 +8,7 @@ import {
 } from "../../../packages/battle-runtime/src/index.ts";
 import type { Schema as SchemaTypes } from "effect";
 
-import { effectRuntimeForPackageOwners } from "../../package-effect-runtime.ts";
+import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
 import type {
   EndBattleRuntimeTurnInput,
   JsonValue,
