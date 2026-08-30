@@ -414,9 +414,9 @@ function compositeTargetBuffWithAftermathTargetSelection(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     fillSet: input.fillSet,
-    targetListMessage: "Haste positive effects require one target choice.",
+    targetListMessage: "Composite target buff requires one target choice.",
     invalidTargetMessage:
-      "Haste target must be a known willing combatant the caster can see within the spell's supported range.",
+      "Composite target buff requires a known willing combatant the caster can see within the spell's supported range.",
   });
 }
 

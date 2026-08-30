@@ -91,7 +91,7 @@ export type SorcererMetamagicProjection = {
     | "transmutedSaveGatedDamage"
     | "transmutedSpellAttack"
     | "twinnedTargetCount"
-    | "heightenedHideousLaughter"
+    | "heightenedStagedCondition"
     | "heightenedGreaseEntrySave"
     | "heightenedGustOfWindEndTurnSave"
     | "heightenedSaveGatedConditionEndTurnSave";
@@ -714,16 +714,16 @@ export function resolveHeightenedBurningHands(state: BattleState): BattleState {
   ).state;
 }
 
-export function resolveHeightenedHideousLaughter(
+export function resolveHeightenedStagedCondition(
   state: BattleState,
 ): BattleState {
-  return resolveHeightenedHideousLaughterSubject(state).resolved.state;
+  return resolveHeightenedStagedConditionSubject(state).resolved.state;
 }
 
-export function observeHeightenedHideousLaughterRoute(
+export function observeHeightenedStagedConditionRoute(
   state: BattleState,
 ): readonly BattleReducerRouteEvent[] {
-  const resolved = resolveHeightenedHideousLaughterSubject(state);
+  const resolved = resolveHeightenedStagedConditionSubject(state);
   return [
     battleReducerStartRouteEvent(),
     ...(resolved.awaitingSave.routeEvents ?? []),
@@ -731,8 +731,8 @@ export function observeHeightenedHideousLaughterRoute(
   ];
 }
 
-function resolveHeightenedHideousLaughterSubject(state: BattleState) {
-  const act = heightenedHideousLaughterAct(state);
+function resolveHeightenedStagedConditionSubject(state: BattleState) {
+  const act = heightenedStagedConditionAct(state);
   const target = targetListFill(
     act.initialHoles,
     "Spell targets",
@@ -1552,7 +1552,7 @@ function heightenedBurningHandsAct(state: BattleState): ActionSpellAct {
   return act;
 }
 
-function heightenedHideousLaughterAct(state: BattleState): ActionSpellAct {
+function heightenedStagedConditionAct(state: BattleState): ActionSpellAct {
   const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&

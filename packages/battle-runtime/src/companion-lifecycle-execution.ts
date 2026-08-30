@@ -114,7 +114,7 @@ export function presentSpawnedCompanionHitPoints(
   familiarId: CombatantId | undefined,
 ): BattleCompanionHitPoints | string {
   if (familiarId === undefined) {
-    return "Present Find Familiar combatant identity is missing.";
+    return "Present companion combatant identity is missing.";
   }
   const combatant = state.combatants.get(familiarId);
   if (combatant === undefined) {
@@ -136,7 +136,7 @@ export function spawnedCompanionCurrentHitPoints(
   currentHp: Hp,
 ): BattleCompanionCurrentHitPoints | string {
   if (currentHp < Hp(1)) {
-    return "Present Find Familiar current HP must be above 0.";
+    return "Present companion current HP must be above 0.";
   }
   // Cast evidence: Hp already proves non-negative integer HP, and the guard
   // above proves the positive part of BattleCompanionCurrentHitPoints.
@@ -154,7 +154,7 @@ export function temporarilyDismissSpawnedCompanion(
     return invalidSpawnedCompanionResult(
       input.state,
       "invalidFill",
-      "Find Familiar caster has no familiar to dismiss.",
+      "Companion owner has no companion to dismiss.",
     );
   }
   const familiar = familiarEntry.companion;
@@ -162,14 +162,14 @@ export function temporarilyDismissSpawnedCompanion(
     return invalidSpawnedCompanionResult(
       input.state,
       "invalidFill",
-      "Find Familiar can be temporarily dismissed only while present.",
+      "A companion can be temporarily dismissed only while present.",
     );
   }
   const familiarId = familiar.combatantId;
   const spent = spendSpawnedCompanionMagicAction(
     input.state,
     input.casterId,
-    "Find Familiar temporary dismissal",
+    "Companion temporary dismissal",
   );
   if (spent.tag === "invalid") {
     return spent;
@@ -266,14 +266,14 @@ export function permanentlyDismissSpawnedCompanion(
     return invalidSpawnedCompanionResult(
       input.state,
       "invalidFill",
-      "Find Familiar caster has no familiar to dismiss forever.",
+      "Companion owner has no companion to dismiss forever.",
     );
   }
   const familiar = familiarEntry.companion;
   const spent = spendSpawnedCompanionMagicAction(
     input.state,
     input.casterId,
-    "Find Familiar permanent dismissal",
+    "Companion permanent dismissal",
   );
   if (spent.tag === "invalid") {
     return spent;
@@ -320,7 +320,7 @@ export function reappearAdmittedTemporarilyDismissedSpawnedCompanion(
     return invalidSpawnedCompanionResult(
       state,
       "invalidFill",
-      "Find Familiar can reappear only from temporary dismissal.",
+      "A companion can reappear only from temporary dismissal.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -333,7 +333,7 @@ export function reappearAdmittedTemporarilyDismissedSpawnedCompanion(
     return invalidSpawnedCompanionResult(
       state,
       "invalidFill",
-      "Find Familiar reappearance admission does not match the retained familiar.",
+      "Companion reappearance admission does not match the retained companion.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -359,7 +359,7 @@ export function reappearAdmittedTemporarilyDismissedSpawnedCompanion(
   const spent = spendSpawnedCompanionMagicAction(
     state,
     casterId,
-    "Find Familiar reappearance",
+    "Companion reappearance",
   );
   if (spent.tag === "invalid") {
     return spent;
@@ -398,7 +398,7 @@ export function applySpawnedCompanionZeroHitPointDisappearance(input: {
     return invalidSpawnedCompanionResult(
       input.state,
       "invalidFill",
-      "Familiar identity is not a present Find Familiar familiar.",
+      "Companion identity is not a present companion.",
     );
   }
   const retainedForm = retainedStoredFormForPresentCompanion({
@@ -473,7 +473,7 @@ export function withSpawnedCompanionCombatant(input: {
     return invalidSpawnedCompanionResult(
       input.state,
       "missingCombatant",
-      "Find Familiar caster is not in this battle.",
+      "Companion owner is not in this battle.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -492,7 +492,7 @@ export function withSpawnedCompanionCombatant(input: {
     return invalidSpawnedCompanionResult(
       input.state,
       "invalidFill",
-      "Present Find Familiar requires maximum HP above 0.",
+      "A present companion requires maximum HP above 0.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -501,7 +501,7 @@ export function withSpawnedCompanionCombatant(input: {
     return invalidSpawnedCompanionResult(
       input.state,
       "invalidFill",
-      "Present Find Familiar admission requires current HP above 0.",
+      "Present-companion admission requires current HP above 0.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -510,7 +510,7 @@ export function withSpawnedCompanionCombatant(input: {
     return invalidSpawnedCompanionResult(
       input.state,
       "invalidFill",
-      "Present Find Familiar admission current HP must not exceed maximum HP.",
+      "Present-companion admission current HP must not exceed maximum HP.",
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -586,7 +586,7 @@ export function familiarMaxHp(
 ): Hp | string {
   const hp = statBlock.statBlock.hp;
   if (hp.kind !== "literal") {
-    return "Find Familiar form Stat Block must use literal HP.";
+    return "Companion form Stat Block must use literal HP.";
   }
   return Hp(hp.value);
 }
@@ -654,17 +654,15 @@ export function spawnedCompanionIdentityIssueMessage(
   return Match.value(issue).pipe(
     Match.when(
       { tag: "casterCollision" },
-      () => "Find Familiar familiar identity must be distinct from its caster.",
+      () => "Companion identity must be distinct from its owner.",
     ),
     Match.when(
       { tag: "ownedByAnotherCaster" },
-      () =>
-        "Find Familiar familiar identity is already owned by another caster.",
+      () => "Companion identity is already owned by another owner.",
     ),
     Match.when(
       { tag: "ordinaryCombatantCollision" },
-      () =>
-        "Find Familiar familiar identity must not identify an ordinary combatant.",
+      () => "Companion identity must not identify an ordinary combatant.",
     ),
     Match.exhaustive,
   );

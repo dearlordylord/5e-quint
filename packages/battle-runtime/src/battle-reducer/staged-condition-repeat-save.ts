@@ -14,8 +14,8 @@ import type {
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-  HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
-  HIDEOUS_LAUGHTER_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX,
+  STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
+  STAGED_CONDITION_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX,
 } from "./domain-constants.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
 import { linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget } from "./linked-defense-damage-share.ts";
@@ -46,7 +46,7 @@ type SaveGatedConditionWithRepeatDamageRepeatSaveFillCheckResult =
     }
   | { readonly tag: "invalid"; readonly message: string };
 
-const HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE =
+const STAGED_CONDITION_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE =
   "save-gated condition damage repeat save fills must match every requested damaged target exactly once.";
 
 export function saveGatedConditionWithRepeatEffects(
@@ -77,11 +77,11 @@ function saveGatedConditionRepeatSaveHoleKeyPrefix(
   return Match.value(trigger).pipe(
     Match.when(
       "endTurn",
-      () => HIDEOUS_LAUGHTER_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX,
+      () => STAGED_CONDITION_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX,
     ),
     Match.when(
       "damage",
-      () => HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
+      () => STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
     ),
     Match.exhaustive,
   );
@@ -176,7 +176,7 @@ export function isSaveGatedConditionWithRepeatDamageRepeatSaveFill(
   fill: SavingThrowOutcomeFill,
 ): boolean {
   return String(fill.holeId).startsWith(
-    HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
+    STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
   );
 }
 
@@ -232,7 +232,7 @@ export function checkSaveGatedConditionWithRepeatDamageRepeatSaveFills(input: {
   if (input.fills.length !== holes.length) {
     return {
       tag: "invalid",
-      message: HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE,
+      message: STAGED_CONDITION_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE,
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -258,7 +258,7 @@ function saveGatedConditionWithRepeatDamageRepeatSaveFillIssue(
 ): string | null {
   const hole = holes.find((candidate) => candidate.holeId === fill.holeId);
   return hole === undefined
-    ? HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE
+    ? STAGED_CONDITION_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE
     : validateSaveGatedConditionWithRepeatRepeatSavingThrowOutcome(
         fill.value,
         hole.saveGatedConditionRepeatSave.targetId,

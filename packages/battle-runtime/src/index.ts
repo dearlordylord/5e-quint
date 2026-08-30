@@ -291,7 +291,7 @@ export {
 } from "./spawned-companion-state.ts";
 
 export {
-  FIND_FAMILIAR_TELEPATHY_RANGE_FEET,
+  COMPANION_TELEPATHY_RANGE_FEET,
   spawnedCompanionTelepathicConnection,
   type CompanionSharedSensesEffect,
   type SpawnedCompanionTelepathicConnection,

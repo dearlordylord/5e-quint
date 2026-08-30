@@ -215,7 +215,8 @@ function resolveFixedCostMovementReplacement(
     fillSet: input.fillSet,
     actorId: input.actorId,
     invocation: input.invocation,
-    invalidFillMessage: "Jump uses a target-list fill only.",
+    invalidFillMessage:
+      "Fixed-cost movement replacement uses a target-list fill only.",
   });
   if (targetSelection.tag !== "selected") {
     return targetSelection;

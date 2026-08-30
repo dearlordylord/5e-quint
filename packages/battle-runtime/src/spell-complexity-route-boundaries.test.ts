@@ -27,7 +27,7 @@ import {
   CUNNING_STRIKE_END_TURN_COVER_HOLE_ID,
   CUNNING_STRIKE_TOOL_POSSESSION_HOLE_ID,
   BRUTAL_STRIKE_FORCEFUL_BLOW_MOVEMENT_HOLE_ID,
-  HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
+  STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
   HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID,
   OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID,
   BRUTAL_STRIKE_DECISION_HOLE_ID,
@@ -634,7 +634,7 @@ describe("battle replay and spell route frontiers", () => {
     });
 
     const saveGatedConditionWithRepeatRepeat = malformedSavingThrowFill(
-      holeId(`${HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX}synthetic`),
+      holeId(`${STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX}synthetic`),
     );
     expect(
       attackFillSet(
@@ -647,7 +647,7 @@ describe("battle replay and spell route frontiers", () => {
       ),
     ).toEqual({
       tag: "invalid",
-      message: "Hideous Laughter damage repeat save was filled twice.",
+      message: "Staged-condition damage repeat save was filled twice.",
     });
 
     const sourceProcedureRef = battleProcedureExecutionRefForTest(

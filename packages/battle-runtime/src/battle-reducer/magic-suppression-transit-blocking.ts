@@ -17,8 +17,8 @@ import {
   magicSuppressionEmanationMembershipIncludesCombatant,
 } from "./magic-suppression-action-interdiction.ts";
 
-export const ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE =
-  "Teleportation into or out of an Antimagic Field aura is blocked.";
+export const MAGIC_SUPPRESSION_TRANSIT_BLOCKING_MESSAGE =
+  "Teleportation into or out of a magic-suppression area is blocked.";
 
 export function magicSuppressionTransitInvalidReason(input: {
   readonly state: BattleState;
@@ -54,7 +54,7 @@ export function magicSuppressionTransitInvalidReason(input: {
       return "magic-suppression emanation transit origin witness must match the active aura membership.";
     }
     if (witness.originInsideAura !== witness.destinationInsideAura) {
-      return ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE;
+      return MAGIC_SUPPRESSION_TRANSIT_BLOCKING_MESSAGE;
     }
   }
 

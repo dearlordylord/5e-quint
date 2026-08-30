@@ -10,7 +10,7 @@ import {
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle blindness_deafness doResolveBlindnessDeafnessBlindedSavingThrow doResolveBlindnessDeafnessDeafenedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle color_spray doResolveColorSprayFailedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle entangle doResolveEntangleFailedSavingThrow
-// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveHideousLaughterRepeatSavingThrowSuccess
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveStagedConditionRepeatSavingThrowSuccess
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hold_monster doResolveHoldMonsterFailedSavingThrow doResolveHoldMonsterRepeatSavingThrowSuccess
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hold_person doResolveHoldPersonFailedSavingThrow doResolveHoldPersonRepeatSavingThrowSuccess
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hypnotic_pattern doResolveHypnoticPatternFailedSavingThrow
@@ -157,7 +157,7 @@ it("observes selected condition-saving-throw qRoute through public reducer event
       initialRoute: saveGatedConditionTargetListRoute(),
     }),
   );
-  expect(resolveHideousLaughterRepeatSavingThrowSuccessRoute()).toEqual(
+  expect(resolveStagedConditionRepeatSavingThrowSuccessRoute()).toEqual(
     repeatSaveSuccessCleanupRoute({
       initialRoute: [battleReducerStartRouteEvent()],
     }),
@@ -254,10 +254,10 @@ defineSelectedIdentityReplayAndQntReplay({
       unitId: "hideous_laughter",
       procedures: [
         {
-          actionName: "doResolveHideousLaughterRepeatSavingThrowSuccess",
+          actionName: "doResolveStagedConditionRepeatSavingThrowSuccess",
           discover: () =>
             resolvedProjection(
-              resolveHideousLaughterRepeatSavingThrowSuccess(),
+              resolveStagedConditionRepeatSavingThrowSuccess(),
             ),
         },
       ],
@@ -473,7 +473,7 @@ function resolveHoldSpellRepeatSavingThrowSuccess(
   });
 }
 
-function resolveHideousLaughterRepeatSavingThrowSuccess(): BattleResolutionResult {
+function resolveStagedConditionRepeatSavingThrowSuccess(): BattleResolutionResult {
   const session = conditionSpellBattle(
     srdSpellRecord("hideous_laughter"),
     "wizard",
@@ -733,7 +733,7 @@ function resolveHoldSpellRepeatSavingThrowSuccessRoute(
   ];
 }
 
-function resolveHideousLaughterRepeatSavingThrowSuccessRoute(): readonly BattleReducerRouteEvent[] {
+function resolveStagedConditionRepeatSavingThrowSuccessRoute(): readonly BattleReducerRouteEvent[] {
   const session = conditionSpellBattle(
     srdSpellRecord("hideous_laughter"),
     "wizard",

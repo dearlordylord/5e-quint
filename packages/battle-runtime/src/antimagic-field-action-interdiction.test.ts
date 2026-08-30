@@ -159,7 +159,7 @@ describe("Antimagic Field action interdiction", () => {
     expect(result).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Spellcasting is blocked inside an Antimagic Field aura.",
+      message: "Spellcasting is blocked inside a magic-suppression area.",
     });
   });
 
@@ -185,7 +185,7 @@ describe("Antimagic Field action interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Magic Action is blocked inside an Antimagic Field aura.",
+      message: "Magic Action is blocked inside a magic-suppression area.",
     });
   });
 
@@ -212,7 +212,7 @@ describe("Antimagic Field action interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Magic Action is blocked inside an Antimagic Field aura.",
+      message: "Magic Action is blocked inside a magic-suppression area.",
     });
   });
 
@@ -254,7 +254,7 @@ describe("Antimagic Field action interdiction", () => {
     ).not.toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Magic Action is blocked inside an Antimagic Field aura.",
+      message: "Magic Action is blocked inside a magic-suppression area.",
     });
   });
 
@@ -287,7 +287,7 @@ describe("Antimagic Field action interdiction", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Magic Action is blocked inside an Antimagic Field aura.",
+      message: "Magic Action is blocked inside a magic-suppression area.",
     });
   });
 
@@ -316,7 +316,7 @@ describe("Antimagic Field action interdiction", () => {
     expect(result).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Spellcasting is blocked inside an Antimagic Field aura.",
+      message: "Spellcasting is blocked inside a magic-suppression area.",
     });
   });
 

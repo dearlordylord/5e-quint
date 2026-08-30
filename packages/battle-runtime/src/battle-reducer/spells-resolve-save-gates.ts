@@ -1246,7 +1246,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
-    const sanctuaryCheck = targetingSaveInterdictionCheck({
+    const interdictionCheck = targetingSaveInterdictionCheck({
       state: input.input.state,
       triggeringProcedureRef: input.invocation.sourceProcedureRef,
       triggeringCombatantId: input.actorId,
@@ -1255,22 +1255,22 @@ export function resolveSaveGateDamageSpellAct(input: {
       replacementTargetKind: "nonAttack",
       fills: input.input.fills,
     });
-    if (sanctuaryCheck.tag === "needsHoles") {
+    if (interdictionCheck.tag === "needsHoles") {
       return needsHolesResult(input.input.state, input.input.subject, [
-        sanctuaryCheck.hole,
+        interdictionCheck.hole,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (sanctuaryCheck.tag === "invalid") {
+    if (interdictionCheck.tag === "invalid") {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
-        sanctuaryCheck.message,
+        interdictionCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
-    if (sanctuaryCheck.tag === "lost") {
+    if (interdictionCheck.tag === "lost") {
       return resolveSaveGateDamageSpellCastResources(input, {
         state: input.input.state,
         actorId: input.actorId,
@@ -1284,9 +1284,9 @@ export function resolveSaveGateDamageSpellAct(input: {
         ),
       });
     }
-    if (sanctuaryCheck.tag === "newTarget") {
+    if (interdictionCheck.tag === "newTarget") {
       const replacementTarget = input.input.state.combatants.get(
-        sanctuaryCheck.targetId,
+        interdictionCheck.targetId,
       );
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
@@ -1296,7 +1296,7 @@ export function resolveSaveGateDamageSpellAct(input: {
           input.actorId,
           replacementTarget.combatantId,
           input.invocation,
-          sanctuaryCheck.spatialFacts,
+          interdictionCheck.spatialFacts,
         )
       ) {
         /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
@@ -1330,7 +1330,7 @@ export function resolveSaveGateDamageSpellAct(input: {
             ? {
                 ...fill,
                 value: replacementTarget.combatantId,
-                spatialFacts: sanctuaryCheck.spatialFacts,
+                spatialFacts: interdictionCheck.spatialFacts,
               }
             : fill,
         );

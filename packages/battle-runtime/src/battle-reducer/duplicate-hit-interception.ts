@@ -19,10 +19,10 @@ import type {
 } from "../battle-state-execution.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
 import {
-  MIRROR_IMAGE_DUPLICATE_COUNTS,
-  MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
-  MIRROR_IMAGE_DUPLICATE_ROLL_HOLE_KEY_PREFIX,
-  MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
+  DUPLICATE_HIT_INTERCEPTION_DUPLICATE_COUNTS,
+  DUPLICATE_HIT_INTERCEPTION_DIE_SIZE,
+  DUPLICATE_HIT_INTERCEPTION_ROLL_HOLE_KEY_PREFIX,
+  DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST,
   type DuplicateHitInterceptionDuplicateCount as DuplicateHitInterceptionCount,
 } from "./domain-constants.ts";
 
@@ -31,12 +31,12 @@ type DuplicateHitInterception = Extract<
   { readonly kind: "duplicateHitInterception" }
 >;
 
-export const MIRROR_IMAGE_HIT_INTERCEPTION_DUPLICATE_COUNTS = [
+export const DUPLICATE_HIT_INTERCEPTION_REMAINING_COUNTS = [
   0,
-  ...MIRROR_IMAGE_DUPLICATE_COUNTS,
+  ...DUPLICATE_HIT_INTERCEPTION_DUPLICATE_COUNTS,
 ] as const;
 export type DuplicateHitInterceptionDuplicateCount =
-  (typeof MIRROR_IMAGE_HIT_INTERCEPTION_DUPLICATE_COUNTS)[number];
+  (typeof DUPLICATE_HIT_INTERCEPTION_REMAINING_COUNTS)[number];
 
 export type DuplicateHitInterceptionState = {
   readonly remainingDuplicates: DuplicateHitInterceptionDuplicateCount;
@@ -70,7 +70,7 @@ export function duplicateHitInterceptionRollHoleId(
   triggeringAttackRollHoleId: BattleHoleId,
 ): BattleHoleId {
   return holeId(
-    `${MIRROR_IMAGE_DUPLICATE_ROLL_HOLE_KEY_PREFIX}${String(
+    `${DUPLICATE_HIT_INTERCEPTION_ROLL_HOLE_KEY_PREFIX}${String(
       triggeringAttackRollHoleId,
     )}`,
   );
@@ -80,7 +80,7 @@ export function isDuplicateHitInterceptionDuplicateRollFill(
   fill: BattleRolledDiceFill,
 ): boolean {
   return String(fill.holeId).startsWith(
-    MIRROR_IMAGE_DUPLICATE_ROLL_HOLE_KEY_PREFIX,
+    DUPLICATE_HIT_INTERCEPTION_ROLL_HOLE_KEY_PREFIX,
   );
 }
 
@@ -219,14 +219,14 @@ export function duplicateHitInterceptionRollHole(
     kind: "rolledDice",
     holeId: holeId(protocolId),
     holeInstanceKey: holeInstanceKey(protocolId),
-    label: `Mirror Image duplicate roll (${effect.remainingDuplicates}d${MIRROR_IMAGE_DUPLICATE_DIE_SIZE})`,
+    label: `Duplicate-interception roll (${effect.remainingDuplicates}d${DUPLICATE_HIT_INTERCEPTION_DIE_SIZE})`,
     duplicateHitInterceptionRoll: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       remainingDuplicates: effect.remainingDuplicates,
-      dieSize: MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
-      successAtLeast: MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
+      dieSize: DUPLICATE_HIT_INTERCEPTION_DIE_SIZE,
+      successAtLeast: DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST,
     },
   };
 }
@@ -271,7 +271,7 @@ function duplicateHitInterceptionRollSucceeds(
 ): boolean {
   return fill.value.some((group) =>
     group.results.some(
-      (roll) => Number(roll) >= MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
+      (roll) => Number(roll) >= DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST,
     ),
   );
 }
@@ -332,8 +332,9 @@ function activeDuplicateHitInterceptionDuplicates(
   count: DuplicateHitInterceptionDuplicateCount,
 ): DuplicateHitInterceptionCount | null {
   return (
-    MIRROR_IMAGE_DUPLICATE_COUNTS.find((candidate) => candidate === count) ??
-    null
+    DUPLICATE_HIT_INTERCEPTION_DUPLICATE_COUNTS.find(
+      (candidate) => candidate === count,
+    ) ?? null
   );
 }
 

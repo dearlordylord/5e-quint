@@ -1078,7 +1078,7 @@ function processSavingThrowOutcomeFill(
       )
     ) {
       return selectedAttackFillError(
-        "Hideous Laughter damage repeat save was filled twice.",
+        "Staged-condition damage repeat save was filled twice.",
       );
     }
     context.saveGatedConditionWithRepeatDamageRepeatSaves.push(fill);

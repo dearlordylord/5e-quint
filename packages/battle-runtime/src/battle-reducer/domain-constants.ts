@@ -88,22 +88,23 @@ export const BLUR_ATTACK_ROLL_BYPASS_SENSES = [
 ] as const satisfies ReadonlyArray<CreatureSense["kind"]>;
 export type PerceptionGatedAttackRollDefenseBypassSense =
   (typeof BLUR_ATTACK_ROLL_BYPASS_SENSES)[number];
-export const MIRROR_IMAGE_UNAFFECTED_SENSES = BLUR_ATTACK_ROLL_BYPASS_SENSES;
+export const DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES =
+  BLUR_ATTACK_ROLL_BYPASS_SENSES;
 export type DuplicateHitInterceptionUnaffectedSense =
-  (typeof MIRROR_IMAGE_UNAFFECTED_SENSES)[number];
-export const MIRROR_IMAGE_UNAFFECTED_BY = [
+  (typeof DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES)[number];
+export const DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_BY = [
   "blinded",
-  ...MIRROR_IMAGE_UNAFFECTED_SENSES,
+  ...DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES,
 ] as const satisfies ReadonlyArray<Condition | CreatureSense["kind"]>;
-export const MIRROR_IMAGE_DUPLICATE_COUNTS = [1, 2, 3] as const;
+export const DUPLICATE_HIT_INTERCEPTION_DUPLICATE_COUNTS = [1, 2, 3] as const;
 export type DuplicateHitInterceptionDuplicateCount =
-  (typeof MIRROR_IMAGE_DUPLICATE_COUNTS)[number];
-export const MIRROR_IMAGE_INITIAL_DUPLICATES =
+  (typeof DUPLICATE_HIT_INTERCEPTION_DUPLICATE_COUNTS)[number];
+export const DUPLICATE_HIT_INTERCEPTION_INITIAL_DUPLICATES =
   3 satisfies DuplicateHitInterceptionDuplicateCount;
-export const MIRROR_IMAGE_DUPLICATE_DIE_SIZE = 6;
-export const MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST = 3;
-export const MIRROR_IMAGE_DUPLICATE_ROLL_HOLE_KEY_PREFIX =
-  "battle:mirror-image:duplicate-roll:";
+export const DUPLICATE_HIT_INTERCEPTION_DIE_SIZE = 6;
+export const DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST = 3;
+export const DUPLICATE_HIT_INTERCEPTION_ROLL_HOLE_KEY_PREFIX =
+  "battle:duplicate-hit-interception:roll:";
 export const CHROMATIC_ORB_DAMAGE_TYPES = [
   "acid",
   "cold",
@@ -117,11 +118,11 @@ export const CHAINED_SPELL_ATTACK_CONTINUATION_LIMIT_KINDS = [
   "max_leaps_from_slot_level",
   "exclude_already_targeted_in_same_cast",
 ] as const;
-export const HIDEOUS_LAUGHTER_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX =
-  "battle:hideous-laughter-repeat-save:end-turn:";
-export const HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX =
-  "battle:hideous-laughter-repeat-save:damage:";
-export const HIDEOUS_LAUGHTER_DURATION_TICKS = elapsedTimeTicks(10);
+export const STAGED_CONDITION_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX =
+  "battle:staged-condition-repeat-save:end-turn:";
+export const STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX =
+  "battle:staged-condition-repeat-save:damage:";
+export const STAGED_CONDITION_DURATION_TICKS = elapsedTimeTicks(10);
 export const SLOW_ACTIVE_PENALTIES_SPEED_RATIO = {
   numerator: 1,
   denominator: 2,

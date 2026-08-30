@@ -344,7 +344,7 @@ export function castResolvedSpawnedCompanion(
     return invalidSpawnedCompanionResult(
       input.state,
       "missingCombatant",
-      "Find Familiar caster is not in this battle.",
+      "Companion owner is not in this battle.",
     );
   }
   /* v8 ignore stop -- @preserve */

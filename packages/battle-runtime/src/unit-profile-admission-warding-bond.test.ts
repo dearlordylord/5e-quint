@@ -750,7 +750,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       { spellLevel: 2, count: 1 },
       { spellLevel: 1, count: 1 },
     ]);
-    const state = withHideousLaughterOnTarget(session.state);
+    const state = withStagedConditionOnTarget(session.state);
     const actionSession = battleRuntimeSessionForTest({ ...session, state });
     const act = spellAct({
       session: actionSession,
@@ -1089,7 +1089,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
   });
 
   test("turn-start shared caster damage requests the caster Hideous Laughter repeat save", () => {
-    const state = withHideousLaughterOnCaster(
+    const state = withStagedConditionOnCaster(
       withTurnStartDamageOnTarget(
         castWardingBond(linkedDefenseResistanceDamageShareBattle()),
       ),
@@ -1523,7 +1523,7 @@ function withTurnStartDamageOnTarget(state: BattleState): BattleState {
   });
 }
 
-function hideousLaughterProcedureRef(
+function stagedConditionProcedureRef(
   state: BattleState,
   sourceCombatantId: CombatantId,
 ) {
@@ -1543,10 +1543,10 @@ function hideousLaughterProcedureRef(
   return binding.procedureRef;
 }
 
-function withHideousLaughterOnTarget(state: BattleState): BattleState {
+function withStagedConditionOnTarget(state: BattleState): BattleState {
   const caster = requireCombatant(state, spellCasterId);
   const target = requireCombatant(state, spellTargetId);
-  const sourceProcedureRef = hideousLaughterProcedureRef(state, spellCasterId);
+  const sourceProcedureRef = stagedConditionProcedureRef(state, spellCasterId);
   const prepared = {
     ...state,
     combatants: new Map(state.combatants)
@@ -1586,10 +1586,10 @@ function withHideousLaughterOnTarget(state: BattleState): BattleState {
   });
 }
 
-function withHideousLaughterOnCaster(state: BattleState): BattleState {
+function withStagedConditionOnCaster(state: BattleState): BattleState {
   const caster = requireCombatant(state, spellCasterId);
   const target = requireCombatant(state, spellTargetId);
-  const sourceProcedureRef = hideousLaughterProcedureRef(state, spellCasterId);
+  const sourceProcedureRef = stagedConditionProcedureRef(state, spellCasterId);
   const prepared = {
     ...state,
     combatants: new Map(state.combatants)

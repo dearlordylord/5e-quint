@@ -236,13 +236,13 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       awaitingTurnStartDamage,
       "rolledDice",
     );
-    const awaitingHideousLaughterDamageSave = endTurn({
+    const awaitingStagedConditionDamageSave = endTurn({
       state,
       actorId: spellCasterId,
       fills: [damageRollFillWithGroups(turnStartDamage, [[4]])],
     });
     const damageRepeatSave = requireResultHole(
-      awaitingHideousLaughterDamageSave,
+      awaitingStagedConditionDamageSave,
       "savingThrowOutcome",
     );
     expect(damageRepeatSave).toEqual(

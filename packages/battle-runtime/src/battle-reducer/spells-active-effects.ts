@@ -127,7 +127,7 @@ import {
   ongoingSpellEffectRefKey,
 } from "./magic-suppression-ongoing-effect.ts";
 import {
-  HIDEOUS_LAUGHTER_DURATION_TICKS,
+  STAGED_CONDITION_DURATION_TICKS,
   SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,
 } from "./domain-constants.ts";
 import {
@@ -1914,7 +1914,7 @@ export function applySaveGatedConditionWithRepeatEffects(
         expiresAt: {
           kind: "concentration" as const,
           combatantId: actorId,
-          durationTicks: HIDEOUS_LAUGHTER_DURATION_TICKS,
+          durationTicks: STAGED_CONDITION_DURATION_TICKS,
         },
       },
     });

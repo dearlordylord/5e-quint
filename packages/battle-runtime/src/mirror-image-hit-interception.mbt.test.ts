@@ -14,7 +14,7 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
-  MIRROR_IMAGE_HIT_INTERCEPTION_DUPLICATE_COUNTS,
+  DUPLICATE_HIT_INTERCEPTION_REMAINING_COUNTS,
   resolveDuplicateHitInterception,
   type DuplicateHitInterceptionDuplicateCount,
   type DuplicateHitInterceptionFills,
@@ -121,7 +121,7 @@ function compareDuplicateHitInterceptionState(
 function duplicateHitInterceptionDuplicateCount(
   value: number,
 ): DuplicateHitInterceptionDuplicateCount {
-  const count = MIRROR_IMAGE_HIT_INTERCEPTION_DUPLICATE_COUNTS.find(
+  const count = DUPLICATE_HIT_INTERCEPTION_REMAINING_COUNTS.find(
     (candidate) => candidate === value,
   );
   if (count === undefined) {

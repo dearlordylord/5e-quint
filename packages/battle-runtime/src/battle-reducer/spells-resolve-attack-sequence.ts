@@ -376,7 +376,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     input.invocation,
     input.partIndex,
   );
-  const sanctuaryCheck = targetingSaveInterdictionCheck({
+  const interdictionCheck = targetingSaveInterdictionCheck({
     state: input.state,
     triggeringProcedureRef: input.invocation.sourceProcedureRef,
     triggeringCombatantId: input.actorId,
@@ -385,22 +385,22 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     replacementTargetKind: "attackRoll",
     fills: input.input.fills,
   });
-  if (sanctuaryCheck.tag === "needsHoles") {
+  if (interdictionCheck.tag === "needsHoles") {
     return needsHolesResult(input.state, input.input.subject, [
-      sanctuaryCheck.hole,
+      interdictionCheck.hole,
     ]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (sanctuaryCheck.tag === "invalid") {
+  if (interdictionCheck.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
-      sanctuaryCheck.message,
+      interdictionCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
-  if (sanctuaryCheck.tag === "lost") {
+  if (interdictionCheck.tag === "lost") {
     return spendSpellCastResources({
       state: input.state,
       actorId: input.actorId,
@@ -410,9 +410,9 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       ...optionalProperty("metamagicApplications", input.metamagicApplications),
     });
   }
-  if (sanctuaryCheck.tag === "newTarget") {
+  if (interdictionCheck.tag === "newTarget") {
     const replacementTarget = input.state.combatants.get(
-      sanctuaryCheck.targetId,
+      interdictionCheck.targetId,
     );
     /* v8 ignore start -- @preserve -- Malformed resolution input: Sanctuary replacement facts must identify a roster combatant legal for this exact sequence spell. */
     if (
@@ -422,14 +422,14 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         input.actorId,
         replacementTarget.combatantId,
         input.invocation,
-        sanctuaryCheck.spatialFacts,
+        interdictionCheck.spatialFacts,
       )
     ) {
       const partName = spellAttackSequencePartName();
       return invalidResult(
         input.input.state,
         "invalidFill",
-        `Sanctuary replacement Spell ${partName} target must be legal for the selected spell.`,
+        `Targeting-interdiction replacement Spell ${partName} target must be legal for the selected spell.`,
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -444,7 +444,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       return invalidResult(
         input.input.state,
         "invalidFill",
-        `Sanctuary replacement requires the original Spell ${partName} target fill.`,
+        `Targeting-interdiction replacement requires the original Spell ${partName} target fill.`,
       );
     }
     /* v8 ignore stop -- @preserve */
@@ -455,7 +455,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
           fill === originalTargetFill
             ? targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement({
                 fill,
-                replacement: sanctuaryCheck,
+                replacement: interdictionCheck,
               })
             : fill,
       );
@@ -594,14 +594,16 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     return invalidResult(
       input.input.state,
       "invalidFill",
-      `Spell ${partName} Mirror Image duplicate roll is only valid after an attack-roll hit.`,
+      `Spell ${partName} duplicate-interception roll is only valid after an attack-roll hit.`,
     );
   }
   /* v8 ignore stop -- @preserve */
   if (hit) {
-    const mirrorImageAttacker = attackRolledState.combatants.get(input.actorId);
+    const duplicateInterceptionAttacker = attackRolledState.combatants.get(
+      input.actorId,
+    );
     /* v8 ignore start -- @preserve -- Internal replay invariant: recording an attack roll and consuming Help preserve the already-resolved spell attacker in the combatant map. */
-    if (mirrorImageAttacker === undefined) {
+    if (duplicateInterceptionAttacker === undefined) {
       return invalidResult(
         input.input.state,
         "missingCombatant",
@@ -609,9 +611,9 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
-    const mirrorImageCheck = duplicateHitInterceptionCheck({
+    const duplicateInterceptionCheck = duplicateHitInterceptionCheck({
       state: attackRolledState,
-      attacker: mirrorImageAttacker,
+      attacker: duplicateInterceptionAttacker,
       target: attackRolledState.combatants.get(target.combatantId) ?? target,
       targetSpatialFacts: input.target.spatialFacts,
       triggeringAttackRollHoleId: spellAttackSequencePartAttackRollHoleId(
@@ -620,22 +622,22 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       ),
       fill: input.partFill.duplicateHitInterceptionRoll,
     });
-    if (mirrorImageCheck.tag === "needsHoles") {
+    if (duplicateInterceptionCheck.tag === "needsHoles") {
       return needsHolesResult(attackRolledState, input.input.subject, [
-        mirrorImageCheck.hole,
+        duplicateInterceptionCheck.hole,
       ]);
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (mirrorImageCheck.tag === "invalid") {
+    if (duplicateInterceptionCheck.tag === "invalid") {
       /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
-        mirrorImageCheck.message,
+        duplicateInterceptionCheck.message,
       );
     }
     /* v8 ignore stop -- @preserve */
-    if (mirrorImageCheck.tag === "hitDuplicate") {
+    if (duplicateInterceptionCheck.tag === "hitDuplicate") {
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (input.partFill.damageRoll !== undefined) {
         /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -648,7 +650,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       /* v8 ignore stop -- @preserve */
       return {
         tag: "resolved",
-        state: mirrorImageCheck.state,
+        state: duplicateInterceptionCheck.state,
         objectDamages: [],
         afterDamageEvents: [],
         usedExtraFillHoleIds: [],
@@ -927,35 +929,35 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       [damageDispositionHole],
     );
   }
-  const relevantHideousLaughterDamageRepeatSaves =
+  const relevantStagedConditionDamageRepeatSaves =
     saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget(
       postRemarkableAthleteMovementState,
       spellReduction.target,
       input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
       damageEventKey,
     );
-  const hideousLaughterSaveCheck =
+  const stagedConditionSaveCheck =
     saveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
       state: postRemarkableAthleteMovementState,
       target: spellReduction.target,
       damageAmount: spellDamageAmount,
-      fills: relevantHideousLaughterDamageRepeatSaves,
+      fills: relevantStagedConditionDamageRepeatSaves,
       damageEventKey,
     });
-  if (hideousLaughterSaveCheck.tag === "needsHoles") {
+  if (stagedConditionSaveCheck.tag === "needsHoles") {
     return needsHolesResult(
       postRemarkableAthleteMovementState,
       input.input.subject,
-      [...hideousLaughterSaveCheck.holes],
+      [...stagedConditionSaveCheck.holes],
     );
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (hideousLaughterSaveCheck.tag === "invalid") {
+  if (stagedConditionSaveCheck.tag === "invalid") {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
-      hideousLaughterSaveCheck.message,
+      stagedConditionSaveCheck.message,
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -1020,7 +1022,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       spellDamageReductionRollHoleForReduction: spellReductionRollHoleForPart,
       sourceDamageRollPenaltyRoll,
       saveGatedConditionWithRepeatDamageRepeatSaves:
-        relevantHideousLaughterDamageRepeatSaves,
+        relevantStagedConditionDamageRepeatSaves,
       saveGatedConditionWithRepeatDamageRepeatSaveEventKey: damageEventKey,
       damageSourceId: input.actorId,
       spatialFacts: input.target.spatialFacts,
@@ -1034,7 +1036,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     ...(spellReductionRoll === undefined ? [] : [spellReductionRoll.holeId]),
     ...(concentrationFill === undefined ? [] : [concentrationFill.holeId]),
     ...relevantDamageDispositionFills.map((fill) => fill.holeId),
-    ...relevantHideousLaughterDamageRepeatSaves.map((fill) => fill.holeId),
+    ...relevantStagedConditionDamageRepeatSaves.map((fill) => fill.holeId),
   ];
   return {
     tag: "resolved",
@@ -1094,7 +1096,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     }
   | Exclude<BattleResolutionResult, { readonly tag: "resolved" }> {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (spellObjectPartHasMirrorImageDuplicateRoll(input.partFill)) {
+  if (spellObjectPartHasDuplicateHitInterceptionRoll(input.partFill)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
@@ -1361,7 +1363,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
   };
 }
 
-function spellObjectPartHasMirrorImageDuplicateRoll(
+function spellObjectPartHasDuplicateHitInterceptionRoll(
   partFill: SpellAttackSequencePartFillSet,
 ): boolean {
   return partFill.duplicateHitInterceptionRoll !== undefined;
