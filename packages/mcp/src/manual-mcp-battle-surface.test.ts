@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import { Either, Schema } from "effect";
 
@@ -676,20 +678,18 @@ describe("manual MCP battle surface coverage", () => {
       "hellish_rebuke",
       2,
     );
+    const attackTarget = attackTargetFill(
+      "battle:attack:target",
+      "goblin",
+      "fighter",
+      goblinAttack.subject,
+    );
     const afterTarget = call(root, "fill_battle_hole", {
       subject: goblinAttack.subject,
       fill: {
-        kind: "targetChoice",
-        holeId: "battle:attack:target",
-        value: "fighter",
+        ...attackTarget,
         spatialFacts: [
-          {
-            kind: "attackTargetDistance",
-            actorId: "goblin",
-            targetId: "fighter",
-            distanceFeet: movementFeet(5),
-            procedureRef: goblinAttack.subject.procedureRef,
-          },
+          ...attackTarget.spatialFacts,
           {
             kind: "reactionSpellDamagerVisibleWithinRange",
             reactorId: "fighter",
@@ -1349,8 +1349,9 @@ function statBlock(
     readonly creatureType?: "beast";
   },
 ): BattleCreatureInit {
-  const statBlock = root.statBlockCatalog.requireStatBlock(
-    "stat_block_goblin_warrior",
+  const statBlock = assertStatBlockForTest(
+    root.statBlockCatalog,
+    statBlockId("stat_block_goblin_warrior"),
   );
   const battleStatBlock =
     input.creatureType === undefined
@@ -1373,7 +1374,21 @@ function statBlock(
       conditions: [],
     }),
   );
-  return { ...init, displayName: input.displayName ?? init.displayName };
+  return input.displayName === undefined
+    ? init
+    : {
+        ...init,
+        creatureInit:
+          init.creatureInit.kind === "statBlock"
+            ? {
+                ...init.creatureInit,
+                presentation: {
+                  ...init.creatureInit.presentation,
+                  displayName: input.displayName,
+                },
+              }
+            : init.creatureInit,
+      };
 }
 
 function character(
@@ -1660,7 +1675,15 @@ function requireAct(
     (candidate) =>
       candidate.label === label &&
       (attackName === undefined ||
-        (!("statBlockDamageNotation" in candidate.subject) &&
+        (candidate.subject.tag === "action" &&
+          "action" in candidate.subject &&
+          candidate.subject.action === "attack" &&
+          (!("statBlockDamageSelection" in candidate.subject) ||
+            candidate.subject.statBlockDamageSelection === undefined ||
+            (candidate.subject.statBlockDamageSelection.length > 0 &&
+              candidate.subject.statBlockDamageSelection.every(
+                ({ notation }) => notation === "rolled",
+              ))) &&
           candidate.summary === `Take the Attack action with ${attackName}.`)),
   );
   const [act] = matchingActs;
@@ -1837,6 +1860,10 @@ function attackTargetFill(
   cleaveSecondTargetId?: string,
   cleaveTargetFact?: { readonly firstTargetId: string },
 ) {
+  const statBlockDamageSelection =
+    "statBlockDamageSelection" in attack
+      ? attack.statBlockDamageSelection
+      : undefined;
   const selection = {
     procedureRef: attack.procedureRef,
     ...(!("attackAbility" in attack) || attack.attackAbility === undefined
@@ -1845,6 +1872,9 @@ function attackTargetFill(
     ...(!("attackDamageType" in attack) || attack.attackDamageType === undefined
       ? {}
       : { attackDamageType: attack.attackDamageType }),
+    ...(statBlockDamageSelection === undefined
+      ? {}
+      : { statBlockDamageSelection }),
   };
   return {
     kind: "targetChoice",

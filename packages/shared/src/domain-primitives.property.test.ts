@@ -17,6 +17,8 @@ import {
 } from "./game-facts.ts";
 import { abilityModifier, difficultyClass } from "./check-difficulty.ts";
 import {
+  D6_ROLL_RESULTS,
+  D6RollResult,
   abilityScore,
   abilityScoreToMod,
   armorClass,
@@ -108,6 +110,11 @@ describe("shared domain primitive constructors", () => {
   });
 
   it("projects remaining branded and collection facts", () => {
+    for (const rollResult of D6_ROLL_RESULTS) {
+      expect(D6RollResult(rollResult)).toBe(rollResult);
+    }
+    expect(() => D6RollResult(7)).toThrow();
+
     expect(unitId("unit")).toBe("unit");
     expect(statBlockId("stat-block")).toBe("stat-block");
     expect(characterClassLevel(20)).toBe(20);

@@ -111,13 +111,13 @@ export const setupScenario: ScenarioSetup = (context) => {
     const missingStatBlockIds: (typeof combatantInputs)[number]["statBlockId"][] =
       [];
     for (const input of combatantInputs) {
-      const statBlock = context.statBlockCatalog.getStatBlock(
-        input.statBlockId,
+      const statBlock = context.statBlocks.find(
+        ({ id }) => id === input.statBlockId,
       );
-      if (statBlock._tag === "None") {
+      if (statBlock === undefined) {
         missingStatBlockIds.push(input.statBlockId);
       } else {
-        statBlocks.push({ input, statBlock: statBlock.value });
+        statBlocks.push({ input, statBlock });
       }
     }
     return missingStatBlockIds.length > 0
@@ -150,7 +150,9 @@ export const setupScenario: ScenarioSetup = (context) => {
     if (context.sdk.isLeft(initialized)) {
       return {
         kind: "obstructed",
-        obstruction: context.sdk.battleStateInitIssueMessage(initialized.left),
+        obstruction: context.sdk.authoredStatBlockBattleInitIssueMessage(
+          initialized.left,
+        ),
         observation: {
           setup: "stat-block-combatant-initialization",
           statBlockId: input.statBlockId,
@@ -200,7 +202,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights,

@@ -1,0 +1,130 @@
+{ challengeRating = 11
+, id = "stat_block_roc"
+, kind = "statBlock"
+, name = "Roc"
+, provenance =
+  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:619-646" }
+, statBlock =
+  { abilityScores = { cha = 9, con = 20, dex = 10, int = 3, str = 28, wis = 10 }
+  , ac.value = { kind = "literal", value = 15 }
+  , actions =
+    [ { description = Some
+          "The roc makes two Beak attacks. It can replace one attack with a Talons attack."
+      , kind = "textOnly"
+      , name = Some "Multiattack"
+      , procedure =
+          None
+            { attackAbility : Text
+            , attackBonus : { kind : Text, value : Natural }
+            , attackType : Text
+            , kind : Text
+            , name : Text
+            , onHit :
+                List
+                  { amount :
+                      { expr :
+                          { dice : Natural, dieSize : Natural, flat : Natural }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+            , reachFeet : Natural
+            }
+      , procedureOrdinal = 1
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    , { description = None Text
+      , kind = "executable"
+      , name = None Text
+      , procedure = Some
+        { attackAbility = "str"
+        , attackBonus = { kind = "literal", value = 13 }
+        , attackType = "melee"
+        , kind = "attack_roll"
+        , name = "Beak"
+        , onHit =
+          [ { amount =
+              { expr = { dice = 3, dieSize = 12, flat = 9 }
+              , kind = "fixed"
+              , static = 28
+              }
+            , damageType = "piercing"
+            , kind = "damage"
+            }
+          ]
+        , reachFeet = 10
+        }
+      , procedureOrdinal = 2
+      , reason = None Text
+      , resourceRefs.kind = "none"
+      }
+    , { description = Some
+          "Melee Attack Roll: +13, reach 5 ft. Hit: 23 (4d6 + 9) Slashing damage. If the target is a Huge or smaller creature, it has the Grappled condition (escape DC 19) from both talons, and it has the Restrained condition until the grapple ends."
+      , kind = "textOnly"
+      , name = Some "Talons"
+      , procedure =
+          None
+            { attackAbility : Text
+            , attackBonus : { kind : Text, value : Natural }
+            , attackType : Text
+            , kind : Text
+            , name : Text
+            , onHit :
+                List
+                  { amount :
+                      { expr :
+                          { dice : Natural, dieSize : Natural, flat : Natural }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+            , reachFeet : Natural
+            }
+      , procedureOrdinal = 3
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = "unaligned"
+  , bonusActions =
+    [ { description =
+          "If the roc has a creature Grappled, the roc flies up to half its Fly Speed without provoking Opportunity Attacks and drops that creature."
+      , kind = "textOnly"
+      , name = "Swoop"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs = { kind = "some", ordinals = [ 1 ] }
+      }
+    ]
+  , communication.kind = "none"
+  , creatureType = "monstrosity"
+  , hp = { kind = "literal", value = 248 }
+  , initiative = { modifier = 8, score = 18 }
+  , passivePerception = 18
+  , resources =
+    [ { limit = { kind = "recharge", minimumRoll = 5 }
+      , ordinal = 1
+      , ownership = "shared"
+      }
+    ]
+  , savingThrowModifiers =
+    [ { ability = "cha", modifier = -1 }
+    , { ability = "con", modifier = +5 }
+    , { ability = "dex", modifier = +4 }
+    , { ability = "int", modifier = -4 }
+    , { ability = "str", modifier = +9 }
+    , { ability = "wis", modifier = +4 }
+    ]
+  , size = "gargantuan"
+  , skillModifiers = [ { modifier = 8, skill = "perception" } ]
+  , speeds =
+    [ { feet = { kind = "literal", value = 20 }, kind = "walk" }
+    , { feet = { kind = "literal", value = 120 }, kind = "fly" }
+    ]
+  }
+}

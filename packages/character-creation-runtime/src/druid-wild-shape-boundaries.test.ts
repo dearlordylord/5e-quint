@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   statBlockId as authoredStatBlockId,
   unitId as authoredUnitId,
@@ -7,12 +8,13 @@ import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
+import { StatBlockGmSpeedChoiceSchema } from "@dnd/surface/surface/schema";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
+import { Either, Option, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -349,7 +351,7 @@ describe("Druid Wild Shape boundaries", () => {
     });
 
     const eligibleRecords = eligibleFormIds.map((statBlockId) =>
-      statBlockCatalog.requireStatBlock(statBlockId),
+      assertStatBlockForTest(statBlockCatalog, statBlockId),
     );
     expect(
       validateDruidWildShapeKnownFormRecords({
@@ -374,8 +376,70 @@ describe("Druid Wild Shape boundaries", () => {
         facts: wildShapeFacts,
         knownForms: [
           ...eligibleRecords.slice(0, 3),
-          statBlockCatalog.requireStatBlock("stat_block_hawk"),
+          assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_hawk"),
+          ),
         ],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Wild Shape known forms cannot have a Fly Speed at this Druid level.",
+      },
+    });
+
+    const formRestrictedFly: StatBlockRecord = {
+      ...eligibleRecords[0],
+      statBlock: {
+        ...eligibleRecords[0].statBlock,
+        speeds: [
+          ...eligibleRecords[0].statBlock.speeds,
+          {
+            kind: "fly",
+            feet: { kind: "literal", value: 40 },
+            availability: {
+              kind: "forms_only",
+              forms: ["winged hybrid"],
+            },
+          },
+        ],
+      },
+    };
+    expect(
+      validateDruidWildShapeKnownFormRecords({
+        facts: wildShapeFacts,
+        knownForms: [formRestrictedFly, ...eligibleRecords.slice(1)],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Wild Shape known forms cannot have a Fly Speed at this Druid level.",
+      },
+    });
+
+    const gmFlyAlternative: StatBlockRecord = {
+      ...eligibleRecords[0],
+      statBlock: {
+        ...eligibleRecords[0].statBlock,
+        speeds: [
+          ...eligibleRecords[0].statBlock.speeds,
+          Schema.decodeUnknownSync(StatBlockGmSpeedChoiceSchema)({
+            kind: "gm_choice",
+            alternatives: [
+              { kind: "climb", feet: { kind: "literal", value: 30 } },
+              { kind: "fly", feet: { kind: "literal", value: 30 } },
+            ],
+          }),
+        ],
+      },
+    };
+    expect(
+      validateDruidWildShapeKnownFormRecords({
+        facts: wildShapeFacts,
+        knownForms: [gmFlyAlternative, ...eligibleRecords.slice(1)],
       }),
     ).toMatchObject({
       _tag: "Left",

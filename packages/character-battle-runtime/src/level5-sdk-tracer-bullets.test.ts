@@ -1001,7 +1001,6 @@ describe("level 5 SDK tracer bullets", () => {
         expect.objectContaining({
           kind: "action",
           source: "spellEffect",
-          sourceOwnerId: hasteCase.casterId,
           restriction: {
             kind: "allow_only",
             actions: [
@@ -3611,10 +3610,17 @@ function interruptDecisionFill(
 
 function elementalTouchStatBlock(damageType: "fire" | "cold"): StatBlockRecord {
   const base = srdStatBlock(authoredStatBlockId("stat_block_goblin_warrior"));
-  const scimitar = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Scimitar",
+  const scimitar = base.statBlock.actions?.find(
+    (entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === "Scimitar",
   );
-  if (scimitar === undefined) {
+  if (
+    scimitar === undefined ||
+    scimitar.kind !== "executable" ||
+    scimitar.procedure.kind !== "attack_roll"
+  ) {
     throw new Error("Expected Goblin Warrior Scimitar fixture.");
   }
   const displayDamageType = damageType === "fire" ? "Fire" : "Cold";
@@ -3625,16 +3631,18 @@ function elementalTouchStatBlock(damageType: "fire" | "cold"): StatBlockRecord {
     ),
     name: `Synthetic ${displayDamageType} Touch`,
     provenance: {
-      kind: "xphb",
+      kind: "synthetic-test",
       section: "level5-sdk-tracer-bullets synthetic test fixture",
     },
     statBlock: {
       ...base.statBlock,
-      displayName: `Synthetic ${displayDamageType} Touch`,
-      actions: {
-        attacks: [
-          {
-            ...scimitar,
+      actions: [
+        {
+          kind: "executable",
+          procedureOrdinal: scimitar.procedureOrdinal,
+          resourceRefs: scimitar.resourceRefs,
+          procedure: {
+            ...scimitar.procedure,
             name: "Elemental Touch",
             onHit: [
               {
@@ -3648,8 +3656,8 @@ function elementalTouchStatBlock(damageType: "fire" | "cold"): StatBlockRecord {
               },
             ],
           },
-        ],
-      },
+        },
+      ],
     },
   };
 }

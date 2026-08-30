@@ -497,7 +497,7 @@ function validateRequiredStringArray(value, context) {
 }
 
 function validFollowUpTaskId(taskId) {
-  return /^RKBC-[A-Z0-9-]+$/.test(taskId);
+  return /^GH-[1-9][0-9]*$/.test(taskId) || /^RKBC-[A-Z0-9-]+$/.test(taskId);
 }
 
 function validateFollowUpTaskIds(taskIds, context, canonicalFollowUpTaskIds) {
@@ -1024,6 +1024,14 @@ function validateObligationShape(obligation, canonicalFollowUpTaskIds) {
   for (const field of ["surfaceEvidence", "qntOwners", "runtimeOwners"]) {
     issues.push(
       ...validateStringArray(obligation[field], `${obligation.id}.${field}`),
+    );
+  }
+  if (Object.prototype.hasOwnProperty.call(obligation, "bridgeOwners")) {
+    issues.push(
+      ...validateStringArray(
+        obligation.bridgeOwners,
+        `${obligation.id}.bridgeOwners`,
+      ),
     );
   }
   if (Object.prototype.hasOwnProperty.call(obligation, "followUpTaskIds")) {
@@ -1601,6 +1609,7 @@ function validateGeneratorReadiness(
   }
   const semanticCore = stringArrayOrEmpty(readiness.semanticCore);
   const proofOnly = stringArrayOrEmpty(readiness.proofOnly);
+  const bridgeOwners = stringArrayOrEmpty(readiness.bridgeOwners);
   const generatorSubset = stringArrayOrEmpty(readiness.generatorSubset);
   const blockedBy = stringArrayOrEmpty(readiness.blockedBy);
   const followUpTaskIds = stringArrayOrEmpty(readiness.followUpTaskIds);
@@ -1637,15 +1646,39 @@ function validateGeneratorReadiness(
     }
   }
   const semanticCoreSet = new Set(semanticCore);
+  const bridgeOwnerSet = new Set(bridgeOwners);
   for (const ownerPath of proofOnly) {
     if (semanticCoreSet.has(ownerPath)) {
       issues.push(
         `${context}.${ownerPath} cannot be both semanticCore and proofOnly.`,
       );
     }
-    if (!qntOwnerRolesByPath.has(ownerPath)) {
+    const ownerRole = qntOwnerRolesByPath.get(ownerPath);
+    if (ownerRole === undefined) {
       issues.push(
         `${context}.proofOnly path ${ownerPath} is missing a QNT owner role.`,
+      );
+    }
+    if (bridgeOwnerSet.has(ownerPath)) {
+      issues.push(
+        `${context}.${ownerPath} cannot be both bridgeOwners and proofOnly.`,
+      );
+    }
+  }
+  for (const ownerPath of bridgeOwners) {
+    if (semanticCoreSet.has(ownerPath)) {
+      issues.push(
+        `${context}.${ownerPath} cannot be both semanticCore and bridgeOwners.`,
+      );
+    }
+    const ownerRole = qntOwnerRolesByPath.get(ownerPath);
+    if (ownerRole === undefined) {
+      issues.push(
+        `${context}.bridgeOwners path ${ownerPath} is missing a QNT owner role.`,
+      );
+    } else if (ownerRole !== "bridge") {
+      issues.push(
+        `${context}.bridgeOwners path ${ownerPath} has QNT owner role ${ownerRole}; expected bridge.`,
       );
     }
   }
@@ -1722,7 +1755,7 @@ function validateGeneratorReadiness(
       `${context}.${readiness.status} has semanticCore run block(s) at ${runBlockLocations} and must include blockedBy ${semanticCoreRunBlockBlocker}.`,
     );
   }
-  for (const field of ["semanticCore", "proofOnly"]) {
+  for (const field of ["semanticCore", "bridgeOwners", "proofOnly"]) {
     for (const ownerPath of stringArrayOrEmpty(readiness[field])) {
       if (!fs.existsSync(path.join(rootPath, ownerPath))) {
         issues.push(`${context}.${field} path ${ownerPath} does not exist.`);
@@ -1731,6 +1764,7 @@ function validateGeneratorReadiness(
   }
   if (obligation !== undefined) {
     const qntOwners = new Set(obligation.qntOwners ?? []);
+    const obligationBridgeOwners = new Set(obligation.bridgeOwners ?? []);
     for (const ownerPath of semanticCore) {
       if (!qntOwners.has(ownerPath)) {
         issues.push(
@@ -1745,6 +1779,13 @@ function validateGeneratorReadiness(
       } else if (ownerRole !== "semantic-core") {
         issues.push(
           `${context}.semanticCore path ${ownerPath} has QNT owner role ${ownerRole}; expected semantic-core.`,
+        );
+      }
+    }
+    for (const ownerPath of bridgeOwners) {
+      if (!obligationBridgeOwners.has(ownerPath)) {
+        issues.push(
+          `${context}.bridgeOwners path ${ownerPath} is not declared as a bridge owner by ${obligation.id}.`,
         );
       }
     }
@@ -1924,7 +1965,7 @@ function generatorReadinessOwnerPaths(generatorReadiness) {
   const ownerPaths = new Set();
   for (const readiness of generatorReadiness) {
     if (!isRecord(readiness) || readiness.status === "not-assessed") continue;
-    for (const field of ["semanticCore", "proofOnly"]) {
+    for (const field of ["semanticCore", "bridgeOwners", "proofOnly"]) {
       for (const ownerPath of stringArrayOrEmpty(readiness[field])) {
         ownerPaths.add(ownerPath);
       }
@@ -1989,6 +2030,7 @@ function validateQntOwnerRole(row, index, rootPath, expectedQntOwnerPaths) {
 function validateCoveredEvidence(rootPath, obligation, markerIndex) {
   const issues = [];
   const qntOwners = obligation.qntOwners ?? [];
+  const bridgeOwners = obligation.bridgeOwners ?? [];
   const runtimeOwners = obligation.runtimeOwners ?? [];
   const parityWitnesses = obligation.parityWitnesses ?? [];
   if (qntOwners.length === 0)
@@ -2008,6 +2050,19 @@ function validateCoveredEvidence(rootPath, obligation, markerIndex) {
     if (!hasMarker(markerIndex, "qnt-owner", obligation.id, ownerPath)) {
       issues.push(
         `${obligation.id} QNT owner ${ownerPath} lacks KERNEL-COVERAGE qnt-owner marker.`,
+      );
+    }
+  }
+
+  for (const ownerPath of bridgeOwners) {
+    const absolutePath = path.join(rootPath, ownerPath);
+    if (!fs.existsSync(absolutePath)) {
+      issues.push(`${obligation.id} bridge owner ${ownerPath} does not exist.`);
+      continue;
+    }
+    if (!hasMarker(markerIndex, "bridge-owner", obligation.id, ownerPath)) {
+      issues.push(
+        `${obligation.id} bridge owner ${ownerPath} lacks KERNEL-COVERAGE bridge-owner marker.`,
       );
     }
   }

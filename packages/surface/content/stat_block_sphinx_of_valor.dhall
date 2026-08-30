@@ -1,0 +1,185 @@
+{ challengeRating = 17
+, id = "stat_block_sphinx_of_valor"
+, kind = "statBlock"
+, name = "Sphinx of Valor"
+, provenance =
+  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1396-1444" }
+, statBlock =
+  { abilityScores =
+    { cha = 18, con = 20, dex = 10, int = 16, str = 22, wis = 23 }
+  , ac.value = { kind = "literal", value = 17 }
+  , actions =
+    [ { description = Some "The sphinx makes two Claw attacks and uses Roar."
+      , kind = "textOnly"
+      , name = Some "Multiattack"
+      , procedure =
+          None
+            { ability : Text
+            , components : { m : Bool, s : Bool, v : Bool }
+            , groups :
+                List
+                  { kind : Text
+                  , resourceRefs :
+                      { kind : Text, ordinals : Optional (List Natural) }
+                  , spells : List { spellId : Text }
+                  }
+            , kind : Text
+            , name : Text
+            , spellSaveDc : { dc : Natural, kind : Text }
+            }
+      , procedureOrdinal = 1
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+      }
+    , { description = Some
+          "Melee Attack Roll: +12, reach 5 ft. Hit: 20 (4d6 + 6) Slashing damage."
+      , kind = "textOnly"
+      , name = Some "Claw"
+      , procedure =
+          None
+            { ability : Text
+            , components : { m : Bool, s : Bool, v : Bool }
+            , groups :
+                List
+                  { kind : Text
+                  , resourceRefs :
+                      { kind : Text, ordinals : Optional (List Natural) }
+                  , spells : List { spellId : Text }
+                  }
+            , kind : Text
+            , name : Text
+            , spellSaveDc : { dc : Natural, kind : Text }
+            }
+      , procedureOrdinal = 2
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+      }
+    , { description = Some
+          "The sphinx emits a magical roar. Whenever it roars, the roar has a different effect, as detailed below (the sequence resets when it takes a Long Rest): - First Roar. Wisdom Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: The target has the Frightened condition for 1 minute. - Second Roar. Wisdom Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically. - Third Roar. Constitution Saving Throw: DC 20, each enemy in a 500-foot Emanation originating from the sphinx. Failure: 44 (8d10) Thunder damage, and the target has the Prone condition. Success: Half damage only."
+      , kind = "textOnly"
+      , name = Some "Roar"
+      , procedure =
+          None
+            { ability : Text
+            , components : { m : Bool, s : Bool, v : Bool }
+            , groups :
+                List
+                  { kind : Text
+                  , resourceRefs :
+                      { kind : Text, ordinals : Optional (List Natural) }
+                  , spells : List { spellId : Text }
+                  }
+            , kind : Text
+            , name : Text
+            , spellSaveDc : { dc : Natural, kind : Text }
+            }
+      , procedureOrdinal = 3
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs = { kind = "some", ordinals = Some [ 1 ] }
+      }
+    , { description = None Text
+      , kind = "executable"
+      , name = None Text
+      , procedure = Some
+        { ability = "wis"
+        , components = { m = False, s = True, v = True }
+        , groups =
+          [ { kind = "at_will"
+            , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+            , spells =
+              [ { spellId = "detect_evil_and_good" }
+              , { spellId = "thaumaturgy" }
+              ]
+            }
+          , { kind = "limited"
+            , resourceRefs = { kind = "some", ordinals = Some [ 2 ] }
+            , spells =
+              [ { spellId = "detect_magic" }
+              , { spellId = "dispel_magic" }
+              , { spellId = "greater_restoration" }
+              , { spellId = "heroes'_feast" }
+              , { spellId = "zone_of_truth" }
+              ]
+            }
+          ]
+        , kind = "spellcasting"
+        , name = "Spellcasting"
+        , spellSaveDc = { dc = 20, kind = "fixed" }
+        }
+      , procedureOrdinal = 4
+      , reason = None Text
+      , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+      }
+    ]
+  , alignment = { morality = "neutral", order = "lawful" }
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages = { kind = "named", languages = [ "Celestial", "Common" ] }
+    }
+  , creatureType = "celestial"
+  , hp = { kind = "literal", value = 199 }
+  , immunities =
+    { conditions = [ "charmed", "frightened" ], damageTypes = [ "psychic" ] }
+  , initiative = { modifier = 12, score = 22 }
+  , legendaryActions =
+    { entries =
+      [ { description =
+            "The sphinx can teleport up to 30 feet to an unoccupied space it can see, and it makes one Claw attack."
+        , kind = "textOnly"
+        , name = "Arcane Prowl"
+        , procedureOrdinal = 1
+        , reason = "unsupported_action_shape"
+        , resourceRefs.kind = "none"
+        }
+      , { description =
+            "Constitution Saving Throw: DC 16, one creature the sphinx can see within 120 feet. Failure: The target gains 1 Exhaustion level. While the target has any Exhaustion levels, it appears 3d10 years older. Failure or Success: The sphinx can't take this action again until the start of its next turn."
+        , kind = "textOnly"
+        , name = "Weight of Years"
+        , procedureOrdinal = 2
+        , reason = "unsupported_action_shape"
+        , resourceRefs.kind = "none"
+        }
+      ]
+    , uses =
+      { additionalUsesInLair = 1, kind = "lair_bonus", usesOutsideLair = 3 }
+    }
+  , passivePerception = 22
+  , resistances = { damageTypes = [ "necrotic", "radiant" ], kind = "fixed" }
+  , resources =
+    [ { limit = { kind = "daily", uses = 3 }
+      , ordinal = 1
+      , ownership = "shared"
+      }
+    , { limit = { kind = "daily", uses = 1 }, ordinal = 2, ownership = "each" }
+    ]
+  , savingThrowModifiers =
+    [ { ability = "cha", modifier = 4 }
+    , { ability = "con", modifier = 11 }
+    , { ability = "dex", modifier = 6 }
+    , { ability = "int", modifier = 9 }
+    , { ability = "str", modifier = 6 }
+    , { ability = "wis", modifier = 12 }
+    ]
+  , senses = [ { kind = "truesight", rangeFeet = 120 } ]
+  , size = "large"
+  , skillModifiers =
+    [ { modifier = 9, skill = "arcana" }
+    , { modifier = 12, skill = "perception" }
+    , { modifier = 15, skill = "religion" }
+    ]
+  , speeds =
+    [ { feet = { kind = "literal", value = 40 }, kind = "walk" }
+    , { feet = { kind = "literal", value = 60 }, kind = "fly" }
+    ]
+  , traits =
+    [ { description =
+          "No magic can observe the sphinx remotely or detect its thoughts without its permission. Wisdom (Insight) checks made to ascertain its intentions or sincerity are made with Disadvantage."
+      , name = "Inscrutable"
+      }
+    , { description =
+          "If the sphinx fails a saving throw, it can choose to succeed instead."
+      , name = "Legendary Resistance (3/Day, or 4/Day in Lair)"
+      }
+    ]
+  }
+}

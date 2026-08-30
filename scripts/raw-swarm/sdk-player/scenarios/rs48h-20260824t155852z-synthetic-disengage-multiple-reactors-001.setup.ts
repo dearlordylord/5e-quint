@@ -99,7 +99,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(wolf)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(wolf.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(wolf.left),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-stat-block-battle-initialization",
@@ -118,7 +118,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeleton)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeleton.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(skeleton.left),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-stat-block-battle-initialization",
@@ -137,7 +137,9 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(goblinWarrior)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblinWarrior.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        goblinWarrior.left,
+      ),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-stat-block-battle-initialization",
@@ -192,7 +194,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],

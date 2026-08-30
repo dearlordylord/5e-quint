@@ -1,3 +1,6 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
@@ -5,6 +8,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard spell.invocation-cloudkill-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
@@ -52,6 +56,10 @@ import {
   TRANSMUTED_SPELL_DAMAGE_TYPES,
 } from "./battle-reducer/metamagic-transmuted-facts.ts";
 import { attackExecutionSelectionKey } from "./battle-action-options.ts";
+import {
+  StatBlockAttackDamageSelection,
+  statBlockAttackDamageSelectionKey,
+} from "./stat-block-attack-damage-selection.ts";
 
 export const BATTLE_SUBJECT_ACTIONS = [
   "attack",
@@ -523,33 +531,23 @@ export const BattleAttackExecutionAbilitySchema = Schema.Union(
   Schema.Literal("spellcasting"),
 );
 
-const CharacterAttackExecutionSelectionSchema = Schema.Struct({
+export const CharacterAttackExecutionSelectionSchema = Schema.Struct({
   procedureRef: BattleAttackProcedureExecutionRef,
   attackAbility: BattleAttackExecutionAbilitySchema,
   attackDamageType: DamageTypeSchema,
   attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+  statBlockDamageSelection: Schema.optionalWith(Schema.Never, {
+    exact: true,
+  }),
 });
 
-const RolledStatBlockAttackExecutionSelectionSchema = Schema.Struct({
+const StatBlockAttackExecutionSelectionSchema = Schema.Struct({
   procedureRef: BattleStatBlockProcedureExecutionRef,
   attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
   attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
   attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-  statBlockDamageNotation: Schema.optionalWith(Schema.Never, { exact: true }),
+  statBlockDamageSelection: StatBlockAttackDamageSelection,
 });
-
-const StaticStatBlockAttackExecutionSelectionSchema = Schema.Struct({
-  procedureRef: BattleStatBlockProcedureExecutionRef,
-  attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-  attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-  attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-  statBlockDamageNotation: Schema.Literal("static"),
-});
-
-const StatBlockAttackExecutionSelectionSchema = Schema.Union(
-  RolledStatBlockAttackExecutionSelectionSchema,
-  StaticStatBlockAttackExecutionSelectionSchema,
-);
 
 export const BattleAttackExecutionSelectionSchema = Schema.Union(
   CharacterAttackExecutionSelectionSchema,
@@ -586,7 +584,9 @@ export const BattleSubjectSchema = Schema.Union(
     attackDamageType: DamageTypeSchema,
     attackName: Schema.optionalWith(Schema.Never, { exact: true }),
     statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockDamageNotation: Schema.optionalWith(Schema.Never, { exact: true }),
+    statBlockDamageSelection: Schema.optionalWith(Schema.Never, {
+      exact: true,
+    }),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -597,27 +597,14 @@ export const BattleSubjectSchema = Schema.Union(
     attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
     attackName: Schema.optionalWith(Schema.Never, { exact: true }),
     statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockDamageNotation: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("attack"),
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockDamageNotation: Schema.Literal("static"),
+    statBlockDamageSelection: StatBlockAttackDamageSelection,
   }),
   Schema.Struct({
     tag: Schema.Literal("pactOfTheChainFamiliarAttack"),
     actorId: CombatantId,
     familiarId: CombatantId,
     procedureRef: BattleStatBlockProcedureExecutionRef,
-    statBlockDamageNotation: Schema.optionalWith(Schema.Literal("static"), {
-      exact: true,
-    }),
+    statBlockDamageSelection: StatBlockAttackDamageSelection,
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -1737,7 +1724,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.actorId,
         attack.familiarId,
         attack.procedureRef,
-        attack.statBlockDamageNotation ?? "rolled",
+        statBlockAttackDamageSelectionKey(attack.statBlockDamageSelection),
       ]),
     ),
     Match.orElse((remainingSubject) =>
@@ -1748,9 +1735,6 @@ function battleSubjectKey(subject: BattleSubject): string {
             attack.actorId,
             attack.action,
             attackExecutionSelectionKey(attack),
-            "statBlockDamageNotation" in attack
-              ? (attack.statBlockDamageNotation ?? "rolled")
-              : null,
           ]),
         ),
         Match.when({ tag: "action", action: "dash" }, (action) =>

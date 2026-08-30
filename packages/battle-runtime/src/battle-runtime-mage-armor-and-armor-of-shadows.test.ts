@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { describe, expect, test } from "vitest";
 import type { BattleActiveEffect } from "./index.ts";
@@ -426,10 +428,22 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
           classLevels: [{ className: "druid", level: 2 }],
           resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
           druidWildShapeAvailableForms: [
-            statBlockCatalog.requireStatBlock("stat_block_rat"),
-            statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
-            statBlockCatalog.requireStatBlock("stat_block_lizard"),
-            statBlockCatalog.requireStatBlock("stat_block_cat"),
+            assertStatBlockForTest(
+              statBlockCatalog,
+              statBlockId("stat_block_rat"),
+            ),
+            assertStatBlockForTest(
+              statBlockCatalog,
+              statBlockId("stat_block_riding_horse"),
+            ),
+            assertStatBlockForTest(
+              statBlockCatalog,
+              statBlockId("stat_block_lizard"),
+            ),
+            assertStatBlockForTest(
+              statBlockCatalog,
+              statBlockId("stat_block_cat"),
+            ),
           ],
         }),
       ],
@@ -547,10 +561,22 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
           classLevels: [{ className: "druid", level: 2 }],
           resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
           druidWildShapeAvailableForms: [
-            statBlockCatalog.requireStatBlock("stat_block_rat"),
-            statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
-            statBlockCatalog.requireStatBlock("stat_block_lizard"),
-            statBlockCatalog.requireStatBlock("stat_block_cat"),
+            assertStatBlockForTest(
+              statBlockCatalog,
+              statBlockId("stat_block_rat"),
+            ),
+            assertStatBlockForTest(
+              statBlockCatalog,
+              statBlockId("stat_block_riding_horse"),
+            ),
+            assertStatBlockForTest(
+              statBlockCatalog,
+              statBlockId("stat_block_lizard"),
+            ),
+            assertStatBlockForTest(
+              statBlockCatalog,
+              statBlockId("stat_block_cat"),
+            ),
           ],
         }),
       ],
@@ -646,7 +672,10 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
           classLevels: [{ className: "druid", level: 2 }],
           resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
           druidWildShapeAvailableForms: [
-            statBlockCatalog.requireStatBlock("stat_block_cat"),
+            assertStatBlockForTest(
+              statBlockCatalog,
+              statBlockId("stat_block_cat"),
+            ),
           ],
         }),
       ],

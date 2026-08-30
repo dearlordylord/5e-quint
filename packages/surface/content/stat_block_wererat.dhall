@@ -1,0 +1,164 @@
+{ challengeRating = 2
+, id = "stat_block_wererat"
+, kind = "statBlock"
+, name = "Wererat"
+, provenance =
+  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:798-830" }
+, statBlock =
+  { abilityScores =
+    { cha = 8, con = 12, dex = 16, int = 11, str = 10, wis = 10 }
+  , ac.value = { kind = "literal", value = 13 }
+  , actions =
+    [ { description = Some
+          "The wererat makes two attacks, using Scratch or Hand Crossbow in any combination. It can replace one attack with a Bite attack."
+      , kind = "textOnly"
+      , name = Some "Multiattack"
+      , procedure =
+          None
+            { attackAbility : Text
+            , attackBonus : { kind : Text, value : Natural }
+            , attackType : Text
+            , kind : Text
+            , name : Text
+            , onHit :
+                List
+                  { amount :
+                      { expr :
+                          { dice : Natural, dieSize : Natural, flat : Natural }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+            , rangeFeet : Optional { long : Natural, normal : Natural }
+            , reachFeet : Optional Natural
+            }
+      , procedureOrdinal = 1
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    , { description = Some
+          "Melee Attack Roll: +5, reach 5 ft. Hit: 8 (2d4 + 3) Piercing damage. If the target is a Humanoid, it is subjected to the following effect. Constitution Saving Throw: DC 11. Failure: The target is cursed. If the cursed target drops to 0 Hit Points, it instead becomes a Wererat under the GM's control and has 10 Hit Points. Success: The target is immune to this wererat's curse for 24 hours."
+      , kind = "textOnly"
+      , name = Some "Bite (Rat or Hybrid Form Only)"
+      , procedure =
+          None
+            { attackAbility : Text
+            , attackBonus : { kind : Text, value : Natural }
+            , attackType : Text
+            , kind : Text
+            , name : Text
+            , onHit :
+                List
+                  { amount :
+                      { expr :
+                          { dice : Natural, dieSize : Natural, flat : Natural }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+            , rangeFeet : Optional { long : Natural, normal : Natural }
+            , reachFeet : Optional Natural
+            }
+      , procedureOrdinal = 2
+      , reason = Some "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    , { description = None Text
+      , kind = "executable"
+      , name = None Text
+      , procedure = Some
+        { attackAbility = "dex"
+        , attackBonus = { kind = "literal", value = 5 }
+        , attackType = "melee"
+        , kind = "attack_roll"
+        , name = "Scratch"
+        , onHit =
+          [ { amount =
+              { expr = { dice = 1, dieSize = 6, flat = 3 }
+              , kind = "fixed"
+              , static = 6
+              }
+            , damageType = "slashing"
+            , kind = "damage"
+            }
+          ]
+        , rangeFeet = None { long : Natural, normal : Natural }
+        , reachFeet = Some 5
+        }
+      , procedureOrdinal = 3
+      , reason = None Text
+      , resourceRefs.kind = "none"
+      }
+    , { description = None Text
+      , kind = "executable"
+      , name = None Text
+      , procedure = Some
+        { attackAbility = "dex"
+        , attackBonus = { kind = "literal", value = 5 }
+        , attackType = "ranged"
+        , kind = "attack_roll"
+        , name = "Hand Crossbow (Humanoid or Hybrid Form Only)"
+        , onHit =
+          [ { amount =
+              { expr = { dice = 1, dieSize = 6, flat = 3 }
+              , kind = "fixed"
+              , static = 6
+              }
+            , damageType = "piercing"
+            , kind = "damage"
+            }
+          ]
+        , rangeFeet = Some { long = 120, normal = 30 }
+        , reachFeet = None Natural
+        }
+      , procedureOrdinal = 4
+      , reason = None Text
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "evil", order = "lawful" }
+  , bonusActions =
+    [ { description =
+          "The wererat shape-shifts into a Medium rat-humanoid hybrid or a Small rat, or it returns to its true humanoid form. Its game statistics, other than its size, are the same in each form. Any equipment it is wearing or carrying isn't transformed."
+      , kind = "textOnly"
+      , name = "Shape-Shift"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages =
+      { kind = "named", languages = [ "Common (can't speak in rat form)" ] }
+    }
+  , creatureType = "monstrosity"
+  , creatureTypeTags = [ "lycanthrope" ]
+  , gear = [ { item = "Hand Crossbow", quantity = 1 } ]
+  , hp = { kind = "literal", value = 60 }
+  , initiative = { modifier = 3, score = 13 }
+  , passivePerception = 14
+  , savingThrowModifiers =
+    [ { ability = "cha", modifier = -1 }
+    , { ability = "con", modifier = +1 }
+    , { ability = "dex", modifier = +3 }
+    , { ability = "int", modifier = +0 }
+    , { ability = "str", modifier = +0 }
+    , { ability = "wis", modifier = +0 }
+    ]
+  , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+  , size = { kind = "alternatives", options = [ "medium", "small" ] }
+  , skillModifiers =
+    [ { modifier = 4, skill = "perception" }
+    , { modifier = 5, skill = "stealth" }
+    ]
+  , speeds =
+    [ { feet = { kind = "literal", value = 30 }, kind = "walk" }
+    , { feet = { kind = "literal", value = 30 }, kind = "climb" }
+    ]
+  }
+}

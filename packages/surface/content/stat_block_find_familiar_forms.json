@@ -18,27 +18,26 @@
         "wis": 12
       },
       "ac": {
-        "kind": "literal",
-        "value": 12
+        "value": {
+          "kind": "literal",
+          "value": 12
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Bite",
             "onHit": [
               {
                 "amount": {
-                  "expr": {
-                    "dice": 0,
-                    "dieSize": 1,
-                    "flat": 1
-                  },
                   "kind": "fixed",
                   "static": 1
                 },
@@ -47,18 +46,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Bat",
       "hp": {
         "kind": "literal",
         "value": 1
       },
-      "initiativeModifier": 2,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 2,
+        "score": 12
+      },
+      "passivePerception": 11,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -4
+        },
+        {
+          "ability": "dex",
+          "modifier": 2
+        },
+        {
+          "ability": "con",
+          "modifier": -1
+        },
+        {
+          "ability": "int",
+          "modifier": -4
+        },
+        {
+          "ability": "wis",
+          "modifier": 1
+        },
+        {
+          "ability": "cha",
+          "modifier": -3
+        }
       ],
       "senses": [
         {
@@ -104,27 +137,26 @@
         "wis": 12
       },
       "ac": {
-        "kind": "literal",
-        "value": 12
+        "value": {
+          "kind": "literal",
+          "value": 12
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Scratch",
             "onHit": [
               {
                 "amount": {
-                  "expr": {
-                    "dice": 0,
-                    "dieSize": 1,
-                    "flat": 1
-                  },
                   "kind": "fixed",
                   "static": 1
                 },
@@ -133,18 +165,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Cat",
       "hp": {
         "kind": "literal",
         "value": 2
       },
-      "initiativeModifier": 2,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 2,
+        "score": 12
+      },
+      "passivePerception": 13,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -4
+        },
+        {
+          "ability": "dex",
+          "modifier": 4
+        },
+        {
+          "ability": "con",
+          "modifier": 0
+        },
+        {
+          "ability": "int",
+          "modifier": -4
+        },
+        {
+          "ability": "wis",
+          "modifier": 1
+        },
+        {
+          "ability": "cha",
+          "modifier": -2
+        }
       ],
       "senses": [
         {
@@ -206,27 +272,26 @@
         "wis": 8
       },
       "ac": {
-        "kind": "literal",
-        "value": 11
+        "value": {
+          "kind": "literal",
+          "value": 11
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 3
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Bite",
             "onHit": [
               {
                 "amount": {
-                  "expr": {
-                    "dice": 0,
-                    "dieSize": 1,
-                    "flat": 1
-                  },
                   "kind": "fixed",
                   "static": 1
                 },
@@ -235,18 +300,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Frog",
       "hp": {
         "kind": "literal",
         "value": 1
       },
-      "initiativeModifier": 1,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 1,
+        "score": 11
+      },
+      "passivePerception": 11,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -5
+        },
+        {
+          "ability": "dex",
+          "modifier": 1
+        },
+        {
+          "ability": "con",
+          "modifier": -1
+        },
+        {
+          "ability": "int",
+          "modifier": -5
+        },
+        {
+          "ability": "wis",
+          "modifier": -1
+        },
+        {
+          "ability": "cha",
+          "modifier": -4
+        }
       ],
       "senses": [
         {
@@ -312,27 +411,26 @@
         "wis": 14
       },
       "ac": {
-        "kind": "literal",
-        "value": 13
+        "value": {
+          "kind": "literal",
+          "value": 13
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 5
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Talons",
             "onHit": [
               {
                 "amount": {
-                  "expr": {
-                    "dice": 0,
-                    "dieSize": 1,
-                    "flat": 1
-                  },
                   "kind": "fixed",
                   "static": 1
                 },
@@ -341,18 +439,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Hawk",
       "hp": {
         "kind": "literal",
         "value": 1
       },
-      "initiativeModifier": 3,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 3,
+        "score": 13
+      },
+      "passivePerception": 16,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -3
+        },
+        {
+          "ability": "dex",
+          "modifier": 3
+        },
+        {
+          "ability": "con",
+          "modifier": -1
+        },
+        {
+          "ability": "int",
+          "modifier": -4
+        },
+        {
+          "ability": "wis",
+          "modifier": 2
+        },
+        {
+          "ability": "cha",
+          "modifier": -2
+        }
       ],
       "size": "tiny",
       "skillModifiers": [
@@ -398,27 +530,26 @@
         "wis": 8
       },
       "ac": {
-        "kind": "literal",
-        "value": 10
+        "value": {
+          "kind": "literal",
+          "value": 10
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 2
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Bite",
             "onHit": [
               {
                 "amount": {
-                  "expr": {
-                    "dice": 0,
-                    "dieSize": 1,
-                    "flat": 1
-                  },
                   "kind": "fixed",
                   "static": 1
                 },
@@ -427,18 +558,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Lizard",
       "hp": {
         "kind": "literal",
         "value": 2
       },
-      "initiativeModifier": 0,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 0,
+        "score": 10
+      },
+      "passivePerception": 9,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -4
+        },
+        {
+          "ability": "dex",
+          "modifier": 0
+        },
+        {
+          "ability": "con",
+          "modifier": 0
+        },
+        {
+          "ability": "int",
+          "modifier": -5
+        },
+        {
+          "ability": "wis",
+          "modifier": -1
+        },
+        {
+          "ability": "cha",
+          "modifier": -4
+        }
       ],
       "senses": [
         {
@@ -490,27 +655,26 @@
         "wis": 10
       },
       "ac": {
-        "kind": "literal",
-        "value": 12
+        "value": {
+          "kind": "literal",
+          "value": 12
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Tentacles",
             "onHit": [
               {
                 "amount": {
-                  "expr": {
-                    "dice": 0,
-                    "dieSize": 1,
-                    "flat": 1
-                  },
                   "kind": "fixed",
                   "static": 1
                 },
@@ -519,18 +683,77 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Octopus",
       "hp": {
         "kind": "literal",
         "value": 3
       },
-      "initiativeModifier": 2,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 2,
+        "score": 12
+      },
+      "passivePerception": 12,
+      "reactions": [
+        {
+          "description": "Trigger: A creature ends its turn within 5 feet of the octopus while underwater. Response: The octopus releases ink that fills a 5-foot Cube centered on itself, and the octopus moves up to its Swim Speed. The Cube is Heavily Obscured for 1 minute or until a strong current or similar effect disperses the ink.",
+          "kind": "textOnly",
+          "name": "Ink Cloud",
+          "procedureOrdinal": 1,
+          "reason": "unsupported_procedure_family",
+          "resourceRefs": {
+            "kind": "some",
+            "ordinals": [
+              1
+            ]
+          }
+        }
+      ],
+      "resources": [
+        {
+          "limit": {
+            "kind": "daily",
+            "uses": 1
+          },
+          "ordinal": 1,
+          "ownership": "shared"
+        }
+      ],
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -3
+        },
+        {
+          "ability": "dex",
+          "modifier": 2
+        },
+        {
+          "ability": "con",
+          "modifier": 0
+        },
+        {
+          "ability": "int",
+          "modifier": -4
+        },
+        {
+          "ability": "wis",
+          "modifier": 0
+        },
+        {
+          "ability": "cha",
+          "modifier": -3
+        }
       ],
       "senses": [
         {
@@ -596,27 +819,26 @@
         "wis": 12
       },
       "ac": {
-        "kind": "literal",
-        "value": 11
+        "value": {
+          "kind": "literal",
+          "value": 11
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 3
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Talons",
             "onHit": [
               {
                 "amount": {
-                  "expr": {
-                    "dice": 0,
-                    "dieSize": 1,
-                    "flat": 1
-                  },
                   "kind": "fixed",
                   "static": 1
                 },
@@ -625,18 +847,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Owl",
       "hp": {
         "kind": "literal",
         "value": 1
       },
-      "initiativeModifier": 1,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 1,
+        "score": 11
+      },
+      "passivePerception": 15,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -4
+        },
+        {
+          "ability": "dex",
+          "modifier": 1
+        },
+        {
+          "ability": "con",
+          "modifier": -1
+        },
+        {
+          "ability": "int",
+          "modifier": -4
+        },
+        {
+          "ability": "wis",
+          "modifier": 1
+        },
+        {
+          "ability": "cha",
+          "modifier": -2
+        }
       ],
       "senses": [
         {
@@ -698,27 +954,26 @@
         "wis": 10
       },
       "ac": {
-        "kind": "literal",
-        "value": 10
+        "value": {
+          "kind": "literal",
+          "value": 10
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 2
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Bite",
             "onHit": [
               {
                 "amount": {
-                  "expr": {
-                    "dice": 0,
-                    "dieSize": 1,
-                    "flat": 1
-                  },
                   "kind": "fixed",
                   "static": 1
                 },
@@ -727,18 +982,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Rat",
       "hp": {
         "kind": "literal",
         "value": 1
       },
-      "initiativeModifier": 0,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 0,
+        "score": 10
+      },
+      "passivePerception": 12,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -4
+        },
+        {
+          "ability": "dex",
+          "modifier": 0
+        },
+        {
+          "ability": "con",
+          "modifier": -1
+        },
+        {
+          "ability": "int",
+          "modifier": -4
+        },
+        {
+          "ability": "wis",
+          "modifier": 0
+        },
+        {
+          "ability": "cha",
+          "modifier": -3
+        }
       ],
       "senses": [
         {
@@ -796,27 +1085,26 @@
         "wis": 13
       },
       "ac": {
-        "kind": "literal",
-        "value": 12
+        "value": {
+          "kind": "literal",
+          "value": 12
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Beak",
             "onHit": [
               {
                 "amount": {
-                  "expr": {
-                    "dice": 0,
-                    "dieSize": 1,
-                    "flat": 1
-                  },
                   "kind": "fixed",
                   "static": 1
                 },
@@ -825,18 +1113,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Raven",
       "hp": {
         "kind": "literal",
         "value": 2
       },
-      "initiativeModifier": 2,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 2,
+        "score": 12
+      },
+      "passivePerception": 13,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -4
+        },
+        {
+          "ability": "dex",
+          "modifier": 2
+        },
+        {
+          "ability": "con",
+          "modifier": 0
+        },
+        {
+          "ability": "int",
+          "modifier": -3
+        },
+        {
+          "ability": "wis",
+          "modifier": 1
+        },
+        {
+          "ability": "cha",
+          "modifier": -2
+        }
       ],
       "size": "tiny",
       "skillModifiers": [
@@ -888,27 +1210,26 @@
         "wis": 10
       },
       "ac": {
-        "kind": "literal",
-        "value": 12
+        "value": {
+          "kind": "literal",
+          "value": 12
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Bite",
             "onHit": [
               {
                 "amount": {
-                  "expr": {
-                    "dice": 0,
-                    "dieSize": 1,
-                    "flat": 1
-                  },
                   "kind": "fixed",
                   "static": 1
                 },
@@ -929,18 +1250,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Spider",
       "hp": {
         "kind": "literal",
         "value": 1
       },
-      "initiativeModifier": 2,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 2,
+        "score": 12
+      },
+      "passivePerception": 10,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -4
+        },
+        {
+          "ability": "dex",
+          "modifier": 2
+        },
+        {
+          "ability": "con",
+          "modifier": -1
+        },
+        {
+          "ability": "int",
+          "modifier": -5
+        },
+        {
+          "ability": "wis",
+          "modifier": 0
+        },
+        {
+          "ability": "cha",
+          "modifier": -4
+        }
       ],
       "senses": [
         {
@@ -990,7 +1345,7 @@
     "name": "Weasel",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:2563-2587"
+      "section": "Animals.md:2563-2583"
     },
     "statBlock": {
       "abilityScores": {
@@ -1002,27 +1357,26 @@
         "wis": 12
       },
       "ac": {
-        "kind": "literal",
-        "value": 13
+        "value": {
+          "kind": "literal",
+          "value": 13
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 5
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Bite",
             "onHit": [
               {
                 "amount": {
-                  "expr": {
-                    "dice": 0,
-                    "dieSize": 1,
-                    "flat": 1
-                  },
                   "kind": "fixed",
                   "static": 1
                 },
@@ -1031,18 +1385,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Weasel",
       "hp": {
         "kind": "literal",
         "value": 1
       },
-      "initiativeModifier": 3,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 3,
+        "score": 13
+      },
+      "passivePerception": 13,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -4
+        },
+        {
+          "ability": "dex",
+          "modifier": 3
+        },
+        {
+          "ability": "con",
+          "modifier": -1
+        },
+        {
+          "ability": "int",
+          "modifier": -4
+        },
+        {
+          "ability": "wis",
+          "modifier": 1
+        },
+        {
+          "ability": "cha",
+          "modifier": -4
+        }
       ],
       "senses": [
         {
@@ -1102,18 +1490,22 @@
         "wis": 10
       },
       "ac": {
-        "kind": "literal",
-        "value": 12
+        "value": {
+          "kind": "literal",
+          "value": 12
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Bite",
             "onHit": [
               {
@@ -1143,18 +1535,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Venomous Snake",
       "hp": {
         "kind": "literal",
         "value": 5
       },
-      "initiativeModifier": 2,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 2,
+        "score": 12
+      },
+      "passivePerception": 10,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -4
+        },
+        {
+          "ability": "dex",
+          "modifier": 2
+        },
+        {
+          "ability": "con",
+          "modifier": 0
+        },
+        {
+          "ability": "int",
+          "modifier": -5
+        },
+        {
+          "ability": "wis",
+          "modifier": 0
+        },
+        {
+          "ability": "cha",
+          "modifier": -4
+        }
       ],
       "senses": [
         {
@@ -1200,18 +1626,22 @@
         "wis": 12
       },
       "ac": {
-        "kind": "literal",
-        "value": 13
+        "value": {
+          "kind": "literal",
+          "value": 13
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 5
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Sting",
             "onHit": [
               {
@@ -1241,21 +1671,51 @@
               }
             ],
             "reachFeet": 5
-          }
-        ],
-        "specials": [
-          {
-            "description": "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
-            "name": "Invisibility"
           },
-          {
-            "description": "The imp shape-shifts to resemble a rat (Speed 20 ft.), a raven (20 ft., Fly 60 ft.), or a spider (20 ft., Climb 20 ft.), or it returns to its true form. Its game statistics are the same in each form, except for its Speed. Any equipment it is wearing or carrying isn't transformed.",
-            "name": "Shape-Shift"
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        },
+        {
+          "description": "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+          "kind": "textOnly",
+          "name": "Invisibility",
+          "procedureOrdinal": 2,
+          "reason": "unsupported_procedure_family",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The imp shape-shifts to resemble a rat (Speed 20 ft.), a raven (20 ft., Fly 60 ft.), or a spider (20 ft., Climb 20 ft.), or it returns to its true form. Its game statistics are the same in each form, except for its Speed. Any equipment it is wearing or carrying isn't transformed.",
+          "kind": "textOnly",
+          "name": "Shape-Shift",
+          "procedureOrdinal": 3,
+          "reason": "unsupported_procedure_family",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        }
+      ],
+      "alignment": {
+        "morality": "evil",
+        "order": "lawful"
+      },
+      "communication": {
+        "kind": "spoken_and_understood",
+        "languages": {
+          "kind": "named",
+          "languages": [
+            "Common",
+            "Infernal"
+          ]
+        }
       },
       "creatureType": "fiend",
-      "displayName": "Imp",
+      "creatureTypeTags": [
+        "devil"
+      ],
       "hp": {
         "kind": "literal",
         "value": 21
@@ -1269,20 +1729,47 @@
           "poison"
         ]
       },
-      "initiativeModifier": 3,
-      "languages": [
-        "Common",
-        "Infernal"
-      ],
+      "initiative": {
+        "modifier": 3,
+        "score": 13
+      },
+      "passivePerception": 11,
       "resistances": {
         "damageTypes": [
           "cold"
         ],
         "kind": "fixed"
       },
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -2
+        },
+        {
+          "ability": "dex",
+          "modifier": 3
+        },
+        {
+          "ability": "con",
+          "modifier": 1
+        },
+        {
+          "ability": "int",
+          "modifier": 0
+        },
+        {
+          "ability": "wis",
+          "modifier": 1
+        },
+        {
+          "ability": "cha",
+          "modifier": 2
+        }
+      ],
       "senses": [
         {
           "kind": "darkvision",
+          "qualifier": "unimpeded_by_magical_darkness",
           "rangeFeet": 120
         }
       ],
@@ -1332,7 +1819,7 @@
     "name": "Pseudodragon",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Monsters/Monsters-P-S.md:292-323"
+      "section": "Monsters/Monsters-P-S.md:292-319"
     },
     "statBlock": {
       "abilityScores": {
@@ -1344,18 +1831,42 @@
         "wis": 12
       },
       "ac": {
-        "kind": "literal",
-        "value": 14
+        "value": {
+          "kind": "literal",
+          "value": 14
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
+            "dispatches": [
+              {
+                "count": {
+                  "kind": "literal",
+                  "value": 2
+                },
+                "procedureOrdinal": 2
+              }
+            ],
+            "kind": "multiattack",
+            "name": "Multiattack"
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 4
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Bite",
             "onHit": [
               {
@@ -1373,61 +1884,72 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 2,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ],
-        "multiattacks": [
-          {
-            "dispatches": [
-              {
-                "count": {
-                  "kind": "literal",
-                  "value": 2
-                },
-                "name": "Bite"
-              }
-            ],
-            "name": "Multiattack"
+        },
+        {
+          "description": "Constitution Saving Throw: DC 12, one creature the pseudodragon can see within 5 feet. Failure: 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. Failure by 5 or More: While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it.",
+          "kind": "textOnly",
+          "name": "Sting",
+          "procedureOrdinal": 3,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
           }
-        ],
-        "saves": [
-          {
-            "ability": "con",
-            "dc": {
-              "dc": 12,
-              "kind": "fixed"
-            },
-            "description": "Failure: 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. Failure by 5 or More: While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it.",
-            "name": "Sting",
-            "onFail": {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 4
-                },
-                "kind": "fixed"
-              },
-              "damageType": "poison",
-              "kind": "damage"
-            },
-            "onSuccess": {
-              "kind": "none"
-            },
-            "target": {
-              "kind": "one_creature_in_range",
-              "rangeFeet": 5
-            }
-          }
-        ]
+        }
+      ],
+      "alignment": {
+        "morality": "good",
+        "order": "neutral"
+      },
+      "communication": {
+        "kind": "understood_but_cannot_speak",
+        "languages": {
+          "kind": "named",
+          "languages": [
+            "Common",
+            "Draconic"
+          ]
+        }
       },
       "creatureType": "dragon",
-      "displayName": "Pseudodragon",
       "hp": {
         "kind": "literal",
         "value": 10
       },
-      "initiativeModifier": 2,
-      "languages": [
-        "Understands Common and Draconic but can't speak"
+      "initiative": {
+        "modifier": 2,
+        "score": 12
+      },
+      "passivePerception": 15,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -2
+        },
+        {
+          "ability": "dex",
+          "modifier": 2
+        },
+        {
+          "ability": "con",
+          "modifier": 1
+        },
+        {
+          "ability": "int",
+          "modifier": 0
+        },
+        {
+          "ability": "wis",
+          "modifier": 1
+        },
+        {
+          "ability": "cha",
+          "modifier": 0
+        }
       ],
       "senses": [
         {
@@ -1493,59 +2015,74 @@
         "wis": 10
       },
       "ac": {
-        "kind": "literal",
-        "value": 13
+        "value": {
+          "kind": "literal",
+          "value": 13
+        }
       },
-      "actions": {
-        "attacks": [
-          {
-            "attackAbility": "dex",
-            "attackBonus": {
-              "kind": "literal",
-              "value": 5
-            },
-            "attackType": "melee",
-            "description": "Hit: 5 (1d4 + 3) Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn.",
-            "name": "Rend",
-            "onHit": [
-              {
-                "amount": {
-                  "expr": {
-                    "dice": 1,
-                    "dieSize": 4,
-                    "flat": 3
-                  },
-                  "kind": "fixed",
-                  "static": 5
-                },
-                "damageType": "slashing",
-                "kind": "damage"
-              }
-            ],
-            "reachFeet": 5
+      "actions": [
+        {
+          "description": "Melee Attack Roll: +5, reach 5 ft. Hit: 5 (1d4 + 3) Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn.",
+          "kind": "textOnly",
+          "name": "Rend",
+          "procedureOrdinal": 1,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
           }
-        ],
-        "specials": [
-          {
-            "description": "The quasit casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
-            "name": "Invisibility"
-          },
-          {
-            "description": "Wisdom Saving Throw: DC 10, one creature within 20 feet. Failure: The target has the Frightened condition. At the end of each of its turns, the target repeats the save, ending the effect on itself on a success. After 1 minute, it succeeds automatically.",
-            "limitedUse": {
-              "kind": "daily",
-              "uses": 1
-            },
-            "name": "Scare"
-          },
-          {
-            "description": "The quasit shape-shifts to resemble a bat (Speed 10 ft., Fly 40 ft.), a centipede (40 ft., Climb 40 ft.), or a toad (40 ft., Swim 40 ft.), or it returns to its true form. Its game statistics are the same in each form, except for its Speed. Any equipment it is wearing or carrying isn't transformed.",
-            "name": "Shape-Shift"
+        },
+        {
+          "description": "The quasit casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+          "kind": "textOnly",
+          "name": "Invisibility",
+          "procedureOrdinal": 2,
+          "reason": "unsupported_procedure_family",
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        },
+        {
+          "description": "Wisdom Saving Throw: DC 10, one creature within 20 feet. Failure: The target has the Frightened condition. At the end of each of its turns, the target repeats the save, ending the effect on itself on a success. After 1 minute, it succeeds automatically.",
+          "kind": "textOnly",
+          "name": "Scare",
+          "procedureOrdinal": 3,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "some",
+            "ordinals": [
+              1
+            ]
+          }
+        },
+        {
+          "description": "The quasit shape-shifts to resemble a bat (Speed 10 ft., Fly 40 ft.), a centipede (40 ft., Climb 40 ft.), or a toad (40 ft., Swim 40 ft.), or it returns to its true form. Its game statistics are the same in each form, except for its Speed. Any equipment it is wearing or carrying isn't transformed.",
+          "kind": "textOnly",
+          "name": "Shape-Shift",
+          "procedureOrdinal": 4,
+          "reason": "unsupported_procedure_family",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        }
+      ],
+      "alignment": {
+        "morality": "evil",
+        "order": "chaotic"
+      },
+      "communication": {
+        "kind": "spoken_and_understood",
+        "languages": {
+          "kind": "named",
+          "languages": [
+            "Abyssal",
+            "Common"
+          ]
+        }
       },
       "creatureType": "fiend",
-      "displayName": "Quasit",
+      "creatureTypeTags": [
+        "demon"
+      ],
       "hp": {
         "kind": "literal",
         "value": 25
@@ -1558,11 +2095,11 @@
           "poison"
         ]
       },
-      "initiativeModifier": 3,
-      "languages": [
-        "Abyssal",
-        "Common"
-      ],
+      "initiative": {
+        "modifier": 3,
+        "score": 13
+      },
+      "passivePerception": 10,
       "resistances": {
         "damageTypes": [
           "cold",
@@ -1571,6 +2108,42 @@
         ],
         "kind": "fixed"
       },
+      "resources": [
+        {
+          "limit": {
+            "kind": "daily",
+            "uses": 1
+          },
+          "ordinal": 1,
+          "ownership": "shared"
+        }
+      ],
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -3
+        },
+        {
+          "ability": "dex",
+          "modifier": 3
+        },
+        {
+          "ability": "con",
+          "modifier": 0
+        },
+        {
+          "ability": "int",
+          "modifier": -2
+        },
+        {
+          "ability": "wis",
+          "modifier": 0
+        },
+        {
+          "ability": "cha",
+          "modifier": 0
+        }
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -1608,7 +2181,7 @@
     "name": "Sprite",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Monsters/Monsters-P-S.md:1484-1512"
+      "section": "Monsters/Monsters-P-S.md:1484-1509"
     },
     "statBlock": {
       "abilityScores": {
@@ -1620,18 +2193,22 @@
         "wis": 13
       },
       "ac": {
-        "kind": "literal",
-        "value": 15
+        "value": {
+          "kind": "literal",
+          "value": 15
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "dex",
             "attackBonus": {
               "kind": "literal",
               "value": 6
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Needle Sword",
             "onHit": [
               {
@@ -1650,58 +2227,92 @@
             ],
             "reachFeet": 5
           },
-          {
-            "attackAbility": "dex",
-            "attackBonus": {
-              "kind": "literal",
-              "value": 6
-            },
-            "attackType": "ranged",
-            "description": "Hit: 1 Piercing damage, and the target has the Charmed condition until the start of the sprite's next turn.",
-            "name": "Enchanting Bow",
-            "onHit": [
-              {
-                "amount": {
-                  "expr": {
-                    "dice": 0,
-                    "dieSize": 1,
-                    "flat": 1
-                  },
-                  "kind": "fixed",
-                  "static": 1
-                },
-                "damageType": "piercing",
-                "kind": "damage"
-              }
-            ],
-            "rangeFeet": {
-              "long": 160,
-              "normal": 40
-            }
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ],
-        "specials": [
-          {
-            "description": "Charisma Saving Throw: DC 10, one creature within 5 feet the sprite can see (Celestials, Fiends, and Undead automatically fail the save). Failure: The sprite knows the target's emotions and alignment.",
-            "name": "Heart Sight"
-          },
-          {
-            "description": "The sprite casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
-            "name": "Invisibility"
+        },
+        {
+          "description": "Ranged Attack Roll: +6, range 40/160 ft. Hit: 1 Piercing damage, and the target has the Charmed condition until the start of the sprite's next turn.",
+          "kind": "textOnly",
+          "name": "Enchanting Bow",
+          "procedureOrdinal": 2,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        },
+        {
+          "description": "Charisma Saving Throw: DC 10, one creature within 5 feet the sprite can see (Celestials, Fiends, and Undead automatically fail the save). Failure: The sprite knows the target's emotions and alignment.",
+          "kind": "textOnly",
+          "name": "Heart Sight",
+          "procedureOrdinal": 3,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The sprite casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+          "kind": "textOnly",
+          "name": "Invisibility",
+          "procedureOrdinal": 4,
+          "reason": "unsupported_procedure_family",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        }
+      ],
+      "alignment": {
+        "morality": "good",
+        "order": "neutral"
+      },
+      "communication": {
+        "kind": "spoken_and_understood",
+        "languages": {
+          "kind": "named",
+          "languages": [
+            "Common",
+            "Elvish",
+            "Sylvan"
+          ]
+        }
       },
       "creatureType": "fey",
-      "displayName": "Sprite",
       "hp": {
         "kind": "literal",
         "value": 10
       },
-      "initiativeModifier": 4,
-      "languages": [
-        "Common",
-        "Elvish",
-        "Sylvan"
+      "initiative": {
+        "modifier": 4,
+        "score": 14
+      },
+      "passivePerception": 13,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": -4
+        },
+        {
+          "ability": "dex",
+          "modifier": 4
+        },
+        {
+          "ability": "con",
+          "modifier": 0
+        },
+        {
+          "ability": "int",
+          "modifier": 2
+        },
+        {
+          "ability": "wis",
+          "modifier": 1
+        },
+        {
+          "ability": "cha",
+          "modifier": 0
+        }
       ],
       "size": "tiny",
       "skillModifiers": [

@@ -1,5 +1,10 @@
 # Disguise Self Frontier Decision
 
+> Archived pre-admission decision. Issue #446 subsequently admitted the SRD
+> Spell Definition and recorded an `unsupported-profile` disposition in
+> `plans/unit-profile-coverage/unit-claims.jsonl`; the historical generated
+> state below is not the current catalog state.
+
 ## RAW Sources
 
 - `.references/srd-5.2.1/Spells/Descriptions-A-D.md:1490` defines

@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   abilityModifier,
   defaultArmorClassState,
@@ -15,6 +16,7 @@ import type {
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
+import { Either } from "effect";
 import { statBlockId, unitId as parseUnitId } from "@dnd/shared/game-facts";
 import weaponClubInput from "../../surface/content/weapon_club.json";
 import weaponGreatswordInput from "../../surface/content/weapon_greatsword.json";
@@ -39,10 +41,13 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import {
   battleAmmunitionStock,
   requiredAmmunitionKinds,
 } from "./battle-ammunition.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import {
   spellCasterId,
   spellTargetId,
@@ -61,6 +66,19 @@ const testUnitRecordsById: ReadonlyMap<UnitRecord["id"], UnitRecord> = new Map(
     unit,
   ]),
 );
+
+type AttackProcedureEntry = Extract<
+  NonNullable<StatBlockRecord["statBlock"]["actions"]>[number],
+  { readonly kind: "executable" }
+> & {
+  readonly procedure: Extract<
+    Extract<
+      NonNullable<StatBlockRecord["statBlock"]["actions"]>[number],
+      { readonly kind: "executable" }
+    >["procedure"],
+    { readonly kind: "attack_roll" }
+  >;
+};
 
 function requireTestOrCatalogUnit(unitId: string): UnitRecord {
   return (
@@ -235,23 +253,31 @@ export function characterCreature(input: {
 export function statBlockWithCreatureType(
   creatureType: StatBlockRecord["statBlock"]["creatureType"],
 ): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
+  const base = assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_goblin_warrior"),
+  );
   return {
     ...base,
     id: statBlockId(`stat_block_test_${creatureType}`),
     name: `Test ${creatureType}`,
     statBlock: {
       ...base.statBlock,
-      displayName: `Test ${creatureType}`,
       creatureType,
     },
   };
 }
 
 export function legendaryActionStatBlock(): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
-  const scimitar = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Scimitar",
+  const base = assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_goblin_warrior"),
+  );
+  const scimitar = base.statBlock.actions?.find(
+    (entry): entry is AttackProcedureEntry =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === "Scimitar",
   );
   if (scimitar === undefined) {
     throw new Error("Expected Goblin Warrior Scimitar fixture.");
@@ -262,17 +288,17 @@ export function legendaryActionStatBlock(): StatBlockRecord {
     name: "Command Legendary",
     statBlock: {
       ...base.statBlock,
-      displayName: "Command Legendary",
       legendaryActions: {
-        uses: 1,
-        actions: {
-          attacks: [
-            {
-              ...scimitar,
+        uses: { kind: "fixed", uses: 1 },
+        entries: [
+          {
+            ...scimitar,
+            procedure: {
+              ...scimitar.procedure,
               name: "Tail Swipe",
             },
-          ],
-        },
+          },
+        ],
       },
     },
   };
@@ -283,18 +309,19 @@ export function statBlockCreature(input: {
   readonly statBlock: StatBlockRecord;
   readonly initiative: number;
 }): BattleCreatureInit {
-  const attacks = [
-    ...(input.statBlock.statBlock.actions?.attacks ?? []),
-    ...(input.statBlock.statBlock.legendaryActions?.actions.attacks ?? []),
-  ];
+  const projected = Either.getOrThrow(
+    projectAuthoredStatBlock(input.statBlock),
+  );
+  const attacks = projected.runtime.procedures.flatMap((procedure) =>
+    procedure.kind === "attack" ? [procedure.attack] : [],
+  );
   return {
     combatantId: input.combatantId,
-    displayName: input.statBlock.statBlock.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
       source: Either.getOrThrow(
-        battleStatBlockCombatantSource(input.statBlock),
+        battleStatBlockCombatantSource(projected.runtime),
       ),
       currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
       tempHp: Hp(0),
@@ -302,6 +329,7 @@ export function statBlockCreature(input: {
         battleAmmunitionStock(ammunition, 20),
       ),
       conditions: [],
+      presentation: projected.presentation,
     },
   };
 }
@@ -340,7 +368,11 @@ export function statBlockAttackAct(
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
-      candidate.subject.statBlockDamageNotation === undefined &&
+      (candidate.subject.statBlockDamageSelection === undefined ||
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          candidate.subject.statBlockDamageSelection,
+          "rolled",
+        )) &&
       candidate.presentation.kind === "attack" &&
       candidate.presentation.name === attackName,
   );
@@ -871,5 +903,3 @@ export function rolledDiceGroup(
     results: [DieRollResult(firstResult), ...restResults.map(DieRollResult)],
   };
 }
-import { Either } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";

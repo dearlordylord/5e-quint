@@ -49,6 +49,21 @@ New procedure owners live under `src/procedure-admission/`,
 `battle-execution-composition.ts` supplies the authored-free procedure registry.
 The registry is an operation dependency, never Battle State or session state.
 
+Restricted Stat Block spell invocation currently has an admission foundation,
+not an execution owner. `admitStatBlockSpellInvocationDeltas` accepts only the
+non-empty typed Surface deltas and returns one precise missing-owner result per
+delta. It cannot receive spell or Stat Block identity, provenance, or authored
+expression. Adding this classification does not admit an invocation, change its
+procedure-pressure disposition, or claim Battle or Quint parity.
+
+Find Familiar's authored Stat Block lookup is owned by
+`find-familiar-stat-block-catalog.ts` and is threaded only through admission
+and presentation; runtime state retains projected source-free execution facts
+and the presentation companion, not the authored record.
+Druid Wild Shape keeps its authored presentation projection in
+`druid-wild-shape-known-form-execution.ts`, while the source-free known-form
+facts used by execution are owned by `druid-wild-shape-known-form-runtime.ts`.
+
 Canonical mechanical vocabulary may still come from Surface or shared owners.
 Do not duplicate abilities, damage types, dice, ranges, or durations merely to
 avoid a package import.
@@ -185,9 +200,10 @@ Character-origin creatures retain selected Unit refs, resolved attack facts,
 feature resources, and spellcasting runtime state. Character Build owns starting
 access and capacity; battle owns uses and slots expended during combat.
 
-Stat Block-origin creatures retain the generic `StatBlockRecord`. Discovery and
-resolution derive supported attacks, limits, and damage adjustments from it
-rather than copying authored scalars into parallel battle state.
+Stat Block-origin creatures retain a source-free execution projection and its
+presentation companion. Admission consumes the authored `StatBlockRecord` once;
+discovery and resolution use projected supported attacks, limits, and damage
+adjustments rather than reading the authored record at runtime.
 
 Armor Class uses `ArmorClassState`, turn resources use
 `RuntimeActionResource[]`, and zero-HP lifecycle is a typed union. New state must

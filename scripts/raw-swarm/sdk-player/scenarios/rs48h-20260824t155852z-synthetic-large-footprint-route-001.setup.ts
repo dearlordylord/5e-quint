@@ -101,7 +101,9 @@ export const setupScenario: ScenarioSetup = (context) => {
     if (sdk.isLeft(combatant)) {
       return {
         kind: "obstructed",
-        obstruction: sdk.battleStateInitIssueMessage(combatant.left),
+        obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+          combatant.left,
+        ),
         observation: {
           capability: "canonical-stat-block-battle-initialization",
         },

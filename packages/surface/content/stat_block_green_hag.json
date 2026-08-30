@@ -1,0 +1,261 @@
+{
+  "challengeRating": 3,
+  "id": "stat_block_green_hag",
+  "kind": "statBlock",
+  "name": "Green Hag",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-E-G.md:1198-1232"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 14,
+      "con": 16,
+      "dex": 12,
+      "int": 13,
+      "str": 18,
+      "wis": 14
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 17
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 2
+              },
+              "procedureOrdinal": 2
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 6
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Claw",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 8,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 8
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 3
+              },
+              "damageType": "poison",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "wis",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "dancing_lights"
+                },
+                {
+                  "restriction": {
+                    "authoredExpression": "24-hour duration",
+                    "deltas": [
+                      {
+                        "duration": {
+                          "amount": 24,
+                          "unit": "hour"
+                        },
+                        "kind": "duration_override"
+                      }
+                    ]
+                  },
+                  "spellId": "disguise_self"
+                },
+                {
+                  "restriction": {
+                    "authoredExpression": "self only, and the hag leaves no tracks while Invisible",
+                    "deltas": [
+                      {
+                        "kind": "target_limit",
+                        "target": "self"
+                      },
+                      {
+                        "kind": "movement_trace_suppression",
+                        "subject": "invoker",
+                        "trace": "none",
+                        "whileCondition": "invisible"
+                      }
+                    ]
+                  },
+                  "spellId": "invisibility"
+                },
+                {
+                  "spellId": "minor_illusion"
+                },
+                {
+                  "castAtLevel": 3,
+                  "spellId": "ray_of_sickness"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellAttackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "spellSaveDc": {
+            "dc": 12,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Elvish",
+          "Sylvan"
+        ]
+      }
+    },
+    "creatureType": "fey",
+    "hp": {
+      "kind": "literal",
+      "value": 82
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 14,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
+        "ability": "con",
+        "modifier": 3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "arcana"
+      },
+      {
+        "modifier": 4,
+        "skill": "deception"
+      },
+      {
+        "modifier": 4,
+        "skill": "perception"
+      },
+      {
+        "modifier": 3,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The hag can breathe air and water.",
+        "name": "Amphibious"
+      },
+      {
+        "description": "While within 30 feet of at least two hag allies, the hag can cast one of the following spells, requiring no Material components, using the spell's normal casting time, and using Intelligence as the spellcasting ability (spell save DC 11): Augury, Find Familiar, Identify, Locate Object, Scrying, or Unseen Servant. The hag must finish a Long Rest before using this trait to cast that spell again.",
+        "name": "Coven Magic"
+      },
+      {
+        "description": "The hag can mimic animal sounds and humanoid voices. A creature that hears the sounds can tell they are imitations only with a successful DC 14 Wisdom (Insight) check.",
+        "name": "Mimicry"
+      }
+    ]
+  }
+}

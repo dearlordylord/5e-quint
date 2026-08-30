@@ -771,15 +771,21 @@ export function ordinaryObjectAttackOptionIsSupported(
     Match.when({ kind: "unarmedStrike" }, () => false),
     Match.when(
       { kind: "statBlockAttack" },
-      (option) =>
-        option.traitAttackRollModes === undefined &&
-        option.attack.onHit.every(
-          (effect) =>
-            effect.kind === "damage" ||
-            effect.kind === "conditional_bonus_damage",
-        ),
+      statBlockAttackSupportsOrdinaryObjectTarget,
     ),
     Match.exhaustive,
+  );
+}
+
+function statBlockAttackSupportsOrdinaryObjectTarget(
+  attack: Extract<
+    BoundSupportedAttackActionOption,
+    { readonly kind: "statBlockAttack" }
+  >,
+): boolean {
+  return (
+    attack.traitAttackRollModes === undefined &&
+    attack.attack.onHit.conditionRider === undefined
   );
 }
 

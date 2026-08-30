@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import { DieRollResult } from "@dnd/shared/types";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -381,9 +383,12 @@ describe("Ice Knife attack-burst boundaries", () => {
         }),
         statBlockCreatureInit({
           combatantId: primaryTargetId,
-          displayName: "Charmed Wolf",
+          statBlockName: "Charmed Wolf",
           initiative: 10,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_wolf"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_wolf"),
+          ),
         }),
       ],
     });

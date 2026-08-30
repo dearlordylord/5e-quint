@@ -43,6 +43,8 @@ import {
   type BattleSubject,
 } from "./battle-runtime.test-support.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
 import { speciesHalflingLuckUnitId } from "./unit-profile-admission-catalog.test-support.ts";
@@ -192,8 +194,10 @@ describe("battle runtime complexity extraction route boundaries", () => {
       goblin.origin.execution,
     ).find(
       (candidate) =>
-        candidate.damageNotation === "static" &&
-        candidate.attack.attackType === "melee",
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          attackExecutionSelectionForOption(candidate).statBlockDamageSelection,
+          "static",
+        ) && candidate.attack.attackType === "melee",
     );
     if (staticOption === undefined) {
       throw new Error("Expected a static melee stat-block attack.");
@@ -202,8 +206,7 @@ describe("battle runtime complexity extraction route boundaries", () => {
       tag: "action",
       actorId: goblinId,
       action: "attack",
-      procedureRef: staticOption.procedureRef,
-      statBlockDamageNotation: "static",
+      ...attackExecutionSelectionForOption(staticOption),
     };
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),

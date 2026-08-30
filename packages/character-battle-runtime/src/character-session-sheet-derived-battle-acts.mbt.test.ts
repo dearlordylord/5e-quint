@@ -1,9 +1,9 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // KERNEL-COVERAGE: parity-witness CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION CHARACTER.BATTLE.HANDOFF.SETTLEMENT
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { statBlockId, unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleActSpellPresentation,
   battleId,
   combatantId,
@@ -21,6 +21,7 @@ import {
   type BattleState,
   type BattleSubject,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   characterEquipmentItemId,
@@ -32,7 +33,7 @@ import {
 import {
   characterSheetId,
   characterSheetSpellSlots,
-  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  rebuildCharacterSheet as rebuildCharacterSheetCore,
   type CharacterSheet,
 } from "@dnd/character-sheet-runtime";
 import {
@@ -60,22 +61,7 @@ import {
 } from "./index.ts";
 import { battleProcedureExecutionRefForHole } from "./sdk-integration.test-support.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  return expectRight(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
-}
+import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
 
 type SheetDerivedOutcome =
   | "init"
@@ -513,11 +499,13 @@ function createSheetDerivedBattleActsDriver(input: {
         const character = requireCharacterCombatant(state);
         const settled = expectRight(
           settleCharacterSheetFromBattle({
-            state,
-            context: currentSession.battle.context,
+            battleSession: battleRuntimeSessionForTest({
+              state,
+              context: currentSession.battle.context,
+            }),
+            combatantId: character.combatantId,
             sheet: currentSession.sheet,
             unitLibrary,
-            combatant: character,
           }),
         );
         settledSheet = settled;
@@ -611,12 +599,13 @@ function startSheetDerivedSession(
 ): SheetDerivedSession {
   const levelOneSlotsExpended = input?.levelOneSlotsExpended ?? 0;
   const sheet = expectRight(
-    createFreshCharacterSheetCore({
+    rebuildCharacterSheetCore({
       characterId: characterSheetId("character:sheet-derived-caster"),
       build,
       currentHp: Hp(7),
       tempHp: Hp(0),
       conditions: [],
+      companion: { tag: "none" },
       hitPointMaximumReduction: Hp(0),
       spellSlotExpenditures:
         build.spellcasting === undefined
@@ -659,7 +648,10 @@ function startSheetDerivedSession(
 function battleCreatureInitFromRidingHorse() {
   return battleCreatureInitFromStatBlock({
     combatantId: targetCombatantId,
-    statBlock: statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
+    statBlock: assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_riding_horse"),
+    ),
     initiative: initiativeScore(10),
   });
 }

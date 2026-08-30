@@ -1,8 +1,9 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
-import { Either, Match } from "effect";
+import { Either, Match, Schema } from "effect";
 import type {
   ActionRestriction,
   ActionRestrictionAllowedAction,
@@ -22,6 +23,61 @@ const STANDARD_ACTION_KIND_SET: ReadonlySet<string> = new Set(
   STANDARD_ACTION_KINDS,
 );
 
+export const HasteActionResourceRestrictionSchema = Schema.Struct({
+  kind: Schema.Literal("allow_only"),
+  actions: Schema.Tuple(
+    Schema.Struct({
+      action: Schema.Literal("attack"),
+      attackLimit: Schema.Struct({
+        kind: Schema.Literal("attack_count"),
+        count: Schema.Literal(1),
+      }),
+    }),
+    Schema.Struct({ action: Schema.Literal("dash") }),
+    Schema.Struct({ action: Schema.Literal("disengage") }),
+    Schema.Struct({ action: Schema.Literal("hide") }),
+    Schema.Struct({ action: Schema.Literal("utilize") }),
+  ),
+});
+export type HasteActionResourceRestriction = Schema.Schema.Type<
+  typeof HasteActionResourceRestrictionSchema
+>;
+export const HASTE_ACTION_RESOURCE_RESTRICTION = {
+  kind: "allow_only",
+  actions: [
+    {
+      action: "attack",
+      attackLimit: { kind: "attack_count", count: 1 },
+    },
+    { action: "dash" },
+    { action: "disengage" },
+    { action: "hide" },
+    { action: "utilize" },
+  ],
+} as const satisfies HasteActionResourceRestriction;
+
+export function isHasteActionResourceRestriction(
+  restriction: ActionRestriction | undefined,
+): boolean {
+  if (restriction?.kind !== "allow_only") return false;
+  const expectedActionKinds = HASTE_ACTION_RESOURCE_RESTRICTION.actions.map(
+    (allowed) => allowed.action,
+  );
+  const actualActionKinds = new Set(
+    restriction.actions.map((allowed) => allowed.action),
+  );
+  const attack = restriction.actions.find(
+    (allowed) => allowed.action === "attack",
+  );
+  return (
+    restriction.actions.length === expectedActionKinds.length &&
+    actualActionKinds.size === expectedActionKinds.length &&
+    expectedActionKinds.every((action) => actualActionKinds.has(action)) &&
+    attack?.attackLimit.kind === "attack_count" &&
+    attack.attackLimit.count === 1
+  );
+}
+
 export type RuntimeActionResource =
   | { readonly kind: "action"; readonly source: "turn" }
   | {
@@ -34,16 +90,26 @@ export type RuntimeActionResource =
   | {
       readonly kind: "action";
       readonly source: "spellEffect";
-      readonly sourceOwnerId: CreatureId;
       readonly sourceEffectRef: BattleActiveEffectExecutionRef;
-      readonly restriction: ActionRestriction;
+      readonly restriction: HasteActionResourceRestriction;
     }
   | {
       readonly kind: "action";
       readonly source: "statBlockMultiattack";
       readonly sourceOwnerId: CreatureId;
-      readonly attackProcedureRef: BattleStatBlockProcedureExecutionRef;
-      readonly restriction: ActionRestriction;
+      readonly sourceProcedureRef: BattleStatBlockProcedureExecutionRef;
+      readonly dispatch:
+        | {
+            readonly kind: "listedOccurrence";
+            readonly attackProcedureRef: BattleStatBlockProcedureExecutionRef;
+          }
+        | {
+            readonly kind: "oneListedChoice";
+            readonly attackProcedureRefs: readonly [
+              BattleStatBlockProcedureExecutionRef,
+              ...BattleStatBlockProcedureExecutionRef[],
+            ];
+          };
     }
   | {
       readonly kind: "action";
@@ -68,6 +134,8 @@ export type ActionOrBonusActionExclusion =
   | { readonly kind: "notRestricted" }
   | {
       readonly kind: "restricted";
+      // Records only the exclusion branch chosen while the gate is active.
+      // Generic Action and Bonus Action resources retain their own spend state.
       readonly choice: ActionOrBonusActionExclusionChoice;
     };
 export type MovementActionBonusActionExclusionChoice =
@@ -84,6 +152,7 @@ export type MovementActionBonusActionExclusion =
 
 export type ActionEconomyState = {
   readonly actionResources: ReadonlyArray<RuntimeActionResource>;
+  readonly actionTakenThisTurn: boolean;
   readonly currentHasBonusAction: boolean;
   readonly actionOrBonusActionExclusion: ActionOrBonusActionExclusion;
   readonly movementActionBonusActionExclusion: MovementActionBonusActionExclusion;
@@ -223,15 +292,17 @@ export function actionRestrictionAllowsAdditionalAttacks(
 export function actionResourceAllowsAdditionalAttacks(
   resource: RuntimeActionResource,
 ): boolean {
-  if (
-    resource.source === "classFeatureExtraAttack" ||
-    resource.source === "monkFocusFlurryOfBlows"
-  ) {
-    return false;
-  }
-  return (
-    resource.source === "turn" ||
-    actionRestrictionAllowsAdditionalAttacks(resource.restriction)
+  return Match.value(resource).pipe(
+    Match.discriminatorsExhaustive("source")({
+      turn: () => true,
+      unit: ({ restriction }) =>
+        actionRestrictionAllowsAdditionalAttacks(restriction),
+      spellEffect: ({ restriction }) =>
+        actionRestrictionAllowsAdditionalAttacks(restriction),
+      statBlockMultiattack: () => false,
+      classFeatureExtraAttack: () => false,
+      monkFocusFlurryOfBlows: () => false,
+    }),
   );
 }
 
@@ -239,12 +310,17 @@ export function actionResourceAllows(
   resource: RuntimeActionResource,
   action: StandardActionKind,
 ): boolean {
-  if (resource.source === "monkFocusFlurryOfBlows") {
-    return false;
-  }
-  return (
-    resource.source === "turn" ||
-    actionRestrictionAllows(resource.restriction, action)
+  return Match.value(resource).pipe(
+    Match.discriminatorsExhaustive("source")({
+      turn: () => true,
+      unit: ({ restriction }) => actionRestrictionAllows(restriction, action),
+      spellEffect: ({ restriction }) =>
+        actionRestrictionAllows(restriction, action),
+      statBlockMultiattack: () => action === "attack",
+      classFeatureExtraAttack: ({ restriction }) =>
+        actionRestrictionAllows(restriction, action),
+      monkFocusFlurryOfBlows: () => false,
+    }),
   );
 }
 
@@ -346,8 +422,6 @@ function markActionSpentForActionOrBonusActionExclusion<
     ? state
     : {
         ...state,
-        actionResources: [],
-        currentHasBonusAction: false,
         actionOrBonusActionExclusion: {
           kind: "restricted",
           choice: "action",
@@ -362,8 +436,6 @@ function markBonusActionSpentForActionOrBonusActionExclusion<
     ? state
     : {
         ...state,
-        actionResources: [],
-        currentHasBonusAction: false,
         actionOrBonusActionExclusion: {
           kind: "restricted",
           choice: "bonusAction",
@@ -426,10 +498,7 @@ export function enableActionOrBonusActionExclusion<
     return state;
   }
 
-  const turnActionAvailable = state.actionResources.some(
-    (resource) => resource.source === "turn",
-  );
-  if (!turnActionAvailable) {
+  if (state.actionTakenThisTurn) {
     return markActionSpentForActionOrBonusActionExclusion({
       ...state,
       actionOrBonusActionExclusion: {
@@ -457,6 +526,17 @@ export function enableActionOrBonusActionExclusion<
   };
 }
 
+export function disableActionOrBonusActionExclusion<
+  T extends ActionEconomyState,
+>(state: T): T {
+  return state.actionOrBonusActionExclusion.kind === "notRestricted"
+    ? state
+    : {
+        ...state,
+        actionOrBonusActionExclusion: { kind: "notRestricted" },
+      };
+}
+
 export function enableMovementActionBonusActionExclusion<
   T extends ActionEconomyState,
 >(state: T, movementSpent: boolean): T {
@@ -474,10 +554,7 @@ export function enableMovementActionBonusActionExclusion<
   if (movementSpent) {
     return markMovementSpentForMovementActionBonusActionExclusion(restricted);
   }
-  const turnActionAvailable = restricted.actionResources.some(
-    (resource) => resource.source === "turn",
-  );
-  if (!turnActionAvailable) {
+  if (restricted.actionTakenThisTurn) {
     return markActionSpentForMovementActionBonusActionExclusion(restricted);
   }
   if (!restricted.currentHasBonusAction) {
@@ -492,9 +569,14 @@ export function spendActionResourceAtIndex<T extends ActionEconomyState>(
   state: T,
   actionResourceIndex: number,
 ): T {
+  const spentResource = state.actionResources[actionResourceIndex];
+  if (spentResource === undefined) return state;
   return markActionSpentForMovementActionBonusActionExclusion(
     markActionSpentForActionOrBonusActionExclusion({
       ...state,
+      actionTakenThisTurn:
+        state.actionTakenThisTurn ||
+        actionResourceConsumptionTakesAction(spentResource),
       actionResources: state.actionResources.filter(
         (_, index) => index !== actionResourceIndex,
       ),
@@ -517,15 +599,17 @@ function actionEconomyStateAfterSpendingBonusAction<
   );
 }
 
-function actionEconomyStateAfterSpendingActionResourceAtIndex<
-  T extends ActionEconomyState,
->(state: T, actionResourceIndex: number): T {
-  return markActionSpentForMovementActionBonusActionExclusion(
-    markActionSpentForActionOrBonusActionExclusion({
-      ...state,
-      actionResources: state.actionResources.filter(
-        (_, index) => index !== actionResourceIndex,
-      ),
+export function actionResourceConsumptionTakesAction(
+  resource: RuntimeActionResource,
+): boolean {
+  return Match.value(resource).pipe(
+    Match.discriminatorsExhaustive("source")({
+      turn: () => true,
+      unit: () => true,
+      spellEffect: () => true,
+      statBlockMultiattack: () => false,
+      classFeatureExtraAttack: () => false,
+      monkFocusFlurryOfBlows: () => false,
     }),
   );
 }
@@ -565,6 +649,7 @@ export function resetTurnActionEconomy<T extends ActionEconomyState>(
   return {
     ...state,
     actionResources: [{ kind: "action", source: "turn" }],
+    actionTakenThisTurn: false,
     currentHasBonusAction: true,
     actionOrBonusActionExclusion: { kind: "notRestricted" },
     movementActionBonusActionExclusion: { kind: "notRestricted" },
@@ -586,12 +671,7 @@ export function spendAction<T extends ActionEconomyState>(
   // TODO: If multiple compatible action resources are available and spending
   // one versus another can change later legality, expose resource choice as a
   // runtime hole instead of choosing deterministically here.
-  return Either.right(
-    actionEconomyStateAfterSpendingActionResourceAtIndex(
-      state,
-      actionResourceIndex,
-    ),
-  );
+  return Either.right(spendActionResourceAtIndex(state, actionResourceIndex));
 }
 
 export function spendUnarmedStrikeActionResource<T extends ActionEconomyState>(
@@ -604,12 +684,7 @@ export function spendUnarmedStrikeActionResource<T extends ActionEconomyState>(
     return Either.left("no action resource available");
   }
 
-  return Either.right(
-    actionEconomyStateAfterSpendingActionResourceAtIndex(
-      state,
-      actionResourceIndex,
-    ),
-  );
+  return Either.right(spendActionResourceAtIndex(state, actionResourceIndex));
 }
 
 export function spendMatchingActionResource<T extends ActionEconomyState>(
@@ -626,12 +701,7 @@ export function spendMatchingActionResource<T extends ActionEconomyState>(
     return Either.left("no action resource available");
   }
 
-  return Either.right(
-    actionEconomyStateAfterSpendingActionResourceAtIndex(
-      state,
-      actionResourceIndex,
-    ),
-  );
+  return Either.right(spendActionResourceAtIndex(state, actionResourceIndex));
 }
 
 export function spendActivationResource<T extends ActionEconomyState>(
@@ -668,13 +738,11 @@ export function hasUnitActionResource(
 
 export function hasSpellEffectActionResource(
   state: ActionEconomyState,
-  sourceOwnerId: CreatureId,
   sourceEffectRef: BattleActiveEffectExecutionRef,
 ): boolean {
   return state.actionResources.some(
     (resource) =>
       resource.source === "spellEffect" &&
-      resource.sourceOwnerId === sourceOwnerId &&
       resource.sourceEffectRef === sourceEffectRef,
   );
 }
@@ -712,11 +780,10 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
 
 export function grantSpellEffectActionResource<T extends ActionEconomyState>(
   state: T,
-  sourceOwnerId: CreatureId,
   sourceEffectRef: BattleActiveEffectExecutionRef,
-  restriction: ActionRestriction,
+  restriction: HasteActionResourceRestriction,
 ): Either.Either<T, ActionEconomySpendError> {
-  if (hasSpellEffectActionResource(state, sourceOwnerId, sourceEffectRef)) {
+  if (hasSpellEffectActionResource(state, sourceEffectRef)) {
     return Either.left("spell-effect action resource already granted");
   }
 
@@ -727,7 +794,6 @@ export function grantSpellEffectActionResource<T extends ActionEconomyState>(
       {
         kind: "action",
         source: "spellEffect",
-        sourceOwnerId,
         sourceEffectRef,
         restriction,
       },

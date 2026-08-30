@@ -6,7 +6,7 @@
 module battleRuntimeWeaponAttacks {
   import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
-  import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
+  import battleRuntimeStatBlockMultiattackBridge.* from "./battle-runtime-stat-block-multiattack-bridge"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellcastingFacts.* from "./battle-runtime-spellcasting-facts"
@@ -366,10 +366,11 @@ module battleRuntimeWeaponAttacks {
 
   pure def resolveGoblinMultiattack(state: BattleState): BattleState = {
     val attacker = combatantForActor(state, Goblin)
+    val syntheticThreeAttackMultiattackDispatchProcedureRefs = List(0, 0, 0)
     if (not(state.actionAvailable) or currentActor(state) != Goblin or attacker.hp == 0)
       state
     else
-      { ...stateWithActorCombatant(state, Goblin, { ...attacker, multiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterFirstAttack }), actionAvailable: false }
+      { ...stateWithActorCombatant(state, Goblin, { ...attacker, multiattackDispatchesRemaining: battleRuntimeStatBlockMultiattackDispatchCountAfterActivation(syntheticThreeAttackMultiattackDispatchProcedureRefs) }), actionAvailable: false }
   }
 
   pure def goblinMultiattackDispatchContinuationOpen(state: BattleState): bool =
@@ -403,7 +404,7 @@ module battleRuntimeWeaponAttacks {
   ): BattleState = {
     val attacker = combatantForActor(state, Goblin)
     val defender = combatantForActor(state, Fighter)
-    val attackerAfterDispatch = { ...attacker, multiattackDispatchesRemaining: battleRuntimeGoblinMultiattackDispatchesAfterDispatch(attacker.multiattackDispatchesRemaining) }
+    val attackerAfterDispatch = { ...attacker, multiattackDispatchesRemaining: battleRuntimeStatBlockMultiattackDispatchCountAfterDispatch(attacker.multiattackDispatchesRemaining) }
     if (attacker.multiattackDispatchesRemaining <= 0 or currentActor(state) != Goblin or attacker.hp == 0)
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(defender), 20)))

@@ -16,6 +16,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { SpellRecord } from "@dnd/surface/surface/types";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 import {
@@ -2742,7 +2743,9 @@ function fireImmuneHumanoidStatBlock() {
     ...base,
     statBlock: {
       ...base.statBlock,
-      immunities: { damageTypes: ["fire"] as const },
+      immunities: decodeCreatureImmunityDeclarationSync({
+        damageTypes: ["fire"],
+      }),
     },
   };
 }

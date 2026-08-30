@@ -1,0 +1,43 @@
+let S = ./_stat_block_types.dhall
+
+in  { challengeRating = 0.5
+    , id = "stat_block_giant_goat"
+    , kind = "statBlock"
+    , name = "Giant Goat"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:974-994" }
+    , statBlock =
+      { abilityScores =
+        { cha = 6, con = 12, dex = 13, int = 3, str = 17, wis = 12 }
+      , ac.value = { kind = "literal", value = 11 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Ram"
+            , description =
+                "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 6 (1d6 + 3) Bludgeoning damage. If the target is a Large or smaller creature and the goat moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition."
+            , reason = "unsupported_action_shape"
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 19 }
+      , initiative = { modifier = +1, score = 11 }
+      , passivePerception = 13
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +5 }
+        , { ability = "dex", modifier = +1 }
+        , { ability = "con", modifier = +1 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = +1 }
+        , { ability = "cha", modifier = -2 }
+        ]
+      , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+      , size = "large"
+      , skillModifiers = [ { modifier = +3, skill = "perception" } ]
+      , speeds =
+        [ { feet = { kind = "literal", value = 40 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 30 }, kind = "climb" }
+        ]
+      }
+    }

@@ -1,0 +1,141 @@
+{
+  "challengeRating": 2,
+  "id": "stat_block_ochre_jelly",
+  "kind": "statBlock",
+  "name": "Ochre Jelly",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-M-O.md:754-785"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 1,
+      "con": 14,
+      "dex": 6,
+      "int": 2,
+      "str": 15,
+      "wis": 6
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 8
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Pseudopod",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 6,
+                  "flat": 2
+                },
+                "kind": "fixed",
+                "static": 12
+              },
+              "damageType": "acid",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "ooze",
+    "hp": {
+      "kind": "literal",
+      "value": 52
+    },
+    "immunities": {
+      "conditions": [
+        "charmed",
+        "deafened",
+        "exhaustion",
+        "frightened",
+        "grappled",
+        "prone",
+        "restrained"
+      ],
+      "damageTypes": [
+        "lightning",
+        "slashing"
+      ]
+    },
+    "initiative": {
+      "modifier": -2,
+      "score": 8
+    },
+    "passivePerception": 8,
+    "reactions": [
+      {
+        "description": "Trigger: While the jelly is Large or Medium and has 10+ Hit Points, it becomes Bloodied or is subjected to Lightning or Slashing damage. Response: The jelly splits into two new Ochre Jellies. Each new jelly is one size smaller than the original jelly and acts on its Initiative. The original jelly's Hit Points are divided evenly between the new jellies (round down).",
+        "kind": "textOnly",
+        "name": "Split",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "resistances": {
+      "damageTypes": [
+        "acid"
+      ],
+      "kind": "fixed"
+    },
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "large",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "climb"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The jelly can move through a space as narrow as 1 inch without expending extra movement to do so.",
+        "name": "Amorphous"
+      },
+      {
+        "description": "The jelly can climb difficult surfaces, including along ceilings, without needing to make an ability check.",
+        "name": "Spider Climb"
+      }
+    ]
+  }
+}

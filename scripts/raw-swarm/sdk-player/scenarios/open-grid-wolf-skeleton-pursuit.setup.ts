@@ -34,7 +34,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isLeft(wolfInit)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer rejected the required Wolf: ${sdk.battleStateInitIssueMessage(wolfInit.left)}`,
+      obstruction: `The public battle initializer rejected the required Wolf: ${sdk.authoredStatBlockBattleInitIssueMessage(wolfInit.left)}`,
       observation: { stage: "wolf-initialization" },
     };
   }
@@ -50,7 +50,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isLeft(skeletonInit)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer rejected the required Skeleton with zero arrows: ${sdk.battleStateInitIssueMessage(skeletonInit.left)}`,
+      obstruction: `The public battle initializer rejected the required Skeleton with zero arrows: ${sdk.authoredStatBlockBattleInitIssueMessage(skeletonInit.left)}`,
       observation: { stage: "skeleton-initialization" },
     };
   }
@@ -85,7 +85,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],
@@ -112,7 +112,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     observation: {
       scenarioId: "open-grid-wolf-skeleton-pursuit",
       combatants: ["wolf", "skeleton"],
-      statBlockDamageNotation: "rolled",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     },
   };
 };

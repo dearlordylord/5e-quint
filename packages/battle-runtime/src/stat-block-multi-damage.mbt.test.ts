@@ -1,16 +1,23 @@
 import { movementFeet } from "@dnd/shared/types";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
-import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
-// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
+import {
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
+  nonSpellExecutableProcedureEntry,
+  projectedStatBlockRuntimeSource,
+  resolveBattleSubject,
+} from "./battle-runtime.test-support.ts";
 import { isDeepStrictEqual } from "node:util";
 
 import { Either } from "effect";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, it } from "vitest";
 
 import { DieRollResult, Hp } from "@dnd/shared/types";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type {
+  AuthoredExecutableProcedure,
+  StatBlockRecord,
+} from "@dnd/surface/surface/types";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 import {
@@ -50,7 +57,6 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
-
 type StatBlockMultiDamageHole = "TargetChoice" | "AttackRoll" | "DamageRoll";
 
 type StatBlockMultiDamageMode = "rolled" | "static";
@@ -66,9 +72,10 @@ type StatBlockMultiDamageRouteProjection = StatBlockMultiDamageProjection & {
   readonly route: readonly ReducerRouteEvent[];
 };
 
-type StatBlockAttack = NonNullable<
-  NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
->[number];
+type StatBlockAttack = Extract<
+  AuthoredExecutableProcedure,
+  { readonly kind: "attack_roll" }
+>;
 
 const actorId = combatantId("stat-block-multi-damage-mbt-actor");
 const targetId = combatantId("stat-block-multi-damage-mbt-target");
@@ -114,6 +121,8 @@ function createStatBlockMultiDamageDriverWithProjection<State>(
 ) {
   return defineDriver<typeof driverSchema, State>(driverSchema, () => {
     let state = statBlockMultiDamageBattle();
+    let resolutionState = state;
+    let subject = requireDiscoveredStatBlockAttackSubject(state, "rolled");
     let damageMode: StatBlockMultiDamageMode = "rolled";
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
@@ -129,12 +138,13 @@ function createStatBlockMultiDamageDriverWithProjection<State>(
 
     function reset(mode: StatBlockMultiDamageMode): void {
       state = statBlockMultiDamageBattle();
+      resolutionState = state;
+      subject = requireDiscoveredStatBlockAttackSubject(state, mode);
       damageMode = mode;
       targetChoice = null;
       attackRoll = null;
-      const subject = requireDiscoveredStatBlockAttackSubject(state, mode);
       const result = resolveBattleSubject({
-        state,
+        state: resolutionState,
         subject,
         fills: [],
       });
@@ -209,8 +219,8 @@ function createStatBlockMultiDamageDriverWithProjection<State>(
     }): void {
       recordResult(
         resolveBattleSubject({
-          state,
-          subject: requireDiscoveredStatBlockAttackSubject(state, damageMode),
+          state: resolutionState,
+          subject,
           fills: input.fills,
         }),
         input.routeFill,
@@ -381,7 +391,10 @@ function requireDiscoveredStatBlockAttackSubject(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
-      (candidate.subject.statBlockDamageNotation ?? "rolled") === damageMode,
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        candidate.subject,
+        damageMode,
+      ),
   );
   if (
     act === undefined ||
@@ -433,17 +446,24 @@ function statBlockCreature(input: {
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
-    displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
       source: Either.getOrThrow(
-        battleStatBlockCombatantSource(input.statBlock),
+        battleStatBlockCombatantSource(
+          projectedStatBlockRuntimeSource(input.statBlock),
+        ),
       ),
       currentHp: Hp(12),
       tempHp: Hp(0),
       ammunitionStocks: [],
       conditions: [],
+      presentation: {
+        displayName: input.displayName,
+        communication: { kind: "none" },
+        traits: [],
+        orderedProcedures: [],
+      },
     },
   };
 }
@@ -455,8 +475,7 @@ function multiDamageAttackerStatBlock(): StatBlockRecord {
     name: "Stat Block Multi-Damage Attacker",
     statBlock: {
       ...base.statBlock,
-      displayName: "Stat Block Multi-Damage Attacker",
-      actions: { attacks: [venomDartAttack()] },
+      actions: [nonSpellExecutableProcedureEntry(1, venomDartAttack())],
     },
   };
 }
@@ -468,8 +487,9 @@ function poisonImmuneTargetStatBlock(): StatBlockRecord {
     name: "Stat Block Poison-Immune Target",
     statBlock: {
       ...base.statBlock,
-      displayName: "Stat Block Poison-Immune Target",
-      immunities: { damageTypes: ["poison"] },
+      immunities: decodeCreatureImmunityDeclarationSync({
+        damageTypes: ["poison"],
+      }),
     },
   };
 }
@@ -481,10 +501,16 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
     name: id,
     challengeRating: 0.25,
     provenance: {
-      kind: "srd-5.2.1",
+      kind: "synthetic-test",
       section: "Stat Block multi-damage MBT fixture",
     },
     statBlock: {
+      size: "medium",
+      creatureType: "humanoid",
+      alignment: { order: "chaotic", morality: "neutral" },
+      ac: { value: { kind: "literal", value: 12 } },
+      hp: { kind: "literal", value: 12 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
       abilityScores: {
         cha: 10,
         con: 10,
@@ -493,21 +519,19 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
         str: 10,
         wis: 10,
       },
-      ac: { kind: "literal", value: 12 },
-      actions: { attacks: [venomDartAttack()] },
-      creatureType: "humanoid",
-      displayName: id,
-      hp: { kind: "literal", value: 12 },
-      initiativeModifier: 0,
-      languages: ["Common"],
-      size: "medium",
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      initiative: { modifier: 0, score: 10 },
+      passivePerception: 10,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Common", "Goblin"] },
+      },
     },
   };
 }
 
 function venomDartAttack(): StatBlockAttack {
   return {
+    kind: "attack_roll",
     attackAbility: "dex",
     attackBonus: { kind: "literal", value: 4 },
     attackType: "ranged",

@@ -17,7 +17,7 @@ import {
   Hp,
   SIZES,
   proficiencyBonusForCharacterLevel,
-  type DieRollResult,
+  type D6RollResult,
 } from "@dnd/shared/types";
 import type { Ability, Size, Skill } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
@@ -34,7 +34,7 @@ import {
   type StatBlockExecutionState,
   type StatBlockExecutionAdmission,
 } from "../stat-block-execution-state.ts";
-import type { BattleDruidWildShapeKnownForm } from "../druid-wild-shape-known-form-execution.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "../druid-wild-shape-known-form-runtime.ts";
 import type {
   BattleActiveEffect,
   BattleCreatureState,
@@ -92,11 +92,11 @@ const SKILL_ABILITIES = {
 } as const satisfies Record<Skill, Ability>;
 
 export function druidWildShapeAvailableFormsIssueForProfile(
-  forms: readonly BattleDruidWildShapeKnownForm[] | undefined,
+  forms: readonly BattleDruidWildShapeKnownFormRuntime[] | undefined,
   profile: BattleDruidWildShapeKnownFormSupportProfile,
 ): string | null;
 export function druidWildShapeAvailableFormsIssueForProfile(
-  forms: readonly BattleDruidWildShapeKnownForm[] | undefined,
+  forms: readonly BattleDruidWildShapeKnownFormRuntime[] | undefined,
 ): string | null {
   if (forms === undefined) {
     return "Druid Wild Shape battle initialization requires an available known-form subset.";
@@ -118,7 +118,7 @@ export function combatantHasActiveDruidWildShape(
 
 export function activeDruidWildShapeForm(
   combatant: BattleCreatureState | undefined,
-): BattleDruidWildShapeKnownForm | null {
+): BattleDruidWildShapeKnownFormRuntime | null {
   return activeDruidWildShape(combatant)?.admission.statBlock ?? null;
 }
 
@@ -310,7 +310,7 @@ export function assumeDruidWildShapeForm(input: {
   readonly state: BattleState;
   readonly actor: CharacterBattleCreatureState;
   readonly procedureRef: BattleProcedureExecutionRef;
-  readonly formAdmission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>;
+  readonly formAdmission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime>;
   readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
   readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
   readonly profile: BattleDruidWildShapeKnownFormSupportProfile;
@@ -383,7 +383,7 @@ export function applyActiveDruidWildShapeRechargeRolls(
   combatant: BattleCreatureState,
   rolls: readonly {
     readonly target: BattleResourcePoolExecutionRef;
-    readonly roll: DieRollResult;
+    readonly roll: D6RollResult;
   }[],
 ): BattleCreatureState {
   return mapActiveDruidWildShapeExecution(combatant, (execution) =>
@@ -423,17 +423,19 @@ export function revertDruidWildShapeForm(input: {
 }
 
 function literalStatBlockArmorClass(
-  form: BattleDruidWildShapeKnownForm,
+  form: BattleDruidWildShapeKnownFormRuntime,
 ): number {
   return Number(armorClass(form.statBlock.ac.value));
 }
 
-function literalStatBlockSize(form: BattleDruidWildShapeKnownForm): Size {
+function literalStatBlockSize(
+  form: BattleDruidWildShapeKnownFormRuntime,
+): Size {
   return form.statBlock.size;
 }
 
 function statBlockAbilityModifiers(
-  form: BattleDruidWildShapeKnownForm,
+  form: BattleDruidWildShapeKnownFormRuntime,
 ): ArmorClassState["abilityModifiers"] {
   const scores = form.statBlock.abilityScores;
   return {
@@ -492,7 +494,7 @@ function characterSkillProficiencyBonus(
 }
 
 function statBlockSavingThrowModifier(
-  form: BattleDruidWildShapeKnownForm,
+  form: BattleDruidWildShapeKnownFormRuntime,
   ability: Ability,
 ): number | undefined {
   return form.statBlock.savingThrowModifiers?.find(
@@ -501,7 +503,7 @@ function statBlockSavingThrowModifier(
 }
 
 function statBlockSkillModifier(
-  form: BattleDruidWildShapeKnownForm,
+  form: BattleDruidWildShapeKnownFormRuntime,
   skill: Skill,
 ): number | undefined {
   return form.statBlock.skillModifiers?.find(

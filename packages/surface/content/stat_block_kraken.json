@@ -1,0 +1,224 @@
+{
+  "challengeRating": 23,
+  "id": "stat_block_kraken",
+  "kind": "statBlock",
+  "name": "Kraken",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-H-L.md:593-637"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 20,
+      "con": 26,
+      "dex": 11,
+      "int": 22,
+      "str": 30,
+      "wis": 18
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 18
+      }
+    },
+    "actions": [
+      {
+        "description": "The kraken makes two Tentacle attacks and uses Fling, Lightning Strike, or Swallow.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee Attack Roll: +17, reach 30 ft. Hit: 24 (4d6 + 10) Bludgeoning damage. The target has the Grappled condition (escape DC 20) from one of ten tentacles, and it has the Restrained condition until the grapple ends.",
+        "kind": "textOnly",
+        "name": "Tentacle",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "The kraken throws a Large or smaller creature Grappled by it to a space it can see within 60 feet of itself that isn't in the air. Dexterity Saving Throw: DC 25, the creature thrown and each creature in the destination space. Failure: 18 (4d8) Bludgeoning damage, and the target has the Prone condition. Success: Half damage only.",
+        "kind": "textOnly",
+        "name": "Fling",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Dexterity Saving Throw: DC 23, one creature the kraken can see within 120 feet. Failure: 33 (6d10) Lightning damage. Success: Half damage.",
+        "kind": "textOnly",
+        "name": "Lightning Strike",
+        "procedureOrdinal": 4,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Dexterity Saving Throw: DC 25, one creature Grappled by the kraken (it can have up to four creatures swallowed at a time). Failure: 23 (3d8 + 10) Piercing damage. If the target is Large or smaller, it is swallowed and no longer Grappled. A swallowed creature has the Restrained condition, has Total Cover against attacks and other effects outside the kraken, and takes 24 (7d6) Acid damage at the start of each of its turns. If the kraken takes 50 damage or more on a single turn from a creature inside it, the kraken must succeed on a DC 25 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, each of which falls in a space within 10 feet of the kraken with the Prone condition. If the kraken dies, any swallowed creature no longer has the Restrained condition and can escape from the corpse using 15 feet of movement, exiting Prone.",
+        "kind": "textOnly",
+        "name": "Swallow",
+        "procedureOrdinal": 5,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "chaotic"
+    },
+    "communication": {
+      "kind": "understood_but_cannot_speak",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Abyssal",
+          "Celestial",
+          "Infernal",
+          "Primordial"
+        ]
+      },
+      "telepathy": {
+        "rangeFeet": 120
+      }
+    },
+    "creatureType": "monstrosity",
+    "creatureTypeTags": [
+      "titan"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 481
+    },
+    "immunities": {
+      "conditions": [
+        "frightened",
+        "grappled",
+        "paralyzed",
+        "restrained"
+      ],
+      "damageTypes": [
+        "cold",
+        "lightning"
+      ]
+    },
+    "initiative": {
+      "modifier": 14,
+      "score": 24
+    },
+    "legendaryActions": {
+      "entries": [
+        {
+          "description": "The kraken uses Lightning Strike.",
+          "kind": "textOnly",
+          "name": "Storm Bolt",
+          "procedureOrdinal": 1,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "Constitution Saving Throw: DC 23, each creature in a 15-foot Emanation originating from the kraken while it is underwater. Failure: The target has the Blinded and Poisoned conditions until the end of the kraken's next turn. The kraken then moves up to its Speed. Failure or Success: The kraken can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Toxic Ink",
+          "procedureOrdinal": 2,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        }
+      ],
+      "uses": {
+        "additionalUsesInLair": 1,
+        "kind": "lair_bonus",
+        "usesOutsideLair": 3
+      }
+    },
+    "passivePerception": 21,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 17
+      },
+      {
+        "ability": "dex",
+        "modifier": 7
+      },
+      {
+        "ability": "con",
+        "modifier": 15
+      },
+      {
+        "ability": "int",
+        "modifier": 6
+      },
+      {
+        "ability": "wis",
+        "modifier": 11
+      },
+      {
+        "ability": "cha",
+        "modifier": 5
+      }
+    ],
+    "senses": [
+      {
+        "kind": "truesight",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "gargantuan",
+    "skillModifiers": [
+      {
+        "modifier": 13,
+        "skill": "history"
+      },
+      {
+        "modifier": 11,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 120
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The kraken can breathe air and water.",
+        "name": "Amphibious"
+      },
+      {
+        "description": "If the kraken fails a saving throw, it can choose to succeed instead.",
+        "name": "Legendary Resistance (4/Day, or 5/Day in Lair)"
+      },
+      {
+        "description": "The kraken deals double damage to objects and structures.",
+        "name": "Siege Monster"
+      }
+    ]
+  }
+}

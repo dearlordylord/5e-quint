@@ -1,0 +1,84 @@
+{ challengeRating = 3
+, id = "stat_block_wight"
+, kind = "statBlock"
+, name = "Wight"
+, provenance =
+  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:1074-1110" }
+, statBlock =
+  { abilityScores =
+    { cha = 15, con = 16, dex = 14, int = 10, str = 15, wis = 13 }
+  , ac.value = { kind = "literal", value = 14 }
+  , actions =
+    [ { description =
+          "The wight makes two attacks, using Necrotic Sword or Necrotic Bow in any combination. It can replace one attack with use of Life Drain."
+      , kind = "textOnly"
+      , name = "Multiattack"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    , { description =
+          "Melee Attack Roll: +4, reach 5 ft. Hit: 6 (1d8 + 2) Slashing damage plus 4 (1d8) Necrotic damage."
+      , kind = "textOnly"
+      , name = "Necrotic Sword"
+      , procedureOrdinal = 2
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    , { description =
+          "Ranged Attack Roll: +4, range 150/600 ft. Hit: 6 (1d8 + 2) Piercing damage plus 4 (1d8) Necrotic damage."
+      , kind = "textOnly"
+      , name = "Necrotic Bow"
+      , procedureOrdinal = 3
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    , { description =
+          "Constitution Saving Throw: DC 13, one creature within 5 feet. Failure: 6 (1d8 + 2) Necrotic damage, and the target's Hit Point maximum decreases by an amount equal to the damage taken. A Humanoid slain by this attack rises 24 hours later as a Zombie under the wight's control, unless the Humanoid is restored to life or its body is destroyed. The wight can have no more than twelve zombies under its control at a time."
+      , kind = "textOnly"
+      , name = "Life Drain"
+      , procedureOrdinal = 4
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "evil", order = "neutral" }
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages =
+      { additionalLanguages = 1
+      , kind = "named_plus_other_languages"
+      , languages = [ "Common" ]
+      }
+    }
+  , creatureType = "undead"
+  , gear = [ { item = "Studded Leather Armor", quantity = 1 } ]
+  , hp = { kind = "literal", value = 88 }
+  , immunities =
+    { conditions = [ "exhaustion", "poisoned" ], damageTypes = [ "poison" ] }
+  , initiative = { modifier = 4, score = 14 }
+  , passivePerception = 13
+  , resistances = { damageTypes = [ "necrotic" ], kind = "fixed" }
+  , savingThrowModifiers =
+    [ { ability = "cha", modifier = 2 }
+    , { ability = "con", modifier = 3 }
+    , { ability = "dex", modifier = 2 }
+    , { ability = "int", modifier = 0 }
+    , { ability = "str", modifier = 2 }
+    , { ability = "wis", modifier = 1 }
+    ]
+  , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+  , size = "medium"
+  , skillModifiers =
+    [ { modifier = 3, skill = "perception" }
+    , { modifier = 4, skill = "stealth" }
+    ]
+  , speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" } ]
+  , traits =
+    [ { description =
+          "While in sunlight, the wight has Disadvantage on ability checks and attack rolls."
+      , name = "Sunlight Sensitivity"
+      }
+    ]
+  }
+}

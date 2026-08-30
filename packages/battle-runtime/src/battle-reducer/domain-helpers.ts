@@ -14,6 +14,7 @@ import type {
   BattleStateInitIssue,
   BattleStateInitLeafIssue,
 } from "../battle-state-execution.ts";
+import type { StatBlockResourceGraphAdmissionFailure } from "../stat-block-execution-state.ts";
 
 export function scoreModifier(score: number): number {
   return Math.floor((score - 10) / 2);
@@ -42,11 +43,37 @@ export function weaponLoadoutMismatchMessage(
 export function battleStateInitIssueMessage(
   issue: BattleStateInitIssue,
 ): string {
-  return issue.tag === "weaponLoadoutMismatch"
-    ? weaponLoadoutMismatchMessage(issue.slot)
-    : issue.tag === "battleStateInitIssues"
-      ? issue.issues.map(battleStateInitIssueMessage).join("; ")
-      : issue.message;
+  return Match.value(issue).pipe(
+    Match.when({ tag: "weaponLoadoutMismatch" }, ({ slot }) =>
+      weaponLoadoutMismatchMessage(slot),
+    ),
+    Match.when({ tag: "battleStateInitIssues" }, ({ issues }) =>
+      issues.map(battleStateInitIssueMessage).join("; "),
+    ),
+    Match.when({ tag: "battleStateInitIssue" }, ({ message }) => message),
+    Match.when({ tag: "statBlockResourceGraphIssue" }, ({ issues }) =>
+      issues.map(statBlockResourceGraphIssueMessage).join("; "),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function statBlockResourceGraphIssueMessage(
+  issue: StatBlockResourceGraphAdmissionFailure,
+): string {
+  return Match.value(issue).pipe(
+    Match.when(
+      { kind: "duplicateResourceOrdinal" },
+      ({ ordinal }) =>
+        `Battle runtime requires Stat Block resource declaration ordinal ${String(ordinal)} to be unique.`,
+    ),
+    Match.when(
+      { kind: "missingResourceDeclaration" },
+      ({ ordinal }) =>
+        `Battle runtime requires Stat Block procedure resource reference ${String(ordinal)} to match a declared resource.`,
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function battleStateInitIssueLeaves(
@@ -61,6 +88,7 @@ export function battleStateInitIssueLeaves(
       );
     }),
     Match.when({ tag: "battleStateInitIssue" }, battleStateInitLeafList),
+    Match.when({ tag: "statBlockResourceGraphIssue" }, battleStateInitLeafList),
     Match.when({ tag: "weaponLoadoutMismatch" }, battleStateInitLeafList),
     Match.exhaustive,
   );

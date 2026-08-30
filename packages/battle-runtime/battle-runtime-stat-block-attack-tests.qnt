@@ -12,15 +12,17 @@ module battleRuntimeStatBlockAttackTests {
     val recursive = resolveGoblinMultiattack(multiattack)
     val firstDispatch = resolveGoblinMultiattackDispatch(multiattack, 1, 1, 0, true)
     val secondDispatch = resolveGoblinMultiattackDispatch(firstDispatch, 1, 1, 0, true)
+    val thirdDispatch = resolveGoblinMultiattackDispatch(secondDispatch, 1, 1, 0, true)
     val ended = endTurn(multiattack)
     all {
       assert(not(multiattack.actionAvailable)),
-      assert(multiattack.goblin.multiattackDispatchesRemaining == 2),
+      assert(multiattack.goblin.multiattackDispatchesRemaining == 3),
       assert(goblinMultiattackDispatchContinuationOpen(multiattack)),
-      assert(recursive.goblin.multiattackDispatchesRemaining == 2),
-      assert(firstDispatch.goblin.multiattackDispatchesRemaining == 1),
-      assert(secondDispatch.goblin.multiattackDispatchesRemaining == 0),
-      assert(not(goblinMultiattackDispatchContinuationOpen(secondDispatch))),
+      assert(recursive.goblin.multiattackDispatchesRemaining == 3),
+      assert(firstDispatch.goblin.multiattackDispatchesRemaining == 2),
+      assert(secondDispatch.goblin.multiattackDispatchesRemaining == 1),
+      assert(thirdDispatch.goblin.multiattackDispatchesRemaining == 0),
+      assert(not(goblinMultiattackDispatchContinuationOpen(thirdDispatch))),
       assert(ended.goblin.multiattackDispatchesRemaining == 0),
     }
   }

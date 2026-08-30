@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Schema } from "effect";
@@ -7,7 +8,15 @@ import {
   movementFeet,
   resourceCount,
 } from "@dnd/shared/types";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import {
+  CreatureRechargeMinimumRollSchema,
+  StatBlockProcedureOrdinalSchema,
+  StatBlockProcedureResourceOrdinalSchema,
+} from "@dnd/surface/surface/schema";
+import type {
+  StatBlockProcedureEntry,
+  StatBlockRecord,
+} from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {
   BattleCheckpointFrontierEnvelopeSchema,
@@ -26,11 +35,14 @@ import {
   type BattleState,
 } from "./index.ts";
 import {
+  admittedStatBlockSource,
   resolveBattleSubject,
   battleId,
   characterSeed,
   fighterId,
   monsterResourceStatBlock,
+  isNonSpellExecutableProcedureEntryOfKind,
+  projectedStatBlockRuntimeSource,
   statBlockCatalog,
   startBattleRight,
   statBlockCreatureInit,
@@ -69,6 +81,7 @@ import {
 import {
   restoreStatBlockExecutionAdmission,
   restoreStatBlockExecutionAdmissions,
+  isNonSpellStatBlockProcedureBinding,
   spendStatBlockProcedureResources,
   statBlockProcedureBinding,
   statBlockExecutionAdmissionCohort,
@@ -84,22 +97,78 @@ import {
 } from "./battle-reducer/api-lifecycle.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import {
+  attackExecutionSelectionForOption,
+  boundAttackExecutionSelectionMatchesOption,
+} from "./battle-action-options.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
 
 const isolatedExecutionBattleId = battleId(
   "battle-stat-block-isolated-execution-admission",
 );
 
-function isolatedStatBlockAdmissions<TStatBlock extends StatBlockRecord>(
+function isolatedStatBlockAdmissions(
   actorId: CombatantId,
-  statBlocks: readonly TStatBlock[],
-): readonly StatBlockExecutionAdmission<TStatBlock>[] {
+  statBlocks: readonly StatBlockRecord[],
+): readonly StatBlockExecutionAdmission[] {
   return statBlockExecutionAdmissionCohort(
     isolatedExecutionBattleId,
     actorId,
-    statBlocks,
+    statBlocks.map(admittedStatBlockSource),
     battleExecutionScopeOrdinal(0),
   ).admissions;
 }
+
+function procedureOrdinal(value: number) {
+  return Schema.decodeSync(StatBlockProcedureOrdinalSchema)(value);
+}
+
+function resourceOrdinal(value: number) {
+  return Schema.decodeSync(StatBlockProcedureResourceOrdinalSchema)(value);
+}
+
+function requireProcedureActions(
+  record: StatBlockRecord,
+): readonly [StatBlockProcedureEntry, ...StatBlockProcedureEntry[]] {
+  const actions = record.statBlock.actions;
+  if (actions === undefined) {
+    throw new Error("Expected Stat Block action procedures.");
+  }
+  return actions;
+}
+
+function mapNonEmpty<T, U>(
+  values: readonly [T, ...T[]],
+  map: (value: T) => U,
+): readonly [U, ...U[]] {
+  const [first, ...rest] = values;
+  return [map(first), ...rest.map(map)];
+}
+
+test("restore retains an empty Stat Block resource graph", () => {
+  const actorId = combatantId("execution-ref-empty-resources");
+  const source = projectedStatBlockRuntimeSource(statBlockRecord());
+  expect(source.resources).toEqual([]);
+  const admission = isolatedStatBlockAdmissions(actorId, [
+    statBlockRecord(),
+  ])[0];
+  if (admission === undefined) {
+    throw new Error("Expected the synthetic Stat Block admission.");
+  }
+
+  const restored = restoreStatBlockExecutionAdmission(
+    isolatedExecutionBattleId,
+    actorId,
+    source,
+    statBlockExecutionSnapshot(admission.execution),
+  );
+
+  expect(Either.isRight(restored)).toBe(true);
+  if (Either.isLeft(restored)) return;
+  expect(restored.right.statBlock.resources).toEqual([]);
+});
 
 function executionReferenceView(
   state: BattleState,
@@ -208,47 +277,48 @@ describe("Stat Block execution references", () => {
   });
   test("offers only rolled damage when structured attack damage omits a static value", () => {
     const base = statBlockRecord();
-    const attacks = base.statBlock.actions?.attacks;
-    if (attacks === undefined) {
+    const actions = base.statBlock.actions;
+    if (actions === undefined) {
       throw new Error("Expected Stat Block attacks.");
     }
-    const [firstAttack, ...remainingAttacks] = attacks;
+    const attacks = actions.filter(
+      (entry) =>
+        entry.kind === "executable" && entry.procedure.kind === "attack_roll",
+    );
     const withoutStaticDamage = (
-      attack: (typeof attacks)[number],
-    ): (typeof attacks)[number] => {
-      const [firstEffect, ...remainingEffects] = attack.onHit;
-      const withoutStaticAmount = (
-        effect: (typeof attack.onHit)[number],
-      ): (typeof attack.onHit)[number] => {
-        if (
-          effect.kind !== "damage" ||
-          effect.amount.kind !== "fixed" ||
-          !("static" in effect.amount)
-        ) {
-          return effect;
-        }
-        const { static: _static, ...amount } = effect.amount;
-        return { ...effect, amount };
-      };
+      entry: (typeof actions)[number],
+    ): (typeof actions)[number] => {
+      if (
+        entry.kind !== "executable" ||
+        entry.procedure.kind !== "attack_roll"
+      ) {
+        return entry;
+      }
       return {
-        ...attack,
-        onHit: [
-          withoutStaticAmount(firstEffect),
-          ...remainingEffects.map(withoutStaticAmount),
-        ],
+        ...entry,
+        procedure: {
+          ...entry.procedure,
+          onHit: mapNonEmpty(entry.procedure.onHit, (effect) => {
+            if (
+              (effect.kind !== "damage" &&
+                effect.kind !== "conditional_bonus_damage") ||
+              effect.amount.kind !== "fixed" ||
+              !("expr" in effect.amount) ||
+              !("static" in effect.amount)
+            ) {
+              return effect;
+            }
+            const { static: _static, ...amount } = effect.amount;
+            return { ...effect, amount };
+          }),
+        },
       };
     };
     const rolledOnly = {
       ...base,
       statBlock: {
         ...base.statBlock,
-        actions: {
-          ...base.statBlock.actions,
-          attacks: [
-            withoutStaticDamage(firstAttack),
-            ...remainingAttacks.map(withoutStaticDamage),
-          ],
-        },
+        actions: mapNonEmpty(actions, withoutStaticDamage),
       },
     } satisfies StatBlockRecord;
     const [admission] = isolatedStatBlockAdmissions(
@@ -256,9 +326,16 @@ describe("Stat Block execution references", () => {
       [rolledOnly],
     );
     expect(
-      statBlockAttackActionOptions(admission.execution).map(
-        ({ damageNotation }) => damageNotation,
-      ),
+      statBlockAttackActionOptions(admission.execution).map((option) => {
+        const selection =
+          attackExecutionSelectionForOption(option).statBlockDamageSelection;
+        return statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          selection,
+          "rolled",
+        )
+          ? "rolled"
+          : "static";
+      }),
     ).toEqual([...attacks.map(() => "rolled"), "static"]);
   });
 
@@ -581,7 +658,11 @@ describe("Stat Block execution references", () => {
         act.subject.action === "attack" &&
         act.subject.actorId === firstId &&
         act.subject.procedureRef !== undefined &&
-        act.subject.statBlockDamageNotation === undefined,
+        act.subject.statBlockDamageSelection !== undefined &&
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          act.subject.statBlockDamageSelection,
+          "rolled",
+        ),
     )?.subject;
     if (replaySubject?.tag !== "action" || replaySubject.action !== "attack") {
       throw new Error("Expected a rolled Stat Block attack replay subject.");
@@ -595,7 +676,7 @@ describe("Stat Block execution references", () => {
     ).toBe("invalid");
   });
 
-  test("admits only fully supported Bonus Action options and allocates rest-recharge ownership", () => {
+  test("rejects mixed Bonus Action options and allocates supported-only rest-recharge ownership", () => {
     const base = statBlockRecord();
     const statBlock: StatBlockRecord = {
       ...base,
@@ -607,24 +688,79 @@ describe("Stat Block execution references", () => {
       },
       statBlock: {
         ...base.statBlock,
-        displayName: "Synthetic Rest-Recharge Action Options",
-        bonusActions: {
-          actionOptions: [
-            {
+        resources: [
+          {
+            ordinal: Schema.decodeSync(StatBlockProcedureResourceOrdinalSchema)(
+              1,
+            ),
+            ownership: "each",
+            limit: { kind: "recharge_after_rest", rest: "short_or_long" },
+          },
+        ],
+        bonusActions: [
+          {
+            kind: "executable",
+            procedureOrdinal: Schema.decodeSync(
+              StatBlockProcedureOrdinalSchema,
+            )(1),
+            procedure: {
+              kind: "action_option",
               name: "Withdraw",
               options: ["disengage"],
-              limitedUse: { kind: "recharge_after_rest" },
             },
-            {
+            resourceRefs: {
+              kind: "some",
+              ordinals: [
+                Schema.decodeSync(StatBlockProcedureResourceOrdinalSchema)(1),
+              ],
+            },
+          },
+          {
+            kind: "executable",
+            procedureOrdinal: Schema.decodeSync(
+              StatBlockProcedureOrdinalSchema,
+            )(2),
+            procedure: {
+              kind: "action_option",
               name: "Overextended Withdrawal",
               options: ["disengage", "dash"],
             },
-          ],
+            resourceRefs: { kind: "none" },
+          },
+        ],
+      },
+    };
+    const bonusActions = statBlock.statBlock.bonusActions;
+    if (bonusActions === undefined || bonusActions.length !== 2) {
+      throw new Error(
+        "Expected supported and unsupported Bonus Action options.",
+      );
+    }
+    const [supportedBonusAction, unsupportedBonusAction] = bonusActions;
+    const projected = projectAuthoredStatBlock(statBlock);
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(projected.left).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "bonusActions",
+          procedureOrdinal: unsupportedBonusAction.procedureOrdinal,
         },
+      ],
+    });
+    const supportedOnlyStatBlock: StatBlockRecord = {
+      ...statBlock,
+      statBlock: {
+        ...statBlock.statBlock,
+        bonusActions: [supportedBonusAction],
       },
     };
     const actorId = combatantId("execution-ref-rest-recharge-owner");
-    const admission = isolatedStatBlockAdmissions(actorId, [statBlock])[0];
+    const admission = isolatedStatBlockAdmissions(actorId, [
+      supportedOnlyStatBlock,
+    ])[0];
     if (admission === undefined) {
       throw new Error("Expected the synthetic Stat Block admission.");
     }
@@ -643,6 +779,7 @@ describe("Stat Block execution references", () => {
     expect(admission.execution.resourcePools).toContainEqual({
       resourcePoolRef: binding.resourcePoolRefs[0],
       kind: "recharge_after_rest",
+      ownership: "each",
       available: true,
     });
 
@@ -653,12 +790,16 @@ describe("Stat Block execution references", () => {
     expect(spentExecution.resourcePools).toContainEqual({
       resourcePoolRef: binding.resourcePoolRefs[0],
       kind: "recharge_after_rest",
+      ownership: "each",
       available: false,
     });
+    const restoredSource = projectedStatBlockRuntimeSource(
+      supportedOnlyStatBlock,
+    );
     const restored = restoreStatBlockExecutionAdmission(
       isolatedExecutionBattleId,
       actorId,
-      statBlock,
+      restoredSource,
       statBlockExecutionSnapshot(spentExecution),
     );
     expect(Either.isRight(restored)).toBe(true);
@@ -667,6 +808,9 @@ describe("Stat Block execution references", () => {
     }
     expect(restored.right.execution.resourcePools).toEqual(
       spentExecution.resourcePools,
+    );
+    expect(restored.right.statBlock.resources).toEqual(
+      restoredSource.resources,
     );
   });
 
@@ -864,30 +1008,63 @@ describe("Stat Block execution references", () => {
   test("keeps identical procedure occurrences and their limited-use pools distinct", () => {
     const actorId = combatantId("execution-ref-identical-procedures");
     const base = monsterResourceStatBlock();
-    const attack = base.statBlock.actions?.attacks?.find(
-      (candidate) => candidate.limitedUse?.kind === "recharge",
+    const actions = requireProcedureActions(base);
+    const cinderBreath = actions.find(
+      (candidate) =>
+        candidate.kind === "executable" &&
+        candidate.procedure.kind === "attack_roll" &&
+        candidate.procedure.name === "Cinder Breath",
     );
-    if (attack === undefined)
-      throw new Error("Expected recharge attack fixture.");
+    const dreadGaze = actions.find(
+      (candidate) =>
+        candidate.kind === "executable" &&
+        candidate.procedure.kind === "attack_roll" &&
+        candidate.procedure.name === "Dread Gaze",
+    );
+    if (
+      cinderBreath?.kind !== "executable" ||
+      cinderBreath.procedure.kind !== "attack_roll" ||
+      dreadGaze?.kind !== "executable" ||
+      dreadGaze.procedure.kind !== "attack_roll"
+    ) {
+      throw new Error("Expected recharge attack fixtures.");
+    }
+    const echoBreath = {
+      ...dreadGaze,
+      procedureOrdinal: procedureOrdinal(2),
+      procedure: { ...dreadGaze.procedure, name: "Echo Breath" },
+      resourceRefs: {
+        kind: "some" as const,
+        ordinals: [resourceOrdinal(1)] as const,
+      },
+    };
+    const multiattackEntry = {
+      kind: "executable" as const,
+      procedureOrdinal: procedureOrdinal(3),
+      procedure: {
+        kind: "multiattack" as const,
+        name: "Synthetic Limited Multiattack",
+        dispatches: [
+          {
+            procedureOrdinal: procedureOrdinal(1),
+            count: { kind: "literal" as const, value: 1 },
+          },
+        ] as const,
+      },
+      resourceRefs: { kind: "none" as const },
+    };
     const statBlock: StatBlockRecord = {
       ...base,
       statBlock: {
         ...base.statBlock,
-        actions: {
-          ...base.statBlock.actions,
-          multiattacks: [
-            {
-              name: "Synthetic Limited Multiattack",
-              dispatches: [
-                {
-                  name: attack.name,
-                  count: { kind: "literal", value: 1 },
-                },
-              ],
-            },
-          ],
-          attacks: [attack, { ...attack, name: "Echo Breath" }] as const,
-        },
+        actions: [cinderBreath, echoBreath, multiattackEntry],
+        resources: [
+          {
+            ...base.statBlock.resources![0],
+            ordinal: resourceOrdinal(1),
+            ownership: "each",
+          },
+        ],
       },
     };
     const battle = startBattleRight({
@@ -936,7 +1113,7 @@ describe("Stat Block execution references", () => {
             ? {
                 ...binding,
                 procedure: {
-                  kind: "multiattack",
+                  ...binding.procedure,
                   dispatchProcedureRefs: [
                     limitedBinding.procedureRef,
                     limitedBinding.procedureRef,
@@ -952,12 +1129,42 @@ describe("Stat Block execution references", () => {
   test("binds authored Multiattack dispatches independently of intrinsic Unarmed Strike", () => {
     const actorId = combatantId("authored-unarmed-strike-multiattack");
     const base = statBlockRecord();
-    const scimitar = base.statBlock.actions?.attacks?.find(
-      (attack) => attack.name === "Scimitar",
+    const actions = requireProcedureActions(base);
+    const scimitar = actions.find(
+      (entry) =>
+        entry.kind === "executable" &&
+        entry.procedure.kind === "attack_roll" &&
+        entry.procedure.name === "Scimitar",
     );
-    if (scimitar === undefined) {
+    if (
+      scimitar?.kind !== "executable" ||
+      scimitar.procedure.kind !== "attack_roll"
+    ) {
       throw new Error("Expected a Scimitar attack fixture.");
     }
+    const shortbow = actions[1];
+    if (shortbow === undefined) {
+      throw new Error("Expected the second Goblin Warrior action.");
+    }
+    const unarmedStrike = {
+      ...scimitar,
+      procedure: { ...scimitar.procedure, name: "Unarmed Strike" },
+    };
+    const multiattackEntry = {
+      kind: "executable" as const,
+      procedureOrdinal: procedureOrdinal(3),
+      procedure: {
+        kind: "multiattack" as const,
+        name: "Synthetic Unarmed Multiattack",
+        dispatches: [
+          {
+            procedureOrdinal: procedureOrdinal(1),
+            count: { kind: "literal" as const, value: 1 },
+          },
+        ] as const,
+      },
+      resourceRefs: { kind: "none" as const },
+    };
     const battle = startBattleRight({
       battleId: battleId("battle-authored-unarmed-strike-multiattack"),
       combatants: [
@@ -968,21 +1175,7 @@ describe("Stat Block execution references", () => {
             ...base,
             statBlock: {
               ...base.statBlock,
-              actions: {
-                ...base.statBlock.actions,
-                attacks: [{ ...scimitar, name: "Unarmed Strike" }],
-                multiattacks: [
-                  {
-                    name: "Synthetic Unarmed Multiattack",
-                    dispatches: [
-                      {
-                        name: "Unarmed Strike",
-                        count: { kind: "literal", value: 1 },
-                      },
-                    ],
-                  },
-                ],
-              },
+              actions: [unarmedStrike, shortbow, multiattackEntry],
             },
           },
         }),
@@ -1017,35 +1210,48 @@ describe("Stat Block execution references", () => {
   test("binds distinct Legendary Action procedures to one explicit shared pool", () => {
     const actorId = combatantId("execution-ref-shared-pool");
     const base = monsterResourceStatBlock();
-    const tailSwipe = base.statBlock.legendaryActions?.actions.attacks?.[0];
-    const actionAttack = base.statBlock.actions?.attacks?.[0];
-    if (tailSwipe === undefined || actionAttack === undefined) {
+    const actions = requireProcedureActions(base);
+    const tailSwipe = base.statBlock.legendaryActions?.entries[0];
+    const actionAttack = actions[0];
+    const secondAction = actions[1];
+    if (
+      tailSwipe?.kind !== "executable" ||
+      tailSwipe.procedure.kind !== "attack_roll" ||
+      actionAttack?.kind !== "executable" ||
+      actionAttack.procedure.kind !== "attack_roll" ||
+      secondAction === undefined
+    ) {
       throw new Error("Expected action and Legendary Action fixtures.");
     }
+    const multiattackEntry = {
+      kind: "executable" as const,
+      procedureOrdinal: procedureOrdinal(3),
+      procedure: {
+        kind: "multiattack" as const,
+        name: "Synthetic Multiattack",
+        dispatches: [
+          {
+            procedureOrdinal: procedureOrdinal(1),
+            count: { kind: "literal" as const, value: 1 },
+          },
+        ] as const,
+      },
+      resourceRefs: { kind: "none" as const },
+    };
+    const wingSweep = {
+      ...tailSwipe,
+      procedureOrdinal: procedureOrdinal(2),
+      procedure: { ...tailSwipe.procedure, name: "Wing Sweep" },
+    };
     const statBlock: StatBlockRecord = {
       ...base,
       statBlock: {
         ...base.statBlock,
-        actions: {
-          ...base.statBlock.actions,
-          multiattacks: [
-            {
-              name: "Synthetic Multiattack",
-              dispatches: [
-                {
-                  name: actionAttack.name,
-                  count: { kind: "literal", value: 1 },
-                },
-              ],
-            },
-          ],
-        },
+        actions: [actionAttack, secondAction, multiattackEntry],
         legendaryActions: {
           ...base.statBlock.legendaryActions,
-          uses: 2,
-          actions: {
-            attacks: [tailSwipe, { ...tailSwipe, name: "Wing Sweep" }] as const,
-          },
+          uses: { kind: "fixed", uses: 2 },
+          entries: [tailSwipe, wingSweep],
         },
       },
     };
@@ -1142,21 +1348,17 @@ describe("Stat Block execution references", () => {
         ...statBlock.statBlock,
         legendaryActions: {
           ...statBlock.statBlock.legendaryActions,
-          uses: 2,
-          actions: {
-            attacks: [
-              {
-                ...tailSwipe,
-                attackBonus: {
-                  kind: "linear_per_level",
-                  axis: "character",
-                  base: 1,
-                  perLevel: 1,
-                  startingAtLevel: 1,
-                },
-              },
-            ],
-          },
+          uses: { kind: "fixed", uses: 2 },
+          entries: [
+            {
+              kind: "textOnly",
+              procedureOrdinal: procedureOrdinal(1),
+              name: "Unsupported Legendary Procedure",
+              description: "A synthetic unsupported legendary procedure.",
+              reason: "unsupported_action_shape",
+              resourceRefs: { kind: "none" },
+            },
+          ],
         },
       },
     };
@@ -1185,29 +1387,167 @@ describe("Stat Block execution references", () => {
     ).toThrow();
   });
 
+  test("rejects spellcasting groups bound to a Legendary Action pool", () => {
+    const actorId = combatantId("execution-ref-spellcasting-legendary-pool");
+    const base = monsterResourceStatBlock();
+    const actions = requireProcedureActions(base);
+    const spellcasting = syntheticSpellcastingProcedureEntry();
+    const record: StatBlockRecord = {
+      ...base,
+      statBlock: {
+        ...base.statBlock,
+        actions: [...actions, spellcasting],
+      },
+    };
+    const admission = isolatedStatBlockAdmissions(actorId, [record])[0];
+    if (admission === undefined) {
+      throw new Error("Expected the spellcasting Stat Block admission.");
+    }
+    const snapshot = statBlockExecutionSnapshot(admission.execution);
+    const spellcastingBinding = snapshot.procedureBindings.find(
+      (binding) => binding.procedure.kind === "spellcasting",
+    );
+    const legendaryPool = snapshot.resourcePools.find(
+      (pool) => pool.kind === "legendaryActions",
+    );
+    if (
+      spellcastingBinding?.procedure.kind !== "spellcasting" ||
+      legendaryPool === undefined
+    ) {
+      throw new Error(
+        "Expected spellcasting and Legendary Action execution bindings.",
+      );
+    }
+    const limitedGroup = spellcastingBinding.procedure.groups.find(
+      (group) => group.kind === "limited",
+    );
+    if (limitedGroup === undefined) {
+      throw new Error("Expected a limited spellcasting group.");
+    }
+    const malformedProcedure = {
+      ...spellcastingBinding.procedure,
+      groups: spellcastingBinding.procedure.groups.map((group) =>
+        group === limitedGroup
+          ? {
+              ...group,
+              resourcePoolRefs: [legendaryPool.resourcePoolRef],
+            }
+          : group,
+      ),
+    };
+    const malformed = {
+      ...snapshot,
+      procedureBindings: snapshot.procedureBindings.map((binding) =>
+        binding.procedureRef === spellcastingBinding.procedureRef
+          ? { ...binding, procedure: malformedProcedure }
+          : binding,
+      ),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)(malformed),
+    ).toThrow();
+
+    const malformedTopLevelResourceBinding = {
+      ...snapshot,
+      procedureBindings: snapshot.procedureBindings.map((binding) =>
+        binding.procedureRef === spellcastingBinding.procedureRef
+          ? {
+              ...binding,
+              resourcePoolRefs: [legendaryPool.resourcePoolRef],
+            }
+          : binding,
+      ),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)(
+        malformedTopLevelResourceBinding,
+      ),
+    ).toThrow();
+
+    const atWillGroup = spellcastingBinding.procedure.groups.find(
+      (group) => group.kind === "at_will",
+    );
+    if (atWillGroup === undefined) {
+      throw new Error("Expected an at-will spellcasting group.");
+    }
+    const schemaMalformedGroups = [
+      spellcastingBinding.procedure.groups.map((group) =>
+        group === atWillGroup
+          ? {
+              ...group,
+              resourcePoolRefs: [legendaryPool.resourcePoolRef],
+            }
+          : group,
+      ),
+      spellcastingBinding.procedure.groups.map((group) =>
+        group === limitedGroup ? { ...group, resourcePoolRefs: [] } : group,
+      ),
+    ];
+    for (const groups of schemaMalformedGroups) {
+      expect(() =>
+        Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)({
+          ...snapshot,
+          procedureBindings: snapshot.procedureBindings.map((binding) =>
+            binding.procedureRef === spellcastingBinding.procedureRef
+              ? {
+                  ...binding,
+                  procedure: { ...spellcastingBinding.procedure, groups },
+                }
+              : binding,
+          ),
+        }),
+      ).toThrow();
+    }
+
+    const dailyPool = snapshot.resourcePools.find(
+      (pool) => pool.kind === "daily",
+    );
+    if (dailyPool === undefined) {
+      throw new Error("Expected a daily spellcasting resource pool.");
+    }
+    expect(() =>
+      Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)({
+        ...snapshot,
+        resourcePools: snapshot.resourcePools.map((pool) =>
+          pool === dailyPool
+            ? {
+                ...pool,
+                usesRemaining: resourceCount(Number(pool.usesMax) + 1),
+              }
+            : pool,
+        ),
+      }),
+    ).toThrow();
+  });
+
   test("spends a procedure's complete resource set atomically", () => {
     const actorId = combatantId("execution-ref-atomic-resource-spend");
     const base = monsterResourceStatBlock();
-    const legendaryAttack =
-      base.statBlock.legendaryActions?.actions.attacks?.[0];
-    if (legendaryAttack === undefined) {
+    const legendaryAttack = base.statBlock.legendaryActions?.entries[0];
+    if (
+      legendaryAttack === undefined ||
+      !isNonSpellExecutableProcedureEntryOfKind(legendaryAttack, "attack_roll")
+    ) {
       throw new Error("Expected the synthetic Legendary Action fixture.");
     }
+    const limitedLegendaryAttack = {
+      ...legendaryAttack,
+      resourceRefs: {
+        kind: "some" as const,
+        ordinals: [resourceOrdinal(2)] as const,
+      },
+    };
     const statBlock: StatBlockRecord = {
       ...base,
       statBlock: {
         ...base.statBlock,
         legendaryActions: {
           ...base.statBlock.legendaryActions,
-          uses: base.statBlock.legendaryActions?.uses ?? 2,
-          actions: {
-            attacks: [
-              {
-                ...legendaryAttack,
-                limitedUse: { kind: "daily", uses: 1 },
-              },
-            ],
+          uses: base.statBlock.legendaryActions?.uses ?? {
+            kind: "fixed",
+            uses: 2,
           },
+          entries: [limitedLegendaryAttack],
         },
       },
     };
@@ -1219,6 +1559,9 @@ describe("Stat Block execution references", () => {
     );
     if (admission === undefined || binding === undefined) {
       throw new Error("Expected an admitted limited-use Legendary Action.");
+    }
+    if (!isNonSpellStatBlockProcedureBinding(binding)) {
+      throw new Error("Expected a non-spellcasting resource binding.");
     }
     expect(binding.resourcePoolRefs).toHaveLength(2);
     const reorderedSnapshot = Schema.decodeUnknownSync(
@@ -1238,7 +1581,7 @@ describe("Stat Block execution references", () => {
     const restoredFromReorderedOwnership = restoreStatBlockExecutionAdmission(
       isolatedExecutionBattleId,
       actorId,
-      statBlock,
+      projectedStatBlockRuntimeSource(statBlock),
       reorderedSnapshot,
     );
     expect(Either.isRight(restoredFromReorderedOwnership)).toBe(true);
@@ -1251,17 +1594,22 @@ describe("Stat Block execution references", () => {
         restoreStatBlockExecutionAdmission(
           isolatedExecutionBattleId,
           actorId,
-          statBlock,
+          projectedStatBlockRuntimeSource(statBlock),
           {
             ...statBlockExecutionSnapshot(admission.execution),
             procedureBindings: admission.execution.procedureBindings.map(
-              (candidate) =>
-                candidate.procedureRef === binding.procedureRef
-                  ? {
-                      ...candidate,
-                      resourcePoolRefs: [firstOwnedPoolRef, firstOwnedPoolRef],
-                    }
-                  : candidate,
+              (candidate) => {
+                if (
+                  candidate.procedureRef !== binding.procedureRef ||
+                  !isNonSpellStatBlockProcedureBinding(candidate)
+                ) {
+                  return candidate;
+                }
+                return {
+                  ...candidate,
+                  resourcePoolRefs: [firstOwnedPoolRef, firstOwnedPoolRef],
+                };
+              },
             ),
           },
         ),
@@ -1318,7 +1666,7 @@ describe("Stat Block execution references", () => {
       {
         reactorId: actorId,
         distanceFeet: movementFeet(5),
-        procedureRef: attack.procedureRef,
+        ...attackExecutionSelectionForOption(attack),
       },
     ])[0];
     if (
@@ -1374,8 +1722,7 @@ describe("Stat Block execution references", () => {
         act.subject.action === "attack" &&
         "procedureRef" in act.subject &&
         act.subject.procedureRef === meleeOption.procedureRef &&
-        (act.subject.statBlockDamageNotation ?? "rolled") ===
-          meleeOption.damageNotation,
+        boundAttackExecutionSelectionMatchesOption(act.subject, meleeOption),
     );
     if (meleeOption === undefined || attackAct === undefined) {
       throw new Error("Expected an admitted melee attack target hole.");
@@ -1440,10 +1787,19 @@ describe("Stat Block execution references", () => {
     const decodedStatBlockAttack = decodedAttackRollHole.attack;
     expect(decodedStatBlockAttack).toEqual(attackRollHole.attack);
     expect(decodedStatBlockAttack).not.toHaveProperty("part");
+    if (
+      attackAct.subject.tag !== "action" ||
+      attackAct.subject.action !== "attack" ||
+      attackAct.subject.statBlockDamageSelection === undefined
+    ) {
+      throw new Error("Expected a selected Stat Block attack subject.");
+    }
+    const damageSelection = attackAct.subject.statBlockDamageSelection;
+    const firstSelection = damageSelection[0];
     expect(() =>
       Schema.decodeUnknownSync(BattleSubjectSchema)({
         ...attackAct.subject,
-        statBlockDamageNotation: "rolled",
+        statBlockDamageSelection: [...damageSelection, firstSelection],
       }),
     ).toThrow();
     expect(() =>
@@ -1946,7 +2302,7 @@ describe("Stat Block execution references", () => {
     const restored = restoreStatBlockExecutionAdmission(
       battle.battleId,
       actorId,
-      statBlock,
+      projectedStatBlockRuntimeSource(statBlock),
       decodedOrigin.execution,
     );
     expect(Either.isRight(restored)).toBe(true);
@@ -1962,7 +2318,7 @@ describe("Stat Block execution references", () => {
     const restoredFromReorderedPools = restoreStatBlockExecutionAdmission(
       battle.battleId,
       actorId,
-      statBlock,
+      projectedStatBlockRuntimeSource(statBlock),
       {
         ...decodedOrigin.execution,
         resourcePools: [...decodedOrigin.execution.resourcePools].reverse(),
@@ -2099,7 +2455,7 @@ describe("Stat Block execution references", () => {
         restoreStatBlockExecutionAdmission(
           battle.battleId,
           actorId,
-          statBlock,
+          projectedStatBlockRuntimeSource(statBlock),
           {
             ...decodedOrigin.execution,
             procedureBindings: decodedOrigin.execution.procedureBindings.map(
@@ -2115,7 +2471,7 @@ describe("Stat Block execution references", () => {
         restoreStatBlockExecutionAdmission(
           battle.battleId,
           actorId,
-          statBlock,
+          projectedStatBlockRuntimeSource(statBlock),
           {
             ...decodedOrigin.execution,
             resourcePools: decodedOrigin.execution.resourcePools.map(
@@ -2144,7 +2500,7 @@ describe("Stat Block execution references", () => {
         restoreStatBlockExecutionAdmission(
           battle.battleId,
           combatantId("different-execution-owner"),
-          statBlock,
+          projectedStatBlockRuntimeSource(statBlock),
           decodedOrigin.execution,
         ),
       ),
@@ -2165,37 +2521,47 @@ describe("Stat Block execution references", () => {
     const actorId = combatantId("execution-ref-changed-binding");
     const statBlock = monsterResourceStatBlock();
     const admission = isolatedStatBlockAdmissions(actorId, [statBlock])[0];
-    const firstAttack = statBlock.statBlock.actions?.attacks?.[0];
-    if (admission === undefined || firstAttack === undefined) {
+    const firstAttack = requireProcedureActions(statBlock).find(
+      (entry) =>
+        entry.kind === "executable" && entry.procedure.kind === "attack_roll",
+    );
+    if (
+      admission === undefined ||
+      firstAttack?.kind !== "executable" ||
+      firstAttack.procedure.kind !== "attack_roll"
+    ) {
       throw new Error("Expected an admitted action attack.");
     }
     const changedStatBlock: StatBlockRecord = {
       ...statBlock,
       statBlock: {
         ...statBlock.statBlock,
-        actions: {
-          ...statBlock.statBlock.actions,
-          attacks: [
-            {
-              ...firstAttack,
-              attackBonus: {
-                kind: "literal",
-                value:
-                  firstAttack.attackBonus.kind === "literal"
-                    ? firstAttack.attackBonus.value + 1
-                    : 1,
-              },
-            },
-            ...(statBlock.statBlock.actions?.attacks?.slice(1) ?? []),
-          ],
-        },
+        actions: mapNonEmpty(requireProcedureActions(statBlock), (entry) =>
+          entry === firstAttack &&
+          entry.kind === "executable" &&
+          entry.procedure.kind === "attack_roll"
+            ? {
+                ...entry,
+                procedure: {
+                  ...entry.procedure,
+                  attackBonus: {
+                    kind: "literal" as const,
+                    value:
+                      entry.procedure.attackBonus.kind === "literal"
+                        ? entry.procedure.attackBonus.value + 1
+                        : 1,
+                  },
+                },
+              }
+            : entry,
+        ),
       },
     };
 
     const restored = restoreStatBlockExecutionAdmission(
       isolatedExecutionBattleId,
       actorId,
-      changedStatBlock,
+      projectedStatBlockRuntimeSource(changedStatBlock),
       statBlockExecutionSnapshot(admission.execution),
     );
 
@@ -2253,7 +2619,7 @@ describe("Stat Block execution references", () => {
       actorId,
       [
         {
-          statBlock: statBlocks[0],
+          statBlock: projectedStatBlockRuntimeSource(statBlocks[0]),
           snapshot: {
             ...kindSnapshot,
             resourcePools: kindSnapshot.resourcePools.map((pool) =>
@@ -2261,6 +2627,7 @@ describe("Stat Block execution references", () => {
                 ? {
                     resourcePoolRef: pool.resourcePoolRef,
                     kind: "recharge_after_rest" as const,
+                    ownership: pool.ownership,
                     available: pool.available,
                   }
                 : pool,
@@ -2268,7 +2635,7 @@ describe("Stat Block execution references", () => {
           },
         },
         {
-          statBlock: statBlocks[1],
+          statBlock: projectedStatBlockRuntimeSource(statBlocks[1]),
           snapshot: {
             ...maximumSnapshot,
             resourcePools: maximumSnapshot.resourcePools.map((pool) =>
@@ -2282,12 +2649,17 @@ describe("Stat Block execution references", () => {
           },
         },
         {
-          statBlock: statBlocks[2],
+          statBlock: projectedStatBlockRuntimeSource(statBlocks[2]),
           snapshot: {
             ...rechargeSnapshot,
             resourcePools: rechargeSnapshot.resourcePools.map((pool) =>
               pool === thresholdRechargePool
-                ? { ...pool, minimumRoll: 6 }
+                ? {
+                    ...pool,
+                    minimumRoll: Schema.decodeUnknownSync(
+                      CreatureRechargeMinimumRollSchema,
+                    )(6),
+                  }
                 : pool,
             ),
           },
@@ -2343,8 +2715,14 @@ describe("Stat Block execution references", () => {
       isolatedExecutionBattleId,
       actorId,
       [
-        { statBlock: firstForm, snapshot: firstSnapshot },
-        { statBlock: secondForm, snapshot: secondSnapshot },
+        {
+          statBlock: projectedStatBlockRuntimeSource(firstForm),
+          snapshot: firstSnapshot,
+        },
+        {
+          statBlock: projectedStatBlockRuntimeSource(secondForm),
+          snapshot: secondSnapshot,
+        },
       ],
     );
 
@@ -2367,7 +2745,7 @@ describe("Stat Block execution references", () => {
         restoreStatBlockExecutionAdmission(
           isolatedExecutionBattleId,
           actorId,
-          secondForm,
+          projectedStatBlockRuntimeSource(secondForm),
           secondSnapshot,
         ),
       ),
@@ -2387,7 +2765,7 @@ describe("Stat Block execution references", () => {
         throw new Error("Expected the paired Stat Block fixture.");
       }
       return {
-        statBlock,
+        statBlock: projectedStatBlockRuntimeSource(statBlock),
         snapshot: {
           ...statBlockExecutionSnapshot(admission.execution),
           procedureBindings: [],
@@ -2413,11 +2791,23 @@ describe("Stat Block execution references", () => {
 
   test("serializes and restores the execution cohort owned by Wild Shape forms", () => {
     const actorId = combatantId("execution-ref-wild-shape-owner");
-    const baseForm: StatBlockRecord =
-      statBlockCatalog.requireStatBlock("stat_block_rat");
-    const baseAttack = baseForm.statBlock.actions?.attacks?.[0];
-    if (baseAttack === undefined) {
-      throw new Error("Expected the SRD Rat fixture to have an attack.");
+    const baseForm: StatBlockRecord = assertStatBlockForTest(
+      statBlockCatalog,
+      parseSharedStatBlockId("stat_block_riding_horse"),
+    );
+    const baseActions = baseForm.statBlock.actions;
+    const baseAttack = baseActions?.find(
+      (entry) =>
+        entry.kind === "executable" && entry.procedure.kind === "attack_roll",
+    );
+    if (
+      baseActions === undefined ||
+      baseAttack === undefined ||
+      !isNonSpellExecutableProcedureEntryOfKind(baseAttack, "attack_roll")
+    ) {
+      throw new Error(
+        "Expected the SRD Riding Horse fixture to have an attack.",
+      );
     }
     const limitedForm: StatBlockRecord = {
       ...baseForm,
@@ -2429,17 +2819,29 @@ describe("Stat Block execution references", () => {
       },
       statBlock: {
         ...baseForm.statBlock,
-        displayName: "Synthetic Limited Wild Shape Form",
-        actions: {
-          ...baseForm.statBlock.actions,
-          attacks: [
-            {
-              ...baseAttack,
-              name: "Synthetic Limited Strike",
-              limitedUse: { kind: "daily" as const, uses: 1 },
-            },
-          ],
-        },
+        actions: mapNonEmpty(baseActions, (entry) =>
+          isNonSpellExecutableProcedureEntryOfKind(entry, "attack_roll") &&
+          entry.procedureOrdinal === baseAttack.procedureOrdinal
+            ? {
+                ...entry,
+                procedure: {
+                  ...entry.procedure,
+                  name: "Synthetic Limited Strike",
+                },
+                resourceRefs: {
+                  kind: "some" as const,
+                  ordinals: [resourceOrdinal(1)] as const,
+                },
+              }
+            : entry,
+        ),
+        resources: [
+          {
+            ordinal: resourceOrdinal(1),
+            ownership: "each" as const,
+            limit: { kind: "daily" as const, uses: 1 },
+          },
+        ],
       },
     };
     const sourceForms: readonly StatBlockRecord[] = [baseForm, limitedForm];
@@ -2549,7 +2951,10 @@ describe("Stat Block execution references", () => {
         if (formSnapshot === undefined) {
           throw new Error("Expected the corresponding serialized form.");
         }
-        return { statBlock, snapshot: formSnapshot.execution };
+        return {
+          statBlock: projectedStatBlockRuntimeSource(statBlock),
+          snapshot: formSnapshot.execution,
+        };
       }),
     );
     expect(Either.isRight(restored)).toBe(true);

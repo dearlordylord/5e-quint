@@ -1,7 +1,9 @@
 // The mutual import cycle with statblock.ts is tolerated
 // because all imported bindings are function values used only at call time.
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
-// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 
 import { Match } from "effect";
 import { optionalProperty } from "../optional-property.ts";
@@ -24,12 +26,11 @@ import {
   type BattleWeaponDamage,
   type CharacterUnarmedStrikeActionOption,
   type CharacterWeaponAttackActionOption,
+  type SelectedStatBlockAttackDamage,
+  type SelectedStatBlockAttackDamageComponent,
   type StatBlockAttackActionOption,
-  type StatBlockAttackDamage,
-  type StatBlockAttackDamageComponent,
-  type StaticStatBlockAttackDamage,
   type SupportedAttackActionOption,
-  type SupportedCreatureAttackRollMechanics,
+  type SupportedStatBlockAttackRollMechanics,
 } from "../battle-action-options.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
@@ -60,7 +61,6 @@ import {
   activeRageDamageBonusForFrenzy,
   ongoingFeatureProfileIsRecklessAttackForFrenzy,
 } from "./barbarian-frenzy.ts";
-import { supportedStatBlockAttackDamage } from "../statblock-attack-damage-support.ts";
 import { STANDARD_CREATURE_MELEE_REACH_FEET } from "./domain-constants.ts";
 import {
   FRENZY_DAMAGE_TYPE_HOLE_ID,
@@ -70,7 +70,7 @@ import {
 const byTag = Match.discriminator("tag");
 
 export function supportedStatBlockAttackTargetConstraint(
-  attack: SupportedCreatureAttackRollMechanics,
+  attack: SupportedStatBlockAttackRollMechanics,
 ): AttackTargetConstraint {
   return Match.value(attack).pipe(
     Match.when({ attackType: "melee" }, (meleeAttack) => ({
@@ -87,18 +87,9 @@ export function supportedStatBlockAttackTargetConstraint(
 }
 
 export function statBlockAttackDamage(
-  attack: Extract<
-    StatBlockAttackActionOption,
-    { readonly damageNotation: "static" }
-  >,
-): StaticStatBlockAttackDamage;
-export function statBlockAttackDamage(
   attack: StatBlockAttackActionOption,
-): StatBlockAttackDamage;
-export function statBlockAttackDamage(
-  attack: StatBlockAttackActionOption,
-): StatBlockAttackDamage {
-  return supportedStatBlockAttackDamage(attack.attack);
+): SelectedStatBlockAttackDamage {
+  return attack.attack.onHit.damage;
 }
 
 export function statBlockAttackTargetConstraint(
@@ -256,12 +247,17 @@ function weaponAttackWithDamageType(
   };
 }
 
-export function attackDamage(attack: SupportedAttackActionOption): {
-  readonly dice: number;
-  readonly dieSize: number;
-  readonly flat?: number;
-  readonly damageType: DamageType;
-} {
+export function attackDamage(attack: SupportedAttackActionOption):
+  | {
+      readonly dice: number;
+      readonly dieSize: number;
+      readonly flat?: number;
+      readonly damageType: DamageType;
+    }
+  | {
+      readonly static: number;
+      readonly damageType: DamageType;
+    } {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, (weaponAttack) =>
       selectedWeaponDamage(weaponAttack.weapon),
@@ -271,12 +267,20 @@ export function attackDamage(attack: SupportedAttackActionOption): {
     ),
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
       const [damage] = statBlockAttackDamage(statBlockAttack).baseComponents;
-      return {
-        dice: damage.expr.dice,
-        dieSize: damage.expr.dieSize,
-        ...optionalProperty("flat", damage.expr.flat),
-        damageType: damage.damageType,
-      };
+      return Match.value(damage).pipe(
+        Match.discriminatorsExhaustive("kind")({
+          fixed: (fixedDamage) => ({
+            static: fixedDamage.amount,
+            damageType: fixedDamage.damageType,
+          }),
+          rolled: (rolledDamage) => ({
+            dice: rolledDamage.expr.dice,
+            dieSize: rolledDamage.expr.dieSize,
+            ...optionalProperty("flat", rolledDamage.expr.flat),
+            damageType: rolledDamage.damageType,
+          }),
+        }),
+      );
     }),
     Match.exhaustive,
   );
@@ -573,9 +577,7 @@ function attackBaseDamageTypes(
   if (attack.kind === "unarmedStrike") {
     return [attack.effect.damage.damageType];
   }
-  const [first, ...rest] = supportedStatBlockAttackDamage(
-    attack.attack,
-  ).baseComponents;
+  const [first, ...rest] = attack.attack.onHit.damage.baseComponents;
   return [first.damageType, ...rest.map((component) => component.damageType)];
 }
 
@@ -924,10 +926,7 @@ export function attackDamageComponents(
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
       const damage = statBlockAttackDamage(statBlockAttack);
       const baseComponents = damage.baseComponents.flatMap((component) =>
-        statBlockAttack.damageNotation === "static" &&
-        component.static !== undefined
-          ? []
-          : [statBlockRolledDamageComponent(component, critical)],
+        rolledStatBlockDamageComponent(component, critical),
       );
       const advantageBonus = damage.advantageBonus;
       if (
@@ -937,13 +936,10 @@ export function attackDamageComponents(
         return baseComponents;
       }
 
-      return statBlockAttack.damageNotation === "static" &&
-        advantageBonus.static !== undefined
-        ? baseComponents
-        : [
-            ...baseComponents,
-            statBlockRolledDamageComponent(advantageBonus, critical),
-          ];
+      return [
+        ...baseComponents,
+        ...rolledStatBlockDamageComponent(advantageBonus, critical),
+      ];
     }),
     Match.exhaustive,
   );
@@ -955,17 +951,26 @@ export function attackDamageComponents(
   ];
 }
 
-function statBlockRolledDamageComponent(
-  damage: StatBlockAttackDamageComponent,
+function rolledStatBlockDamageComponent(
+  damage: SelectedStatBlockAttackDamageComponent,
   critical: boolean,
-): AttackDamageComponent {
-  return {
-    expr: {
-      ...damage.expr,
-      dice: critical ? damage.expr.dice * 2 : damage.expr.dice,
-    },
-    damageType: damage.damageType,
-  };
+): readonly AttackDamageComponent[] {
+  return Match.value(damage).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      fixed: () => [],
+      rolled: (rolledDamage) => [
+        {
+          expr: {
+            ...rolledDamage.expr,
+            dice: critical
+              ? rolledDamage.expr.dice * 2
+              : rolledDamage.expr.dice,
+          },
+          damageType: rolledDamage.damageType,
+        },
+      ],
+    }),
+  );
 }
 
 export function weaponDamageComponent(

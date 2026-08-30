@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   abilityScoreAssignment,
   classUnitId,
@@ -55,8 +56,9 @@ const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
 describe("MCP character sessions", () => {
   test("drops a selected Stat Block projection after catalog drift", () => {
     const root = createMcpPlaySessionRoot();
-    const selected = root.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const selected = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
     let retained = true;
     const store = createMcpSessionStore({
@@ -414,8 +416,9 @@ describe("MCP character sessions", () => {
       statBlockCatalog: root.statBlockCatalog,
       unitLibrary: root.unitLibrary,
     });
-    const goblin = root.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const goblin = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
     const combatant = expectRight(
       battleCreatureInitFromStatBlock({
@@ -434,6 +437,12 @@ describe("MCP character sessions", () => {
         combatants: [combatant],
       }),
     );
+    const foreignActive = expectRight(
+      startBattle({
+        battleId: battleId("battle:store-transition-foreign-active"),
+        combatants: [combatant],
+      }),
+    );
     const atomicSetupStore = createMcpSessionStore({
       statBlockCatalog: root.statBlockCatalog,
       unitLibrary: root.unitLibrary,
@@ -448,8 +457,47 @@ describe("MCP character sessions", () => {
       tag: "initialInitiativeSetup",
       setup: ownedSetup,
     });
+    expect(
+      store.planActiveBattleRosterTransition({
+        kind: "remove",
+        combatantId: combatant.combatantId,
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "invalidBattleStateTransition",
+        from: "none",
+        to: "activeBattle",
+      }),
+    );
+    expect(
+      store.applyInitialInitiativeSwap({
+        sourceId: combatant.combatantId,
+        candidateId: combatant.combatantId,
+        candidateWitness: { tag: "willingAlly" },
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "invalidBattleStateTransition",
+        from: "none",
+        to: "initialInitiativeSetup",
+      }),
+    );
+    expect(store.finalizeInitialInitiativeSetup()).toEqual(
+      Either.left({
+        tag: "invalidBattleStateTransition",
+        from: "none",
+        to: "activeBattle",
+      }),
+    );
     expect(store.storeInitialInitiativeSetup(ownedSetup)).toEqual(
       Either.right(undefined),
+    );
+    expect(store.storeActiveBattle(foreignActive)).toEqual(
+      Either.left({
+        tag: "invalidBattleStateTransition",
+        from: "initialInitiativeSetup",
+        to: "activeBattle",
+      }),
     );
     const before = store.snapshot();
     expect(
@@ -467,10 +515,11 @@ describe("MCP character sessions", () => {
     expect(store.snapshot()).toEqual(before);
 
     const active = expectRight(store.finalizeInitialInitiativeSetup());
-    const foreignActive = expectRight(
-      startBattle({
-        battleId: battleId("battle:store-transition-foreign-active"),
-        combatants: [combatant],
+    expect(store.storeInitialInitiativeSetup(ownedSetup)).toEqual(
+      Either.left({
+        tag: "invalidBattleStateTransition",
+        from: "activeBattle",
+        to: "initialInitiativeSetup",
       }),
     );
     expect(store.storeActiveBattle(foreignActive)).toEqual(
@@ -489,13 +538,18 @@ describe("MCP character sessions", () => {
       statBlockCatalog: root.statBlockCatalog,
       unitLibrary: root.unitLibrary,
     });
-    const goblin = root.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const goblin = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
-    const skeleton = root.statBlockCatalog.requireStatBlock(
-      "stat_block_skeleton",
+    const skeleton = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_skeleton"),
     );
-    const wolf = root.statBlockCatalog.requireStatBlock("stat_block_wolf");
+    const wolf = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_wolf"),
+    );
     const initial = expectRight(
       battleCreatureInitFromStatBlock({
         combatantId: combatantId("store-plan-initial"),
@@ -631,8 +685,9 @@ describe("MCP character sessions", () => {
     const goblin = expectRight(
       battleCreatureInitFromStatBlock({
         combatantId: combatantId("store-plan-character-goblin"),
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
+        statBlock: assertStatBlockForTest(
+          root.statBlockCatalog,
+          statBlockId("stat_block_goblin_warrior"),
         ),
         initiative: initiativeScore(8),
         currentHp: Hp(10),
@@ -694,8 +749,9 @@ describe("MCP character sessions", () => {
     const goblin = expectRight(
       battleCreatureInitFromStatBlock({
         combatantId: combatantId("store-plan-fills-goblin"),
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
+        statBlock: assertStatBlockForTest(
+          root.statBlockCatalog,
+          statBlockId("stat_block_goblin_warrior"),
         ),
         initiative: initiativeScore(10),
         currentHp: Hp(10),
@@ -708,8 +764,9 @@ describe("MCP character sessions", () => {
       expectRight(
         battleCreatureInitFromStatBlock({
           combatantId: combatantId("store-plan-fills-skeleton"),
-          statBlock: root.statBlockCatalog.requireStatBlock(
-            "stat_block_skeleton",
+          statBlock: assertStatBlockForTest(
+            root.statBlockCatalog,
+            statBlockId("stat_block_skeleton"),
           ),
           initiative: initiativeScore(6),
           currentHp: Hp(10),

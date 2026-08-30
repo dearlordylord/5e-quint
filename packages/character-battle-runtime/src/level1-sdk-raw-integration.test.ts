@@ -928,7 +928,7 @@ describe("level 1 SDK RAW integration", () => {
     const wizardBuild = finalizedLevelOneWizardBuild({
       draftIdText: "draft:l1-sdk-wizard-table-adjudicated-cantrip",
       expectedBuildLabel: "Wizard table-adjudicated cantrip",
-      cantrips: ["mage_hand", fireBoltSpellId, "ray_of_frost"],
+      cantrips: ["message", fireBoltSpellId, "ray_of_frost"],
       spellbook: [
         "detect_magic",
         "feather_fall",
@@ -946,7 +946,7 @@ describe("level 1 SDK RAW integration", () => {
     });
 
     expect(wizardBuild.spellcasting?.sources[0]?.cantrips).toEqual([
-      "mage_hand",
+      "message",
       fireBoltSpellId,
       "ray_of_frost",
     ]);
@@ -1791,9 +1791,11 @@ describe("level 1 SDK RAW integration", () => {
     expect(
       settleCharacterSheetFromBattle({
         sheet: hexSheet.sheet,
-        state: resolved.state,
-        context: session.context,
-        combatant: caster,
+        battleSession: battleRuntimeSessionForTest({
+          state: resolved.state,
+          context: session.context,
+        }),
+        combatantId: caster.combatantId,
         unitLibrary,
       }),
     ).toMatchObject({
@@ -1817,9 +1819,11 @@ describe("level 1 SDK RAW integration", () => {
     const settled = requireRight(
       settleCharacterSheetFromBattle({
         sheet: hexSheet.sheet,
-        state: concentrationEnded,
-        context: session.context,
-        combatant: cleanedCaster,
+        battleSession: battleRuntimeSessionForTest({
+          state: concentrationEnded,
+          context: session.context,
+        }),
+        combatantId: cleanedCaster.combatantId,
         unitLibrary,
       }),
     );
@@ -4806,9 +4810,11 @@ function assertLevelOneHuntersMark(input: {
   expect(
     settleCharacterSheetFromBattle({
       sheet: rangerSheet.sheet,
-      state: resolved.state,
-      context: session.context,
-      combatant: ranger,
+      battleSession: battleRuntimeSessionForTest({
+        state: resolved.state,
+        context: session.context,
+      }),
+      combatantId: ranger.combatantId,
       unitLibrary,
     }),
   ).toMatchObject({
@@ -4833,9 +4839,11 @@ function assertLevelOneHuntersMark(input: {
   const settled = requireRight(
     settleCharacterSheetFromBattle({
       sheet: rangerSheet.sheet,
-      state: concentrationEnded,
-      context: session.context,
-      combatant: cleanedRanger,
+      battleSession: battleRuntimeSessionForTest({
+        state: concentrationEnded,
+        context: session.context,
+      }),
+      combatantId: cleanedRanger.combatantId,
       unitLibrary,
     }),
   );
@@ -5025,9 +5033,11 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
   const settled = requireRight(
     settleCharacterSheetFromBattle({
       sheet: rangerSheet.sheet,
-      state: concentrationEnded,
-      context: session.context,
-      combatant: cleanedRanger,
+      battleSession: battleRuntimeSessionForTest({
+        state: concentrationEnded,
+        context: session.context,
+      }),
+      combatantId: cleanedRanger.combatantId,
       unitLibrary,
     }),
   );

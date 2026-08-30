@@ -31,7 +31,7 @@
         "options": [
           {
             "count": 3,
-            "monsterId": "ghoul"
+            "monsterId": "stat_block_ghoul"
           }
         ],
         "slotLevel": 6
@@ -40,7 +40,7 @@
         "options": [
           {
             "count": 4,
-            "monsterId": "ghoul"
+            "monsterId": "stat_block_ghoul"
           }
         ],
         "slotLevel": 7
@@ -49,15 +49,15 @@
         "options": [
           {
             "count": 5,
-            "monsterId": "ghoul"
+            "monsterId": "stat_block_ghoul"
           },
           {
             "count": 2,
-            "monsterId": "ghast"
+            "monsterId": "stat_block_ghast"
           },
           {
             "count": 2,
-            "monsterId": "wight"
+            "monsterId": "stat_block_wight"
           }
         ],
         "slotLevel": 8
@@ -66,19 +66,19 @@
         "options": [
           {
             "count": 6,
-            "monsterId": "ghoul"
+            "monsterId": "stat_block_ghoul"
           },
           {
             "count": 3,
-            "monsterId": "ghast"
+            "monsterId": "stat_block_ghast"
           },
           {
             "count": 3,
-            "monsterId": "wight"
+            "monsterId": "stat_block_wight"
           },
           {
             "count": 2,
-            "monsterId": "mummy"
+            "monsterId": "stat_block_mummy"
           }
         ],
         "slotLevel": 9

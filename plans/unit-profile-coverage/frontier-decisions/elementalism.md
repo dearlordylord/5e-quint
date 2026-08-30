@@ -1,5 +1,10 @@
 # Elementalism Frontier Decision
 
+> Archived pre-admission decision. Issue #446 subsequently admitted the SRD
+> Spell Definition and recorded an `unsupported-profile` disposition in
+> `plans/unit-profile-coverage/unit-claims.jsonl`; the historical generated
+> state below is not the current catalog state.
+
 ## RAW Sources
 
 - `.references/srd-5.2.1/Spells/Descriptions-E-L.md:45` defines
@@ -77,12 +82,12 @@ door/shutter disposition, or map-light derivation for ordinary objects.
 
 ## Effect Classification
 
-| RAW effect | Classification | Rationale |
-| --- | --- | --- |
-| Beckon Air | Runtime-detached environment/object adjudication | The breeze can move presentation-scale environmental details and close unheld doors or shutters. Door/shutter state is environmental object disposition, not a promoted battle-runtime reducer boundary. |
-| Beckon Earth | Runtime-detached utility/presentation | Surface dust/sand coverage and a one-word mark in dirt or sand are table-facing presentation and environmental marks with no current catalog or runtime owner. |
-| Beckon Fire | Runtime-detached environment/object adjudication | Harmless embers, colored/scented smoke, lingering scent, and candle/torch/lamp ignition touch mundane flame and sensory state. Existing light emitters are source-owned spell effects, not a general mundane fire/light owner. |
-| Beckon Water | Runtime-detached utility/presentation | Light dampening and 1 cup of temporary clean water are creature/object presentation and small environmental water state. No current runtime owner consumes wetness, water containers, or evaporation. |
+| RAW effect     | Classification                                                      | Rationale                                                                                                                                                                                                                                                 |
+| -------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Beckon Air     | Runtime-detached environment/object adjudication                    | The breeze can move presentation-scale environmental details and close unheld doors or shutters. Door/shutter state is environmental object disposition, not a promoted battle-runtime reducer boundary.                                                  |
+| Beckon Earth   | Runtime-detached utility/presentation                               | Surface dust/sand coverage and a one-word mark in dirt or sand are table-facing presentation and environmental marks with no current catalog or runtime owner.                                                                                            |
+| Beckon Fire    | Runtime-detached environment/object adjudication                    | Harmless embers, colored/scented smoke, lingering scent, and candle/torch/lamp ignition touch mundane flame and sensory state. Existing light emitters are source-owned spell effects, not a general mundane fire/light owner.                            |
+| Beckon Water   | Runtime-detached utility/presentation                               | Light dampening and 1 cup of temporary clean water are creature/object presentation and small environmental water state. No current runtime owner consumes wetness, water containers, or evaporation.                                                     |
 | Sculpt Element | Future environment/object pressure only if such an owner is created | The 1-hour crude shape is persistent environmental/object presentation. It has no current battle, character sheet, or character creation consequence, but would belong with a future environment/object persistence subsystem if the product creates one. |
 
 ## Decision

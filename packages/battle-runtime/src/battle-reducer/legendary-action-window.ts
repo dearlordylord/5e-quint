@@ -1,3 +1,6 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.legendary-action-lifecycle
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { BattleResolutionResult } from "../battle-state-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";

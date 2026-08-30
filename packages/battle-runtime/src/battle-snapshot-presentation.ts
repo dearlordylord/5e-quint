@@ -5,7 +5,6 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   AvailableBattleAct,
   BattleCreatureSnapshot,
-  BattleActPresentation,
   BattleInterruptDecisionFrontier,
   BattleInterruptProcedureChoice,
   BattleInterruptChoicePresentationIssue,
@@ -38,6 +37,79 @@ import {
   BattlePresentedSnapshotSchema,
 } from "./battle-reducer/battle-codecs.ts";
 
+export type BattlePresentedInterruptChoice =
+  | {
+      readonly choice: Schema.Schema.Type<
+        typeof BattleInterruptProcedureModifierChoiceSchema
+      >;
+    }
+  | {
+      readonly choice: Schema.Schema.Type<
+        typeof BattleInterruptProcedureChoiceWithSubjectSchema
+      >;
+      readonly presentation: Schema.Schema.Type<
+        typeof BattleActPresentationSchema
+      >;
+    };
+
+export type BattlePresentedCheckpointFrontierEnvelope = {
+  readonly checkpoint: Schema.Schema.Type<typeof BattlePresentedSnapshotSchema>;
+  readonly frontier:
+    | {
+        readonly kind: "acts";
+        readonly acts: readonly AvailableBattleAct[];
+      }
+    | Extract<BattleCheckpointFrontierEnvelope["frontier"], { kind: "holes" }>
+    | (Omit<BattleInterruptDecisionFrontier, "choices"> & {
+        readonly choices: ReadonlyNonEmptyArray<BattlePresentedInterruptChoice>;
+      });
+};
+
+type EncodedBattleAvailableAct = Schema.Schema.Encoded<
+  typeof BattleActDiscoveryCandidateSchema
+> & {
+  readonly label: string;
+  readonly summary: string;
+  readonly presentation: Schema.Schema.Encoded<
+    typeof BattleActPresentationSchema
+  >;
+};
+
+type EncodedBattlePresentedInterruptChoice =
+  | {
+      readonly choice: Schema.Schema.Encoded<
+        typeof BattleInterruptProcedureModifierChoiceSchema
+      >;
+    }
+  | {
+      readonly choice: Schema.Schema.Encoded<
+        typeof BattleInterruptProcedureChoiceWithSubjectSchema
+      >;
+      readonly presentation: Schema.Schema.Encoded<
+        typeof BattleActPresentationSchema
+      >;
+    };
+
+type EncodedBattlePresentedInterruptDecisionFrontier = Omit<
+  Schema.Schema.Encoded<typeof BattleInterruptDecisionFrontierSchema>,
+  "choices"
+> & {
+  readonly choices: ReadonlyNonEmptyArray<EncodedBattlePresentedInterruptChoice>;
+};
+
+type EncodedBattlePresentedCheckpointFrontierEnvelope = {
+  readonly checkpoint: Schema.Schema.Encoded<
+    typeof BattlePresentedSnapshotSchema
+  >;
+  readonly frontier:
+    | {
+        readonly kind: "acts";
+        readonly acts: readonly EncodedBattleAvailableAct[];
+      }
+    | Schema.Schema.Encoded<typeof BattleCheckpointFrontierHolesSchema>
+    | EncodedBattlePresentedInterruptDecisionFrontier;
+};
+
 const BattleAvailableActSchema = Schema.Struct({
   ...BattleActDiscoveryCandidateSchema.fields,
   label: Schema.NonEmptyTrimmedString,
@@ -53,7 +125,11 @@ const BattlePresentedInterruptChoiceSchema = Schema.Union(
   }),
 );
 
-export const BattlePresentedCheckpointFrontierEnvelopeSchema = Schema.Struct({
+export const BattlePresentedCheckpointFrontierEnvelopeSchema: Schema.Schema<
+  BattlePresentedCheckpointFrontierEnvelope,
+  EncodedBattlePresentedCheckpointFrontierEnvelope,
+  never
+> = Schema.Struct({
   checkpoint: BattlePresentedSnapshotSchema,
   frontier: Schema.Union(
     Schema.Struct({
@@ -67,34 +143,6 @@ export const BattlePresentedCheckpointFrontierEnvelopeSchema = Schema.Struct({
     }),
   ),
 }).annotations({ identifier: "BattlePresentedCheckpointFrontierEnvelope" });
-
-export type BattlePresentedInterruptChoice =
-  | {
-      readonly choice: Extract<
-        BattleInterruptProcedureChoice,
-        { readonly kind: "reactionRollOrDamageReduction" }
-      >;
-    }
-  | {
-      readonly choice: Exclude<
-        BattleInterruptProcedureChoice,
-        { readonly kind: "reactionRollOrDamageReduction" }
-      >;
-      readonly presentation: BattleActPresentation;
-    };
-
-export type BattlePresentedCheckpointFrontierEnvelope = {
-  readonly checkpoint: BattlePresentedSnapshot;
-  readonly frontier:
-    | {
-        readonly kind: "acts";
-        readonly acts: readonly AvailableBattleAct[];
-      }
-    | Extract<BattleCheckpointFrontierEnvelope["frontier"], { kind: "holes" }>
-    | (Omit<BattleInterruptDecisionFrontier, "choices"> & {
-        readonly choices: ReadonlyNonEmptyArray<BattlePresentedInterruptChoice>;
-      });
-};
 
 export function battlePresentedSnapshot(
   session: BattleRuntimeSession,

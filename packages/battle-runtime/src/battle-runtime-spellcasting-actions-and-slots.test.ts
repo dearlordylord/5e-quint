@@ -1390,6 +1390,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
       }),
     ).state;
     expect(afterSlotSpell.currentTurnResources).toMatchObject({
+      actionTakenThisTurn: true,
       currentHasBonusAction: true,
       commandHalt: null,
       spellSlotUsesThisTurn: [{ kind: "committed", combatantId: wizardId }],

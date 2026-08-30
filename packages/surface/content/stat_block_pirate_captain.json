@@ -1,0 +1,195 @@
+{
+  "challengeRating": 6,
+  "id": "stat_block_pirate_captain",
+  "kind": "statBlock",
+  "name": "Pirate Captain",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-P-S.md:94-126"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 17,
+      "con": 14,
+      "dex": 18,
+      "int": 10,
+      "str": 10,
+      "wis": 14
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 17
+      }
+    },
+    "actions": [
+      {
+        "description": "The pirate makes three attacks, using Rapier or Pistol in any combination.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee Attack Roll: +7, reach 5 ft. Hit: 13 (2d8 + 4) Piercing damage, and the pirate has Advantage on the next attack roll it makes before the end of this turn.",
+        "kind": "textOnly",
+        "name": "Rapier",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ammunition": "bullet",
+          "attackAbility": "dex",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 7
+          },
+          "attackType": "ranged",
+          "kind": "attack_roll",
+          "name": "Pistol",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 10,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 15
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "rangeFeet": {
+            "long": 90,
+            "normal": 30
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "bonusActions": [
+      {
+        "description": "Wisdom Saving Throw: DC 14, one creature the pirate can see within 30 feet. Failure: The target has the Charmed condition until the start of the pirate's next turn.",
+        "kind": "textOnly",
+        "name": "Captain's Charm",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "additionalLanguages": 1,
+        "kind": "named_plus_other_languages",
+        "languages": [
+          "Common"
+        ]
+      }
+    },
+    "creatureType": "humanoid",
+    "gear": [
+      {
+        "item": "Pistol",
+        "quantity": 1
+      },
+      {
+        "item": "Rapier",
+        "quantity": 1
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 84
+    },
+    "initiative": {
+      "modifier": 7,
+      "score": 17
+    },
+    "passivePerception": 15,
+    "reactions": [
+      {
+        "description": "Trigger: The pirate is hit by a melee attack roll while holding a weapon. Response: The pirate adds 3 to its AC against that attack, possibly causing it to miss. On a miss, the pirate makes one Rapier attack against the triggering creature if within range.",
+        "kind": "textOnly",
+        "name": "Riposte",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_procedure_family",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "cha",
+        "modifier": 6
+      },
+      {
+        "ability": "con",
+        "modifier": 2
+      },
+      {
+        "ability": "dex",
+        "modifier": 7
+      },
+      {
+        "ability": "int",
+        "modifier": 0
+      },
+      {
+        "ability": "str",
+        "modifier": 3
+      },
+      {
+        "ability": "wis",
+        "modifier": 5
+      }
+    ],
+    "size": {
+      "kind": "alternatives",
+      "options": [
+        "medium",
+        "small"
+      ]
+    },
+    "skillModifiers": [
+      {
+        "modifier": 7,
+        "skill": "acrobatics"
+      },
+      {
+        "modifier": 5,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}

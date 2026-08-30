@@ -1,4 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.legendary-action-lifecycle stat-block.resource-lifecycle
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
@@ -28,7 +31,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.d20-test-natural-one-reroll unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.d20-test-natural-one-reroll unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff
 
 import { enableMovementActionBonusActionExclusion } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -130,7 +133,14 @@ import {
 import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { slowActionOrBonusActionTurnResources } from "./slow-active-penalties-runtime.ts";
+import {
+  battleStateWithReconciledCurrentActorSlowTurnRestriction,
+  slowActionOrBonusActionTurnResources,
+} from "./slow-active-penalties-turn-restriction.ts";
+import {
+  slowActivePenaltiesEffects,
+  type SlowActivePenaltiesEffect,
+} from "./slow-active-penalties-effects.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,
@@ -425,23 +435,23 @@ function resolveEndTurn({
     damageDispositions,
     turnBoundaryHideousLaughterDamageRepeatSaves,
   ).combatants;
+  const durationTickState = {
+    ...state,
+    initiative,
+    combatants: combatantsAfterSpellTurnStartDamage,
+  };
   const durationTick =
     Number(initiative.round) > Number(state.initiative.round)
-      ? tickDurationEffects(combatantsAfterSpellTurnStartDamage, {
-          state: {
-            ...state,
-            initiative,
-            combatants: combatantsAfterSpellTurnStartDamage,
-          },
+      ? tickBattleStateDurationEffects(durationTickState, {
           spellEndTargetStatePromotionTiming:
             END_OF_NEXT_TURN_NEW_ROUND_DURATION_TICK,
         })
       : {
-          value: combatantsAfterSpellTurnStartDamage,
+          value: durationTickState,
           flySpeedGrantEndFallCleanupFrames: [],
           spellEndTargetStatePromotionIds: [],
         };
-  const combatantsAfterDurationTick = durationTick.value;
+  const combatantsAfterDurationTick = durationTick.value.combatants;
   flySpeedGrantEndFallCleanupFrames.push(
     ...durationTick.flySpeedGrantEndFallCleanupFrames,
   );
@@ -453,7 +463,7 @@ function resolveEndTurn({
   const combatantsAfterDamageReductionReset =
     resetSpellDamageReductionsForNewTurn(combatantsAfterRecharge);
   const resetTurnResources = spellGrantedActionResourceTurnResources(
-    resetBattleTurnResources(state.currentTurnResources),
+    resetBattleTurnResources(durationTick.value.currentTurnResources),
     combatantsAfterDamageReductionReset.get(nextActorId),
   );
   const stateAfterCommandHalt = applyCommandHaltAtTurnStart({
@@ -903,11 +913,6 @@ type AbilityD20TestRollModeEndTurnSaveEffect = Extract<
   { readonly kind: "abilityD20TestRollModeEndTurnSave" }
 >;
 
-export type SlowActivePenaltiesEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "slowActivePenalties" }
->;
-
 type DurationActiveEffect = Extract<
   Exclude<
     BattleActiveEffect,
@@ -1251,16 +1256,6 @@ function unitFeatureConditionEndTurnSavingThrowOutcomeFor(
   hole: BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
-}
-
-function slowActivePenaltiesEffects(
-  combatant: BattleCreatureState | undefined,
-): readonly SlowActivePenaltiesEffect[] {
-  return activeEffectsMatching(
-    combatant,
-    (effect): effect is SlowActivePenaltiesEffect =>
-      effect.kind === "slowActivePenalties",
-  );
 }
 
 function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
@@ -2214,6 +2209,38 @@ function expireEndOfTurnEffects(
       effect.expiresAt.combatantId === actorId &&
       effect.expiresAt.round === round,
   );
+}
+
+export type BattleStateDurationTickContext = {
+  readonly spellEndTargetStatePromotionTiming: EndOfNextTurnExpirationTiming;
+};
+
+export function tickBattleStateDurationEffects(
+  state: BattleState,
+  context?: BattleStateDurationTickContext,
+): {
+  readonly value: BattleState;
+  readonly flySpeedGrantEndFallCleanupFrames: readonly BattleFlySpeedGrantEndFallCleanupFrame[];
+  readonly spellEndTargetStatePromotionIds: readonly CombatantId[];
+} {
+  const ticked = tickDurationEffects(
+    state.combatants,
+    context === undefined
+      ? undefined
+      : {
+          state,
+          spellEndTargetStatePromotionTiming:
+            context.spellEndTargetStatePromotionTiming,
+        },
+  );
+  return {
+    value: battleStateWithReconciledCurrentActorSlowTurnRestriction({
+      ...state,
+      combatants: ticked.value,
+    }),
+    flySpeedGrantEndFallCleanupFrames: ticked.flySpeedGrantEndFallCleanupFrames,
+    spellEndTargetStatePromotionIds: ticked.spellEndTargetStatePromotionIds,
+  };
 }
 
 type DurationTickContext = {
@@ -3576,9 +3603,6 @@ export function statBlockRechargeRollFillMatchesHole(
 
   const matchedTargetIndexes = new Set<number>();
   for (const result of value) {
-    /* v8 ignore next -- @preserve -- DieRollResult is parsed as a PositiveInteger, so only the d6 upper bound remains a reachable recharge-fill failure. */
-    if (result.roll < 1) return false;
-    if (result.roll > 6) return false;
     const targetIndex = rechargeHole.rechargeTargets.findIndex(
       (target, index) =>
         !matchedTargetIndexes.has(index) && target === result.target,

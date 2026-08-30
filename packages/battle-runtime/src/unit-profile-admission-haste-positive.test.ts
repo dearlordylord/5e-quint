@@ -1,6 +1,11 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  monsterMultiattackStatBlock,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { BattleSnapshotSchema } from "./index.ts";
+import { battleActiveEffectExecutionRef } from "./identity.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C17-HASTE-POSITIVE-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C18-HASTE-LETHARGY-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-C17-HASTE-POSITIVE-RUNTIME haste
@@ -14,6 +19,7 @@ import {
   canSpendAction,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
@@ -45,6 +51,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import {
   battleUnitRefWithSupportProfiles,
   breakBattleConcentration,
+  discoverBattleActCandidates,
   Either,
   elapsedTimeTicks,
   endTurn,
@@ -147,7 +154,6 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       expect.objectContaining({
         kind: "action",
         source: "spellEffect",
-        sourceOwnerId: spellCasterId,
         restriction: {
           kind: "allow_only",
           actions: [
@@ -187,6 +193,190 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     ).toBe(false);
   });
 
+  test("keeps the bound Haste Action while a Stat Block Multiattack continuation is active", () => {
+    const spell = spellRecord(hasteUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      targetStatBlock: monsterMultiattackStatBlock(),
+    });
+    const act = spellAct({
+      session,
+      spellId: hasteUnitId,
+      slotLevel: 3,
+    });
+    const cast = resolveHaste({
+      state: session.state,
+      subject: act.subject,
+      targetHole: requireHole(act.initialHoles, "targetChoice"),
+    });
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    expect(targetTurn.tag).toBe("resolved");
+    if (targetTurn.tag !== "resolved") return;
+    const ordinaryTurn = Schema.encodeSync(BattleSnapshotSchema)(
+      targetTurn.snapshot,
+    );
+    const ordinaryHasteResource = ordinaryTurn.turn.actionResources.find(
+      (resource) => resource.source === "spellEffect",
+    );
+    expect(ordinaryHasteResource).toBeDefined();
+    if (ordinaryHasteResource === undefined) return;
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(ordinaryTurn),
+      ),
+    ).toBe(true);
+    const inactiveHaste = {
+      ...ordinaryTurn,
+      combatants: ordinaryTurn.combatants.map((combatant) =>
+        combatant.combatantId === spellTargetId
+          ? {
+              ...combatant,
+              activeEffectRefs: combatant.activeEffectRefs.filter(
+                (effectRef) =>
+                  effectRef !== ordinaryHasteResource.sourceEffectRef,
+              ),
+            }
+          : combatant,
+      ),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(inactiveHaste),
+      ),
+    ).toBe(true);
+    const foreignOwner = ordinaryTurn.combatants.find(
+      (combatant) => combatant.combatantId === spellCasterId,
+    );
+    expect(foreignOwner?.origin.kind).toBe("character");
+    if (foreignOwner?.origin.kind !== "character") return;
+    const foreignEffectOrdinal = 999;
+    const foreignEffectRef = battleActiveEffectExecutionRef(
+      JSON.stringify({
+        kind: "activeEffectOccurrence",
+        ownerScopeRef: foreignOwner.origin.execution.scopeRef,
+        ordinal: foreignEffectOrdinal,
+      }),
+    );
+    const foreignHaste = {
+      ...ordinaryTurn,
+      combatants: ordinaryTurn.combatants.map((combatant) =>
+        combatant.combatantId === spellCasterId
+          ? {
+              ...combatant,
+              activeEffectRefs: [
+                ...combatant.activeEffectRefs,
+                foreignEffectRef,
+              ],
+            }
+          : combatant,
+      ),
+      turn: {
+        ...ordinaryTurn.turn,
+        actionResources: ordinaryTurn.turn.actionResources.map((resource) =>
+          resource.source === "spellEffect"
+            ? { ...resource, sourceEffectRef: foreignEffectRef }
+            : resource,
+        ),
+      },
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(foreignHaste),
+      ),
+    ).toBe(true);
+    const duplicatedOrdinaryHaste = {
+      ...ordinaryTurn,
+      turn: {
+        ...ordinaryTurn.turn,
+        actionResources: [
+          ...ordinaryTurn.turn.actionResources,
+          ordinaryHasteResource,
+        ],
+      },
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+          duplicatedOrdinaryHaste,
+        ),
+      ),
+    ).toBe(true);
+    const multiattack = discoverBattleActCandidates(targetTurn.state).find(
+      (candidate) =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.actorId === spellTargetId &&
+        candidate.subject.action === "multiattack",
+    );
+    expect(multiattack).toBeDefined();
+    if (multiattack === undefined) return;
+    const opened = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: multiattack.subject,
+      fills: [],
+    });
+    expect(opened.tag).toBe("resolved");
+    if (opened.tag !== "resolved") return;
+
+    expect(
+      opened.snapshot.turn.actionResources.filter(
+        (resource) => resource.source === "spellEffect",
+      ),
+    ).toHaveLength(1);
+    expect(
+      opened.snapshot.turn.actionResources.some(
+        (resource) => resource.source === "turn",
+      ),
+    ).toBe(false);
+    expect(
+      opened.snapshot.turn.actionResources.filter(
+        (resource) => resource.source === "statBlockMultiattack",
+      ).length,
+    ).toBeGreaterThan(0);
+
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(opened.snapshot);
+    expect(
+      Either.isRight(Schema.decodeUnknownEither(BattleSnapshotSchema)(encoded)),
+    ).toBe(true);
+    const forgedSpellRestriction = {
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: encoded.turn.actionResources.map((resource) =>
+          resource.source === "spellEffect"
+            ? { ...resource, restriction: { kind: "none" } }
+            : resource,
+        ),
+      },
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+          forgedSpellRestriction,
+        ),
+      ),
+    ).toBe(true);
+    const forgedSpellOwner = {
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: encoded.turn.actionResources.map((resource) =>
+          resource.source === "spellEffect"
+            ? { ...resource, sourceOwnerId: spellCasterId }
+            : resource,
+        ),
+      },
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(forgedSpellOwner),
+      ),
+    ).toBe(true);
+  });
+
   test("grants the spell action resource immediately when Haste targets the current actor", () => {
     const spell = spellRecord(hasteUnitId);
     const state = spellBattle({
@@ -211,7 +401,6 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       expect.objectContaining({
         kind: "action",
         source: "spellEffect",
-        sourceOwnerId: spellCasterId,
       }),
     ]);
     expect(canSpendAction(resolved.state.currentTurnResources, "dash")).toBe(

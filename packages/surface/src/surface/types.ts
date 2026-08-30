@@ -590,6 +590,9 @@ export type GlyphWardingMechanics = Schema.Schema.Type<
 export type StatBlockValue = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockValueSchema
 >;
+export type StatBlockLiteralValue = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockLiteralValueSchema
+>;
 export type Size = Schema.Schema.Type<typeof SurfaceSchema.SizeSchema>;
 export type SixAbilityScores = Schema.Schema.Type<
   typeof SurfaceSchema.SixAbilityScoresSchema
@@ -608,6 +611,18 @@ export type CreatureImmunityList = Schema.Schema.Type<
 >;
 export type CreatureSense = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureSenseSchema
+>;
+export type StandaloneCreatureSense = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneCreatureSenseSchema
+>;
+export type StandaloneCreatureSpeed = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneCreatureSpeedSchema
+>;
+export type StandaloneStatBlockSpeedEntry = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneStatBlockSpeedEntrySchema
+>;
+export type StandaloneStatBlockAbilityScores = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneStatBlockAbilityScoresSchema
 >;
 export type CreatureNamedAttackRoll = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureNamedAttackRollSchema
@@ -630,6 +645,9 @@ export type CreatureNamedActionOption = Schema.Schema.Type<
 export type CreatureActions = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureActionsSchema
 >;
+export type CreatureRechargeMinimumRoll = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureRechargeMinimumRollSchema
+>;
 export type CreatureLimitedUse = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureLimitedUseSchema
 >;
@@ -638,6 +656,9 @@ export type CreatureLegendaryActions = Schema.Schema.Type<
 >;
 export type CreatureSavingThrowModifier = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureSavingThrowModifierSchema
+>;
+export type CreatureSkillModifier = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureSkillModifierSchema
 >;
 export type CreatureTraitEffect = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureTraitEffectSchema
@@ -648,8 +669,76 @@ export type CreatureTrait = Schema.Schema.Type<
 export type CreatureStatBlock = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureStatBlockSchema
 >;
-export type MonsterStatBlock = Schema.Schema.Type<
-  typeof SurfaceSchema.MonsterStatBlockSchema
+export type StatBlockCreatureProjection = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureStatBlockProjectionSchema
+>;
+export type StandaloneStatBlock = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneStatBlockSchema
+>;
+export type StandaloneStatBlockValue = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneStatBlockValueSchema
+>;
+export type AuthoredExecutableProcedure = Schema.Schema.Type<
+  typeof SurfaceSchema.AuthoredExecutableProcedureSchema
+>;
+export type AuthoredStatBlockReactionTrigger = Schema.Schema.Type<
+  typeof SurfaceSchema.AuthoredStatBlockReactionTriggerSchema
+>;
+export type StatBlockProcedureEntry = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureEntrySchema
+>;
+export type StatBlockProcedureOrdinal = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureOrdinalSchema
+>;
+export type StatBlockProcedureResourceOrdinal = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureResourceOrdinalSchema
+>;
+export type StatBlockProcedureResource = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureResourceSchema
+>;
+export type StatBlockCommunication = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockCommunicationSchema
+>;
+export type StatBlockProcedureResourceLimit = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureResourceLimitSchema
+>;
+export type StatBlockProcedureAreaShape = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureAreaShapeSchema
+>;
+export type StatBlockProcedureDcSource = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureDcSourceSchema
+>;
+export type StatBlockProcedureSection = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureSectionSchema
+>;
+export type StatBlockReactionSection = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockReactionSectionSchema
+>;
+export type StatBlockSpellReference = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockSpellReferenceSchema
+>;
+export type StatBlockSpellInvocationDeltaKind =
+  (typeof SurfaceSchema.STAT_BLOCK_SPELL_INVOCATION_DELTA_KINDS)[number];
+export type StatBlockSpellInvocationDelta = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockSpellInvocationDeltaSchema
+>;
+export type StatBlockSpellInvocationDeltas = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockSpellInvocationDeltasSchema
+>;
+export type StatBlockSpellInvocationRestriction = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockSpellInvocationRestrictionSchema
+>;
+export type StatBlockSpellcastingGroup = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockSpellcastingGroupSchema
+>;
+export type StatBlockTextOnlyReason = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockTextOnlyReasonSchema
+>;
+export type StatBlockInitiativeModifier = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockInitiativeModifierSchema
+>;
+export type StatBlockInitiative = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockInitiativeSchema
 >;
 export type CreatureStatBlockOverrides = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureStatBlockOverridesSchema
@@ -1289,7 +1378,6 @@ export type AuthoredUnitSource = UnitRecord;
 export type DragonbornSpeciesSource = DragonbornSpeciesRecord;
 export type StatBlockId = StatBlockRecord["id"];
 export type ChallengeRating = StatBlockRecord["challengeRating"];
-export type StatBlockMechanics = StatBlockRecord["statBlock"];
 
 export type SpellFreeCastGrant = Extract<
   EffectAtom,

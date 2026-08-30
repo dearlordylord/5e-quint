@@ -1,5 +1,10 @@
 # Mage Hand Frontier Decision
 
+> Archived pre-admission decision. Issue #446 subsequently admitted the SRD
+> Spell Definition and recorded an `unsupported-profile` disposition in
+> `plans/unit-profile-coverage/unit-claims.jsonl`; the historical generated
+> state below is not the current catalog state.
+
 ## RAW Sources
 
 - `.references/srd-5.2.1/Spells/Descriptions-M-P.md:18` defines Mage Hand
@@ -102,15 +107,15 @@ equipment or object transfer workflows as executable state.
 
 Effect classification for the current plan:
 
-| RAW effect | Classification | Rationale |
-| --- | --- | --- |
-| Create a spectral floating hand at a point within 30 feet for 1 minute | Runtime-detached object-control adjudication | Hand identity, map point, caster association, and persistent hand position are exploration/object facts with no current runtime owner. |
-| Vanish when more than 30 feet from the caster or when recast | Runtime-detached duration and distance adjudication | The distance threshold and recast replacement require represented hand state and caster-to-hand geometry that no current package owns. |
-| Manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour a vial at cast time | Runtime-detached object/container adjudication | Object state, unlocked/open container state, item holder transfer, and vial contents are table-facing object facts outside promoted owners. |
-| Later Magic action controls the hand again and moves the hand up to 30 feet | Runtime-detached object-control adjudication | The Magic action matters only if a represented hand can consume the control operation; the hand's relocation is not creature Movement. |
-| Cannot attack | No battle-runtime behavior to add | This prevents using the hand as an attack source. Adding an attack subject solely to reject it would invent runtime state for a prohibited action. |
-| Cannot activate magic items | Runtime-detached magic-item/object adjudication | Magic item activation permissions require a magic item owner and object-use workflow that do not exist in current promoted packages. |
-| Cannot carry more than 10 pounds | Runtime-detached object/inventory adjudication | Carry enforcement needs represented carried object weight and hand load state; Character Sheet defers mutable equipment/inventory workflows. |
+| RAW effect                                                                                                                             | Classification                                      | Rationale                                                                                                                                          |
+| -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Create a spectral floating hand at a point within 30 feet for 1 minute                                                                 | Runtime-detached object-control adjudication        | Hand identity, map point, caster association, and persistent hand position are exploration/object facts with no current runtime owner.             |
+| Vanish when more than 30 feet from the caster or when recast                                                                           | Runtime-detached duration and distance adjudication | The distance threshold and recast replacement require represented hand state and caster-to-hand geometry that no current package owns.             |
+| Manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour a vial at cast time | Runtime-detached object/container adjudication      | Object state, unlocked/open container state, item holder transfer, and vial contents are table-facing object facts outside promoted owners.        |
+| Later Magic action controls the hand again and moves the hand up to 30 feet                                                            | Runtime-detached object-control adjudication        | The Magic action matters only if a represented hand can consume the control operation; the hand's relocation is not creature Movement.             |
+| Cannot attack                                                                                                                          | No battle-runtime behavior to add                   | This prevents using the hand as an attack source. Adding an attack subject solely to reject it would invent runtime state for a prohibited action. |
+| Cannot activate magic items                                                                                                            | Runtime-detached magic-item/object adjudication     | Magic item activation permissions require a magic item owner and object-use workflow that do not exist in current promoted packages.               |
+| Cannot carry more than 10 pounds                                                                                                       | Runtime-detached object/inventory adjudication      | Carry enforcement needs represented carried object weight and hand load state; Character Sheet defers mutable equipment/inventory workflows.       |
 
 ## Decision
 

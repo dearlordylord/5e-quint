@@ -102,9 +102,35 @@ function sdkTranscript(directory: string): string {
     resolve(run, "evidence/player-invocation-0002.events.jsonl"),
     '{"type":"second"}\n',
   );
-  const initialSession = { battle: { round: 1 } };
-  const outputSession = { battle: { round: 2 } };
-  const result = { tag: "resolved", session: outputSession };
+  const initialSession = {
+    battle: {
+      state: {
+        battleId: "battle:artifact-index",
+        initiative: { stillToAct: [{ creature: "fighter" }] },
+      },
+      round: 1,
+    },
+  };
+  const outputSession = {
+    battle: {
+      state: {
+        battleId: "battle:artifact-index",
+        initiative: { stillToAct: [{ creature: "fighter" }] },
+      },
+      round: 2,
+    },
+  };
+  const result = {
+    tag: "resolved",
+    session: outputSession,
+    envelope: {
+      checkpoint: {
+        battleId: "battle:artifact-index",
+        currentActorId: "fighter",
+      },
+      frontier: { kind: "acts", acts: [] },
+    },
+  };
   const header = {
     type: "sdk-player-header",
     scenarioId: "artifact-index",

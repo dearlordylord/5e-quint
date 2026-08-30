@@ -1,0 +1,69 @@
+{ challengeRating = 2
+, id = "stat_block_pegasus"
+, kind = "statBlock"
+, name = "Pegasus"
+, provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:5-24" }
+, statBlock =
+  { abilityScores =
+    { cha = 13, con = 16, dex = 15, int = 10, str = 18, wis = 15 }
+  , ac.value = { kind = "literal", value = 12 }
+  , actions =
+    [ { kind = "executable"
+      , procedure =
+        { attackAbility = "str"
+        , attackBonus = { kind = "literal", value = 6 }
+        , attackType = "melee"
+        , kind = "attack_roll"
+        , name = "Hooves"
+        , onHit =
+          [ { amount =
+              { expr = { dice = 1, dieSize = 6, flat = Some 4 }
+              , kind = "fixed"
+              , static = 7
+              }
+            , damageType = "bludgeoning"
+            , kind = "damage"
+            }
+          , { amount =
+              { expr = { dice = 2, dieSize = 4, flat = None Natural }
+              , kind = "fixed"
+              , static = 5
+              }
+            , damageType = "radiant"
+            , kind = "damage"
+            }
+          ]
+        , reachFeet = 5
+        }
+      , procedureOrdinal = 1
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "good", order = "chaotic" }
+  , communication =
+    { kind = "understood_but_cannot_speak"
+    , languages =
+      { kind = "named"
+      , languages = [ "Celestial", "Common", "Elvish", "Sylvan" ]
+      }
+    }
+  , creatureType = "celestial"
+  , hp = { kind = "literal", value = 59 }
+  , initiative = { modifier = 2, score = 12 }
+  , passivePerception = 16
+  , savingThrowModifiers =
+    [ { ability = "cha", modifier = 3 }
+    , { ability = "con", modifier = 5 }
+    , { ability = "dex", modifier = 4 }
+    , { ability = "int", modifier = 0 }
+    , { ability = "str", modifier = 4 }
+    , { ability = "wis", modifier = 4 }
+    ]
+  , size = "large"
+  , skillModifiers = [ { modifier = 6, skill = "perception" } ]
+  , speeds =
+    [ { feet = { kind = "literal", value = 60 }, kind = "walk" }
+    , { feet = { kind = "literal", value = 90 }, kind = "fly" }
+    ]
+  }
+}

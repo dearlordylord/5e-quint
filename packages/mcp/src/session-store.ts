@@ -21,11 +21,11 @@ import {
 } from "@dnd/character-sheet-runtime";
 type CharacterId = CharacterSheetId;
 import type {
-  StatBlockCatalog,
+  SrdStatBlockCatalog,
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type { SrdStatBlockRecord } from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import { createBattleRosterTransitionPlanner } from "./battle-roster-session-store.ts";
@@ -111,10 +111,10 @@ export type McpSessionStore = {
   >;
   pendingBattleFills: PendingBattleFillSession | null;
   clearSelectedStatBlock(): void;
-  getSelectedStatBlock(): StatBlockRecord | null;
+  getSelectedStatBlock(): SrdStatBlockRecord | null;
   selectStatBlock(
     statBlockId: StatBlockId,
-  ): Either.Either<StatBlockRecord, CharacterSessionIssue>;
+  ): Either.Either<SrdStatBlockRecord, CharacterSessionIssue>;
   snapshot(): McpSessionSnapshot;
 };
 
@@ -153,7 +153,7 @@ export function characterIdFromDraftId(draftId: CharacterDraftId): CharacterId {
 }
 
 export function createMcpSessionStore(input: {
-  readonly statBlockCatalog: StatBlockCatalog;
+  readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
 }): McpSessionStore {
   const { statBlockCatalog, unitLibrary } = input;
@@ -317,7 +317,7 @@ export function createMcpSessionStore(input: {
     clearSelectedStatBlock(): void {
       selectedStatBlockId = null;
     },
-    getSelectedStatBlock(): StatBlockRecord | null {
+    getSelectedStatBlock(): SrdStatBlockRecord | null {
       if (selectedStatBlockId === null) return null;
       const statBlock = statBlockCatalog.getStatBlock(selectedStatBlockId);
       return Option.isSome(statBlock) ? statBlock.value : null;

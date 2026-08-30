@@ -4,7 +4,11 @@ import { describe, expect, test } from "vitest";
 import { createMcpPlaySessionRoot, handleToolCall } from "./server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import { characterDraftId } from "@dnd/character-creation-runtime";
-import { combatantId, type BattleActPresentation } from "@dnd/battle-runtime";
+import {
+  combatantId,
+  type BattleActPresentation,
+  type StatBlockAttackDamageSelection,
+} from "@dnd/battle-runtime";
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
   GENERIC_COMBAT_ACTION_LABELS,
@@ -144,7 +148,7 @@ describe("end-user MCP vertical", () => {
     expect(selected.selectedStatBlock).toMatchObject({
       id: "stat_block_goblin_warrior",
       provenance: { kind: "srd-5.2.1" },
-      statBlock: { displayName: "Goblin Warrior" },
+      name: "Goblin Warrior",
     });
 
     const started = callTool(root, "start_battle", {
@@ -221,6 +225,10 @@ describe("end-user MCP vertical", () => {
     expect(endedFighterTurn.envelope.checkpoint.currentActorId).toBe("goblin");
 
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
+      "Attack",
+      "Attack",
+      "Attack",
+      "Attack",
       "Attack",
       "Attack",
       "Attack",
@@ -337,8 +345,8 @@ describe("end-user MCP vertical", () => {
     expect(selected.selectedStatBlock).toMatchObject({
       id: "stat_block_skeleton",
       provenance: { kind: "srd-5.2.1" },
+      name: "Skeleton",
       statBlock: {
-        displayName: "Skeleton",
         vulnerabilities: { damageTypes: ["bludgeoning"] },
         immunities: {
           damageTypes: ["poison"],
@@ -1900,9 +1908,18 @@ type BoundAttackSubjectView = {
   readonly actorId: string;
   readonly action: "attack";
   readonly procedureRef: string;
-  readonly attackAbility?: string;
-  readonly attackDamageType?: string;
-};
+} & (
+  | {
+      readonly attackAbility: string;
+      readonly attackDamageType: string;
+      readonly statBlockDamageSelection?: never;
+    }
+  | {
+      readonly attackAbility?: never;
+      readonly attackDamageType?: never;
+      readonly statBlockDamageSelection: StatBlockAttackDamageSelection;
+    }
+);
 
 type BattleHoleView = {
   readonly kind: string;
@@ -1941,8 +1958,11 @@ function requireAttackAct(
       act.subject.actorId === actorId &&
       "action" in act.subject &&
       act.subject.action === "attack" &&
-      (!("statBlockDamageNotation" in act.subject) ||
-        act.subject.statBlockDamageNotation === undefined) &&
+      (act.subject.statBlockDamageSelection === undefined ||
+        (act.subject.statBlockDamageSelection.length > 0 &&
+          act.subject.statBlockDamageSelection.every(
+            ({ notation }) => notation === "rolled",
+          ))) &&
       act.summary === `Take the Attack action with ${attackName}.`,
   );
   const [act] = matchingActs;
@@ -2415,6 +2435,12 @@ function fillBattleSubject(
                       subject.attackDamageType === undefined
                         ? {}
                         : { attackDamageType: subject.attackDamageType }),
+                      ...(subject.statBlockDamageSelection === undefined
+                        ? {}
+                        : {
+                            statBlockDamageSelection:
+                              subject.statBlockDamageSelection,
+                          }),
                     },
                   ]
                 : [],

@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   statBlockId as authoredStatBlockId,
   unitId as authoredUnitId,
@@ -1149,7 +1150,7 @@ export function monsterBattleInput(
 }
 
 export function srdStatBlock(id: StatBlockRecord["id"]): StatBlockRecord {
-  return statBlockCatalog.requireStatBlock(id);
+  return assertStatBlockForTest(statBlockCatalog, id);
 }
 
 export function attackSubject(
@@ -1165,7 +1166,11 @@ export function attackSubject(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.actorId === actorId &&
-      candidate.subject.statBlockDamageNotation === undefined &&
+      (candidate.subject.statBlockDamageSelection === undefined ||
+        (candidate.subject.statBlockDamageSelection.length > 0 &&
+          candidate.subject.statBlockDamageSelection.every(
+            ({ notation }) => notation === "rolled",
+          ))) &&
       candidate.presentation.kind === "attack" &&
       candidate.presentation.name === attackName,
   );

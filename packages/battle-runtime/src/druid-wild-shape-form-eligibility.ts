@@ -1,4 +1,5 @@
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { statBlockHasPotentialFlySpeed } from "@dnd/surface/surface/stat-block-speed-readers";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./druid-wild-shape-support-execution.ts";
 
 export const WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_ISSUE_CODES = [
@@ -32,7 +33,7 @@ export function wildShapeKnownFormEligibilityIssue(input: {
   }
   if (
     input.profile.knownFormRoster.flySpeed === "forbidden" &&
-    statBlockHasFlySpeed(input.form)
+    statBlockHasPotentialFlySpeed(input.form.statBlock)
   ) {
     return { code: "flySpeed" };
   }
@@ -44,8 +45,4 @@ export function statBlockIsWildShapeKnownFormEligible(input: {
   readonly profile: BattleDruidWildShapeKnownFormSupportProfile;
 }): boolean {
   return wildShapeKnownFormEligibilityIssue(input) === undefined;
-}
-
-function statBlockHasFlySpeed(form: StatBlockRecord): boolean {
-  return form.statBlock.speeds.some((speed) => speed.kind === "fly");
 }

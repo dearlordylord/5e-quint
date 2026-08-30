@@ -53,7 +53,9 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeletonOne)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeletonOne.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        skeletonOne.left,
+      ),
       observation: {
         capability: "stat-block-creature-init",
         combatant: "Skeleton One",
@@ -63,7 +65,9 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(skeletonTwo)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(skeletonTwo.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        skeletonTwo.left,
+      ),
       observation: {
         capability: "stat-block-creature-init",
         combatant: "Skeleton Two",
@@ -73,7 +77,9 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(goblinWarrior)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(goblinWarrior.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        goblinWarrior.left,
+      ),
       observation: {
         capability: "stat-block-creature-init",
         combatant: "Goblin Warrior",
@@ -142,7 +148,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: partitionBoundaries.map(({ between }) => ({

@@ -19,7 +19,6 @@ export {
 export { retainedStoredFormForPresentCompanion } from "./companion-stored-form.ts";
 import {
   familiarMaxHp,
-  familiarStatBlockWithCreatureTypeOverride,
   findFamiliarCurrentHitPoints,
   findFamiliarIdentityIssueFacts,
   findFamiliarIdentityIssueMessage,
@@ -33,6 +32,12 @@ import {
   spendFindFamiliarMagicAction,
   withFindFamiliarCombatant,
 } from "./find-familiar-lifecycle-execution.ts";
+import {
+  battleStatBlockProjectionFailureMessage,
+  projectAuthoredStatBlockWithCreatureType,
+  type AuthoredStatBlockProjection,
+  type BattleStatBlockProjectionFailure,
+} from "./stat-block-authored-projection.ts";
 import { findFamiliarDisappearedAtZeroHitPointsState } from "./companion-state.ts";
 
 import type {
@@ -44,6 +49,8 @@ import type {
   BattleStateInitIssue,
   BattleStateInitLeafIssue,
 } from "./battle-state-execution.ts";
+import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
+import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
@@ -60,14 +67,13 @@ import {
 } from "./battle-reducer/domain-helpers.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
-import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
 import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
-import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
+import type { FindFamiliarStatBlockCatalog } from "./find-familiar-stat-block-catalog.ts";
 
 export type FindFamiliarReappearanceInput = {
   readonly state: BattleState;
   readonly casterId: CombatantId;
-  readonly catalog: BattleStatBlockExecutionCatalog;
+  readonly catalog: FindFamiliarStatBlockCatalog;
   readonly initiative: InitiativeScore;
   readonly placement: Extract<
     import("./companion-state.ts").BattleCompanionPlacement,
@@ -336,15 +342,57 @@ export type ResolvedFindFamiliarCastInput = Omit<
   readonly retainedTransition: "reject" | "sessionOwned";
 };
 
-export function castResolvedFindFamiliar(
+export type FindFamiliarCastWithPresentation =
+  | {
+      readonly result: Extract<
+        BattleResolutionResult,
+        { readonly tag: "resolved" }
+      >;
+      readonly presentation: {
+        readonly combatantId: CombatantId;
+        readonly source: BattleStatBlockPresentationSource;
+      };
+    }
+  | {
+      readonly result: Extract<
+        BattleResolutionResult,
+        { readonly tag: "invalid" }
+      >;
+    };
+
+function retainedFindFamiliarCastIssue(input: {
+  readonly prior: FindFamiliarCastPrior;
+  readonly retainedTransition: ResolvedFindFamiliarCastInput["retainedTransition"];
+}): string | undefined {
+  if (
+    input.prior.tag !== "none" &&
+    input.prior.familiar.identity.tag === "retainedBetweenBattles" &&
+    input.retainedTransition !== "sessionOwned"
+  ) {
+    return "Retained Find Familiar recast requires the session-owned authored selection transition.";
+  }
+  return undefined;
+}
+
+type FindFamiliarCastPreparation = {
+  readonly prior: FindFamiliarCastPrior;
+  readonly familiarId: CombatantId;
+};
+
+function prepareFindFamiliarCast(
   input: ResolvedFindFamiliarCastInput,
-): BattleResolutionResult {
+): Either.Either<
+  FindFamiliarCastPreparation,
+  Extract<BattleResolutionResult, { readonly tag: "invalid" }>
+> {
   /* v8 ignore start -- @preserve -- Stale direct call: discovered Find Familiar acts retain a caster already present in the same battle state. */
   if (!input.state.combatants.has(input.casterId)) {
-    return invalidFindFamiliarResult(
-      input.state,
-      "missingCombatant",
-      "Find Familiar caster is not in this battle.",
+    return Either.left(
+      invalidFindFamiliarResult(
+        input.state,
+        "missingCombatant",
+        "Find Familiar caster is not in this battle.",
+      ),
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -352,15 +400,13 @@ export function castResolvedFindFamiliar(
     findCompanionEntryByOwner(input.state.companions, input.casterId)
       ?.companion,
   );
-  if (
-    prior.tag !== "none" &&
-    prior.familiar.identity.tag === "retainedBetweenBattles" &&
-    input.retainedTransition !== "sessionOwned"
-  ) {
-    return invalidFindFamiliarResult(
-      input.state,
-      "invalidFill",
-      "Retained Find Familiar recast requires the session-owned authored selection transition.",
+  const retainedCastIssue = retainedFindFamiliarCastIssue({
+    prior,
+    retainedTransition: input.retainedTransition,
+  });
+  if (retainedCastIssue !== undefined) {
+    return Either.left(
+      invalidFindFamiliarResult(input.state, "invalidFill", retainedCastIssue),
     );
   }
   const familiarId =
@@ -371,9 +417,41 @@ export function castResolvedFindFamiliar(
     familiarId,
   );
   if (identityIssue !== null) {
-    return invalidFindFamiliarResult(input.state, "invalidFill", identityIssue);
+    return Either.left(
+      invalidFindFamiliarResult(input.state, "invalidFill", identityIssue),
+    );
   }
+  return Either.right({ prior, familiarId });
+}
+
+export function castResolvedFindFamiliar(
+  input: ResolvedFindFamiliarCastInput,
+): BattleResolutionResult {
+  return castResolvedFindFamiliarWithPresentation(input).result;
+}
+
+export function castResolvedFindFamiliarWithPresentation(
+  input: ResolvedFindFamiliarCastInput,
+): FindFamiliarCastWithPresentation {
+  const preparation = prepareFindFamiliarCast(input);
+  if (Either.isLeft(preparation)) {
+    return { result: preparation.left };
+  }
+  const { familiarId, prior } = preparation.right;
   const resolvedForm = input.resolvedForm;
+  const projected = projectFamiliarStatBlock(resolvedForm);
+  if (Either.isLeft(projected)) {
+    return {
+      result: invalidFindFamiliarResult(
+        input.state,
+        "invalidFill",
+        battleStatBlockProjectionFailureMessage(
+          projected.left,
+          "Find Familiar form projection failed",
+        ),
+      ),
+    };
+  }
   const nextFamiliar = findFamiliarPresentState({
     form: {
       formAccess: "findFamiliar",
@@ -389,15 +467,17 @@ export function castResolvedFindFamiliar(
   const preservedHitPoints = hitPointsForFindFamiliarCast({
     state: input.state,
     prior,
-    statBlock: resolvedForm.statBlock,
+    statBlock: projected.right.runtime,
   });
   /* v8 ignore start -- @preserve -- Corrupt retained state: admitted present/dismissed companions carry positive HP and a resolvable literal familiar maximum. */
   if (typeof preservedHitPoints === "string") {
-    return invalidFindFamiliarResult(
-      input.state,
-      "invalidFill",
-      preservedHitPoints,
-    );
+    return {
+      result: invalidFindFamiliarResult(
+        input.state,
+        "invalidFill",
+        preservedHitPoints,
+      ),
+    };
   }
   /* v8 ignore stop -- @preserve */
   const reactionAvailable = reactionAvailableForFindFamiliarCast({
@@ -406,11 +486,13 @@ export function castResolvedFindFamiliar(
   });
   /* v8 ignore start -- @preserve -- A stale present companion can retain identity after its live combatant is missing. */
   if (Either.isLeft(reactionAvailable)) {
-    return invalidFindFamiliarResult(
-      input.state,
-      "missingCombatant",
-      reactionAvailable.left.message,
-    );
+    return {
+      result: invalidFindFamiliarResult(
+        input.state,
+        "missingCombatant",
+        reactionAvailable.left.message,
+      ),
+    };
   }
   /* v8 ignore stop -- @preserve */
   const nextState = withAdmittedFindFamiliarCombatant({
@@ -419,7 +501,7 @@ export function castResolvedFindFamiliar(
     familiarId,
     familiar: nextFamiliar,
     initiative: input.initiative,
-    statBlock: familiarStatBlockWithCreatureTypeOverride(resolvedForm),
+    statBlock: projected.right.runtime,
     ammunitionStocks: input.ammunitionStocks,
     reactionAvailable: reactionAvailable.right,
     ...(preservedHitPoints === null
@@ -431,34 +513,59 @@ export function castResolvedFindFamiliar(
   });
   /* v8 ignore start -- @preserve -- The resolved catalog form and collision-checked combatant identity satisfy Stat Block admission; failures remain a defensive typed propagation. */
   if (nextState.tag === "invalid") {
-    return nextState;
+    return { result: nextState };
   }
   /* v8 ignore stop -- @preserve */
-  return resolvedFindFamiliarResult(
-    nextState.state,
-    [],
-    findFamiliarCompanionLifecycleRouteEvents(),
-  );
+  return {
+    result: resolvedFindFamiliarResult(
+      nextState.state,
+      [],
+      findFamiliarCompanionLifecycleRouteEvents(),
+    ),
+    presentation: {
+      combatantId: familiarId,
+      source: projected.right.presentation,
+    },
+  };
+}
+
+type WildCompanionCasterAdmissionIssue = {
+  readonly reason: "missingCombatant" | "invalidFill";
+  readonly message: string;
+};
+
+function wildCompanionCasterAdmissionIssue(
+  owner: BattleCreatureState | undefined,
+): WildCompanionCasterAdmissionIssue | undefined {
+  /* v8 ignore start -- @preserve -- Stale direct call: Wild Companion discovery is available only for an admitted character caster. */
+  if (owner?.origin.kind !== "character") {
+    return {
+      reason: "missingCombatant",
+      message: "Wild Companion caster is not a character in this battle.",
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- The admitted character must carry the Druid Wild Companion feature before its resource can be spent. */
+  if (!characterHasWildCompanionFeature(owner.origin.execution)) {
+    return {
+      reason: "invalidFill",
+      message: "Wild Companion requires the Druid Wild Companion feature.",
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  return undefined;
 }
 
 export function castWildCompanion(
   input: WildCompanionCastInput,
 ): BattleResolutionResult {
   const owner = input.state.combatants.get(input.casterId);
-  /* v8 ignore start -- @preserve -- Stale direct call: Wild Companion discovery is available only for an admitted character caster. */
-  if (owner?.origin.kind !== "character") {
+  const ownerIssue = wildCompanionCasterAdmissionIssue(owner);
+  if (ownerIssue !== undefined) {
     return invalidFindFamiliarResult(
       input.state,
-      "missingCombatant",
-      "Wild Companion caster is not a character in this battle.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (!characterHasWildCompanionFeature(owner.origin.execution)) {
-    return invalidFindFamiliarResult(
-      input.state,
-      "invalidFill",
-      "Wild Companion requires the Druid Wild Companion feature.",
+      ownerIssue.reason,
+      ownerIssue.message,
     );
   }
   const spent = spendWildCompanionCost({
@@ -486,6 +593,20 @@ export function castWildCompanion(
     );
   }
   /* v8 ignore stop -- @preserve */
+  const projected = projectFamiliarStatBlock({
+    statBlock: resolvedForm.form.statBlock,
+    creatureTypeOverride: "fey",
+  });
+  if (Either.isLeft(projected)) {
+    return invalidFindFamiliarResult(
+      spent.state,
+      "invalidFill",
+      battleStatBlockProjectionFailureMessage(
+        projected.left,
+        "Find Familiar form projection failed",
+      ),
+    );
+  }
   const prior = findFamiliarCastPrior(
     findCompanionEntryByOwner(spent.state.companions, input.casterId)
       ?.companion,
@@ -517,7 +638,7 @@ export function castWildCompanion(
   const preservedHitPoints = hitPointsForFindFamiliarCast({
     state: spent.state,
     prior,
-    statBlock: resolvedForm.form.statBlock,
+    statBlock: projected.right.runtime,
   });
   /* v8 ignore start -- @preserve -- Corrupt retained state: admitted Wild Companions carry positive HP and a resolvable literal familiar maximum. */
   if (typeof preservedHitPoints === "string") {
@@ -547,10 +668,7 @@ export function castWildCompanion(
     familiarId,
     familiar: nextFamiliar,
     initiative: input.initiative,
-    statBlock: familiarStatBlockWithCreatureTypeOverride({
-      statBlock: resolvedForm.form.statBlock,
-      creatureTypeOverride: "fey",
-    }),
+    statBlock: projected.right.runtime,
     ammunitionStocks: input.ammunitionStocks,
     reactionAvailable: reactionAvailable.right,
     ...(preservedHitPoints === null
@@ -673,12 +791,39 @@ function companionAdmissionPreconditionIssue(
 export function admitCompanionToBattle(
   input: CompanionBattleAdmissionInput,
 ): Either.Either<BattleState, BattleStateInitIssue> {
+  return Either.map(
+    admitCompanionToBattleWithPresentation(input),
+    (admitted) => admitted.state,
+  );
+}
+
+export type CompanionBattleAdmissionWithPresentation =
+  | {
+      readonly tag: "embodiedOutsideBattle";
+      readonly state: BattleState;
+      readonly companionId: CombatantId;
+      readonly presentation: BattleStatBlockPresentationSource;
+    }
+  | {
+      readonly tag: "stored";
+      readonly state: BattleState;
+    };
+
+export function admitCompanionToBattleWithPresentation(
+  input: CompanionBattleAdmissionInput,
+): Either.Either<
+  CompanionBattleAdmissionWithPresentation,
+  BattleStateInitIssue
+> {
   const preconditionIssue = companionAdmissionPreconditionIssue(input);
   if (preconditionIssue !== undefined) return Either.left(preconditionIssue);
   if (!("companionId" in input)) {
-    return admitAbsentCompanionToBattle({
-      ...input,
-    });
+    return Either.map(
+      admitAbsentCompanionToBattle({
+        ...input,
+      }),
+      (state) => ({ tag: "stored" as const, state }),
+    );
   }
   /* v8 ignore start -- @preserve -- Type-level invariant: the companionId branch of CompanionBattleAdmissionInput requires an embodied manifestation. */
   if (input.manifestation.tag !== "embodiedOutsideBattle") {
@@ -712,6 +857,20 @@ export function admitCompanionToBattle(
     return companionStateInitIssue(resolvedForm.facts, resolvedForm.message);
   }
   /* v8 ignore stop -- @preserve */
+  const projected = projectFamiliarStatBlock(resolvedForm.form);
+  if (Either.isLeft(projected)) {
+    return companionStateInitIssue(
+      {
+        kind: "companionCombatantAdmissionInvalid",
+        ownerId: input.ownerId,
+        companionCombatantId: input.companionId,
+      },
+      battleStatBlockProjectionFailureMessage(
+        projected.left,
+        "Find Familiar form projection failed",
+      ),
+    );
+  }
   const nextCompanion = findFamiliarPresentState({
     form: { formAccess: input.manifestation.storedForm.formAccess },
     combatantId: input.companionId,
@@ -727,7 +886,7 @@ export function admitCompanionToBattle(
     familiarId: input.companionId,
     familiar: nextCompanion,
     initiative: input.manifestation.initiative,
-    statBlock: familiarStatBlockWithCreatureTypeOverride(resolvedForm.form),
+    statBlock: projected.right.runtime,
     ammunitionStocks: input.manifestation.ammunitionStocks,
     currentHp: input.manifestation.hitPoints.currentHp,
     tempHp: input.manifestation.hitPoints.tempHp,
@@ -757,12 +916,19 @@ export function admitCompanionToBattle(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return withInitialInitiativeOrder(
+  const state = withInitialInitiativeOrder(
     nextState.state,
     input.ownerId,
     input.companionId,
     input.initialCombatantOrder,
   );
+  if (Either.isLeft(state)) return Either.left(state.left);
+  return Either.right({
+    tag: "embodiedOutsideBattle",
+    state: state.right,
+    companionId: input.companionId,
+    presentation: projected.right.presentation,
+  });
 }
 
 function findFamiliarIdentityStateInitIssue(
@@ -984,7 +1150,7 @@ function companionInitializationIssueFromLeaves(
 function hitPointsForFindFamiliarCast(input: {
   readonly state: BattleState;
   readonly prior: FindFamiliarCastPrior;
-  readonly statBlock: StatBlockRecord;
+  readonly statBlock: BattleStatBlockExecutionSource;
 }): BattleCompanionHitPoints | null | string {
   if (input.prior.tag === "none" || input.prior.tag === "dismissedForever") {
     return null;
@@ -1031,7 +1197,7 @@ function reactionAvailableForFindFamiliarCast(input: {
 
 function hitPointsForAdoptedFamiliarForm(input: {
   readonly hitPoints: BattleCompanionHitPoints;
-  readonly statBlock: StatBlockRecord;
+  readonly statBlock: BattleStatBlockExecutionSource;
 }): BattleCompanionHitPoints | string {
   const maxHp = familiarMaxHp(input.statBlock);
   /* v8 ignore start -- @preserve -- Eligible familiar forms are admitted from the supported catalog, whose execution projection has literal positive maximum HP. */
@@ -1051,6 +1217,21 @@ function hitPointsForAdoptedFamiliarForm(input: {
     currentHp,
     tempHp: input.hitPoints.tempHp,
   };
+}
+
+function projectFamiliarStatBlock(
+  form: FindFamiliarResolvedForm,
+): Either.Either<
+  AuthoredStatBlockProjection,
+  BattleStatBlockProjectionFailure
+> {
+  const projected = projectAuthoredStatBlockWithCreatureType(
+    form.statBlock,
+    form.creatureTypeOverride,
+  );
+  return Either.isLeft(projected)
+    ? Either.left(projected.left)
+    : Either.right(projected.right);
 }
 
 function resolveStoredFindFamiliarForm(input: {

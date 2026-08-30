@@ -51,6 +51,7 @@ type ActionEconomyProjection = {
   readonly turnActionAvailable: boolean;
   readonly restrictedUnitActionProcedureRefs: readonly BattleProcedureExecutionRef[];
   readonly hasBonusAction: boolean;
+  readonly actionTakenThisTurn: boolean;
 };
 
 type ConditionsProjection = {
@@ -437,6 +438,7 @@ describe("shared reducer algebra MBT", () => {
 function initialActionEconomyState(): ActionEconomyState {
   return resetTurnActionEconomy({
     actionResources: [],
+    actionTakenThisTurn: false,
     currentHasBonusAction: false,
     actionOrBonusActionExclusion: { kind: "notRestricted" },
     movementActionBonusActionExclusion: { kind: "notRestricted" },
@@ -454,6 +456,7 @@ function projectActionEconomy(
       state.actionResources,
     ),
     hasBonusAction: state.currentHasBonusAction,
+    actionTakenThisTurn: state.actionTakenThisTurn,
   };
 }
 
@@ -552,6 +555,7 @@ function normalizeActionEconomySpecState(
       numberField(state, "qRestrictedUnitActionOrder"),
     ),
     hasBonusAction: booleanField(state, "qHasBonusAction"),
+    actionTakenThisTurn: booleanField(state, "qActionTakenThisTurn"),
   };
 }
 

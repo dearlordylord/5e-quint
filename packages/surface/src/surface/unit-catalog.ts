@@ -402,6 +402,41 @@ import wizardEvocationSavantInput from "../../content/wizard_evocation_savant.js
 import wizardPotentCantripInput from "../../content/wizard_potent_cantrip.json";
 import wizardRitualAdeptInput from "../../content/wizard_ritual_adept.json";
 import wizardScholarInput from "../../content/wizard_scholar.json";
+import animateDeadInput from "../../content/animate_dead.json";
+import chainLightningInput from "../../content/chain_lightning.json";
+import clairvoyanceInput from "../../content/clairvoyance.json";
+import confusionInput from "../../content/confusion.json";
+import controlWaterInput from "../../content/control_water.json";
+import controlWeatherInput from "../../content/control_weather.json";
+import createUndeadInput from "../../content/create_undead.json";
+import dimensionDoorInput from "../../content/dimension_door.json";
+import disguiseSelfInput from "../../content/disguise_self.json";
+import druidcraftInput from "../../content/druidcraft.json";
+import elementalismInput from "../../content/elementalism.json";
+import etherealnessInput from "../../content/etherealness.json";
+import fearInput from "../../content/fear.json";
+import fingerOfDeathInput from "../../content/finger_of_death.json";
+import harmInput from "../../content/harm.json";
+import heroesFeastInput from "../../content/heroes_feast.json";
+import iceStormInput from "../../content/ice_storm.json";
+import identifyInput from "../../content/identify.json";
+import mageHandInput from "../../content/mage_hand.json";
+import majorImageInput from "../../content/major_image.json";
+import phantasmalKillerInput from "../../content/phantasmal_killer.json";
+import planeShiftInput from "../../content/plane_shift.json";
+import powerWordKillInput from "../../content/power_word_kill.json";
+import powerWordStunInput from "../../content/power_word_stun.json";
+import projectImageInput from "../../content/project_image.json";
+import resurrectionInput from "../../content/resurrection.json";
+import spiritGuardiansInput from "../../content/spirit_guardians.json";
+import teleportInput from "../../content/teleport.json";
+import tonguesInput from "../../content/tongues.json";
+import trueSeeingInput from "../../content/true_seeing.json";
+import vitriolicSphereInput from "../../content/vitriolic_sphere.json";
+import wallOfFireInput from "../../content/wall_of_fire.json";
+import waterBreathingInput from "../../content/water_breathing.json";
+import windWalkInput from "../../content/wind_walk.json";
+import wordOfRecallInput from "../../content/word_of_recall.json";
 import acidSplashInput from "../../content/acid_splash.json";
 import { decodeUnitRecordSync } from "./schema.ts";
 import type {
@@ -432,6 +467,55 @@ export type UnitCatalog = {
   readonly listUnits: () => readonly UnitRecord[];
   readonly requireUnit: (id: string) => UnitRecord;
 };
+
+export type AuthoredUnitReferenceResolution = {
+  readonly authoredReference: string;
+  readonly canonicalUnitId: UnitId;
+  readonly unit: UnitRecord;
+};
+
+/**
+ * Resolve a source-authored Unit reference at the catalog boundary.
+ *
+ * Authored source may retain punctuation that is not part of the canonical
+ * Unit id (for example, a possessive apostrophe). Compare the supplied value
+ * to catalog-owned ids directly first, then use the deterministic authored
+ * reference key. No alias table is maintained, and an ambiguous key is not
+ * resolved.
+ */
+export function resolveAuthoredUnitReference(
+  authoredReference: string,
+  units: readonly UnitRecord[],
+): AuthoredUnitReferenceResolution | undefined {
+  const exact = units.find((unit) => unit.id === authoredReference);
+  if (exact !== undefined) {
+    return {
+      authoredReference,
+      canonicalUnitId: exact.id,
+      unit: exact,
+    };
+  }
+
+  const key = authoredUnitReferenceKey(authoredReference);
+  const matches = units.filter(
+    (unit) => authoredUnitReferenceKey(unit.id) === key,
+  );
+  return matches.length === 1
+    ? {
+        authoredReference,
+        canonicalUnitId: matches[0]!.id,
+        unit: matches[0]!,
+      }
+    : undefined;
+}
+
+function authoredUnitReferenceKey(value: string): string {
+  return value
+    .normalize("NFKC")
+    .trim()
+    .toLowerCase()
+    .replace(/[\u0027\u2019]/g, "");
+}
 
 export type ClassSpellListName = SpellcastingClassRecord["className"];
 
@@ -836,6 +920,41 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesHumanVersatileInput,
     speciesGoliathPowerfulBuildInput,
     speciesTieflingDarkvisionInput,
+    animateDeadInput,
+    chainLightningInput,
+    clairvoyanceInput,
+    confusionInput,
+    controlWaterInput,
+    controlWeatherInput,
+    createUndeadInput,
+    dimensionDoorInput,
+    disguiseSelfInput,
+    druidcraftInput,
+    elementalismInput,
+    etherealnessInput,
+    fearInput,
+    fingerOfDeathInput,
+    harmInput,
+    heroesFeastInput,
+    iceStormInput,
+    identifyInput,
+    mageHandInput,
+    majorImageInput,
+    phantasmalKillerInput,
+    planeShiftInput,
+    powerWordKillInput,
+    powerWordStunInput,
+    projectImageInput,
+    resurrectionInput,
+    spiritGuardiansInput,
+    teleportInput,
+    tonguesInput,
+    trueSeeingInput,
+    vitriolicSphereInput,
+    wallOfFireInput,
+    waterBreathingInput,
+    windWalkInput,
+    wordOfRecallInput,
     acidSplashInput,
     acidArrowInput,
     aidInput,

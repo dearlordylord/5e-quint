@@ -135,6 +135,11 @@ import {
   srdStatBlockCollection,
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import {
+  decodeCreatureImmunityDeclarationSync,
+  decodeStatBlockRecordSync,
+} from "@dnd/surface/surface/schema";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Either, Match, Option } from "effect";
 import { describe, expect, test } from "vitest";
@@ -163,6 +168,7 @@ import {
   characterBattleInitIssueReasonFromFact,
   battleCreatureInitIssuesFromMessages,
   battleCreatureInitIssueLeaves,
+  type CharacterBattleRuntimeIssue,
   type CharacterBattleInitIssueReason,
 } from "./index.ts";
 import type { BattleRosterIssue } from "./index.ts";
@@ -243,19 +249,10 @@ function characterSpellcasting(
 function startBattleFromProjectedRosterFixture(input: {
   readonly battleId: Parameters<typeof startBattle>[0]["battleId"];
   readonly projections: readonly [
-    Either.Either<
-      BattleCreatureInit,
-      BattleStateInitIssue | BattleCreatureInitIssue
-    >,
-    ...Either.Either<
-      BattleCreatureInit,
-      BattleStateInitIssue | BattleCreatureInitIssue
-    >[],
+    Either.Either<BattleCreatureInit, CharacterBattleRuntimeIssue>,
+    ...Either.Either<BattleCreatureInit, CharacterBattleRuntimeIssue>[],
   ];
-}): Either.Either<
-  BattleRuntimeSession,
-  BattleStateInitIssue | BattleCreatureInitIssue
-> {
+}): Either.Either<BattleRuntimeSession, CharacterBattleRuntimeIssue> {
   const combatants: BattleCreatureInit[] = [];
   for (const projection of input.projections) {
     if (Either.isLeft(projection)) return Either.left(projection.left);
@@ -454,6 +451,34 @@ describe("Character Sheet battle handoff", () => {
     ]);
   });
 
+  test("preserves Stat Block resource graph facts through handoff issues", () => {
+    const statBlock = assertStatBlockForTest(
+      statBlockCatalog,
+      authoredStatBlockId("stat_block_chimera"),
+    );
+    const resource = statBlock.statBlock.resources?.[0];
+    if (resource === undefined) {
+      throw new Error("Expected the Chimera resource declaration fixture.");
+    }
+    const issues = [
+      { kind: "missingResourceDeclaration", ordinal: resource.ordinal },
+    ] as const;
+
+    expect(
+      characterSheetBattleHandoffIssuesFromStateInit({
+        tag: "statBlockResourceGraphIssue",
+        issues,
+      }),
+    ).toEqual([
+      {
+        tag: "characterSheetBattleHandoffIssue",
+        message: `Battle runtime requires Stat Block procedure resource reference ${String(resource.ordinal)} to match a declared resource.`,
+        handoffReason: "battleInitializationResourceGraph",
+        issues,
+      },
+    ]);
+  });
+
   test("projects Magic Initiate for a non-class caster without inventing slots", () => {
     const magicInitiateMonk = magicInitiateMonkBuild();
     const projection = expectRight(
@@ -495,7 +520,10 @@ describe("Character Sheet battle handoff", () => {
           }),
           parseBattleCreatureInitFromStatBlock({
             combatantId: combatantId("magic-initiate-target"),
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
@@ -1055,8 +1083,9 @@ describe("Character Sheet battle handoff", () => {
             kind: "available",
             input: {
               combatantId: monsterCombatantId,
-              statBlock: statBlockCatalog.requireStatBlock(
-                "stat_block_skeleton",
+              statBlock: assertStatBlockForTest(
+                statBlockCatalog,
+                authoredStatBlockId("stat_block_skeleton"),
               ),
               initiative: initiativeScore(10),
               ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
@@ -1151,8 +1180,9 @@ describe("Character Sheet battle handoff", () => {
               kind: "available",
               input: {
                 combatantId: characterCombatantId,
-                statBlock: statBlockCatalog.requireStatBlock(
-                  "stat_block_skeleton",
+                statBlock: assertStatBlockForTest(
+                  statBlockCatalog,
+                  authoredStatBlockId("stat_block_skeleton"),
                 ),
                 initiative: initiativeScore(10),
                 ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
@@ -1166,59 +1196,6 @@ describe("Character Sheet battle handoff", () => {
       _tag: "Left",
       left: {
         message: expect.stringContaining("Duplicate combatant id"),
-      },
-    });
-
-    const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
-    expect(
-      startBattleFromTestRoster({
-        battleId: battleId("battle:unsupported-stat-block"),
-        entries: [
-          {
-            kind: "characterSheet",
-            source: {
-              kind: "available",
-              input: {
-                sheet: sheet.right,
-                unitLibrary,
-                statBlockCatalog,
-                combatantId: characterCombatantId,
-                displayName: "Character",
-                initiative: initiativeScore(20),
-                ammunitionStocks: [],
-              },
-            },
-          },
-          {
-            kind: "statBlock",
-            source: {
-              kind: "available",
-              input: {
-                combatantId: monsterCombatantId,
-                statBlock: {
-                  ...skeleton,
-                  statBlock: {
-                    ...skeleton.statBlock,
-                    hp: {
-                      kind: "caster_derived",
-                      source: "proficiency_bonus",
-                    },
-                  },
-                },
-                initiative: initiativeScore(10),
-                ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-                conditions: [],
-              },
-            },
-          },
-        ],
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: expect.stringContaining(
-          "requires literal Stat Block maximum HP",
-        ),
       },
     });
   });
@@ -1639,7 +1616,10 @@ describe("Character Sheet battle handoff", () => {
           kind: "available",
           input: {
             combatantId: sharedCombatantId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
@@ -1668,6 +1648,155 @@ describe("Character Sheet battle handoff", () => {
           index: 1,
           combatantId: sharedCombatantId,
           firstIndex: 0,
+        },
+      ],
+    });
+  });
+
+  test("preserves every authored Stat Block initialization failure in roster order", () => {
+    const baseStatBlock = assertStatBlockForTest(
+      statBlockCatalog,
+      authoredStatBlockId("stat_block_goblin_warrior"),
+    );
+    const projectionFailureStatBlock = decodeStatBlockRecordSync({
+      ...baseStatBlock,
+      statBlock: {
+        ...baseStatBlock.statBlock,
+        size: {
+          kind: "alternatives",
+          options: ["small", "medium"],
+        },
+      },
+    });
+    const resourceStatBlock = assertStatBlockForTest(
+      statBlockCatalog,
+      authoredStatBlockId("stat_block_chimera"),
+    );
+    const resource = resourceStatBlock.statBlock.resources?.[0];
+    if (resource === undefined) {
+      throw new Error("Expected the Chimera resource declaration fixture.");
+    }
+    const duplicateResourceStatBlock = {
+      ...baseStatBlock,
+      statBlock: {
+        ...baseStatBlock.statBlock,
+        resources: [resource, resource] as const,
+      },
+    };
+    const initialConditionImmuneStatBlock = {
+      ...baseStatBlock,
+      statBlock: {
+        ...baseStatBlock.statBlock,
+        immunities: decodeCreatureImmunityDeclarationSync({
+          conditions: ["prone"],
+        }),
+      },
+    };
+    const projectionCombatantId = combatantId(
+      "combatant:roster-stat-block-projection-failure",
+    );
+    const resourceCombatantId = combatantId(
+      "combatant:roster-stat-block-resource-graph",
+    );
+    const immunityCombatantId = combatantId(
+      "combatant:roster-stat-block-initial-condition",
+    );
+    const projectionFailure = {
+      tag: "battleStatBlockProjectionFailure" as const,
+      reason: "nonLiteralSize" as const,
+    };
+
+    expect(
+      characterBattleRuntimeIssueMessage({
+        tag: "statBlockProjectionFailure",
+        failure: projectionFailure,
+      }),
+    ).toBe(
+      "Stat Block authored projection failed: battle initialization requires a concrete Size.",
+    );
+
+    const composition = composeBattleRoster([
+      {
+        kind: "statBlock",
+        source: {
+          kind: "available",
+          input: {
+            combatantId: projectionCombatantId,
+            statBlock: projectionFailureStatBlock,
+            initiative: initiativeScore(12),
+            ammunitionStocks: testAmmunitionStocksForStatBlock(
+              projectionFailureStatBlock,
+            ),
+            conditions: [],
+          },
+        },
+      },
+      {
+        kind: "statBlock",
+        source: {
+          kind: "available",
+          input: {
+            combatantId: resourceCombatantId,
+            statBlock: duplicateResourceStatBlock,
+            initiative: initiativeScore(11),
+            ammunitionStocks: testAmmunitionStocksForStatBlock(
+              duplicateResourceStatBlock,
+            ),
+            conditions: [],
+          },
+        },
+      },
+      {
+        kind: "statBlock",
+        source: {
+          kind: "available",
+          input: {
+            combatantId: immunityCombatantId,
+            statBlock: initialConditionImmuneStatBlock,
+            initiative: initiativeScore(10),
+            ammunitionStocks: testAmmunitionStocksForStatBlock(
+              initialConditionImmuneStatBlock,
+            ),
+            conditions: ["prone"],
+          },
+        },
+      },
+    ]);
+
+    expect(composition).toEqual({
+      tag: "rejected",
+      admissions: [],
+      issues: [
+        {
+          kind: "statBlockProjection",
+          index: 0,
+          combatantId: projectionCombatantId,
+          issueTag: "statBlockProjectionFailure",
+          failure: projectionFailure,
+          message:
+            "Stat Block authored projection failed: battle initialization requires a concrete Size.",
+        },
+        {
+          kind: "statBlockProjection",
+          index: 1,
+          combatantId: resourceCombatantId,
+          issueTag: "statBlockResourceGraphIssue",
+          issues: [
+            {
+              kind: "duplicateResourceOrdinal",
+              ordinal: resource.ordinal,
+            },
+          ],
+          message: `Battle runtime requires Stat Block resource declaration ordinal ${String(resource.ordinal)} to be unique.`,
+        },
+        {
+          kind: "statBlockProjection",
+          index: 2,
+          combatantId: immunityCombatantId,
+          issueTag: "battleStateInitIssue",
+          reason: "initialConditionImmune",
+          condition: "prone",
+          message: "Stat Block combatant is immune to initial prone condition.",
         },
       ],
     });
@@ -2183,7 +2312,10 @@ describe("Character Sheet battle handoff", () => {
           ),
           battleCreatureInitFromStatBlock({
             combatantId: statBlockCombatantId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
           }),
         ],
@@ -2193,12 +2325,27 @@ describe("Character Sheet battle handoff", () => {
       session.state,
       statBlockCombatantId,
     );
+    const missingCombatantId = combatantId("settlement-missing-combatant");
     expect(
       settleCharacterSheetFromBattle({
         sheet,
-        state: session.state,
-        context: session.context,
-        combatant: statBlockCombatant,
+        battleSession: session,
+        combatantId: missingCombatantId,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "characterSheetBattleHandoffIssue",
+        handoffReason: "combatantMissing",
+        combatantId: missingCombatantId,
+      },
+    });
+    expect(
+      settleCharacterSheetFromBattle({
+        sheet,
+        battleSession: session,
+        combatantId: statBlockCombatant.combatantId,
         unitLibrary,
       }),
     ).toMatchObject({
@@ -2213,9 +2360,11 @@ describe("Character Sheet battle handoff", () => {
     expect(
       settleCharacterSheetFromBattle({
         sheet,
-        state: session.state,
-        context: battleRuntimeContextForTest(new Map()),
-        combatant: characterCombatant,
+        battleSession: battleRuntimeSessionForTest({
+          state: session.state,
+          context: battleRuntimeContextForTest(new Map()),
+        }),
+        combatantId: characterCombatant.combatantId,
         unitLibrary,
       }),
     ).toMatchObject({
@@ -2604,7 +2753,10 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: ownerId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(12),
           }),
         ],
@@ -3083,7 +3235,10 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: companionId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_cat"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_cat"),
+            ),
             initiative: initiativeScore(14),
             currentHp: Hp(0),
           }),
@@ -3128,7 +3283,10 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: companionId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_rat"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_rat"),
+            ),
             initiative: initiativeScore(14),
           }),
         ],
@@ -3419,9 +3577,8 @@ describe("Character Sheet battle handoff", () => {
     const settled = expectRight(
       settleCharacterSheetFromBattle({
         sheet,
-        state: recast.session.state,
-        context: recast.session.context,
-        combatant: requireCombatant(recast.session.state, ownerId),
+        battleSession: recast.session,
+        combatantId: ownerId,
         unitLibrary,
         statBlockCatalog,
       }),
@@ -3640,7 +3797,10 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: ownerId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(12),
           }),
         ],
@@ -3755,7 +3915,10 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: ownerId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(12),
           }),
         ],
@@ -3826,7 +3989,6 @@ describe("Character Sheet battle handoff", () => {
         statBlockCatalog
           .listStatBlocks()
           .filter((statBlock) => statBlock.id !== "stat_block_cat"),
-      requireStatBlock: (id) => statBlockCatalog.requireStatBlock(id),
     };
     expect(
       admitCharacterSheetCompanionToBattle({
@@ -3877,7 +4039,10 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: ownerId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(12),
           }),
         ],
@@ -3966,9 +4131,11 @@ describe("Character Sheet battle handoff", () => {
     const handoff = expectRight(
       settleCharacterSheetFromBattle({
         sheet,
-        state: cast.state,
-        context: state.context,
-        combatant: requireCombatant(cast.state, ownerId),
+        battleSession: battleRuntimeSessionForTest({
+          state: cast.state,
+          context: state.context,
+        }),
+        combatantId: ownerId,
         unitLibrary,
         statBlockCatalog,
       }),
@@ -4079,7 +4246,10 @@ describe("Character Sheet battle handoff", () => {
           init,
           battleCreatureInitFromStatBlock({
             combatantId: combatantId("combatant:no-catalog-skeleton"),
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
           }),
         ],
@@ -4142,7 +4312,10 @@ describe("Character Sheet battle handoff", () => {
           init,
           battleCreatureInitFromStatBlock({
             combatantId: combatantId("combatant:wild-shape-subset-skeleton"),
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
           }),
         ],
@@ -4338,10 +4511,22 @@ describe("Character Sheet battle handoff", () => {
       ammunitionStocks: [],
       unitLibrary,
       druidWildShapeAvailableForms: [
-        statBlockCatalog.requireStatBlock("stat_block_rat"),
-        statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
-        statBlockCatalog.requireStatBlock("stat_block_cat"),
-        statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+        assertStatBlockForTest(
+          statBlockCatalog,
+          authoredStatBlockId("stat_block_rat"),
+        ),
+        assertStatBlockForTest(
+          statBlockCatalog,
+          authoredStatBlockId("stat_block_riding_horse"),
+        ),
+        assertStatBlockForTest(
+          statBlockCatalog,
+          authoredStatBlockId("stat_block_cat"),
+        ),
+        assertStatBlockForTest(
+          statBlockCatalog,
+          authoredStatBlockId("stat_block_skeleton"),
+        ),
       ],
     });
 
@@ -5058,8 +5243,9 @@ describe("Character Sheet battle handoff", () => {
               kind: "available",
               input: {
                 combatantId: combatantId("stable-init-entry-skeleton"),
-                statBlock: statBlockCatalog.requireStatBlock(
-                  "stat_block_skeleton",
+                statBlock: assertStatBlockForTest(
+                  statBlockCatalog,
+                  authoredStatBlockId("stat_block_skeleton"),
                 ),
                 initiative: initiativeScore(5),
                 ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
@@ -5342,10 +5528,9 @@ describe("Character Sheet battle handoff", () => {
     expect(
       settleCharacterSheetFromBattle({
         sheet,
-        state: session.state,
-        context: session.context,
+        battleSession: session,
+        combatantId: combatant.combatantId,
         unitLibrary,
-        combatant,
       }),
     ).toMatchObject({
       _tag: "Right",
@@ -6271,7 +6456,10 @@ describe("Character Sheet battle handoff", () => {
             combatantId: combatantId(
               "combatant:sorcerer-font-battle-closed-skeleton",
             ),
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
           }),
         ],
@@ -6371,7 +6559,10 @@ describe("Character Sheet battle handoff", () => {
           characterInit,
           battleCreatureInitFromStatBlock({
             combatantId: combatantId("combatant:skeleton-metamagic"),
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
           }),
         ],
@@ -7716,7 +7907,10 @@ describe("Character Build battle projection", () => {
       battleCreatureInitFromCharacterBuild({
         ...init,
         druidWildShapeAvailableForms: [
-          statBlockCatalog.requireStatBlock("stat_block_rat"),
+          assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_rat"),
+          ),
         ],
       }),
     ).toMatchObject({
@@ -7738,7 +7932,10 @@ describe("Character Build battle projection", () => {
           }),
           parseBattleCreatureInitFromStatBlock({
             combatantId: combatantId("invalid-build-boundary-stat-block"),
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(5),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
@@ -7748,37 +7945,6 @@ describe("Character Build battle projection", () => {
     ).toMatchObject({
       _tag: "Left",
       left: { message: expect.stringContaining("max HP must be positive") },
-    });
-
-    const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
-    expect(
-      startBattleFromProjectedRosterFixture({
-        battleId: battleId("battle:invalid-stat-block-boundary"),
-        projections: [
-          battleCreatureInitFromCharacterBuild({ ...init, unitLibrary }),
-          parseBattleCreatureInitFromStatBlock({
-            combatantId: combatantId("invalid-stat-block-boundary"),
-            statBlock: {
-              ...skeleton,
-              statBlock: {
-                ...skeleton.statBlock,
-                hp: {
-                  kind: "caster_derived",
-                  source: "proficiency_bonus",
-                },
-              },
-            },
-            initiative: initiativeScore(5),
-            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-            conditions: [],
-          }),
-        ],
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: "Battle runtime requires literal Stat Block maximum HP.",
-      },
     });
   });
 
@@ -8459,7 +8625,7 @@ describe("Character Build battle projection", () => {
     }
     const [wizardSource] = wizardSpellcasting.sources;
 
-    expect(
+    const projection = expectRight(
       characterSpellcasting({
         build: {
           ...wizard,
@@ -8480,14 +8646,15 @@ describe("Character Build battle projection", () => {
         },
         unitLibrary,
       }),
-    ).toMatchObject({
-      _tag: "Right",
-      right: {
-        cantrips: [expect.objectContaining({ id: "true_strike" })],
-        preparedSpells: [],
-        spellbookRitualSpellAccesses: [],
-      },
-    });
+    );
+    expect(projection.cantrips).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "true_strike" }),
+        expect.objectContaining({ id: "mage_hand" }),
+      ]),
+    );
+    expect(projection.preparedSpells).toEqual([]);
+    expect(projection.spellbookRitualSpellAccesses).toEqual([]);
   });
 
   test("projects an empty weapon loadout and rejects a non-Weapon off-hand reference", () => {
@@ -9204,7 +9371,10 @@ describe("Character Build battle projection", () => {
           }),
           parseBattleCreatureInitFromStatBlock({
             combatantId: targetId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
@@ -9397,8 +9567,9 @@ describe("Character Build battle projection", () => {
               kind: "available",
               input: {
                 combatantId: combatantId("combatant:pact-tome-opponent"),
-                statBlock: statBlockCatalog.requireStatBlock(
-                  "stat_block_skeleton",
+                statBlock: assertStatBlockForTest(
+                  statBlockCatalog,
+                  authoredStatBlockId("stat_block_skeleton"),
                 ),
                 initiative: initiativeScore(5),
                 ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
@@ -9416,9 +9587,8 @@ describe("Character Build battle projection", () => {
     const settled = expectRight(
       settleCharacterSheetFromBattle({
         sheet,
-        state: entry.session.state,
-        context: entry.session.context,
-        combatant,
+        battleSession: entry.session,
+        combatantId: combatant.combatantId,
         unitLibrary,
         statBlockCatalog,
       }),
@@ -9894,7 +10064,10 @@ describe("Character Build battle projection", () => {
           }),
           parseBattleCreatureInitFromStatBlock({
             combatantId: targetId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
@@ -9959,7 +10132,10 @@ describe("Character Build battle projection", () => {
           }),
           parseBattleCreatureInitFromStatBlock({
             combatantId: targetId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
@@ -10094,7 +10270,10 @@ describe("Character Build battle projection", () => {
           }),
           parseBattleCreatureInitFromStatBlock({
             combatantId: targetId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
@@ -10173,7 +10352,10 @@ describe("Character Build battle projection", () => {
           }),
           parseBattleCreatureInitFromStatBlock({
             combatantId: targetId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
@@ -10442,8 +10624,9 @@ describe("Character Build battle projection", () => {
           }),
           parseBattleCreatureInitFromStatBlock({
             combatantId: targetId,
-            statBlock: statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(10),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
@@ -10539,8 +10722,9 @@ describe("Character Build battle projection", () => {
           }),
           parseBattleCreatureInitFromStatBlock({
             combatantId: targetId,
-            statBlock: statBlockCatalog.requireStatBlock(
-              "stat_block_goblin_warrior",
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_goblin_warrior"),
             ),
             initiative: initiativeScore(10),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
@@ -11031,7 +11215,10 @@ describe("Character Build battle projection", () => {
           }),
           parseBattleCreatureInitFromStatBlock({
             combatantId: targetId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],
@@ -12089,6 +12276,7 @@ function attackMeleeReachFact(
         targetId,
         distanceFeet: movementFeet(5),
         procedureRef: subject.procedureRef,
+        statBlockDamageSelection: subject.statBlockDamageSelection,
       }
     : {
         kind: "attackTargetDistance",
@@ -12134,7 +12322,10 @@ function startDruidWildShapeSheetBattle(
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: combatantId("skeleton"),
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
         }),
       ],
@@ -12154,7 +12345,6 @@ function statBlockCatalogWithLookupCount(): {
         return statBlockCatalog.getStatBlock(id);
       },
       listStatBlocks: () => statBlockCatalog.listStatBlocks(),
-      requireStatBlock: (id) => statBlockCatalog.requireStatBlock(id),
     },
     lookupCount: () => getStatBlockCalls,
   };
@@ -12164,9 +12354,6 @@ function emptyStatBlockCatalog(): StatBlockCatalog {
   return {
     getStatBlock: () => Option.none(),
     listStatBlocks: () => [],
-    requireStatBlock: (id) => {
-      throw new Error(`Unexpected Stat Block lookup: ${id}`);
-    },
   };
 }
 
@@ -13612,24 +13799,28 @@ function testSorcererMetamagicOptionId(optionId: string) {
   return expectRight(sorcererMetamagicOptionId(optionId));
 }
 
-function settleHandoffBranchToCharacterSheet(
-  input: Omit<
-    Parameters<typeof settleCharacterSheetFromBattle>[0],
-    "state" | "context"
-  > & {
-    readonly context?: BattleRuntimeContext;
-    readonly resourceOwnership?: readonly CharacterBattleResourceOwnership[];
-  },
-): ReturnType<typeof settleCharacterSheetFromBattle> {
+function settleHandoffBranchToCharacterSheet(input: {
+  readonly sheet: CharacterSheet;
+  readonly combatant: BattleCreatureState;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog?: StatBlockCatalog;
+  readonly context?: BattleRuntimeContext;
+  readonly resourceOwnership?: readonly CharacterBattleResourceOwnership[];
+}): ReturnType<typeof settleCharacterSheetFromBattle> {
   const session = handoffBranchSession(
     input.combatant,
     input.resourceOwnership,
   );
   return settleCharacterSheetFromBattle({
     sheet: input.sheet,
-    state: session.state,
-    context: input.context ?? session.context,
-    combatant: input.combatant,
+    battleSession:
+      input.context === undefined
+        ? session
+        : battleRuntimeSessionForTest({
+            state: session.state,
+            context: input.context,
+          }),
+    combatantId: input.combatant.combatantId,
     unitLibrary: input.unitLibrary,
     ...(input.statBlockCatalog === undefined
       ? {}
@@ -13647,7 +13838,10 @@ function handoffBranchSession(
       combatants: [
         battleCreatureInitFromStatBlock({
           combatantId: combatant.combatantId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
         }),
       ],

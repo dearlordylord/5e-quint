@@ -1,0 +1,319 @@
+{
+  "challengeRating": 4,
+  "id": "stat_block_couatl",
+  "kind": "statBlock",
+  "name": "Couatl",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:479-515"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 18,
+      "con": 17,
+      "dex": 20,
+      "int": 18,
+      "str": 16,
+      "wis": 20
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 19
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "dex",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 7
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 12,
+                  "flat": 5
+                },
+                "kind": "fixed",
+                "static": 11
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            },
+            {
+              "condition": "poisoned",
+              "expiresAt": {
+                "kind": "source_next_turn_end"
+              },
+              "kind": "apply_condition"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Strength Saving Throw: DC 15, one Medium or smaller creature the couatl can see within 5 feet. Failure: 8 (1d6 + 5) Bludgeoning damage. The target has the Grappled condition (escape DC 13), and it has the Restrained condition until the grapple ends.",
+        "kind": "textOnly",
+        "name": "Constrict",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "wis",
+          "components": {
+            "m": false,
+            "s": false,
+            "v": false
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "detect_evil_and_good"
+                },
+                {
+                  "spellId": "detect_magic"
+                },
+                {
+                  "spellId": "detect_thoughts"
+                },
+                {
+                  "restriction": {
+                    "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                    "deltas": [
+                      {
+                        "creatureTypes": [
+                          "beast",
+                          "humanoid"
+                        ],
+                        "kind": "transformation_form_creature_type_limit"
+                      },
+                      {
+                        "kind": "temporary_hit_points",
+                        "maintenanceRequirement": "not_required",
+                        "spellGrant": "none"
+                      },
+                      {
+                        "kind": "concentration_requirement",
+                        "requirement": "not_required"
+                      }
+                    ]
+                  },
+                  "spellId": "shapechange"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "create_food_and_water"
+                },
+                {
+                  "spellId": "dream"
+                },
+                {
+                  "spellId": "greater_restoration"
+                },
+                {
+                  "spellId": "scrying"
+                },
+                {
+                  "spellId": "sleep"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 15,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "good",
+      "order": "lawful"
+    },
+    "bonusActions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "wis",
+          "components": {
+            "m": false,
+            "s": false,
+            "v": false
+          },
+          "groups": [
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "bless"
+                },
+                {
+                  "spellId": "lesser_restoration"
+                },
+                {
+                  "spellId": "sanctuary"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Divine Aid"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "all"
+      },
+      "telepathy": {
+        "rangeFeet": 120
+      }
+    },
+    "creatureType": "celestial",
+    "hp": {
+      "kind": "literal",
+      "value": 60
+    },
+    "immunities": {
+      "damageTypes": [
+        "psychic",
+        "radiant"
+      ]
+    },
+    "initiative": {
+      "modifier": 5,
+      "score": 15
+    },
+    "passivePerception": 15,
+    "resistances": {
+      "damageTypes": [
+        "bludgeoning",
+        "piercing",
+        "slashing"
+      ],
+      "kind": "fixed"
+    },
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 1,
+        "ownership": "each"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 2
+        },
+        "ordinal": 2,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 3
+      },
+      {
+        "ability": "dex",
+        "modifier": 5
+      },
+      {
+        "ability": "con",
+        "modifier": 5
+      },
+      {
+        "ability": "int",
+        "modifier": 4
+      },
+      {
+        "ability": "wis",
+        "modifier": 7
+      },
+      {
+        "ability": "cha",
+        "modifier": 4
+      }
+    ],
+    "senses": [
+      {
+        "kind": "truesight",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "medium",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 90
+        },
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The couatl's thoughts can't be read by any means, and other creatures can communicate with it telepathically only if it allows them.",
+        "name": "Shielded Mind"
+      }
+    ]
+  }
+}

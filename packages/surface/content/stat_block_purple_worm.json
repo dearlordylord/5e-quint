@@ -1,0 +1,178 @@
+{
+  "challengeRating": 15,
+  "id": "stat_block_purple_worm",
+  "kind": "statBlock",
+  "name": "Purple Worm",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-P-S.md:323-355"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 4,
+      "con": 22,
+      "dex": 7,
+      "int": 1,
+      "str": 28,
+      "wis": 8
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 18
+      }
+    },
+    "actions": [
+      {
+        "description": "The worm makes one Bite attack and one Tail Stinger attack.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee Attack Roll: +14, reach 10 ft. Hit: 22 (3d8 + 9) Piercing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 19), and it has the Restrained condition until the grapple ends.",
+        "kind": "textOnly",
+        "name": "Bite",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 14
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Tail Stinger",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6,
+                  "flat": 9
+                },
+                "kind": "fixed",
+                "static": 16
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 10,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 35
+              },
+              "damageType": "poison",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "bonusActions": [
+      {
+        "description": "Strength Saving Throw: DC 19, one Large or smaller creature Grappled by the worm (it can have up to three creatures swallowed at a time). Failure: The target is swallowed by the worm, and the Grappled condition ends. A swallowed creature has the Blinded and Restrained conditions, has Total Cover against attacks and other effects outside the worm, and takes 17 (5d6) Acid damage at the start of each of the worm's turns. If the worm takes 30 damage or more on a single turn from a creature inside it, the worm must succeed on a DC 21 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, each of which falls in a space within 5 feet of the worm and has the Prone condition. If the worm dies, any swallowed creature no longer has the Restrained condition and can escape from the corpse using 20 feet of movement, exiting Prone.",
+        "kind": "textOnly",
+        "name": "Swallow",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "monstrosity",
+    "hp": {
+      "kind": "literal",
+      "value": 247
+    },
+    "initiative": {
+      "modifier": 3,
+      "score": 13
+    },
+    "passivePerception": 9,
+    "savingThrowModifiers": [
+      {
+        "ability": "cha",
+        "modifier": -3
+      },
+      {
+        "ability": "con",
+        "modifier": 11
+      },
+      {
+        "ability": "dex",
+        "modifier": -2
+      },
+      {
+        "ability": "int",
+        "modifier": -5
+      },
+      {
+        "ability": "str",
+        "modifier": 9
+      },
+      {
+        "ability": "wis",
+        "modifier": 4
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 30
+      },
+      {
+        "kind": "tremorsense",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "gargantuan",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 50
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 50
+        },
+        "kind": "burrow"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The worm can burrow through solid rock at half its Burrow Speed and leaves a 10-foot-diameter tunnel in its wake.",
+        "name": "Tunneler"
+      }
+    ]
+  }
+}

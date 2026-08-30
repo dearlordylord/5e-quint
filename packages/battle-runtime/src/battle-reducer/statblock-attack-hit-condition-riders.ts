@@ -1,5 +1,7 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-ATTACK-PROCEDURE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
-// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 
 import type {
@@ -7,10 +9,7 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import type { StatBlockAttackActionOption } from "../battle-action-options.ts";
-import {
-  creatureSizeIsAtMost,
-  supportedStatBlockAttackHitConditionRiders,
-} from "../statblock-attack-hit-condition-support.ts";
+import { creatureSizeIsAtMost } from "../statblock-attack-hit-condition-support.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state-execution.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import { conditionApplicationPreventedByConditionImmunity } from "./spell-condition-effects-helpers.ts";
@@ -20,16 +19,11 @@ export function applyStatBlockAttackHitConditionRiders(input: {
   readonly target: BattleCreatureState;
   readonly attack: StatBlockAttackActionOption;
 }): BattleState {
-  const riders = supportedStatBlockAttackHitConditionRiders(
-    input.attack.attack,
-  );
-  if (riders.length === 0) {
+  const rider = input.attack.attack.onHit.conditionRider;
+  if (rider === undefined) {
     return input.state;
   }
-  const nextTarget = riders.reduce(
-    applyStatBlockAttackHitConditionRider,
-    input.target,
-  );
+  const nextTarget = applyStatBlockAttackHitConditionRider(input.target, rider);
   return nextTarget === input.target
     ? input.state
     : {
@@ -44,8 +38,8 @@ export function applyStatBlockAttackHitConditionRiders(input: {
 function applyStatBlockAttackHitConditionRider(
   target: BattleCreatureState,
   rider: NonNullable<
-    ReturnType<typeof supportedStatBlockAttackHitConditionRiders>
-  >[number],
+    StatBlockAttackActionOption["attack"]["onHit"]["conditionRider"]
+  >,
 ): BattleCreatureState {
   if (
     !creatureSizeIsAtMost(

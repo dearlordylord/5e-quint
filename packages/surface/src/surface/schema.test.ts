@@ -27,7 +27,7 @@ import {
   decodeFeatRecordSync,
   decodeMagicItemRecordSync,
   decodeMasteryRecordSync,
-  decodeMonsterStatBlockSync,
+  decodeStatBlockRecordSync,
   decodeShieldRecordSync,
   decodeShieldTemplateRecordSync,
   decodeSpeciesRecordSync,
@@ -129,9 +129,7 @@ describe("SRD Surface publication schema", () => {
     });
 
     const monster = srdSurface.statBlocks[0];
-    expect(decodeMonsterStatBlockSync(monster.statBlock)).toEqual(
-      monster.statBlock,
-    );
+    expect(decodeStatBlockRecordSync(monster)).toEqual(monster);
   });
 
   test("reads top-level casting-time and ritual facts without assuming every Spell family has them", () => {
@@ -466,10 +464,10 @@ describe("SRD Surface publication schema", () => {
       "stat blocks property",
     );
     expect(requireRecord(units.items, "units items").$ref).toBe(
-      "#/$defs/PublishedSrdUnitPublicationEncoded",
+      "#/$defs/PublishedSrdUnitPublication",
     );
     expect(requireRecord(statBlocks.items, "stat blocks items").$ref).toBe(
-      "#/$defs/PublishedSrdStatBlockPublicationEncoded",
+      "#/$defs/PublishedSrdStatBlockPublication",
     );
     expect(
       JSON.stringify(SrdSurfaceJsonSchema.$defs).includes('"srd-5.2.1"'),

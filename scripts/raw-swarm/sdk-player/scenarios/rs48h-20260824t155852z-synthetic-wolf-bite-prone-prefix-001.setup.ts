@@ -49,7 +49,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(bitingWolf)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(bitingWolf.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(bitingWolf.left),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-stat-block-battle-initialization",
@@ -68,7 +68,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(targetWolf)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(targetWolf.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(targetWolf.left),
       observation: {
         scenarioId: SCENARIO_ID,
         capability: "canonical-stat-block-battle-initialization",
@@ -122,7 +122,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],

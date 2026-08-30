@@ -5,11 +5,28 @@ export const setupScenario: ScenarioSetup = (context) => {
   const ridingHorseId = sdk.combatantId("riding-horse");
   const wolfId = sdk.combatantId("wolf");
 
+  const ridingHorseStatBlock = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_riding_horse",
+  );
+  const wolfStatBlock = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_wolf",
+  );
+  if (ridingHorseStatBlock === undefined || wolfStatBlock === undefined) {
+    return {
+      kind: "obstructed",
+      obstruction:
+        "The supplied Stat Block catalog is missing a required scenario combatant.",
+      observation: {
+        stage: "required-stat-block-selection",
+        ridingHorseFound: ridingHorseStatBlock !== undefined,
+        wolfFound: wolfStatBlock !== undefined,
+      },
+    };
+  }
+
   const ridingHorse = sdk.battleCreatureInitFromStatBlock({
     combatantId: ridingHorseId,
-    statBlock: context.statBlockCatalog.requireStatBlock(
-      "stat_block_riding_horse",
-    ),
+    statBlock: ridingHorseStatBlock,
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [],
     conditions: [],
@@ -17,14 +34,16 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(ridingHorse)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(ridingHorse.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        ridingHorse.left,
+      ),
       observation: { stage: "riding-horse-battle-initialization" },
     };
   }
 
   const wolf = sdk.battleCreatureInitFromStatBlock({
     combatantId: wolfId,
-    statBlock: context.statBlockCatalog.requireStatBlock("stat_block_wolf"),
+    statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(13),
     ammunitionStocks: [],
     conditions: [],
@@ -32,7 +51,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(wolf)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(wolf.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(wolf.left),
       observation: { stage: "wolf-battle-initialization" },
     };
   }
@@ -70,7 +89,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],

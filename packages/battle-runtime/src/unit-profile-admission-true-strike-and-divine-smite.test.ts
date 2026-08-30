@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveCastAttackHitBonusActionSpellCommand } from "./battle-reducer/attack-hit-bonus-action-spell-procedures.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
@@ -342,7 +344,10 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       statBlockTargets: [
         {
           combatantId: skeletonTargetId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_skeleton"),
+          ),
           initiative: 9,
         },
       ],

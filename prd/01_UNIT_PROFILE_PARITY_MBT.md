@@ -116,7 +116,7 @@ and runtime projection remain separate throughout the flow.
 ## Implementation Decisions
 
 - Procedure Parity MBT and Selected identity replay are distinct concepts.
-- Existing QMBT2-QMBT6 lanes are Procedure Parity MBT.
+- Existing focused QMBT lanes are Procedure Parity MBT.
 - The Unit profile matrix owns concrete authored Unit identity coverage.
 - QNT must not enumerate all Units or import authored Surface records.
 - Supported profiles must be narrow, domain-named mechanics profiles rather
@@ -157,7 +157,7 @@ and runtime projection remain separate throughout the flow.
   naturally matches existing QMBT lanes.
 - MBT runs are reserved for completed behavior changes or selected identity
   parity slices. They are not used for exploratory matrix edits.
-- Existing Procedure Parity prior art is QMBT2-QMBT6.
+- Existing Procedure Parity prior art is the set of focused QMBT lanes.
 
 ## Out of Scope
 

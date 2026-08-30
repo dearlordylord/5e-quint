@@ -12,7 +12,8 @@ The matrix records:
 - requirement ids for non-fluff domain spans;
 - RAW review agent signoff for each covered section;
 - QNT/runtime/verification owner claims;
-- active-plan task claims against requirements;
+- historical evidence claims and distinct tracker follow-up joins against
+  requirements; GitHub Issues own execution status;
 - generated JSON and Markdown reports.
 
 Run:
@@ -44,25 +45,25 @@ labels:
    QNT file with the `qnt-owner` claim kind.
 4. Add the proof artifact with the `verification-owner:qnt-proof` claim kind
    and cite it in the proof file.
-5. Add or update the `task-claims.jsonl` row for the active QCORE task.
+5. Add or update the `evidence-claims.jsonl` row for the proof artifact.
 6. Run `pnpm raw-coverage:check` before any proof or MBT gate.
 
 Every QMBT task starts from an existing QCORE requirement:
 
-1. Use the requirement ids listed on the matching QCORE task claim.
+1. Use the requirement ids listed on the matching QCORE historical evidence
+   claim.
 2. Add runtime owners only where production runtime code implements the
    requirement.
 3. Add focused MBT owners with `verification-owner:focused-mbt` when parity is
    tested.
-4. Add or update the `task-claims.jsonl` row for the QMBT task. If the task is
-   not `done` in `plans/ACTIVE_PLAN.md`, the matrix reports it as planned
-   parity, not completed parity.
+4. Add or update the `evidence-claims.jsonl` row for the QMBT artifact. Its
+   `evidenceId` identifies checked historical evidence, not tracker status.
 5. Run `pnpm raw-coverage:check`; run promoted MBT only after behavior changes
    are complete.
 
-The active plan may list matrix requirement ids for human navigation, but the
-canonical machine-readable task mapping lives in `task-claims.jsonl`. Task
-status remains derived from `plans/ACTIVE_PLAN.md`.
+Historical proof/runtime mappings live in `evidence-claims.jsonl`. Bounded gap
+ownership lives separately in `tracker-claims.jsonl`; those rows carry stable
+GitHub issue identity and a closed gap metric, never copied issue status.
 
 ## RAW Review Agent
 

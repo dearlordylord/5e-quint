@@ -154,6 +154,15 @@ module actionTurnProcedures {
     }
   }
 
+  pure def spendOrdinaryActionResource(
+    state: TurnProcedureState
+  ): ActionCostSpendResult =
+    if (not(canSpendAction(state))) { turn: state, admitted: false }
+    else {
+      turn: state.with("actionQuota", ActionSpent),
+      admitted: true,
+    }
+
   pure def resolveDash(state: TurnProcedureState, speedFeet: int, cost: ActionCost): TurnProcedureState = {
     val spend = spendActionCost(state, cost)
     if (not(spend.admitted)) state

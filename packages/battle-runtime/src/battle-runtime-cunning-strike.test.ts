@@ -1379,7 +1379,6 @@ function largeTargetStatBlock(): ReturnType<typeof statBlockRecord> {
     name: "Synthetic Cunning Strike Large Target",
     statBlock: {
       ...base.statBlock,
-      displayName: "Synthetic Cunning Strike Large Target",
       size: "large",
     },
   };

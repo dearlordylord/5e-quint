@@ -1,5 +1,6 @@
 import { Either, JSONSchema, ParseResult, Schema } from "effect";
 import { StatBlockId } from "@dnd/shared/game-facts";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import * as SchemaAST from "effect/SchemaAST";
 
 export {
@@ -37,6 +38,7 @@ export {
   CommandTargetNextTurnOptionsSchema,
   ComponentsSchema,
   CreatureActionsSchema,
+  CREATURE_RECHARGE_MINIMUM_ROLLS,
   CreatureLegendaryActionsSchema,
   CreatureLimitedUseSchema,
   CreatureRechargeMinimumRollSchema,
@@ -45,6 +47,7 @@ export {
   CreatureDismissalSchema,
   CreatureImmunityListSchema,
   CreatureSavingThrowModifierSchema,
+  CreatureSkillModifierSchema,
   CreatureModeSchema,
   CreatureNamedAttackRollSchema,
   CreatureAttackRollMechanicsSchema,
@@ -54,8 +57,50 @@ export {
   CreatureResistanceListSchema,
   CreatureSenseSchema,
   CreatureSpeedSchema,
+  CreatureStatBlockProjectionSchema,
   CreatureStatBlockOverridesSchema,
   CreatureStatBlockSchema,
+  AuthoredStatBlockReactionTriggerSchema,
+  AuthoredExecutableProcedureSchema,
+  StatBlockActionSectionSchema,
+  StatBlockBonusActionSectionSchema,
+  StatBlockLegendaryActionSectionSchema,
+  StatBlockProcedureAreaShapeSchema,
+  StatBlockProcedureDcSourceSchema,
+  StatBlockProcedureEntrySchema,
+  StatBlockProcedureOrdinalSchema,
+  StatBlockProcedureResourceLimitSchema,
+  StatBlockProcedureResourceOrdinalSchema,
+  StatBlockProcedureResourceRefsSchema,
+  StatBlockProcedureResourceSchema,
+  StatBlockProcedureResourcesSchema,
+  StatBlockProcedureSectionSchema,
+  StatBlockReactionSectionSchema,
+  STAT_BLOCK_SPELL_INVOCATION_DELTA_KINDS,
+  StatBlockSpellInvocationDeltaSchema,
+  StatBlockSpellInvocationDeltasSchema,
+  StatBlockSpellInvocationRestrictionSchema,
+  StatBlockSpellReferenceSchema,
+  StatBlockSpellcastingComponentsSchema,
+  StatBlockSpellcastingGroupSchema,
+  StatBlockTextOnlyReasonSchema,
+  StandaloneCreatureSenseSchema,
+  StandaloneCreatureSpeedSchema,
+  StandaloneStatBlockAbilityScoresSchema,
+  StandaloneStatBlockSpeedEntrySchema,
+  StandaloneStatBlockSchema,
+  StandaloneStatBlockSizeSchema,
+  StandaloneStatBlockValueSchema,
+  StatBlockGmSpeedChoiceSchema,
+  StatBlockAlignmentSchema,
+  StatBlockArmorClassSchema,
+  StatBlockCommunicationSchema,
+  StatBlockGearEntrySchema,
+  StatBlockInitiativeModifierSchema,
+  StatBlockInitiativeSchema,
+  StatBlockLiteralValueSchema,
+  StatBlockLanguageSetSchema,
+  StatBlockTelepathySchema,
   CreatureTraitEffectSchema,
   CreatureTraitSchema,
   CreatureVulnerabilityListSchema,
@@ -451,7 +496,12 @@ import {
   WeaponRecordSchema,
 } from "./schema-nonspell.ts";
 import { ProvenanceSchema, surfaceSchemaRole } from "./schema-base.ts";
-import { CreatureStatBlockSchema, SpellRecordSchema } from "./schema-spell.ts";
+import {
+  CreatureImmunityListSchema,
+  CreatureStatBlockSchema,
+  SpellRecordSchema,
+  StandaloneStatBlockSchema,
+} from "./schema-spell.ts";
 
 export {
   SURFACE_IDENTITY_KINDS,
@@ -482,8 +532,6 @@ export type {
 // content surface. Consumers decode through these helpers and derive types from
 // this schema entrypoint rather than casting authored JSON.
 
-export const MonsterStatBlockSchema = CreatureStatBlockSchema;
-
 export const SRD_CHALLENGE_RATINGS = [
   0, 0.125, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
   17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
@@ -503,7 +551,7 @@ export const StatBlockRecordSchema = Schema.Struct({
   }),
   provenance: ProvenanceSchema,
   challengeRating: ChallengeRatingSchema,
-  statBlock: MonsterStatBlockSchema,
+  statBlock: StandaloneStatBlockSchema,
 }).annotations({ identifier: "StatBlockRecord" });
 
 export const SrdProvenanceSchema = Schema.Struct({
@@ -576,14 +624,7 @@ const factorUnionAst = (
             property.annotations,
           ),
       ),
-      ast.indexSignatures.map(
-        (index) =>
-          new SchemaAST.IndexSignature(
-            factor(index.parameter),
-            factor(index.type),
-            index.isReadonly,
-          ),
-      ),
+      ast.indexSignatures,
       ast.annotations,
     );
   }
@@ -617,14 +658,6 @@ const factorUnionAst = (
       factor(ast.from),
       factor(ast.to),
       ast.transformation,
-      ast.annotations,
-    );
-  }
-  if (ast._tag === "Declaration") {
-    return new SchemaAST.Declaration(
-      ast.typeParameters.map(factor),
-      ast.decodeUnknown,
-      ast.encodeUnknown,
       ast.annotations,
     );
   }
@@ -734,30 +767,93 @@ export const PublishedSrdUnitRecordSchema = specializePublishedSrdRecordSchema(
   "PublishedSrdUnitRecord",
 );
 
-export const PublishedSrdStatBlockRecordSchema =
-  specializePublishedSrdRecordSchema(
-    StatBlockRecordSchema,
-    "PublishedSrdStatBlockRecord",
-  );
+export const PublishedSrdStatBlockRecordSchema: Schema.Schema<
+  PublishedSrdRecord<Schema.Schema.Type<typeof StatBlockRecordSchema>>,
+  PublishedSrdRecord<Schema.Schema.Encoded<typeof StatBlockRecordSchema>>,
+  never
+> = specializePublishedSrdRecordSchema(
+  StatBlockRecordSchema,
+  "PublishedSrdStatBlockRecord",
+);
 
 const nonEmptyPublicationArray = <S extends Schema.Schema.AnyNoContext>(
   item: S,
 ) => Schema.Tuple([item], item);
 
-const SrdUnitPublicationSchema = Schema.suspend(
-  () => SrdUnitRecordSchema,
-).annotations({ identifier: "SrdUnitPublication" });
-const SrdStatBlockPublicationSchema = Schema.suspend(
-  () => SrdStatBlockRecordSchema,
-).annotations({ identifier: "SrdStatBlockPublication" });
-const PublishedSrdUnitPublicationSchema = Schema.suspend(
-  () => PublishedSrdUnitRecordSchema,
-).annotations({ identifier: "PublishedSrdUnitPublication" });
-const PublishedSrdStatBlockPublicationSchema = Schema.suspend(
-  () => PublishedSrdStatBlockRecordSchema,
-).annotations({ identifier: "PublishedSrdStatBlockPublication" });
+const SrdUnitPublicationSchema: Schema.suspend<
+  Schema.Schema.Type<typeof SrdUnitRecordSchema>,
+  Schema.Schema.Encoded<typeof SrdUnitRecordSchema>,
+  never
+> = Schema.suspend(() => SrdUnitRecordSchema).annotations({
+  identifier: "SrdUnitPublication",
+});
+const SrdStatBlockPublicationSchema: Schema.suspend<
+  Schema.Schema.Type<typeof SrdStatBlockRecordSchema>,
+  Schema.Schema.Encoded<typeof SrdStatBlockRecordSchema>,
+  never
+> = Schema.suspend(() => SrdStatBlockRecordSchema).annotations({
+  identifier: "SrdStatBlockPublication",
+});
+const PublishedSrdUnitPublicationSchema: Schema.suspend<
+  Schema.Schema.Type<typeof PublishedSrdUnitRecordSchema>,
+  Schema.Schema.Encoded<typeof PublishedSrdUnitRecordSchema>,
+  never
+> = Schema.suspend(() => PublishedSrdUnitRecordSchema).annotations({
+  identifier: "PublishedSrdUnitPublication",
+});
+const PublishedSrdStatBlockPublicationSchema: Schema.suspend<
+  Schema.Schema.Type<typeof PublishedSrdStatBlockRecordSchema>,
+  Schema.Schema.Encoded<typeof PublishedSrdStatBlockRecordSchema>,
+  never
+> = Schema.suspend(() => PublishedSrdStatBlockRecordSchema).annotations({
+  identifier: "PublishedSrdStatBlockPublication",
+});
 
-export const SrdSurfaceSchema = Schema.Struct({
+export type SrdSurface = {
+  readonly kind: "srd-5.2.1-surface-catalog";
+  readonly units: ReadonlyNonEmptyArray<
+    Schema.Schema.Type<typeof SrdUnitPublicationSchema>
+  >;
+  readonly statBlocks: ReadonlyNonEmptyArray<
+    Schema.Schema.Type<typeof SrdStatBlockPublicationSchema>
+  >;
+};
+
+type SrdSurfaceEncoded = {
+  readonly kind: "srd-5.2.1-surface-catalog";
+  readonly units: ReadonlyNonEmptyArray<
+    Schema.Schema.Encoded<typeof SrdUnitPublicationSchema>
+  >;
+  readonly statBlocks: ReadonlyNonEmptyArray<
+    Schema.Schema.Encoded<typeof SrdStatBlockPublicationSchema>
+  >;
+};
+
+export type PublishedSrdSurface = {
+  readonly kind: "srd-5.2.1-surface-catalog";
+  readonly units: ReadonlyNonEmptyArray<
+    Schema.Schema.Type<typeof PublishedSrdUnitPublicationSchema>
+  >;
+  readonly statBlocks: ReadonlyNonEmptyArray<
+    Schema.Schema.Type<typeof PublishedSrdStatBlockPublicationSchema>
+  >;
+};
+
+type PublishedSrdSurfaceEncoded = {
+  readonly kind: "srd-5.2.1-surface-catalog";
+  readonly units: ReadonlyNonEmptyArray<
+    Schema.Schema.Encoded<typeof PublishedSrdUnitPublicationSchema>
+  >;
+  readonly statBlocks: ReadonlyNonEmptyArray<
+    Schema.Schema.Encoded<typeof PublishedSrdStatBlockPublicationSchema>
+  >;
+};
+
+export const SrdSurfaceSchema: Schema.Schema<
+  SrdSurface,
+  SrdSurfaceEncoded,
+  never
+> = Schema.Struct({
   kind: Schema.Literal("srd-5.2.1-surface-catalog"),
   units: nonEmptyPublicationArray(
     Schema.suspend(() => SrdUnitPublicationSchema),
@@ -767,7 +863,11 @@ export const SrdSurfaceSchema = Schema.Struct({
   ),
 });
 
-export const PublishedSrdSurfaceSchema = Schema.Struct({
+export const PublishedSrdSurfaceSchema: Schema.Schema<
+  PublishedSrdSurface,
+  PublishedSrdSurfaceEncoded,
+  never
+> = Schema.Struct({
   kind: Schema.Literal("srd-5.2.1-surface-catalog"),
   units: nonEmptyPublicationArray(
     Schema.suspend(() => PublishedSrdUnitPublicationSchema),
@@ -777,15 +877,9 @@ export const PublishedSrdSurfaceSchema = Schema.Struct({
   ),
 });
 
-export const SrdSurfaceJsonSchema = JSONSchema.make(
-  Schema.encodedSchema(PublishedSrdSurfaceSchema),
-  { target: "jsonSchema2020-12" },
-);
-
-export type SrdSurface = Schema.Schema.Type<typeof SrdSurfaceSchema>;
-export type PublishedSrdSurface = Schema.Schema.Type<
-  typeof PublishedSrdSurfaceSchema
->;
+export const SrdSurfaceJsonSchema = JSONSchema.make(PublishedSrdSurfaceSchema, {
+  target: "jsonSchema2020-12",
+});
 
 const STRICT_DECODE_OPTIONS = { onExcessProperty: "error" } as const;
 
@@ -804,11 +898,20 @@ export function decodeStatBlockRecordSync(
   )(raw);
 }
 
-export function decodeMonsterStatBlockSync(
+export function decodeCreatureStatBlockSync(
   raw: unknown,
-): Schema.Schema.Type<typeof MonsterStatBlockSchema> {
+): Schema.Schema.Type<typeof CreatureStatBlockSchema> {
   return Schema.decodeUnknownSync(
-    MonsterStatBlockSchema,
+    CreatureStatBlockSchema,
+    STRICT_DECODE_OPTIONS,
+  )(raw);
+}
+
+export function decodeCreatureImmunityDeclarationSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof CreatureImmunityListSchema> {
+  return Schema.decodeUnknownSync(
+    CreatureImmunityListSchema,
     STRICT_DECODE_OPTIONS,
   )(raw);
 }

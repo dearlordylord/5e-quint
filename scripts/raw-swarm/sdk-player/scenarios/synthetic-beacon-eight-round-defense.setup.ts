@@ -135,7 +135,9 @@ export const setupScenario: ScenarioSetup = ({
     if (sdk.isLeft(projected)) {
       return {
         kind: "obstructed",
-        obstruction: sdk.battleStateInitIssueMessage(projected.left),
+        obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+          projected.left,
+        ),
         observation: { combatantId: choice.combatantId },
       };
     }
@@ -238,7 +240,7 @@ export const setupScenario: ScenarioSetup = ({
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: boundaries

@@ -1696,7 +1696,12 @@ describe("MCP protocol server", () => {
             subject.tag === "action" &&
             subject.action === "attack" &&
             subject.actorId === "row-shield-goblin" &&
-            subject.statBlockDamageNotation === undefined
+            Array.isArray(subject.statBlockDamageSelection) &&
+            subject.statBlockDamageSelection.length > 0 &&
+            subject.statBlockDamageSelection.every(
+              (selection) =>
+                isJsonObject(selection) && selection.notation === "rolled",
+            )
           );
         });
         if (!goblinAttack || !isJsonObject(goblinAttack.subject)) {
@@ -1721,6 +1726,12 @@ describe("MCP protocol server", () => {
             : {}),
           ...(typeof attackSubject.attackDamageType === "string"
             ? { attackDamageType: attackSubject.attackDamageType }
+            : {}),
+          ...(Array.isArray(attackSubject.statBlockDamageSelection)
+            ? {
+                statBlockDamageSelection:
+                  attackSubject.statBlockDamageSelection,
+              }
             : {}),
         };
         await callStructuredTool(client, {

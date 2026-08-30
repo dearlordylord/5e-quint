@@ -565,19 +565,6 @@ function withoutPresentFindFamiliarCombatant(
   return { tag: "resolved", state: { ...removed.right, companions } };
 }
 
-export function familiarStatBlockWithCreatureTypeOverride(input: {
-  readonly statBlock: BattleStatBlockExecutionSource;
-  readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
-}): BattleStatBlockExecutionSource {
-  return {
-    ...input.statBlock,
-    statBlock: {
-      ...input.statBlock.statBlock,
-      creatureType: input.creatureTypeOverride,
-    },
-  };
-}
-
 export function familiarMaxHp(
   statBlock: BattleStatBlockExecutionSource,
 ): Hp | string {

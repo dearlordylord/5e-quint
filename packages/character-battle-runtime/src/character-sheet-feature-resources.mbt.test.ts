@@ -1,10 +1,10 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // KERNEL-COVERAGE: parity-witness SHEET.FEATURE_RESOURCES.TRANSITIONS
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   characterBattleResourceIsPointPool,
   combatantId,
@@ -14,6 +14,7 @@ import {
   type BattleCreatureState,
   type BattleState,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   classUnitId,
@@ -36,14 +37,14 @@ import {
   completeShortRest,
   convertFontOfMagicSpellSlotToSorceryPoints,
   convertFontOfMagicSorceryPointsToSpellSlot,
-  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  rebuildCharacterSheet as rebuildCharacterSheetCore,
   finishLongRest,
   finishShortRest,
   startLongRest,
   startShortRest,
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
-  type CharacterSheetInput,
+  type CharacterSheetRebuildInput,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
@@ -69,22 +70,7 @@ import {
   settleCharacterSheetFromBattle,
 } from "./index.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  return requireRight(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
-}
+import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
 
 const featureResourceScenarios = [
   "init",
@@ -757,7 +743,10 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: combatantId("combatant:metamagic-skeleton"),
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
         }),
       ],
@@ -803,10 +792,12 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
   const handoff = requireRight(
     settleCharacterSheetFromBattle({
       sheet,
-      state: battleStateWithCombatant(battle.state, spentSorcerer),
-      context: battle.context,
+      battleSession: battleRuntimeSessionForTest({
+        state: battleStateWithCombatant(battle.state, spentSorcerer),
+        context: battle.context,
+      }),
+      combatantId: spentSorcerer.combatantId,
       unitLibrary,
-      combatant: spentSorcerer,
     }),
   );
   const expended = resourceExpended(
@@ -895,7 +886,7 @@ function sheetFixture(
     readonly tempHp?: number;
   } & Partial<
     Pick<
-      CharacterSheetInput,
+      CharacterSheetRebuildInput,
       | "conditions"
       | "spellSlotExpenditures"
       | "resourceExpenditures"
@@ -905,13 +896,14 @@ function sheetFixture(
   >,
 ): CharacterSheet {
   return requireRight(
-    createFreshCharacterSheetCore({
+    rebuildCharacterSheetCore({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
       currentHp: Hp(input.currentHp),
       tempHp: Hp(input.tempHp ?? 0),
       hitPointMaximumReduction: Hp(0),
       conditions: input.conditions ?? [],
+      companion: { tag: "none" },
       unitLibrary,
       ...(input.spellSlotExpenditures === undefined
         ? {}

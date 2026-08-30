@@ -1,29 +1,49 @@
 import type { ScenarioSetup } from "@dnd/scenario-setup-sdk";
 
 export const setupScenario: ScenarioSetup = (context) => {
-  const { sdk, statBlockCatalog } = context;
+  const { sdk } = context;
 
   const nearerGoblinId = sdk.combatantId("nearer-goblin-warrior");
   const fartherGoblinId = sdk.combatantId("farther-goblin-warrior");
   const skeletonId = sdk.combatantId("skeleton");
 
+  const goblinWarriorStatBlock = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_goblin_warrior",
+  );
+  const skeletonStatBlock = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_skeleton",
+  );
+  if (goblinWarriorStatBlock === undefined || skeletonStatBlock === undefined) {
+    return {
+      kind: "obstructed",
+      obstruction:
+        "The supplied Stat Block catalog is missing a required scenario combatant.",
+      observation: {
+        scenarioId: "two-goblins-pursue-skeleton",
+        status: "missing-required-stat-block",
+        goblinWarriorFound: goblinWarriorStatBlock !== undefined,
+        skeletonFound: skeletonStatBlock !== undefined,
+      },
+    };
+  }
+
   const nearerGoblin = sdk.battleCreatureInitFromStatBlock({
     combatantId: nearerGoblinId,
-    statBlock: statBlockCatalog.requireStatBlock("stat_block_goblin_warrior"),
+    statBlock: goblinWarriorStatBlock,
     initiative: sdk.initiativeScore(18),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
   const skeleton = sdk.battleCreatureInitFromStatBlock({
     combatantId: skeletonId,
-    statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+    statBlock: skeletonStatBlock,
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
   const fartherGoblin = sdk.battleCreatureInitFromStatBlock({
     combatantId: fartherGoblinId,
-    statBlock: statBlockCatalog.requireStatBlock("stat_block_goblin_warrior"),
+    statBlock: goblinWarriorStatBlock,
     initiative: sdk.initiativeScore(9),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
@@ -34,7 +54,9 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (invalidCreature !== undefined) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(invalidCreature.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        invalidCreature.left,
+      ),
       observation: {
         scenarioId: "two-goblins-pursue-skeleton",
         status: "invalid-canonical-combatant",

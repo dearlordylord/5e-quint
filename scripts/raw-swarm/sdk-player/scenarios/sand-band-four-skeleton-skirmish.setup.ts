@@ -94,7 +94,7 @@ export const setupScenario: ScenarioSetup = (context) => {
         kind: "obstructed",
         obstruction:
           "The canonical Skeleton Stat Block could not be initialized: " +
-          sdk.battleStateInitIssueMessage(projected.left),
+          sdk.authoredStatBlockBattleInitIssueMessage(projected.left),
         observation: {
           scenarioId: "sand-band-four-skeleton-skirmish",
           skeletonBattleInitializationSucceeded: false,
@@ -175,7 +175,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],

@@ -38,6 +38,7 @@ import {
   testDaggerAttack,
   testShortswordAttack,
   statBlockCreatureInit,
+  authoredProcedureOrdinal,
   reactionModifierUnitRef,
   cuttingWordsResource,
   reactionModifierChoice,
@@ -58,6 +59,8 @@ import {
   wizardId,
 } from "./battle-runtime.test-support.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import { resolvedAnimalFriendshipState } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   requireSpellDamageReductionHole,
@@ -78,7 +81,6 @@ import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel, DieRollResult, movementFeet } from "@dnd/shared/types";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
 import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
-import { BattleStatBlockProcedureExecutionRef } from "./identity.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
 import {
   battleUnitRefWithSupportProfiles,
@@ -111,8 +113,10 @@ function goblinMeleeOpportunityAttackThreatFromExecution(state: BattleState) {
   }
   const attack = statBlockAttackActionOptions(goblin.origin.execution).find(
     (candidate) =>
-      candidate.damageNotation === "rolled" &&
-      candidate.attack.attackType === "melee",
+      statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+        attackExecutionSelectionForOption(candidate).statBlockDamageSelection,
+        "rolled",
+      ) && candidate.attack.attackType === "melee",
   );
   if (attack === undefined) {
     throw new Error("Expected the Animal Friendship reactor's melee attack.");
@@ -120,7 +124,7 @@ function goblinMeleeOpportunityAttackThreatFromExecution(state: BattleState) {
   return {
     reactorId: goblinId,
     distanceFeet: movementFeet(5),
-    procedureRef: attack.procedureRef,
+    ...attackExecutionSelectionForOption(attack),
   };
 }
 
@@ -267,18 +271,6 @@ function startFighterUnarmedOpportunityAttack(state: BattleState) {
     subject: choice.subject,
     attackRoll: findHole(startedReaction.holes, "attackRoll"),
   };
-}
-
-function statBlockAttackProcedureRef(
-  subject: Extract<
-    BattleSubject,
-    { readonly tag: "action"; readonly action: "attack" }
-  >,
-) {
-  if (subject.procedureRef === undefined) {
-    throw new Error("Expected Stat Block attack procedure ref.");
-  }
-  return BattleStatBlockProcedureExecutionRef.make(subject.procedureRef);
 }
 
 function lightPropertyAttackState(
@@ -1379,7 +1371,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
               kind: "attackTargetDistance",
               actorId: goblinId,
               targetId: fighterId,
-              procedureRef: statBlockAttackProcedureRef(subject),
+              ...attackExecutionSelectionForSubjectForTest(subject),
               distanceFeet: movementFeet(5),
             },
           ]),
@@ -1402,7 +1394,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         kind: "attackTargetDistance",
         actorId: goblinId,
         targetId: fighterId,
-        procedureRef: statBlockAttackProcedureRef(subject),
+        ...attackExecutionSelectionForSubjectForTest(subject),
         distanceFeet: movementFeet(100),
       },
     ]);
@@ -1467,7 +1459,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       kind: "attackTargetDistance" as const,
       actorId: goblinId,
       targetId: fighterId,
-      procedureRef: statBlockAttackProcedureRef(subject),
+      ...attackExecutionSelectionForSubjectForTest(subject),
       distanceFeet: movementFeet(5),
     };
     const longRangeFact = {
@@ -1519,7 +1511,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         kind: "attackTargetDistance",
         actorId: goblinId,
         targetId: fighterId,
-        procedureRef: statBlockAttackProcedureRef(subject),
+        ...attackExecutionSelectionForSubjectForTest(subject),
         distanceFeet: movementFeet(100),
       },
     ]);
@@ -1960,10 +1952,17 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
   test("Opportunity Attack interrupt selection distinguishes two procedures from one reactor", () => {
     const reactorId = combatantId("opportunity-attack-two-procedure-reactor");
     const base = monsterResourceStatBlock();
-    const meleeAttack = base.statBlock.actions?.attacks?.find(
-      (attack) => attack.attackType === "melee",
+    const meleeAttack = base.statBlock.actions?.find(
+      (entry) =>
+        entry.kind === "executable" &&
+        entry.procedure.kind === "attack_roll" &&
+        entry.procedure.attackType === "melee",
     );
-    if (meleeAttack === undefined) {
+    if (
+      meleeAttack === undefined ||
+      meleeAttack.kind !== "executable" ||
+      meleeAttack.procedure.kind !== "attack_roll"
+    ) {
       throw new Error(
         "Expected the synthetic reactor fixture to have a melee attack.",
       );
@@ -1979,13 +1978,17 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
             ...base,
             statBlock: {
               ...base.statBlock,
-              actions: {
-                ...base.statBlock.actions,
-                attacks: [
-                  meleeAttack,
-                  { ...meleeAttack, name: "Synthetic Echo Strike" },
-                ],
-              },
+              actions: [
+                meleeAttack,
+                {
+                  ...meleeAttack,
+                  procedureOrdinal: authoredProcedureOrdinal(2),
+                  procedure: {
+                    ...meleeAttack.procedure,
+                    name: "Synthetic Echo Strike",
+                  },
+                },
+              ],
             },
           },
         }),
@@ -1995,18 +1998,23 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (reactor?.origin.kind !== "statBlock") {
       throw new Error("Expected the synthetic Stat Block reactor.");
     }
-    const procedureRefs = statBlockAttackActionOptions(reactor.origin.execution)
-      .filter(
-        (attack) =>
-          attack.damageNotation === "rolled" &&
-          attack.attack.attackType === "melee",
-      )
-      .map((attack) => attack.procedureRef);
-    const firstProcedureRef = procedureRefs[0];
-    const secondProcedureRef = procedureRefs[1];
-    if (firstProcedureRef === undefined || secondProcedureRef === undefined) {
+    const attacks = statBlockAttackActionOptions(
+      reactor.origin.execution,
+    ).filter(
+      (attack) =>
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          attackExecutionSelectionForOption(attack).statBlockDamageSelection,
+          "rolled",
+        ) && attack.attack.attackType === "melee",
+    );
+    const firstAttack = attacks[0];
+    const secondAttack = attacks[1];
+    if (firstAttack === undefined || secondAttack === undefined) {
       throw new Error("Expected two admitted melee procedure refs.");
     }
+    const firstSelection = attackExecutionSelectionForOption(firstAttack);
+    const secondSelection = attackExecutionSelectionForOption(secondAttack);
+    const secondProcedureRef = secondSelection.procedureRef;
     const moveSubject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: fighterId,
@@ -2022,12 +2030,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         {
           reactorId,
           distanceFeet: movementFeet(5),
-          procedureRef: firstProcedureRef,
+          ...firstSelection,
         },
         {
           reactorId,
           distanceFeet: movementFeet(5),
-          procedureRef: secondProcedureRef,
+          ...secondSelection,
         },
       ],
     });
@@ -2037,12 +2045,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         {
           reactorId,
           distanceFeet: movementFeet(5),
-          procedureRef: secondProcedureRef,
+          ...secondSelection,
         },
         {
           reactorId,
           distanceFeet: movementFeet(5),
-          procedureRef: firstProcedureRef,
+          ...firstSelection,
         },
       ],
     });
@@ -2052,12 +2060,12 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         {
           reactorId,
           distanceFeet: movementFeet(5),
-          procedureRef: firstProcedureRef,
+          ...firstSelection,
         },
         {
           reactorId,
           distanceFeet: movementFeet(5),
-          procedureRef: firstProcedureRef,
+          ...firstSelection,
         },
       ],
     });

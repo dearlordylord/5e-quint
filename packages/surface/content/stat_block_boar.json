@@ -1,0 +1,94 @@
+{
+  "challengeRating": 0.25,
+  "id": "stat_block_boar",
+  "kind": "statBlock",
+  "name": "Boar",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Animals.md:241-264"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 5,
+      "con": 14,
+      "dex": 11,
+      "int": 2,
+      "str": 13,
+      "wis": 9
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 11
+      }
+    },
+    "actions": [
+      {
+        "description": "*Melee Attack Roll:* +3, reach 5 ft. *Hit:* 4 (1d6 + 1) Piercing damage. If the target is a Medium or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit, the target takes an extra 3 (1d6) Piercing damage and has the Prone condition.",
+        "kind": "textOnly",
+        "name": "Gore",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "beast",
+    "hp": {
+      "kind": "literal",
+      "value": 13
+    },
+    "initiative": {
+      "modifier": 0,
+      "score": 10
+    },
+    "passivePerception": 9,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 1
+      },
+      {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
+        "ability": "con",
+        "modifier": 2
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": -1
+      },
+      {
+        "ability": "cha",
+        "modifier": -3
+      }
+    ],
+    "size": "medium",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "While Bloodied, the boar has Advantage on attack rolls.",
+        "name": "Bloodied Fury"
+      }
+    ]
+  }
+}

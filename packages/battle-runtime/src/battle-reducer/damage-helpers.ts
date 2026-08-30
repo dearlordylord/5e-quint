@@ -1,3 +1,5 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -11,7 +13,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
-// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 import { DieRollResult, type DamageType } from "@dnd/shared/types";
 import {
   holeId,
@@ -28,6 +30,8 @@ import type {
 import type {
   CharacterUnarmedStrikeActionOption,
   CharacterWeaponAttackActionOption,
+  SelectedStatBlockAttackDamage,
+  SelectedStatBlockAttackDamageComponent,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import {
@@ -120,33 +124,56 @@ export function fixedAttackDamageByTypeEntries(
     }),
     Match.when({ kind: "weapon" }, () => null),
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
-      if (statBlockAttack.damageNotation !== "static") {
+      const damage = statBlockAttackDamage(statBlockAttack);
+      if (
+        activeStatBlockDamageComponents(damage, attackRoll).some(
+          (component) => component.kind === "rolled",
+        )
+      ) {
         return null;
       }
-      const damage = statBlockAttackDamage(statBlockAttack);
-      const baseStaticDamage = damage.baseComponents.map((component) => ({
-        damageType: component.damageType,
-        amount: Math.max(0, component.static),
-      }));
-      const advantageBonus =
-        damage.advantageBonus !== undefined &&
-        attackRoll?.rollMode === "advantage"
-          ? damage.advantageBonus
-          : undefined;
-      return [
-        ...baseStaticDamage,
-        ...(advantageBonus === undefined
-          ? []
-          : [
-              {
-                damageType: advantageBonus.damageType,
-                amount: Math.max(0, advantageBonus.static),
-              },
-            ]),
-      ];
+      const entries = selectedStatBlockFixedDamageEntries(damage, attackRoll);
+      return entries.length === 0 ? null : entries;
     }),
     Match.exhaustive,
   );
+}
+
+/**
+ * Static components remain part of a mixed attack's final damage, but their
+ * presence must not suppress the rolled-dice hole for a sibling expression.
+ */
+function selectedStatBlockFixedDamageEntries(
+  damage: SelectedStatBlockAttackDamage,
+  attackRoll: AttackRollResult | undefined,
+): readonly DamageAmountByTypeEntry[] {
+  return activeStatBlockDamageComponents(damage, attackRoll).flatMap(
+    (component) =>
+      Match.value(component).pipe(
+        Match.discriminatorsExhaustive("kind")({
+          fixed: (fixedDamage) => [
+            {
+              damageType: fixedDamage.damageType,
+              amount: Math.max(0, fixedDamage.amount),
+            },
+          ],
+          rolled: () => [],
+        }),
+      ),
+  );
+}
+
+function activeStatBlockDamageComponents(
+  damage: SelectedStatBlockAttackDamage,
+  attackRoll: AttackRollResult | undefined,
+): readonly SelectedStatBlockAttackDamageComponent[] {
+  return [
+    ...damage.baseComponents,
+    ...(attackRoll?.rollMode === "advantage" &&
+    damage.advantageBonus !== undefined
+      ? [damage.advantageBonus]
+      : []),
+  ];
 }
 
 export function prospectiveAttackDamageTypes(
@@ -231,6 +258,13 @@ export function attackDamageByType(
     attack,
     attackRoll,
   );
+  const staticBaseDamageEntries =
+    fixedBaseDamageEntries === null && attack.kind === "statBlockAttack"
+      ? selectedStatBlockFixedDamageEntries(
+          statBlockAttackDamage(attack),
+          attackRoll,
+        )
+      : [];
   const damageDieFloorMinimum = attackDamageDieFloorMinimum(
     attacker,
     attack,
@@ -262,7 +296,9 @@ export function attackDamageByType(
       const unadjusted = diceTotal + (component.expr.flat ?? 0) + modifier;
       return addDamageAmountForType(totals, component.damageType, unadjusted);
     },
-    damageAmountByTypeEntriesToMap(fixedBaseDamageEntries ?? []),
+    damageAmountByTypeEntriesToMap(
+      fixedBaseDamageEntries ?? staticBaseDamageEntries,
+    ),
   );
   const reducedDamageByType = damageRoll.value.reduce<
     ReadonlyMap<DamageType, number>
