@@ -11,21 +11,23 @@ import {
   KNOCKED_OUT_UNCONSCIOUS,
   parseSupportedUnitFeatureProfile,
   battleCreatureInitFromStatBlock,
+  authoredStatBlockBattleInitIssueMessage,
   battleInitializationIssueFactFields,
+  type AuthoredStatBlockBattleInitIssue,
   type BattleCreatureInit,
   type BattleId,
   type BattleCreatureState,
   type BattleStateInitIssue,
   type BattleStatBlockInitializationIssue,
   type BattleInitializationIssueFacts,
-  type BattleState,
-  type BattleRuntimeContext,
+  type BattleRuntimeSession,
+  type CombatantId,
   type CharacterBattleResourceOwnership,
   type CharacterBattleResourceState,
   type CharacterBattleClassLevels,
   type CharacterBattleRuntimeContext,
   type CharacterZeroHpLifecycleInit,
-  type StatBlockBattleInitInput,
+  type AuthoredStatBlockBattleInitInput,
   battleStateInitIssueMessage,
 } from "@dnd/battle-runtime";
 import {
@@ -89,7 +91,6 @@ import {
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
 import {
-  type CharacterBattleRuntimeIssueMessage,
   type BattleCreatureInitIssue,
   battleCreatureInitIssue,
   battleCreatureInitIssueMessage,
@@ -101,6 +102,7 @@ import {
 } from "./battle-character-build-projection.ts";
 import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
 import {
+  characterSheetBattleHandoffCombatantMissing,
   characterSheetBattleHandoffIssuesFromStateInit,
   characterSheetBattleHandoffIssue,
   characterSheetBattleHandoffIssueFromIssue,
@@ -126,15 +128,24 @@ function characterBattleHandoffValidationIssue(
   );
 }
 
-export const characterBattleRuntimeIssueMessage: CharacterBattleRuntimeIssueMessage =
-  (issue: BattleCreatureInitIssue | BattleStateInitIssue): string => {
-    return issue.tag === "battleCreatureInitIssues"
-      ? battleCreatureInitIssueMessage(issue)
-      : issue.tag === "battleCreatureInitIssue" ||
-          issue.tag === "characterBattleSpellAccessProjectionIssue"
-        ? issue.message
-        : battleStateInitIssueMessage(issue);
-  };
+export type CharacterBattleRuntimeIssue =
+  | BattleCreatureInitIssue
+  | BattleStateInitIssue
+  | AuthoredStatBlockBattleInitIssue;
+
+export function characterBattleRuntimeIssueMessage(
+  issue: CharacterBattleRuntimeIssue,
+): string {
+  if (issue.tag === "statBlockProjectionFailure") {
+    return authoredStatBlockBattleInitIssueMessage(issue);
+  }
+  return issue.tag === "battleCreatureInitIssues"
+    ? battleCreatureInitIssueMessage(issue)
+    : issue.tag === "battleCreatureInitIssue" ||
+        issue.tag === "characterBattleSpellAccessProjectionIssue"
+      ? issue.message
+      : battleStateInitIssueMessage(issue);
+}
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
@@ -248,25 +259,15 @@ export type CharacterBattleInitProjectionIssue = BattleCreatureInitIssue & {
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
 };
 
-export type BattleRosterCharacterCombatant = Omit<
+export type BattleRosterCharacterCombatant = Extract<
   BattleCreatureInit,
-  "creatureInit"
-> & {
-  readonly creatureInit: Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >;
-};
+  { readonly creatureInit: { readonly kind: "character" } }
+>;
 
-export type BattleRosterStatBlockCombatant = Omit<
+export type BattleRosterStatBlockCombatant = Extract<
   BattleCreatureInit,
-  "creatureInit"
-> & {
-  readonly creatureInit: Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "statBlock" }
-  >;
-};
+  { readonly creatureInit: { readonly kind: "statBlock" } }
+>;
 
 export type BattleRosterCharacterSource =
   | {
@@ -288,12 +289,12 @@ export type BattleRosterCharacterSource =
 export type BattleRosterStatBlockSource =
   | {
       readonly kind: "available";
-      readonly input: StatBlockBattleInitInput;
+      readonly input: AuthoredStatBlockBattleInitInput;
     }
   | {
       readonly kind: "missing";
       readonly statBlockId: StatBlockRecord["id"];
-      readonly combatantId: StatBlockBattleInitInput["combatantId"];
+      readonly combatantId: AuthoredStatBlockBattleInitInput["combatantId"];
     };
 
 export type BattleRosterEntry =
@@ -330,9 +331,26 @@ type BattleRosterStatBlockProjectionIssue = {
   readonly kind: "statBlockProjection";
   readonly index: number;
   readonly combatantId: BattleCreatureInit["combatantId"];
-  readonly issueTag: "battleStateInitIssue";
   readonly message: string;
-} & BattleRosterStatBlockProjectionFact;
+} & (
+  | ({
+      readonly issueTag: "battleStateInitIssue";
+    } & BattleRosterStatBlockProjectionFact)
+  | {
+      readonly issueTag: "statBlockResourceGraphIssue";
+      readonly issues: Extract<
+        AuthoredStatBlockBattleInitIssue,
+        { readonly tag: "statBlockResourceGraphIssue" }
+      >["issues"];
+    }
+  | {
+      readonly issueTag: "statBlockProjectionFailure";
+      readonly failure: Extract<
+        AuthoredStatBlockBattleInitIssue,
+        { readonly tag: "statBlockProjectionFailure" }
+      >["failure"];
+    }
+);
 
 export type BattleRosterAdmission =
   | {
@@ -891,16 +909,33 @@ function battleRosterStatBlockProjectionIssue(input: {
 function battleRosterStatBlockProjectionIssues(input: {
   readonly index: number;
   readonly combatantId: BattleCreatureInit["combatantId"];
-  readonly issue: BattleStatBlockInitializationIssue;
+  readonly issue: AuthoredStatBlockBattleInitIssue;
 }): ReadonlyNonEmptyArray<BattleRosterIssue> {
-  return [
-    battleRosterStatBlockProjectionIssue({
-      index: input.index,
-      combatantId: input.combatantId,
-      issue: input.issue,
-      issueIndex: 0,
-    }),
-  ];
+  const common = {
+    kind: "statBlockProjection" as const,
+    index: input.index,
+    combatantId: input.combatantId,
+    message: authoredStatBlockBattleInitIssueMessage(input.issue),
+  };
+  return Match.value(input.issue).pipe(
+    Match.when({ tag: "battleStateInitIssue" }, (issue) =>
+      battleRosterIssueList(
+        battleRosterStatBlockProjectionIssue({
+          index: input.index,
+          combatantId: input.combatantId,
+          issue,
+          issueIndex: 0,
+        }),
+      ),
+    ),
+    Match.when({ tag: "statBlockResourceGraphIssue" }, ({ tag, issues }) =>
+      battleRosterIssueList({ ...common, issueTag: tag, issues }),
+    ),
+    Match.when({ tag: "statBlockProjectionFailure" }, ({ tag, failure }) =>
+      battleRosterIssueList({ ...common, issueTag: tag, failure }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function projectBattleRosterEntry(
@@ -1144,20 +1179,30 @@ function rejectCharacterBattleInitProjectionRoute(): readonly CharacterBattleRou
 
 export function settleCharacterSheetFromBattle(input: {
   readonly sheet: CharacterSheet;
-  readonly state: BattleState;
-  readonly context: BattleRuntimeContext;
-  readonly combatant: BattleCreatureState;
+  /**
+   * The nominal battle session carries the only valid state/context pairing.
+   * Settlement is also used when removing a character from an active roster,
+   * so the session is not required to be in a separate terminal state.
+   */
+  readonly battleSession: BattleRuntimeSession;
+  readonly combatantId: CombatantId;
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog?: StatBlockCatalog;
 }): Result.Result<CharacterSheet, CharacterSheetBattleHandoffIssue> {
-  const combatant = input.combatant;
+  const state = input.battleSession.state;
+  const combatant = state.combatants.get(input.combatantId);
+  if (combatant === undefined) {
+    return characterSheetBattleHandoffCombatantMissing(input.combatantId);
+  }
   if (!isCharacterBattleCreatureState(combatant)) {
     return characterBattleHandoffValidationIssue(
       "combatantNotCharacter",
       "Battle handoff combatant is not a character.",
     );
   }
-  const runtimeContext = input.context.characters.get(combatant.combatantId);
+  const runtimeContext = input.battleSession.context.characters.get(
+    combatant.combatantId,
+  );
   if (runtimeContext === undefined) {
     return characterBattleHandoffValidationIssue(
       "runtimeContextMissing",
@@ -1172,8 +1217,8 @@ export function settleCharacterSheetFromBattle(input: {
   if (Result.isFailure(settledCharacter)) return settledCharacter;
   return settleCompanionFromBattle({
     sheet: settledCharacter.success,
-    state: input.state,
-    ownerCombatantId: input.combatant.combatantId,
+    state,
+    ownerCombatantId: combatant.combatantId,
     unitLibrary: input.unitLibrary,
     ...(runtimeContext.retainedCompanionSelection === undefined
       ? {}

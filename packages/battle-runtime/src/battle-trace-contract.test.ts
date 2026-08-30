@@ -1,3 +1,5 @@
+import { statBlockId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { Result } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
@@ -11,6 +13,7 @@ import {
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { invalidResult } from "./battle-reducer/result-helpers.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 
 import {
   battleActTraceCheckpoint,
@@ -246,12 +249,9 @@ function statBlockCreatureInit(input: {
   readonly initiative: number;
 }): BattleCreatureInit {
   const statBlock = statBlockRecord();
-  if (statBlock.statBlock.hp.kind !== "literal") {
-    throw new Error("Trace contract fixture requires literal Stat Block HP.");
-  }
+  const projected = Result.getOrThrow(projectAuthoredStatBlock(statBlock));
   return {
     combatantId: input.combatantId,
-    displayName: statBlock.statBlock.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
@@ -266,27 +266,34 @@ function statBlockCreatureInit(input: {
       tempHp: Hp(0),
       ammunitionStocks: [],
       conditions: [],
+      presentation: projected.presentation,
     },
   };
 }
 
 function statBlockRecord(): StatBlockRecord {
-  const statBlock = statBlockCatalog.requireStatBlock(
-    "stat_block_goblin_warrior",
+  const statBlock = assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_goblin_warrior"),
   );
-  const scimitar = statBlock.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Scimitar",
+  const scimitar = statBlock.statBlock.actions?.find(
+    (entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === "Scimitar",
   );
-  if (scimitar === undefined) {
+  if (
+    scimitar === undefined ||
+    scimitar.kind !== "executable" ||
+    scimitar.procedure.kind !== "attack_roll"
+  ) {
     throw new Error("Expected Goblin Warrior Scimitar fixture.");
   }
   return {
     ...statBlock,
     statBlock: {
       ...statBlock.statBlock,
-      actions: {
-        attacks: [scimitar],
-      },
+      actions: [scimitar],
     },
   };
 }

@@ -60,7 +60,7 @@ export type BattleRuntimeResolutionInput = {
   readonly session: BattleRuntimeSession;
   readonly subject: BattleSubject;
   readonly fills: BattleResolutionInput["fills"];
-  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
+  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
 };
 
 type ResolvedBattleResult = Extract<

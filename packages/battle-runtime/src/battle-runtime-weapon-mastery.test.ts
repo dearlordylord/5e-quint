@@ -1214,7 +1214,7 @@ describe("battle runtime: Weapon Mastery", () => {
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Cleave second target",
+          statBlockName: "Cleave second target",
           initiative: 9,
         }),
       ],
@@ -1505,7 +1505,7 @@ describe("battle runtime: Weapon Mastery", () => {
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
         }),
       ],
@@ -1616,7 +1616,7 @@ describe("battle runtime: Weapon Mastery", () => {
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Concentrating Second Target",
+          statBlockName: "Concentrating Second Target",
           initiative: 9,
         }),
       ],
@@ -1766,7 +1766,7 @@ describe("battle runtime: Weapon Mastery", () => {
           statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
           statBlockCreatureInit({
             combatantId: skeletonId,
-            displayName: "Warding Bond Caster",
+            statBlockName: "Warding Bond Caster",
             initiative: 9,
           }),
         ],
@@ -1930,7 +1930,7 @@ describe("battle runtime: Weapon Mastery", () => {
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
         }),
       ],
@@ -2059,7 +2059,7 @@ describe("battle runtime: Weapon Mastery", () => {
             statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
             statBlockCreatureInit({
               combatantId: skeletonId,
-              displayName: "Second Target",
+              statBlockName: "Second Target",
               initiative: 9,
             }),
           ],
@@ -2092,7 +2092,7 @@ describe("battle runtime: Weapon Mastery", () => {
                 }),
                 statBlockCreatureInit({
                   combatantId: skeletonId,
-                  displayName: "Second Target",
+                  statBlockName: "Second Target",
                   initiative: 9,
                 }),
               ],
@@ -2318,7 +2318,7 @@ describe("battle runtime: Weapon Mastery", () => {
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
         }),
       ],
@@ -2458,7 +2458,7 @@ describe("battle runtime: Weapon Mastery", () => {
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
         }),
       ],
@@ -2626,7 +2626,7 @@ describe("battle runtime: Weapon Mastery", () => {
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Dark Blessing Target",
+          statBlockName: "Dark Blessing Target",
           initiative: 9,
           currentHp: 1,
         }),
@@ -2790,7 +2790,7 @@ describe("battle runtime: Weapon Mastery", () => {
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
         }),
       ],

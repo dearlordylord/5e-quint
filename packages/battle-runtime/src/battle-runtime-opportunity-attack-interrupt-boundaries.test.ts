@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import {
   opportunityAttackLeavesReach,
   opportunityAttackThreatIdentityEqual,
@@ -809,7 +810,9 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
       ...baseTarget,
       statBlock: {
         ...baseTarget.statBlock,
-        immunities: { conditions: ["incapacitated"] as const },
+        immunities: decodeCreatureImmunityDeclarationSync({
+          conditions: ["incapacitated"],
+        }),
         hp: { kind: "literal" as const, value: 20 },
       },
     };
@@ -828,7 +831,7 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
         }),
         statBlockCreatureInit({
           combatantId: goblinId,
-          displayName: "Incapacitated-immune target",
+          statBlockName: "Incapacitated-immune target",
           initiative: 20,
           statBlock: incapacitatedImmuneTarget,
           currentHp: 20,

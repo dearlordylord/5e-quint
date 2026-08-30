@@ -114,6 +114,11 @@ const generatorSubsetConstructs = new Set(
 );
 
 const generatorSubsetObservedConstructAuditObligationIds = new Set([
+  "BATTLE.STAT_BLOCK.ACTION_LIFECYCLE",
+  "BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE",
+  "BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE",
+  "BATTLE.STAT_BLOCK.MULTIATTACK",
+  "BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE",
   "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
   "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
   "BATTLE.ATTACK.MINIMAL_RESOLUTION",
@@ -327,13 +332,6 @@ const qntRegistryExemptions = [
       "Run-block examples for the spell bridge; registered spell rule-core and battle owners carry active coverage.",
   },
   {
-    ownerPath:
-      "packages/battle-runtime/battle-runtime-stat-block-bridge-examples.qnt",
-    category: "proof-only-example",
-    evidence:
-      "Run-block examples for the stat-block bridge; registered stat-block owners carry active coverage.",
-  },
-  {
     ownerPath: "packages/battle-runtime/rule-core-component-route.qnt",
     category: "leaf-type-vocabulary",
     evidence:
@@ -416,6 +414,7 @@ const kernelIrBoundaryKinds = new Set([
 
 const markerKinds = new Set([
   "qnt-owner",
+  "bridge-owner",
   "runtime-owner",
   "parity-witness",
   "boundary-owner",

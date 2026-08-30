@@ -1,4 +1,5 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE glyph_of_warding
@@ -5628,10 +5629,9 @@ function damageImmuneHumanoidStatBlock(damageType: "force" | "thunder") {
     ...target,
     statBlock: {
       ...target.statBlock,
-      immunities: {
-        kind: "fixed" as const,
+      immunities: decodeCreatureImmunityDeclarationSync({
         damageTypes: [damageType] as const,
-      },
+      }),
     },
   };
 }

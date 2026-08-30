@@ -21,6 +21,7 @@ Durable decisions that apply across all phases:
 
   The combined library is a view, not an authored collection. Mixed provenance
   or mixed distribution policy is invalid at collection boundaries.
+
 - **Classic non-SRD policy**: `classic2024NonSrdMechanicsUnitCollection`
   contains public, renamed, mechanics-only authored `UnitRecord`s for Classic
   mechanics not already covered by SRD. It intentionally preserves recognizable
@@ -39,7 +40,7 @@ Durable decisions that apply across all phases:
 - **Profile model**: QNT proves structural mechanics profiles, not individual
   authored Units. Unit coverage proves that every authored Unit maps to one or
   more supported profiles or to an explicit unsupported disposition.
-- **Procedure parity vs Unit identity**: QMBT2-QMBT6 are Procedure Parity MBT:
+- **Procedure parity vs Unit identity**: focused QMBT lanes are Procedure Parity MBT:
   focused behavior-shape parity against production reducers. Selected identity
   replay is a later, selective identity-aware lane driven by this matrix.
 - **Selective identity coverage**: deterministic projection/admission coverage
@@ -74,9 +75,7 @@ the tracer proves the shape belongs in a package or script boundary:
 Logical shapes:
 
 ```typescript
-type UnitCollectionId =
-  | "srd-5.2.1"
-  | "classic-2024-non-srd-mechanics";
+type UnitCollectionId = "srd-5.2.1" | "classic-2024-non-srd-mechanics";
 
 type UnitCollectionPolicy =
   | {
@@ -142,7 +141,11 @@ type MechanicsProfile = {
   readonly qntOwners: ReadonlyArray<string>;
   readonly runtimeOwners: ReadonlyArray<string>;
   readonly verificationOwners: ReadonlyArray<{
-    readonly kind: "qnt-proof" | "focused-mbt" | "runtime-test" | "catalog-test";
+    readonly kind:
+      | "qnt-proof"
+      | "focused-mbt"
+      | "runtime-test"
+      | "catalog-test";
     readonly ownerPath: string;
   }>;
 };
@@ -308,7 +311,7 @@ artifacts; generated inventory comes from the authored collections.
 
 ### What To Build
 
-Backfill profile claims for existing QCORE7-QCORE11 proof families. Map current
+Backfill profile claims for existing reusable proof families. Map current
 SRD Units that instantiate those profiles. Keep the matrix honest: if a Unit
 contains mechanics beyond a proved profile, split its claim or mark the
 remainder as unsupported/widening.
@@ -320,10 +323,11 @@ remainder as unsupported/widening.
 - [ ] QCORE8 reaction/continuation-related Unit pressure maps to profile ids.
 - [ ] QCORE9 feature procedure Units map to profile ids.
 - [ ] QCORE10 spell procedure Units map to profile ids.
-- [ ] QCORE11 stat-block control pressure remains separate from `UnitRecord`
-      claims where the authored source is `StatBlockRecord`.
-- [ ] The report shows profile coverage by QCORE task without duplicating task
-      status from `ACTIVE_PLAN.md`.
+- [ ] Stat-block procedure pressure remains separate from `UnitRecord` claims
+      where the authored source is `StatBlockRecord`, and is partitioned by
+      procedure family rather than a catch-all control profile.
+- [ ] The report shows profile coverage by stable GitHub task id without
+      duplicating tracker execution status in generated planning artifacts.
 
 ---
 
@@ -338,12 +342,12 @@ remainder as unsupported/widening.
 
 ### What To Build
 
-Backfill QMBT1-QMBT6 profile parity claims. Add planned parity rows for ready
+Backfill focused QMBT profile parity claims. Add planned parity rows for ready
 tasks and completed parity rows for done tasks. Keep MBT scarce: profile MBT is
 representative semantics coverage, while catalog tests cover per-Unit
 classification.
 
-After QMBT2-QMBT6, use the matrix as the input to a separate Specific Unit
+After the focused QMBT lanes, use the matrix as the input to a separate Specific Unit
 Parity MBT lane only where identity matters. That lane should bind selected
 Unit ids into production runtime fixtures, not enumerate all Units in QNT.
 

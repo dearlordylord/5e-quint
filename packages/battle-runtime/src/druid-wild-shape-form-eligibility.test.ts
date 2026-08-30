@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { ClassLevel } from "@dnd/shared/types";
 import { statBlockId } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
@@ -22,7 +23,10 @@ const profile = {
 } satisfies BattleDruidWildShapeKnownFormSupportProfile;
 
 function syntheticCrHalfBeast(): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock("stat_block_riding_horse");
+  const base = assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_riding_horse"),
+  );
   return {
     ...base,
     id: statBlockId("synthetic_cr_half_beast"),
@@ -34,7 +38,6 @@ function syntheticCrHalfBeast(): StatBlockRecord {
     },
     statBlock: {
       ...base.statBlock,
-      displayName: "Synthetic CR-Half Beast",
     },
   };
 }
@@ -55,13 +58,19 @@ describe("Wild Shape known-form eligibility", () => {
     ).toEqual({ code: "challengeRating" });
     expect(
       wildShapeKnownFormEligibilityIssue({
-        form: statBlockCatalog.requireStatBlock("stat_block_bat"),
+        form: assertStatBlockForTest(
+          statBlockCatalog,
+          statBlockId("stat_block_bat"),
+        ),
         profile,
       }),
     ).toEqual({ code: "flySpeed" });
     expect(
       wildShapeKnownFormEligibilityIssue({
-        form: statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
+        form: assertStatBlockForTest(
+          statBlockCatalog,
+          statBlockId("stat_block_riding_horse"),
+        ),
         profile,
       }),
     ).toBeUndefined();

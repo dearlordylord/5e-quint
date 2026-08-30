@@ -12,7 +12,11 @@
 -- the tracer expects. Grow this file as new heterogeneous cases
 -- surface; keep it minimal — only add fields currently authored.
 
-let DiceExpr : Type = { dice : Natural, dieSize : Natural }
+let DiceExpr : Type =
+      { dice : Natural
+      , dieSize : Natural
+      , flat : Optional Integer
+      }
 
 let DiceExprDelta : Type = { dice : Natural, dieSize : Optional Natural }
 
@@ -24,6 +28,7 @@ let DiceAmount : Type =
       , perLevel : Optional DiceExprDelta
       , startingAtLevel : Optional Natural
       , abilityModifier : Optional Text
+      , static : Optional Natural
       }
 
 let defaultDiceAmount : DiceAmount =
@@ -34,6 +39,7 @@ let defaultDiceAmount : DiceAmount =
       , perLevel = None DiceExprDelta
       , startingAtLevel = None Natural
       , abilityModifier = None Text
+      , static = None Natural
       }
 
 let Effect : Type =
@@ -41,12 +47,16 @@ let Effect : Type =
       , damageType : Optional Text
       , amount : Optional DiceAmount
       , expiresAt : Optional Text
+      , duration : Optional Text
       , condition : Optional Text
       , feet : Optional Natural
       , actor : Optional Text
       , cost : Optional Text
       , method : Optional Text
       , outcome : Optional Text
+      , maxCreatureSize : Optional Text
+      , timing : Optional Text
+      , when : Optional { kind : Text, types : Optional (List Text) }
       }
 
 let defaultEffect : Effect =
@@ -54,12 +64,16 @@ let defaultEffect : Effect =
       , damageType = None Text
       , amount = None DiceAmount
       , expiresAt = None Text
+      , duration = None Text
       , condition = None Text
       , feet = None Natural
       , actor = None Text
       , cost = None Text
       , method = None Text
       , outcome = None Text
+      , maxCreatureSize = None Text
+      , timing = None Text
+      , when = None { kind : Text, types : Optional (List Text) }
       }
 
 let Trigger : Type =

@@ -109,6 +109,7 @@ const ACCEPTED_MBT_GROUPS = {
         "src/sleep-repeat-save.mbt.test.ts",
         "src/spiritual-weapon.mbt.test.ts",
         "src/starry-wisp-object.mbt.test.ts",
+        "src/stat-block-attack-resolution.mbt.test.ts",
         "src/stat-block-multi-damage.mbt.test.ts",
         "src/stat-block-size-gated-condition-rider.mbt.test.ts",
       ]),

@@ -29,24 +29,24 @@ let createUndead =
           , nightOnly = True
           , menu =
               [ { slotLevel = 6
-                , options = [ { monsterId = "ghoul", count = 3 } ]
+                , options = [ { monsterId = "stat_block_ghoul", count = 3 } ]
                 }
               , { slotLevel = 7
-                , options = [ { monsterId = "ghoul", count = 4 } ]
+                , options = [ { monsterId = "stat_block_ghoul", count = 4 } ]
                 }
               , { slotLevel = 8
                 , options =
-                    [ { monsterId = "ghoul", count = 5 }
-                    , { monsterId = "ghast", count = 2 }
-                    , { monsterId = "wight", count = 2 }
+                    [ { monsterId = "stat_block_ghoul", count = 5 }
+                    , { monsterId = "stat_block_ghast", count = 2 }
+                    , { monsterId = "stat_block_wight", count = 2 }
                     ]
                 }
               , { slotLevel = 9
                 , options =
-                    [ { monsterId = "ghoul", count = 6 }
-                    , { monsterId = "ghast", count = 3 }
-                    , { monsterId = "wight", count = 3 }
-                    , { monsterId = "mummy", count = 2 }
+                    [ { monsterId = "stat_block_ghoul", count = 6 }
+                    , { monsterId = "stat_block_ghast", count = 3 }
+                    , { monsterId = "stat_block_wight", count = 3 }
+                    , { monsterId = "stat_block_mummy", count = 2 }
                     ]
                 }
               ]

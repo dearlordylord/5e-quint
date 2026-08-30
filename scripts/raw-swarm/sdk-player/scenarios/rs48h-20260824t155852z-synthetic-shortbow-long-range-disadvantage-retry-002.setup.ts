@@ -49,7 +49,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     conditions: [],
   });
 
-  if (sdk.isLeft(skeletonInit)) {
+  if (sdk.isFailure(skeletonInit)) {
     return {
       kind: "obstructed",
       obstruction: `The canonical Skeleton could not be initialized: ${sdk.battleStateInitIssueMessage(skeletonInit.failure)}`,
@@ -69,7 +69,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     conditions: [],
   });
 
-  if (sdk.isLeft(wolfInit)) {
+  if (sdk.isFailure(wolfInit)) {
     return {
       kind: "obstructed",
       obstruction: `The canonical Wolf could not be initialized: ${sdk.battleStateInitIssueMessage(wolfInit.failure)}`,
@@ -85,7 +85,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     combatants: [skeletonInit.success, wolfInit.success],
   });
 
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
       obstruction: `The canonical battle could not be started: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
@@ -108,7 +108,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],
@@ -121,7 +121,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     objects: [],
   });
 
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
       obstruction: `The public scenario-session surface rejected the fixed battlefield: ${sdk.scenarioSessionIssueMessage(session.failure)}`,

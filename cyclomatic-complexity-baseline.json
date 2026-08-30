@@ -6,14 +6,14 @@
       "module/binding:presentationTimelineDetail": 9,
       "module/binding:presentationTimelineTitle": 11
     },
-    "packages/app/src/battle-scene/battle-scene-layout.ts": {
-      "module/binding:computeCreatureLayout": 24
-    },
     "packages/app/src/battle-scene/CreatureToken.tsx": {
       "module/binding:CreatureToken": 25
     },
     "packages/app/src/battle-scene/InitiativeTracker.tsx": {
       "module/binding:InitiativeTracker/call:creatures.map:argument-0": 29
+    },
+    "packages/app/src/battle-scene/battle-scene-layout.ts": {
+      "module/binding:computeCreatureLayout": 24
     },
     "packages/battle-runtime/src/active-effect/lifecycle.ts": {
       "module/binding:activeEffectCondition": 9,
@@ -25,6 +25,9 @@
       "module/binding:intrinsicActPresentationText": 23,
       "module/binding:intrinsicSubjectPresentation": 14,
       "module/binding:spellProcedurePresentationText": 13
+    },
+    "packages/battle-runtime/src/battle-reducer/action-eligibility.ts": {
+      "module/binding:actionSubjectEligibilityFacts": 9
     },
     "packages/battle-runtime/src/battle-reducer/action-spell-slot-expenditure.ts": {
       "module/binding:expendActionSpellSlot": 11
@@ -38,12 +41,16 @@
       "module/binding:afterHitSpellRouteForInterrupt": 23,
       "module/binding:afterHitSpellTurnBoundaryRouteForResolution": 11
     },
-    "packages/battle-runtime/src/battle-reducer/magic-suppression-action-interdiction.ts": {
+    "packages/battle-runtime/src/battle-reducer/antimagic-field-action-interdiction.ts": {
       "module/binding:antimagicFieldSubjectInterdiction": 13
+    },
+    "packages/battle-runtime/src/battle-reducer/antimagic-field-suppression.ts": {
+      "module/binding:ongoingSpellEffectRefEquals": 12
     },
     "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts": {
       "module/binding:admitBattleCombatant": 11,
-      "module/binding:applyInitiativeSwap": 12
+      "module/binding:applyInitiativeSwap": 12,
+      "module/binding:battleInitializationLeafIssueFromStateIssue": 10
     },
     "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts": {
       "module/binding:attackActionOptionsForActor": 9,
@@ -83,6 +90,7 @@
       "module/binding:resolveShakeAwakeFromSleep": 9,
       "module/binding:resolveShove": 14,
       "module/binding:spendAttackAction": 11,
+      "module/binding:spendAttackTurnResources": 10,
       "module/binding:validateAttackDamageFill": 17,
       "module/binding:validateRolledDiceForWeaponAttack": 11
     },
@@ -101,13 +109,15 @@
     },
     "packages/battle-runtime/src/battle-reducer/battle-codecs.ts": {
       "module/binding:battleCreatureSnapshotInvariantsHold": 13,
+      "module/binding:characterBattleCreatureSnapshotInvariantsHold": 10,
       "module/binding:statBlockExecutionSnapshotGraphIsValid": 12,
       "module/binding:statBlockExecutionSnapshotGraphIsValid/call:snapshot.procedureBindings.every:argument-0": 13
     },
     "packages/battle-runtime/src/battle-reducer/battle-discovery.ts": {
       "module/binding:companionProtocolActs": 13,
       "module/binding:discoverBattleActsWithoutRouteEvents": 69,
-      "module/binding:pactOfTheChainFamiliarAttackActs": 9
+      "module/binding:pactOfTheChainFamiliarAttackActs": 9,
+      "module/binding:subjectAllowedDuringStatBlockMultiattackDispatch": 11
     },
     "packages/battle-runtime/src/battle-reducer/battle-movement.ts": {
       "module/binding:applyBattleMovement": 11
@@ -123,6 +133,20 @@
     "packages/battle-runtime/src/battle-reducer/combatant-removal.ts": {
       "module/binding:removeBattleCombatants": 12
     },
+    "packages/battle-runtime/src/battle-reducer/command-procedures.ts": {
+      "module/binding:resolveCommandApproachCommand": 12,
+      "module/binding:resolveCommandDropCommand": 14,
+      "module/binding:resolveCommandFleeCommand": 12
+    },
+    "packages/battle-runtime/src/battle-reducer/command-routes.ts": {
+      "module/binding:commandRouteOwner": 12
+    },
+    "packages/battle-runtime/src/battle-reducer/companion-lifecycle-procedures.ts": {
+      "module/binding:deliverTouchSpellThroughFindFamiliar": 10
+    },
+    "packages/battle-runtime/src/battle-reducer/companion-routes.ts": {
+      "module/binding:pactFamiliarReactionAttackRouteForResolution": 10
+    },
     "packages/battle-runtime/src/battle-reducer/compelled-behavior-procedures.ts": {
       "module/binding:resolveCommandApproachCommand": 12,
       "module/binding:resolveCommandDropCommand": 14,
@@ -130,9 +154,6 @@
     },
     "packages/battle-runtime/src/battle-reducer/compelled-behavior-routes.ts": {
       "module/binding:commandRouteOwner": 12
-    },
-    "packages/battle-runtime/src/battle-reducer/companion-routes.ts": {
-      "module/binding:pactFamiliarReactionAttackRouteForResolution": 10
     },
     "packages/battle-runtime/src/battle-reducer/condition-immunity-temporary-hit-point-routes.ts": {
       "module/binding:conditionImmunityTemporaryHitPointRouteForResolution": 11
@@ -173,9 +194,10 @@
       "module/binding:damageRelationshipQuestions": 14
     },
     "packages/battle-runtime/src/battle-reducer/dispatcher.ts": {
+      "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll": 18,
       "module/binding:resolveBattleSubjectAfterD20TestNaturalOneReroll/call:iife:argument--1": 70
     },
-    "packages/battle-runtime/src/battle-reducer/granted-area-save-damage.ts": {
+    "packages/battle-runtime/src/battle-reducer/dragons-breath.ts": {
       "module/binding:resolveDragonsBreathExhaleCommand": 32
     },
     "packages/battle-runtime/src/battle-reducer/effect-lifecycle-routes.ts": {
@@ -191,7 +213,7 @@
     "packages/battle-runtime/src/battle-reducer/feature-action-routes.ts": {
       "module/binding:attackActionAreaSaveDamageReplacementRouteForResolution": 11
     },
-    "packages/battle-runtime/src/battle-reducer/companion-lifecycle-procedures.ts": {
+    "packages/battle-runtime/src/battle-reducer/find-familiar-procedures.ts": {
       "module/binding:deliverTouchSpellThroughFindFamiliar": 10
     },
     "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts": {
@@ -209,6 +231,9 @@
       "module/binding:glyphWardingTriggerSupported": 12,
       "module/binding:releaseGlyphExplosiveRune": 10
     },
+    "packages/battle-runtime/src/battle-reducer/granted-area-save-damage.ts": {
+      "module/binding:resolveDragonsBreathExhaleCommand": 32
+    },
     "packages/battle-runtime/src/battle-reducer/hole-helpers.ts": {
       "module/binding:requiredAbilityCheckRollMode": 12
     },
@@ -224,12 +249,19 @@
       "module/binding:stateForOpeningInterruptCheckpoint": 9
     },
     "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts": {
-      "module/binding:interruptCheckpointAfterModifier": 10,
+      "module/binding:appendObjectOutcomesToContinuation": 10,
+      "module/binding:interruptCheckpointAfterModifier": 11,
       "module/binding:resolveInterruptLifecycleDecision": 14,
       "module/binding:resolveReactionRollOrDamageReduction": 19
     },
     "packages/battle-runtime/src/battle-reducer/interrupt-stack-routes.ts": {
       "module/binding:interruptStackResumeDiscoveryRouteForResolution": 9
+    },
+    "packages/battle-runtime/src/battle-reducer/levitate-creature.ts": {
+      "module/binding:validateLevitatedMovementFact": 13
+    },
+    "packages/battle-runtime/src/battle-reducer/magic-suppression-action-interdiction.ts": {
+      "module/binding:antimagicFieldSubjectInterdiction": 13
     },
     "packages/battle-runtime/src/battle-reducer/marked-damage-routes.ts": {
       "module/binding:markedDamageRiderRouteForResolution": 12
@@ -268,7 +300,7 @@
       "module/binding:resolveMovementEffectsAfterMovement": 16,
       "module/binding:validateAreaDifficultTerrainMovementFact": 18,
       "module/binding:validateGrappleDragMovementFact": 13,
-      "module/binding:validateGustOfWindLineMovementFact": 9,
+      "module/binding:validateGustOfWindLineMovementFact": 10,
       "module/binding:validateMovementCostFacts": 26
     },
     "packages/battle-runtime/src/battle-reducer/movement-routes.ts": {
@@ -297,14 +329,18 @@
       "module/binding:passiveProjectionRouteForResolution": 17,
       "module/binding:passiveSavingThrowRollModeDispositionForTarget": 10
     },
+    "packages/battle-runtime/src/battle-reducer/persistent-area-save-damage.ts": {
+      "module/binding:resolveParsedPersistentAreaSaveDamage": 16
+    },
     "packages/battle-runtime/src/battle-reducer/persistent-spatial-spell-procedures.ts": {
       "module/binding:resolveFlamingSphereRamCommand": 30,
       "module/binding:resolveFlamingSphereRepositionCommand": 10,
-      "module/binding:resolveFlamingSphereSaveCommand": 17,
-      "module/binding:resolveGreaseGroundHazardEndTurnSaveCommand": 9,
+      "module/binding:resolveFlamingSphereSaveCommand": 19,
+      "module/binding:resolveGreaseGroundHazardEndTurnSaveCommand": 11,
       "module/binding:resolveGustOfWindLineDirectionChangeCommand": 12,
+      "module/binding:resolveGustOfWindLineSaveCommand": 10,
       "module/binding:resolveMoonbeamRepositionCommand": 10,
-      "module/binding:resolveMoonbeamSaveCommand": 21,
+      "module/binding:resolveMoonbeamSaveCommand": 25,
       "module/binding:resolveSleetStormAreaHazardSaveCommand": 11,
       "module/binding:resolveWebRestraintSaveCommand": 11,
       "module/binding:validateGustOfWindLineSavingThrowOutcome": 13
@@ -351,7 +387,7 @@
     "packages/battle-runtime/src/battle-reducer/resolution-admission.ts": {
       "module/binding:admitUnitSubject": 12
     },
-    "packages/battle-runtime/src/battle-reducer/targeting-save-interdiction.ts": {
+    "packages/battle-runtime/src/battle-reducer/sanctuary-targeting-interdiction.ts": {
       "module/binding:sanctuaryTargetingInterdictionCheck": 15
     },
     "packages/battle-runtime/src/battle-reducer/spatial-effect-routes.ts": {
@@ -422,22 +458,47 @@
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/after-hit-timed-damage-and-save.ts": {
       "module/binding:afterHitTimedDamageAndSaveSpellProjection": 47
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts": {
-      "module/binding:magicSuppressionOngoingSpellEffectSpell": 20
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/antimagic-field-ongoing-spell-suppression.ts": {
+      "module/binding:antimagicFieldOngoingSpellSuppressionSpell": 20
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/perception-gated-attack-roll-defense.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/area-control-condition.ts": {
+      "module/binding:hypnoticPatternSpell": 14,
+      "module/binding:isHypnoticPatternPhase": 20,
+      "module/binding:resolveHypnoticPattern": 16,
+      "module/binding:validateHypnoticPatternAreaWitness": 12
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/area-movement-distance-damage.ts": {
+      "module/binding:spikeGrowthMovementHazardSpell": 30
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/blur-attack-roll-defense.ts": {
       "module/binding:blurAttackRollDefenseShape": 25
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/bonus-action-dash.ts": {
+      "module/binding:expeditiousRetreatDashActiveEffect": 26,
+      "module/binding:resolveExpeditiousRetreatDash": 12
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/chosen-damage-resistance.ts": {
       "module/binding:chosenDamageResistanceSpellProjection": 42
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/source-turn-translation-persistent-area-save-damage.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts": {
       "module/binding:cloudkillAreaHazardSpell": 32,
       "module/binding:cloudkillSaveGateDamageAmount": 15
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/collision-reposition-persistent-area-save-damage.ts": {
+      "module/binding:flamingSphereSpell": 42,
+      "module/binding:isFlamingSphereSaveEffect": 24
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/command.ts": {
+      "module/binding:commandSpell": 15,
+      "module/binding:isCommandPhase": 26
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/compelled-next-turn-behavior.ts": {
       "module/binding:commandSpell": 15,
       "module/binding:isCompelledBehaviorPhase": 26
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/composite-target-buff.ts": {
+      "module/binding:hasNonHastePositiveFill": 23,
+      "module/binding:hastePositiveSpellProjection": 59
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/condition-immunity-turn-start-temporary-hit-points.ts": {
       "module/binding:conditionImmunityAndTurnStartTemporaryHitPointsSpellProjection": 17
@@ -445,7 +506,7 @@
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/condition-removal-protection.ts": {
       "module/binding:conditionRemovalProtectionSpellProjection": 49
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-cast-interruption-reaction.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/counterspell.ts": {
       "module/binding:counterspellSpellProjection": 26,
       "module/binding:resolveCounterspell": 10,
       "module/binding:stateAfterCounteredSpellCast": 9
@@ -462,7 +523,7 @@
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/damage-reduction.ts": {
       "module/binding:damageReductionShape": 33
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/dancing-lights.ts": {
       "module/binding:dancingLightsSpell": 17
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/direct-condition-removal.ts": {
@@ -476,32 +537,53 @@
       "module/binding:hitPointRestorationTargeting": 9,
       "module/binding:resolveDirectHitPointRestoration": 9
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/granted-area-save-damage.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/directed-reposition-persistent-area-save-damage.ts": {
+      "module/binding:isMoonbeamSaveGate": 12,
+      "module/binding:moonbeamDamageEffect": 12,
+      "module/binding:moonbeamSpell": 38
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/directional-persistent-area.ts": {
+      "module/binding:gustOfWindLineSpell": 37,
+      "module/binding:isGustOfWindLineSaveGate": 18
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/dragons-breath-initial.ts": {
       "module/binding:dragonsBreathInitialSpellProjection": 56
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/bonus-action-dash.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/duplicate-hit-interception.ts": {
+      "module/binding:mirrorImageHitInterceptionShape": 22
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/expeditious-retreat-dash.ts": {
       "module/binding:expeditiousRetreatDashActiveEffect": 26,
       "module/binding:resolveExpeditiousRetreatDash": 12
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/falling-creature-mitigation-reaction.ts": {
       "module/binding:featherFallMitigationSpellProjection": 40
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/collision-reposition-persistent-area-save-damage.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/feather-fall-mitigation.ts": {
+      "module/binding:featherFallMitigationSpellProjection": 40
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/fixed-cost-movement-replacement.ts": {
+      "module/binding:jumpMovementReplacementSpellProjection": 35
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/flaming-sphere.ts": {
       "module/binding:flamingSphereSpell": 42,
       "module/binding:isFlamingSphereSaveEffect": 24
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-obscurement.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/fog-cloud-obscurement.ts": {
       "module/binding:fogCloudObscurementSpell": 35
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-condition.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/granted-area-save-damage.ts": {
+      "module/binding:dragonsBreathInitialSpellProjection": 56
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/grease-ground-hazard.ts": {
       "module/binding:greaseGroundHazardSpell": 14,
       "module/binding:isGreaseGroundHazardPhase": 16
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/directional-persistent-area.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/gust-of-wind-line.ts": {
       "module/binding:gustOfWindLineSpell": 37,
       "module/binding:isGustOfWindLineSaveGate": 18
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/composite-target-buff.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/haste-positive.ts": {
       "module/binding:hasNonHastePositiveFill": 23,
       "module/binding:hastePositiveSpellProjection": 59
     },
@@ -510,28 +592,39 @@
       "module/binding:heldLightHurlMechanicalFacts": 15,
       "module/binding:isProduceFlameOngoingEffectSpell": 13
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/staged-save-condition.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/hideous-laughter.ts": {
       "module/binding:hideousLaughterSpell": 15,
       "module/binding:isHideousLaughterPhase": 20
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/area-control-condition.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts": {
+      "module/binding:isSleepTargetAdmissionPhase": 24,
+      "module/binding:sleepTargetAdmissionSpell": 16
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/hypnotic-pattern.ts": {
       "module/binding:hypnoticPatternSpell": 14,
       "module/binding:isHypnoticPatternPhase": 20,
       "module/binding:resolveHypnoticPattern": 16,
       "module/binding:validateHypnoticPatternAreaWitness": 12
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/stationary-persistent-area-save-damage.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts": {
       "module/binding:insectPlagueAreaHazardSpell": 28,
       "module/binding:insectPlagueSaveGateDamageAmount": 15
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/fixed-cost-movement-replacement.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/jump-movement-replacement.ts": {
       "module/binding:jumpMovementReplacementSpellProjection": 35
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts": {
       "module/binding:levitatedCreatureSpellProjection": 40,
       "module/binding:resolveLevitatedCreature": 13
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-attack-override.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share.ts": {
+      "module/binding:wardingBondMaterialComponentIsSupported": 9,
+      "module/binding:wardingBondSpellProjection": 22
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-suppression-emanation.ts": {
+      "module/binding:magicSuppressionOngoingSpellEffectSpell": 20
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magic-weapon-enhancement.ts": {
       "module/binding:magicWeaponEnhancementProjection": 13
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/magical-darkness-point-origin.ts": {
@@ -547,13 +640,16 @@
       "module/binding:markedDamageRiderSpellProjection": 16,
       "module/binding:resolveMarkedDamageRider": 17
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/duplicate-hit-interception.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/mirror-image-hit-interception.ts": {
       "module/binding:mirrorImageHitInterceptionShape": 22
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/directed-reposition-persistent-area-save-damage.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/moonbeam.ts": {
       "module/binding:isMoonbeamSaveGate": 12,
       "module/binding:moonbeamDamageEffect": 12,
       "module/binding:moonbeamSpell": 38
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts": {
+      "module/binding:dancingLightsSpell": 17
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/object-contact-damage.ts": {
       "module/binding:isManufacturedMetalObjectAttachment": 9,
@@ -575,14 +671,40 @@
       "module/binding:ongoingSpellTargetChoices": 9,
       "module/binding:resolveOngoingSpellEndSpellAct": 11
     },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/perception-gated-attack-roll-defense.ts": {
+      "module/binding:blurAttackRollDefenseShape": 25
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-obscurement.ts": {
+      "module/binding:fogCloudObscurementSpell": 35
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-composite.ts": {
+      "module/binding:isSleetStormAreaHazardSaveGate": 9,
+      "module/binding:sharedOncePerTurnLimitGroup": 10,
+      "module/binding:sleetStormAreaHazardSpell": 24
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-condition-escape.ts": {
+      "module/binding:isWebRestraintEscapeOperation": 12,
+      "module/binding:webRestraintHazardSpell": 29
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-condition.ts": {
+      "module/binding:greaseGroundHazardSpell": 14,
+      "module/binding:isGreaseGroundHazardPhase": 16
+    },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-armor-effect.ts": {
       "module/binding:resolvePersistentArmorEffect": 13
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/repeated-damage-allocation.ts": {
       "module/binding:admitRepeatedDamageAllocation": 18
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/targeting-save-interdiction.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/sanctuary-targeting-interdiction.ts": {
       "module/binding:sanctuaryTargetingInterdictionProjection": 30
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts": {
+      "module/binding:isSlowActivePenaltiesPhase": 38,
+      "module/binding:isSlowDexteritySavingThrowPenaltyEffect": 10,
+      "module/binding:resolveSlowActivePenalties": 13,
+      "module/binding:slowActivePenaltiesSpell": 14,
+      "module/binding:validateSlowAreaWitness": 13
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts": {
       "module/binding:resolveScalarBuff": 9,
@@ -598,24 +720,39 @@
       "module/binding:selfTransformationModeSpellProjection": 10,
       "module/binding:selfTransformationNaturalWeaponsEffect": 9
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/triggered-armor-defense.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/shield-reaction.ts": {
       "module/binding:shieldReactionSpellProjection": 30
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/sleep-target-admission.ts": {
       "module/binding:isSleepTargetAdmissionPhase": 24,
       "module/binding:sleepTargetAdmissionSpell": 16
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-composite.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/sleet-storm-area-hazard.ts": {
       "module/binding:isSleetStormAreaHazardSaveGate": 9,
       "module/binding:sharedOncePerTurnLimitGroup": 10,
       "module/binding:sleetStormAreaHazardSpell": 24
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts": {
       "module/binding:isSlowActivePenaltiesPhase": 38,
       "module/binding:isSlowDexteritySavingThrowPenaltyEffect": 10,
       "module/binding:resolveSlowActivePenalties": 13,
       "module/binding:slowActivePenaltiesSpell": 14,
       "module/binding:validateSlowAreaWitness": 13
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/source-turn-translation-persistent-area-save-damage.ts": {
+      "module/binding:cloudkillAreaHazardSpell": 32,
+      "module/binding:cloudkillSaveGateDamageAmount": 15
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spatial-melee-spell-attack-proxy.ts": {
+      "module/binding:isSupportedSpiritualWeaponDamageAmount": 11,
+      "module/binding:sameSpiritualWeaponDamageEffect": 11,
+      "module/binding:spiritualWeaponAttackTargetMatchesForce": 12,
+      "module/binding:spiritualWeaponSpell": 55
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-cast-interruption-reaction.ts": {
+      "module/binding:counterspellSpellProjection": 26,
+      "module/binding:resolveCounterspell": 10,
+      "module/binding:stateAfterCounteredSpellCast": 9
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-created-held-object.ts": {
       "module/binding:spellCreatedHeldObjectActiveEffectProjection": 34,
@@ -624,26 +761,46 @@
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spell-hosted-weapon-attack.ts": {
       "module/binding:spellHostedWeaponAttackProjection": 19
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/area-movement-distance-damage.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spike-growth-movement-hazard.ts": {
       "module/binding:spikeGrowthMovementHazardSpell": 30
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spatial-melee-spell-attack-proxy.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spiritual-weapon.ts": {
       "module/binding:isSupportedSpiritualWeaponDamageAmount": 11,
       "module/binding:sameSpiritualWeaponDamageEffect": 11,
       "module/binding:spiritualWeaponAttackTargetMatchesForce": 12,
       "module/binding:spiritualWeaponSpell": 55
     },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/staged-save-condition.ts": {
+      "module/binding:hideousLaughterSpell": 15,
+      "module/binding:isHideousLaughterPhase": 20
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/stationary-persistent-area-save-damage.ts": {
+      "module/binding:insectPlagueAreaHazardSpell": 28,
+      "module/binding:insectPlagueSaveGateDamageAmount": 15
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/targeting-save-interdiction.ts": {
+      "module/binding:sanctuaryTargetingInterdictionProjection": 30
+    },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/temporary-ability-check-roll-mode.ts": {
       "module/binding:resolveThaumaturgyBoomingVoice": 9
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/thaumaturgy-booming-voice.ts": {
+      "module/binding:resolveThaumaturgyBoomingVoice": 9
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/triggered-armor-defense.ts": {
+      "module/binding:shieldReactionSpellProjection": 30
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/warding-bond.ts": {
       "module/binding:wardingBondMaterialComponentIsSupported": 9,
       "module/binding:wardingBondSpellProjection": 22
+    },
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-attack-override.ts": {
+      "module/binding:magicWeaponEnhancementProjection": 13
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-damage-rider.ts": {
       "module/binding:weaponDamageRiderActiveEffect": 10
     },
-    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-condition-escape.ts": {
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/web-restraint-hazard.ts": {
       "module/binding:isWebRestraintEscapeOperation": 12,
       "module/binding:webRestraintHazardSpell": 29
     },
@@ -785,14 +942,19 @@
     "packages/battle-runtime/src/battle-reducer/stunning-strike.ts": {
       "module/binding:stunningStrikeHit": 9
     },
+    "packages/battle-runtime/src/battle-reducer/targeting-save-interdiction.ts": {
+      "module/binding:sanctuaryTargetingInterdictionCheck": 15
+    },
     "packages/battle-runtime/src/battle-reducer/triggered-reaction-spell-procedures.ts": {
       "module/binding:resolveCastTriggeredReactionSpellCommand": 26,
       "module/binding:resolveTriggeredReactionSaveGatedDamage": 31
     },
     "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts": {
       "module/binding:expireConcentrationDurationSourceWithFlySpeedGrantEndFallCleanupFrames/call:[...combatants].map:argument-0": 10,
-      "module/binding:resolveEndTurn": 9,
-      "module/binding:resolveEndTurnCommandForParent": 76
+      "module/binding:resolveEndTurn": 10,
+      "module/binding:resolveEndTurnCommand": 85,
+      "module/binding:resolveEndTurnCommandForParent": 76,
+      "module/binding:tickDurationEffects/call:[...combatants].map:argument-0": 11
     },
     "packages/battle-runtime/src/battle-reducer/unit-feature-discovery.ts": {
       "module/binding:sacredWeaponHeldMeleeWeapons": 13,
@@ -841,8 +1003,9 @@
     "packages/battle-runtime/src/character-execution-queries.ts": {
       "module/binding:executableSpellProcedureFromLiveEffects": 18
     },
-    "packages/battle-runtime/src/domain-value-equality.ts": {
-      "module/binding:sameDomainValue": 19
+    "packages/battle-runtime/src/companion-communication.ts": {
+      "module/binding:findFamiliarTouchDeliveryFills": 10,
+      "module/binding:prepareTouchSpellDeliveryThroughFindFamiliar": 14
     },
     "packages/battle-runtime/src/companion-lifecycle-execution.ts": {
       "module/binding:withFindFamiliarCombatant": 11
@@ -853,7 +1016,19 @@
       "module/binding:selectedStoredFormStatBlockId": 9,
       "module/binding:spendWildCompanionCost": 10
     },
-    "packages/battle-runtime/src/companion-communication.ts": {
+    "packages/battle-runtime/src/domain-value-equality.ts": {
+      "module/binding:sameDomainValue": 19
+    },
+    "packages/battle-runtime/src/find-familiar-lifecycle-execution.ts": {
+      "module/binding:withFindFamiliarCombatant": 11
+    },
+    "packages/battle-runtime/src/find-familiar-lifecycle.ts": {
+      "module/binding:admitCompanionToBattleWithPresentation": 10,
+      "module/binding:castWildCompanion": 13,
+      "module/binding:selectedStoredFormStatBlockId": 9,
+      "module/binding:spendWildCompanionCost": 10
+    },
+    "packages/battle-runtime/src/find-familiar-telepathy.ts": {
       "module/binding:findFamiliarTouchDeliveryFills": 10,
       "module/binding:prepareTouchSpellDeliveryThroughFindFamiliar": 14
     },
@@ -870,7 +1045,7 @@
       "module/binding:weaponAttackOverrideExecutor/binding:resolveWeaponAttackOverride": 9
     },
     "packages/battle-runtime/src/stat-block-combatant-admission.ts": {
-      "module/binding:admitBattleStatBlockCombatantSource": 15
+      "module/binding:admitBattleStatBlockCombatantSource": 16
     },
     "packages/battle-runtime/src/stat-block-execution.ts": {
       "module/binding:admitStatBlock": 19,
@@ -880,12 +1055,19 @@
     "packages/battle-runtime/src/stat-block-presentation.ts": {
       "module/binding:attackActionOptionPresentationName": 21
     },
+    "packages/battle-runtime/src/stat-block-procedure-pressure.ts": {
+      "module/binding:classifyUnrestrictedStatBlockSpellReferences/call:records.flatMap:argument-0/call:statBlockProcedurePressureOccurrences( record, recordOrdinal, sourceAuthority, ) .filter( ( occurrence, ): occurrence is StatBlockProcedurePressureOccurrence & { readonly kind: \"spellReference\"; readonly witness: StatBlockProcedurePressureWitness & { readonly location: Extract< StatBlockProcedurePressureLocation, { readonly kind: \"spellReference\" } >; }; } => occurrence.kind === \"spellReference\" && occurrence.witness.location.kind === \"spellReference\", ) .flatMap:argument-0": 9,
+      "module/binding:countUnrestrictedStatBlockSpellReferenceDefinitions": 9
+    },
     "packages/battle-runtime/src/statblock-action-support.ts": {
       "module/binding:attackHitEffectRiderCategory": 11,
       "module/binding:wildShapeFormActionSurfaceCategories": 18
     },
     "packages/battle-runtime/src/statblock-attack-damage-support.ts": {
-      "module/binding:supportedStatBlockAttackDamage": 10
+      "module/binding:supportedStatBlockAttackDamage": 13
+    },
+    "packages/battle-runtime/src/statblock-attack-execution-mechanics.ts": {
+      "module/binding:statBlockAttackMechanicsSupport": 12
     },
     "packages/battle-runtime/src/unit-feature-support.ts": {
       "module/binding:acrobaticMovementProfileForUnit": 11,
@@ -953,6 +1135,7 @@
       "module/binding:featurePreparedSpellAccess": 11
     },
     "packages/character-battle-runtime/src/battle-creature-init.ts": {
+      "module/binding:battleCreatureInitFromCharacterBuild/call:Either.gen:argument-0": 32,
       "module/binding:battleCreatureInitFromCharacterBuild/call:Result.gen:argument-0": 32,
       "module/binding:characterBattlePersistedUsesRemaining": 18,
       "module/binding:characterBattleResourceInit": 10
@@ -1309,13 +1492,21 @@
       "module/binding:surfaceSchemaRoleKey": 9
     },
     "packages/surface/src/surface/schema-nonspell.ts": {
+      "module/call:Schema.filter:argument-0:selector-0d851a375de1": 17,
+      "module/call:Schema.filter:argument-0:selector-4f2a16240006": 14,
+      "module/call:Schema.filter:argument-0:selector-d6439d46566a": 14,
+      "module/call:Schema.filter:argument-0:selector-e8d6fdfe4db4": 10,
       "module/call:Schema.makeFilter:argument-0:selector-5a4d3eae6657": 10,
       "module/call:Schema.makeFilter:argument-0:selector-977ec7c7f821": 14,
       "module/call:Schema.makeFilter:argument-0:selector-9b63a8d53180": 17,
       "module/call:Schema.makeFilter:argument-0:selector-f113f2374944": 14
     },
     "packages/surface/src/surface/schema.ts": {
-      "module/binding:factorEncodedPublicationAst": 10
+      "module/binding:factorEncodedPublicationAst": 10,
+      "module/binding:factorUnionAst": 10
+    },
+    "packages/surface/src/surface/unit-catalog.ts": {
+      "module/binding:buildUnitCatalog": 9
     },
     "packages/tactical-space/src/index.ts": {
       "module/binding:commitPreview": 9,

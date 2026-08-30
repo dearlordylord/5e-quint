@@ -37,6 +37,7 @@ import type { DamageRelationshipDecisionsByHole } from "./damage-relationship-de
 export const INITIAL_ROUND: RoundType = Round(1);
 export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   actionResources: [],
+  actionTakenThisTurn: false,
   currentHasBonusAction: false,
   actionOrBonusActionExclusion: { kind: "notRestricted" },
   movementActionBonusActionExclusion: { kind: "notRestricted" },

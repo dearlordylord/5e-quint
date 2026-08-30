@@ -1320,7 +1320,7 @@ function sorcererMetamagicBattleWithOptions(
       }),
       statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Skeleton",
+        statBlockName: "Skeleton",
         initiative: 10,
       }),
       characterSeed({
@@ -1332,7 +1332,7 @@ function sorcererMetamagicBattleWithOptions(
       }),
       statBlockCreatureInit({
         combatantId: secondSkeletonId,
-        displayName: "Second Skeleton",
+        statBlockName: "Second Skeleton",
         initiative: 8,
       }),
     ],

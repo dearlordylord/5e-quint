@@ -1,3 +1,6 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.legendary-action-lifecycle
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE
 // Authored-free creature-state queries and transitions used by battle execution.
 // Creature initialization, support-profile admission, and presentation joins stay
 // in creature-state.ts so execution roots do not inherit those owners.

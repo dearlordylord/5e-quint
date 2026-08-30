@@ -288,7 +288,7 @@ function deathSavingThrowCharacterSeed(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["zeroHpLifecycle"];
-}): BattleCreatureInit {
+}): ReturnType<typeof characterSeed> {
   const seed = characterSeed({
     combatantId: input.combatantId,
     displayName: input.displayName,

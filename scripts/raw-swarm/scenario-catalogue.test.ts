@@ -39,24 +39,26 @@ import {
 } from "./scenario-catalogue.ts";
 import { repoRoot } from "./transcript.ts";
 
-const decodeRight = <A>(decoded: Result.Result<A, string>): A => {
+const decodeSuccess = <A>(decoded: Result.Result<A, string>): A => {
   if (Result.isFailure(decoded)) throw new Error(decoded.failure);
   return decoded.success;
 };
 
 const ids = {
-  campaignId: decodeRight(decodeScenarioCampaignId("open-grid-campaign")),
-  candidateId: decodeRight(
+  campaignId: decodeSuccess(decodeScenarioCampaignId("open-grid-campaign")),
+  candidateId: decodeSuccess(
     decodeScenarioCandidateId("open-grid-campaign-candidate-one"),
   ),
-  scenarioId: decodeRight(decodeScenarioId("open-grid-wolf-skeleton-pursuit")),
-  executionId: decodeRight(decodeExecutionId("execution-alpha")),
-  otherExecutionId: decodeRight(decodeExecutionId("execution-beta")),
-  benchmarkId: decodeRight(decodeBenchmarkId("context-profile-comparison")),
-  benchmarkEvidenceSetId: decodeRight(
+  scenarioId: decodeSuccess(
+    decodeScenarioId("open-grid-wolf-skeleton-pursuit"),
+  ),
+  executionId: decodeSuccess(decodeExecutionId("execution-alpha")),
+  otherExecutionId: decodeSuccess(decodeExecutionId("execution-beta")),
+  benchmarkId: decodeSuccess(decodeBenchmarkId("context-profile-comparison")),
+  benchmarkEvidenceSetId: decodeSuccess(
     decodeEvidenceSetId("context-profile-comparison-evidence"),
   ),
-  evidenceSetId: decodeRight(decodeEvidenceSetId("evidence-alpha")),
+  evidenceSetId: decodeSuccess(decodeEvidenceSetId("evidence-alpha")),
 };
 
 const projectedFacts = {
@@ -304,7 +306,7 @@ describe("Raw Swarm scenario catalogue", () => {
         expect(
           findAuthorableScenarioInCatalogue({
             catalogue: result.success,
-            scenarioId: decodeRight(decodeScenarioId("second-synthetic")),
+            scenarioId: decodeSuccess(decodeScenarioId("second-synthetic")),
           }),
         ).toMatchObject({ _tag: "Success" });
       }
@@ -455,7 +457,7 @@ describe("Raw Swarm scenario catalogue", () => {
           schemaVersion: 1,
           executionId: ids.otherExecutionId,
           scenarioId: ids.scenarioId,
-          evidenceSetId: decodeRight(decodeEvidenceSetId("evidence-beta")),
+          evidenceSetId: decodeSuccess(decodeEvidenceSetId("evidence-beta")),
         },
       ],
       benchmarks: [
@@ -474,7 +476,9 @@ describe("Raw Swarm scenario catalogue", () => {
           schemaVersion: 1,
           candidateId: ids.candidateId,
           campaignId: ids.campaignId,
-          evidenceSetId: decodeRight(decodeEvidenceSetId("rejection-evidence")),
+          evidenceSetId: decodeSuccess(
+            decodeEvidenceSetId("rejection-evidence"),
+          ),
           reason: "The authored spatial facts contradict each other.",
         },
       ],
@@ -509,9 +513,9 @@ describe("Raw Swarm scenario catalogue", () => {
       executions: [
         {
           schemaVersion: 1,
-          executionId: decodeRight(decodeExecutionId("renamed-execution")),
+          executionId: decodeSuccess(decodeExecutionId("renamed-execution")),
           scenarioId: ids.scenarioId,
-          evidenceSetId: decodeRight(decodeEvidenceSetId("renamed-evidence")),
+          evidenceSetId: decodeSuccess(decodeEvidenceSetId("renamed-evidence")),
         },
       ],
       benchmarks: [],
@@ -569,7 +573,7 @@ describe("Raw Swarm scenario catalogue", () => {
           {
             schemaVersion: 1,
             executionId: ids.executionId,
-            scenarioId: decodeRight(decodeScenarioId("missing-scenario")),
+            scenarioId: decodeSuccess(decodeScenarioId("missing-scenario")),
             evidenceSetId: ids.evidenceSetId,
           },
         ],
@@ -590,7 +594,7 @@ describe("Raw Swarm scenario catalogue", () => {
           {
             schemaVersion: 1,
             executionId: ids.executionId,
-            scenarioId: decodeRight(decodeScenarioId("missing-scenario")),
+            scenarioId: decodeSuccess(decodeScenarioId("missing-scenario")),
             evidenceSetId: ids.evidenceSetId,
           },
         ],
@@ -629,7 +633,7 @@ describe("Raw Swarm scenario catalogue", () => {
       schemaVersion: 1 as const,
       candidateId: ids.candidateId,
       campaignId: ids.campaignId,
-      evidenceSetId: decodeRight(decodeEvidenceSetId("candidate-evidence")),
+      evidenceSetId: decodeSuccess(decodeEvidenceSetId("candidate-evidence")),
       reason: "Synthetic rejection.",
     };
     expect(
@@ -668,7 +672,7 @@ describe("Raw Swarm scenario catalogue", () => {
       ]),
     });
 
-    const otherScenarioId = decodeRight(
+    const otherScenarioId = decodeSuccess(
       decodeScenarioId("other-synthetic-scenario"),
     );
     const otherSource = { ...source, scenarioId: otherScenarioId };
@@ -687,7 +691,7 @@ describe("Raw Swarm scenario catalogue", () => {
             schemaVersion: 1,
             executionId: ids.otherExecutionId,
             scenarioId: otherScenarioId,
-            evidenceSetId: decodeRight(decodeEvidenceSetId("other-evidence")),
+            evidenceSetId: decodeSuccess(decodeEvidenceSetId("other-evidence")),
           },
         ],
         benchmarks: [
@@ -743,7 +747,7 @@ describe("Raw Swarm scenario catalogue", () => {
   test("orders catalogue output deterministically", () => {
     const record = (scenarioId: string): AdmittedScenarioRecord => ({
       schemaVersion: 1,
-      scenarioId: decodeRight(decodeScenarioId(scenarioId)),
+      scenarioId: decodeSuccess(decodeScenarioId(scenarioId)),
       title: scenarioId,
       purpose: `Explore ${scenarioId}.`,
       authoredSource: {
@@ -814,10 +818,10 @@ describe("Raw Swarm scenario catalogue", () => {
           maxLength: 5,
         }),
         ([first, second, firstEvidence, secondEvidence, benchmark]) => {
-          const firstExecutionId = decodeRight(
+          const firstExecutionId = decodeSuccess(
             decodeExecutionId(`execution-${first}`),
           );
-          const secondExecutionId = decodeRight(
+          const secondExecutionId = decodeSuccess(
             decodeExecutionId(`execution-${second}`),
           );
           const executions = [
@@ -825,7 +829,7 @@ describe("Raw Swarm scenario catalogue", () => {
               schemaVersion: 1 as const,
               executionId: firstExecutionId,
               scenarioId: ids.scenarioId,
-              evidenceSetId: decodeRight(
+              evidenceSetId: decodeSuccess(
                 decodeEvidenceSetId(`evidence-${firstEvidence}`),
               ),
             },
@@ -833,12 +837,12 @@ describe("Raw Swarm scenario catalogue", () => {
               schemaVersion: 1 as const,
               executionId: secondExecutionId,
               scenarioId: ids.scenarioId,
-              evidenceSetId: decodeRight(
+              evidenceSetId: decodeSuccess(
                 decodeEvidenceSetId(`evidence-${secondEvidence}`),
               ),
             },
           ];
-          const benchmarkId = decodeRight(
+          const benchmarkId = decodeSuccess(
             decodeBenchmarkId(`benchmark-${benchmark}`),
           );
           const base = {
@@ -854,7 +858,7 @@ describe("Raw Swarm scenario catalogue", () => {
                 {
                   schemaVersion: 1,
                   benchmarkId,
-                  evidenceSetId: decodeRight(
+                  evidenceSetId: decodeSuccess(
                     decodeEvidenceSetId(`benchmark-evidence-${benchmark}`),
                   ),
                   comparisonTargets: [
@@ -885,7 +889,7 @@ describe("Raw Swarm scenario catalogue", () => {
                 {
                   schemaVersion: 1,
                   benchmarkId,
-                  evidenceSetId: decodeRight(
+                  evidenceSetId: decodeSuccess(
                     decodeEvidenceSetId(`duplicate-evidence-${benchmark}`),
                   ),
                   comparisonTargets: [
@@ -1699,6 +1703,45 @@ describe("Raw Swarm scenario catalogue", () => {
     }
   });
 
+  test("surfaces the #283 scenario as an explicit unsupported probe before play", () => {
+    const catalogue = readRawSwarmCatalogue({
+      repositoryRoot: repoRoot,
+      scenarioDirectory: resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios",
+      ),
+      evidenceDirectory: resolve(repoRoot, "scripts/raw-swarm/out"),
+    });
+    expect(Result.isSuccess(catalogue)).toBe(true);
+    if (Result.isFailure(catalogue)) {
+      throw new Error(JSON.stringify(catalogue.failure));
+    }
+
+    const scenario = findAuthorableScenarioInCatalogue({
+      catalogue: catalogue.success,
+      scenarioId: decodeSuccess(
+        decodeScenarioId("orc-fighter-rogue-close-interception"),
+      ),
+    });
+    expect(scenario).toMatchObject({
+      _tag: "Success",
+      success: {
+        purpose:
+          "Probe issue #283 ordinary-object targeting during a constrained Character Sheet close interception.",
+        sdkCapability: {
+          tag: "assessed",
+          sdkCapabilityIntent: "probeUnsupportedCapability",
+          sdkCapabilityReview: {
+            classification: "explicitUnsupportedProbe",
+            evidence: expect.stringContaining(
+              "Wolf Bite against the synthetic prism",
+            ),
+          },
+        },
+      },
+    });
+  });
+
   test("identity parsers reject traversal and opaque generated scenario ids", () => {
     for (const decode of [
       decodeScenarioCampaignId,
@@ -1755,7 +1798,7 @@ describe("Raw Swarm scenario catalogue", () => {
           })
           .map((characters) => characters.join("")),
         (value) => {
-          const evidenceSetId = decodeRight(decodeEvidenceSetId(value));
+          const evidenceSetId = decodeSuccess(decodeEvidenceSetId(value));
           expect(
             decodeEvidenceSetDirectory(
               evidenceSetDirectory("/tmp/raw-swarm-evidence", evidenceSetId),

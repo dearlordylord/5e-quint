@@ -17,6 +17,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE

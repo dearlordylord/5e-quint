@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -29,6 +30,8 @@ import {
 } from "@dnd/surface/surface/find-familiar-forms";
 import { Result } from "effect";
 import { describe, expect, it } from "vitest";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -81,6 +84,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { statBlockCatalog } from "./unit-profile-admission-catalog.test-support.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const FAMILIAR_STATUSES = ["none", "present"] as const;
@@ -890,6 +894,16 @@ function requireSpawnedCompanionEligibility(
   return eligibility;
 }
 
+function withFreshMagicAction(state: BattleState): BattleState {
+  return {
+    ...state,
+    currentTurnResources: {
+      ...state.currentTurnResources,
+      actionResources: [{ kind: "action", source: "turn" }],
+    },
+  };
+}
+
 function touchSpellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   procedureRef: Extract<
@@ -940,22 +954,33 @@ function pactScratchSubject(
   if (familiar?.origin.kind !== "statBlock") {
     throw new Error("Expected the committed familiar Stat Block admission.");
   }
-  const procedureRef = statBlockProcedurePresentations({
-    statBlock: statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
-    execution: familiar.origin.execution,
-  }).find(
+  const procedureRef = Result.getOrThrow(
+    statBlockProcedurePresentations({
+      presentation: Result.getOrThrow(
+        projectAuthoredStatBlock(
+          assertStatBlockForTest(statBlockCatalog, familiar.origin.statBlockId),
+        ),
+      ).presentation,
+      execution: familiar.origin.execution,
+    }),
+  ).find(
     (presentation) =>
       presentation.kind === "attack" && presentation.name === "Scratch",
   )?.procedureRef;
   if (procedureRef === undefined) {
     throw new Error("Expected admitted Scratch procedure.");
   }
+  const attack = statBlockAttackActionOptions(familiar.origin.execution).find(
+    (candidate) => candidate.procedureRef === procedureRef,
+  );
+  if (attack === undefined) {
+    throw new Error("Expected executable Scratch damage selection.");
+  }
   return {
     tag: "companionAttack",
     actorId: casterId,
     familiarId,
-    procedureRef,
-    statBlockDamageNotation: "static",
+    ...attackExecutionSelectionForOption(attack),
   };
 }
 

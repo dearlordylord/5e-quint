@@ -1,0 +1,59 @@
+{
+  "id": "resurrection",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 1,
+      "kind": "hours",
+      "ritual": false
+    },
+    "components": {
+      "m": "a diamond worth 1,000+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 1000,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 7,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "resurrection_target",
+          "kind": "hole",
+          "label": "dead creature",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "stateFilter": [
+                "dead"
+              ],
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "effects": [
+          {
+            "kind": "none"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "necromancy"
+  },
+  "name": "Resurrection",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-Q-R#Resurrection"
+  }
+}

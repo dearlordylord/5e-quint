@@ -1,0 +1,77 @@
+let S = ./_stat_block_types.dhall
+
+in  { challengeRating = 0.5
+    , id = "stat_block_swarm_of_insects"
+    , kind = "statBlock"
+    , name = "Swarm of Insects"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2256-2283" }
+    , statBlock =
+      { abilityScores =
+        { cha = 1, con = 14, dex = 13, int = 1, str = 3, wis = 7 }
+      , ac.value = { kind = "literal", value = 11 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Bites"
+            , description =
+                "*Melee Attack Roll:* +3, reach 5 ft. *Hit:* 6 (2d4 + 1) Poison damage, or 3 (1d4 + 1) Poison damage if the swarm is Bloodied."
+            , reason = "unsupported_action_shape"
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , swarm = { constituentSize = "tiny" }
+      , hp = { kind = "literal", value = 19 }
+      , immunities.conditions
+        =
+        [ "charmed"
+        , "frightened"
+        , "grappled"
+        , "paralyzed"
+        , "petrified"
+        , "prone"
+        , "restrained"
+        , "stunned"
+        ]
+      , initiative = { modifier = +1, score = 11 }
+      , passivePerception = 8
+      , resistances =
+        { damageTypes = [ "bludgeoning", "piercing", "slashing" ]
+        , kind = "fixed"
+        }
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = -4 }
+        , { ability = "dex", modifier = +1 }
+        , { ability = "con", modifier = +2 }
+        , { ability = "int", modifier = -5 }
+        , { ability = "wis", modifier = -2 }
+        , { ability = "cha", modifier = -5 }
+        ]
+      , senses = [ { kind = "blindsight", rangeFeet = 30 } ]
+      , size = "medium"
+      , speeds =
+        [ S.speed (S.SpeedAlternative.walk { feet = 20 })
+        , S.gmSpeedChoice
+            { first = S.SpeedAlternative.climb { feet = 20 }
+            , second =
+                S.SpeedAlternative.fly (S.FlySpeed.ordinary { feet = 20 })
+            , rest = [] : List S.SpeedAlternative
+            }
+        ]
+      , traits =
+        [ S.trait
+            { name = "Spider Climb"
+            , description =
+                "If the swarm has a Climb Speed, the swarm can climb difficult surfaces, including along ceilings, without needing to make an ability check."
+            , effectKind = None Text
+            }
+        , S.trait
+            { name = "Swarm"
+            , description =
+                "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny insect. The swarm can't regain Hit Points or gain Temporary Hit Points."
+            , effectKind = None Text
+            }
+        ]
+      }
+    }

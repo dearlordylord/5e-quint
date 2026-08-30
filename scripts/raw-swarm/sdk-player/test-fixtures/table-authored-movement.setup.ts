@@ -38,7 +38,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(goblin) || sdk.isLeft(skeleton)) {
+  if (sdk.isFailure(goblin) || sdk.isFailure(skeleton)) {
     return {
       kind: "obstructed",
       obstruction:
@@ -50,7 +50,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     battleId: sdk.battleId("table-authored-movement-transcript"),
     combatants: [goblin.success, skeleton.success],
   });
-  if (sdk.isLeft(started)) {
+  if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(started.failure),
@@ -91,14 +91,14 @@ export const setupScenario: ScenarioSetup = (context) => {
       ],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: { overhead: { kind: "open" }, barrierHeights: [] },
     initialRangedAttackEnemyRelationships: [],
     movementAllyRelationships: [],
     opportunityAttackEnemyRelationships: [],
     objects: [],
   });
-  return sdk.isLeft(session)
+  return sdk.isFailure(session)
     ? {
         kind: "obstructed",
         obstruction: sdk.scenarioSessionIssueMessage(session.failure),

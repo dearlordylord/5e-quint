@@ -1,11 +1,15 @@
-import type { StatBlockRecord, UnitRecord } from "../surface/types.ts";
+import type {
+  StatBlockProcedureEntry,
+  StatBlockRecord,
+  UnitRecord,
+} from "../surface/types.ts";
 import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
+import { Match } from "effect";
 
 import { idGen } from "./tracer-rule-labels.ts";
+import { describeStatBlockValue } from "./tracer-creature-actions.ts";
 
 import { traceSpellUnit } from "./tracer-spell-core.ts";
-
-import { traceCreatureActions } from "./tracer-creature-actions.ts";
 
 import {
   traceArmorTemplateUnit,
@@ -92,20 +96,10 @@ export function traceStatBlock(record: StatBlockRecord): Trace {
     [record.statBlock.actions, "action"],
     [record.statBlock.bonusActions, "bonus_action"],
     [record.statBlock.reactions, "reaction"],
+    [record.statBlock.legendaryActions?.entries, "legendary_action"],
   ] as const) {
     if (slot === undefined) continue;
-    traceCreatureActions(
-      {
-        procId: rootId,
-        compId: rootId,
-        slotId: null,
-        kind,
-        nodes,
-        edges,
-        ids,
-      },
-      slot,
-    );
+    traceStandaloneProcedures(slot, kind, rootId, nodes, edges, ids);
   }
 
   return {
@@ -115,4 +109,85 @@ export function traceStatBlock(record: StatBlockRecord): Trace {
     edges,
     atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
+}
+
+function traceStandaloneProcedures(
+  entries: ReadonlyArray<StatBlockProcedureEntry>,
+  kind: "action" | "bonus_action" | "reaction" | "legendary_action",
+  rootId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: ReturnType<typeof idGen>,
+): void {
+  for (const entry of entries) {
+    if (entry.kind === "textOnly") {
+      const holeId = ids("hole");
+      const resourceRefs =
+        entry.resourceRefs.kind === "none"
+          ? "none"
+          : entry.resourceRefs.ordinals.join(",");
+      nodes.push({
+        id: holeId,
+        category: "hole",
+        atomKind: `text_only_${entry.reason}`,
+        label: `text_only [${kind} ${entry.procedureOrdinal}: ${entry.name}]\nreason: ${entry.reason}\nresources: ${resourceRefs}\n${entry.description}`,
+      });
+      edges.push({ from: rootId, to: holeId, relation: "retains" });
+      continue;
+    }
+
+    const procedure = entry.procedure;
+    const procedureName = procedure.name;
+    const resourceRefs =
+      entry.resourceRefs.kind === "none"
+        ? "none"
+        : entry.resourceRefs.ordinals.join(",");
+    const nodeId = ids("proc");
+    const prefix = `${kind} ${entry.procedureOrdinal}: ${procedureName}`;
+    const { atomKind, detail } = Match.value(procedure).pipe(
+      Match.discriminatorsExhaustive("kind")({
+        attack_roll: (attack) => ({
+          atomKind: "attack_roll",
+          detail: `${attack.attackType} (+${describeStatBlockValue(attack.attackBonus)})`,
+        }),
+        multiattack: (multiattack) => ({
+          atomKind: "multiattack",
+          detail: `dispatches: ${multiattack.dispatches
+            .map(
+              (dispatch) =>
+                `${describeStatBlockValue(dispatch.count)}× ordinal ${dispatch.procedureOrdinal}`,
+            )
+            .join(" + ")}`,
+        }),
+        action_option: (option) => ({
+          atomKind: "action_option",
+          detail: option.options.join(" or "),
+        }),
+        support: (support) => ({
+          atomKind: "direct_apply",
+          detail: `target: ${support.target}${support.rangeFeet === undefined ? "" : ` (${support.rangeFeet} ft)`}`,
+        }),
+        save: (save) => ({
+          atomKind: "save_gate",
+          detail: `${save.ability.toUpperCase()} save DC ${save.dc.dc}`,
+        }),
+        spellcasting: (spellcasting) => ({
+          atomKind: "spellcasting",
+          detail: spellcasting.groups
+            .map(
+              (group) =>
+                `${group.kind}: ${group.spells.map((spell) => spell.spellId).join(", ")}`,
+            )
+            .join("; "),
+        }),
+      }),
+    );
+    nodes.push({
+      id: nodeId,
+      category: "procedure",
+      atomKind,
+      label: `${atomKind} [${prefix}]\n${detail}\nresources: ${resourceRefs}`,
+    });
+    edges.push({ from: rootId, to: nodeId, relation: "grants" });
+  }
 }

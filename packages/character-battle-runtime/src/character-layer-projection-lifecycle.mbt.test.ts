@@ -1,11 +1,12 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { movementFeet } from "@dnd/shared/types";
 // KERNEL-COVERAGE: parity-witness CHARACTER.LIFECYCLE.LAYER_PROJECTION
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { statBlockId, unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
+  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   combatantId,
   initiativeScore,
   discoverBattleActs,
@@ -310,9 +311,8 @@ function createLifecycleDriver() {
           const settled = requireSuccess(
             settleCharacterSheetFromBattle({
               sheet,
-              state: battleSession.state,
-              context: battleSession.context,
-              combatant,
+              battleSession,
+              combatantId: combatant.combatantId,
               unitLibrary,
             }),
           );
@@ -519,7 +519,10 @@ function startLifecycleBattle(sheet: CharacterSheet): {
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: lifecycleSkeletonCombatantId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(20),
         }),
       ],
@@ -584,7 +587,10 @@ function requireSkeletonShortswordAct(
       act.subject.actorId === lifecycleSkeletonCombatantId &&
       act.presentation.kind === "attack" &&
       act.presentation.name === "Shortsword" &&
-      act.subject.statBlockDamageNotation === undefined,
+      act.subject.statBlockDamageSelection !== undefined &&
+      act.subject.statBlockDamageSelection.every(
+        ({ notation }: { readonly notation: string }) => notation === "rolled",
+      ),
   );
   if (acts.length !== 1) {
     throw new Error("Expected exactly one rolled Skeleton Shortsword act.");
@@ -614,6 +620,7 @@ function targetChoiceFill(
           targetId: lifecycleCharacterCombatantId,
           distanceFeet: movementFeet(5),
           procedureRef: subject.procedureRef,
+          statBlockDamageSelection: subject.statBlockDamageSelection,
         }
       : {
           kind: "attackTargetDistance" as const,

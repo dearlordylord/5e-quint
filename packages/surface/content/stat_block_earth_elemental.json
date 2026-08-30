@@ -1,0 +1,200 @@
+{
+  "challengeRating": 5,
+  "id": "stat_block_earth_elemental",
+  "kind": "statBlock",
+  "name": "Earth Elemental",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-E-G.md:5-36"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 5,
+      "con": 20,
+      "dex": 8,
+      "int": 5,
+      "str": 20,
+      "wis": 10
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 17
+      }
+    },
+    "actions": [
+      {
+        "description": "The elemental makes two attacks, using Slam or Rock Launch in any combination.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 8
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Slam",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8,
+                  "flat": 5
+                },
+                "kind": "fixed",
+                "static": 14
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 8
+          },
+          "attackType": "ranged",
+          "kind": "attack_roll",
+          "name": "Rock Launch",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6,
+                  "flat": 5
+                },
+                "kind": "fixed",
+                "static": 8
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            },
+            {
+              "condition": "prone",
+              "kind": "apply_condition_if_target_size_at_most",
+              "maxCreatureSize": "large"
+            }
+          ],
+          "rangeFeet": {
+            "long": 60,
+            "normal": 60
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Primordial (Terran)"
+        ]
+      }
+    },
+    "creatureType": "elemental",
+    "hp": {
+      "kind": "literal",
+      "value": 147
+    },
+    "immunities": {
+      "conditions": [
+        "exhaustion",
+        "paralyzed",
+        "petrified",
+        "poisoned",
+        "unconscious"
+      ],
+      "damageTypes": [
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": -1,
+      "score": 9
+    },
+    "passivePerception": 10,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 5
+      },
+      {
+        "ability": "con",
+        "modifier": 5
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      },
+      {
+        "kind": "tremorsense",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "large",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "burrow"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The elemental can burrow through nonmagical, unworked earth and stone. While doing so, the elemental doesn't disturb the material it moves through.",
+        "name": "Earth Glide"
+      },
+      {
+        "description": "The elemental deals double damage to objects and structures.",
+        "name": "Siege Monster"
+      }
+    ],
+    "vulnerabilities": {
+      "damageTypes": [
+        "thunder"
+      ],
+      "kind": "fixed"
+    }
+  }
+}

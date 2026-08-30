@@ -1,0 +1,2064 @@
+{
+  "version": 1,
+  "schemaSha256": "59513d01da7e2f66c67f3b83c42771fef133f8b5dd838ba648fe66fab08616d5",
+  "dependencyContractSha256": "b21fc4b75faefb3be6b374bc738b7ebcef55bd630f0323ae516e4dd26c354e58",
+  "cases": [
+    {
+      "name": "valid published aggregate",
+      "inputSha256": "5d09615cab04525e22ad63e2f1ec8c08527150f450f5ac113bf4a967d6455982",
+      "expected": {
+        "tag": "accepted"
+      }
+    },
+    {
+      "name": "unknown field",
+      "inputSha256": "d19fa91ba9c6973ce1c586d09f9ed87c27a47d466636b37a1a2ab4f67331332d",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "schema",
+            "path": "$.units[0]"
+          }
+        ]
+      }
+    },
+    {
+      "name": "non-SRD provenance",
+      "inputSha256": "4fc52906ade8b8c4e26296598e4ed3da2c7df4c55b8145cf3d2d2c13a5ff5bd9",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "schema",
+            "path": "$.statBlocks[0]"
+          }
+        ]
+      }
+    },
+    {
+      "name": "refinement violation",
+      "inputSha256": "a51464c23c540dbd7ae27ad202cd8c59d822517d2f935d317b85d6972e6fc16f",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "schema",
+            "path": "$.statBlocks[0]"
+          }
+        ]
+      }
+    },
+    {
+      "name": "condition immunity overlap",
+      "inputSha256": "ca64593fa9ecdc6445027b8c3d4cac14671b66e54629a132dca06d49e39582ea",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "schema",
+            "path": "$.statBlocks[0]"
+          }
+        ]
+      }
+    },
+    {
+      "name": "empty collections",
+      "inputSha256": "8e2fbe76ff0fa1ced88e5dab3d0f314f6411a1ebda1bf1f63280b4b8d11e1f6f",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "shape",
+            "path": "$.statBlocks"
+          },
+          {
+            "code": "shape",
+            "path": "$.units"
+          }
+        ]
+      }
+    },
+    {
+      "name": "duplicate JSON member",
+      "inputSha256": "b086eb43ae0b1f9f0c122a3e107bcc1da0a58c3f0294fa852ad7b462dcdfbfff",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "duplicate-json-member",
+            "path": "$.units",
+            "memberName": "units"
+          }
+        ]
+      }
+    },
+    {
+      "name": "malformed JSON text",
+      "inputSha256": "5d022d7e55bf5a01a859dd7d9596eed77bcac84e357c143983db16c98bb42aa3",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "json",
+            "path": "$"
+          }
+        ]
+      }
+    },
+    {
+      "name": "duplicate identity within one family",
+      "inputSha256": "08a78b808dfe386c4c37f4d73f966463e81bad42e960a7fe0a122d965a630137",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_rage",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_unarmored_defense",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_weapon_mastery",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_primal_knowledge",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[4].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[5].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_extra_attack",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[6].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_fast_movement",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[7].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_brutal_strike",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_rage",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_unarmored_defense",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_weapon_mastery",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_primal_knowledge",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[4].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[5].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_extra_attack",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[6].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_fast_movement",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[7].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_brutal_strike",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "duplicate-authored-identity",
+            "path": "$.units[1].id",
+            "targetKind": "unit",
+            "targetId": "class_barbarian",
+            "priorPath": "$.units[0].id"
+          }
+        ]
+      }
+    },
+    {
+      "name": "duplicate identity across record families",
+      "inputSha256": "70d6c8c0bee8093ee7116e623714944c7d97d31c15c78cc59fcfec14a16c2e82",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "duplicate-authored-identity",
+            "path": "$.statBlocks[0].id",
+            "targetKind": "statBlock",
+            "targetId": "species_dragonborn",
+            "priorPath": "$.units[0].id"
+          }
+        ]
+      }
+    },
+    {
+      "name": "dangling authored dependency",
+      "inputSha256": "1a373d1afd6f2fca6f7e656e25ec2376da17879e6a64e8dc0487e778f0569e65",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[0].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_bat",
+            "relation": "stat-block-reference"
+          }
+        ]
+      }
+    },
+    {
+      "name": "schema-invalid dependency target accumulates dangling issue",
+      "inputSha256": "ddb77b4c78536b60d84206ad89953802b517abb20c66a81355dd156f69537632",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[0].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_bat",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "schema",
+            "path": "$.statBlocks[0]"
+          }
+        ]
+      }
+    },
+    {
+      "name": "independent record failures accumulate",
+      "inputSha256": "b94af683a20839620d1b2e5590fe3fe4b5456d67b57c5b0e8480d8dff3c13dbc",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "schema",
+            "path": "$.statBlocks[0]"
+          },
+          {
+            "code": "schema",
+            "path": "$.units[0]"
+          }
+        ]
+      }
+    },
+    {
+      "name": "schema and dependency failures accumulate",
+      "inputSha256": "df2502cdc037e6919b853e12a47d6074e2f2a95b38afff072f36a89bbcdff11a",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].mechanics.creature.normalForms[0].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_bat",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "schema",
+            "path": "$.units[0]"
+          }
+        ]
+      }
+    },
+    {
+      "name": "all canonical dependency fields are checked",
+      "inputSha256": "ed8e6a3290f1abafe536ce45dca9285fc424a65458e5c83766e0345bd554c307",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_rage",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_unarmored_defense",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_weapon_mastery",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_primal_knowledge",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[4].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[5].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_extra_attack",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[6].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_fast_movement",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "bard_bardic_inspiration",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "bard_expertise",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "bard_jack_of_all_trades",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "bard_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[4].unitId",
+            "targetKind": "unit",
+            "targetId": "bard_expertise",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[1].featureGrants[5].unitId",
+            "targetKind": "unit",
+            "targetId": "bard_magical_secrets",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[10].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "warlock_eldritch_invocations",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[10].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "warlock_pact_magic",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[10].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "warlock_magical_cunning",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[10].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "warlock_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[11].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "wizard_ritual_adept",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[11].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "wizard_arcane_recovery",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[11].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "wizard_scholar",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[11].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "wizard_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[11].startingEquipment[0].items[0].unitId",
+            "targetKind": "unit",
+            "targetId": "weapon_dagger",
+            "relation": "item-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[11].startingEquipment[0].items[1].unitId",
+            "targetKind": "unit",
+            "targetId": "weapon_quarterstaff",
+            "relation": "item-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[12].originFeatId",
+            "targetKind": "unit",
+            "targetId": "feat_magic_initiate_cleric",
+            "relation": "origin-feat-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[13].originFeatId",
+            "targetKind": "unit",
+            "targetId": "alert",
+            "relation": "origin-feat-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[13].startingEquipment[0].items[0].unitId",
+            "targetKind": "unit",
+            "targetId": "weapon_dagger",
+            "relation": "item-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[14].originFeatId",
+            "targetKind": "unit",
+            "targetId": "feat_magic_initiate_wizard",
+            "relation": "origin-feat-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[14].startingEquipment[0].items[0].unitId",
+            "targetKind": "unit",
+            "targetId": "weapon_quarterstaff",
+            "relation": "item-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[15].originFeatId",
+            "targetKind": "unit",
+            "targetId": "feat_savage_attacker",
+            "relation": "origin-feat-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[15].startingEquipment[0].items[0].unitId",
+            "targetKind": "unit",
+            "targetId": "weapon_spear",
+            "relation": "item-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[15].startingEquipment[0].items[1].unitId",
+            "targetKind": "unit",
+            "targetId": "weapon_shortbow",
+            "relation": "item-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[16].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_frenzy",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[16].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_retaliation",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[17].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "cleric_life_domain_spells",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[17].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "cleric_disciple_of_life",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[18].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "druid_circle_of_the_land_spells",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[18].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "druid_natures_ward",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[19].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "fighter_improved_critical",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[19].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "fighter_remarkable_athlete",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[19].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "fighter_heroic_warrior",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[2].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "cleric_divine_order",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[2].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "cleric_channel_divinity",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[2].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "cleric_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[2].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "cleric_divine_intervention",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[20].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "monk_open_hand_technique",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[21].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "paladin_oath_of_devotion_spells",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[22].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "ranger_hunters_prey",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[23].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "rogue_fast_hands",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[23].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "rogue_second_story_work",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[24].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "sorcerer_draconic_resilience",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[24].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "sorcerer_draconic_spells",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[25].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "warlock_fiend_spells",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[25].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "warlock_dark_ones_blessing",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[25].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "warlock_fiendish_resilience",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[26].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "wizard_evocation_savant",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[26].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "wizard_potent_cantrip",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[26].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "wizard_empowered_evocation",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[27].mechanics.spends.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "fighter_second_wind",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[28].mechanics.trigger.prerequisiteUnitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_reckless_attack",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[29].mechanics.spends.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "cleric_channel_divinity",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[3].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "druid_primal_order",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[3].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "druid_wild_shape",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[3].featureGrants[4].unitId",
+            "targetKind": "unit",
+            "targetId": "druid_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[30].mechanics.grants[1].spellId",
+            "targetKind": "unit",
+            "targetId": "speak_with_animals",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[31].mechanics.spends.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "druid_wild_shape",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[32].mechanics.spendOptions[1].resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "druid_wild_shape",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[33].mechanics.healing.amount.martialArtsUnitId",
+            "targetKind": "unit",
+            "targetId": "monk_martial_arts",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[33].mechanics.recovery.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "monk_monks_focus",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[34].mechanics.modifiers[0].zeroDamageRedirect.spends.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "monk_monks_focus",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[35].mechanics.spends.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "monk_monks_focus",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[36].mechanics.grants[0].spellId",
+            "targetKind": "unit",
+            "targetId": "hunters_mark",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[36].mechanics.grants[1].spellId",
+            "targetKind": "unit",
+            "targetId": "hunters_mark",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[37].mechanics.trigger.sourceUnitId",
+            "targetKind": "unit",
+            "targetId": "rogue_sneak_attack",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[39].mechanics.spends.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "sorcerer_font_of_magic",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[4].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "fighter_fighting_style",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[4].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "fighter_second_wind",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[4].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "fighter_weapon_mastery",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[4].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "fighter_action_surge",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[4].featureGrants[5].unitId",
+            "targetKind": "unit",
+            "targetId": "fighter_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[4].featureGrants[6].unitId",
+            "targetKind": "unit",
+            "targetId": "fighter_extra_attack",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[4].featureGrants[7].unitId",
+            "targetKind": "unit",
+            "targetId": "fighter_indomitable",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[4].featureGrants[8].unitId",
+            "targetKind": "unit",
+            "targetId": "fighter_tactical_master",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[40].mechanics.resource.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "sorcerer_font_of_magic",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[41].mechanics.grants[0].spellId",
+            "targetKind": "unit",
+            "targetId": "contact_other_plane",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[41].mechanics.grants[1].spellId",
+            "targetKind": "unit",
+            "targetId": "contact_other_plane",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[42].mechanics.grants[0].spellId",
+            "targetKind": "unit",
+            "targetId": "divine_smite",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[42].mechanics.grants[1].spellId",
+            "targetKind": "unit",
+            "targetId": "divine_smite",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[43].mechanics.spends.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "paladin_channel_divinity",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[44].mechanics.spends.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "paladin_channel_divinity",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[45].mechanics.options[0].mechanics.grants[0].spellId",
+            "targetKind": "unit",
+            "targetId": "minor_illusion",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[45].mechanics.options[0].mechanics.grants[1].spellId",
+            "targetKind": "unit",
+            "targetId": "speak_with_animals",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[45].mechanics.options[0].mechanics.grants[2].spellId",
+            "targetKind": "unit",
+            "targetId": "speak_with_animals",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[45].mechanics.options[1].mechanics.grants[0].spellId",
+            "targetKind": "unit",
+            "targetId": "mending",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[45].mechanics.options[1].mechanics.grants[1].spellId",
+            "targetKind": "unit",
+            "targetId": "prestidigitation",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[0].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[0].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[1].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[1].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[2].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[2].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[3].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[3].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[4].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[4].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[5].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[5].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[6].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[46].mechanics.menu[6].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[47].mechanics.menu[0].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_ghoul",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[47].mechanics.menu[1].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_ghoul",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[47].mechanics.menu[2].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_ghoul",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[47].mechanics.menu[2].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_ghast",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[47].mechanics.menu[2].options[2].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_wight",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[47].mechanics.menu[3].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_ghoul",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[47].mechanics.menu[3].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_ghast",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[47].mechanics.menu[3].options[2].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_wight",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[47].mechanics.menu[3].options[3].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_mummy",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[48].mechanics.creature.normalForms[0].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_bat",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[48].mechanics.creature.normalForms[1].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_cat",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[48].mechanics.creature.normalForms[10].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_weasel",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[48].mechanics.creature.normalForms[2].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_frog",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[48].mechanics.creature.normalForms[3].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_hawk",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[48].mechanics.creature.normalForms[4].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_lizard",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[48].mechanics.creature.normalForms[5].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_octopus",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[48].mechanics.creature.normalForms[6].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_owl",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[48].mechanics.creature.normalForms[7].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_rat",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[48].mechanics.creature.normalForms[8].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_raven",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[48].mechanics.creature.normalForms[9].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_spider",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[5].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "monk_martial_arts",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[5].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "monk_unarmored_defense",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[5].featureGrants[10].unitId",
+            "targetKind": "unit",
+            "targetId": "monk_heightened_focus",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[5].featureGrants[11].unitId",
+            "targetKind": "unit",
+            "targetId": "monk_self_restoration",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[5].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "monk_monks_focus",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[5].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "monk_unarmored_movement",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[5].featureGrants[5].unitId",
+            "targetKind": "unit",
+            "targetId": "monk_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[5].featureGrants[6].unitId",
+            "targetKind": "unit",
+            "targetId": "monk_slow_fall",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[5].featureGrants[7].unitId",
+            "targetKind": "unit",
+            "targetId": "monk_extra_attack",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[5].featureGrants[9].unitId",
+            "targetKind": "unit",
+            "targetId": "monk_acrobatic_movement",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[6].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "paladin_lay_on_hands",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[6].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "paladin_weapon_mastery",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[6].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "paladin_fighting_style",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[6].featureGrants[4].unitId",
+            "targetKind": "unit",
+            "targetId": "paladin_channel_divinity",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[6].featureGrants[5].unitId",
+            "targetKind": "unit",
+            "targetId": "paladin_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[6].featureGrants[6].unitId",
+            "targetKind": "unit",
+            "targetId": "paladin_extra_attack",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[6].featureGrants[8].unitId",
+            "targetKind": "unit",
+            "targetId": "paladin_aura_of_courage",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[7].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "ranger_weapon_mastery",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[7].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "ranger_deft_explorer",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[7].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "ranger_fighting_style",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[7].featureGrants[4].unitId",
+            "targetKind": "unit",
+            "targetId": "ranger_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[7].featureGrants[5].unitId",
+            "targetKind": "unit",
+            "targetId": "ranger_extra_attack",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[7].featureGrants[6].unitId",
+            "targetKind": "unit",
+            "targetId": "ranger_roving",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[7].featureGrants[7].unitId",
+            "targetKind": "unit",
+            "targetId": "ranger_ability_score_improvement_l8",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[7].featureGrants[8].unitId",
+            "targetKind": "unit",
+            "targetId": "ranger_expertise",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[7].featureGrants[9].unitId",
+            "targetKind": "unit",
+            "targetId": "ranger_tireless",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[8].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "rogue_expertise",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[8].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "rogue_sneak_attack",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[8].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "rogue_thieves_cant",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[8].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "rogue_weapon_mastery",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[8].featureGrants[4].unitId",
+            "targetKind": "unit",
+            "targetId": "rogue_steady_aim",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[8].featureGrants[5].unitId",
+            "targetKind": "unit",
+            "targetId": "rogue_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[8].featureGrants[7].unitId",
+            "targetKind": "unit",
+            "targetId": "rogue_uncanny_dodge",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[8].featureGrants[9].unitId",
+            "targetKind": "unit",
+            "targetId": "rogue_ability_score_improvement_l10",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[9].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "sorcerer_innate_sorcery",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[9].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "sorcerer_font_of_magic",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[9].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "sorcerer_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.featureGrants[].unitId",
+      "inputSha256": "dde6192bc0c269237070f797c05188d4047813794f9b763b032f42fcb3f792b5",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_rage",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_unarmored_defense",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_weapon_mastery",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_primal_knowledge",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[4].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[5].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_extra_attack",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[6].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_fast_movement",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[7].unitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_brutal_strike",
+            "relation": "unit-reference"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.creature.normalForms[].statBlockId",
+      "inputSha256": "34c9f4dc63a50142d182bbb54516617420dd6696c4a553d7c13d30aa72f97b3e",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[0].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_bat",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[1].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_cat",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[10].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_weasel",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[2].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_frog",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[3].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_hawk",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[4].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_lizard",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[5].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_octopus",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[6].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_owl",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[7].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_rat",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[8].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_raven",
+            "relation": "stat-block-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.creature.normalForms[9].statBlockId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_spider",
+            "relation": "stat-block-reference"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.grants[].spellId",
+      "inputSha256": "0fe45c79bbd865946a01ada7958be933350ad32f384205a59ab8bd50517a3422",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.grants[1].spellId",
+            "targetKind": "unit",
+            "targetId": "speak_with_animals",
+            "relation": "spell-reference"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.healing.amount.martialArtsUnitId",
+      "inputSha256": "4bdf4d362b6151b434bfaf63db2dd9228c16a002ffb12d0efe609692f6856b5d",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.healing.amount.martialArtsUnitId",
+            "targetKind": "unit",
+            "targetId": "monk_martial_arts",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.recovery.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "monk_monks_focus",
+            "relation": "resource-link"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.menu[].options[].monsterId",
+      "inputSha256": "541f219f75193f4c98eb45487afbae8a9cbc4ef08d2b3cf87f419078f6cfa2e4",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[0].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[0].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[1].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[1].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[2].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[2].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[3].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[3].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[4].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[4].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[5].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[5].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[6].options[0].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_skeleton",
+            "relation": "monster-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.menu[6].options[1].monsterId",
+            "targetKind": "statBlock",
+            "targetId": "stat_block_zombie",
+            "relation": "monster-reference"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.modifiers[].zeroDamageRedirect.spends.resourceUnitId",
+      "inputSha256": "33f6732f93c23c00cec4969310f087d9dcb4563618a053882974e8d1d83b24c2",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.modifiers[0].zeroDamageRedirect.spends.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "monk_monks_focus",
+            "relation": "resource-link"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.options[].mechanics.grants[].spellId",
+      "inputSha256": "fb9a371e40d7ba9ce9f75721d1f7c77ade14ede35f482fb0c28491ca7515df48",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.options[0].mechanics.grants[0].spellId",
+            "targetKind": "unit",
+            "targetId": "minor_illusion",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.options[0].mechanics.grants[1].spellId",
+            "targetKind": "unit",
+            "targetId": "speak_with_animals",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.options[0].mechanics.grants[2].spellId",
+            "targetKind": "unit",
+            "targetId": "speak_with_animals",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.options[1].mechanics.grants[0].spellId",
+            "targetKind": "unit",
+            "targetId": "mending",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.options[1].mechanics.grants[1].spellId",
+            "targetKind": "unit",
+            "targetId": "prestidigitation",
+            "relation": "spell-reference"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.recovery.resourceUnitId",
+      "inputSha256": "4bdf4d362b6151b434bfaf63db2dd9228c16a002ffb12d0efe609692f6856b5d",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.healing.amount.martialArtsUnitId",
+            "targetKind": "unit",
+            "targetId": "monk_martial_arts",
+            "relation": "resource-link"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.recovery.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "monk_monks_focus",
+            "relation": "resource-link"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.resource.resourceUnitId",
+      "inputSha256": "d9d4e48929440617c59f5b6d722af7237424434e121dcf48ba174cefea72ad2d",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.resource.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "sorcerer_font_of_magic",
+            "relation": "resource-link"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.sourceUnitId",
+      "inputSha256": "dbcbdea06561f276ed490799d31ed82b64baf0488e82692666a402872c9b1cd5",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.sourceUnitId",
+            "targetKind": "unit",
+            "targetId": "rogue_cunning_strike",
+            "relation": "unit-reference"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.spellId",
+      "inputSha256": "2e6a15923430709fe3ec53133e3948df6ee74c28409b191adc68a4a1976dc2dc",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.spellId",
+            "targetKind": "unit",
+            "targetId": "find_familiar",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.spendOptions[1].resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "druid_wild_shape",
+            "relation": "resource-link"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.spendOptions[].resourceUnitId",
+      "inputSha256": "2e6a15923430709fe3ec53133e3948df6ee74c28409b191adc68a4a1976dc2dc",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.spellId",
+            "targetKind": "unit",
+            "targetId": "find_familiar",
+            "relation": "spell-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.spendOptions[1].resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "druid_wild_shape",
+            "relation": "resource-link"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.spends.resourceUnitId",
+      "inputSha256": "c1a39b7fabb996285a9ce0d473e712aeaa8bafc0abef6c147131a6d1f58ab069",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.spends.resourceUnitId",
+            "targetKind": "unit",
+            "targetId": "fighter_second_wind",
+            "relation": "resource-link"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.trigger.prerequisiteUnitId",
+      "inputSha256": "efdfd967b9ff41eaee04fd09278c640e01737e259c2bd99455803c53af14a382",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.trigger.prerequisiteUnitId",
+            "targetKind": "unit",
+            "targetId": "barbarian_reckless_attack",
+            "relation": "unit-reference"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.mechanics.trigger.sourceUnitId",
+      "inputSha256": "827995bb35f493bc6b54a95a455e2a79b2013d0c20fa2b139f954f0cb5a6ba6b",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].mechanics.trigger.sourceUnitId",
+            "targetKind": "unit",
+            "targetId": "rogue_sneak_attack",
+            "relation": "unit-reference"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.originFeatId",
+      "inputSha256": "e656e03519f070a276faae30751366aa5f46cf39a7a6b2da05884154ca1a0daa",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].originFeatId",
+            "targetKind": "unit",
+            "targetId": "feat_magic_initiate_cleric",
+            "relation": "origin-feat-reference"
+          }
+        ]
+      }
+    },
+    {
+      "name": "canonical dependency role: unit.startingEquipment[].items[].unitId",
+      "inputSha256": "8791ebee04c4e52e89f6fd9075843fefeede68ca3921d99dd90377529033c369",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[0].unitId",
+            "targetKind": "unit",
+            "targetId": "wizard_ritual_adept",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[1].unitId",
+            "targetKind": "unit",
+            "targetId": "wizard_arcane_recovery",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[2].unitId",
+            "targetKind": "unit",
+            "targetId": "wizard_scholar",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].featureGrants[3].unitId",
+            "targetKind": "unit",
+            "targetId": "wizard_ability_score_improvement_l4",
+            "relation": "unit-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].startingEquipment[0].items[0].unitId",
+            "targetKind": "unit",
+            "targetId": "weapon_dagger",
+            "relation": "item-reference"
+          },
+          {
+            "code": "dangling-authored-dependency",
+            "path": "$.units[0].startingEquipment[0].items[1].unitId",
+            "targetKind": "unit",
+            "targetId": "weapon_quarterstaff",
+            "relation": "item-reference"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -70,6 +70,10 @@ export type CharacterSheetBattleHandoffFact =
       readonly check: CharacterSheetBattleHandoffValidationCheck;
     }
   | {
+      readonly handoffReason: "combatantMissing";
+      readonly combatantId: CombatantId;
+    }
+  | {
       readonly handoffReason: "spellSlotSourceAmbiguous";
       readonly spellLevel: SpellSlotLevel;
     }
@@ -84,6 +88,13 @@ export type CharacterSheetBattleHandoffFact =
       readonly handoffReason: "battleInitializationUnavailable";
       readonly initializationTag: "weaponLoadoutMismatch";
       readonly slot: "main-hand" | "off-hand";
+    }
+  | {
+      readonly handoffReason: "battleInitializationResourceGraph";
+      readonly issues: Extract<
+        BattleStateInitLeafIssue,
+        { readonly tag: "statBlockResourceGraphIssue" }
+      >["issues"];
     }
   | {
       readonly handoffReason: "delegatedCharacterSheetIssue";
@@ -194,6 +205,10 @@ function characterSheetBattleHandoffFactFromStateInitLeaf(
       initializationTag: "weaponLoadoutMismatch" as const,
       slot,
     })),
+    Match.when({ tag: "statBlockResourceGraphIssue" }, ({ issues }) => ({
+      handoffReason: "battleInitializationResourceGraph" as const,
+      issues,
+    })),
     Match.exhaustive,
   );
 }
@@ -235,4 +250,13 @@ export function characterSheetBattleHandoffIssueFromIssue(
         message: issue.message,
         ...characterSheetBattleHandoffFactFromIssue(issue),
       };
+}
+
+export function characterSheetBattleHandoffCombatantMissing(
+  combatantId: CombatantId,
+): Result.Result<never, CharacterSheetBattleHandoffIssue> {
+  return characterSheetBattleHandoffIssue(
+    { handoffReason: "combatantMissing", combatantId },
+    "Battle handoff combatant is not present in Battle State.",
+  );
 }

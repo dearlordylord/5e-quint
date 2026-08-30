@@ -34,7 +34,7 @@ those facts to battle state. Do not invent substitute creatures, silently drop
 required combatants, or encode later tactics in setup code.
 For a Table-authored relation or target answer, use
 `context.sdk.scenarioDistanceFeet(number)` to obtain the branded distance and
-handle its typed `Either` result; do not cast a raw number into a spatial fact.
+handle its typed `Result` value; do not cast a raw number into a spatial fact.
 Vertical environment facts are retained setup evidence only. The current public
 SDK has no table-authored per-test circumstance witness that turns relative
 height into Advantage or Disadvantage; a supported-only scenario must not

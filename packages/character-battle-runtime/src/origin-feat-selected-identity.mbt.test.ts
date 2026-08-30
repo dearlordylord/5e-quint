@@ -1,6 +1,10 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B7-FEAT-IDENTITY-BATCH alert
 // UNIT-IDENTITY-REPLAY: B7-FEAT-IDENTITY-BATCH alert doFinalizeCriminalAlertOriginFeat doProjectAlertInitiativeHandoff
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import {
+  statBlockId as authoredStatBlockId,
+  unitId as authoredUnitId,
+} from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -416,7 +420,10 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
   };
   const statBlockEntryInput = {
     combatantId: combatantId("combatant:origin-feat-skeleton"),
-    statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+    statBlock: assertStatBlockForTest(
+      statBlockCatalog,
+      authoredStatBlockId("stat_block_skeleton"),
+    ),
     initiative: initiativeScore(10),
     ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
     conditions: [],
@@ -461,7 +468,6 @@ function characterSheetForBuild(build: CharacterBuild) {
   const sheet = rebuildCharacterSheet({
     characterId: characterSheetId("character:origin-feat"),
     build,
-    currentHp: Hp(10),
     tempHp: Hp(0),
     hitPointMaximumReduction: Hp(0),
     conditions: [],
@@ -487,7 +493,7 @@ function alertInitiativeScoreForBuild(build: CharacterBuild) {
   return score.success;
 }
 
-function finalizedFighterBuildForBackground(input: {
+type FighterBackgroundFixtureInput = {
   readonly backgroundUnitId: string;
   readonly originFeatUnitId: string;
   readonly asiOptionId: string;
@@ -499,7 +505,11 @@ function finalizedFighterBuildForBackground(input: {
         readonly levelOneSpell: string;
         readonly ability: "int" | "wis" | "cha";
       };
-}): CharacterBuild {
+};
+
+function finalizedFighterBuildForBackground(
+  input: FighterBackgroundFixtureInput,
+): CharacterBuild {
   const finalized = finalizeCharacterDraft({
     draft: completeFighterDraftForBackground(input),
     unitLibrary,
@@ -520,19 +530,16 @@ function finalizedFighterBuildForBackground(input: {
   return finalized.build;
 }
 
-function completeFighterDraftForBackground(input: {
-  readonly backgroundUnitId: string;
-  readonly originFeatUnitId: string;
-  readonly asiOptionId: string;
-  readonly toolOptionId: string;
-  readonly magicInitiate:
-    | false
-    | {
-        readonly cantrips: readonly [string, string];
-        readonly levelOneSpell: string;
-        readonly ability: "int" | "wis" | "cha";
-      };
-}): CharacterDraft {
+function completeFighterDraftForBackground(
+  input: FighterBackgroundFixtureInput,
+): CharacterDraft {
+  const background = unitLibrary.requireUnit(
+    authoredUnitId(input.backgroundUnitId),
+  );
+  if (background.kind !== "background") {
+    throw new Error("Origin feat fixture requires a background Unit.");
+  }
+  const originFeatUnitId = background.originFeatId;
   const draft = createCharacterDraft({
     unitLibrary,
     draftId: characterDraftId(`origin-feat-${input.backgroundUnitId}`),
@@ -580,21 +587,21 @@ function completeFighterDraftForBackground(input: {
             fills: [
               choiceFill(
                 unitChoiceHoleId(
-                  input.originFeatUnitId,
+                  originFeatUnitId,
                   "origin_feat_magic_initiate_cantrip_choice",
                 ),
                 ...input.magicInitiate.cantrips,
               ),
               choiceFill(
                 unitChoiceHoleId(
-                  input.originFeatUnitId,
+                  originFeatUnitId,
                   "origin_feat_magic_initiate_level_one_spell_choice",
                 ),
                 input.magicInitiate.levelOneSpell,
               ),
               choiceFill(
                 unitChoiceHoleId(
-                  input.originFeatUnitId,
+                  originFeatUnitId,
                   "origin_feat_magic_initiate_spellcasting_ability_choice",
                 ),
                 input.magicInitiate.ability,

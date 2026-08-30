@@ -80,6 +80,28 @@ function expectSecondStoryWorkProjection() {
 describe("Character Sheet runtime / ability checks", () => {
   test(secondStoryWorkProjectionTestName, expectSecondStoryWorkProjection);
 
+  test("projects linked speeds from the Ranger Roving composite feature", () => {
+    const rangerBuild = armorClassBuild({
+      startingClass: "class_ranger",
+      advancements: Array.from({ length: 5 }, () => "class_ranger"),
+    });
+
+    expect(
+      requireRight(characterSheetLinkedSpeedGrants(rangerBuild, unitLibrary)),
+    ).toEqual([
+      {
+        sourceUnitId: authoredUnitId("ranger_roving"),
+        speedKind: "climb",
+        feet: { kind: "walk_speed" },
+      },
+      {
+        sourceUnitId: authoredUnitId("ranger_roving"),
+        speedKind: "swim",
+        feet: { kind: "walk_speed" },
+      },
+    ]);
+  });
+
   test(jackOfAllTradesAddsHalfProficiencyBonusTestName, () => {
     const input = {
       build: bardJackOfAllTradesBuild({ totalLevel: 2 }),

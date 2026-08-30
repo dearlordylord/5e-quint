@@ -76,7 +76,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     }),
   ];
 
-  const invalidCombatant = combatantInits.find(sdk.isLeft);
+  const invalidCombatant = combatantInits.find(sdk.isFailure);
   if (invalidCombatant !== undefined) {
     return {
       kind: "obstructed",
@@ -88,14 +88,14 @@ export const setupScenario: ScenarioSetup = (context) => {
     };
   }
   const combatants = combatantInits
-    .filter((combatant) => !sdk.isLeft(combatant))
+    .filter((combatant) => !sdk.isFailure(combatant))
     .map((combatant) => combatant.success);
 
   const started = sdk.startBattle({
     battleId: sdk.battleId("four-way-crank-control-cycle"),
     combatants,
   });
-  if (sdk.isLeft(started)) {
+  if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(started.failure),
@@ -107,7 +107,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
 
   const adjacentDistance = sdk.scenarioDistanceFeet(5);
-  if (sdk.isLeft(adjacentDistance)) {
+  if (sdk.isFailure(adjacentDistance)) {
     return {
       kind: "obstructed",
       obstruction: adjacentDistance.failure.message,
@@ -175,14 +175,14 @@ export const setupScenario: ScenarioSetup = (context) => {
     battle: started.success,
     spatial: { kind: "tableAuthored", spatialDecisions },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: { overhead: { kind: "open" }, barrierHeights: [] },
     initialRangedAttackEnemyRelationships: [],
     movementAllyRelationships: [],
     opportunityAttackEnemyRelationships: [],
     objects: [],
   });
-  return sdk.isLeft(session)
+  return sdk.isFailure(session)
     ? {
         kind: "obstructed",
         obstruction: sdk.scenarioSessionIssueMessage(session.failure),

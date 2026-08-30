@@ -1,0 +1,49 @@
+{
+  "id": "elementalism",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 0,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "cube",
+            "sideFeet": 5
+          }
+        },
+        "effects": [
+          {
+            "kind": "none"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Elementalism",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Elementalism"
+  }
+}

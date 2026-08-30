@@ -1,0 +1,8 @@
+{"trackerId":"GH-418","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"]}
+{"trackerId":"GH-420","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001"]}
+{"trackerId":"GH-421","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-SAVE-PROCEDURE-001"]}
+{"trackerId":"GH-422","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001"]}
+{"trackerId":"GH-423","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-REACTION-LIFECYCLE-001"]}
+{"trackerId":"GH-424","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-SPELL-INVOCATION-RESTRICTED-001"]}
+{"trackerId":"GH-425","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-ATTACK-ADDITIONAL-EFFECT-001"]}
+{"trackerId":"GH-426","coverageMetric":"missing-runtime-owner","requirementIds":["RAW-STAT-BLOCK-STANDARD-ACTION-OPTION-001"]}

@@ -5192,7 +5192,7 @@ function saveMetamagicBattle(input: {
       }),
       statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Skeleton",
+        statBlockName: "Skeleton",
         initiative: 10,
       }),
     ],
@@ -5256,7 +5256,7 @@ function quickenedProfileBattle(input: {
       }),
       statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Skeleton",
+        statBlockName: "Skeleton",
         initiative: 10,
       }),
     ],
@@ -5315,12 +5315,12 @@ function twinnedTargetCountBattle(
       }),
       statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Skeleton",
+        statBlockName: "Skeleton",
         initiative: 10,
       }),
       statBlockCreatureInit({
         combatantId: extraTargetId,
-        displayName: "Extra Target",
+        statBlockName: "Extra Target",
         initiative: 9,
       }),
     ],
@@ -5375,7 +5375,7 @@ function commandMetamagicBattle(input: {
       }),
       statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Skeleton",
+        statBlockName: "Skeleton",
         initiative: 10,
       }),
     ],
@@ -5435,7 +5435,7 @@ function repeatSaveMetamagicBattle(input: {
       }),
       statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Skeleton",
+        statBlockName: "Skeleton",
         initiative: 10,
       }),
     ],
@@ -5483,7 +5483,7 @@ function sleepMetamagicBattle(input: {
       }),
       statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Skeleton",
+        statBlockName: "Skeleton",
         initiative: 10,
       }),
     ],

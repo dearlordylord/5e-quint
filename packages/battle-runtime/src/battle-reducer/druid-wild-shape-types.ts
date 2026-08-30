@@ -2,7 +2,7 @@
 // druid-wild-shape.ts and creature-state-leaves.ts to avoid a type-import cycle.
 
 import type { BattleActiveEffect } from "../battle-state-execution.ts";
-import type { BattleDruidWildShapeKnownForm } from "../druid-wild-shape-known-form-execution.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "../druid-wild-shape-known-form-runtime.ts";
 import type { StatBlockExecutionAdmission } from "../stat-block-execution-state.ts";
 
 export type ActiveDruidWildShape = {
@@ -10,5 +10,5 @@ export type ActiveDruidWildShape = {
     BattleActiveEffect,
     { readonly kind: "druidWildShapeForm" }
   >;
-  readonly admission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>;
+  readonly admission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime>;
 };

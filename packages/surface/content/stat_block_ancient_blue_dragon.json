@@ -1,0 +1,348 @@
+{
+  "challengeRating": 23,
+  "id": "stat_block_ancient_blue_dragon",
+  "kind": "statBlock",
+  "name": "Ancient Blue Dragon",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:1012-1058"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 25,
+      "con": 27,
+      "dex": 10,
+      "int": 18,
+      "str": 29,
+      "wis": 17
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 22
+      }
+    },
+    "actions": [
+      {
+        "description": "The dragon makes three Rend attacks. It can replace one attack with a use of Spellcasting to cast Shatter (level 3 version).",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 16
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Rend",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8,
+                  "flat": 9
+                },
+                "kind": "fixed",
+                "static": 18
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 10
+                },
+                "kind": "fixed",
+                "static": 11
+              },
+              "damageType": "lightning",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 15
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "dex",
+          "area": {
+            "kind": "line",
+            "lengthFeet": 120,
+            "widthFeet": 10
+          },
+          "dc": {
+            "dc": 23,
+            "kind": "fixed"
+          },
+          "kind": "save",
+          "name": "Lightning Breath",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 16,
+                "dieSize": 10
+              },
+              "kind": "fixed",
+              "static": 88
+            },
+            "damageType": "lightning",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "detect_magic"
+                },
+                {
+                  "spellId": "invisibility"
+                },
+                {
+                  "spellId": "mage_hand"
+                },
+                {
+                  "castAtLevel": 3,
+                  "spellId": "shatter"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "scrying"
+                },
+                {
+                  "spellId": "sending"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 22,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Draconic"
+        ]
+      }
+    },
+    "creatureType": "dragon",
+    "creatureTypeTags": [
+      "chromatic"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 481
+    },
+    "immunities": {
+      "damageTypes": [
+        "lightning"
+      ]
+    },
+    "initiative": {
+      "modifier": 14,
+      "score": 24
+    },
+    "legendaryActions": {
+      "entries": [
+        {
+          "description": "The dragon uses Spellcasting to cast Invisibility on itself, and it can fly up to half its Fly Speed. The dragon can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Cloaked Flight",
+          "procedureOrdinal": 1,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The dragon uses Spellcasting to cast Shatter (level 3 version). The dragon can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Sonic Boom",
+          "procedureOrdinal": 2,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The dragon makes one Rend attack.",
+          "kind": "textOnly",
+          "name": "Tail Swipe",
+          "procedureOrdinal": 3,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        }
+      ],
+      "uses": {
+        "additionalUsesInLair": 1,
+        "kind": "lair_bonus",
+        "usesOutsideLair": 3
+      }
+    },
+    "passivePerception": 27,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 2,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 9
+      },
+      {
+        "ability": "dex",
+        "modifier": 7
+      },
+      {
+        "ability": "con",
+        "modifier": 8
+      },
+      {
+        "ability": "int",
+        "modifier": 4
+      },
+      {
+        "ability": "wis",
+        "modifier": 10
+      },
+      {
+        "ability": "cha",
+        "modifier": 7
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 60
+      },
+      {
+        "kind": "darkvision",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "gargantuan",
+    "skillModifiers": [
+      {
+        "modifier": 17,
+        "skill": "perception"
+      },
+      {
+        "modifier": 7,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "burrow"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 80
+        },
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the dragon fails a saving throw, it can choose to succeed instead.",
+        "name": "Legendary Resistance (4/Day, or 5/Day in Lair)"
+      }
+    ]
+  }
+}

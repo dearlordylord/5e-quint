@@ -1,0 +1,42 @@
+{
+  "id": "teleport",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 7,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "none"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 10,
+      "kind": "point"
+    },
+    "school": "conjuration"
+  },
+  "name": "Teleport",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Teleport"
+  }
+}

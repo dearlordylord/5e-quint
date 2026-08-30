@@ -23,10 +23,6 @@ import {
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
-import {
-  statBlockLanguagePresentation,
-  statBlockProcedurePresentations,
-} from "./stat-block-presentation.ts";
 
 const AdmittedSpawnedCompanionReappearance =
   Brand.nominal<AdmittedSpawnedCompanionReappearance>();

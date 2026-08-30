@@ -1,7 +1,12 @@
 import { Schema } from "effect";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { HASTE_ACTION_RESOURCE_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
+import { D6_ROLL_RESULTS, NonNegativeInteger } from "@dnd/shared/types";
+import {
+  statBlockId as parseSharedStatBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 import {
   BattleFillSchema,
   BattleHoleSchema,
@@ -52,11 +57,14 @@ import {
   BattleObjectDamageOutcomeSchema,
 } from "./battle-reducer/battle-codecs.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
-import type { BattleSubject } from "./battle-subjects.ts";
+import { BattleSubjectSchema, type BattleSubject } from "./battle-subjects.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   battleAreaId,
   battleLineDirectionId,
   battleObjectId,
+  battleResourcePoolExecutionRef,
   battleSpellEffectOccurrenceId,
   battleTablePositionId,
 } from "./identity.ts";
@@ -70,6 +78,7 @@ type EncodedOccurrenceLocation =
 type EncodedEnvelope = Schema.Codec.Encoded<
   typeof BattleCheckpointFrontierEnvelopeSchema
 >;
+type EncodedSnapshot = EncodedEnvelope["checkpoint"];
 type EncodedActsFrontier = Extract<
   EncodedEnvelope["frontier"],
   { readonly kind: "acts" }
@@ -79,6 +88,18 @@ type EncodedInterruptChoice = Extract<
   EncodedEnvelope["frontier"],
   { readonly kind: "interruptDecision" }
 >["choices"][number];
+type EncodedActionResource = EncodedSnapshot["turn"]["actionResources"][number];
+type EncodedStatBlockMultiattackActionResource = Extract<
+  EncodedActionResource,
+  { readonly source: "statBlockMultiattack" }
+>;
+type EncodedListedMultiattackActionResource =
+  EncodedStatBlockMultiattackActionResource & {
+    readonly dispatch: Extract<
+      EncodedStatBlockMultiattackActionResource["dispatch"],
+      { readonly kind: "listedOccurrence" }
+    >;
+  };
 type CodecCase = {
   readonly name: string;
   readonly expected: "Success" | "Failure";
@@ -254,6 +275,77 @@ function expectEnvelopeDecodeFailure(envelope: EncodedEnvelope): void {
     BattleCheckpointFrontierEnvelopeSchema,
   )(envelope);
   expect(Result.isFailure(decoded)).toBe(true);
+}
+
+function expectSnapshotDecodeLeft(snapshot: unknown): void {
+  const decoded = Schema.decodeUnknownResult(BattleSnapshotSchema)(snapshot);
+  expect(Result.isFailure(decoded)).toBe(true);
+}
+
+function isEncodedStatBlockMultiattackActionResource(
+  resource: EncodedActionResource,
+): resource is EncodedStatBlockMultiattackActionResource {
+  return resource.source === "statBlockMultiattack";
+}
+
+function isEncodedListedMultiattackActionResource(
+  resource: EncodedActionResource,
+): resource is EncodedListedMultiattackActionResource {
+  return (
+    isEncodedStatBlockMultiattackActionResource(resource) &&
+    resource.dispatch.kind === "listedOccurrence"
+  );
+}
+
+function encodedActivatedMultiattackSnapshot(): EncodedSnapshot {
+  const session = startBattleSessionRight({
+    battleId: battleId("codec-multiattack-continuation"),
+    combatants: [
+      characterSeed({ combatantId: wizardId, initiative: 20 }),
+      statBlockCreatureInit({
+        combatantId: skeletonId,
+        statBlock: monsterMultiattackStatBlock(),
+        initiative: 10,
+      }),
+    ],
+  });
+  const turn = requireResolved(
+    endTurn({ state: session.state, actorId: wizardId }),
+  ).state;
+  const multiattack = discoverBattleActCandidates(turn).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "multiattack" &&
+      act.subject.actorId === skeletonId,
+  );
+  if (multiattack === undefined) {
+    throw new Error("Expected a Stat Block Multiattack act.");
+  }
+  return encodedEnvelopeFromState(
+    requireResolved(
+      resolveBattleSubject({
+        state: turn,
+        subject: multiattack.subject,
+        fills: [],
+      }),
+    ).state,
+  ).checkpoint;
+}
+
+function codecRechargeResourcePoolRef() {
+  const snapshot = Schema.decodeUnknownSync(BattleSnapshotSchema)(
+    encodedActivatedMultiattackSnapshot(),
+  );
+  const actor = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === skeletonId,
+  );
+  if (actor?.origin.kind !== "statBlock") {
+    throw new Error("Expected the codec Recharge fixture actor.");
+  }
+  return battleResourcePoolExecutionRef(
+    actor.origin.execution.scopeRef,
+    NonNegativeInteger(0),
+  );
 }
 
 function codecFixture() {
@@ -884,39 +976,71 @@ const failureCase = (name: string, holeValue: EncodedHole): CodecCase => ({
   hole: holeValue,
 });
 
-function codecStaticDartStatBlock() {
+function codecStaticDartStatBlock(): StatBlockRecord {
   const base = monsterMultiattackStatBlock();
-  const shortbow = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Shortbow",
+  const shortbow = base.statBlock.actions?.find(
+    (entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === "Shortbow",
   );
-  if (shortbow === undefined) {
+  if (
+    shortbow === undefined ||
+    shortbow.kind !== "executable" ||
+    shortbow.procedure.kind !== "attack_roll"
+  ) {
     throw new Error("Expected the static codec Shortbow fixture.");
   }
   return {
-    ...base,
+    id: parseSharedStatBlockId("stat_block_codec_static_dart_monster"),
+    kind: "statBlock",
     name: "Codec Static Dart Monster",
+    challengeRating: 0.25,
+    provenance: {
+      kind: "synthetic-test",
+      section: "codec static damage fixture",
+    },
     statBlock: {
-      ...base.statBlock,
-      displayName: "Codec Static Dart Monster",
-      actions: {
-        ...base.statBlock.actions,
-        attacks: [
-          {
-            ...shortbow,
+      size: "small",
+      creatureType: "fey",
+      alignment: { order: "chaotic", morality: "neutral" },
+      ac: { value: { kind: "literal", value: 15 } },
+      hp: { kind: "literal", value: 10 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      abilityScores: {
+        cha: 8,
+        con: 10,
+        dex: 15,
+        int: 10,
+        str: 8,
+        wis: 8,
+      },
+      initiative: { modifier: 2, score: 12 },
+      passivePerception: 9,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Common", "Goblin"] },
+      },
+      actions: [
+        {
+          ...shortbow,
+          procedure: {
+            ...shortbow.procedure,
+            name: "Static Dart",
             onHit: [
               {
-                kind: "damage" as const,
-                damageType: "piercing" as const,
+                kind: "damage",
+                damageType: "piercing",
                 amount: {
-                  kind: "fixed" as const,
+                  kind: "fixed",
                   expr: { dice: 1, dieSize: 4 },
                   static: 3,
                 },
               },
-            ] as const,
+            ],
           },
-        ] as const,
-      },
+        },
+      ],
     },
   };
 }
@@ -928,7 +1052,7 @@ function staticDartSubject(
   {
     readonly tag: "action";
     readonly action: "attack";
-    readonly statBlockDamageNotation: "static";
+    readonly statBlockDamageSelection: unknown;
   }
 > {
   const subject = discoverBattleActs(session).find(
@@ -936,12 +1060,20 @@ function staticDartSubject(
       candidate.tag === "action" &&
       candidate.action === "attack" &&
       candidate.actorId === goblinId &&
-      candidate.statBlockDamageNotation === "static",
+      candidate.statBlockDamageSelection !== undefined &&
+      statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+        candidate.statBlockDamageSelection,
+        "static",
+      ),
   )?.subject;
   if (
     subject?.tag !== "action" ||
     subject.action !== "attack" ||
-    subject.statBlockDamageNotation !== "static"
+    subject.statBlockDamageSelection === undefined ||
+    !statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+      subject.statBlockDamageSelection,
+      "static",
+    )
   ) {
     throw new Error("Expected a discovered static Stat Block attack.");
   }
@@ -2110,6 +2242,108 @@ describe("battle codec execution-reference boundaries", () => {
   });
 });
 
+describe("battle codec Stat Block Recharge d6 boundaries", () => {
+  const target = codecRechargeResourcePoolRef();
+
+  test.each(D6_ROLL_RESULTS)("accepts the d6 result %i", (roll) => {
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleFillSchema)({
+          kind: "statBlockRechargeRoll",
+          holeId: holeId(`recharge-d6-${roll}`),
+          value: [{ target, roll }],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test.each([0, 7] as const)("rejects the non-d6 result %i", (roll) => {
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
+          kind: "statBlockRechargeRoll",
+          holeId: holeId(`recharge-not-d6-${roll}`),
+          value: [{ target, roll }],
+        }),
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("battle codec attack-selection boundaries", () => {
+  test("rejects a Stat Block selection on a character-only Weapon Mastery Push fact", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-weapon-mastery-push-selection"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          statBlock: codecStaticDartStatBlock(),
+          initiative: 20,
+        }),
+        characterSeed({ combatantId: fighterId, initiative: 10 }),
+      ],
+    });
+    const subject = staticDartSubject(session);
+
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
+          kind: "targetSpatialFacts",
+          holeId: holeId("weapon-mastery-push-stat-block-selection"),
+          spatialFacts: [
+            {
+              kind: "weaponMasteryPushDisposition",
+              attackerId: subject.actorId,
+              targetId: fighterId,
+              procedureRef: subject.procedureRef,
+              statBlockDamageSelection: subject.statBlockDamageSelection,
+              disposition: {
+                kind: "blocked",
+                distanceFeet: movementFeet(0),
+                reason: "noLegalDestination",
+                provokesOpportunityAttacks: false,
+              },
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects noncanonical component roles through the Stat Block subject codec", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-stat-block-damage-component-roles"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          statBlock: codecStaticDartStatBlock(),
+          initiative: 20,
+        }),
+        characterSeed({ combatantId: fighterId, initiative: 10 }),
+      ],
+    });
+    const subject = staticDartSubject(session);
+
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSubjectSchema)({
+          ...subject,
+          statBlockDamageSelection: [
+            {
+              componentRef: { kind: "baseDamageComponent", ordinal: 2 },
+              notation: "rolled",
+            },
+            {
+              componentRef: { kind: "baseDamageComponent", ordinal: 1 },
+              notation: "static",
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
+  });
+});
+
 describe("battle codec act ownership boundaries", () => {
   test("preserves static Stat Block distance identity for an ordinary attack", () => {
     const session = startBattleSessionRight({
@@ -2135,7 +2369,7 @@ describe("battle codec act ownership boundaries", () => {
         fighterId,
         {
           procedureRef: subject.procedureRef,
-          statBlockDamageNotation: "static",
+          statBlockDamageSelection: subject.statBlockDamageSelection,
         },
         movementFeet(5),
       ),
@@ -2149,7 +2383,7 @@ describe("battle codec act ownership boundaries", () => {
         {
           kind: "attackTargetDistance",
           procedureRef: subject.procedureRef,
-          statBlockDamageNotation: "static",
+          statBlockDamageSelection: subject.statBlockDamageSelection,
         },
       ],
     });
@@ -2189,8 +2423,12 @@ describe("battle codec act ownership boundaries", () => {
     const attackResponse = declarationHole.responseChoices.find(
       (response) =>
         response.kind === "attack" &&
-        "statBlockDamageNotation" in response.selection &&
-        response.selection.statBlockDamageNotation === "static",
+        "statBlockDamageSelection" in response.selection &&
+        response.selection.statBlockDamageSelection !== undefined &&
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          response.selection.statBlockDamageSelection,
+          "static",
+        ),
     );
     if (attackResponse?.kind !== "attack") {
       throw new Error("Expected the static Stat Block Ready response.");
@@ -2339,11 +2577,19 @@ describe("battle codec act ownership boundaries", () => {
     ) {
       throw new Error("Expected the encoded readied-attack choice.");
     }
+    const statBlockDamageSelection =
+      attackResponse.selection.statBlockDamageSelection;
+    if (statBlockDamageSelection === undefined) {
+      throw new Error(
+        "Expected the stored readied attack to retain Stat Block damage selection.",
+      );
+    }
     const statBlockRetaliationChoice: EncodedInterruptChoice = {
       kind: "nestedProcedure",
       subject: {
         ...encodedReadiedAttack.subject,
         command: "retaliationAttack",
+        statBlockDamageSelection,
       },
       initialHoles: [],
     };
@@ -2459,6 +2705,7 @@ describe("battle codec act ownership boundaries", () => {
           ...encodedReadiedAttack.subject,
           command: "opportunityAttack",
           distanceFeet: 5,
+          statBlockDamageSelection,
         },
         initialHoles: [],
       },
@@ -2576,6 +2823,7 @@ describe("battle codec act ownership boundaries", () => {
               command: "opportunityAttack",
               reactorId: combatantId("codec-missing-opportunity-reactor"),
               distanceFeet: 5,
+              statBlockDamageSelection,
             },
             initialHoles: [],
           },
@@ -2594,6 +2842,7 @@ describe("battle codec act ownership boundaries", () => {
               command: "opportunityAttack",
               procedureRef: fighterAttackProcedureRef,
               distanceFeet: 5,
+              statBlockDamageSelection,
             },
             initialHoles: [],
           },
@@ -2646,7 +2895,8 @@ describe("battle codec act ownership boundaries", () => {
       spatialFacts: [
         {
           kind: "attackTargetDistance",
-          statBlockDamageNotation: "static",
+          statBlockDamageSelection:
+            attackResponse.selection.statBlockDamageSelection,
         },
       ],
     });
@@ -2704,9 +2954,18 @@ describe("battle codec act ownership boundaries", () => {
         ],
       }),
     );
+    expect(readied.snapshot.turn.actionTakenThisTurn).toBe(true);
+    const encodedReadied = Schema.encodeSync(BattleSnapshotSchema)(
+      readied.snapshot,
+    );
+    expect(
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(encodedReadied).turn
+        .actionTakenThisTurn,
+    ).toBe(true);
     const goblinTurn = requireResolved(
       endTurn({ state: readied.state, actorId: fighterId }),
     );
+    expect(goblinTurn.snapshot.turn.actionTakenThisTurn).toBe(false);
     const reported = resolveBattleSubject({
       state: goblinTurn.state,
       subject: {
@@ -2842,6 +3101,197 @@ describe("battle codec act ownership boundaries", () => {
       wizardId,
     );
     expectEnvelopeDecodeFailure(malformed);
+  });
+  test("rejects an empty Stat Block Multiattack one-listed choice", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: encoded.turn.actionResources.map((resource) =>
+          resource.source === "statBlockMultiattack"
+            ? {
+                ...resource,
+                dispatch: {
+                  kind: "oneListedChoice",
+                  attackProcedureRefs: [],
+                },
+              }
+            : resource,
+        ),
+      },
+    });
+  });
+  test("rejects a Stat Block Multiattack continuation owned by another combatant", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: encoded.turn.actionResources.map((resource) =>
+          resource.source === "statBlockMultiattack"
+            ? { ...resource, sourceOwnerId: wizardId }
+            : resource,
+        ),
+      },
+    });
+  });
+  test("rejects an ordinary turn Action restored during a Stat Block Multiattack continuation", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: [
+          ...encoded.turn.actionResources,
+          { kind: "action", source: "turn" },
+        ],
+      },
+    });
+  });
+  test("rejects a forged restriction on a Stat Block Multiattack continuation", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: encoded.turn.actionResources.map((resource) =>
+          resource.source === "statBlockMultiattack"
+            ? { ...resource, restriction: { kind: "none" } }
+            : resource,
+        ),
+      },
+    });
+  });
+  test("rejects an unbound spell-effect Action during a Stat Block Multiattack continuation", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: [
+          ...encoded.turn.actionResources,
+          {
+            kind: "action",
+            source: "spellEffect",
+            sourceEffectRef: battleActiveEffectExecutionRefForTest(
+              "forged-multiattack-continuation",
+            ),
+            restriction: HASTE_ACTION_RESOURCE_RESTRICTION,
+          },
+        ],
+      },
+    });
+  });
+  test("rejects a Stat Block Multiattack continuation bound to a non-Multiattack procedure", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    const attackResource = encoded.turn.actionResources.find(
+      isEncodedListedMultiattackActionResource,
+    );
+    if (attackResource === undefined) {
+      throw new Error("Expected a listed Multiattack continuation resource.");
+    }
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: encoded.turn.actionResources.map((resource) =>
+          resource.source === "statBlockMultiattack"
+            ? {
+                ...resource,
+                sourceProcedureRef: attackResource.dispatch.attackProcedureRef,
+              }
+            : resource,
+        ),
+      },
+    });
+  });
+  test("rejects an unlisted Stat Block Multiattack dispatch procedure", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    const statBlockCombatant = encoded.combatants.find(
+      (combatant) => combatant.combatantId === skeletonId,
+    );
+    if (statBlockCombatant?.origin.kind !== "statBlock") {
+      throw new Error("Expected a Stat Block continuation owner.");
+    }
+    const unarmedStrikeRef =
+      statBlockCombatant.origin.execution.procedureBindings.find(
+        (binding) => binding.procedure.kind === "unarmedStrike",
+      )?.procedureRef;
+    if (unarmedStrikeRef === undefined) {
+      throw new Error("Expected the runtime-injected Unarmed Strike binding.");
+    }
+    const firstContinuationIndex = encoded.turn.actionResources.findIndex(
+      (resource) => resource.source === "statBlockMultiattack",
+    );
+    expect(firstContinuationIndex).toBeGreaterThanOrEqual(0);
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: encoded.turn.actionResources.map((resource, index) =>
+          index === firstContinuationIndex &&
+          resource.source === "statBlockMultiattack"
+            ? {
+                ...resource,
+                dispatch: {
+                  kind: "listedOccurrence",
+                  attackProcedureRef: unarmedStrikeRef,
+                },
+              }
+            : resource,
+        ),
+      },
+    });
+  });
+  test("rejects Stat Block Multiattack continuation multiplicity beyond the source binding", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    const continuationResources = encoded.turn.actionResources.filter(
+      isEncodedStatBlockMultiattackActionResource,
+    );
+    const lastContinuation = continuationResources.at(-1);
+    if (lastContinuation === undefined) {
+      throw new Error("Expected a Multiattack continuation resource.");
+    }
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: [...encoded.turn.actionResources, lastContinuation],
+      },
+    });
+  });
+  test("rejects a one-listed Multiattack choice that drops source multiplicity", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    const continuationResources = encoded.turn.actionResources.filter(
+      isEncodedListedMultiattackActionResource,
+    );
+    const firstContinuation = continuationResources[0];
+    if (firstContinuation === undefined) {
+      throw new Error("Expected a listed Multiattack continuation resource.");
+    }
+    const distinctProcedureRefs = Array.from(
+      new Set(
+        continuationResources.map(
+          (resource) => resource.dispatch.attackProcedureRef,
+        ),
+      ),
+    );
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: [
+          {
+            ...firstContinuation,
+            dispatch: {
+              kind: "oneListedChoice",
+              attackProcedureRefs: distinctProcedureRefs,
+            },
+          },
+        ],
+      },
+    });
   });
   test("rejects a character off-hand attack owned by a stat block", () => {
     const session = startBattleSessionRight({

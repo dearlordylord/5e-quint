@@ -1,0 +1,286 @@
+{
+  "challengeRating": 11,
+  "id": "stat_block_efreeti",
+  "kind": "statBlock",
+  "name": "Efreeti",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-E-G.md:40-77"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 19,
+      "con": 24,
+      "dex": 12,
+      "int": 16,
+      "str": 22,
+      "wis": 15
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 17
+      }
+    },
+    "actions": [
+      {
+        "description": "The efreeti makes three attacks, using Heated Blade or Hurl Flame in any combination.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 10
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Heated Blade",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6,
+                  "flat": 6
+                },
+                "kind": "fixed",
+                "static": 13
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 12
+                },
+                "kind": "fixed",
+                "static": 13
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "cha",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 8
+          },
+          "attackType": "ranged",
+          "kind": "attack_roll",
+          "name": "Hurl Flame",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 7,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 24
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            }
+          ],
+          "rangeFeet": {
+            "long": 120,
+            "normal": 120
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "detect_magic"
+                },
+                {
+                  "spellId": "elementalism"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "gaseous_form"
+                },
+                {
+                  "spellId": "invisibility"
+                },
+                {
+                  "spellId": "major_image"
+                },
+                {
+                  "spellId": "plane_shift"
+                },
+                {
+                  "spellId": "tongues"
+                },
+                {
+                  "castAtLevel": 7,
+                  "spellId": "wall_of_fire"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 16,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Primordial (Ignan)"
+        ]
+      }
+    },
+    "creatureType": "elemental",
+    "creatureTypeTags": [
+      "genie"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 212
+    },
+    "immunities": {
+      "damageTypes": [
+        "fire"
+      ]
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 12,
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 1,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 6
+      },
+      {
+        "ability": "dex",
+        "modifier": 1
+      },
+      {
+        "ability": "con",
+        "modifier": 7
+      },
+      {
+        "ability": "wis",
+        "modifier": 6
+      },
+      {
+        "ability": "cha",
+        "modifier": 8
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "large",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 60
+        },
+        "hover": true,
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the efreeti dies outside the Elemental Plane of Fire, its body dissolves into ash, and it gains a new body in 1d4 days, reviving with all its Hit Points somewhere on the Plane of Fire.",
+        "name": "Elemental Restoration"
+      },
+      {
+        "description": "The efreeti has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      },
+      {
+        "description": "The efreeti has a 30 percent chance of knowing the Wish spell. If the efreeti knows it, the efreeti can cast it only on behalf of a non-genie creature who communicates a wish in a way the efreeti can understand. If the efreeti casts the spell for the creature, the efreeti suffers none of the spell's stress. Once the efreeti has cast it three times, the efreeti can't do so again for 365 days.",
+        "name": "Wishes"
+      }
+    ]
+  }
+}

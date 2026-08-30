@@ -6,13 +6,8 @@ import {
   type BattleRuntimeSession,
   type RetainedCompanionBattleSelection,
 } from "./battle-runtime-context.ts";
-import type {
-  BattleResolutionResult,
-  BattleStateInitIssue,
-} from "./battle-state-execution.ts";
-import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
-import type { CombatantId } from "./identity.ts";
-import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
+import type { BattleStateInitIssue } from "./battle-state-execution.ts";
+import type { BattleResolutionResult } from "./battle-state-execution.ts";
 import {
   admitCompanionToBattle,
   castResolvedSpawnedCompanion,
@@ -23,9 +18,10 @@ import { resolveSpawnedCompanionForm } from "@dnd/surface/surface/find-familiar-
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
-  statBlockLanguagePresentation,
-  statBlockProcedurePresentations,
-} from "./stat-block-presentation.ts";
+  resolveFindFamiliarForm,
+  type FindFamiliarResolvedForm,
+} from "@dnd/surface/surface/find-familiar-forms";
+import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 
 type WithoutBattleState<Input> = Input extends unknown
   ? Omit<Input, "state">
@@ -37,7 +33,7 @@ export function admitCompanionToBattleRuntime(
   },
 ): Result.Result<BattleRuntimeSession, BattleStateInitIssue> {
   const selection = retainedCompanionSelection(input.manifestation.storedForm);
-  const admitted = admitCompanionToBattle({
+  const admitted = admitCompanionToBattleWithPresentation({
     ...input,
     state: input.session.state,
   });
@@ -135,11 +131,21 @@ export function castRetainedSpawnedCompanionRuntime(
     creatureTypeOverrideChoiceId: input.creatureTypeOverrideChoiceId,
   });
   if (resolvedForm.tag === "issue") {
+    return Result.fail(resolvedForm.message);
+  }
+  return Result.succeed(resolvedForm.form);
+}
+
+export function castRetainedFindFamiliarRuntime(
+  input: RetainedFindFamiliarRuntimeInput,
+): RetainedCompanionRuntimeCastResult {
+  const resolvedForm = resolveRetainedFindFamiliarCastForm(input);
+  if (Result.isFailure(resolvedForm)) {
     return {
       tag: "invalid",
       session: input.session,
       reason: "invalidFill",
-      message: resolvedForm.message,
+      message: resolvedForm.failure,
       snapshot: snapshotBattle(input.session.state),
     };
   }
@@ -147,14 +153,15 @@ export function castRetainedSpawnedCompanionRuntime(
     state: input.session.state,
     casterId: input.casterId,
     familiarId: input.familiarId,
-    resolvedForm: resolvedForm.form,
+    resolvedForm: resolvedForm.success,
     initiative: input.initiative,
     placement: input.placement,
     ammunitionStocks: input.ammunitionStocks,
     retainedTransition: "sessionOwned",
   });
   /* v8 ignore start -- @preserve -- Cast lifecycle failures are exercised at the lifecycle boundary; this wrapper only preserves their typed reason, message, and snapshot. */
-  if (result.tag === "invalid") {
+  if (!("presentation" in cast)) {
+    const result = cast.result;
     return {
       tag: "invalid",
       session: input.session,

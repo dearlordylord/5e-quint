@@ -1,32 +1,26 @@
-{ id = "stat_block_sphinx_of_wonder"
+{ challengeRating = 1
+, id = "stat_block_sphinx_of_wonder"
 , kind = "statBlock"
 , name = "Sphinx of Wonder"
-, challengeRating = 1.0
 , provenance =
-  { kind = "srd-5.2.1"
-  , section = "Monsters/Monsters-P-S.md:1316-1344"
-  }
+  { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:1316-1344" }
 , statBlock =
   { abilityScores =
-    { cha = 11
-    , con = 13
-    , dex = 17
-    , int = 15
-    , str = 6
-    , wis = 12
-    }
-  , ac = { kind = "literal", value = +13 }
+    { cha = 11, con = 13, dex = 17, int = 15, str = 6, wis = 12 }
+  , ac.value = { kind = "literal", value = 13 }
   , actions =
-    { attacks =
-      [ { attackAbility = "dex"
-        , attackBonus = { kind = "literal", value = +5 }
+    [ { kind = "executable"
+      , procedure =
+        { attackAbility = "dex"
+        , attackBonus = { kind = "literal", value = 5 }
         , attackType = "melee"
+        , kind = "attack_roll"
         , name = "Rend"
         , onHit =
           [ { amount =
               { expr = { dice = 1, dieSize = 4, flat = Some 3 }
               , kind = "fixed"
-              , static = Some 5
+              , static = 5
               }
             , damageType = "slashing"
             , kind = "damage"
@@ -34,7 +28,7 @@
           , { amount =
               { expr = { dice = 2, dieSize = 6, flat = None Natural }
               , kind = "fixed"
-              , static = Some 7
+              , static = 7
               }
             , damageType = "radiant"
             , kind = "damage"
@@ -42,30 +36,51 @@
           ]
         , reachFeet = 5
         }
-      ]
+      , procedureOrdinal = 1
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "good", order = "lawful" }
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages = { kind = "named", languages = [ "Celestial", "Common" ] }
     }
   , creatureType = "celestial"
-  , displayName = "Sphinx of Wonder"
-  , hp = { kind = "literal", value = +39 }
-  , initiativeModifier = +3
-  , languages = [ "Celestial", "Common" ]
+  , hp = { kind = "literal", value = 39 }
+  , initiative = { modifier = 3, score = 13 }
+  , passivePerception = 11
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = -2 }
+    , { ability = "dex", modifier = +3 }
+    , { ability = "con", modifier = +1 }
+    , { ability = "int", modifier = +2 }
+    , { ability = "wis", modifier = +1 }
+    , { ability = "cha", modifier = +0 }
+    ]
   , reactions =
-    { specials =
-      [ { description =
-            "Trigger: The sphinx or another creature within 30 feet makes an ability check or a saving throw. Response: The sphinx adds 2 to the roll."
-        , limitedUse = { kind = "daily", uses = 2 }
-        , name = "Burst of Ingenuity"
-        }
-      ]
-    }
+    [ { description =
+          "Trigger: The sphinx or another creature within 30 feet makes an ability check or a saving throw. Response: The sphinx adds 2 to the roll."
+      , kind = "textOnly"
+      , name = "Burst of Ingenuity"
+      , procedureOrdinal = 1
+      , reason = "unsupported_procedure_family"
+      , resourceRefs = { kind = "some", ordinals = [ 1 ] }
+      }
+    ]
   , resistances =
     { damageTypes = [ "necrotic", "psychic", "radiant" ], kind = "fixed" }
+  , resources =
+    [ { limit = { kind = "daily", uses = 2 }
+      , ordinal = 1
+      , ownership = "shared"
+      }
+    ]
   , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
   , size = "tiny"
   , skillModifiers =
-    [ { modifier = +4, skill = "arcana" }
-    , { modifier = +4, skill = "religion" }
-    , { modifier = +5, skill = "stealth" }
+    [ { modifier = 4, skill = "arcana" }
+    , { modifier = 4, skill = "religion" }
+    , { modifier = 5, skill = "stealth" }
     ]
   , speeds =
     [ { feet = { kind = "literal", value = 20 }, kind = "walk" }

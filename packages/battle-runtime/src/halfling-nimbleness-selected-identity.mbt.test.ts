@@ -1,10 +1,9 @@
-// RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.creature-space-movement-permission
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness doMoveThroughLargerCreatureSpace doRejectOccupiedStop doRejectMissingProfile doRejectSameSizeTraversal
 import { expect, it } from "vitest";
-import { movementFeet } from "@dnd/shared/types";
+import { movementFeet, NonNegativeInteger } from "@dnd/shared/types";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
@@ -150,8 +149,18 @@ it("observes selected Halfling Nimbleness qRoute through public reducer events",
   expect(
     movementBudgetFailure.route.some(isCreatureSpaceMovementPermissionRoute),
   ).toBe(false);
+  const opportunityAttackThreatFailureState = halflingNimblenessBattle({
+    selected: true,
+  });
+  const blockerAttackSelection = attackExecutionSelectionForSubjectForTest(
+    characterAttackSubjectForTest(
+      opportunityAttackThreatFailureState,
+      blockerId,
+      "Longsword",
+    ),
+  );
   const opportunityAttackThreatFailure = observeMovementRouteResult(
-    halflingNimblenessBattle({ selected: true }),
+    opportunityAttackThreatFailureState,
     {
       destination: {
         kind: "unoccupiedSpace",
@@ -163,10 +172,13 @@ it("observes selected Halfling Nimbleness qRoute through public reducer events",
         {
           reactorId: blockerId,
           distanceFeet: movementFeet(5),
-          procedureRef:
-            BattleAttackProcedureExecutionRef.make("missing-attack"),
-          attackAbility: "str",
-          attackDamageType: "slashing",
+          ...blockerAttackSelection,
+          procedureRef: battleAttackProcedureExecutionRef(
+            battleAttackExecutionScopeRefForProcedureRef(
+              blockerAttackSelection.procedureRef,
+            ),
+            NonNegativeInteger(999),
+          ),
         },
       ],
     },

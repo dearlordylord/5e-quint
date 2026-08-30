@@ -178,7 +178,7 @@ module characterBattleInitProjectionMbt {
         .with("maxHp", 7)
         .with("armorClass", 12)
         .with("selectedCantripCount", 2)
-        .with("projectedCantripCount", 1)
+        .with("projectedCantripCount", 2)
         .with("selectedLeveledSpellCount", 1)
         .with("projectedLeveledSpellCount", 0),
       3,

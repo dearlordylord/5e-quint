@@ -1,10 +1,11 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // KERNEL-COVERAGE: parity-witness CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { statBlockId, unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
+  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   characterId,
   combatantId,
   initiativeScore,
@@ -452,7 +453,10 @@ function projectCharacterBattle(input: {
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: combatantId(`${input.battleIdText}:skeleton`),
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
         }),
       ],

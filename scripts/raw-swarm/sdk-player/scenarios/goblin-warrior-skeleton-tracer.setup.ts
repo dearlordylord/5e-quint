@@ -19,7 +19,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(goblin)) {
+  if (sdk.isFailure(goblin)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(goblin.failure),
@@ -43,7 +43,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(skeleton)) {
+  if (sdk.isFailure(skeleton)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(skeleton.failure),
@@ -54,7 +54,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     battleId: sdk.battleId("goblin-warrior-skeleton-tracer"),
     combatants: [goblin.success, skeleton.success],
   });
-  if (sdk.isLeft(started)) {
+  if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(started.failure),
@@ -79,7 +79,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: { overhead: { kind: "open" }, barrierHeights: [] },
     initialRangedAttackEnemyRelationships: [
       {
@@ -104,7 +104,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ],
     objects: [],
   });
-  return sdk.isLeft(session)
+  return sdk.isFailure(session)
     ? {
         kind: "obstructed",
         obstruction: sdk.scenarioSessionIssueMessage(session.failure),

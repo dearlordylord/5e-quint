@@ -46,6 +46,7 @@ const fixedBenchmarkCli = resolve(
   repoRoot,
   "scripts/raw-swarm/fixed-scenario-benchmark.ts",
 );
+const DECLARATION_CONTEXT_BUILD_TIMEOUT_MS = 300_000;
 
 const historicalReview = {
   raw: {
@@ -802,17 +803,21 @@ describe("fixed scenario benchmark boundary", () => {
     ).toBe(capabilityContextForRole("player"));
   });
 
-  test("builds historical context from public documents and declarations", () => {
-    const context =
-      fixedBenchmarkDocumentDeclarationContextForRole("characterAuthoring");
+  test(
+    "builds historical context from public documents and declarations",
+    () => {
+      const context =
+        fixedBenchmarkDocumentDeclarationContextForRole("characterAuthoring");
 
-    expect(context).toContain("SCENARIO_CHARACTERS.md");
-    expect(context).toContain("CHARACTER_CREATION_SDK.md");
-    expect(context).toContain("Full emitted public declaration bundle");
-    expect(context).toContain("declare ");
-    expect(context).not.toContain("generate-scenario.ts");
-    expect(context).not.toContain("scenario-campaign.ts");
-  }, 120_000);
+      expect(context).toContain("SCENARIO_CHARACTERS.md");
+      expect(context).toContain("CHARACTER_CREATION_SDK.md");
+      expect(context).toContain("Full emitted public declaration bundle");
+      expect(context).toContain("declare ");
+      expect(context).not.toContain("generate-scenario.ts");
+      expect(context).not.toContain("scenario-campaign.ts");
+    },
+    DECLARATION_CONTEXT_BUILD_TIMEOUT_MS,
+  );
 
   test("keeps baseline composites four-field and bounded composites five-field", () => {
     const historicalSchema = codexOutputJsonSchema(

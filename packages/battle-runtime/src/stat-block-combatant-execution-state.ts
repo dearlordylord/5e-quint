@@ -3,8 +3,11 @@ import { Hp, type Size } from "@dnd/shared/types";
 import type {
   DamageType,
   StatBlockId,
-  StatBlockMechanics,
+  SixAbilityScores,
+  CreatureSavingThrowModifier,
+  CreatureSkillModifier,
 } from "@dnd/surface/surface/types";
+import type { SurfaceCondition } from "@dnd/shared/game-facts";
 import type { Brand } from "effect";
 
 import type {
@@ -13,32 +16,30 @@ import type {
   BattleId,
   CombatantId,
 } from "./identity.ts";
-import type { StatBlockExecutionState } from "./stat-block-execution-state.ts";
+import type {
+  BattleStatBlockRuntimeFacts,
+  BattleStatBlockRuntimeSense,
+  BattleStatBlockRuntimeSpeed,
+  StatBlockExecutionState,
+} from "./stat-block-execution-state.ts";
 
 /** Authored-free mechanical facts queried after a Stat Block combatant commits. */
 export type BattleStatBlockCombatantMechanics = {
   readonly creatureType: import("@dnd/shared/game-facts").CreatureType;
-  readonly speeds: StatBlockMechanics["speeds"];
-  readonly abilityScores: StatBlockMechanics["abilityScores"];
-  readonly savingThrowModifiers: ReadonlyArray<
-    NonNullable<StatBlockMechanics["savingThrowModifiers"]>[number]
-  >;
-  readonly skillModifiers: ReadonlyArray<
-    NonNullable<StatBlockMechanics["skillModifiers"]>[number]
-  >;
+  readonly speeds: readonly BattleStatBlockRuntimeSpeed[];
+  readonly abilityScores: SixAbilityScores;
+  readonly savingThrowModifiers: readonly CreatureSavingThrowModifier[];
+  readonly skillModifiers: readonly CreatureSkillModifier[];
   readonly vulnerabilities: readonly DamageType[];
   readonly resistances: readonly DamageType[];
   readonly immunities: {
     readonly damageTypes: readonly DamageType[];
-    readonly conditions: ReadonlyArray<
-      NonNullable<
-        NonNullable<StatBlockMechanics["immunities"]>["conditions"]
-      >[number]
-    >;
+    readonly conditions: readonly SurfaceCondition[];
   };
-  readonly specialSenses: ReadonlyArray<
-    NonNullable<StatBlockMechanics["senses"]>[number]
-  >;
+  readonly specialSenses: readonly BattleStatBlockRuntimeSense[];
+  readonly initiativeModifier: BattleStatBlockRuntimeFacts["initiativeModifier"];
+  readonly initiativeScore: BattleStatBlockRuntimeFacts["initiativeScore"];
+  readonly passivePerception: BattleStatBlockRuntimeFacts["passivePerception"];
 };
 
 /** Durable Stat Block battle projection retained after admission is consumed. */

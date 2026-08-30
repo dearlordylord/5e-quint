@@ -1,3 +1,6 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
@@ -5,6 +8,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard spell.invocation-cloudkill-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
@@ -16,7 +20,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
-import { Match, Schema, Tuple } from "effect";
+import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import {
   MovementFeet,
@@ -53,6 +57,10 @@ import {
   TRANSMUTED_SPELL_DAMAGE_TYPES,
 } from "./battle-reducer/metamagic-transmuted-facts.ts";
 import { attackExecutionSelectionKey } from "./battle-action-options.ts";
+import {
+  StatBlockAttackDamageSelection,
+  statBlockAttackDamageSelectionKey,
+} from "./stat-block-attack-damage-selection.ts";
 
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
@@ -533,33 +541,21 @@ export const BattleAttackExecutionAbilitySchema = Schema.Union([
   Schema.Literal("spellcasting"),
 ]);
 
-const CharacterAttackExecutionSelectionSchema = Schema.Struct({
+export const CharacterAttackExecutionSelectionSchema = Schema.Struct({
   procedureRef: BattleAttackProcedureExecutionRef,
   attackAbility: BattleAttackExecutionAbilitySchema,
   attackDamageType: DamageTypeSchema,
   attackName: Schema.optionalKey(Schema.Never),
+  statBlockDamageSelection: Schema.optionalKey(Schema.Never),
 });
 
-const RolledStatBlockAttackExecutionSelectionSchema = Schema.Struct({
+const StatBlockAttackExecutionSelectionSchema = Schema.Struct({
   procedureRef: BattleStatBlockProcedureExecutionRef,
   attackAbility: Schema.optionalKey(Schema.Never),
   attackDamageType: Schema.optionalKey(Schema.Never),
   attackName: Schema.optionalKey(Schema.Never),
-  statBlockDamageNotation: Schema.optionalKey(Schema.Never),
+  statBlockDamageSelection: StatBlockAttackDamageSelection,
 });
-
-const StaticStatBlockAttackExecutionSelectionSchema = Schema.Struct({
-  procedureRef: BattleStatBlockProcedureExecutionRef,
-  attackAbility: Schema.optionalKey(Schema.Never),
-  attackDamageType: Schema.optionalKey(Schema.Never),
-  attackName: Schema.optionalKey(Schema.Never),
-  statBlockDamageNotation: Schema.Literal("static"),
-});
-
-const StatBlockAttackExecutionSelectionSchema = Schema.Union([
-  RolledStatBlockAttackExecutionSelectionSchema,
-  StaticStatBlockAttackExecutionSelectionSchema,
-]);
 
 export const BattleAttackExecutionSelectionSchema = Schema.Union([
   CharacterAttackExecutionSelectionSchema,
@@ -590,9 +586,7 @@ export const battleInterruptAttackExecutionSelectionWithFields = <
 ) =>
   Schema.Union([
     CharacterAttackExecutionSelectionSchema.pipe(Schema.fieldsAssign(fields)),
-    StatBlockAttackExecutionSelectionSchema.mapMembers(
-      Tuple.map(Schema.fieldsAssign(fields)),
-    ),
+    StatBlockAttackExecutionSelectionSchema.pipe(Schema.fieldsAssign(fields)),
   ]);
 
 const BattleInterruptReleaseReadiedSpellSubjectSchema = Schema.Struct({
@@ -762,7 +756,7 @@ export const BattleSubjectSchema = Schema.Union([
     attackDamageType: DamageTypeSchema,
     attackName: Schema.optionalKey(Schema.Never),
     statBlockSection: Schema.optionalKey(Schema.Never),
-    statBlockDamageNotation: Schema.optionalKey(Schema.Never),
+    statBlockDamageSelection: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -773,25 +767,14 @@ export const BattleSubjectSchema = Schema.Union([
     attackDamageType: Schema.optionalKey(Schema.Never),
     attackName: Schema.optionalKey(Schema.Never),
     statBlockSection: Schema.optionalKey(Schema.Never),
-    statBlockDamageNotation: Schema.optionalKey(Schema.Never),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("attack"),
-    procedureRef: BattleStatBlockProcedureExecutionRef,
-    attackAbility: Schema.optionalKey(Schema.Never),
-    attackDamageType: Schema.optionalKey(Schema.Never),
-    attackName: Schema.optionalKey(Schema.Never),
-    statBlockSection: Schema.optionalKey(Schema.Never),
-    statBlockDamageNotation: Schema.Literal("static"),
+    statBlockDamageSelection: StatBlockAttackDamageSelection,
   }),
   Schema.Struct({
     tag: Schema.Literal("companionAttack"),
     actorId: CombatantId,
     familiarId: CombatantId,
     procedureRef: BattleStatBlockProcedureExecutionRef,
-    statBlockDamageNotation: Schema.optionalKey(Schema.Literal("static")),
+    statBlockDamageSelection: StatBlockAttackDamageSelection,
   }),
   BattleReadyActionSubjectSchema,
   Schema.Struct({
@@ -1902,7 +1885,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.actorId,
         attack.familiarId,
         attack.procedureRef,
-        attack.statBlockDamageNotation ?? "rolled",
+        statBlockAttackDamageSelectionKey(attack.statBlockDamageSelection),
       ]),
     ),
     Match.orElse((remainingSubject) =>
@@ -1913,9 +1896,6 @@ function battleSubjectKey(subject: BattleSubject): string {
             attack.actorId,
             attack.action,
             attackExecutionSelectionKey(attack),
-            "statBlockDamageNotation" in attack
-              ? (attack.statBlockDamageNotation ?? "rolled")
-              : null,
           ]),
         ),
         Match.when({ tag: "action", action: "dash" }, (action) =>

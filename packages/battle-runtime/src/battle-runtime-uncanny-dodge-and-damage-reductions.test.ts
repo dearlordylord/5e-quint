@@ -26,6 +26,7 @@ import {
   applyCondition,
   attackInitialTargetHole,
   attackRollFill,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   attackRollHoleAfterTarget,
   battleRuntimeContextForStateForTest,
   battleId,
@@ -366,14 +367,20 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.statBlockDamageNotation === "static" &&
+        battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+          act.subject,
+          "static",
+        ) &&
         act.presentation.kind === "attack" &&
         act.presentation.name === "Scimitar",
     )?.subject;
     if (
       subject?.tag !== "action" ||
       subject.action !== "attack" ||
-      subject.statBlockDamageNotation !== "static"
+      !battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        subject,
+        "static",
+      )
     ) {
       throw new Error("Expected the discovered static Scimitar attack.");
     }

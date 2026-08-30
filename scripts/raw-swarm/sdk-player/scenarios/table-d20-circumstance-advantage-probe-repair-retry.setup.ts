@@ -5,16 +5,33 @@ export const setupScenario: ScenarioSetup = (context) => {
   const ridingHorseId = sdk.combatantId("riding-horse");
   const wolfId = sdk.combatantId("wolf");
 
+  const ridingHorseStatBlock = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_riding_horse",
+  );
+  const wolfStatBlock = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_wolf",
+  );
+  if (ridingHorseStatBlock === undefined || wolfStatBlock === undefined) {
+    return {
+      kind: "obstructed",
+      obstruction:
+        "The supplied Stat Block catalog is missing a required scenario combatant.",
+      observation: {
+        stage: "required-stat-block-selection",
+        ridingHorseFound: ridingHorseStatBlock !== undefined,
+        wolfFound: wolfStatBlock !== undefined,
+      },
+    };
+  }
+
   const ridingHorse = sdk.battleCreatureInitFromStatBlock({
     combatantId: ridingHorseId,
-    statBlock: context.statBlockCatalog.requireStatBlock(
-      "stat_block_riding_horse",
-    ),
+    statBlock: ridingHorseStatBlock,
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(ridingHorse)) {
+  if (sdk.isFailure(ridingHorse)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(ridingHorse.failure),
@@ -24,12 +41,12 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const wolf = sdk.battleCreatureInitFromStatBlock({
     combatantId: wolfId,
-    statBlock: context.statBlockCatalog.requireStatBlock("stat_block_wolf"),
+    statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(13),
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(wolf)) {
+  if (sdk.isFailure(wolf)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(wolf.failure),
@@ -41,7 +58,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     battleId: sdk.battleId("horse-wolf-pursuit"),
     combatants: [ridingHorse.success, wolf.success],
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(battle.failure),
@@ -70,7 +87,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],
@@ -83,7 +100,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ],
     objects: [],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
       obstruction: sdk.scenarioSessionIssueMessage(session.failure),
@@ -103,7 +120,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       source: "disadvantage",
     },
   });
-  if (sdk.isLeft(tableCircumstance)) {
+  if (sdk.isFailure(tableCircumstance)) {
     return {
       kind: "obstructed",
       obstruction: tableCircumstance.failure.message,

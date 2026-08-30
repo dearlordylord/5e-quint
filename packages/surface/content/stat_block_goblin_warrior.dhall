@@ -1,133 +1,108 @@
-let DiceExpr
-    : Type
-    = { dice : Natural, dieSize : Natural, flat : Optional Natural }
+let T = ./_stat_block_types.dhall
 
-let DamageAmount
-    : Type
-    = { expr : DiceExpr, kind : Text, static : Optional Natural }
-
-let AdvantageCondition
-    : Type
-    = { kind : Text }
-
-let HitEffect
-    : Type
-    = { amount : DamageAmount
-      , damageType : Text
-      , kind : Text
-      , when : Optional AdvantageCondition
-      }
-
-let AttackRange
-    : Type
-    = { long : Natural, normal : Natural }
-
-let Attack
-    : Type
-    = { ammunition : Optional Text
-      , attackAbility : Text
-      , attackBonus : { kind : Text, value : Integer }
-      , attackType : Text
-      , name : Text
-      , onHit : List HitEffect
-      , rangeFeet : Optional AttackRange
-      , reachFeet : Optional Natural
-      }
-
-let scimitar : Attack =
-      { ammunition = None Text
-      , attackAbility = "dex"
-      , attackBonus = { kind = "literal", value = +4 }
-      , attackType = "melee"
-      , name = "Scimitar"
-      , onHit =
-        [ { amount =
-            { expr = { dice = 1, dieSize = 6, flat = Some 2 }
-            , kind = "fixed"
-            , static = Some 5
+in  { challengeRating = 0.25
+    , id = "stat_block_goblin_warrior"
+    , kind = "statBlock"
+    , name = "Goblin Warrior"
+    , provenance =
+      { kind = "srd-5.2.1", section = "Monsters/Monsters-E-G.md:721-748" }
+    , statBlock =
+      { abilityScores =
+        { cha = 8, con = 10, dex = 15, int = 10, str = 8, wis = 8 }
+      , ac.value = { kind = "literal", value = 15 }
+      , actions =
+        [ T.executable
+            { procedureOrdinal = 1
+            , procedure =
+                T.meleeAttack
+                  { name = "Scimitar"
+                  , attackAbility = "dex"
+                  , attackBonus = +4
+                  , reachFeet = 5
+                  , onHit =
+                    { first =
+                        T.damage
+                          { damageType = "slashing"
+                          , dice = 1
+                          , dieSize = 6
+                          , flat = Some +2
+                          , static = 5
+                          }
+                    , rest =
+                          [ T.advantageDamage
+                              { damageType = "slashing"
+                              , dice = 1
+                              , dieSize = 4
+                              , flat = None Integer
+                              , static = 2
+                              }
+                          ]
+                        : List T.Effect
+                    }
+                  }
             }
-          , damageType = "slashing"
-          , kind = "damage"
-          , when = None AdvantageCondition
-          }
-        , { amount =
-            { expr = { dice = 1, dieSize = 4, flat = None Natural }
-            , kind = "fixed"
-            , static = Some 2
+        , T.executable
+            { procedureOrdinal = 2
+            , procedure =
+                T.rangedAttack
+                  { name = "Shortbow"
+                  , attackAbility = "dex"
+                  , attackBonus = +4
+                  , rangeFeet = { normal = 80, long = 320 }
+                  , ammunition = Some "arrow"
+                  , onHit =
+                    { first =
+                        T.damage
+                          { damageType = "piercing"
+                          , dice = 1
+                          , dieSize = 6
+                          , flat = Some +2
+                          , static = 5
+                          }
+                    , rest =
+                          [ T.advantageDamage
+                              { damageType = "piercing"
+                              , dice = 1
+                              , dieSize = 4
+                              , flat = None Integer
+                              , static = 2
+                              }
+                          ]
+                        : List T.Effect
+                    }
+                  }
             }
-          , damageType = "slashing"
-          , kind = "conditional_bonus_damage"
-          , when = Some { kind = "attack_roll_had_advantage" }
-          }
         ]
-      , rangeFeet = None AttackRange
-      , reachFeet = Some 5
-      }
-
-let shortbow : Attack =
-      { attackAbility = "dex"
-      , attackBonus = { kind = "literal", value = +4 }
-      , attackType = "ranged"
-      , ammunition = Some "arrow"
-      , name = "Shortbow"
-      , onHit =
-        [ { amount =
-            { expr = { dice = 1, dieSize = 6, flat = Some 2 }
-            , kind = "fixed"
-            , static = Some 5
+      , alignment = { morality = "neutral", order = "chaotic" }
+      , bonusActions =
+        [ T.executable
+            { procedureOrdinal = 1
+            , procedure =
+                T.actionOption
+                  { name = "Nimble Escape"
+                  , options = { first = "disengage", rest = [ "hide" ] }
+                  }
             }
-          , damageType = "piercing"
-          , kind = "damage"
-          , when = None AdvantageCondition
-          }
-        , { amount =
-            { expr = { dice = 1, dieSize = 4, flat = None Natural }
-            , kind = "fixed"
-            , static = Some 2
-            }
-          , damageType = "piercing"
-          , kind = "conditional_bonus_damage"
-          , when = Some { kind = "attack_roll_had_advantage" }
-          }
         ]
-      , rangeFeet = Some { long = 320, normal = 80 }
-      , reachFeet = None Natural
+      , communication =
+        { kind = "spoken_and_understood"
+        , languages = { kind = "named", languages = [ "Common", "Goblin" ] }
+        }
+      , creatureType = "fey"
+      , creatureTypeTags = [ "goblinoid" ]
+      , gear =
+        [ { item = "Leather Armor" }
+        , { item = "Scimitar" }
+        , { item = "Shield" }
+        , { item = "Shortbow" }
+        ]
+      , hp = { kind = "literal", value = 10 }
+      , initiative = { modifier = 2, score = 12 }
+      , passivePerception = 9
+      , savingThrowModifiers = [ { ability = "dex", modifier = 2 } ]
+      , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+      , size = "small"
+      , skillModifiers = [ { modifier = 6, skill = "stealth" } ]
+      , speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" } ]
       }
-
-in  { id = "stat_block_goblin_warrior"
-, kind = "statBlock"
-, name = "Goblin Warrior"
-, challengeRating = 0.25
-, provenance =
-  { kind = "srd-5.2.1"
-  , section = "Monsters/Monsters-E-G.md:721-748"
-  }
-, statBlock =
-  { abilityScores =
-    { cha = 8
-    , con = 10
-    , dex = 15
-    , int = 10
-    , str = 8
-    , wis = 8
     }
-  , ac = { kind = "literal", value = +15 }
-  , actions =
-    { attacks =
-      [ scimitar, shortbow ]
-    }
-  , bonusActions =
-    { actionOptions =
-      [ { name = "Nimble Escape", options = [ "disengage", "hide" ] } ]
-    }
-  , creatureType = "fey"
-  , displayName = "Goblin Warrior"
-  , hp = { kind = "literal", value = +10 }
-  , initiativeModifier = +2
-  , languages = [ "Common", "Goblin" ]
-  , savingThrowModifiers = [ { ability = "dex", modifier = +2 } ]
-  , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
-  , size = "small"
-  , speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" } ]
-  }
-}

@@ -1,5 +1,6 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form unit-feature.light-extra-attack-damage-ability-modifier unit-feature.martial-arts-attack-projection unit-feature.paladin-sacred-weapon spell.invocation-weapon-attack-override spell.invocation-magic-weapon-enhancement spell.invocation-self-transformation-mode
-// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack unit-feature.druid-wild-shape-known-form unit-feature.light-extra-attack-damage-ability-modifier unit-feature.martial-arts-attack-projection unit-feature.paladin-sacred-weapon spell.invocation-weapon-attack-override spell.invocation-magic-weapon-enhancement spell.invocation-self-transformation-mode
+// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 
 import { nonEmptyArrayProperty } from "../optional-property.ts";
@@ -65,7 +66,6 @@ import {
 import {
   ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
   ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE,
-  type StatBlockMultiattackActionResource,
 } from "./battle-runtime-protocol.ts";
 import { isStatBlockMultiattackActionResource } from "./action-resource-kinds.ts";
 import { weaponAttackDamageEnhancementBonus } from "./spell-modifier-binding.ts";
@@ -392,15 +392,9 @@ export function attackActionOptionForSubject(
     { readonly tag: "action"; readonly action: "attack" }
   >,
 ): BoundSupportedAttackActionOption | undefined {
-  return attackActionOptionsForActor(state, subject.actorId).find((attack) => {
-    return (
-      boundAttackExecutionSelectionMatchesOption(subject, attack) &&
-      (attack.kind === "statBlockAttack"
-        ? attack.damageNotation ===
-          (subject.statBlockDamageNotation ?? "rolled")
-        : subject.statBlockDamageNotation === undefined)
-    );
-  });
+  return attackActionOptionsForActor(state, subject.actorId).find((attack) =>
+    boundAttackExecutionSelectionMatchesOption(subject, attack),
+  );
 }
 
 export function attackActionOptionsForActor(
@@ -462,14 +456,12 @@ export function attackActionOptionsForActor(
 
   if (actor?.origin.kind === "statBlock") {
     const origin = actor.origin;
-    const multiattackResources =
-      state.currentTurnResources.actionResources.filter(
-        (resource): resource is StatBlockMultiattackActionResource =>
-          isStatBlockMultiattackActionResource(resource, actorId),
+    const hasMultiattackContinuation =
+      hasStatBlockMultiattackContinuationResource(
+        state.currentTurnResources.actionResources,
+        actorId,
+        origin.execution,
       );
-    const multiattackAttackProcedureRefs = multiattackResources.map(
-      (resource) => resource.attackProcedureRef,
-    );
     return statBlockAttackActionOptions(origin.execution).filter(
       (option) =>
         option.procedureRef !== undefined &&
@@ -477,9 +469,16 @@ export function attackActionOptionsForActor(
           origin.execution,
           option.procedureRef,
         ) &&
-        (multiattackAttackProcedureRefs.length === 0 ||
+        (!hasMultiattackContinuation ||
           (option.procedureRef !== undefined &&
-            multiattackAttackProcedureRefs.includes(option.procedureRef))) &&
+            state.currentTurnResources.actionResources.some((resource) =>
+              statBlockMultiattackActionResourceMatchesProcedure(
+                resource,
+                actorId,
+                origin.execution,
+                option.procedureRef,
+              ),
+            ))) &&
         ammunitionForAttackIsAvailable(actor, option),
     );
   }

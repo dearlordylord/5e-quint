@@ -1123,7 +1123,9 @@ function fireImmuneHumanoidStatBlock() {
     ...base,
     statBlock: {
       ...base.statBlock,
-      immunities: { damageTypes: ["fire"] as const },
+      immunities: decodeCreatureImmunityDeclarationSync({
+        damageTypes: ["fire"],
+      }),
     },
   };
 }

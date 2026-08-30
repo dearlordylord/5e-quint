@@ -1,389 +1,975 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-slow-active-penalties
 
 module battleRuntimeSlowActivePenaltiesMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import spellSlowActivePenaltiesCore.* from "../shared-algebras/proofs/rule-core/spell-slow-active-penalties-core"
+  import spellSlowStatBlockMultiattackCore.* from "../shared-algebras/proofs/rule-core/spell-slow-stat-block-multiattack-core"
 
-  // RAW trace:
-  // - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Slow:
-  //   failed Wisdom Saving Throws halve Speed, apply -2 AC and -2 Dexterity
-  //   Saving Throw penalties, prevent Reactions, restrict the affected target's
-  //   turns to either an Action or Bonus Action, cap the Attack action at one
-  //   attack, impose a 25 percent Somatic spell failure chance, and allow an
-  //   end-of-target-turn repeat save ending the spell on that target on success.
-  // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Slot, Concentration, Saving
-  //   Throw, Speed, Armor Class, Reaction, Area of Effect/Cube, and Spell Effect.
+  // This focused replay projects production state from the reusable semantic
+  // cores. It is intentionally still a bounded battle fixture, not a semantic
+  // owner in its own right. Generic Action and Bonus Action availability is a
+  // literal projection inputs checked against production; the Slow core
+  // contributes only its temporary legality gate.
   type Hole =
     | NoHole
     | EndTurnSave
     | SomaticFailure
 
-  type SlowActivePenaltiesScenarioOutcome = | Init | FailedSave | TargetTurn | NeedsSave | Saved | FailedAgain | SpentAction | AttackedOnce | NeedsSomaticFailure | SomaticSpellFailed | SelfFailedSave | MultiattackFailedSave | MultiattackTargetTurn | MultiattackedOnce
+  type SlowActivePenaltiesScenarioOutcome =
+    | Init
+    | FailedSave
+    | TargetTurn
+    | NeedsSave
+    | Saved
+    | FailedAgain
+    | SpentAction
+    | SpentBonusAction
+    | ConcentrationEndedAfterAction
+    | DurationExpiredAfterBonusAction
+    | AttackedOnce
+    | NeedsSomaticFailure
+    | SomaticSpellFailed
+    | SelfFailedSave
+    | PriorBonusActionReconciled
+    | CompatibleActionResourceSpent
+    | PriorCompatibleActionReconciled
+    | PriorCompatibleActionCleanup
+    | ExtraResourcesNoActionReconciled
+    | MultiattackFailedSave
+    | MultiattackTargetTurn
+    | MultiattackActivated
+    | MultiattackDispatched
+    | TwoTargetsFailedSave
+    | TwoTargetsTargetTurn
+    | TwoTargetsNeedSave
+    | OneTargetSaved
+    | ConcentrationEnded
+    | DurationExpired
+
+  type GenericActionEconomyProjection = {
+    bonusActionAvailable: bool,
+    actionTakenThisTurn: bool,
+    actionTakingResourceCount: int,
+  }
+
+  pure def qActionEconomyAfterSlowCast: GenericActionEconomyProjection = {
+    bonusActionAvailable: true,
+    actionTakenThisTurn: true,
+    actionTakingResourceCount: 0,
+  }
 
   type SlowActivePenaltiesWitnessState = {
     currentTurnRole: str,
     turnActionOrBonusChoice: str,
     targetTurnCanSpendAction: bool,
     targetTurnCanSpendBonusAction: bool,
+    targetCanMakeAttack: bool,
     extraAttackResourceCount: int,
+    actionTakenThisTurn: bool,
+    actionTakingResourceCount: int,
+    casterTurnCanSpendAction: bool,
     casterTurnCanSpendBonusAction: bool,
-    statBlockMultiattackResourceCount: int,
     targetSlowed: bool,
+    secondTargetSlowed: bool,
+    multiattackTargetSlowed: bool,
+    affectedTargetCount: int,
     targetSpeedFeet: int,
     targetArmorClass: int,
     dexteritySavingThrowDelta: int,
     targetCanReact: bool,
     casterConcentrating: bool,
+    somaticFailurePercent: int,
+    somaticFailureSpentCastResources: bool,
+    somaticSpellEffectMayApply: bool,
+    somaticFailureStartedConcentration: bool,
+    statBlockMultiattackResourceCount: int,
+    statBlockMultiattackDispatchKind: str,
+    statBlockMultiattackPendingProcedureRefs: List[int],
+    statBlockMultiattackSourceOwnerMatches: bool,
+    statBlockMultiattackSourceProcedureMatches: bool,
+    statBlockMultiattackContinuationOpen: bool,
+    statBlockMultiattackChosenProcedurePermitted: bool,
     scenarioOutcome: SlowActivePenaltiesScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   }
 
   var qState: SlowActivePenaltiesWitnessState
 
-  action recordSlowState(
+  pure def qSlowSource: SlowEffectSource = {
+    casterRef: 0,
+    procedureExecutionRef: 7,
+  }
+
+  pure def qSingleTargetSlow: SlowOccurrenceState =
+    applySlowInitialFailedSaves(
+      initialSlowOccurrenceState,
+      qSlowSource,
+      Set(1)
+    ).occurrence
+
+  pure def qTwoTargetSlow: SlowOccurrenceState =
+    applySlowInitialFailedSaves(
+      initialSlowOccurrenceState,
+      qSlowSource,
+      Set(1, 2)
+    ).occurrence
+
+  pure def qSelfSlow: SlowOccurrenceState =
+    applySlowInitialFailedSaves(
+      initialSlowOccurrenceState,
+      qSlowSource,
+      Set(0)
+    ).occurrence
+
+  pure def qMultiattackTargetSlow: SlowOccurrenceState =
+    applySlowInitialFailedSaves(
+      initialSlowOccurrenceState,
+      qSlowSource,
+      Set(3)
+    ).occurrence
+
+  pure def qMultiattackBinding: SlowStatBlockMultiattackBinding = {
+    sourceOwnerRef: 3,
+    multiattackProcedureExecutionRef: 4,
+  }
+
+  pure def qMultiattackProfile: SlowStatBlockMultiattackProfile = {
+    binding: qMultiattackBinding,
+    dispatchProfile: { dispatchProcedureRefs: List(0, 0, 1) },
+  }
+
+  pure def qSlowedMultiattackActivated: SlowStatBlockMultiattackState =
+    activateSlowStatBlockMultiattack(
+      initialSlowStatBlockMultiattackState,
+      qMultiattackTargetSlow,
+      qMultiattackProfile
+    )
+
+  pure def qSlowedMultiattackDispatched: SlowStatBlockMultiattackState =
+    resolveSlowStatBlockMultiattackDispatch(
+      qSlowedMultiattackActivated,
+      {
+        binding: qMultiattackBinding,
+        attackProcedureRef: 1,
+      }
+    )
+
+  pure def qTurnChoice(turn: SlowTargetTurnState): str =
+    match turn {
+      | SlowTurnUnrestricted => "notRestricted"
+      | SlowTurnRestrictedUnused => "notChosen"
+      | SlowTurnRestrictedAttackActionOneAttackAvailable => "action"
+      | SlowTurnRestrictedAttackActionNoAttackAvailable => "action"
+      | SlowTurnRestrictedOtherActionUsed => "action"
+      | SlowTurnRestrictedBonusActionUsed => "bonusAction"
+    }
+
+  pure def qTurnCanMakeAttack(turn: SlowTargetTurnState): bool =
+    match turn {
+      | SlowTurnUnrestricted => true
+      | SlowTurnRestrictedUnused => true
+      | SlowTurnRestrictedAttackActionOneAttackAvailable => true
+      | _ => false
+    }
+
+  pure def qSomaticFailurePercent(
+    somatic: SlowSomaticResolutionState
+  ): int =
+    match somatic {
+      | SlowSomaticFailureOutcomeRequired => slowSomaticFailurePercent
+      | _ => 0
+    }
+
+  pure def qMultiattackDispatchKind(
+    multiattack: SlowStatBlockMultiattackState
+  ): str =
+    if (slowStatBlockMultiattackDispatchResourceCount(multiattack) == 0)
+      "none"
+    else if (slowStatBlockMultiattackOneListedAllowanceActive(multiattack))
+      "oneListedChoice"
+    else "listedOccurrences"
+
+  pure def qMultiattackSourceOwnerObserved(
+    multiattack: SlowStatBlockMultiattackState
+  ): bool = all {
+    slowStatBlockMultiattackContinuationOpen(multiattack),
+    slowStatBlockMultiattackSourceOwnerMatches(
+      multiattack,
+      qMultiattackBinding.sourceOwnerRef
+    ),
+  }
+
+  pure def qMultiattackSourceProcedureObserved(
+    multiattack: SlowStatBlockMultiattackState
+  ): bool = all {
+    slowStatBlockMultiattackContinuationOpen(multiattack),
+    slowStatBlockMultiattackProcedureExecutionMatches(
+      multiattack,
+      qMultiattackBinding.multiattackProcedureExecutionRef
+    ),
+  }
+
+  pure def qMultiattackChosenProcedurePermitted(
+    multiattack: SlowStatBlockMultiattackState
+  ): bool =
+    canResolveSlowStatBlockMultiattackDispatch(
+      multiattack,
+      {
+        binding: qMultiattackBinding,
+        attackProcedureRef: 1,
+      }
+    )
+
+  action recordSlowStateWithGenericActionEconomy(
     currentTurnRole: str,
-    turnActionOrBonusChoice: str,
-    targetTurnCanSpendAction: bool,
-    targetTurnCanSpendBonusAction: bool,
-    extraAttackResourceCount: int,
-    casterTurnCanSpendBonusAction: bool,
-    statBlockMultiattackResourceCount: int,
-    targetSlowed: bool,
-    targetSpeedFeet: int,
-    targetArmorClass: int,
-    dexteritySavingThrowDelta: int,
-    targetCanReact: bool,
-    casterConcentrating: bool,
+    occurrence: SlowOccurrenceState,
+    turn: SlowTargetTurnState,
+    genericActionEconomy: GenericActionEconomyProjection,
+    somatic: SlowSomaticResolutionState,
+    multiattack: SlowStatBlockMultiattackState,
     scenarioOutcome: SlowActivePenaltiesScenarioOutcome,
     protocol: WitnessProtocol[Hole],
   ): bool = all {
     qState' = {
       currentTurnRole: currentTurnRole,
-      turnActionOrBonusChoice: turnActionOrBonusChoice,
-      targetTurnCanSpendAction: targetTurnCanSpendAction,
-      targetTurnCanSpendBonusAction: targetTurnCanSpendBonusAction,
-      extraAttackResourceCount: extraAttackResourceCount,
-      casterTurnCanSpendBonusAction: casterTurnCanSpendBonusAction,
-      statBlockMultiattackResourceCount: statBlockMultiattackResourceCount,
-      targetSlowed: targetSlowed,
-      targetSpeedFeet: targetSpeedFeet,
-      targetArmorClass: targetArmorClass,
-      dexteritySavingThrowDelta: dexteritySavingThrowDelta,
-      targetCanReact: targetCanReact,
-      casterConcentrating: casterConcentrating,
+      turnActionOrBonusChoice: qTurnChoice(turn),
+      targetTurnCanSpendAction:
+        currentTurnRole != "caster" and
+          genericActionEconomy.actionTakingResourceCount > 0 and
+          slowTurnCanSpendAction(turn),
+      targetTurnCanSpendBonusAction:
+        currentTurnRole != "caster" and
+          genericActionEconomy.bonusActionAvailable and
+          slowTurnCanSpendBonusAction(turn),
+      targetCanMakeAttack:
+        currentTurnRole == "target" and
+          genericActionEconomy.actionTakingResourceCount > 0 and
+          qTurnCanMakeAttack(turn),
+      extraAttackResourceCount: 0,
+      actionTakenThisTurn: genericActionEconomy.actionTakenThisTurn,
+      actionTakingResourceCount:
+        genericActionEconomy.actionTakingResourceCount,
+      casterTurnCanSpendAction:
+        currentTurnRole == "caster" and
+          genericActionEconomy.actionTakingResourceCount > 0 and
+          slowTurnCanSpendAction(turn),
+      casterTurnCanSpendBonusAction:
+        currentTurnRole == "caster" and
+          genericActionEconomy.bonusActionAvailable and
+          slowTurnCanSpendBonusAction(turn),
+      targetSlowed: slowTargetAffected(occurrence, 1),
+      secondTargetSlowed: slowTargetAffected(occurrence, 2),
+      multiattackTargetSlowed: slowTargetAffected(occurrence, 3),
+      affectedTargetCount: slowAffectedTargetCount(occurrence),
+      targetSpeedFeet: slowEffectiveSpeed(occurrence, 1, 30),
+      targetArmorClass: slowEffectiveArmorClass(occurrence, 1, 10),
+      dexteritySavingThrowDelta:
+        slowDexteritySavingThrowDelta(occurrence, 1),
+      targetCanReact: slowTargetCanReact(occurrence, 1),
+      casterConcentrating: slowAffectedTargetCount(occurrence) > 0,
+      somaticFailurePercent: qSomaticFailurePercent(somatic),
+      somaticFailureSpentCastResources:
+        slowSomaticFailureSpentCastResources(somatic),
+      somaticSpellEffectMayApply: slowSomaticSpellEffectMayApply(somatic),
+      somaticFailureStartedConcentration:
+        slowSomaticFailureStartsNewConcentration(somatic),
+      statBlockMultiattackResourceCount:
+        slowStatBlockMultiattackDispatchResourceCount(multiattack),
+      statBlockMultiattackDispatchKind:
+        qMultiattackDispatchKind(multiattack),
+      statBlockMultiattackPendingProcedureRefs:
+        slowStatBlockMultiattackPendingProcedureRefs(multiattack),
+      statBlockMultiattackSourceOwnerMatches:
+        qMultiattackSourceOwnerObserved(multiattack),
+      statBlockMultiattackSourceProcedureMatches:
+        qMultiattackSourceProcedureObserved(multiattack),
+      statBlockMultiattackContinuationOpen:
+        slowStatBlockMultiattackContinuationOpen(multiattack),
+      statBlockMultiattackChosenProcedurePermitted:
+        qMultiattackChosenProcedurePermitted(multiattack),
       scenarioOutcome: scenarioOutcome,
       protocol: protocol,
     },
   }
 
+  action recordSlowState(
+    currentTurnRole: str,
+    occurrence: SlowOccurrenceState,
+    turn: SlowTargetTurnState,
+    somatic: SlowSomaticResolutionState,
+    multiattack: SlowStatBlockMultiattackState,
+    scenarioOutcome: SlowActivePenaltiesScenarioOutcome,
+    protocol: WitnessProtocol[Hole],
+  ): bool =
+    recordSlowStateWithGenericActionEconomy(
+      currentTurnRole,
+      occurrence,
+      turn,
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: false,
+        actionTakingResourceCount: 1,
+      },
+      somatic,
+      multiattack,
+      scenarioOutcome,
+      protocol
+    )
+
   action init = recordSlowState(
     "caster",
-    "notRestricted",
-    false,
-    false,
-    0,
-    true,
-    0,
-    false,
-    30,
-    10,
-    0,
-    true,
-    false,
+    initialSlowOccurrenceState,
+    SlowTurnUnrestricted,
+    initialSlowSomaticResolutionState,
+    initialSlowStatBlockMultiattackState,
     Init,
-    witnessInit(NoHole))
+    witnessInit(NoHole)
+  )
 
   action doCastSlowFailedSave = all {
     qState.scenarioOutcome == Init,
-    recordSlowState(
+    recordSlowStateWithGenericActionEconomy(
       "caster",
-      "notRestricted",
-      false,
-      false,
-      0,
-      true,
-      0,
-      true,
-      15,
-      8,
-      -2,
-      false,
-      true,
+      qSingleTargetSlow,
+      SlowTurnUnrestricted,
+      qActionEconomyAfterSlowCast,
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
       FailedSave,
-      witnessResolved(NoHole)),
+      witnessResolved(NoHole)
+    ),
   }
 
   action doEndCasterTurn = all {
     qState.scenarioOutcome == FailedSave,
     recordSlowState(
       "target",
-      "notChosen",
-      true,
-      true,
-      0,
-      false,
-      0,
-      true,
-      15,
-      8,
-      -2,
-      false,
-      true,
+      qSingleTargetSlow,
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
       TargetTurn,
-      witnessResolved(NoHole)),
+      witnessResolved(NoHole)
+    ),
   }
 
   action doRequestEndTurnSave = all {
     qState.scenarioOutcome == TargetTurn,
+    requestSlowRepeatSave(qSingleTargetSlow, 1) != SlowRepeatSaveNotRequired,
     recordSlowState(
       "target",
-      "notChosen",
-      true,
-      true,
-      0,
-      false,
-      0,
-      true,
-      15,
-      8,
-      -2,
-      false,
-      true,
+      qSingleTargetSlow,
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
       NeedsSave,
-      witnessNeedsHoles(Set(EndTurnSave))),
+      witnessNeedsHoles(Set(EndTurnSave))
+    ),
   }
 
-  action doFillEndTurnSaveSuccess = all {
-    qState.scenarioOutcome == NeedsSave,
-    qState.protocol.holes == Set(EndTurnSave),
-    recordSlowState(
-      "caster",
-      "notRestricted",
-      false,
-      false,
-      0,
-      true,
-      0,
-      false,
-      30,
-      10,
-      0,
-      true,
-      false,
-      Saved,
-      witnessResolved(NoHole)),
+  action doFillEndTurnSaveSuccess = {
+    val request = requestSlowRepeatSave(qSingleTargetSlow, 1)
+    val saved = applySlowRepeatSaveOutcome(
+      qSingleTargetSlow,
+      request,
+      SlowSaveSucceeded
+    )
+    all {
+      qState.scenarioOutcome == NeedsSave,
+      qState.protocol.holes == Set(EndTurnSave),
+      saved.concentrationCommand == SlowSourceConcentrationEndRequired,
+      recordSlowState(
+        "caster",
+        saved.occurrence,
+        SlowTurnUnrestricted,
+        initialSlowSomaticResolutionState,
+        initialSlowStatBlockMultiattackState,
+        Saved,
+        witnessResolved(NoHole)
+      ),
+    }
   }
 
-  action doFillEndTurnSaveFailure = all {
-    qState.scenarioOutcome == NeedsSave,
-    qState.protocol.holes == Set(EndTurnSave),
-    recordSlowState(
-      "caster",
-      "notRestricted",
-      false,
-      false,
-      0,
-      true,
-      0,
-      true,
-      15,
-      8,
-      -2,
-      false,
-      true,
-      FailedAgain,
-      witnessResolved(NoHole)),
+  action doFillEndTurnSaveFailure = {
+    val request = requestSlowRepeatSave(qSingleTargetSlow, 1)
+    val failed = applySlowRepeatSaveOutcome(
+      qSingleTargetSlow,
+      request,
+      SlowSaveFailed
+    )
+    all {
+      qState.scenarioOutcome == NeedsSave,
+      qState.protocol.holes == Set(EndTurnSave),
+      recordSlowState(
+        "caster",
+        failed.occurrence,
+        SlowTurnUnrestricted,
+        initialSlowSomaticResolutionState,
+        initialSlowStatBlockMultiattackState,
+        FailedAgain,
+        witnessResolved(NoHole)
+      ),
+    }
   }
 
-  action doSpendTargetAction = all {
-    qState.scenarioOutcome == TargetTurn,
-    recordSlowState(
-      "target",
-      "action",
-      false,
-      false,
-      0,
-      false,
-      0,
-      true,
-      15,
-      8,
-      -2,
-      false,
-      true,
-      SpentAction,
-      witnessResolved(NoHole)),
+  action doSpendTargetAction = {
+    val spent = applySlowTurnAction(
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
+      SlowOtherAction
+    )
+    all {
+      qState.scenarioOutcome == TargetTurn,
+      recordSlowStateWithGenericActionEconomy(
+        "target",
+        qSingleTargetSlow,
+        spent,
+        {
+          bonusActionAvailable: true,
+          actionTakenThisTurn: true,
+          actionTakingResourceCount: 0,
+        },
+        initialSlowSomaticResolutionState,
+        initialSlowStatBlockMultiattackState,
+        SpentAction,
+        witnessResolved(NoHole)
+      ),
+    }
   }
 
-  action doMakeTargetAttack = all {
-    qState.scenarioOutcome == TargetTurn,
-    recordSlowState(
-      "target",
-      "action",
-      false,
-      false,
-      0,
-      false,
-      0,
-      true,
-      15,
-      8,
-      -2,
-      false,
-      true,
-      AttackedOnce,
-      witnessResolved(NoHole)),
+  action doSpendTargetBonusAction = {
+    val spent = applySlowTurnBonusAction(
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      )
+    )
+    all {
+      qState.scenarioOutcome == TargetTurn,
+      recordSlowStateWithGenericActionEconomy(
+        "target",
+        qSingleTargetSlow,
+        spent,
+        {
+          bonusActionAvailable: false,
+          actionTakenThisTurn: false,
+          actionTakingResourceCount: 1,
+        },
+        initialSlowSomaticResolutionState,
+        initialSlowStatBlockMultiattackState,
+        SpentBonusAction,
+        witnessResolved(NoHole)
+      ),
+    }
   }
 
-  action doRequestSomaticFailure = all {
-    qState.scenarioOutcome == TargetTurn,
-    recordSlowState(
-      "target",
-      "notChosen",
-      true,
-      true,
-      0,
-      false,
-      0,
-      true,
-      15,
-      8,
-      -2,
-      false,
-      true,
-      NeedsSomaticFailure,
-      witnessNeedsHoles(Set(SomaticFailure))),
+  action doEndSlowConcentrationAfterAction = {
+    val spent = applySlowTurnAction(
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
+      SlowOtherAction
+    )
+    val cleaned = applySlowOccurrenceCleanupSignal(
+      qSingleTargetSlow,
+      SlowSourceConcentrationEnded({ source: qSlowSource })
+    )
+    val reconciled = reconcileSlowTargetTurnAfterOccurrenceTransition(
+      cleaned.occurrence,
+      1,
+      spent
+    )
+    all {
+      qState.scenarioOutcome == SpentAction,
+      recordSlowStateWithGenericActionEconomy(
+        "target",
+        cleaned.occurrence,
+        reconciled,
+        {
+          bonusActionAvailable: true,
+          actionTakenThisTurn: true,
+          actionTakingResourceCount: 0,
+        },
+        initialSlowSomaticResolutionState,
+        initialSlowStatBlockMultiattackState,
+        ConcentrationEndedAfterAction,
+        witnessResolved(NoHole)
+      ),
+    }
   }
 
-  action doFillSomaticSpellFailure = all {
-    qState.scenarioOutcome == NeedsSomaticFailure,
-    qState.protocol.holes == Set(SomaticFailure),
-    recordSlowState(
-      "target",
-      "bonusAction",
-      false,
-      false,
-      0,
-      false,
-      0,
-      true,
-      15,
-      8,
-      -2,
-      false,
-      true,
-      SomaticSpellFailed,
-      witnessResolved(NoHole)),
+  action doExpireSlowDurationAfterBonusAction = {
+    val spent = applySlowTurnBonusAction(
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      )
+    )
+    val cleaned = applySlowOccurrenceCleanupSignal(
+      qSingleTargetSlow,
+      SlowDurationExpired({ source: qSlowSource })
+    )
+    val reconciled = reconcileSlowTargetTurnAfterOccurrenceTransition(
+      cleaned.occurrence,
+      1,
+      spent
+    )
+    all {
+      qState.scenarioOutcome == SpentBonusAction,
+      recordSlowStateWithGenericActionEconomy(
+        "target",
+        cleaned.occurrence,
+        reconciled,
+        {
+          bonusActionAvailable: false,
+          actionTakenThisTurn: false,
+          actionTakingResourceCount: 1,
+        },
+        initialSlowSomaticResolutionState,
+        initialSlowStatBlockMultiattackState,
+        DurationExpiredAfterBonusAction,
+        witnessResolved(NoHole)
+      ),
+    }
+  }
+
+  action doMakeTargetAttack = {
+    val attackAction = applySlowTurnAction(
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
+      SlowAttackAction
+    )
+    val attacked = applySlowAttackActionAttack(attackAction)
+    all {
+      qState.scenarioOutcome == TargetTurn,
+      recordSlowStateWithGenericActionEconomy(
+        "target",
+        qSingleTargetSlow,
+        attacked,
+        {
+          bonusActionAvailable: true,
+          actionTakenThisTurn: true,
+          actionTakingResourceCount: 0,
+        },
+        initialSlowSomaticResolutionState,
+        initialSlowStatBlockMultiattackState,
+        AttackedOnce,
+        witnessResolved(NoHole)
+      ),
+    }
+  }
+
+  action doRequestSomaticFailure = {
+    val requested = requestSlowSomaticResolution(
+      initialSlowSomaticResolutionState,
+      qSingleTargetSlow,
+      1,
+      true
+    )
+    all {
+      qState.scenarioOutcome == TargetTurn,
+      slowSomaticOutcomeRequired(requested),
+      recordSlowState(
+        "target",
+        qSingleTargetSlow,
+        beginSlowTargetTurn(
+          qSingleTargetSlow,
+          1,
+          SlowTurnUnrestricted
+        ),
+        requested,
+        initialSlowStatBlockMultiattackState,
+        NeedsSomaticFailure,
+        witnessNeedsHoles(Set(SomaticFailure))
+      ),
+    }
+  }
+
+  action doFillSomaticSpellFailure = {
+    val requested = requestSlowSomaticResolution(
+      initialSlowSomaticResolutionState,
+      qSingleTargetSlow,
+      1,
+      true
+    )
+    val failed = applySlowSomaticFailureOutcome(
+      requested,
+      SlowSomaticSpellFailed
+    )
+    val spentBonus = applySlowTurnBonusAction(
+      beginSlowTargetTurn(
+        qSingleTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      )
+    )
+    all {
+      qState.scenarioOutcome == NeedsSomaticFailure,
+      qState.protocol.holes == Set(SomaticFailure),
+      recordSlowState(
+        "target",
+        qSingleTargetSlow,
+        spentBonus,
+        failed,
+        initialSlowStatBlockMultiattackState,
+        SomaticSpellFailed,
+        witnessResolved(NoHole)
+      ),
+    }
   }
 
   action doCastSlowSelfFailedSave = all {
     qState.scenarioOutcome == Init,
+    recordSlowStateWithGenericActionEconomy(
+      "caster",
+      qSelfSlow,
+      beginSlowTargetTurnAfterPriorAction(
+        qSelfSlow,
+        0,
+        SlowTurnUnrestricted,
+        SlowOtherAction
+      ),
+      qActionEconomyAfterSlowCast,
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      SelfFailedSave,
+      witnessResolved(NoHole)
+    ),
+  }
+
+  action doReconcileSlowAfterPriorBonusAction = all {
+    qState.scenarioOutcome == Init,
     recordSlowState(
       "caster",
-      "action",
-      false,
-      false,
-      0,
-      false,
-      0,
-      false,
-      30,
-      10,
-      0,
-      true,
-      true,
-      SelfFailedSave,
-      witnessResolved(NoHole)),
+      qSelfSlow,
+      beginSlowTargetTurnAfterPriorBonusAction(
+        qSelfSlow,
+        0,
+        SlowTurnUnrestricted
+      ),
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      PriorBonusActionReconciled,
+      witnessResolved(NoHole)
+    ),
+  }
+
+  action doSpendCompatibleActionResourceBeforeSlow = all {
+    qState.scenarioOutcome == Init,
+    recordSlowStateWithGenericActionEconomy(
+      "caster",
+      initialSlowOccurrenceState,
+      SlowTurnUnrestricted,
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 2,
+      },
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      CompatibleActionResourceSpent,
+      witnessResolved(NoHole)
+    ),
+  }
+
+  action doReconcileSlowAfterCompatibleAction = all {
+    qState.scenarioOutcome == CompatibleActionResourceSpent,
+    recordSlowStateWithGenericActionEconomy(
+      "caster",
+      qSelfSlow,
+      beginSlowTargetTurnAfterPriorAction(
+        qSelfSlow,
+        0,
+        SlowTurnUnrestricted,
+        SlowOtherAction
+      ),
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 1,
+      },
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      PriorCompatibleActionReconciled,
+      witnessResolved(NoHole)
+    ),
+  }
+
+  action doCleanupSlowAfterCompatibleAction = all {
+    qState.scenarioOutcome == PriorCompatibleActionReconciled,
+    recordSlowStateWithGenericActionEconomy(
+      "caster",
+      initialSlowOccurrenceState,
+      SlowTurnUnrestricted,
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 1,
+      },
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      PriorCompatibleActionCleanup,
+      witnessResolved(NoHole)
+    ),
+  }
+
+  action doReconcileSlowWithUntakenExtraActionResource = all {
+    qState.scenarioOutcome == Init,
+    recordSlowStateWithGenericActionEconomy(
+      "caster",
+      qSelfSlow,
+      beginSlowTargetTurn(qSelfSlow, 0, SlowTurnUnrestricted),
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: false,
+        actionTakingResourceCount: 2,
+      },
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      ExtraResourcesNoActionReconciled,
+      witnessResolved(NoHole)
+    ),
   }
 
   action doCastSlowMultiattackFailedSave = all {
     qState.scenarioOutcome == Init,
-    recordSlowState(
+    recordSlowStateWithGenericActionEconomy(
       "caster",
-      "notRestricted",
-      false,
-      false,
-      0,
-      true,
-      0,
-      false,
-      30,
-      10,
-      0,
-      true,
-      true,
+      qMultiattackTargetSlow,
+      SlowTurnUnrestricted,
+      qActionEconomyAfterSlowCast,
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
       MultiattackFailedSave,
-      witnessResolved(NoHole)),
+      witnessResolved(NoHole)
+    ),
   }
 
   action doEndCasterTurnForMultiattackTarget = all {
     qState.scenarioOutcome == MultiattackFailedSave,
     recordSlowState(
       "multiattackTarget",
-      "notChosen",
-      true,
-      true,
-      0,
-      false,
-      0,
-      false,
-      30,
-      10,
-      0,
-      true,
-      true,
+      qMultiattackTargetSlow,
+      beginSlowTargetTurn(
+        qMultiattackTargetSlow,
+        3,
+        SlowTurnUnrestricted
+      ),
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
       MultiattackTargetTurn,
-      witnessResolved(NoHole)),
+      witnessResolved(NoHole)
+    ),
   }
 
-  action doMakeSlowedStatBlockMultiattack = all {
+  action doActivateSlowedStatBlockMultiattack = all {
     qState.scenarioOutcome == MultiattackTargetTurn,
-    recordSlowState(
+    slowStatBlockMultiattackOneListedAllowanceActive(
+      qSlowedMultiattackActivated
+    ),
+    recordSlowStateWithGenericActionEconomy(
       "multiattackTarget",
-      "action",
-      false,
-      false,
-      0,
-      false,
-      0,
-      false,
-      30,
-      10,
-      0,
-      true,
-      true,
-      MultiattackedOnce,
-      witnessResolved(NoHole)),
+      qMultiattackTargetSlow,
+      applySlowTurnAction(
+        beginSlowTargetTurn(
+          qMultiattackTargetSlow,
+          3,
+          SlowTurnUnrestricted
+        ),
+        SlowAttackAction
+      ),
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 0,
+      },
+      initialSlowSomaticResolutionState,
+      qSlowedMultiattackActivated,
+      MultiattackActivated,
+      witnessResolved(NoHole)
+    ),
+  }
+
+  action doResolveChosenSlowedStatBlockMultiattackDispatch = all {
+    qState.scenarioOutcome == MultiattackActivated,
+    recordSlowStateWithGenericActionEconomy(
+      "multiattackTarget",
+      qMultiattackTargetSlow,
+      applySlowAttackActionAttack(
+        applySlowTurnAction(
+          beginSlowTargetTurn(
+            qMultiattackTargetSlow,
+            3,
+            SlowTurnUnrestricted
+          ),
+          SlowAttackAction
+        )
+      ),
+      {
+        bonusActionAvailable: true,
+        actionTakenThisTurn: true,
+        actionTakingResourceCount: 0,
+      },
+      initialSlowSomaticResolutionState,
+      qSlowedMultiattackDispatched,
+      MultiattackDispatched,
+      witnessResolved(NoHole)
+    ),
+  }
+
+  action doCastSlowTwoTargetsFailedSave = all {
+    qState.scenarioOutcome == Init,
+    recordSlowStateWithGenericActionEconomy(
+      "caster",
+      qTwoTargetSlow,
+      SlowTurnUnrestricted,
+      qActionEconomyAfterSlowCast,
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      TwoTargetsFailedSave,
+      witnessResolved(NoHole)
+    ),
+  }
+
+  action doEndCasterTurnForTwoTargets = all {
+    qState.scenarioOutcome == TwoTargetsFailedSave,
+    recordSlowState(
+      "target",
+      qTwoTargetSlow,
+      beginSlowTargetTurn(
+        qTwoTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      TwoTargetsTargetTurn,
+      witnessResolved(NoHole)
+    ),
+  }
+
+  action doRequestFirstTargetEndTurnSave = all {
+    qState.scenarioOutcome == TwoTargetsTargetTurn,
+    requestSlowRepeatSave(qTwoTargetSlow, 1) != SlowRepeatSaveNotRequired,
+    recordSlowState(
+      "target",
+      qTwoTargetSlow,
+      beginSlowTargetTurn(
+        qTwoTargetSlow,
+        1,
+        SlowTurnUnrestricted
+      ),
+      initialSlowSomaticResolutionState,
+      initialSlowStatBlockMultiattackState,
+      TwoTargetsNeedSave,
+      witnessNeedsHoles(Set(EndTurnSave))
+    ),
+  }
+
+  action doFillFirstTargetEndTurnSaveSuccess = {
+    val request = requestSlowRepeatSave(qTwoTargetSlow, 1)
+    val saved = applySlowRepeatSaveOutcome(
+      qTwoTargetSlow,
+      request,
+      SlowSaveSucceeded
+    )
+    all {
+      qState.scenarioOutcome == TwoTargetsNeedSave,
+      qState.protocol.holes == Set(EndTurnSave),
+      saved.concentrationCommand == SlowSourceConcentrationUnchanged,
+      recordSlowState(
+        "secondTarget",
+        saved.occurrence,
+        beginSlowTargetTurn(
+          saved.occurrence,
+          2,
+          SlowTurnUnrestricted
+        ),
+        initialSlowSomaticResolutionState,
+        initialSlowStatBlockMultiattackState,
+        OneTargetSaved,
+        witnessResolved(NoHole)
+      ),
+    }
+  }
+
+  action doEndSlowConcentration = {
+    val cleaned = applySlowOccurrenceCleanupSignal(
+      qSingleTargetSlow,
+      SlowSourceConcentrationEnded({ source: qSlowSource })
+    )
+    all {
+      qState.scenarioOutcome == Init,
+      recordSlowStateWithGenericActionEconomy(
+        "caster",
+        cleaned.occurrence,
+        SlowTurnUnrestricted,
+        qActionEconomyAfterSlowCast,
+        initialSlowSomaticResolutionState,
+        initialSlowStatBlockMultiattackState,
+        ConcentrationEnded,
+        witnessResolved(NoHole)
+      ),
+    }
+  }
+
+  action doExpireSlowDuration = {
+    val cleaned = applySlowOccurrenceCleanupSignal(
+      qSingleTargetSlow,
+      SlowDurationExpired({ source: qSlowSource })
+    )
+    all {
+      qState.scenarioOutcome == Init,
+      cleaned.concentrationCommand == SlowSourceConcentrationEndRequired,
+      recordSlowStateWithGenericActionEconomy(
+        "caster",
+        cleaned.occurrence,
+        SlowTurnUnrestricted,
+        qActionEconomyAfterSlowCast,
+        initialSlowSomaticResolutionState,
+        initialSlowStatBlockMultiattackState,
+        DurationExpired,
+        witnessResolved(NoHole)
+      ),
+    }
   }
 
   action doStutter = all {
     qState.scenarioOutcome.in(Set(
       Saved,
       FailedAgain,
-      SpentAction,
+      ConcentrationEndedAfterAction,
+      DurationExpiredAfterBonusAction,
       AttackedOnce,
       SomaticSpellFailed,
       SelfFailedSave,
-      MultiattackedOnce,
+      PriorBonusActionReconciled,
+      PriorCompatibleActionCleanup,
+      ExtraResourcesNoActionReconciled,
+      MultiattackDispatched,
+      OneTargetSaved,
+      ConcentrationEnded,
+      DurationExpired
     )),
-    recordSlowState(
-      qState.currentTurnRole,
-      qState.turnActionOrBonusChoice,
-      qState.targetTurnCanSpendAction,
-      qState.targetTurnCanSpendBonusAction,
-      qState.extraAttackResourceCount,
-      qState.casterTurnCanSpendBonusAction,
-      qState.statBlockMultiattackResourceCount,
-      qState.targetSlowed,
-      qState.targetSpeedFeet,
-      qState.targetArmorClass,
-      qState.dexteritySavingThrowDelta,
-      qState.targetCanReact,
-      qState.casterConcentrating,
-      qState.scenarioOutcome,
-      qState.protocol,
-    ),
+    qState' = qState,
   }
 
   action step = any {
@@ -393,13 +979,28 @@ module battleRuntimeSlowActivePenaltiesMbt {
     doFillEndTurnSaveSuccess,
     doFillEndTurnSaveFailure,
     doSpendTargetAction,
+    doSpendTargetBonusAction,
+    doEndSlowConcentrationAfterAction,
+    doExpireSlowDurationAfterBonusAction,
     doMakeTargetAttack,
     doRequestSomaticFailure,
     doFillSomaticSpellFailure,
     doCastSlowSelfFailedSave,
+    doReconcileSlowAfterPriorBonusAction,
+    doSpendCompatibleActionResourceBeforeSlow,
+    doReconcileSlowAfterCompatibleAction,
+    doCleanupSlowAfterCompatibleAction,
+    doReconcileSlowWithUntakenExtraActionResource,
     doCastSlowMultiattackFailedSave,
     doEndCasterTurnForMultiattackTarget,
-    doMakeSlowedStatBlockMultiattack,
+    doActivateSlowedStatBlockMultiattack,
+    doResolveChosenSlowedStatBlockMultiattackDispatch,
+    doCastSlowTwoTargetsFailedSave,
+    doEndCasterTurnForTwoTargets,
+    doRequestFirstTargetEndTurnSave,
+    doFillFirstTargetEndTurnSaveSuccess,
+    doEndSlowConcentration,
+    doExpireSlowDuration,
     doStutter,
   }
 }

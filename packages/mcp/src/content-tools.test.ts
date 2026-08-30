@@ -1,4 +1,9 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
+import {
+  decodeCreatureImmunityDeclarationSync,
+  decodeStatBlockRecordSync,
+} from "@dnd/surface/surface/schema";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 import { SrdUnitRecordSchema } from "@dnd/surface/surface/schema";
@@ -37,31 +42,36 @@ function unitDetailPayload(response: ReturnType<typeof handleToolCall>) {
 }
 
 describe("MCP Stat Block summaries", () => {
-  test("projects cast-time choices and nonliteral execution values", () => {
+  test("projects authored names and ordered procedure summaries", () => {
     const root = createMcpPlaySessionRoot();
-    const base = root.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const base = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
-    const {
-      actions: _actions,
-      initiativeModifier: _initiativeModifier,
-      ...baseMechanics
-    } = base.statBlock;
+    const firstAction = base.statBlock.actions?.[0];
+    if (firstAction === undefined) {
+      throw new Error("Goblin Warrior fixture must have an action");
+    }
     const summary = statBlockSummary({
       ...base,
       id: statBlockId("stat_block_synthetic_summary"),
       name: "Synthetic Summary Creature",
       statBlock: {
-        ...baseMechanics,
-        displayName: "Synthetic Summary Creature",
-        creatureType: {
-          kind: "choice",
-          label: "Synthetic creature type",
-          options: ["beast"],
-        },
-        ac: { kind: "caster_derived", source: "spell_save_dc" },
-        hp: { kind: "caster_derived", source: "proficiency_bonus" },
-        immunities: { conditions: ["poisoned"] },
+        ...base.statBlock,
+        actions: [
+          {
+            kind: "textOnly",
+            procedureOrdinal: firstAction.procedureOrdinal,
+            name: "Unmodeled Roar",
+            description: "A synthetic procedure retained for presentation.",
+            reason: "unsupported_procedure_family",
+            resourceRefs: { kind: "none" },
+          },
+        ],
+        creatureType: "beast",
+        immunities: decodeCreatureImmunityDeclarationSync({
+          conditions: ["poisoned"],
+        }),
         resistances: {
           kind: "choose_one_from",
           options: ["cold", "fire"],
@@ -70,17 +80,28 @@ describe("MCP Stat Block summaries", () => {
     });
 
     expect(summary).toMatchObject({
-      armorClass: null,
+      armorClass: 15,
       attacks: [],
       conditionImmunities: ["poisoned"],
-      creatureType: expect.stringContaining("Synthetic creature type"),
+      creatureType: "beast",
       damageImmunities: [],
       damageResistanceChoices: ["cold", "fire"],
       damageResistances: [],
-      hitPoints: null,
+      hitPoints: 10,
+      initiativeModifier: 2,
+      name: "Synthetic Summary Creature",
+      orderedProcedures: expect.arrayContaining([
+        expect.objectContaining({
+          section: "action",
+          procedureOrdinal: 1,
+          kind: "textOnly",
+          name: "Unmodeled Roar",
+          reason: "unsupported_procedure_family",
+          resourceRefs: { kind: "none" },
+        }),
+      ]),
       statBlockId: "stat_block_synthetic_summary",
     });
-    expect(summary).not.toHaveProperty("initiativeModifier");
   });
 });
 
@@ -98,7 +119,7 @@ describe("MCP installed SRD catalog tools", () => {
         "playSessionId",
       );
       expect(JSON.stringify(definition.outputSchema)).not.toMatch(
-        /"(executable|supported)"/,
+        /"supported"/,
       );
     }
   });
@@ -161,5 +182,120 @@ describe("MCP installed SRD catalog tools", () => {
           "Call list_catalog_units and retry with one returned Unit id.",
       },
     });
+  });
+
+  test("retains nested spellcasting group resource references", () => {
+    const root = createMcpPlaySessionRoot();
+    const base = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
+    );
+    const restriction = {
+      authoredExpression: "restricted to the synthetic invoker",
+      deltas: [{ kind: "target_limit", target: "self" }],
+    } as const;
+    const summary = statBlockSummary(
+      decodeStatBlockRecordSync({
+        ...base,
+        id: statBlockId("stat_block_synthetic_spellcasting_summary"),
+        name: "Synthetic Spellcasting Creature",
+        provenance: {
+          kind: "synthetic-test",
+          section: "mcp-spellcasting-summary",
+        },
+        statBlock: {
+          ...base.statBlock,
+          actions: [
+            {
+              kind: "executable",
+              procedureOrdinal: 1,
+              procedure: {
+                kind: "spellcasting",
+                name: "Synthetic Spellcasting",
+                ability: "int",
+                groups: [
+                  {
+                    kind: "limited",
+                    resourceRefs: { kind: "some", ordinals: [1] },
+                    spells: [
+                      {
+                        spellId: "magic_missile",
+                        count: 2,
+                        castAtLevel: 3,
+                        restriction,
+                      },
+                      { spellId: "shield" },
+                    ],
+                  },
+                ],
+              },
+              resourceRefs: { kind: "none" },
+            },
+          ],
+          resources: [
+            {
+              ordinal: 1,
+              ownership: "shared",
+              limit: { kind: "daily", uses: 1 },
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(summary.orderedProcedures).toEqual(
+      expect.arrayContaining([
+        {
+          section: "action",
+          procedureOrdinal: 1,
+          kind: "executable",
+          procedureKind: "spellcasting",
+          name: "Synthetic Spellcasting",
+          resourceRefs: { kind: "none" },
+          spellcastingGroups: [
+            {
+              kind: "limited",
+              resourceRefs: { kind: "some", ordinals: [1] },
+              spells: [
+                {
+                  spellId: "magic_missile",
+                  count: 2,
+                  castAtLevel: 3,
+                  restriction,
+                },
+                { spellId: "shield" },
+              ],
+            },
+          ],
+        },
+      ]),
+    );
+
+    const spellcastingProcedure = summary.orderedProcedures.find(
+      (procedure) =>
+        procedure.kind === "executable" &&
+        procedure.procedureKind === "spellcasting",
+    );
+    if (
+      spellcastingProcedure?.kind !== "executable" ||
+      spellcastingProcedure.procedureKind !== "spellcasting"
+    ) {
+      throw new Error("Expected spellcasting procedure summary.");
+    }
+    const [spellcastingGroup] = spellcastingProcedure.spellcastingGroups ?? [];
+    if (spellcastingGroup === undefined) {
+      throw new Error("Expected spellcasting group summary.");
+    }
+    const [completeSpell, minimalSpell] = spellcastingGroup.spells;
+    expect(completeSpell).toEqual({
+      spellId: "magic_missile",
+      count: 2,
+      castAtLevel: 3,
+      restriction,
+    });
+    expect(minimalSpell).toEqual({ spellId: "shield" });
+    expect(minimalSpell).not.toHaveProperty("count");
+    expect(minimalSpell).not.toHaveProperty("castAtLevel");
+    expect(minimalSpell).not.toHaveProperty("restriction");
   });
 });

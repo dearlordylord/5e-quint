@@ -1439,4 +1439,246 @@ export const continueBattle: PlayerContinuation = (context) => {
     },
     CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
   );
+
+  test(
+    "accepts a public spread of a static Stat Block attack selection in its distance witness",
+    async () => {
+      const destination = mkdtempSync(
+        join(tmpdir(), "dnd-player-static-attack-"),
+      );
+      const trustedDestination = mkdtempSync(
+        join(tmpdir(), "dnd-player-static-attack-supervisor-"),
+      );
+      try {
+        await execFileAsync(
+          "pnpm",
+          [
+            "exec",
+            "tsx",
+            "scripts/raw-swarm/sdk-player/consumer-distribution-cli.ts",
+            destination,
+            trustedDestination,
+            resolve(
+              repoRoot,
+              "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
+            ),
+          ],
+          {
+            cwd: repoRoot,
+            timeout: CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
+          },
+        );
+        mkdirSync(join(trustedDestination, "evidence"), {
+          recursive: true,
+        });
+        copyFileSync(
+          resolve(
+            repoRoot,
+            "scripts/raw-swarm/sdk-player/test-fixtures/ready-fighter.characters.ts",
+          ),
+          join(trustedDestination, "evidence/characters.ts"),
+        );
+        const mixedSetup = readFileSync(
+          resolve(
+            repoRoot,
+            "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.setup.ts",
+          ),
+          "utf8",
+        )
+          .replace(
+            'preferredComponentNotation: "rolled"',
+            'preferredComponentNotation: "static"',
+          )
+          .replace(
+            "initiative: sdk.initiativeScore(10)",
+            "initiative: sdk.initiativeScore(20)",
+          );
+        writeFileSync(
+          join(trustedDestination, "evidence/setup.ts"),
+          mixedSetup,
+        );
+        writeFileSync(
+          join(destination, "attempt.ts"),
+          attemptSource(`  const usesOnlyStaticDamageComponents = (
+    selection: unknown,
+  ): boolean =>
+    Array.isArray(selection) &&
+    selection.length > 0 &&
+    selection.every(
+      (component: unknown) =>
+        typeof component === "object" &&
+        component !== null &&
+        "notation" in component &&
+        component.notation === "static",
+    );
+  const attack = context.sdk
+    .discoverBattleActs(context.session)
+    .find(
+      ({ subject, initialHoles }) =>
+        subject.tag === "action" &&
+        subject.action === "attack" &&
+        subject.actorId === "external-skeleton" &&
+        subject.attackAbility === undefined &&
+        usesOnlyStaticDamageComponents(subject.statBlockDamageSelection) &&
+        initialHoles.some(
+          (hole: (typeof initialHoles)[number]) =>
+            hole.kind === "targetChoice" &&
+            hole.attack?.targetConstraint.kind === "rangedRange",
+        ),
+    );
+  if (
+    attack === undefined ||
+    attack.subject.tag !== "action" ||
+    attack.subject.action !== "attack" ||
+    attack.subject.attackAbility !== undefined ||
+    !usesOnlyStaticDamageComponents(
+      attack.subject.statBlockDamageSelection,
+    )
+  ) {
+    throw new Error("Expected the static External Skeleton attack");
+  }
+  const awaitingTarget = context.sdk.resolveBattleRuntimeSubject({
+    session: context.session,
+    subject: attack.subject,
+    fills: [],
+  });
+  if (awaitingTarget.tag !== "needsHoles") {
+    throw new Error("Expected a static Stat Block attack target frontier");
+  }
+  if (awaitingTarget.envelope.frontier.kind !== "holes") {
+    throw new Error("Expected a static Stat Block attack target Hole frontier");
+  }
+  const targetHole = awaitingTarget.envelope.frontier.holes.find(
+    (hole: (typeof attack.initialHoles)[number]) =>
+      hole.kind === "targetChoice" && hole.attack !== undefined,
+  );
+  if (targetHole?.kind !== "targetChoice" || targetHole.attack === undefined) {
+    throw new Error("Expected a static Stat Block attack target hole");
+  }
+  const targetId = targetHole.choices[0];
+  if (targetId === undefined) {
+    throw new Error("Expected a static Stat Block attack target");
+  }
+  if (targetHole.attack.targetConstraint.kind !== "rangedRange") {
+    throw new Error("Expected the static Stat Block attack to be ranged");
+  }
+  const targetFill = {
+    kind: "targetChoice" as const,
+    holeId: targetHole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "attackTargetDistance" as const,
+        actorId: targetHole.attack.actorId,
+        targetId,
+        ...targetHole.attack.selection,
+        distanceFeet: targetHole.attack.targetConstraint.normalFeet,
+      },
+    ],
+  };
+  const resolved = context.sdk.resolveBattleRuntimeSubject({
+    session: awaitingTarget.session,
+    subject: awaitingTarget.envelope.frontier.subject,
+    fills: [targetFill],
+  });
+  if (resolved.tag !== "needsHoles") {
+    throw new Error("Expected the static Stat Block attack roll frontier");
+  }
+  return {
+    kind: "continue",
+    session: resolved.session,
+    tacticalNote:
+      "The public static Stat Block selection spread into the distance witness and reached the attack roll frontier.",
+  };`),
+        );
+
+        const supervisor = join(trustedDestination, "supervisor.mjs");
+        const supervisorOptions = {
+          cwd: trustedDestination,
+          env: { ...process.env, RAW_SWARM_PLAYER_ROOT: destination },
+          stdio: "pipe" as const,
+        };
+        execFileSync(
+          process.execPath,
+          [
+            supervisor,
+            "init",
+            "static-attack-distance-witness",
+            "a".repeat(40),
+            "instructionalFallback",
+            SUPERVISOR_HANDOFF_STARTED_AT,
+            "b".repeat(64),
+            "c".repeat(64),
+            "d".repeat(64),
+          ],
+          supervisorOptions,
+        );
+        execFileSync(
+          process.execPath,
+          [supervisor, "attempt", join(destination, "attempt.ts")],
+          supervisorOptions,
+        );
+
+        const transcriptRecords = readFileSync(
+          join(trustedDestination, "evidence/sdk-calls.jsonl"),
+          "utf8",
+        )
+          .trim()
+          .split("\n")
+          .map((line): unknown => JSON.parse(line));
+        const parsedTranscript = parseSdkTranscript(transcriptRecords);
+        expect(parsedTranscript.tag).toBe("valid");
+        if (parsedTranscript.tag !== "valid") {
+          throw new Error(parsedTranscript.message);
+        }
+        expect(parsedTranscript.value.calls).toHaveLength(3);
+        expect(
+          parsedTranscript.value.calls.map(({ operation }) => operation),
+        ).toEqual([
+          "discoverBattleActs",
+          "resolveBattleRuntimeSubject",
+          "resolveBattleRuntimeSubject",
+        ]);
+        const targetCall = parsedTranscript.value.calls[2];
+        expect(targetCall).toMatchObject({
+          operation: "resolveBattleRuntimeSubject",
+          outcome: "returned",
+          result: {
+            tag: "needsHoles",
+            envelope: {
+              frontier: {
+                kind: "holes",
+                holes: [{ kind: "attackRoll" }],
+              },
+            },
+          },
+          input: {
+            fills: [
+              {
+                kind: "targetChoice",
+                spatialFacts: [
+                  {
+                    kind: "attackTargetDistance",
+                    statBlockDamageSelection: [
+                      expect.objectContaining({ notation: "static" }),
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        });
+        expect(
+          execFileSync(process.execPath, [supervisor, "replay"], {
+            cwd: trustedDestination,
+            encoding: "utf8",
+          }),
+        ).toContain("3 call(s) matched");
+      } finally {
+        rmSync(destination, { recursive: true, force: true });
+        rmSync(trustedDestination, { recursive: true, force: true });
+      }
+    },
+    CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
+  );
 });

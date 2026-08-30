@@ -13,6 +13,7 @@ import {
   combatantId,
 } from "./identity.ts";
 import {
+  admittedStatBlockSource,
   attackRollFill,
   battleProcedureExecutionRefForTest,
   battleCheckpointFrontierEnvelope,
@@ -24,6 +25,7 @@ import {
   goblinId,
   movementFill,
   monsterResourceStatBlock,
+  monsterResourceStatBlockWithSharedResource,
   requireHole,
   resolveBattleSubject,
   targetFill,
@@ -140,11 +142,28 @@ function encodedStatBlockSnapshots() {
   const admission = statBlockExecutionAdmissionCohort(
     battleId("gh227-codec-stat-block"),
     combatantId("gh227-codec-stat-block"),
-    [monsterResourceStatBlock()],
+    [admittedStatBlockSource(monsterResourceStatBlock())],
     battleExecutionScopeOrdinal(0),
   ).admissions[0];
   if (admission === undefined) {
     throw new Error("Expected a reachable Stat Block execution admission.");
+  }
+  return Schema.encodeSync(StatBlockExecutionSnapshotSchema)(
+    admission.execution,
+  );
+}
+
+function encodedSharedResourceStatBlockSnapshot() {
+  const admission = statBlockExecutionAdmissionCohort(
+    battleId("gh227-codec-shared-resource-stat-block"),
+    combatantId("gh227-codec-shared-resource-stat-block"),
+    [admittedStatBlockSource(monsterResourceStatBlockWithSharedResource())],
+    battleExecutionScopeOrdinal(0),
+  ).admissions[0];
+  if (admission === undefined) {
+    throw new Error(
+      "Expected a reachable shared-resource Stat Block admission.",
+    );
   }
   return Schema.encodeSync(StatBlockExecutionSnapshotSchema)(
     admission.execution,
@@ -190,6 +209,105 @@ describe("GH-227 battle codec properties", () => {
     expect(
       Schema.encodeSync(StatBlockExecutionSnapshotSchema)(decoded.success),
     ).toEqual(encoded);
+  });
+
+  test("a shared Stat Block resource pool referenced by multiple bindings round-trips", () => {
+    const encoded = encodedSharedResourceStatBlockSnapshot();
+    const sharedRefs = encoded.procedureBindings
+      .filter((binding) => binding.resourcePoolRefs.length > 0)
+      .flatMap((binding) => binding.resourcePoolRefs);
+    expect(new Set(sharedRefs).size).toBeLessThan(sharedRefs.length);
+    const decoded = Schema.decodeUnknownResult(
+      StatBlockExecutionSnapshotSchema,
+    )(encoded);
+    expect(Result.isSuccess(decoded)).toBe(true);
+    if (Result.isFailure(decoded)) return;
+    expect(
+      Schema.encodeSync(StatBlockExecutionSnapshotSchema)(decoded.success),
+    ).toEqual(encoded);
+  });
+
+  test.each([0, -2])(
+    "rejects runtime Stat Block procedure ordinal %s",
+    (procedureOrdinal) => {
+      const encoded = encodedStatBlockSnapshots();
+      const malformed = replaceFirstRecordInArray(
+        encoded,
+        "procedureBindings",
+        (binding) => ({
+          ...binding,
+          procedure: replaceProcedureField(
+            binding,
+            "procedureOrdinal",
+            procedureOrdinal,
+          ),
+        }),
+      );
+      expect(
+        Result.isFailure(
+          Schema.decodeUnknownResult(StatBlockExecutionSnapshotSchema)(
+            malformed,
+          ),
+        ),
+      ).toBe(true);
+    },
+  );
+
+  test("rejects a negative ordinal on an authored attack binding", () => {
+    const encoded = encodedStatBlockSnapshots();
+    const malformed = replaceFirstRecordInArray(
+      encoded,
+      "procedureBindings",
+      (binding) => ({
+        ...binding,
+        procedure: replaceProcedureField(binding, "procedureOrdinal", -1),
+      }),
+    );
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockExecutionSnapshotSchema)(malformed),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects duplicate runtime Stat Block procedure ordinals", () => {
+    const encoded = encodedStatBlockSnapshots();
+    const ordinalBindings = encoded.procedureBindings.filter(
+      (binding) => binding.procedure.kind !== "unarmedStrike",
+    );
+    const first = ordinalBindings[0];
+    const second = ordinalBindings[1];
+    if (first === undefined || second === undefined) {
+      throw new Error("Expected two ordinal-bearing procedure bindings.");
+    }
+    const firstProcedure = first.procedure;
+    const secondProcedure = second.procedure;
+    if (
+      firstProcedure.kind === "unarmedStrike" ||
+      secondProcedure.kind === "unarmedStrike"
+    ) {
+      throw new Error("Expected authored procedure bindings.");
+    }
+    const firstProcedureOrdinal = firstProcedure.procedureOrdinal;
+    const malformed = {
+      ...encoded,
+      procedureBindings: encoded.procedureBindings.map((binding) =>
+        binding.procedureRef === second.procedureRef
+          ? {
+              ...binding,
+              procedure: {
+                ...binding.procedure,
+                procedureOrdinal: firstProcedureOrdinal,
+              },
+            }
+          : binding,
+      ),
+    };
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockExecutionSnapshotSchema)(malformed),
+      ),
+    ).toBe(true);
   });
 
   test("generated missing Stat Block pool edges are rejected", () => {
@@ -297,3 +415,15 @@ describe("GH-227 battle codec properties", () => {
     ).toBe(true);
   });
 });
+
+function replaceProcedureField(
+  binding: UnknownRecord,
+  field: string,
+  value: unknown,
+): UnknownRecord {
+  const procedure = binding["procedure"];
+  if (!isRecord(procedure)) {
+    throw new Error("Expected a procedure object.");
+  }
+  return { ...procedure, [field]: value };
+}

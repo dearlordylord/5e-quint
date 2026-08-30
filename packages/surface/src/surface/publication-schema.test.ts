@@ -274,6 +274,10 @@ describe("committed SRD Surface publication", () => {
             ...aggregate,
             units: [change(aggregate.units[0]), ...aggregate.units.slice(1)],
           });
+          const withFirstStatBlock = (change) => ({
+            ...aggregate,
+            statBlocks: [change(aggregate.statBlocks[0]), ...aggregate.statBlocks.slice(1)],
+          });
           const invalidCases = {
             unknownProperty: withFirstUnit((unit) => ({ ...unit, unknownProperty: true })),
             nonSrdProvenance: withFirstUnit((unit) => ({
@@ -283,7 +287,36 @@ describe("committed SRD Surface publication", () => {
             emptyCollections: { ...aggregate, units: [], statBlocks: [] },
             statBlockInUnits: { ...aggregate, units: [aggregate.statBlocks[0]] },
             unitInStatBlocks: { ...aggregate, statBlocks: [aggregate.units[0]] },
+            emptyImmunities: withFirstStatBlock((statBlock) => ({
+              ...statBlock,
+              statBlock: { ...statBlock.statBlock, immunities: {} },
+            })),
+            contradictoryImmunities: withFirstStatBlock((statBlock) => ({
+              ...statBlock,
+              statBlock: {
+                ...statBlock.statBlock,
+                immunities: {
+                  conditions: ["charmed"],
+                  qualifiedConditions: [{ condition: "charmed", qualifier: "from a synthetic source" }],
+                },
+              },
+            })),
           };
+          const validMixedImmunities = withFirstStatBlock((statBlock) => ({
+            ...statBlock,
+            statBlock: {
+              ...statBlock.statBlock,
+              immunities: {
+                damageTypes: ["fire"],
+                conditions: ["poisoned"],
+                qualifiedConditions: [{ condition: "charmed", qualifier: "from a synthetic source" }],
+              },
+            },
+          }));
+          if (!validate(validMixedImmunities)) {
+            console.error("distinct mixed immunities were rejected: " + JSON.stringify(validate.errors));
+            process.exit(1);
+          }
           for (const [name, invalid] of Object.entries(invalidCases)) {
             if (validate(invalid)) {
               console.error(name + " was accepted");
@@ -297,7 +330,7 @@ describe("committed SRD Surface publication", () => {
     );
 
     expect(result.trim()).toBe(
-      "valid; rejected unknownProperty,nonSrdProvenance,emptyCollections,statBlockInUnits,unitInStatBlocks",
+      "valid; rejected unknownProperty,nonSrdProvenance,emptyCollections,statBlockInUnits,unitInStatBlocks,emptyImmunities,contradictoryImmunities",
     );
   }, 180_000);
 });

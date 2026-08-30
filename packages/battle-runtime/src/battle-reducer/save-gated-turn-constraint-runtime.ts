@@ -4,15 +4,12 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
 import { optionalProperty } from "../optional-property.ts";
-import { enableActionOrBonusActionExclusion } from "@dnd/shared-algebras/action-economy-algebra";
 import type {
   ActionSpellBattleResolutionInput,
-  BattleCreatureState,
   BattleExecutableSpellInvocation,
   BattleFill,
   BattleResolutionResult,
   BattleState,
-  BattleTurnResources,
   BonusActionDashSpellBattleResolutionInput,
   BonusActionSpellBattleResolutionInput,
 } from "../battle-state-execution.ts";

@@ -31,7 +31,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(wolfInit)) {
+  if (sdk.isFailure(wolfInit)) {
     return {
       kind: "obstructed",
       obstruction: `The public battle initializer rejected the required Wolf: ${sdk.battleStateInitIssueMessage(wolfInit.failure)}`,
@@ -47,7 +47,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 0)],
     conditions: [],
   });
-  if (sdk.isLeft(skeletonInit)) {
+  if (sdk.isFailure(skeletonInit)) {
     return {
       kind: "obstructed",
       obstruction: `The public battle initializer rejected the required Skeleton with zero arrows: ${sdk.battleStateInitIssueMessage(skeletonInit.failure)}`,
@@ -59,7 +59,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     battleId: sdk.battleId("open-grid-wolf-skeleton-pursuit"),
     combatants: [wolfInit.success, skeletonInit.success],
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
       obstruction: `The public battle initializer could not start the required encounter: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
@@ -85,7 +85,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],
@@ -98,7 +98,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     ],
     objects: [],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
       obstruction: `The public scenario-session surface rejected the required battlefield: ${sdk.scenarioSessionIssueMessage(session.failure)}`,
@@ -112,7 +112,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     observation: {
       scenarioId: "open-grid-wolf-skeleton-pursuit",
       combatants: ["wolf", "skeleton"],
-      statBlockDamageNotation: "rolled",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     },
   };
 };

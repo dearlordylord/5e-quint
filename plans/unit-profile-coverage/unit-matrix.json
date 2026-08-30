@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 514,
-      "numerator": 349,
-      "percent": "67.9%"
+      "denominator": 530,
+      "numerator": 384,
+      "percent": "72.5%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 602,
-      "numerator": 399,
-      "percent": "66.3%"
+      "denominator": 618,
+      "numerator": 434,
+      "percent": "70.2%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,7 +59,7 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 400
+      "value": 435
     },
     "deterministicAdmissionProjectionCoverage": {
       "denominator": 219,
@@ -67,44 +67,44 @@
       "percent": "96.3%"
     },
     "profileClassificationCoverage": {
-      "denominator": 400,
-      "numerator": 400,
+      "denominator": 435,
+      "numerator": 435,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 150,
-      "numerator": 150,
-      "percent": "100%"
+      "denominator": 164,
+      "numerator": 156,
+      "percent": "95.1%"
     },
     "qntProofCoverage": {
-      "denominator": 150,
-      "numerator": 147,
-      "percent": "98%"
+      "denominator": 164,
+      "numerator": 153,
+      "percent": "93.3%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 189,
-      "numerator": 168,
-      "percent": "88.9%"
+      "denominator": 203,
+      "numerator": 175,
+      "percent": "86.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 189,
-      "numerator": 187,
-      "percent": "98.9%"
+      "denominator": 203,
+      "numerator": 201,
+      "percent": "99%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 205,
-      "numerator": 174,
-      "percent": "84.9%"
+      "numerator": 175,
+      "percent": "85.4%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 150,
-      "numerator": 150,
-      "percent": "100%"
+      "denominator": 164,
+      "numerator": 156,
+      "percent": "95.1%"
     },
     "runtimeParityCoverage": {
-      "denominator": 150,
-      "numerator": 150,
-      "percent": "100%"
+      "denominator": 164,
+      "numerator": 156,
+      "percent": "95.1%"
     },
     "selectedIdentityReplayCoverage": {
       "denominator": 199,
@@ -112,9 +112,9 @@
       "percent": "98%"
     },
     "supportedProfileCoverage": {
-      "denominator": 350,
+      "denominator": 385,
       "numerator": 219,
-      "percent": "62.6%"
+      "percent": "56.9%"
     }
   },
   "metricSemantics": [
@@ -308,19 +308,28 @@
       "id": "spell.invocation-slow-active-penalties",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
-        "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-slow-stat-block-multiattack-core.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/active-effect/types.ts",
+        "packages/battle-runtime/src/stat-block-execution.ts",
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/battle-reducer/action-eligibility.ts",
+        "packages/battle-runtime/src/battle-reducer/action-resource-kinds.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
         "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-effects.ts",
         "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-runtime.ts",
+        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-turn-restriction.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts",
         "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
         "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
@@ -333,16 +342,17 @@
         "packages/battle-runtime/src/battle-subjects.ts",
         "packages/shared-algebras/src/action-economy-algebra.ts"
       ],
-      "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, active Slow effect state, action-economy state, Attack action resource state, and canonical spell component facts. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-turn Action or Bonus Action mutual exclusion, Attack action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic cast resource spending without applying the spell effect, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
+      "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, active Slow effect state, action-economy state, Attack action resource state, and canonical spell component facts. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, the target-turn at-most-one Action-or-Bonus-Action restriction including reconciliation when either was already spent, the Attack action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic cast resource spending without applying the spell effect or starting new Concentration, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. The identity-independent Slow semantic core owns those occurrence-local rules and consumes typed concentration-ended and duration-expired signals without replacing the canonical generic Concentration lifecycle or elapsed-time scheduler. The Slow Stat Block composition derives the one-listed-dispatch allowance from typed active Slow state at atomic Multiattack activation while preserving source, ordered list, multiplicity, and continuation. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
       "taskRefs": [
         "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
-        "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
+        "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
+        "GH-441"
       ],
       "title": "Spell invocation applies Slow active penalties with target-turn and Somatic runtime restrictions",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle-tests.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-inductive.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3277,36 +3287,6 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-scalar-buff-and-heroism-spells.test.ts"
-        }
-      ]
-    },
-    {
-      "id": "stat-block.attack-control",
-      "profileKind": "stat-block-control",
-      "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
-      ],
-      "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
-      ],
-      "sourceBoundary": "StatBlockRecord",
-      "taskRefs": [
-        "QCORE11",
-        "QMBT6"
-      ],
-      "title": "Stat Block action, multiattack, limited-use, recharge, and reaction controls",
-      "verificationOwners": [
-        {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt"
-        },
-        {
-          "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts"
-        },
-        {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
         }
       ]
     },
@@ -7422,20 +7402,354 @@
           "ownerPath": "packages/battle-runtime/src/barbarian-retaliation.test.ts"
         }
       ]
+    },
+    {
+      "id": "stat-block.action-lifecycle",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "SB-ACTION-LIFECYCLE-INDUCTIVE",
+        "SB-ACTIONS-RUNTIME-TEST"
+      ],
+      "title": "Stat Block Action lifecycle",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.bonus-action-lifecycle",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "SB-BONUS-ACTION-LIFECYCLE-INDUCTIVE",
+        "SB-ACTIONS-RUNTIME-TEST"
+      ],
+      "title": "Stat Block Bonus Action lifecycle",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.legendary-action-lifecycle",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/unit-feature-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/legendary-action-window.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "SB-LEGENDARY-ACTION-LIFECYCLE-INDUCTIVE",
+        "SB-ACTIONS-RUNTIME-TEST"
+      ],
+      "title": "Stat Block Legendary Action lifecycle",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.attack-procedure",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-action-options.ts",
+        "packages/battle-runtime/src/stat-block-attack-damage-selection.ts",
+        "packages/battle-runtime/src/statblock-attack-damage-support.ts",
+        "packages/battle-runtime/src/battle-subjects.ts",
+        "packages/battle-runtime/src/battle-reducer/codec-building-blocks.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
+        "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts",
+        "packages/battle-runtime/src/procedure-admission/stat-block-procedure-execution-decision.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "SB-ATTACK-RESOLUTION-INDUCTIVE",
+        "SB-ATTACK-RESOLUTION-MBT",
+        "SB-ACTIONS-RUNTIME-TEST"
+      ],
+      "title": "Stat Block attack and damage procedure",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/stat-block-attack-resolution.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.multiattack",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/shared-algebras/src/action-economy-algebra.ts",
+        "packages/battle-runtime/src/stat-block-execution.ts",
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/battle-reducer/action-eligibility.ts",
+        "packages/battle-runtime/src/battle-reducer/action-resource-kinds.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "SB-MULTIATTACK-INDUCTIVE",
+        "SB-MULTIATTACK-MBT",
+        "SB-ACTIONS-RUNTIME-TEST"
+      ],
+      "title": "Admitted attack-procedure Multiattack control and dispatch",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-multiattack-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-multiattack.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.resource-lifecycle",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-reducer/statblock.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "SB-RESOURCE-LIFECYCLE-INDUCTIVE",
+        "SB-ACTIONS-RUNTIME-TEST"
+      ],
+      "title": "Stat Block limited-use and recharge resource lifecycle",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle-inductive.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.spell-invocation.unrestricted",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-418"
+      ],
+      "title": "Unrestricted Stat Block spell invocation",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.spellcasting.procedure",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure.qnt"
+      ],
+      "qntOwnershipStatus": "covered",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/stat-block-authored-projection.ts",
+        "packages/battle-runtime/src/stat-block-execution-state.ts",
+        "packages/battle-runtime/src/stat-block-execution.ts",
+        "packages/battle-runtime/src/procedure-admission/stat-block-procedure-execution-decision.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord; generic admission preserves typed procedure facts and child outcome kinds without selecting a group or invocation",
+      "taskRefs": [
+        "SB-SPELLCASTING-PROCEDURE-QNT",
+        "SB-SPELLCASTING-PROCEDURE-MBT",
+        "SB-SPELLCASTING-PROCEDURE-RUNTIME-TEST"
+      ],
+      "title": "Stat Block spellcasting procedure",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure-examples.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-spellcasting-procedure.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.spellcasting.limited-group",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-420"
+      ],
+      "title": "Limited-use Stat Block spellcasting group",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.save-procedure",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-421"
+      ],
+      "title": "Stat Block save-gated procedure",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.spellcasting.at-will-group",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-422"
+      ],
+      "title": "At-will Stat Block spellcasting group",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.reaction-lifecycle",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-423"
+      ],
+      "title": "Stat Block reaction trigger and resource lifecycle",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.spell-invocation.restricted",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-424"
+      ],
+      "title": "Restricted Stat Block spell invocation",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.attack-additional-effect",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-425"
+      ],
+      "title": "Typed Stat Block attack additional-effect continuation",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.standard-action-option",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-426"
+      ],
+      "title": "Stat Block standard action-option delegation",
+      "verificationOwners": []
     }
   ],
   "rulesKernelProfileJoin": {
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 189,
-        "numerator": 168,
-        "percent": "88.9%"
+        "denominator": 203,
+        "numerator": 175,
+        "percent": "86.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 189,
-        "numerator": 187,
-        "percent": "98.9%"
+        "denominator": 203,
+        "numerator": 201,
+        "percent": "99%"
       }
     },
     "profileKinds": [
@@ -7494,13 +7808,20 @@
             "runtime": "battle",
             "status": "covered",
             "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Slow caps an activated Stat Block Multiattack to one listed attack"
           }
         ],
         "profileId": "spell.invocation-slow-active-penalties",
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
-          "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
+          "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt",
+          "packages/shared-algebras/proofs/rule-core/spell-slow-stat-block-multiattack-core.qnt"
         ]
       },
       {
@@ -9087,22 +9408,6 @@
         "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
-            "runtime": "battle",
-            "status": "covered",
-            "title": "Battle Stat Block action, Multiattack, limited-use, recharge, reaction, legendary action, attack damage, and target Size Prone-rider controls"
-          }
-        ],
-        "profileId": "stat-block.attack-control",
-        "profileKind": "stat-block-control",
-        "qntOwners": [
-          "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
-        ]
-      },
-      {
-        "joinStatus": "covered",
-        "obligations": [
-          {
             "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
             "runtime": "character-sheet",
             "status": "covered",
@@ -10045,7 +10350,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
@@ -10687,6 +10992,254 @@
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-retaliation.qnt"
         ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.ACTION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Stat Block Action lifecycle"
+          }
+        ],
+        "profileId": "stat-block.action-lifecycle",
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-action-lifecycle.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Stat Block Bonus Action lifecycle"
+          }
+        ],
+        "profileId": "stat-block.bonus-action-lifecycle",
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-bonus-action-lifecycle.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Stat Block Legendary Action windows and resources"
+          }
+        ],
+        "profileId": "stat-block.legendary-action-lifecycle",
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-legendary-action-lifecycle.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Stat Block attack, damage, and typed hit-rider procedure"
+          }
+        ],
+        "profileId": "stat-block.attack-procedure",
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-attack-resolution.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.MULTIATTACK",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle admitted attack-procedure Multiattack control and dispatch"
+          }
+        ],
+        "profileId": "stat-block.multiattack",
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Stat Block limited-use and recharge resource lifecycle"
+          }
+        ],
+        "profileId": "stat-block.resource-lifecycle",
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-resource-lifecycle.qnt"
+        ]
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-418"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Unrestricted Stat Block spell invocation"
+          }
+        ],
+        "profileId": "stat-block.spell-invocation.unrestricted",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Stat Block spellcasting procedure"
+          }
+        ],
+        "profileId": "stat-block.spellcasting.procedure",
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-spellcasting-procedure.qnt"
+        ]
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-420"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Limited-use Stat Block spellcasting group lifecycle"
+          }
+        ],
+        "profileId": "stat-block.spellcasting.limited-group",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-421"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.SAVE_PROCEDURE",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Stat Block saving throw procedure"
+          }
+        ],
+        "profileId": "stat-block.save-procedure",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-422"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "At-will Stat Block spellcasting group lifecycle"
+          }
+        ],
+        "profileId": "stat-block.spellcasting.at-will-group",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-423"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.REACTION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Stat Block Reaction trigger and resource lifecycle"
+          }
+        ],
+        "profileId": "stat-block.reaction-lifecycle",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-424"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.SPELL_INVOCATION_RESTRICTED",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Restricted Stat Block spell invocation"
+          }
+        ],
+        "profileId": "stat-block.spell-invocation.restricted",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-425"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.ATTACK_ADDITIONAL_EFFECT",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Typed Stat Block attack additional-effect continuation"
+          }
+        ],
+        "profileId": "stat-block.attack-additional-effect",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-426"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.STANDARD_ACTION_OPTION",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Stat Block standard action-option delegation"
+          }
+        ],
+        "profileId": "stat-block.standard-action-option",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
       }
     ],
     "sourceArtifacts": {
@@ -10698,8 +11251,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 205,
-          "numerator": 174,
-          "percent": "84.9%"
+          "numerator": 175,
+          "percent": "85.4%"
         }
       },
       "units": [
@@ -15440,10 +15993,10 @@
           "unitId": "searing_smite"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
@@ -15695,13 +16248,20 @@
                   "runtime": "battle",
                   "status": "covered",
                   "title": "Battle Slow applies active penalties, target-turn Action or Bonus Action restriction, Attack cap, Somatic failure, and repeat-save cleanup"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Slow caps an activated Stat Block Multiattack to one listed attack"
                 }
               ],
               "profileId": "spell.invocation-slow-active-penalties",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
-                "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
+                "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-slow-stat-block-multiattack-core.qnt"
               ]
             }
           ],
@@ -16563,14 +17123,6 @@
       "taskId": "QCORE10"
     },
     {
-      "claimKind": "qnt-proof",
-      "note": "Stat Block control pressure stays separate from UnitRecord claims.",
-      "profileIds": [
-        "stat-block.attack-control"
-      ],
-      "taskId": "QCORE11"
-    },
-    {
       "claimKind": "completed-runtime-parity",
       "note": "Movement and grapple parity has no current UnitRecord profile row.",
       "profileIds": [],
@@ -16611,14 +17163,6 @@
         "spell.readied-action-time-spell"
       ],
       "taskId": "QMBT5"
-    },
-    {
-      "claimKind": "completed-runtime-parity",
-      "note": "Focused stat-block control runtime parity.",
-      "profileIds": [
-        "stat-block.attack-control"
-      ],
-      "taskId": "QMBT6"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -20867,6 +21411,179 @@
         "spell.invocation-magic-suppression-magical-effect-interdiction"
       ],
       "taskId": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Identity-independent semantic QNT owns the admitted Slow occurrence lifecycle, at-most-one Action-or-Bonus-Action restriction with prior-resource reconciliation, Attack cap, effective-Somatic 25 percent failure, per-target repeat saves, exact-source cleanup, and Slow-derived Stat Block Multiattack allowance; focused MBT replays those facts through production runtime.",
+      "profileIds": [
+        "spell.invocation-slow-active-penalties"
+      ],
+      "taskId": "GH-441"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.spell-invocation.unrestricted"
+      ],
+      "taskId": "GH-418"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.spellcasting.limited-group"
+      ],
+      "taskId": "GH-420"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.save-procedure"
+      ],
+      "taskId": "GH-421"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.spellcasting.at-will-group"
+      ],
+      "taskId": "GH-422"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.reaction-lifecycle"
+      ],
+      "taskId": "GH-423"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.spell-invocation.restricted"
+      ],
+      "taskId": "GH-424"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.attack-additional-effect"
+      ],
+      "taskId": "GH-425"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.standard-action-option"
+      ],
+      "taskId": "GH-426"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Exact historical Action lifecycle proof evidence; not tracker status.",
+      "profileIds": [
+        "stat-block.action-lifecycle"
+      ],
+      "taskId": "SB-ACTION-LIFECYCLE-INDUCTIVE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Exact historical Bonus Action lifecycle proof evidence; not tracker status.",
+      "profileIds": [
+        "stat-block.bonus-action-lifecycle"
+      ],
+      "taskId": "SB-BONUS-ACTION-LIFECYCLE-INDUCTIVE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Exact historical Legendary Action lifecycle proof evidence; not tracker status.",
+      "profileIds": [
+        "stat-block.legendary-action-lifecycle"
+      ],
+      "taskId": "SB-LEGENDARY-ACTION-LIFECYCLE-INDUCTIVE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Exact historical Multiattack proof evidence; not tracker status.",
+      "profileIds": [
+        "stat-block.multiattack"
+      ],
+      "taskId": "SB-MULTIATTACK-INDUCTIVE"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Exact historical limited-usage resource proof evidence; not tracker status.",
+      "profileIds": [
+        "stat-block.resource-lifecycle"
+      ],
+      "taskId": "SB-RESOURCE-LIFECYCLE-INDUCTIVE"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "note": "Exact synthetic production-runtime evidence; not QNT parity or tracker status.",
+      "profileIds": [
+        "stat-block.action-lifecycle",
+        "stat-block.bonus-action-lifecycle",
+        "stat-block.legendary-action-lifecycle",
+        "stat-block.attack-procedure",
+        "stat-block.multiattack",
+        "stat-block.resource-lifecycle"
+      ],
+      "taskId": "SB-ACTIONS-RUNTIME-TEST"
+    },
+    {
+      "claimKind": "runtime-parity",
+      "note": "Focused semantic-function MBT evidence for Multiattack control only.",
+      "profileIds": [
+        "stat-block.multiattack"
+      ],
+      "taskId": "SB-MULTIATTACK-MBT"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Identity-independent bounded proof evidence for Attack Roll hit/miss, per-instance static-or-rolled damage, Critical Hit dice, Advantage-only bonus damage, and the admitted typed hit rider.",
+      "profileIds": [
+        "stat-block.attack-procedure"
+      ],
+      "taskId": "SB-ATTACK-RESOLUTION-INDUCTIVE"
+    },
+    {
+      "claimKind": "runtime-parity",
+      "note": "Five synthetic fixture families compare the reusable Stat Block attack resolver with actual production reducer state and hole projections.",
+      "profileIds": [
+        "stat-block.attack-procedure"
+      ],
+      "taskId": "SB-ATTACK-RESOLUTION-MBT"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Exact generic Stat Block spellcasting procedure admission and typed child-outcome proof evidence; not child lifecycle or invocation execution.",
+      "profileIds": [
+        "stat-block.spellcasting.procedure"
+      ],
+      "taskId": "SB-SPELLCASTING-PROCEDURE-QNT"
+    },
+    {
+      "claimKind": "runtime-parity",
+      "note": "Focused production parity for generic Stat Block spellcasting procedure projection; no group or invocation selection.",
+      "profileIds": [
+        "stat-block.spellcasting.procedure"
+      ],
+      "taskId": "SB-SPELLCASTING-PROCEDURE-MBT"
+    },
+    {
+      "claimKind": "runtime-evidence",
+      "note": "Exact source-free runtime projection and identity-independence evidence; restricted deltas remain non-executable.",
+      "profileIds": [
+        "stat-block.spellcasting.procedure"
+      ],
+      "taskId": "SB-SPELLCASTING-PROCEDURE-RUNTIME-TEST"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -20921,8 +21638,8 @@
         "unsupportedOrOtherUnits": 1
       },
       {
-        "executableUnitDenominator": 191,
-        "installedUnitDenominator": 191,
+        "executableUnitDenominator": 226,
+        "installedUnitDenominator": 226,
         "kind": "spell",
         "label": "Spell Units",
         "profileFactDenominator": 209,
@@ -20932,7 +21649,7 @@
         "selectedIdentityReplayGapUnits": 0,
         "selectedIdentityReplayWitnessUnits": 148,
         "supportedProfileUnits": 98,
-        "unsupportedOrOtherUnits": 39
+        "unsupportedOrOtherUnits": 74
       },
       {
         "executableUnitDenominator": 118,
@@ -33159,6 +33876,811 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/species_tiefling_darkvision.json",
       "unitId": "species_tiefling_darkvision"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "companion-control-boundary",
+          "owner": "future reanimated companion lifecycle/control owner",
+          "reason": "Animate Dead's represented runtime behavior is closed at the companion-control boundary: a future reanimated companion owner must model Skeleton/Zombie combatant creation from corpse-or-bones targets, control-window ownership, Bonus Action command fan-out, default Dodge-and-avoid behavior, autonomous task following, 24-hour control expiry, higher-slot reassertion, and stat-block action execution without authored-identity dispatch in generic runtime code."
+        },
+        "reason": "Animate Dead is an SRD level-3 Spell Definition whose Surface record models 1-minute Spell Slot casting, 10-foot range, V/S/M blood/flesh/bone-dust components, Instantaneous duration, a Medium or Small Humanoid corpse-or-bones target, Skeleton or Zombie creation, a slot-tier Skeleton/Zombie menu, a 24-hour control window, Bonus Action mental command within 60 feet, and default Dodge-and-avoid behavior. No promoted battle-runtime profile is claimed because reanimated combatant creation, stat-block projection, caster control ownership, per-turn command assignment, task-following autonomy, control expiry, and recast reassertion belong to a companion-control lifecycle owner rather than generic Spell Invocation reducers.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/animate_dead.json",
+      "unitId": "animate_dead"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future chained area save-damage owner",
+          "reason": "A future owner must validate the initial target, the bounded additional-target chain, object-or-creature eligibility, per-target Dexterity Saving Throws, Lightning damage, range between chained targets, and higher-slot target expansion without authored-identity dispatch."
+        },
+        "reason": "Chain Lightning is authored and installed, but chained multi-target selection, Dexterity Saving Throws, Lightning damage, object-or-creature targets, and slot-scaled additional targets are not owned by a promoted runtime profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/chain_lightning.json",
+      "unitId": "chain_lightning"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-perception-exploration",
+          "owner": "runtime-detached table/perception and remote-sensor owner",
+          "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy."
+        },
+        "reason": "Clairvoyance is an SRD level-3 Spell Definition whose current Surface record models 10-minute Spell Slot casting, 1-mile range, V/S/M 100+ GP focus, Concentration up to 10 minutes, a familiar-or-obvious location sensor hole, an Invisible invulnerable sensor, remote seeing-or-hearing perception, and Bonus Action sense switching. RAW also includes the sensor's intangible nature and luminous-orb observer presentation for creatures that can see the sensor. No promoted battle-runtime profile is claimed because location familiarity or obviousness, remote seeing or hearing information, active chosen-sense state, Bonus Action switching between remote senses, sensor visibility to See Invisibility or Truesight observers, and luminous-orb presentation are table/perception/exploration facts outside promoted battle Unit profiles; the sensor must not become ordinary caster sight, target, attack visibility, companion, or autonomous actor state.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/clairvoyance.json",
+      "unitId": "clairvoyance"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future active random-behavior control Spell Effect plus table/spatial random-target and movement owner",
+          "reason": "A future owner must carry the Concentration-owned affected-target set, slot-scaled Sphere radius, action/Reaction denial, target-turn d10 behavior roll, random direction movement, no-action branches, random reachable melee target selection, Attack action forcing, and repeat Wisdom saves. Table/spatial ownership must supply area membership, cardinal directions, reach, target availability, and movement path facts without duplicating map or action state."
+        },
+        "reason": "Confusion is an authored SRD Surface Spell Definition installed in this corpus. It affects creatures in a Sphere with Wisdom saves, denies Bonus Actions/Reactions, rolls a d10 behavior table at each affected turn start, can force random movement or melee Attack action, and repeats saves at turn end. No promoted profile is claimed until a turn-behavior control owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/confusion.json",
+      "unitId": "confusion"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table/spatial water-volume and environmental-hazard owner",
+          "reason": "A future owner must carry the controlled water area, current selected mode, Magic Action mode changes, wave repeats, trenches, redirects, whirlpool geometry, vehicle interactions, creature pull movement, Strength saves, damage, and swim-away checks. Water bodies, depth, flow, vehicles, routes, and environmental persistence are table/environment facts and must not be copied into generic spell reducers."
+        },
+        "reason": "Control Water is an authored SRD Surface Spell Definition installed in this corpus. It manipulates water in a large Cube with Flood, Part Water, Redirect Flow, and Whirlpool modes, including vehicle capsizing, water level/wave state, swim pulls, save-gated whirlpool damage, and Athletics escape. No promoted profile is claimed until a water/environment owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/control_water.json",
+      "unitId": "control_water"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table/environment weather owner",
+          "reason": "A future owner must adjudicate outdoor location, weather-stage transitions, precipitation, temperature, wind, storm timing, and the weather area's persistent Concentration state without duplicating environment state in battle runtime."
+        },
+        "reason": "Control Weather is authored and installed, but its outdoor five-mile weather area, staged precipitation/temperature/wind changes, long casting time, and Concentration lifecycle are table/environment facts outside promoted runtime profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/control_weather.json",
+      "unitId": "control_weather"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "companion-control-boundary",
+          "owner": "future reanimated companion lifecycle/control owner",
+          "reason": "A future owner must create the slot-selected undead from eligible Humanoid corpses, retain caster control, process Bonus Action commands within range, apply default behavior, expire control after 24 hours, and support higher-slot reassertion without authored-identity dispatch."
+        },
+        "reason": "Create Undead is authored and installed, but corpse eligibility, Ghouls creation, slot-selected higher-tier forms, command range, 24-hour control, reassertion, and autonomous undead behavior are not owned by a promoted runtime profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/create_undead.json",
+      "unitId": "create_undead"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future self-and-companion teleport owner plus table/spatial destination legality owner",
+          "reason": "A future owner must consume destination description/visualization facts, willing adjacent passenger facts, range, destination and passenger placement, occupied-or-filled collision checks, Force damage on failed arrival, and atomic teleport failure/success. Map coordinates, visibility, description interpretation, occupancy, object fill, and nearest destination placement belong to the table/spatial owner rather than copied spell state."
+        },
+        "reason": "Dimension Door is an SRD level-4 Spell Definition whose local SRD text teleports the caster to a specified destination within 500 feet, may bring one willing adjacent creature, places that creature near the destination, and fails with Force damage if arrival spaces are occupied or filled. No promoted profile is claimed until a table-spatial teleport owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/dimension_door.json",
+      "unitId": "dimension_door"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion presentation and perception owner",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime."
+        },
+        "reason": "Disguise Self is authored and installed, but appearance and equipment illusion, physical inspection, and Study or Investigation discovery are presentation and exploration facts outside promoted runtime profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/disguise_self.json",
+      "unitId": "disguise_self"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state."
+        },
+        "reason": "Druidcraft is authored and installed, but weather signs, harmless sensory effects, plant blossoming, and small flame effects are noncombat environmental facts outside promoted runtime profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/druidcraft.json",
+      "unitId": "druidcraft"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state."
+        },
+        "reason": "Elementalism is authored and installed, but harmless air, earth, fire, and water shaping and sensory effects are noncombat environmental facts outside promoted runtime profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/elementalism.json",
+      "unitId": "elementalism"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future planar transformation and travel owner",
+          "reason": "A future owner must model plane state, eligible willing targets, Ethereal movement and visibility, cross-plane interaction limits, occupied-space return shunting, Force damage, and higher-slot target expansion without duplicating map or plane state in battle runtime."
+        },
+        "reason": "Etherealness is authored and installed, but Border Ethereal travel, plane-specific visibility and interaction, movement, eligibility, occupied-space shunting, and slot-scaled willing targets are not owned by a promoted runtime profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/etherealness.json",
+      "unitId": "etherealness"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active Frightened-compulsion Spell Effect, held-object release, and compelled-movement owner",
+          "reason": "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers."
+        },
+        "reason": "Fear is an SRD level-3 Spell Definition whose authored Surface record captures Action Spell Slot casting, Self range, V/S/M white-feather components, Concentration up to 1 minute, a 30-foot Cone, and an initial Wisdom Saving Throw to apply Frightened; the RAW prose also requires failed-save held-object drop, mandatory Dash action and movement away from the caster by the safest route on each affected target's turns unless there is nowhere to move, and an end-of-turn Wisdom Saving Throw only when the target ends where it lacks line of sight to the caster. No promoted battle-runtime profile is claimed because full support needs an active Frightened-compulsion Spell Effect owner that stores affected targets, caster-target line-of-sight relation, held-object release, compelled Dash action use, safest-route movement/pathing, no-move exception, per-target repeat-save timing, and Concentration cleanup without authored-identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/fear.json",
+      "unitId": "fear"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "companion-control-boundary",
+          "owner": "future save-damage and reanimated companion lifecycle owner",
+          "reason": "A future owner must resolve the Constitution Saving Throw and Necrotic damage, detect a qualifying Humanoid death, create the controlled Zombie, and retain its command behavior without authored-identity dispatch."
+        },
+        "reason": "Finger of Death is authored and installed, but Constitution-save Necrotic damage plus Humanoid-on-kill Zombie creation and control are not owned by a promoted runtime profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/finger_of_death.json",
+      "unitId": "finger_of_death"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future save-damage and Hit Point maximum effect owner",
+          "reason": "A future owner must resolve the Constitution Saving Throw, 14d6 Necrotic damage, and failed-save Hit Point maximum reduction bounded not to reduce the maximum below 1, with active-effect cleanup."
+        },
+        "reason": "Harm is authored and installed, but Constitution-save Necrotic damage and the failed-save Hit Point maximum reduction are not owned by a promoted runtime profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/harm.json",
+      "unitId": "harm"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future table provisioning and character-effect owner",
+          "reason": "A future owner must adjudicate the consumed feast, participant set, 24-hour benefit duration, Poison resistance, Poisoned and Frightened immunity, and Hit Point maximum increase without duplicating inventory or character-effect state in battle runtime."
+        },
+        "reason": "Heroes' Feast is authored and installed, but costly consumed provisioning, up-to-twelve participant selection, and its 24-hour Poison and Frightened immunity, Poison resistance, and Hit Point maximum benefits are not owned by a promoted runtime profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/heroes_feast.json",
+      "unitId": "heroes_feast"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future area save-damage plus temporary terrain Spell Effect owner",
+          "reason": "A future owner must admit Cylinder affected creatures, Dexterity Saving Throws, mixed damage entries with half damage on success, slot-scaled Bludgeoning dice, and a short-lived Difficult Terrain area. Table/spatial ownership must supply Cylinder placement, area membership, ground affected, terrain movement costs, and cleanup at the caster next-turn boundary without duplicating map geometry."
+        },
+        "reason": "Ice Storm is an SRD level-4 Spell Definition whose local SRD text creates a Cylinder, deals mixed Bludgeoning and Cold save-gated damage, leaves temporary Difficult Terrain until the end of the caster's next turn, and scales Bludgeoning damage by slot. No promoted profile is claimed until direct area damage can create temporary terrain effects.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/ice_storm.json",
+      "unitId": "ice_storm"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached identification/table owner",
+          "reason": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts."
+        },
+        "reason": "Magic-item identification, attunement/property discovery, and spell-affecting-object or spell-affecting-creature identification are runtime-detached table adjudication outside promoted battle Unit profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/identify.json",
+      "unitId": "identify"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime."
+        },
+        "reason": "Mage Hand is authored and installed, but spectral-hand creation, remote object manipulation, carry limit, repeated Magic Action control, and distance or recast expiry are exploration object-control facts outside promoted runtime profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/mage_hand.json",
+      "unitId": "mage_hand"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion Spell Effect and table/presentation/perception owner",
+          "reason": "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers."
+        },
+        "reason": "Major Image is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, 120-foot point range, V/S/M fleece component, Concentration up to 10 minutes, a visible point-origin 20-foot Cube illusion, visual/sound/smell/temperature sensory channels, and the no-damage/no-conditions limit. RAW also requires caster Magic Action repositioning and content changes while within range, physical-interaction reveal, Study action Intelligence (Investigation) discovery against Spell Save DC, per-creature see-through and faint sensory qualities after discernment, and level-4+ Spell Slot duration until dispelled without Concentration. No promoted battle-runtime profile is claimed because full support needs an illusion Spell Effect and table/presentation/perception owner for depicted content, sensory believability, image movement and conversation, physical interaction, per-observer discerned state, and duration-kind substitution rather than generic Spell Invocation reducers or duplicated battle map/perception state.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/major_image.json",
+      "unitId": "major_image"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future single-target fear-illusion Spell Effect plus repeating save/damage owner",
+          "reason": "A future owner must carry the target-specific illusion, initial and end-turn Wisdom saves, slot-scaled Psychic damage, failed-save Ability Check and attack-roll Disadvantage, successful-save cleanup, and repeated damage timing. It must consume existing roll-mode, damage, condition/effect lifecycle, and turn-boundary owners without dispatching on the spell name."
+        },
+        "reason": "Phantasmal Killer is an authored SRD Surface Spell Definition installed in this corpus. It makes an initial Wisdom save, deals Psychic damage, applies Ability Check and attack-roll Disadvantage on failed saves, repeats end-turn Wisdom saves, repeats damage on failed repeat saves, and ends on successful saves. No promoted profile is claimed until a fear-illusion repeating-save owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/phantasmal_killer.json",
+      "unitId": "phantasmal_killer"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table/session planar travel owner",
+          "reason": "A future owner must validate touch targets, willingness and linked grouping, destination or sigil-circle choice, plane legality, and travel placement without duplicating plane or map state in battle runtime."
+        },
+        "reason": "Plane Shift is authored and installed, but plane destination, willing linked-creature selection, sigil-circle targeting, and cross-plane travel are table/session facts outside promoted runtime profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/plane_shift.json",
+      "unitId": "plane_shift"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future threshold death and damage owner",
+          "reason": "A future owner must validate the 60-foot creature target, branch at 100 current Hit Points, apply instant death below the threshold, and apply 12d12 Psychic damage otherwise without authored-identity dispatch."
+        },
+        "reason": "Power Word Kill is authored and installed, but its target Hit Point threshold, instant death branch, and fallback Psychic damage are not owned by a promoted runtime profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/power_word_kill.json",
+      "unitId": "power_word_kill"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future threshold condition and repeat-save owner",
+          "reason": "A future owner must validate the 60-foot creature target, branch at 150 current Hit Points, apply Stunned or Speed 0, and process the target's end-of-turn Constitution saves and cleanup without authored-identity dispatch."
+        },
+        "reason": "Power Word Stun is authored and installed, but its target Hit Point threshold, Stunned branch, fallback Speed-zero branch, and end-of-turn Constitution saves are not owned by a promoted runtime profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/power_word_stun.json",
+      "unitId": "power_word_stun"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion presentation and remote-perception owner",
+          "reason": "A future owner must retain the 500-mile image placement, remote sight and hearing, movement and gesture changes, physical interaction and Study or Investigation discovery, damage-ending behavior, and per-observer presentation without duplicating map or perception state in battle runtime."
+        },
+        "reason": "Project Image is authored and installed, but its long-range illusory copy, remote perception, Magic Action movement, physical-interaction discovery, and damage-ending Concentration behavior are presentation and exploration facts outside promoted runtime profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/project_image.json",
+      "unitId": "project_image"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future Character Sheet revival aftermath owner",
+          "reason": "A future owner must adjudicate dead-creature eligibility, current Hit Points, body-part and poison restoration, the -4 D20 recovery penalty and Long Rest reduction, old-age and Undead exclusions, and generic revival cleanup without duplicating death state in battle runtime."
+        },
+        "reason": "Resurrection is authored and installed, but century-old-death eligibility, consumed diamond, full restoration, body-part and poison cleanup, D20 recovery penalty, and revival aftermath are not owned by a promoted runtime profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/resurrection.json",
+      "unitId": "resurrection"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active Emanation area-hazard Spell Effect and table/spatial membership owner",
+          "reason": "Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers."
+        },
+        "reason": "Spirit Guardians is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, Self range, V/S/M prayer-scroll components, caster-owned Concentration up to 10 minutes, a self-origin 15-foot Emanation, passive halving of affected creatures' Speed in the Emanation, a Wisdom Saving Throw gate, Radiant-or-Necrotic damage with half damage on success, and +1d8 damage per Spell Slot level above 3. No promoted battle-runtime profile is claimed because full support needs an active Emanation area-hazard Spell Effect that carries the caster-selected unaffected creature set, self-moving Emanation identity, area-membership trigger facts, Speed projection, save-gated damage timing, and per-creature once-per-turn save ledger without authored-identity dispatch.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/spirit_guardians.json",
+      "unitId": "spirit_guardians"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table/session teleport travel owner",
+          "reason": "A future owner must adjudicate destination description and familiarity, same-plane restrictions, willing target or object selection, exact or near-miss placement, mishap rolls, and travel consequences without duplicating map state in battle runtime."
+        },
+        "reason": "Teleport is authored and installed, but destination familiarity, same-plane legality, group and object targeting, d100 destination outcomes, and mishap resolution are table/session travel facts outside promoted runtime profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/teleport.json",
+      "unitId": "teleport"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "social-knowledge-effect",
+          "owner": "runtime-detached language/communication owner",
+          "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell."
+        },
+        "reason": "Tongues is an SRD level-3 Spell Definition whose current Surface record models Action casting, Touch range, V/M miniature-ziggurat components, 1-hour duration, one touched creature target, spoken-or-signed language understanding, and outward intelligibility to any creature that knows at least one language and can hear the speech or see the signing. Task 54 preserves the no-promoted-battle-runtime closure because hearing or seeing communication, knowing at least one language, language comprehension, and conversation outcomes are runtime-detached table/social communication facts outside promoted battle Unit profiles; the spell must not introduce autonomous behavior, commanded-action execution, or authored-identity dispatch in runtime code.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/tongues.json",
+      "unitId": "tongues"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-perception-exploration",
+          "owner": "future table/perception sense-projection owner",
+          "reason": "A future owner must project the willing touched creature's 120-foot Truesight and adjudicate its special-sense interactions with magical darkness, invisibility, illusions, transformations, and the Ethereal Plane without duplicating perception state in battle runtime."
+        },
+        "reason": "True Seeing is authored and installed, but Truesight projection and its interaction with magical darkness, invisible creatures, visual illusions, transformations, and Ethereal visibility are perception facts outside promoted runtime profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/true_seeing.json",
+      "unitId": "true_seeing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future area save-damage plus delayed target damage Spell Effect owner",
+          "reason": "A future owner must admit Sphere affected creatures, Dexterity saves, initial Acid damage with half damage on success, failed-save-only delayed Acid damage at each target next-turn end, slot scaling, and cleanup. Table/spatial ownership must provide area membership while target-turn timing and delayed damage use existing active-effect and damage owners."
+        },
+        "reason": "Vitriolic Sphere is an authored SRD Surface Spell Definition installed in this corpus. It deals Dexterity save-gated Acid damage in a Sphere and applies delayed end-of-next-turn Acid damage only to failed-save creatures, with slot-scaled initial damage. No promoted profile is claimed until a delayed-damage area spell owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/vitriolic_sphere.json",
+      "unitId": "vitriolic_sphere"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active wall-area hazard Spell Effect plus table/spatial wall-geometry owner",
+          "reason": "A future owner must carry wall shape, dimensions, ring/line mode, opaque projection, selected damaging side, Concentration duration, appearance-time affected creatures, Dexterity save damage, first-entry/end-turn damage timing, and slot-scaled damage. Table/spatial ownership must supply solid-surface placement, wall geometry, side relation, entry, and area membership without duplicating map or line-of-sight state."
+        },
+        "reason": "Wall of Fire is an SRD level-4 Spell Definition whose local SRD text creates an opaque line or ring wall on a solid surface, deals appearance-time Dexterity save Fire damage, and damages creatures on the selected hot side or inside the wall at entry/end-turn timing. No promoted profile is claimed until a wall-area hazard owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wall_of_fire.json",
+      "unitId": "wall_of_fire"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/environment suffocation and underwater-breathing owner",
+          "reason": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state."
+        },
+        "reason": "Water Breathing is an SRD level-3 Spell Definition whose current Surface record models Action or Ritual casting, 30-foot range, V/S/M short-reed components, 24-hour duration, up to ten willing creature targets, water-breathing grant, and retained normal respiration. Task 29 claims no promoted battle-runtime profile because underwater environment presence, breath-holding timing, suffocation progression, suffocation-caused Exhaustion cleanup when breathing resumes, and any table determination that a creature needs underwater breathing are runtime-detached table/environment hazard facts outside promoted battle Unit profiles. The existing Alter Self Aquatic Adaptation projection is source-specific self-transformation state and is not a generic Water Breathing spell owner.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/water_breathing.json",
+      "unitId": "water_breathing"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future multi-target transformation and travel owner",
+          "reason": "A future owner must model willing-target selection, gaseous form, Fly and Hover movement, Prone immunity, damage resistances and immunities, reversion timing, descent, and long-duration cleanup without duplicating transformation or map state in battle runtime."
+        },
+        "reason": "Wind Walk is authored and installed, but multi-target gaseous transformation, 300-foot Fly movement, Hover, resistances and immunities, Dash or Magic Action reversion, and eight-hour lifecycle are not owned by a promoted runtime profile.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/wind_walk.json",
+      "unitId": "wind_walk"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table/session sanctuary travel owner",
+          "reason": "A future owner must retain the caster's prepared sanctuary, validate willing targets within range, handle absent-sanctuary no-effect behavior, and resolve destination placement without duplicating map or travel state in battle runtime."
+        },
+        "reason": "Word of Recall is authored and installed, but sanctuary preparation, up-to-five willing target selection, and destination teleportation are table/session travel facts outside promoted runtime profiles.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [],
+      "executableMechanics": true,
+      "kind": "spell",
+      "profiles": [],
+      "sourceRecordPath": "packages/surface/content/word_of_recall.json",
+      "unitId": "word_of_recall"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -46488,19 +48010,28 @@
           "id": "spell.invocation-slow-active-penalties",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
-            "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-slow-stat-block-multiattack-core.qnt",
+            "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/active-effect/types.ts",
+            "packages/battle-runtime/src/stat-block-execution.ts",
+            "packages/battle-runtime/src/stat-block-execution-state.ts",
+            "packages/battle-runtime/src/battle-reducer/action-eligibility.ts",
+            "packages/battle-runtime/src/battle-reducer/action-resource-kinds.ts",
+            "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
             "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
             "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/creature-state.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+            "packages/battle-runtime/src/battle-reducer/slow-active-penalties-effects.ts",
             "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-runtime.ts",
+            "packages/battle-runtime/src/battle-reducer/slow-active-penalties-turn-restriction.ts",
+            "packages/battle-runtime/src/battle-reducer/statblock.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts",
             "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
             "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
@@ -46513,16 +48044,17 @@
             "packages/battle-runtime/src/battle-subjects.ts",
             "packages/shared-algebras/src/action-economy-algebra.ts"
           ],
-          "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, active Slow effect state, action-economy state, Attack action resource state, and canonical spell component facts. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, target-turn Action or Bonus Action mutual exclusion, Attack action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic cast resource spending without applying the spell effect, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
+          "sourceBoundary": "The runtime consumes the authored Slow spell shape, caller-supplied point-origin Cube affected-creature witnesses for up to six chosen creatures, Wisdom Saving Throw outcomes, active Slow effect state, action-economy state, Attack action resource state, and canonical spell component facts. It owns Magic Action and level-3-or-higher Spell Slot spending, caster Concentration, failed-save active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties, the target-turn at-most-one Action-or-Bonus-Action restriction including reconciliation when either was already spent, the Attack action one-attack cap, Somatic component failure chance before spell resolution, failed-Somatic cast resource spending without applying the spell effect or starting new Concentration, target-end repeat-save cleanup, and concentration cleanup when no affected targets remain. The identity-independent Slow semantic core owns those occurrence-local rules and consumes typed concentration-ended and duration-expired signals without replacing the canonical generic Concentration lifecycle or elapsed-time scheduler. The Slow Stat Block composition derives the one-listed-dispatch allowance from typed active Slow state at atomic Multiattack activation while preserving source, ordered list, multiplicity, and continuation. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
           "taskRefs": [
             "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
-            "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
+            "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME",
+            "GH-441"
           ],
           "title": "Spell invocation applies Slow active penalties with target-turn and Somatic runtime restrictions",
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle-tests.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-inductive.qnt"
             },
             {
               "kind": "runtime-test",
@@ -48791,34 +50323,6 @@
       },
       "claim": {
         "battleReadinessClosure": {
-          "kind": "companion-control-boundary",
-          "owner": "future reanimated companion lifecycle/control owner",
-          "reason": "Animate Dead's represented runtime behavior is closed at the companion-control boundary: a future reanimated companion owner must model Skeleton/Zombie combatant creation from corpse-or-bones targets, control-window ownership, Bonus Action command fan-out, default Dodge-and-avoid behavior, autonomous task following, 24-hour control expiry, higher-slot reassertion, and stat-block action execution without authored-identity dispatch in generic runtime code."
-        },
-        "reason": "Animate Dead is an SRD level-3 Spell Definition whose Surface record models 1-minute Spell Slot casting, 10-foot range, V/S/M blood/flesh/bone-dust components, Instantaneous duration, a Medium or Small Humanoid corpse-or-bones target, Skeleton or Zombie creation, a slot-tier Skeleton/Zombie menu, a 24-hour control window, Bonus Action mental command within 60 feet, and default Dodge-and-avoid behavior. No promoted battle-runtime profile is claimed because reanimated combatant creation, stat-block projection, caster control ownership, per-turn command assignment, task-following autonomy, control expiry, and recast reassertion belong to a companion-control lifecycle owner rather than generic Spell Invocation reducers.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/animate_dead.json",
-      "unitId": "animate_dead"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
           "kind": "outside-runtime-presentation-exploration",
           "owner": "future remote visual sensor Spell Effect plus table/spatial sight and movement owner",
           "reason": "A future owner must carry the sensor occurrence, caster ownership, Concentration duration, Invisible/invulnerable presentation, remote visual feed, Darkvision range, Bonus Action movement, solid-barrier blocking, and one-inch opening passage. Table/spatial ownership must supply map openings, barriers, movement path, line of sight, and what the eye can see without duplicating map or perception state inside generic spell reducers."
@@ -49325,24 +50829,6 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/chain_lightning.json",
-      "unitId": "chain_lightning"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -49377,34 +50863,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/circle_of_death.json",
       "unitId": "circle_of_death"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "table-perception-exploration",
-          "owner": "runtime-detached table/perception and remote-sensor owner",
-          "reason": "Clairvoyance creates a table-placed remote sensor and remote perception channel. Promoted battle runtime does not own location familiarity, remote information disclosure, active sensor-sense presentation, observer visibility of the sensor, or autonomous sensor behavior, and must not treat the sensor as ordinary caster sight or a target-selection proxy."
-        },
-        "reason": "Clairvoyance is an SRD level-3 Spell Definition whose current Surface record models 10-minute Spell Slot casting, 1-mile range, V/S/M 100+ GP focus, Concentration up to 10 minutes, a familiar-or-obvious location sensor hole, an Invisible invulnerable sensor, remote seeing-or-hearing perception, and Bonus Action sense switching. RAW also includes the sensor's intangible nature and luminous-orb observer presentation for creatures that can see the sensor. No promoted battle-runtime profile is claimed because location familiarity or obviousness, remote seeing or hearing information, active chosen-sense state, Bonus Action switching between remote senses, sensor visibility to See Invisibility or Truesight observers, and luminous-orb presentation are table/perception/exploration facts outside promoted battle Unit profiles; the sensor must not become ordinary caster sight, target, attack visibility, companion, or autonomous actor state.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/clairvoyance.json",
-      "unitId": "clairvoyance"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -49575,24 +51033,6 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/create_undead.json",
-      "unitId": "create_undead"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
       "claim": {
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -49609,34 +51049,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/death_ward.json",
       "unitId": "death_ward"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future self-and-companion teleport owner plus table/spatial destination legality owner",
-          "reason": "A future owner must consume destination description/visualization facts, willing adjacent passenger facts, range, destination and passenger placement, occupied-or-filled collision checks, Force damage on failed arrival, and atomic teleport failure/success. Map coordinates, visibility, description interpretation, occupancy, object fill, and nearest destination placement belong to the table/spatial owner rather than copied spell state."
-        },
-        "reason": "Dimension Door is an SRD level-4 Spell Definition whose local SRD text teleports the caster to a specified destination within 500 feet, may bring one willing adjacent creature, places that creature near the destination, and fails with Force damage if arrival spaces are occupied or filled. No promoted profile is claimed until a table-spatial teleport owner exists.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/dimension_door.json",
-      "unitId": "dimension_door"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -49780,34 +51192,6 @@
       "authoredSurfaceDuplicateIdCount": 1,
       "catalogAdmission": {
         "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future active Frightened-compulsion Spell Effect, held-object release, and compelled-movement owner",
-          "reason": "Fear's represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the 30-foot Cone affected target set and Wisdom Saving Throw, carry per-target Frightened state under Concentration, release held objects on failed saves, force affected targets to Dash and move away by the safest route when movement is possible, gate repeat Wisdom Saving Throws on ending a turn without line of sight to the caster, and consume table/spatial pathing, line-of-sight, no-route, and held-object witnesses rather than duplicating map or inventory state inside generic Spell Invocation reducers."
-        },
-        "reason": "Fear is an SRD level-3 Spell Definition whose authored Surface record captures Action Spell Slot casting, Self range, V/S/M white-feather components, Concentration up to 1 minute, a 30-foot Cone, and an initial Wisdom Saving Throw to apply Frightened; the RAW prose also requires failed-save held-object drop, mandatory Dash action and movement away from the caster by the safest route on each affected target's turns unless there is nowhere to move, and an end-of-turn Wisdom Saving Throw only when the target ends where it lacks line of sight to the caster. No promoted battle-runtime profile is claimed because full support needs an active Frightened-compulsion Spell Effect owner that stores affected targets, caster-target line-of-sight relation, held-object release, compelled Dash action use, safest-route movement/pathing, no-move exception, per-target repeat-save timing, and Concentration cleanup without authored-identity dispatch.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/fear.json",
-      "unitId": "fear"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
           "category": "unsupported-widening-pressure",
           "planningLane": "QMBT18",
           "reason": "Executable SRD authored data is absent from the catalog and needs an explicit unsupported profile or surface-widening slice."
@@ -49859,24 +51243,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/find_steed.json",
       "unitId": "find_steed"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/finger_of_death.json",
-      "unitId": "finger_of_death"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -50059,24 +51425,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/harm.json",
-      "unitId": "harm"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/heal.json",
       "unitId": "heal"
     },
@@ -50097,62 +51445,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/holy_aura.json",
       "unitId": "holy_aura"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future area save-damage plus temporary terrain Spell Effect owner",
-          "reason": "A future owner must admit Cylinder affected creatures, Dexterity Saving Throws, mixed damage entries with half damage on success, slot-scaled Bludgeoning dice, and a short-lived Difficult Terrain area. Table/spatial ownership must supply Cylinder placement, area membership, ground affected, terrain movement costs, and cleanup at the caster next-turn boundary without duplicating map geometry."
-        },
-        "reason": "Ice Storm is an SRD level-4 Spell Definition whose local SRD text creates a Cylinder, deals mixed Bludgeoning and Cold save-gated damage, leaves temporary Difficult Terrain until the end of the caster's next turn, and scales Bludgeoning damage by slot. No promoted profile is claimed until direct area damage can create temporary terrain effects.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/ice_storm.json",
-      "unitId": "ice_storm"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached identification/table owner",
-          "reason": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts."
-        },
-        "reason": "Magic-item identification, attunement/property discovery, and spell-affecting-object or spell-affecting-creature identification are runtime-detached table adjudication outside promoted battle Unit profiles.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/identify.json",
-      "unitId": "identify"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -51569,34 +52861,6 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "future illusion Spell Effect and table/presentation/perception owner",
-          "reason": "Major Image's represented runtime behavior is closed outside promoted battle runtime: a future illusion Spell Effect and table/presentation/perception owner must carry the illusion occurrence, Concentration or level-4+ until-dispelled duration, selected spot and 20-foot Cube bounds, caster Magic Action repositioning and content changes, physical-interaction reveal, Study/Investigation discovery, and per-observer see-through/faint sensory presentation without duplicating map, line-of-sight, object or creature presence, or believability state inside battle Spell Invocation reducers."
-        },
-        "reason": "Major Image is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, 120-foot point range, V/S/M fleece component, Concentration up to 10 minutes, a visible point-origin 20-foot Cube illusion, visual/sound/smell/temperature sensory channels, and the no-damage/no-conditions limit. RAW also requires caster Magic Action repositioning and content changes while within range, physical-interaction reveal, Study action Intelligence (Investigation) discovery against Spell Save DC, per-creature see-through and faint sensory qualities after discernment, and level-4+ Spell Slot duration until dispelled without Concentration. No promoted battle-runtime profile is claimed because full support needs an illusion Spell Effect and table/presentation/perception owner for depicted content, sensory believability, image movement and conversation, physical interaction, per-observer discerned state, and duration-kind substitution rather than generic Spell Invocation reducers or duplicated battle map/perception state.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/major_image.json",
-      "unitId": "major_image"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -51856,42 +53120,6 @@
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
-      "sourceRecordPath": "packages/surface/content/power_word_kill.json",
-      "unitId": "power_word_kill"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/power_word_stun.json",
-      "unitId": "power_word_stun"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
       "sourceRecordPath": "packages/surface/content/prismatic_wall.json",
       "unitId": "prismatic_wall"
     },
@@ -51987,34 +53215,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/silent_image.json",
       "unitId": "silent_image"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future active Emanation area-hazard Spell Effect and table/spatial membership owner",
-          "reason": "Spirit Guardians' represented battle behavior is closed outside the current promoted battle-runtime boundary: a future active Spell Effect owner must admit the caster-selected unaffected creatures, carry the caster-owned Concentration occurrence and self-origin 15-foot Emanation, project Speed halving only for affected creatures in the Emanation, and resolve Wisdom Saving Throw Radiant-or-Necrotic damage when the Emanation enters a creature's space, a creature enters the Emanation, or a creature ends its turn there, with a shared once-per-turn save limit. Table/spatial ownership must supply moving Emanation membership and area-entry witnesses rather than duplicating map or path state inside generic Spell Invocation reducers."
-        },
-        "reason": "Spirit Guardians is an SRD level-3 Spell Definition whose authored Surface record models Action Spell Slot casting, Self range, V/S/M prayer-scroll components, caster-owned Concentration up to 10 minutes, a self-origin 15-foot Emanation, passive halving of affected creatures' Speed in the Emanation, a Wisdom Saving Throw gate, Radiant-or-Necrotic damage with half damage on success, and +1d8 damage per Spell Slot level above 3. No promoted battle-runtime profile is claimed because full support needs an active Emanation area-hazard Spell Effect that carries the caster-selected unaffected creature set, self-moving Emanation identity, area-membership trigger facts, Speed projection, save-gated damage timing, and per-creature once-per-turn save ledger without authored-identity dispatch.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/spirit_guardians.json",
-      "unitId": "spirit_guardians"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -52137,58 +53337,12 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "social-knowledge-effect",
-          "owner": "runtime-detached language/communication owner",
-          "reason": "Tongues changes communication intelligibility through hearing, sight, signing, speech, and known-language gates. Promoted battle runtime does not own conversation content, social outcomes, automatic communication adjudication, or language-table projection for this spell."
-        },
-        "reason": "Tongues is an SRD level-3 Spell Definition whose current Surface record models Action casting, Touch range, V/M miniature-ziggurat components, 1-hour duration, one touched creature target, spoken-or-signed language understanding, and outward intelligibility to any creature that knows at least one language and can hear the speech or see the signing. Task 54 preserves the no-promoted-battle-runtime closure because hearing or seeing communication, knowing at least one language, language comprehension, and conversation outcomes are runtime-detached table/social communication facts outside promoted battle Unit profiles; the spell must not introduce autonomous behavior, commanded-action execution, or authored-identity dispatch in runtime code.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/tongues.json",
-      "unitId": "tongues"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/true_polymorph.json",
       "unitId": "true_polymorph"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/true_seeing.json",
-      "unitId": "true_seeing"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -52247,34 +53401,6 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-battle-runtime",
-          "owner": "future active wall-area hazard Spell Effect plus table/spatial wall-geometry owner",
-          "reason": "A future owner must carry wall shape, dimensions, ring/line mode, opaque projection, selected damaging side, Concentration duration, appearance-time affected creatures, Dexterity save damage, first-entry/end-turn damage timing, and slot-scaled damage. Table/spatial ownership must supply solid-surface placement, wall geometry, side relation, entry, and area membership without duplicating map or line-of-sight state."
-        },
-        "reason": "Wall of Fire is an SRD level-4 Spell Definition whose local SRD text creates an opaque line or ring wall on a solid surface, deals appearance-time Dexterity save Fire damage, and damages creatures on the selected hot side or inside the wall at entry/end-turn timing. No promoted profile is claimed until a wall-area hazard owner exists.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/wall_of_fire.json",
-      "unitId": "wall_of_fire"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -52299,34 +53425,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/wall_of_thorns.json",
       "unitId": "wall_of_thorns"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "claim": {
-        "battleReadinessClosure": {
-          "kind": "outside-runtime-presentation-exploration",
-          "owner": "runtime-detached table/environment suffocation and underwater-breathing owner",
-          "reason": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state."
-        },
-        "reason": "Water Breathing is an SRD level-3 Spell Definition whose current Surface record models Action or Ritual casting, 30-foot range, V/S/M short-reed components, 24-hour duration, up to ten willing creature targets, water-breathing grant, and retained normal respiration. Task 29 claims no promoted battle-runtime profile because underwater environment presence, breath-holding timing, suffocation progression, suffocation-caused Exhaustion cleanup when breathing resumes, and any table determination that a creature needs underwater breathing are runtime-detached table/environment hazard facts outside promoted battle Unit profiles. The existing Alter Self Aquatic Adaptation projection is source-specific self-transformation state and is not a generic Water Breathing spell owner.",
-        "tag": "unsupported-profile"
-      },
-      "collectionId": "srd-5.2.1",
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/water_breathing.json",
-      "unitId": "water_breathing"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,
@@ -52867,24 +53965,6 @@
       "profiles": [],
       "sourceRecordPath": "packages/surface/content/weird.json",
       "unitId": "weird"
-    },
-    {
-      "authoredSurfaceDuplicateIdCount": 1,
-      "catalogAdmission": {
-        "disposition": {
-          "category": "srd-candidate",
-          "planningLane": "QMBT14-QMBT16",
-          "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
-        },
-        "expectedCollectionId": "srd-5.2.1",
-        "status": "not-in-unit-catalog"
-      },
-      "evidence": [],
-      "executableMechanics": true,
-      "kind": "spell",
-      "profiles": [],
-      "sourceRecordPath": "packages/surface/content/wind_walk.json",
-      "unitId": "wind_walk"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

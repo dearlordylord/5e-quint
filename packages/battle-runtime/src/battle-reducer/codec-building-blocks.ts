@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
+// UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
 import {
   ABILITIES,
   AmmunitionKindSchema,
@@ -251,19 +253,21 @@ export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   damageBonus: Schema.optionalKey(Schema.Number),
   damageTypeChoices: Schema.optionalKey(
     Schema.NonEmptyArray(DamageTypeSchema).pipe(
-      Schema.refine(
-        (
-          choices,
-        ): choices is readonly [
-          typeof DamageTypeSchema.Type,
-          typeof DamageTypeSchema.Type,
-          ...(typeof DamageTypeSchema.Type)[],
-        ] => choices.length >= 2,
-        {
-          /* v8 ignore next -- @preserve -- Only malformed authored weapon data requests this diagnostic; valid choices are parsed through the two-or-more predicate above. */
-          message:
-            "Weapon attack damage type choices must contain at least two choices.",
-        },
+      Schema.check(
+        Schema.makeFilter(
+          (
+            choices,
+          ): choices is readonly [
+            typeof DamageTypeSchema.Type,
+            typeof DamageTypeSchema.Type,
+            ...(typeof DamageTypeSchema.Type)[],
+          ] => choices.length >= 2,
+          {
+            /* v8 ignore next -- @preserve -- Only malformed authored weapon data requests this diagnostic; valid choices are parsed through the two-or-more predicate above. */
+            message:
+              "Weapon attack damage type choices must contain at least two choices.",
+          },
+        ),
       ),
     ),
   ),
@@ -289,24 +293,28 @@ export const BoundCharacterWeaponAttackActionOptionSchema =
 
 const SupportedCreatureAttackRollMechanicsSchema =
   CreatureAttackRollMechanicsSchema.pipe(
-    Schema.refine(creatureAttackRollMechanicsAreSupported, {
-      message: "Unsupported Stat Block attack mechanics.",
-    }),
+    Schema.check(
+      Schema.makeFilter(creatureAttackRollMechanicsAreSupported, {
+        message: "Unsupported Stat Block attack mechanics.",
+      }),
+    ),
   );
 
 const SupportedStaticDamageCreatureAttackRollMechanicsSchema =
   SupportedCreatureAttackRollMechanicsSchema.pipe(
-    Schema.refine(
-      (
-        attack: SupportedCreatureAttackRollMechanics,
-      ): attack is SupportedStaticDamageCreatureAttackRollMechanics =>
-        statBlockAttackDamageSupportsStaticNotation(
-          supportedStatBlockAttackDamage(attack),
-        ),
-      {
-        /* v8 ignore next -- @preserve -- Only malformed authored static-damage data requests this diagnostic; valid static attacks satisfy the predicate above. */
-        message: "Static Stat Block damage requires static damage facts.",
-      },
+    Schema.check(
+      Schema.makeFilter(
+        (
+          attack: SupportedCreatureAttackRollMechanics,
+        ): attack is SupportedStaticDamageCreatureAttackRollMechanics =>
+          statBlockAttackDamageSupportsStaticNotation(
+            supportedStatBlockAttackDamage(attack),
+          ),
+        {
+          /* v8 ignore next -- @preserve -- Only malformed authored static-damage data requests this diagnostic; valid static attacks satisfy the predicate above. */
+          message: "Static Stat Block damage requires static damage facts.",
+        },
+      ),
     ),
   );
 

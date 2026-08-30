@@ -14,10 +14,13 @@ import {
   elapsedTimeTicksFromTimeSpanDuration,
   ElapsedTimeTicksSchema,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
-import type { StandardActionKind } from "@dnd/shared/game-facts";
+import {
+  HASTE_ACTION_RESOURCE_RESTRICTION,
+  HasteActionResourceRestrictionSchema,
+  isHasteActionResourceRestriction,
+} from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type {
-  ActionRestriction,
   AreaDirectEffectAtom,
   EffectAtom,
 } from "@dnd/surface/surface/types";
@@ -247,19 +250,7 @@ function compositeTargetBuffWithAftermathSpellProjection(
       grantedActionResource: {
         kind: "spellGrantedActionResource",
         sourceCombatantId: actorId,
-        restriction: {
-          kind: "allow_only",
-          actions: [
-            {
-              action: "attack",
-              attackLimit: { kind: "attack_count", count: 1 },
-            },
-            { action: "dash" },
-            { action: "disengage" },
-            { action: "hide" },
-            { action: "utilize" },
-          ],
-        },
+        restriction: HASTE_ACTION_RESOURCE_RESTRICTION,
         expiresAt,
       },
       spellEndTargetState: {

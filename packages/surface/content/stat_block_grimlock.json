@@ -1,0 +1,137 @@
+{
+  "challengeRating": 0.25,
+  "id": "stat_block_grimlock",
+  "kind": "statBlock",
+  "name": "Grimlock",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-E-G.md:1290-1310"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 6,
+      "con": 12,
+      "dex": 12,
+      "int": 9,
+      "str": 16,
+      "wis": 8
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 11
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Bone Cudgel",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6,
+                  "flat": 3
+                },
+                "kind": "fixed",
+                "static": 6
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 4
+                },
+                "kind": "fixed",
+                "static": 2
+              },
+              "damageType": "psychic",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "aberration",
+    "hp": {
+      "kind": "literal",
+      "value": 11
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 13,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 3
+      },
+      {
+        "ability": "dex",
+        "modifier": 1
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 30
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "athletics"
+      },
+      {
+        "modifier": 3,
+        "skill": "perception"
+      },
+      {
+        "modifier": 5,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "climb"
+      }
+    ]
+  }
+}

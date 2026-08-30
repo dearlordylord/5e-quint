@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import {
   requireCharacterSpellProcedureRefForTest,
   startBattleSessionRight,
@@ -231,9 +233,12 @@ describe("battle runtime: Sacred Flame, Inflict Wounds, and Burning Hands", () =
         skeletonCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: secondSkeletonId,
-          displayName: "Second Skeleton",
+          statBlockName: "Second Skeleton",
           initiative: 8,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_skeleton"),
+          ),
         }),
       ],
     });

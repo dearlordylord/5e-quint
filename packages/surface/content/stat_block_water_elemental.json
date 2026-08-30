@@ -1,0 +1,213 @@
+{
+  "challengeRating": 5,
+  "id": "stat_block_water_elemental",
+  "kind": "statBlock",
+  "name": "Water Elemental",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-T-Z.md:690-722"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 8,
+      "con": 18,
+      "dex": 14,
+      "int": 5,
+      "str": 18,
+      "wis": 10
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 14
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 2
+              },
+              "procedureOrdinal": 2
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 7
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Slam",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 13
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            },
+            {
+              "condition": "prone",
+              "kind": "apply_condition_if_target_size_at_most",
+              "maxCreatureSize": "medium"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Strength Saving Throw: DC 15, each creature in the elemental's space. Failure: 22 (4d8 + 4) Bludgeoning damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14). Until the grapple ends, the target has the Restrained condition, is suffocating unless it can breathe water, and takes 9 (2d8) Bludgeoning damage at the start of each of the elemental's turns. The elemental can grapple one Large creature or up to two Medium or smaller creatures at a time with Whelm. As an action, a creature within 5 feet of the elemental can pull a creature out of it by succeeding on a DC 14 Strength (Athletics) check. Success: Half damage only.",
+        "kind": "textOnly",
+        "name": "Whelm",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Primordial (Aquan)"
+        ]
+      }
+    },
+    "creatureType": "elemental",
+    "hp": {
+      "kind": "literal",
+      "value": 114
+    },
+    "immunities": {
+      "conditions": [
+        "exhaustion",
+        "grappled",
+        "paralyzed",
+        "petrified",
+        "poisoned",
+        "prone",
+        "restrained",
+        "unconscious"
+      ],
+      "damageTypes": [
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 2,
+      "score": 12
+    },
+    "passivePerception": 10,
+    "resistances": {
+      "damageTypes": [
+        "acid",
+        "fire"
+      ],
+      "kind": "fixed"
+    },
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 4
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "cha",
+        "modifier": -1
+      },
+      {
+        "ability": "con",
+        "modifier": 4
+      },
+      {
+        "ability": "dex",
+        "modifier": 2
+      },
+      {
+        "ability": "int",
+        "modifier": -3
+      },
+      {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "large",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 90
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the elemental takes Cold damage, its Speed decreases by 20 feet until the end of its next turn.",
+        "name": "Freeze"
+      },
+      {
+        "description": "The elemental can enter an enemy's space and stop there. It can move through a space as narrow as 1 inch without expending extra movement to do so.",
+        "name": "Water Form"
+      }
+    ]
+  }
+}

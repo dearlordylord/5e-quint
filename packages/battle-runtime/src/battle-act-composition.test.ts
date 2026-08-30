@@ -21,6 +21,7 @@ import {
   monksFocusResource,
   startBattleSessionRight,
   statBlockCreatureInit,
+  singleBaseStatBlockAttackDamageSelectionForTest,
   wizardId,
   wizardSpellcasting,
   spellRecord,
@@ -403,6 +404,8 @@ describe("battle act composition presentations", () => {
           ),
           NonNegativeInteger(0),
         ),
+        statBlockDamageSelection:
+          singleBaseStatBlockAttackDamageSelectionForTest("rolled"),
       },
       {
         tag: "monkFocusFlurryOfBlowsStrike",

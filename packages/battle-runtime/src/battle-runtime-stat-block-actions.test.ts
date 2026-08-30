@@ -1,40 +1,59 @@
+// RAW-COVERAGE: verification-owner:runtime-test RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
+import {
+  D6RollResult,
+  NonNegativeInteger,
+  resourceCount,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import fc from "fast-check";
-// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
+import { Schema } from "effect";
+import * as Result from "effect/Result";
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ACTION_LIFECYCLE BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.ATTACK_PROCEDURE BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.action-lifecycle stat-block.bonus-action-lifecycle stat-block.legendary-action-lifecycle stat-block.attack-procedure stat-block.multiattack stat-block.resource-lifecycle
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
 import {
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
 } from "./battle-runtime.test-support.ts";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
+import {
+  decodeCreatureImmunityDeclarationSync,
+  StatBlockProcedureResourceOrdinalSchema,
+} from "@dnd/surface/surface/schema";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import type {
   BattleHole,
   BattleState,
   BattleSubject,
+  NonSpellExecutableProcedureKind,
 } from "./battle-runtime.test-support.ts";
+import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import {
   abilityCheckFill,
   attackDamageHoleAfterHit,
   attackInitialTargetHole,
+  attackExecutionSelectionForSubjectForTest,
   attackRollFill,
   attackRollHoleAfterTarget,
   attackTargetFill,
   assertBattleSnapshotCodecRoundTripForTest,
+  authoredProcedureOrdinal,
   battleId,
   battleRuntimeContextForStateForTest,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   characterAttackSubjectForTest,
   characterSeed,
   damageRollFill,
   damageRollFillWithGroups,
-  DieRollResult,
   difficultyClass,
   discoverBattleActs,
   distantFighterId,
   endTurn,
+  nonSpellExecutableProcedureEntry,
   fighterAttackSubject,
   fighterGrapplesGoblin,
   fighterId,
@@ -46,10 +65,12 @@ import {
   goblinTurnBattle,
   grappleOutcomeFill,
   hidePrerequisites,
+  isNonSpellExecutableProcedureEntryOfKind,
   longRangeFighterId,
   monsterAttackSubject,
   monsterMultiattackStatBlock,
   monsterResourceStatBlock,
+  monsterResourceStatBlockWithSharedResource,
   monsterResourceStatBlockWithTwoRechargeActions,
   monsterResourceStatBlockWithUnsupportedAttackSections,
   movementFeet,
@@ -64,7 +85,6 @@ import {
   snapshotBattle,
   startBattleRight,
   statBlockCreatureInit,
-  statBlockProcedurePresentationsForStateForTest,
   statBlockRecord,
   targetFill,
   testLightHammerAttack,
@@ -72,16 +92,28 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   BattleStatBlockProcedureExecutionRef,
+  battleStatBlockProcedureExecutionRef,
   spellId,
   type BattleResourcePoolExecutionRef,
   type CombatantId,
 } from "./identity.ts";
+import {
+  admittedStatBlockExecutionState,
+  spendStatBlockMultiattackActivationResources,
+  statBlockMultiattackResourcesAvailable,
+  statBlockProcedureBinding,
+  type StatBlockMultiattackProcedure,
+  type StatBlockProcedureBindingFor,
+} from "./stat-block-execution-state.ts";
+import { statBlockMultiattackDispatchResourceDemandForActor } from "./battle-reducer/statblock.ts";
 import {
   creatureActionSectionIsSupported,
   creatureNamedAttackRollIsSupported,
 } from "./statblock-action-support.ts";
 import { supportedStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-support.ts";
 import { statBlockRechargeRollFillMatchesHole } from "./battle-reducer/turn-boundary-lifecycle.ts";
+import { isStatBlockBattleCreatureState } from "./battle-reducer/battle-discovery.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 
 function discoverStatBlockActs(state: BattleState) {
   return discoverBattleActs(
@@ -106,6 +138,50 @@ function discoveredMultiattackSubject(state: BattleState): BattleSubject {
   return act.subject;
 }
 
+function resolveMultiattackDispatchMiss(
+  state: BattleState,
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+): BattleState {
+  const act = discoverStatBlockActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.procedureRef === procedureRef &&
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        candidate.subject,
+        "rolled",
+      ),
+  );
+  if (act === undefined) {
+    throw new Error("Expected a pending Multiattack dispatch.");
+  }
+  const targetChoice = attackTargetFill(
+    findHole(act.initialHoles, "targetChoice"),
+    goblinId,
+    fighterId,
+  );
+  const targeted = requireNeedsHoles(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice],
+    }),
+  );
+  return requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetChoice,
+        attackRollFill(findHole(targeted.holes, "attackRoll"), {
+          total: 1,
+          naturalD20: 1,
+        }),
+      ],
+    }),
+  ).state;
+}
+
 function discoveredStatBlockBonusActionSubject(
   state: BattleState,
   standardAction: "disengage" | "hide",
@@ -124,8 +200,8 @@ function discoveredStatBlockBonusActionSubject(
 
 function discoveredStatBlockAttackSubject(
   state: BattleState,
-  attackName: string,
-  damageNotation: "rolled" | "static" = "rolled",
+  procedureOrdinal: number,
+  damageComponentNotation: "rolled" | "static" = "rolled",
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
@@ -135,12 +211,17 @@ function discoveredStatBlockAttackSubject(
       candidate.subject.tag === "action" &&
       candidate.subject.action === "attack" &&
       candidate.subject.procedureRef !== undefined &&
-      (candidate.subject.statBlockDamageNotation ?? "rolled") ===
-        damageNotation &&
-      candidate.summary.includes(attackName),
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        candidate.subject,
+        damageComponentNotation,
+      ) &&
+      candidate.subject.procedureRef ===
+        procedureRefForAttack(state, procedureOrdinal),
   );
   if (act?.subject.tag !== "action" || act.subject.action !== "attack") {
-    throw new Error(`Expected discovered ${attackName} attack.`);
+    throw new Error(
+      `Expected discovered attack procedure ordinal ${procedureOrdinal}.`,
+    );
   }
   return act.subject;
 }
@@ -150,105 +231,198 @@ function unavailableMultiattackSubject(state: BattleState): BattleSubject {
     tag: "action",
     actorId: goblinId,
     action: "multiattack",
-    procedureRef: procedureRefForAttack(state, "Scimitar"),
+    procedureRef: procedureRefForOrdinal(state, 3),
   };
 }
 
 function resourcePoolRefForAttack(
   state: BattleState,
-  attackName: string,
+  procedureOrdinal: number,
+  section: "actions" | "legendaryActions" = "actions",
 ): BattleResourcePoolExecutionRef {
   const actor = state.combatants.get(goblinId);
   if (actor?.origin.kind !== "statBlock") {
     throw new Error("Expected Stat Block goblin.");
   }
   const origin = actor.origin;
-  const procedureRef = statBlockProcedurePresentationsForStateForTest(
-    state,
-    goblinId,
-  ).find(
-    (candidate) => candidate.kind === "attack" && candidate.name === attackName,
-  )?.procedureRef;
+  const procedureRef = procedureRefForOrdinal(state, procedureOrdinal, section);
   const binding = origin.execution.procedureBindings.find(
     (candidate) => candidate.procedureRef === procedureRef,
   );
   const resourcePoolRef = binding?.resourcePoolRefs[0];
   if (resourcePoolRef === undefined) {
-    throw new Error(`Expected ${attackName} to own a resource pool.`);
+    throw new Error(
+      `Expected procedure ordinal ${procedureOrdinal} to own a resource pool.`,
+    );
   }
   return resourcePoolRef;
 }
 
-function procedureRefForAttack(
+function procedureRefForOrdinal(
   state: BattleState,
-  attackName: string,
+  procedureOrdinal: number,
+  section: "actions" | "legendaryActions" = "actions",
 ): ReturnType<typeof BattleStatBlockProcedureExecutionRef.make> {
   const actor = state.combatants.get(goblinId);
   if (actor?.origin.kind !== "statBlock") {
     throw new Error("Expected Stat Block goblin.");
   }
   const origin = actor.origin;
-  const procedureRef = statBlockProcedurePresentationsForStateForTest(
-    state,
-    goblinId,
-  ).find(
-    (candidate) => candidate.kind === "attack" && candidate.name === attackName,
-  )?.procedureRef;
-  const binding = origin.execution.procedureBindings.find(
-    (candidate) => candidate.procedureRef === procedureRef,
-  );
+  const binding = origin.execution.procedureBindings.find((candidate) => {
+    if (candidate.procedure.kind === "unarmedStrike") return false;
+    return (
+      candidate.procedure.section === section &&
+      candidate.procedure.procedureOrdinal ===
+        authoredProcedureOrdinal(procedureOrdinal)
+    );
+  });
   if (binding === undefined) {
-    throw new Error(`Expected ${attackName} procedure binding.`);
+    throw new Error(
+      `Expected procedure ordinal ${procedureOrdinal} in ${section}.`,
+    );
   }
   return binding.procedureRef;
 }
 
+function procedureRefForAttack(
+  state: BattleState,
+  procedureOrdinal: number,
+  section: "actions" | "legendaryActions" = "actions",
+): ReturnType<typeof BattleStatBlockProcedureExecutionRef.make> {
+  const actor = state.combatants.get(goblinId);
+  if (actor?.origin.kind !== "statBlock") {
+    throw new Error("Expected Stat Block goblin.");
+  }
+  const binding = actor.origin.execution.procedureBindings.find((candidate) => {
+    if (candidate.procedure.kind !== "attack") return false;
+    return (
+      candidate.procedure.section === section &&
+      candidate.procedure.procedureOrdinal ===
+        authoredProcedureOrdinal(procedureOrdinal)
+    );
+  });
+  if (binding === undefined) {
+    throw new Error(
+      `Expected attack procedure ordinal ${procedureOrdinal} in ${section}.`,
+    );
+  }
+  return binding.procedureRef;
+}
+
+function resourceOrdinal(value: number) {
+  return Schema.decodeSync(StatBlockProcedureResourceOrdinalSchema)(value);
+}
+
+function repeatedProcedureRefs(
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+  count: number,
+): ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef> {
+  if (count === 1) return [procedureRef];
+  return [procedureRef, ...repeatedProcedureRefs(procedureRef, count - 1)];
+}
+
+function slowActivePenaltiesEffectForTest(): Extract<
+  BattleActiveEffect,
+  { readonly kind: "slowActivePenalties" }
+> {
+  return {
+    kind: "slowActivePenalties",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      "synthetic-slow-multiattack-resource",
+    ),
+    sourceCombatantId: fighterId,
+    save: {
+      ability: "wis",
+      dc: { kind: "caster_spell_save_dc" },
+    },
+    expiresAt: {
+      kind: "concentration",
+      combatantId: fighterId,
+      durationTicks: elapsedTimeTicks(10),
+    },
+  };
+}
+
+function authoredAttackProcedure(
+  record: StatBlockRecord,
+  name: string,
+): Extract<
+  Extract<
+    NonNullable<StatBlockRecord["statBlock"]["actions"]>[number],
+    { readonly kind: "executable" }
+  >["procedure"],
+  { readonly kind: "attack_roll" }
+> {
+  const entry = record.statBlock.actions?.find(
+    (candidate) =>
+      candidate.kind === "executable" &&
+      candidate.procedure.kind === "attack_roll" &&
+      candidate.procedure.name === name,
+  );
+  if (entry?.kind !== "executable" || entry.procedure.kind !== "attack_roll") {
+    throw new Error(`Expected authored ${name} attack.`);
+  }
+  return entry.procedure;
+}
+
+function requireNonSpellExecutableProcedureEntryOfKind<
+  Kind extends NonSpellExecutableProcedureKind,
+>(record: StatBlockRecord, ordinal: number, kind: Kind) {
+  const entry = record.statBlock.actions?.find(
+    (candidate) =>
+      candidate.procedureOrdinal === authoredProcedureOrdinal(ordinal) &&
+      isNonSpellExecutableProcedureEntryOfKind(candidate, kind),
+  );
+  if (
+    entry === undefined ||
+    !isNonSpellExecutableProcedureEntryOfKind(entry, kind)
+  ) {
+    throw new Error(`Expected authored action ordinal ${ordinal}.`);
+  }
+  return entry;
+}
+
 function sizeGatedConditionRiderStatBlock(): StatBlockRecord {
   const base = statBlockRecord();
+  const template = authoredAttackProcedure(base, "Scimitar");
   return {
     ...base,
     id: parseSharedStatBlockId("stat_block_size_gated_condition_test_monster"),
     name: "Size-Gated Condition Test Monster",
     statBlock: {
       ...base.statBlock,
-      displayName: "Size-Gated Condition Test Monster",
-      actions: {
-        attacks: [
-          {
-            attackAbility: "str",
-            attackBonus: { kind: "literal", value: 4 },
-            attackType: "melee",
-            name: "Bite",
-            onHit: [
-              {
-                amount: {
-                  kind: "fixed",
-                  expr: { dice: 1, dieSize: 6, flat: 2 },
-                  static: 5,
-                },
-                damageType: "piercing",
-                kind: "damage",
+      actions: [
+        nonSpellExecutableProcedureEntry(1, {
+          ...template,
+          attackAbility: "str",
+          attackType: "melee",
+          name: "Bite",
+          onHit: [
+            {
+              amount: {
+                kind: "fixed",
+                expr: { dice: 1, dieSize: 6, flat: 2 },
+                static: 5,
               },
-              {
-                condition: "prone",
-                kind: "apply_condition_if_target_size_at_most",
-                maxCreatureSize: "medium",
-              },
-            ],
-            reachFeet: 5,
-          },
-        ],
-      },
+              damageType: "piercing",
+              kind: "damage",
+            },
+            {
+              condition: "prone",
+              kind: "apply_condition_if_target_size_at_most",
+              maxCreatureSize: "medium",
+            },
+          ],
+          reachFeet: 5,
+        }),
+      ],
     },
   };
 }
 
-function untypedConditionRiderStatBlock(): StatBlockRecord {
+function unsupportedConditionRiderStatBlock(): StatBlockRecord {
   const base = sizeGatedConditionRiderStatBlock();
-  const bite = base.statBlock.actions?.attacks?.[0];
-  if (bite === undefined) {
-    throw new Error("Expected synthetic Bite attack.");
-  }
+  const bite = authoredAttackProcedure(base, "Bite");
   const damage = bite.onHit[0];
   if (damage === undefined) {
     throw new Error("Expected synthetic Bite damage.");
@@ -256,61 +430,56 @@ function untypedConditionRiderStatBlock(): StatBlockRecord {
   return {
     ...base,
     id: parseSharedStatBlockId(
-      "stat_block_untyped_condition_rider_test_monster",
+      "stat_block_unsupported_condition_rider_test_monster",
     ),
-    name: "Untyped Condition Rider Test Monster",
+    name: "Unsupported Condition Rider Test Monster",
     statBlock: {
       ...base.statBlock,
-      displayName: "Untyped Condition Rider Test Monster",
-      actions: {
-        attacks: [
-          {
-            ...bite,
-            onHit: [damage, { kind: "apply_condition", condition: "prone" }],
-          },
-        ],
-      },
+      actions: [
+        nonSpellExecutableProcedureEntry(1, {
+          ...bite,
+          onHit: [
+            damage,
+            {
+              condition: "restrained",
+              kind: "apply_condition_if_target_size_at_most",
+              maxCreatureSize: "medium",
+            },
+          ],
+        }),
+      ],
     },
   };
 }
 
 function conditionOnlyRiderStatBlock(): StatBlockRecord {
   const base = sizeGatedConditionRiderStatBlock();
-  const bite = base.statBlock.actions?.attacks?.[0];
-  if (bite === undefined) {
-    throw new Error("Expected synthetic Bite attack.");
-  }
+  const bite = authoredAttackProcedure(base, "Bite");
   return {
     ...base,
     id: parseSharedStatBlockId("stat_block_condition_only_rider_test_monster"),
     name: "Condition-Only Rider Test Monster",
     statBlock: {
       ...base.statBlock,
-      displayName: "Condition-Only Rider Test Monster",
-      actions: {
-        attacks: [
-          {
-            ...bite,
-            onHit: [
-              {
-                condition: "prone",
-                kind: "apply_condition_if_target_size_at_most",
-                maxCreatureSize: "medium",
-              },
-            ],
-          },
-        ],
-      },
+      actions: [
+        nonSpellExecutableProcedureEntry(1, {
+          ...bite,
+          onHit: [
+            {
+              condition: "prone",
+              kind: "apply_condition_if_target_size_at_most",
+              maxCreatureSize: "medium",
+            },
+          ],
+        }),
+      ],
     },
   };
 }
 
 function nonProneSizeGatedConditionRiderStatBlock(): StatBlockRecord {
   const base = sizeGatedConditionRiderStatBlock();
-  const bite = base.statBlock.actions?.attacks?.[0];
-  if (bite === undefined) {
-    throw new Error("Expected synthetic Bite attack.");
-  }
+  const bite = authoredAttackProcedure(base, "Bite");
   const damage = bite.onHit[0];
   if (damage === undefined) {
     throw new Error("Expected synthetic Bite damage.");
@@ -323,22 +492,19 @@ function nonProneSizeGatedConditionRiderStatBlock(): StatBlockRecord {
     name: "Non-Prone Size-Gated Condition Test Monster",
     statBlock: {
       ...base.statBlock,
-      displayName: "Non-Prone Size-Gated Condition Test Monster",
-      actions: {
-        attacks: [
-          {
-            ...bite,
-            onHit: [
-              damage,
-              {
-                condition: "grappled",
-                kind: "apply_condition_if_target_size_at_most",
-                maxCreatureSize: "medium",
-              },
-            ],
-          },
-        ],
-      },
+      actions: [
+        nonSpellExecutableProcedureEntry(1, {
+          ...bite,
+          onHit: [
+            damage,
+            {
+              condition: "grappled",
+              kind: "apply_condition_if_target_size_at_most",
+              maxCreatureSize: "medium",
+            },
+          ],
+        }),
+      ],
     },
   };
 }
@@ -351,7 +517,6 @@ function largeTargetStatBlock(): StatBlockRecord {
     name: "Large Condition Rider Target",
     statBlock: {
       ...base.statBlock,
-      displayName: "Large Condition Rider Target",
       hp: { kind: "literal", value: 20 },
       size: "large",
     },
@@ -368,32 +533,22 @@ function proneImmuneTargetStatBlock(): StatBlockRecord {
     name: "Prone-Immune Condition Rider Target",
     statBlock: {
       ...base.statBlock,
-      displayName: "Prone-Immune Condition Rider Target",
       hp: { kind: "literal", value: 20 },
-      immunities: {
+      immunities: decodeCreatureImmunityDeclarationSync({
         ...(base.statBlock.immunities ?? {}),
         conditions: ["prone"],
-      },
+      }),
       size: "medium",
     },
   };
 }
 
-function procedureRefForStatBlockAttackSubject(
+function biteMeleeReachFact(
+  targetId: CombatantId,
   subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
   >,
-) {
-  if (subject.procedureRef === undefined) {
-    throw new Error("Expected Stat Block attack procedure ref.");
-  }
-  return BattleStatBlockProcedureExecutionRef.make(subject.procedureRef);
-}
-
-function biteMeleeReachFact(
-  targetId: CombatantId,
-  procedureRef: ReturnType<typeof BattleStatBlockProcedureExecutionRef.make>,
 ) {
   return [
     {
@@ -401,7 +556,7 @@ function biteMeleeReachFact(
       actorId: goblinId,
       targetId,
       distanceFeet: movementFeet(5),
-      procedureRef,
+      ...attackExecutionSelectionForSubjectForTest(subject),
     },
   ];
 }
@@ -428,47 +583,39 @@ function withProneConditionImmunity(
 
 function monsterMultiDamageStatBlock(): StatBlockRecord {
   const base = statBlockRecord();
-  const shortbow = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Shortbow",
-  );
-  if (shortbow === undefined) {
-    throw new Error("Expected Goblin Warrior Shortbow fixture.");
-  }
+  const shortbow = authoredAttackProcedure(base, "Shortbow");
   return {
     ...base,
     id: parseSharedStatBlockId("stat_block_multi_damage_test_monster"),
     name: "Multi Damage Test Monster",
     statBlock: {
       ...base.statBlock,
-      displayName: "Multi Damage Test Monster",
-      actions: {
-        attacks: [
-          {
-            ...shortbow,
-            name: "Venom Dart",
-            onHit: [
-              {
-                kind: "damage",
-                damageType: "piercing",
-                amount: {
-                  kind: "fixed",
-                  expr: { dice: 1, dieSize: 4, flat: 1 },
-                  static: 3,
-                },
+      actions: [
+        nonSpellExecutableProcedureEntry(1, {
+          ...shortbow,
+          name: "Venom Dart",
+          onHit: [
+            {
+              kind: "damage",
+              damageType: "piercing",
+              amount: {
+                kind: "fixed",
+                expr: { dice: 1, dieSize: 4, flat: 1 },
+                static: 3,
               },
-              {
-                kind: "damage",
-                damageType: "poison",
-                amount: {
-                  kind: "fixed",
-                  expr: { dice: 1, dieSize: 6 },
-                  static: 3,
-                },
+            },
+            {
+              kind: "damage",
+              damageType: "poison",
+              amount: {
+                kind: "fixed",
+                expr: { dice: 1, dieSize: 6 },
+                static: 3,
               },
-            ],
-          },
-        ],
-      },
+            },
+          ],
+        }),
+      ],
     },
   };
 }
@@ -506,15 +653,12 @@ function resolveBiteAgainst(input: {
     ],
   });
   const state = input.stateTransform?.(initialState) ?? initialState;
-  const subject = discoveredStatBlockAttackSubject(state, "Bite");
+  const subject = discoveredStatBlockAttackSubject(state, 1);
   const targetHole = attackInitialTargetHole(state, subject);
   const targetChoice = targetFill(
     targetHole,
     input.targetId,
-    biteMeleeReachFact(
-      input.targetId,
-      procedureRefForStatBlockAttackSubject(subject),
-    ),
+    biteMeleeReachFact(input.targetId, subject),
   );
   const rollHole = requireHole(
     resolveBattleSubject({
@@ -571,21 +715,21 @@ describe("battle runtime: Stat Block actions", () => {
     }
 
     const acts = discoverStatBlockActs(afterFighter.state);
+    const scimitar = discoveredStatBlockAttackSubject(
+      afterFighter.state,
+      1,
+      "rolled",
+    );
+    const shortbow = discoveredStatBlockAttackSubject(
+      afterFighter.state,
+      2,
+      "rolled",
+    );
 
     expect(acts.map((act) => act.subject)).toEqual(
       expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          procedureRef: procedureRefForAttack(afterFighter.state, "Scimitar"),
-        },
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          procedureRef: procedureRefForAttack(afterFighter.state, "Shortbow"),
-        },
+        scimitar,
+        shortbow,
         { tag: "runtimeCommand", actorId: goblinId, command: "move" },
         { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
       ]),
@@ -594,7 +738,7 @@ describe("battle runtime: Stat Block actions", () => {
 
   test("a character cannot execute a Stat Block Multiattack subject", () => {
     const state = fighterVsGoblinBattle();
-    const statBlockProcedureRef = procedureRefForAttack(state, "Scimitar");
+    const statBlockProcedureRef = procedureRefForAttack(state, 1);
 
     expect(
       resolveBattleSubject({
@@ -616,7 +760,7 @@ describe("battle runtime: Stat Block actions", () => {
 
   test("a character cannot execute a Stat Block Bonus Action subject", () => {
     const state = fighterVsGoblinBattle();
-    const statBlockProcedureRef = procedureRefForAttack(state, "Scimitar");
+    const statBlockProcedureRef = procedureRefForAttack(state, 1);
 
     expect(
       resolveBattleSubject({
@@ -658,7 +802,7 @@ describe("battle runtime: Stat Block actions", () => {
         state: goblinTurn,
         subject: {
           ...subject,
-          procedureRef: procedureRefForAttack(goblinTurn, "Scimitar"),
+          procedureRef: procedureRefForAttack(goblinTurn, 1),
         },
         fills: [],
       }),
@@ -744,19 +888,16 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const subject = discoveredStatBlockAttackSubject(monsterTurn, "Venom Dart");
+    const subject = discoveredStatBlockAttackSubject(monsterTurn, 1);
+    const staticSubject = discoveredStatBlockAttackSubject(
+      monsterTurn,
+      1,
+      "static",
+    );
 
     expect(
       discoverStatBlockActs(monsterTurn).map((act) => act.subject),
-    ).toEqual(
-      expect.arrayContaining([
-        subject,
-        {
-          ...subject,
-          statBlockDamageNotation: "static",
-        },
-      ]),
-    );
+    ).toEqual(expect.arrayContaining([subject, staticSubject]));
 
     const targetHole = attackInitialTargetHole(monsterTurn, subject);
     const targetChoice = venomDartTargetFill(targetHole);
@@ -822,11 +963,7 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
-    const subject = discoveredStatBlockAttackSubject(
-      monsterTurn,
-      "Venom Dart",
-      "static",
-    );
+    const subject = discoveredStatBlockAttackSubject(monsterTurn, 1, "static");
     const targetHole = attackInitialTargetHole(monsterTurn, subject);
     const targetChoice = venomDartTargetFill(targetHole);
     const rollHole = requireHole(
@@ -861,10 +998,7 @@ describe("battle runtime: Stat Block actions", () => {
 
   test("Stat Block attacks admit target-size-gated condition riders from structured on-hit payload", () => {
     const statBlock = sizeGatedConditionRiderStatBlock();
-    const attack = statBlock.statBlock.actions?.attacks?.[0];
-    if (attack === undefined) {
-      throw new Error("Expected synthetic Bite attack.");
-    }
+    const attack = authoredAttackProcedure(statBlock, "Bite");
 
     expect(creatureNamedAttackRollIsSupported(attack)).toBe(true);
     expect(supportedStatBlockAttackHitConditionRiders(attack)).toEqual([
@@ -887,26 +1021,15 @@ describe("battle runtime: Stat Block actions", () => {
 
     expect(discoverStatBlockActs(state).map((act) => act.subject)).toEqual(
       expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          procedureRef: procedureRefForAttack(state, "Bite"),
-        },
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          procedureRef: procedureRefForAttack(state, "Bite"),
-          statBlockDamageNotation: "static",
-        },
+        discoveredStatBlockAttackSubject(state, 1, "rolled"),
+        discoveredStatBlockAttackSubject(state, 1, "static"),
       ]),
     );
   });
 
   test("Stat Block condition-rider support rejects duplicate and nonterminal riders", () => {
     const statBlock = sizeGatedConditionRiderStatBlock();
-    const attack = statBlock.statBlock.actions?.attacks?.[0];
+    const attack = authoredAttackProcedure(statBlock, "Bite");
     const damage = attack?.onHit[0];
     const rider = attack?.onHit[1];
     if (attack === undefined || damage === undefined || rider === undefined) {
@@ -986,7 +1109,7 @@ describe("battle runtime: Stat Block actions", () => {
       targetId: distantFighterId,
       target: statBlockCreatureInit({
         combatantId: distantFighterId,
-        displayName: "Large Target",
+        statBlockName: "Large Target",
         initiative: 10,
         statBlock: largeTargetStatBlock(),
       }),
@@ -1006,7 +1129,7 @@ describe("battle runtime: Stat Block actions", () => {
       targetId: distantFighterId,
       target: statBlockCreatureInit({
         combatantId: distantFighterId,
-        displayName: "Prone-Immune Target",
+        statBlockName: "Prone-Immune Target",
         initiative: 10,
         statBlock: proneImmuneTargetStatBlock(),
       }),
@@ -1037,70 +1160,67 @@ describe("battle runtime: Stat Block actions", () => {
     expect(hasCondition(target.conditions, "prone")).toBe(false);
   });
 
-  test("Stat Block attacks with untyped condition riders remain unsupported", () => {
-    const statBlock = untypedConditionRiderStatBlock();
-    const attack = statBlock.statBlock.actions?.attacks?.[0];
-    if (attack === undefined) {
-      throw new Error("Expected synthetic Bite attack.");
-    }
-    expect(creatureNamedAttackRollIsSupported(attack)).toBe(false);
+  test("Stat Block executable condition riders remain unsupported", () => {
+    const statBlock = unsupportedConditionRiderStatBlock();
+    const attack = authoredAttackProcedure(statBlock, "Bite");
 
-    const state = startBattleRight({
-      battleId: battleId("battle-monster-untyped-condition-rider-rejected"),
-      combatants: [
-        statBlockCreatureInit({ initiative: 20, statBlock }),
-        characterSeed({ initiative: 10 }),
+    expect(creatureNamedAttackRollIsSupported(attack)).toBe(false);
+    expect(supportedStatBlockAttackHitConditionRiders(attack)).toBeNull();
+
+    const projected = projectAuthoredStatBlock(statBlock);
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "actions",
+          procedureOrdinal: authoredProcedureOrdinal(1),
+        },
       ],
     });
-
-    expect(
-      discoverStatBlockActs(state).map((act) => act.summary),
-    ).not.toContain("Take the Attack action with Bite.");
   });
 
   test("Stat Block attacks with non-Prone target-size condition riders remain unsupported", () => {
     const statBlock = nonProneSizeGatedConditionRiderStatBlock();
-    const attack = statBlock.statBlock.actions?.attacks?.[0];
-    if (attack === undefined) {
-      throw new Error("Expected synthetic Bite attack.");
-    }
+    const attack = authoredAttackProcedure(statBlock, "Bite");
     expect(creatureNamedAttackRollIsSupported(attack)).toBe(false);
     expect(supportedStatBlockAttackHitConditionRiders(attack)).toBeNull();
 
-    const state = startBattleRight({
-      battleId: battleId(
-        "battle-monster-non-prone-size-gated-condition-rider-rejected",
-      ),
-      combatants: [
-        statBlockCreatureInit({ initiative: 20, statBlock }),
-        characterSeed({ initiative: 10 }),
+    const projected = projectAuthoredStatBlock(statBlock);
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "actions",
+          procedureOrdinal: authoredProcedureOrdinal(1),
+        },
       ],
     });
-
-    expect(
-      discoverStatBlockActs(state).map((act) => act.summary),
-    ).not.toContain("Take the Attack action with Bite.");
   });
 
   test("Stat Block attacks with only condition riders remain unsupported", () => {
     const statBlock = conditionOnlyRiderStatBlock();
-    const attack = statBlock.statBlock.actions?.attacks?.[0];
-    if (attack === undefined) {
-      throw new Error("Expected synthetic Bite attack.");
-    }
+    const attack = authoredAttackProcedure(statBlock, "Bite");
     expect(creatureNamedAttackRollIsSupported(attack)).toBe(false);
 
-    const state = startBattleRight({
-      battleId: battleId("battle-monster-condition-only-rider-rejected"),
-      combatants: [
-        statBlockCreatureInit({ initiative: 20, statBlock }),
-        characterSeed({ initiative: 10 }),
+    const projected = projectAuthoredStatBlock(statBlock);
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "actions",
+          procedureOrdinal: authoredProcedureOrdinal(1),
+        },
       ],
     });
-
-    expect(
-      discoverStatBlockActs(state).map((act) => act.summary),
-    ).not.toContain("Take the Attack action with Bite.");
   });
 
   test("Goblin Warrior discovers Nimble Escape as Stat Block Bonus Action options", () => {
@@ -1249,12 +1369,17 @@ describe("battle runtime: Stat Block actions", () => {
   test("limited-use Stat Block Bonus Action rejects a replay after a later turn", () => {
     const base = monsterMultiattackStatBlock();
     const bonusActions = base.statBlock.bonusActions;
-    if (bonusActions?.actionOptions === undefined) {
+    if (bonusActions === undefined) {
       throw new Error("Expected a Stat Block Bonus Action option.");
     }
-    const [firstBonusAction, ...remainingBonusActions] =
-      bonusActions.actionOptions;
-    if (firstBonusAction === undefined) {
+    const [firstBonusAction] = bonusActions;
+    if (
+      firstBonusAction === undefined ||
+      !isNonSpellExecutableProcedureEntryOfKind(
+        firstBonusAction,
+        "action_option",
+      )
+    ) {
       throw new Error("Expected a first Stat Block Bonus Action option.");
     }
     const statBlock: StatBlockRecord = {
@@ -1270,20 +1395,22 @@ describe("battle runtime: Stat Block actions", () => {
       challengeRating: base.challengeRating,
       statBlock: {
         ...base.statBlock,
-        displayName: "Limited Bonus Action Replay Test Monster",
-        bonusActions: {
-          ...bonusActions,
-          actionOptions: [
-            {
-              ...firstBonusAction,
-              limitedUse: { kind: "daily" as const, uses: 1 },
+        bonusActions: [
+          {
+            ...firstBonusAction,
+            resourceRefs: {
+              kind: "some",
+              ordinals: [resourceOrdinal(1)],
             },
-            ...remainingBonusActions.map((option) => ({
-              ...option,
-              limitedUse: { kind: "daily" as const, uses: 1 },
-            })),
-          ],
-        },
+          },
+        ],
+        resources: [
+          {
+            ordinal: resourceOrdinal(1),
+            ownership: "each",
+            limit: { kind: "daily", uses: 1 },
+          },
+        ],
       },
     };
     const goblinTurn = requireResolved(
@@ -1358,7 +1485,7 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
-  test("Stat Block Multiattack spends the Attack action and grants named dispatch attacks", () => {
+  test("unrestricted Multiattack keeps every activation-owned occurrence when Slow is later applied", () => {
     const goblinTurn = requireResolved(
       endTurn({
         state: startBattleRight({
@@ -1384,63 +1511,76 @@ describe("battle runtime: Stat Block actions", () => {
     const multiattackState = requireResolved(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
     ).state;
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(multiattackState));
+    expect(multiattackState.currentTurnResources.actionTakenThisTurn).toBe(
+      true,
+    );
 
     expect(multiattackState.currentTurnResources.actionResources).toEqual([
       {
         kind: "action",
         source: "statBlockMultiattack",
         sourceOwnerId: goblinId,
-        attackProcedureRef: procedureRefForAttack(goblinTurn, "Scimitar"),
-        restriction: {
-          kind: "exclude",
-          actions: expect.arrayContaining(["dash", "magic", "utilize"]),
+        sourceProcedureRef: procedureRefForOrdinal(goblinTurn, 3),
+        dispatch: {
+          kind: "listedOccurrence",
+          attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
         },
       },
       {
         kind: "action",
         source: "statBlockMultiattack",
         sourceOwnerId: goblinId,
-        attackProcedureRef: procedureRefForAttack(goblinTurn, "Shortbow"),
-        restriction: {
-          kind: "exclude",
-          actions: expect.arrayContaining(["dash", "magic", "utilize"]),
+        sourceProcedureRef: procedureRefForOrdinal(goblinTurn, 3),
+        dispatch: {
+          kind: "listedOccurrence",
+          attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+        },
+      },
+      {
+        kind: "action",
+        source: "statBlockMultiattack",
+        sourceOwnerId: goblinId,
+        sourceProcedureRef: procedureRefForOrdinal(goblinTurn, 3),
+        dispatch: {
+          kind: "listedOccurrence",
+          attackProcedureRef: procedureRefForAttack(goblinTurn, 2),
         },
       },
     ]);
     const continuationActs = discoverStatBlockActs(multiattackState);
     const continuationSubjects = continuationActs.map((act) => act.subject);
-    expect(continuationSubjects).toEqual([
-      {
-        tag: "action",
-        actorId: goblinId,
-        action: "attack",
-        procedureRef: procedureRefForAttack(multiattackState, "Scimitar"),
-      },
-      {
-        tag: "action",
-        actorId: goblinId,
-        action: "attack",
-        procedureRef: procedureRefForAttack(multiattackState, "Scimitar"),
-        statBlockDamageNotation: "static",
-      },
-      {
-        tag: "action",
-        actorId: goblinId,
-        action: "attack",
-        procedureRef: procedureRefForAttack(multiattackState, "Shortbow"),
-      },
-      {
-        tag: "action",
-        actorId: goblinId,
-        action: "attack",
-        procedureRef: procedureRefForAttack(multiattackState, "Shortbow"),
-        statBlockDamageNotation: "static",
-      },
+    const continuationAttackSubjects = continuationSubjects.flatMap(
+      (continuationSubject) =>
+        continuationSubject.tag === "action" &&
+        continuationSubject.action === "attack"
+          ? [continuationSubject]
+          : [],
+    );
+    expect(
+      continuationAttackSubjects.map((attackSubject) =>
+        attackSubject.statBlockDamageSelection?.map(({ notation }) => notation),
+      ),
+    ).toEqual([
+      ["rolled", "rolled"],
+      ["rolled", "static"],
+      ["static", "rolled"],
+      ["static", "static"],
+      ["rolled", "rolled"],
+      ["rolled", "static"],
+      ["static", "rolled"],
+      ["static", "static"],
+    ]);
+    expect(continuationSubjects.slice(-2)).toEqual([
       { tag: "runtimeCommand", actorId: goblinId, command: "move" },
       { tag: "runtimeCommand", actorId: goblinId, command: "endTurn" },
     ]);
     expect(continuationSubjects).not.toContainEqual(subject);
     expect(continuationActs.map((act) => act.label)).toEqual([
+      "Attack",
+      "Attack",
+      "Attack",
+      "Attack",
       "Attack",
       "Attack",
       "Attack",
@@ -1490,13 +1630,32 @@ describe("battle runtime: Stat Block actions", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
-    const shortbow = discoverStatBlockActs(multiattackState).find(
+    const multiattackActor = multiattackState.combatants.get(goblinId);
+    if (multiattackActor === undefined) {
+      throw new Error("Expected the Multiattack actor.");
+    }
+    const multiattackStateAfterSlowApplied: BattleState = {
+      ...multiattackState,
+      combatants: new Map(multiattackState.combatants).set(goblinId, {
+        ...multiattackActor,
+        activeEffects: [
+          ...multiattackActor.activeEffects,
+          slowActivePenaltiesEffectForTest(),
+        ],
+      }),
+    };
+    const shortbow = discoverStatBlockActs(
+      multiattackStateAfterSlowApplied,
+    ).find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
         act.subject.procedureRef ===
-          procedureRefForAttack(multiattackState, "Shortbow") &&
-        act.subject.statBlockDamageNotation === undefined,
+          procedureRefForAttack(multiattackStateAfterSlowApplied, 2) &&
+        battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+          act.subject,
+          "rolled",
+        ),
     );
     if (shortbow === undefined) throw new Error("Expected Shortbow act.");
     const shortbowSubject = shortbow.subject;
@@ -1507,14 +1666,14 @@ describe("battle runtime: Stat Block actions", () => {
     );
     const targeted = requireNeedsHoles(
       resolveBattleSubject({
-        state: multiattackState,
+        state: multiattackStateAfterSlowApplied,
         subject: shortbowSubject,
         fills: [targetChoice],
       }),
     );
     const afterDispatch = requireResolved(
       resolveBattleSubject({
-        state: multiattackState,
+        state: multiattackStateAfterSlowApplied,
         subject: shortbowSubject,
         fills: [
           targetChoice,
@@ -1525,23 +1684,30 @@ describe("battle runtime: Stat Block actions", () => {
         ],
       }),
     ).state;
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(afterDispatch));
+    expect(afterDispatch.currentTurnResources.actionTakenThisTurn).toBe(true);
 
     expect(afterDispatch.currentTurnResources.actionResources).toEqual([
       expect.objectContaining({
         source: "statBlockMultiattack",
-        attackProcedureRef: procedureRefForAttack(goblinTurn, "Scimitar"),
+        dispatch: expect.objectContaining({
+          kind: "listedOccurrence",
+          attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+        }),
+      }),
+      expect.objectContaining({
+        source: "statBlockMultiattack",
+        dispatch: expect.objectContaining({
+          kind: "listedOccurrence",
+          attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+        }),
       }),
     ]);
     expect(
       discoverStatBlockActs(afterDispatch).map((act) => act.subject),
     ).toEqual(
       expect.arrayContaining([
-        {
-          tag: "action",
-          actorId: goblinId,
-          action: "attack",
-          procedureRef: procedureRefForAttack(afterDispatch, "Scimitar"),
-        },
+        discoveredStatBlockAttackSubject(afterDispatch, 1, "rolled"),
       ]),
     );
     expect(
@@ -1556,23 +1722,70 @@ describe("battle runtime: Stat Block actions", () => {
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
+  test("Stat Block Multiattack resolves every effective dispatch exactly once", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multiattack-multiplicity"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterMultiattackStatBlock(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    let state = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: discoveredMultiattackSubject(goblinTurn),
+        fills: [],
+      }),
+    ).state;
+    const dispatchOrder = [
+      procedureRefForAttack(state, 2),
+      procedureRefForAttack(state, 1),
+      procedureRefForAttack(state, 1),
+    ];
+
+    expect(
+      state.currentTurnResources.actionResources.filter(
+        (resource) => resource.source === "statBlockMultiattack",
+      ),
+    ).toHaveLength(3);
+    for (const [index, procedureRef] of dispatchOrder.entries()) {
+      state = resolveMultiattackDispatchMiss(state, procedureRef);
+      expect(
+        state.currentTurnResources.actionResources.filter(
+          (resource) => resource.source === "statBlockMultiattack",
+        ),
+      ).toHaveLength(dispatchOrder.length - index - 1);
+    }
+  });
+
   test("limited-use Stat Block Multiattack rejects a replay after its dispatch is spent", () => {
     const base = monsterMultiattackStatBlock({ scimitarCount: 1 });
-    const attacks = base.statBlock.actions?.attacks;
-    const multiattacks = base.statBlock.actions?.multiattacks;
-    const scimitar = attacks?.find((attack) => attack.name === "Scimitar");
-    const multiattack = multiattacks?.[0];
-    if (
-      attacks === undefined ||
-      multiattack === undefined ||
-      scimitar === undefined
-    ) {
+    const actions = base.statBlock.actions;
+    const scimitar = requireNonSpellExecutableProcedureEntryOfKind(
+      base,
+      1,
+      "attack_roll",
+    );
+    const multiattack = requireNonSpellExecutableProcedureEntryOfKind(
+      base,
+      3,
+      "multiattack",
+    );
+    if (actions === undefined) {
       throw new Error("Expected the synthetic Multiattack fixtures.");
     }
-    const [firstDispatch] = multiattack.dispatches;
-    if (firstDispatch?.name !== "Scimitar") {
+    const [firstDispatch] = multiattack.procedure.dispatches;
+    if (firstDispatch?.procedureOrdinal !== authoredProcedureOrdinal(1)) {
       throw new Error(
-        "Expected Scimitar to be the first Multiattack dispatch.",
+        "Expected authored ordinal 1 to be the first Multiattack dispatch.",
       );
     }
     const statBlock: StatBlockRecord = {
@@ -1588,23 +1801,31 @@ describe("battle runtime: Stat Block actions", () => {
       challengeRating: base.challengeRating,
       statBlock: {
         ...base.statBlock,
-        displayName: "Limited Multiattack Replay Test Monster",
-        actions: {
-          ...base.statBlock.actions,
-          attacks: [
-            {
-              ...scimitar,
-              limitedUse: { kind: "daily" as const, uses: 1 },
+        actions: [
+          {
+            ...scimitar,
+            resourceRefs: {
+              kind: "some",
+              ordinals: [resourceOrdinal(1)],
             },
-            ...attacks.filter((attack) => attack.name !== "Scimitar"),
-          ],
-          multiattacks: [
-            {
-              ...multiattack,
-              dispatches: [firstDispatch],
-            },
-          ],
-        },
+          },
+          ...actions.filter(
+            (entry) =>
+              entry.procedureOrdinal !== scimitar.procedureOrdinal &&
+              entry.procedureOrdinal !== multiattack.procedureOrdinal,
+          ),
+          nonSpellExecutableProcedureEntry(3, {
+            ...multiattack.procedure,
+            dispatches: [firstDispatch],
+          }),
+        ],
+        resources: [
+          {
+            ordinal: resourceOrdinal(1),
+            ownership: "each",
+            limit: { kind: "daily", uses: 1 },
+          },
+        ],
       },
     };
     const goblinTurn = requireResolved(
@@ -1623,8 +1844,12 @@ describe("battle runtime: Stat Block actions", () => {
     const afterMultiattack = requireResolved(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
     ).state;
+    const afterDispatch = resolveMultiattackDispatchMiss(
+      afterMultiattack,
+      procedureRefForAttack(afterMultiattack, 1),
+    );
     const fighterTurn = requireResolved(
-      endTurn({ state: afterMultiattack, actorId: goblinId }),
+      endTurn({ state: afterDispatch, actorId: goblinId }),
     ).state;
     const nextGoblinTurn = requireResolved(
       endTurn({ state: fighterTurn, actorId: fighterId }),
@@ -1639,69 +1864,581 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
-  test("Stat Block Multiattack remains gated when a dispatch has no positive literal count", () => {
+  test("Stat Block Multiattack spends its own limited-use resource and rejects replay", () => {
+    const base = monsterMultiattackStatBlock();
+    const actions = base.statBlock.actions;
+    const multiattack = requireNonSpellExecutableProcedureEntryOfKind(
+      base,
+      3,
+      "multiattack",
+    );
+    if (actions === undefined) {
+      throw new Error("Expected the synthetic Multiattack fixtures.");
+    }
+    const retainedActions = actions.filter(
+      (entry) => entry.procedureOrdinal !== multiattack.procedureOrdinal,
+    );
+    const [firstRetainedAction, ...remainingRetainedActions] = retainedActions;
+    if (firstRetainedAction === undefined) {
+      throw new Error("Expected a non-Multiattack action fixture.");
+    }
+    const statBlock: StatBlockRecord = {
+      ...base,
+      id: parseSharedStatBlockId(
+        "stat_block_limited_multiattack_own_resource_test_monster",
+      ),
+      name: "Limited Multiattack Own Resource Test Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "limited-multiattack-own-resource-test-monster",
+      },
+      statBlock: {
+        ...base.statBlock,
+        actions: [
+          firstRetainedAction,
+          ...remainingRetainedActions,
+          {
+            ...nonSpellExecutableProcedureEntry(3, multiattack.procedure),
+            resourceRefs: {
+              kind: "some",
+              ordinals: [resourceOrdinal(1)],
+            },
+          },
+        ],
+        resources: [
+          {
+            ordinal: resourceOrdinal(1),
+            ownership: "each",
+            limit: { kind: "daily", uses: 1 },
+          },
+        ],
+      },
+    };
     const goblinTurn = requireResolved(
       endTurn({
         state: startBattleRight({
-          battleId: battleId("battle-monster-multiattack-zero-count"),
+          battleId: battleId("battle-stat-block-multiattack-own-resource"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({ initiative: 10, statBlock }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject = discoveredMultiattackSubject(goblinTurn);
+    const afterMultiattack = requireResolved(
+      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+    ).state;
+    const goblin = afterMultiattack.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Stat Block goblin.");
+    }
+    expect(goblin.origin.execution.resourcePools).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "daily", usesRemaining: 0 }),
+      ]),
+    );
+    const fighterTurn = requireResolved(
+      endTurn({ state: afterMultiattack, actorId: goblinId }),
+    ).state;
+    const nextGoblinTurn = requireResolved(
+      endTurn({ state: fighterTurn, actorId: fighterId }),
+    ).state;
+
+    expect(
+      discoverStatBlockActs(nextGoblinTurn).map((act) => act.subject),
+    ).not.toContainEqual(subject);
+    expect(
+      resolveBattleSubject({ state: nextGoblinTurn, subject, fills: [] }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Multiattack Stat Block resources are no longer available.",
+    });
+  });
+
+  test("Stat Block Multiattack spends its binding at activation and its overlapping dispatch resource at resolution", () => {
+    const base = monsterResourceStatBlock();
+    const actions = base.statBlock.actions;
+    const resources = base.statBlock.resources;
+    if (actions === undefined || resources === undefined) {
+      throw new Error("Expected resource-backed Stat Block fixtures.");
+    }
+    const [firstResource, ...remainingResources] = resources;
+    if (firstResource === undefined) {
+      throw new Error("Expected the first Stat Block resource fixture.");
+    }
+    const statBlock: StatBlockRecord = {
+      ...base,
+      id: parseSharedStatBlockId(
+        "stat_block_multiattack_binding_dispatch_overlap_test_monster",
+      ),
+      name: "Multiattack Binding Dispatch Overlap Test Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "multiattack-binding-dispatch-overlap-test-monster",
+      },
+      statBlock: {
+        ...base.statBlock,
+        actions: [
+          ...actions,
+          {
+            ...nonSpellExecutableProcedureEntry(3, {
+              kind: "multiattack",
+              name: "Synthetic Binding Dispatch Overlap",
+              dispatches: [
+                {
+                  procedureOrdinal: authoredProcedureOrdinal(1),
+                  count: { kind: "literal", value: 1 },
+                },
+              ],
+            }),
+            resourceRefs: {
+              kind: "some",
+              ordinals: [resourceOrdinal(1)],
+            },
+          },
+        ],
+        resources: [
+          {
+            ...firstResource,
+            ownership: "shared",
+            limit: { kind: "daily", uses: 2 },
+          },
+          ...remainingResources,
+        ],
+      },
+    };
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-stat-block-multiattack-overlap"),
           combatants: [
             characterSeed({ initiative: 20 }),
             statBlockCreatureInit({
               initiative: 10,
-              statBlock: monsterMultiattackStatBlock({
-                scimitarCount: 0,
-              }),
+              statBlock,
             }),
           ],
         }),
         actorId: fighterId,
       }),
     ).state;
-    const subject = unavailableMultiattackSubject(goblinTurn);
+    const goblin = goblinTurn.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Stat Block goblin.");
+    }
+    const multiattackBinding = goblin.origin.execution.procedureBindings.find(
+      (binding) => binding.procedure.kind === "multiattack",
+    );
+    if (
+      multiattackBinding === undefined ||
+      multiattackBinding.procedure.kind !== "multiattack"
+    ) {
+      throw new Error("Expected the overlapping Multiattack binding.");
+    }
+    const [firstDispatch] = multiattackBinding.procedure.dispatchProcedureRefs;
+    const dispatchBinding = goblin.origin.execution.procedureBindings.find(
+      (binding) => binding.procedureRef === firstDispatch,
+    );
+    if (dispatchBinding === undefined) {
+      throw new Error("Expected the first Multiattack dispatch binding.");
+    }
+    expect(multiattackBinding.resourcePoolRefs).toEqual(
+      dispatchBinding.resourcePoolRefs,
+    );
+    const [resourcePoolRef] = multiattackBinding.resourcePoolRefs;
+    if (resourcePoolRef === undefined) {
+      throw new Error("Expected the overlapping resource pool.");
+    }
 
+    const subject = discoveredMultiattackSubject(goblinTurn);
+    const afterMultiattack = requireResolved(
+      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+    ).state;
+    const afterGoblin = afterMultiattack.combatants.get(goblinId);
+    if (afterGoblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Stat Block goblin after Multiattack.");
+    }
+    expect(afterGoblin.origin.execution.resourcePools).toContainEqual(
+      expect.objectContaining({
+        resourcePoolRef,
+        kind: "daily",
+        usesRemaining: 1,
+      }),
+    );
+    const afterDispatch = resolveMultiattackDispatchMiss(
+      afterMultiattack,
+      firstDispatch,
+    );
+    const afterDispatchGoblin = afterDispatch.combatants.get(goblinId);
+    if (afterDispatchGoblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Stat Block goblin after dispatch.");
+    }
+    expect(afterDispatchGoblin.origin.execution.resourcePools).toContainEqual(
+      expect.objectContaining({
+        resourcePoolRef,
+        kind: "daily",
+        usesRemaining: 0,
+      }),
+    );
+    const fighterTurn = requireResolved(
+      endTurn({ state: afterDispatch, actorId: goblinId }),
+    ).state;
+    const nextGoblinTurn = requireResolved(
+      endTurn({ state: fighterTurn, actorId: fighterId }),
+    ).state;
     expect(
-      discoverStatBlockActs(goblinTurn).map((act) => act.subject),
+      discoverStatBlockActs(nextGoblinTurn).map((act) => act.subject),
     ).not.toContainEqual(subject);
     expect(
-      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+      resolveBattleSubject({ state: nextGoblinTurn, subject, fills: [] }),
     ).toMatchObject({
       tag: "invalid",
-      reason: "unsupportedActOption",
+      reason: "staleSubject",
+      message: "Multiattack Stat Block resources are no longer available.",
     });
   });
 
-  test("Stat Block Multiattack remains gated when repeated dispatches exceed one limited use", () => {
-    const statBlock = monsterResourceStatBlock();
-    const repeatedLimitedUseStatBlock: StatBlockRecord = {
-      ...statBlock,
+  test("slowed Multiattack keeps its activation-owned one-choice cap when Slow is removed", () => {
+    const base = monsterResourceStatBlock();
+    const actions = base.statBlock.actions;
+    const resources = base.statBlock.resources;
+    if (actions === undefined || resources === undefined) {
+      throw new Error("Expected resource-backed Stat Block fixtures.");
+    }
+    const [firstResource, ...remainingResources] = resources;
+    if (firstResource === undefined) {
+      throw new Error("Expected the first Stat Block resource fixture.");
+    }
+    const statBlock: StatBlockRecord = {
+      ...base,
       id: parseSharedStatBlockId(
-        "stat_block_repeated_limited_use_multiattack_test_monster",
+        "stat_block_slow_multiattack_resource_test_monster",
       ),
+      name: "Slow Multiattack Resource Test Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "slow-multiattack-resource-test-monster",
+      },
       statBlock: {
-        ...statBlock.statBlock,
-        actions: {
-          ...statBlock.statBlock.actions,
-          multiattacks: [
-            {
-              name: "Synthetic Repeated Limited Attack",
+        ...base.statBlock,
+        actions: [
+          ...actions,
+          {
+            ...nonSpellExecutableProcedureEntry(3, {
+              kind: "multiattack",
+              name: "Synthetic Slow Multiattack",
               dispatches: [
-                { name: "Dread Gaze", count: { kind: "literal", value: 1 } },
-                { name: "Dread Gaze", count: { kind: "literal", value: 1 } },
+                {
+                  procedureOrdinal: authoredProcedureOrdinal(1),
+                  count: { kind: "literal", value: 1 },
+                },
+                {
+                  procedureOrdinal: authoredProcedureOrdinal(2),
+                  count: { kind: "literal", value: 1 },
+                },
               ],
+            }),
+            resourceRefs: {
+              kind: "some",
+              ordinals: [resourceOrdinal(1)],
             },
-          ],
-        },
+          },
+        ],
+        resources: [
+          {
+            ...firstResource,
+            ownership: "shared",
+            limit: { kind: "daily", uses: 2 },
+          },
+          ...remainingResources,
+        ],
       },
     };
     const goblinTurn = requireResolved(
       endTurn({
         state: startBattleRight({
-          battleId: battleId("battle-monster-multiattack-repeated-limited-use"),
+          battleId: battleId("battle-stat-block-slow-multiattack-resource"),
           combatants: [
             characterSeed({ initiative: 20 }),
             statBlockCreatureInit({
               initiative: 10,
-              statBlock: repeatedLimitedUseStatBlock,
+              statBlock,
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const goblin = goblinTurn.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Stat Block goblin.");
+    }
+    const slowedGoblinTurn: BattleState = {
+      ...goblinTurn,
+      combatants: new Map(goblinTurn.combatants).set(goblinId, {
+        ...goblin,
+        activeEffects: [
+          ...goblin.activeEffects,
+          slowActivePenaltiesEffectForTest(),
+        ],
+      }),
+    };
+    const subject = discoveredMultiattackSubject(slowedGoblinTurn);
+    const afterMultiattack = requireResolved(
+      resolveBattleSubject({
+        state: slowedGoblinTurn,
+        subject,
+        fills: [],
+      }),
+    ).state;
+    const afterGoblin = afterMultiattack.combatants.get(goblinId);
+    if (afterGoblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Stat Block goblin after Multiattack.");
+    }
+    expect(
+      afterMultiattack.currentTurnResources.actionResources.filter(
+        (resource) => resource.source === "statBlockMultiattack",
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        sourceProcedureRef: procedureRefForOrdinal(afterMultiattack, 3),
+        dispatch: {
+          kind: "oneListedChoice",
+          attackProcedureRefs: [
+            procedureRefForAttack(afterMultiattack, 1),
+            procedureRefForAttack(afterMultiattack, 2),
+          ],
+        },
+      }),
+    ]);
+    expect(afterGoblin.origin.execution.resourcePools).toContainEqual(
+      expect.objectContaining({ kind: "daily", usesRemaining: 1 }),
+    );
+    const afterMultiattackActor = afterMultiattack.combatants.get(goblinId);
+    if (afterMultiattackActor === undefined) {
+      throw new Error("Expected the slowed Multiattack actor.");
+    }
+    const afterMultiattackWithoutSlow: BattleState = {
+      ...afterMultiattack,
+      combatants: new Map(afterMultiattack.combatants).set(goblinId, {
+        ...afterMultiattackActor,
+        activeEffects: afterMultiattackActor.activeEffects.filter(
+          (effect) => effect.kind !== "slowActivePenalties",
+        ),
+      }),
+    };
+    const effectiveDispatch = procedureRefForAttack(
+      afterMultiattackWithoutSlow,
+      2,
+    );
+    const afterDispatch = resolveMultiattackDispatchMiss(
+      afterMultiattackWithoutSlow,
+      effectiveDispatch,
+    );
+    const afterDispatchGoblin = afterDispatch.combatants.get(goblinId);
+    if (afterDispatchGoblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected slowed Stat Block goblin after dispatch.");
+    }
+    expect(afterDispatchGoblin.origin.execution.resourcePools).toContainEqual(
+      expect.objectContaining({ kind: "daily", usesRemaining: 0 }),
+    );
+    expect(
+      afterDispatch.currentTurnResources.actionResources.filter(
+        (resource) => resource.source === "statBlockMultiattack",
+      ),
+    ).toHaveLength(0);
+  });
+
+  test("Stat Block Multiattack resource demand matches the independent capacity oracle", () => {
+    const baseTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-stat-block-multiattack-resource-oracle"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterResourceStatBlock(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const actor = baseTurn.combatants.get(goblinId);
+    if (!isStatBlockBattleCreatureState(actor)) {
+      throw new Error("Expected Stat Block goblin.");
+    }
+    const firstAttackRef = procedureRefForAttack(baseTurn, 1);
+    const secondAttackRef = procedureRefForAttack(baseTurn, 2);
+    const firstAttackBinding = statBlockProcedureBinding(
+      actor.origin.execution,
+      firstAttackRef,
+    );
+    const secondAttackBinding = statBlockProcedureBinding(
+      actor.origin.execution,
+      secondAttackRef,
+    );
+    const ownPoolRef = firstAttackBinding?.resourcePoolRefs[0];
+    const dispatchPoolRef = secondAttackBinding?.resourcePoolRefs[0];
+    if (ownPoolRef === undefined || dispatchPoolRef === undefined) {
+      throw new Error("Expected resource-backed attack bindings.");
+    }
+    const multiattackProcedureRef = battleStatBlockProcedureExecutionRef(
+      actor.origin.execution.scopeRef,
+      NonNegativeInteger(99),
+    );
+
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 3 }),
+        fc.integer({ min: 1, max: 3 }),
+        fc.boolean(),
+        fc.boolean(),
+        (availableUses, dispatchCount, slowed, shared) => {
+          const binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure> =
+            {
+              procedureRef: multiattackProcedureRef,
+              resourcePoolRefs: [shared ? dispatchPoolRef : ownPoolRef],
+              procedure: {
+                kind: "multiattack",
+                section: "actions",
+                procedureOrdinal: authoredProcedureOrdinal(99),
+                dispatchProcedureRefs: repeatedProcedureRefs(
+                  secondAttackRef,
+                  dispatchCount,
+                ),
+              },
+            };
+          const actorForPlan = slowed
+            ? {
+                ...actor,
+                activeEffects: [
+                  ...actor.activeEffects,
+                  slowActivePenaltiesEffectForTest(),
+                ],
+              }
+            : actor;
+          const dispatchResourceDemand =
+            statBlockMultiattackDispatchResourceDemandForActor(
+              actorForPlan,
+              binding,
+            );
+          const relevantResourcePoolRefs = shared
+            ? [dispatchPoolRef]
+            : [ownPoolRef, dispatchPoolRef];
+          const execution = admittedStatBlockExecutionState({
+            ...actor.origin.execution,
+            procedureBindings: [
+              ...actor.origin.execution.procedureBindings,
+              binding,
+            ],
+            resourcePools: actor.origin.execution.resourcePools.map((pool) =>
+              relevantResourcePoolRefs.includes(pool.resourcePoolRef)
+                ? {
+                    resourcePoolRef: pool.resourcePoolRef,
+                    kind: "daily" as const,
+                    ownership: shared ? ("shared" as const) : ("each" as const),
+                    usesMax: resourceCount(3),
+                    usesRemaining: resourceCount(availableUses),
+                  }
+                : pool,
+            ),
+          });
+          const effectiveDispatchCount = slowed ? 1 : dispatchCount;
+          const expectedAvailable = shared
+            ? availableUses >= 1 + effectiveDispatchCount
+            : availableUses >= 1 && availableUses >= effectiveDispatchCount;
+
+          expect(dispatchResourceDemand).toMatchObject({
+            kind: slowed ? "oneListedDispatch" : "allListedDispatches",
+          });
+          expect(dispatchResourceDemand.procedureRefs).toEqual(
+            repeatedProcedureRefs(secondAttackRef, dispatchCount),
+          );
+          expect(
+            statBlockMultiattackResourcesAvailable(
+              execution,
+              binding,
+              dispatchResourceDemand,
+            ),
+          ).toBe(expectedAvailable);
+
+          if (!expectedAvailable) {
+            return;
+          }
+          const spent = spendStatBlockMultiattackActivationResources(
+            execution,
+            binding,
+          );
+          const bindingPool = spent.resourcePools.find(
+            (pool) =>
+              pool.resourcePoolRef === (shared ? dispatchPoolRef : ownPoolRef),
+          );
+          const dispatchPool = spent.resourcePools.find(
+            (pool) => pool.resourcePoolRef === dispatchPoolRef,
+          );
+          if (shared) {
+            expect(bindingPool).toEqual(dispatchPool);
+            expect(dispatchPool).toEqual(
+              expect.objectContaining({
+                kind: "daily",
+                usesRemaining: resourceCount(availableUses - 1),
+              }),
+            );
+          } else {
+            expect(bindingPool).toEqual(
+              expect.objectContaining({
+                kind: "daily",
+                usesRemaining: resourceCount(availableUses - 1),
+              }),
+            );
+            expect(dispatchPool).toEqual(
+              expect.objectContaining({
+                kind: "daily",
+                usesRemaining: resourceCount(availableUses),
+              }),
+            );
+          }
+        },
+      ),
+      { numRuns: 48 },
+    );
+  });
+
+  test("Stat Block Multiattack projection rejects a dispatch without a positive literal count", () => {
+    const projected = projectAuthoredStatBlock(
+      monsterMultiattackStatBlock({ scimitarCount: 0 }),
+    );
+
+    expect(projected).toEqual(
+      Result.fail({
+        tag: "battleStatBlockProjectionFailure",
+        reason: "unsupportedProcedureBinding",
+        issues: [
+          {
+            section: "actions",
+            procedureOrdinal: authoredProcedureOrdinal(3),
+          },
+        ],
+      }),
+    );
+  });
+
+  test("Stat Block action bindings preserve shared resource identity by ordinal", () => {
+    const statBlock = monsterResourceStatBlockWithSharedResource();
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-shared-resource-identity"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock,
             }),
           ],
         }),
@@ -1713,17 +2450,159 @@ describe("battle runtime: Stat Block actions", () => {
       throw new Error("Expected Stat Block goblin.");
     }
 
-    expect(
-      goblin.origin.execution.procedureBindings.some(
-        (binding) => binding.procedure.kind === "multiattack",
+    const cinderBinding = goblin.origin.execution.procedureBindings.find(
+      (binding) =>
+        binding.procedureRef === procedureRefForAttack(goblinTurn, 1),
+    );
+    const dreadBinding = goblin.origin.execution.procedureBindings.find(
+      (binding) =>
+        binding.procedureRef === procedureRefForAttack(goblinTurn, 2),
+    );
+    if (cinderBinding === undefined || dreadBinding === undefined) {
+      throw new Error("Expected both shared-resource action bindings.");
+    }
+    expect(cinderBinding.resourcePoolRefs).toEqual(
+      dreadBinding.resourcePoolRefs,
+    );
+    expect(cinderBinding.resourcePoolRefs).toHaveLength(1);
+  });
+
+  test("Stat Block Multiattack rejects multiple dispatches beyond a shared one-use pool", () => {
+    const base = monsterResourceStatBlockWithSharedResource();
+    const actions = base.statBlock.actions;
+    if (actions === undefined) {
+      throw new Error("Expected shared-resource action fixtures.");
+    }
+    const statBlock: StatBlockRecord = {
+      ...base,
+      id: parseSharedStatBlockId(
+        "stat_block_repeated_limited_use_multiattack_test_monster",
       ),
-    ).toBe(false);
+      statBlock: {
+        ...base.statBlock,
+        actions: [
+          ...actions,
+          {
+            ...nonSpellExecutableProcedureEntry(3, {
+              kind: "multiattack",
+              name: "Synthetic Repeated Limited Attack",
+              dispatches: [
+                {
+                  procedureOrdinal: authoredProcedureOrdinal(1),
+                  count: { kind: "literal", value: 1 },
+                },
+                {
+                  procedureOrdinal: authoredProcedureOrdinal(2),
+                  count: { kind: "literal", value: 1 },
+                },
+              ],
+            }),
+            resourceRefs: { kind: "none" },
+          },
+        ],
+      },
+    };
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multiattack-repeated-limited-use"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock,
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const multiattackSubject = unavailableMultiattackSubject(goblinTurn);
     expect(
-      discoverStatBlockActs(goblinTurn).some(
-        (act) =>
-          act.subject.tag === "action" && act.subject.action === "multiattack",
+      discoverStatBlockActs(goblinTurn).map((act) => act.subject),
+    ).not.toContainEqual(multiattackSubject);
+    const rejected = resolveBattleSubject({
+      state: goblinTurn,
+      subject: multiattackSubject,
+      fills: [],
+    });
+    expect(rejected).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Multiattack Stat Block resources are no longer available.",
+    });
+    if (rejected.tag !== "invalid") {
+      throw new Error("Expected shared-pool Multiattack rejection.");
+    }
+    expect(rejected.snapshot).toEqual(snapshotBattle(goblinTurn));
+  });
+
+  test("Stat Block Multiattack rejects a count-two dispatch against a shared one-use pool", () => {
+    const base = monsterResourceStatBlockWithSharedResource();
+    const actions = base.statBlock.actions;
+    if (actions === undefined) {
+      throw new Error("Expected shared-resource action fixtures.");
+    }
+    const statBlock: StatBlockRecord = {
+      ...base,
+      id: parseSharedStatBlockId(
+        "stat_block_count_two_limited_use_multiattack_test_monster",
       ),
-    ).toBe(false);
+      name: "Count Two Limited Multiattack Test Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "count-two-limited-use-multiattack-test-monster",
+      },
+      statBlock: {
+        ...base.statBlock,
+        actions: [
+          ...actions,
+          nonSpellExecutableProcedureEntry(3, {
+            kind: "multiattack",
+            name: "Synthetic Count Two Limited Attack",
+            dispatches: [
+              {
+                procedureOrdinal: authoredProcedureOrdinal(1),
+                count: { kind: "literal", value: 2 },
+              },
+            ],
+          }),
+        ],
+      },
+    };
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multiattack-count-two-limited"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock,
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const multiattackSubject = unavailableMultiattackSubject(goblinTurn);
+    expect(
+      discoverStatBlockActs(goblinTurn).map((act) => act.subject),
+    ).not.toContainEqual(multiattackSubject);
+    const rejected = resolveBattleSubject({
+      state: goblinTurn,
+      subject: multiattackSubject,
+      fills: [],
+    });
+    expect(rejected).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Multiattack Stat Block resources are no longer available.",
+    });
+    if (rejected.tag !== "invalid") {
+      throw new Error("Expected count-two Multiattack rejection.");
+    }
+    expect(rejected.snapshot).toEqual(snapshotBattle(goblinTurn));
   });
 
   test("Stat Block Multiattack dispatch resources do not authorize Escape Grapple", () => {
@@ -1780,7 +2659,7 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
-  test("Stat Block Multiattack remains gated when dispatch names are ambiguous", () => {
+  test("Stat Block Multiattack dispatches by ordinal when authored labels duplicate", () => {
     const goblinTurn = requireResolved(
       endTurn({
         state: startBattleRight({
@@ -1802,13 +2681,24 @@ describe("battle runtime: Stat Block actions", () => {
 
     expect(
       discoverStatBlockActs(goblinTurn).map((act) => act.subject),
-    ).not.toContainEqual(subject);
-    expect(
+    ).toContainEqual(subject);
+    const after = requireResolved(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "unsupportedActOption",
-    });
+    ).state;
+    expect(after.currentTurnResources.actionResources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          dispatch: expect.objectContaining({
+            attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+          }),
+        }),
+        expect.objectContaining({
+          dispatch: expect.objectContaining({
+            attackProcedureRef: procedureRefForAttack(goblinTurn, 2),
+          }),
+        }),
+      ]),
+    );
   });
 
   test("Stat Block limited-use resources are initialized from authored monster controls", () => {
@@ -1823,11 +2713,8 @@ describe("battle runtime: Stat Block actions", () => {
       ],
     });
 
-    const cinderBreathPoolRef = resourcePoolRefForAttack(
-      state,
-      "Cinder Breath",
-    );
-    const dreadGazePoolRef = resourcePoolRefForAttack(state, "Dread Gaze");
+    const cinderBreathPoolRef = resourcePoolRefForAttack(state, 1);
+    const dreadGazePoolRef = resourcePoolRefForAttack(state, 2);
     const goblin = state.combatants.get(goblinId);
     if (goblin?.origin.kind !== "statBlock") {
       throw new Error("Expected Stat Block goblin.");
@@ -1875,12 +2762,14 @@ describe("battle runtime: Stat Block actions", () => {
                 kind: "recharge",
                 minimumRoll: 5,
                 available: true,
+                ownership: "each",
               },
               {
                 resourcePoolRef: dreadGazePoolRef,
                 kind: "daily",
                 usesMax: 1,
                 usesRemaining: 1,
+                ownership: "each",
               },
             ]),
           }),
@@ -1889,31 +2778,22 @@ describe("battle runtime: Stat Block actions", () => {
     );
   });
 
-  test("Stat Block Bonus Action and Reaction attacks do not enter the Attack action lane", () => {
-    const goblinTurn = requireResolved(
-      endTurn({
-        state: startBattleRight({
-          battleId: battleId("battle-monster-unsupported-sections"),
-          combatants: [
-            characterSeed({ initiative: 20 }),
-            statBlockCreatureInit({
-              initiative: 10,
-              statBlock:
-                monsterResourceStatBlockWithUnsupportedAttackSections(),
-            }),
-          ],
-        }),
-        actorId: fighterId,
-      }),
-    ).state;
-
-    expect(
-      discoverStatBlockActs(goblinTurn).some(
-        (act) =>
-          act.summary === "Take the Attack action with Swift Bite." ||
-          act.summary === "Take the Attack action with Counter Snap.",
-      ),
-    ).toBe(false);
+  test("Stat Block Bonus Action and Reaction attack sections reject unsupported bindings", () => {
+    const projected = projectAuthoredStatBlock(
+      monsterResourceStatBlockWithUnsupportedAttackSections(),
+    );
+    expect(Result.isFailure(projected)).toBe(true);
+    if (Result.isSuccess(projected)) return;
+    expect(projected.failure).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "bonusActions",
+          procedureOrdinal: authoredProcedureOrdinal(1),
+        },
+      ],
+    });
   });
 
   test("Recharge attacks spend availability and use a start-turn d6 roll to return", () => {
@@ -1972,10 +2852,7 @@ describe("battle runtime: Stat Block actions", () => {
     const fighterTurn = requireResolved(
       endTurn({ state: spent, actorId: goblinId }),
     ).state;
-    const cinderBreathPoolRef = resourcePoolRefForAttack(
-      fighterTurn,
-      "Cinder Breath",
-    );
+    const cinderBreathPoolRef = resourcePoolRefForAttack(fighterTurn, 1);
     const rechargeRequest = endTurn({ state: fighterTurn, actorId: fighterId });
     expect(rechargeRequest).toMatchObject({
       tag: "needsHoles",
@@ -2004,7 +2881,7 @@ describe("battle runtime: Stat Block actions", () => {
             value: [
               {
                 target: cinderBreathPoolRef,
-                roll: DieRollResult(5),
+                roll: D6RollResult(5),
               },
             ],
           },
@@ -2072,9 +2949,7 @@ describe("battle runtime: Stat Block actions", () => {
     }
     expect(
       spentGoblin.origin.execution.resourcePools.find(
-        (pool) =>
-          pool.resourcePoolRef ===
-          resourcePoolRefForAttack(spent, "Dread Gaze"),
+        (pool) => pool.resourcePoolRef === resourcePoolRefForAttack(spent, 2),
       ),
     ).toMatchObject({ kind: "daily", usesRemaining: 0 });
     expect(
@@ -2102,11 +2977,8 @@ describe("battle runtime: Stat Block actions", () => {
     if (goblin?.origin.kind !== "statBlock") {
       throw new Error("Expected Stat Block goblin.");
     }
-    const cinderBreathPoolRef = resourcePoolRefForAttack(
-      state,
-      "Cinder Breath",
-    );
-    const ashCloudPoolRef = resourcePoolRefForAttack(state, "Ash Cloud");
+    const cinderBreathPoolRef = resourcePoolRefForAttack(state, 1);
+    const ashCloudPoolRef = resourcePoolRefForAttack(state, 3);
     const unavailablePoolRefs = new Set([cinderBreathPoolRef, ashCloudPoolRef]);
     const spentState: BattleState = {
       ...state,
@@ -2147,7 +3019,7 @@ describe("battle runtime: Stat Block actions", () => {
     expect(statBlockRechargeRollFillMatchesHole([], null)).toBe(true);
     expect(
       statBlockRechargeRollFillMatchesHole(
-        [{ target: cinderBreathPoolRef, roll: DieRollResult(1) }],
+        [{ target: cinderBreathPoolRef, roll: D6RollResult(1) }],
         null,
       ),
     ).toBe(false);
@@ -2155,17 +3027,8 @@ describe("battle runtime: Stat Block actions", () => {
     expect(
       statBlockRechargeRollFillMatchesHole(
         [
-          { target: cinderBreathPoolRef, roll: DieRollResult(7) },
-          { target: ashCloudPoolRef, roll: DieRollResult(6) },
-        ],
-        rechargeHole,
-      ),
-    ).toBe(false);
-    expect(
-      statBlockRechargeRollFillMatchesHole(
-        [
-          { target: cinderBreathPoolRef, roll: DieRollResult(1) },
-          { target: cinderBreathPoolRef, roll: DieRollResult(6) },
+          { target: cinderBreathPoolRef, roll: D6RollResult(1) },
+          { target: cinderBreathPoolRef, roll: D6RollResult(6) },
         ],
         rechargeHole,
       ),
@@ -2179,9 +3042,9 @@ describe("battle runtime: Stat Block actions", () => {
           const results = [
             {
               target: cinderBreathPoolRef,
-              roll: DieRollResult(cinderRoll),
+              roll: D6RollResult(cinderRoll),
             },
-            { target: ashCloudPoolRef, roll: DieRollResult(ashRoll) },
+            { target: ashCloudPoolRef, roll: D6RollResult(ashRoll) },
           ] as const;
           expect(
             statBlockRechargeRollFillMatchesHole(
@@ -2208,11 +3071,11 @@ describe("battle runtime: Stat Block actions", () => {
             value: [
               {
                 target: cinderBreathPoolRef,
-                roll: DieRollResult(4),
+                roll: D6RollResult(4),
               },
               {
                 target: ashCloudPoolRef,
-                roll: DieRollResult(6),
+                roll: D6RollResult(6),
               },
             ],
           },
@@ -2261,7 +3124,8 @@ describe("battle runtime: Stat Block actions", () => {
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
-        act.subject.procedureRef === procedureRefForAttack(state, "Tail Swipe"),
+        act.subject.procedureRef ===
+          procedureRefForAttack(state, 1, "legendaryActions"),
     );
     if (legendaryAct === undefined) {
       throw new Error("Expected Tail Swipe Legendary Action act.");
@@ -2315,7 +3179,7 @@ describe("battle runtime: Stat Block actions", () => {
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
           act.subject.procedureRef ===
-            procedureRefForAttack(afterLegendary, "Tail Swipe"),
+            procedureRefForAttack(afterLegendary, 1, "legendaryActions"),
       ),
     ).toBe(false);
     expect(
@@ -2389,7 +3253,11 @@ describe("battle runtime: Stat Block actions", () => {
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
           act.subject.procedureRef ===
-            procedureRefForAttack(afterDistantFighterActs, "Tail Swipe"),
+            procedureRefForAttack(
+              afterDistantFighterActs,
+              1,
+              "legendaryActions",
+            ),
       ),
     ).toBe(false);
   });
@@ -2412,7 +3280,7 @@ describe("battle runtime: Stat Block actions", () => {
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
           act.subject.procedureRef ===
-            procedureRefForAttack(state, "Tail Swipe"),
+            procedureRefForAttack(state, 1, "legendaryActions"),
       ),
     ).toBe(false);
     expect(
@@ -2450,7 +3318,7 @@ describe("battle runtime: Stat Block actions", () => {
           act.subject.tag === "action" &&
           act.subject.action === "attack" &&
           act.subject.procedureRef ===
-            procedureRefForAttack(ownTurn, "Tail Swipe"),
+            procedureRefForAttack(ownTurn, 1, "legendaryActions"),
       ),
     ).toBe(false);
     expect(
@@ -2638,7 +3506,7 @@ describe("battle runtime: Stat Block actions", () => {
 
   test("Goblin Warrior advantage rider is included when the attack roll had Advantage", () => {
     const state = goblinTurnBattle({ fighterHp: 12 });
-    const subject = discoveredStatBlockAttackSubject(state, "Scimitar");
+    const subject = discoveredStatBlockAttackSubject(state, 1);
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(
       state,
@@ -2687,11 +3555,7 @@ describe("battle runtime: Stat Block actions", () => {
 
   test("Goblin Warrior static damage includes its Advantage rider without a damage-roll frontier", () => {
     const state = goblinTurnBattle({ fighterHp: 12 });
-    const subject = discoveredStatBlockAttackSubject(
-      state,
-      "Scimitar",
-      "static",
-    );
+    const subject = discoveredStatBlockAttackSubject(state, 1, "static");
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(
       state,

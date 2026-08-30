@@ -6,15 +6,22 @@
   "type": "module",
   "exports": {
     "./surface/character-creation-readers": "./src/surface/character-creation-readers.ts",
+    "./surface/catalog-install": "./src/surface/catalog-install.ts",
     "./surface/druid-wild-shape-readers": "./src/surface/druid-wild-shape-readers.ts",
     "./surface/find-familiar-forms": "./src/surface/find-familiar-forms.ts",
+    "./surface/portable-surface": "./src/surface/portable-surface.ts",
+    "./surface/mechanics-graph-path": "./src/surface/mechanics-graph-path.ts",
     "./surface/stat-block-catalog": "./src/surface/stat-block-catalog.ts",
     "./surface/stat-block-catalog-core": "./src/surface/stat-block-catalog-core.ts",
+    "./surface/stat-block-catalog.test-support": "./src/surface/stat-block-catalog.test-support.ts",
+    "./surface/stat-block-speed-readers": "./src/surface/stat-block-speed-readers.ts",
+    "./surface/stat-block-identity": "./src/surface/stat-block-identity.ts",
     "./surface/unit-catalog": "./src/surface/unit-catalog.ts",
     "./surface/unit-catalog-core": "./src/surface/unit-catalog-core.ts",
     "./surface/types": "./src/surface/types.ts",
     "./surface/schema": "./src/surface/schema.ts",
     "./surface/surface-relations": "./src/surface/surface-relations.ts",
+    "./surface/source-section-anchor": "./src/surface/source-section-anchor.ts",
     "./surface/surface-catalog": "./src/surface/surface-catalog.ts"
   },
   "imports": {

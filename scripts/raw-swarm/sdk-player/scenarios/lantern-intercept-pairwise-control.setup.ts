@@ -47,26 +47,48 @@ export const setupScenario: ScenarioSetup = (context) => {
   const skeletonId = sdk.combatantId("skeleton");
   const hawkId = sdk.combatantId("hawk");
 
+  const wolf = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_wolf",
+  );
+  const hawk = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_hawk",
+  );
+  const skeleton = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_skeleton",
+  );
+  if (wolf === undefined || hawk === undefined || skeleton === undefined) {
+    return {
+      kind: "obstructed",
+      obstruction:
+        "The supplied Stat Block catalog is missing a required scenario combatant.",
+      observation: {
+        tag: "required-stat-block-missing",
+        scenarioId,
+        wolfFound: wolf !== undefined,
+        hawkFound: hawk !== undefined,
+        skeletonFound: skeleton !== undefined,
+      },
+    };
+  }
+
   const creatureInputs = [
     {
       combatantId: wolfId,
-      statBlock: context.statBlockCatalog.requireStatBlock("stat_block_wolf"),
+      statBlock: wolf,
       initiative: sdk.initiativeScore(15),
       ammunitionStocks: [],
       conditions: [],
     },
     {
       combatantId: hawkId,
-      statBlock: context.statBlockCatalog.requireStatBlock("stat_block_hawk"),
+      statBlock: hawk,
       initiative: sdk.initiativeScore(13),
       ammunitionStocks: [],
       conditions: [],
     },
     {
       combatantId: skeletonId,
-      statBlock: context.statBlockCatalog.requireStatBlock(
-        "stat_block_skeleton",
-      ),
+      statBlock: skeleton,
       initiative: sdk.initiativeScore(10),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
       conditions: [],
@@ -76,7 +98,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   const combatants = [];
   for (const input of creatureInputs) {
     const initialized = sdk.battleCreatureInitFromStatBlock(input);
-    if (sdk.isLeft(initialized)) {
+    if (sdk.isFailure(initialized)) {
       return {
         kind: "obstructed",
         obstruction: sdk.battleStateInitIssueMessage(initialized.failure),
@@ -94,7 +116,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     battleId: sdk.battleId(scenarioId),
     combatants,
   });
-  if (sdk.isLeft(started)) {
+  if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(started.failure),
@@ -129,7 +151,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "dimLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: {
         kind: "ceiling",
@@ -154,7 +176,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     objects: [],
   });
 
-  if (sdk.isLeft(created)) {
+  if (sdk.isFailure(created)) {
     return {
       kind: "obstructed",
       obstruction: sdk.scenarioSessionIssueMessage(created.failure),

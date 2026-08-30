@@ -1,4 +1,5 @@
 import type {
+  AttackPresentationJoinIssue,
   BattleActDiscoveryCandidate,
   BattleActPresentation,
   BattleState,
@@ -31,7 +32,9 @@ import type {
 import type {
   BattleRuntimeContext,
   BattleRuntimeSession,
+  BattleStatBlockPresentationSource,
 } from "./battle-runtime-context.ts";
+import type { StatBlockProjectionIssue } from "./stat-block-execution-state.ts";
 import {
   BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
@@ -57,6 +60,39 @@ type IntrinsicBattleSubject = Exclude<
   BattleSubject,
   CharacterProcedureBattleSubject
 >;
+
+type IntrinsicAttackSubject = Extract<
+  IntrinsicBattleSubject,
+  | { readonly tag: "action"; readonly action: "attack" }
+  | { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
+>;
+
+type IntrinsicRuntimeAttackSubject = Extract<
+  IntrinsicBattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "opportunityAttack" | "retaliationAttack";
+  }
+>;
+
+type IntrinsicPresentation = Extract<
+  BattleActPresentation,
+  { readonly kind: "intrinsic" }
+>;
+
+type IntrinsicAttackPresentation = Extract<
+  BattleActPresentation,
+  { readonly kind: "attack" | "presentationIssue" }
+>;
+
+type IntrinsicProcedurePresentation = Extract<
+  BattleActPresentation,
+  { readonly kind: "intrinsic" | "presentationIssue" }
+>;
+
+type IntrinsicActPresentation =
+  | IntrinsicPresentation
+  | IntrinsicAttackPresentation;
 
 export function battleActSpellPresentation(
   act: AvailableBattleAct,
@@ -97,6 +133,40 @@ export function discoverBattleActs(
   session: BattleRuntimeSession,
 ): readonly AvailableBattleAct[] {
   return presentBattleActs(session, discoverBattleActCandidates(session.state));
+}
+
+export type BattleStatBlockActDiscovery = {
+  readonly acts: readonly AvailableBattleAct[];
+  readonly statBlockProjectionIssues: readonly {
+    readonly combatantId: CombatantId;
+    readonly issues: ReadonlyNonEmptyArray<StatBlockProjectionIssue>;
+  }[];
+};
+
+export function discoverBattleActsWithStatBlockProjectionIssues(
+  session: BattleRuntimeSession,
+): BattleStatBlockActDiscovery {
+  const statBlockProjectionIssues = [...session.state.combatants].flatMap(
+    ([combatantId]) => {
+      const issues = statBlockProjectionIssuesForActor(
+        session.state,
+        session.context,
+        combatantId,
+      );
+      if (issues === null) return [];
+      const [firstIssue, ...remainingIssues] = issues;
+      if (firstIssue === undefined) return [];
+      const nonEmptyIssues: ReadonlyNonEmptyArray<StatBlockProjectionIssue> = [
+        firstIssue,
+        ...remainingIssues,
+      ];
+      return [{ combatantId, issues: nonEmptyIssues }];
+    },
+  );
+  return {
+    acts: discoverBattleActs(session),
+    statBlockProjectionIssues,
+  };
 }
 
 export function presentBattleActs(
@@ -319,6 +389,17 @@ function intrinsicSubjectPresentation(
     }
     return undefined;
   }
+  return {
+    kind: "presentationIssue",
+    issue: {
+      tag: "attackPresentationJoinIssue",
+      reason: "statBlockProcedurePresentationJoin",
+      issues: presentations.failure,
+    },
+  };
+}
+
+function intrinsicSubjectPresentationFallback(): IntrinsicPresentation {
   return { kind: "intrinsic" };
 }
 
@@ -392,19 +473,22 @@ function intrinsicActPresentationText(
     (subject.tag === "bonusAction" &&
       subject.action === "statBlockActionOption")
   ) {
-    const actor = state.combatants.get(subject.actorId);
-    if (actor?.origin.kind === "statBlock") {
-      const presentation = statBlockProcedurePresentationsForActor(
-        state,
-        context,
-        subject.actorId,
-      )?.find((candidate) => candidate.procedureRef === subject.procedureRef);
-      if (presentation !== undefined && presentation.kind !== "attack") {
-        return {
-          label: presentation.label,
-          summary: `Use ${presentation.label}.`,
-        };
-      }
+    const presentations = statBlockProcedurePresentationsForActor(
+      state,
+      context,
+      subject.actorId,
+    );
+    const presentation =
+      presentations === null || Result.isFailure(presentations)
+        ? undefined
+        : presentations.success.find(
+            (candidate) => candidate.procedureRef === subject.procedureRef,
+          );
+    if (presentation !== undefined && presentation.kind !== "attack") {
+      return {
+        label: presentation.label,
+        summary: `Use ${presentation.label}.`,
+      };
     }
   }
   const label = intrinsicActPresentationLabel(subject);
@@ -704,21 +788,19 @@ function characterProcedurePresentationJoin(
       procedureRef,
       DRUID_WILD_SHAPE_PROCEDURE_QUERY,
     );
-    if (form === undefined || unit === undefined) {
-      return undefined;
-    }
-    const label = `${battleUnitPresentationName(unit)}: ${form.statBlock.statBlock.displayName}`;
-    return {
-      label,
-      summary: `Use ${label}.`,
-      presentation: {
-        kind: "druidWildShapeForm",
-        procedureRef,
-        formExecutionRef: subject.formExecutionRef,
-        unitId: unit.id,
-        formStatBlockId: form.statBlock.id,
-      },
-    };
+    if (form === undefined || unit === undefined) return undefined;
+    const formPresentation = druidWildShapeFormPresentationForScope(
+      context,
+      actor.combatantId,
+      form.execution.scopeRef,
+    );
+    return druidWildShapeFormPresentationJoin(
+      procedureRef,
+      subject,
+      form,
+      unit,
+      formPresentation,
+    );
   }
   if (
     subject.tag === "bonusActionStandardAction" &&
@@ -808,6 +890,48 @@ function characterProcedurePresentationJoin(
     };
   }
   return { label: name, summary: `Use ${name}.`, presentation };
+}
+
+function druidWildShapeFormPresentationForScope(
+  context: BattleRuntimeContext,
+  actorId: CombatantId,
+  scopeRef: BattleStatBlockExecutionScopeRef,
+): BattleStatBlockPresentationSource | undefined {
+  return context.characters
+    .get(actorId)
+    ?.druidWildShapeFormPresentations?.get(scopeRef);
+}
+
+type CharacterWildShapeFormAdmission = NonNullable<
+  Extract<
+    CharacterBattleCreatureState["origin"],
+    { readonly kind: "character" }
+  >["druidWildShapeAvailableForms"]
+>[number];
+
+function druidWildShapeFormPresentationJoin(
+  procedureRef: BattleProcedureExecutionRef,
+  subject: Extract<
+    CharacterProcedureBattleSubject,
+    { readonly tag: "druidWildShape"; readonly action: "assumeForm" }
+  >,
+  form: CharacterWildShapeFormAdmission,
+  unit: BattleUnitRef["unit"],
+  formPresentation: BattleStatBlockPresentationSource | undefined,
+): Pick<AvailableBattleAct, "label" | "summary" | "presentation"> | undefined {
+  if (formPresentation === undefined) return undefined;
+  const label = `${battleUnitPresentationName(unit)}: ${formPresentation.displayName}`;
+  return {
+    label,
+    summary: `Use ${label}.`,
+    presentation: {
+      kind: "druidWildShapeForm",
+      procedureRef,
+      formExecutionRef: subject.formExecutionRef,
+      unitId: unit.id,
+      formStatBlockId: form.statBlock.id,
+    },
+  };
 }
 
 function spellProcedurePresentationText(

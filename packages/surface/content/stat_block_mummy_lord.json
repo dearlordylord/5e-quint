@@ -1,0 +1,313 @@
+{
+  "challengeRating": 15,
+  "id": "stat_block_mummy_lord",
+  "kind": "statBlock",
+  "name": "Mummy Lord",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-M-O.md:530-587"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 16,
+      "con": 17,
+      "dex": 10,
+      "int": 11,
+      "str": 18,
+      "wis": 19
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 17
+      }
+    },
+    "actions": [
+      {
+        "description": "The mummy makes one Rotting Fist or Channel Negative Energy attack, and it uses Dreadful Glare.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee Attack Roll: +9, reach 5 ft. Hit: 15 (2d10 + 4) Bludgeoning damage plus 10 (3d6) Necrotic damage. If the target is a creature, it is cursed. While cursed, the target can't regain Hit Points, it gains no benefit from finishing a Long Rest, and its Hit Point maximum decreases by 10 (3d6) every 24 hours that elapse. A creature dies and turns to dust if reduced to 0 Hit Points by this attack.",
+        "kind": "textOnly",
+        "name": "Rotting Fist",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Ranged Attack Roll: +9, range 60 ft. Hit: 25 (6d6 + 4) Necrotic damage.",
+        "kind": "textOnly",
+        "name": "Channel Negative Energy",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Wisdom Saving Throw: DC 17, one creature the mummy can see within 60 feet. Failure: 25 (6d6 + 4) Psychic damage, and the target has the Paralyzed condition until the end of the mummy's next turn.",
+        "kind": "textOnly",
+        "name": "Dreadful Glare",
+        "procedureOrdinal": 4,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "wis",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "dispel_magic"
+                },
+                {
+                  "spellId": "thaumaturgy"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "animate_dead"
+                },
+                {
+                  "spellId": "harm"
+                },
+                {
+                  "castAtLevel": 7,
+                  "spellId": "insect_plague"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellAttackBonus": {
+            "kind": "literal",
+            "value": 9
+          },
+          "spellSaveDc": {
+            "dc": 17,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 5,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "additionalLanguages": 3,
+        "kind": "named_plus_other_languages",
+        "languages": [
+          "Common"
+        ]
+      }
+    },
+    "creatureType": "undead",
+    "creatureTypeTags": [
+      "cleric"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 187
+    },
+    "immunities": {
+      "conditions": [
+        "charmed",
+        "exhaustion",
+        "frightened",
+        "paralyzed",
+        "poisoned"
+      ],
+      "damageTypes": [
+        "necrotic",
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 10,
+      "score": 20
+    },
+    "legendaryActions": {
+      "entries": [
+        {
+          "description": "The mummy casts Command (level 2 version), using the same spellcasting ability as Spellcasting. The mummy can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Dread Command",
+          "procedureOrdinal": 1,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The mummy uses Dreadful Glare. The mummy can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Glare",
+          "procedureOrdinal": 2,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The mummy makes one Rotting Fist or Channel Negative Energy attack.",
+          "kind": "textOnly",
+          "name": "Necrotic Strike",
+          "procedureOrdinal": 3,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        }
+      ],
+      "uses": {
+        "additionalUsesInLair": 1,
+        "kind": "lair_bonus",
+        "usesOutsideLair": 3
+      }
+    },
+    "passivePerception": 19,
+    "reactions": [
+      {
+        "description": "Trigger: The mummy is hit by an attack roll. Response: The mummy adds 2 to its AC against the attack, possibly causing the attack to miss, and the mummy teleports up to 60 feet to an unoccupied space it can see. Each creature of its choice that it can see within 5 feet of its destination space has the Blinded condition until the end of the mummy's next turn.",
+        "kind": "textOnly",
+        "name": "Whirlwind of Sand",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 1,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "cha",
+        "modifier": 3
+      },
+      {
+        "ability": "con",
+        "modifier": 3
+      },
+      {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": 5
+      },
+      {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
+        "ability": "wis",
+        "modifier": 9
+      }
+    ],
+    "senses": [
+      {
+        "kind": "truesight",
+        "rangeFeet": 60
+      }
+    ],
+    "size": {
+      "kind": "alternatives",
+      "options": [
+        "medium",
+        "small"
+      ]
+    },
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "history"
+      },
+      {
+        "modifier": 9,
+        "skill": "perception"
+      },
+      {
+        "modifier": 5,
+        "skill": "religion"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the mummy fails a saving throw, it can choose to succeed instead.",
+        "name": "Legendary Resistance (3/Day, or 4/Day in Lair)"
+      },
+      {
+        "description": "The mummy has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      },
+      {
+        "description": "If destroyed, the mummy gains a new body in 24 hours if its heart is intact, reviving with all its Hit Points. The new body appears in an unoccupied space within the mummy's lair. The heart is a Tiny object that has AC 17, HP 10, and Immunity to all damage except Fire.",
+        "name": "Undead Restoration"
+      }
+    ],
+    "vulnerabilities": {
+      "damageTypes": [
+        "fire"
+      ],
+      "kind": "fixed"
+    }
+  }
+}

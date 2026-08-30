@@ -98,7 +98,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   ];
   const initializedCombatants = [];
   for (const combatant of combatants) {
-    if (sdk.isLeft(combatant)) {
+    if (sdk.isFailure(combatant)) {
       return {
         kind: "obstructed",
         obstruction: sdk.battleStateInitIssueMessage(combatant.failure),
@@ -116,7 +116,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ),
     combatants: initializedCombatants,
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(battle.failure),

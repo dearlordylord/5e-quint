@@ -100,6 +100,7 @@ export type {
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-emanation
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
@@ -109,7 +110,7 @@ export type {
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hypnotic-pattern-control
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm spell.hit-point-restoration spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-save-gated-condition-immunity spell.invocation-see-invisible-observer-sight spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.magic-action-save-gated-condition unit-feature.martial-arts-attack-projection unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.creature-type-protection-and-charm spell.hit-point-restoration spell.invocation-after-hit-damage spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-blur-attack-roll-defense spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-condition-immunity-turn-start-temporary-hit-points spell.invocation-condition-removal-protection spell.invocation-condition-save spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-dancing-lights-movable-dim-light spell.invocation-expeditious-retreat-dash spell.invocation-feather-fall-mitigation spell.invocation-fog-cloud-obscurement spell.invocation-forced-reaction-movement spell.invocation-grease-ground-hazard spell.invocation-held-light-emitter spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-independent-attack-sequence spell.invocation-jump-movement-replacement spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-object-light spell.invocation-roll-modifier spell.invocation-sanctuary-targeting-interdiction spell.invocation-save-gated-condition-immunity spell.invocation-see-invisible-observer-sight spell.invocation-self-ability-check-advantage spell.invocation-self-teleport spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-spell-hosted-weapon-attack spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.innate-sorcery-activation unit-feature.magic-action-save-gated-condition unit-feature.martial-arts-attack-projection unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.zero-hit-point-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
@@ -118,7 +119,7 @@ export type {
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hide-action-obscurement-permission
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
-// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.STAT_BLOCK.ATTACK_CONTROL BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE BATTLE.SPELL.READIED_RESPONSE_PROCEDURE
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE BATTLE.SPELL.READIED_RESPONSE_PROCEDURE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
@@ -173,6 +174,7 @@ import {
   movementFeet,
   type Condition,
   type CoverType,
+  type D6RollResult,
   type DamageDieSize,
   type ReadonlyNonEmptyArray,
   type ResourceCount,
@@ -190,11 +192,11 @@ import type {
   SpellMechanics,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
-import type * as Option from "effect/Option";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
   BoundAttackExecutionSelection,
+  CharacterAttackExecutionSelection,
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 
@@ -235,16 +237,18 @@ import type {
   CharacterBattleLoadoutRef,
   HeldWeaponLoadoutSlot,
 } from "./character-creature-execution-facts.ts";
-import type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-known-form-runtime.ts";
 import type { BattlePositiveHpUnconscious } from "./positive-hp-unconscious.ts";
 import type { StatBlockBattleOrigin } from "./stat-block-combatant-execution-state.ts";
 import type {
   BattleStatBlockExecutionSource,
   StatBlockExecutionAdmission,
   StatBlockExecutionSnapshot,
+  StatBlockResourceGraphAdmissionFailure,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import type { BattleCompanionDurableId } from "./companion-state.ts";
+import type { StatBlockProcedurePresentationJoinIssue } from "./stat-block-presentation-contract.ts";
 
 export type BattleStatBlockExecutionCatalog = {
   readonly getStatBlock: (
@@ -1664,7 +1668,7 @@ export type BattleTargetSpatialFact =
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
       readonly disposition: BattleShovePushDisposition;
-    } & BattleAttackExecutionSelection)
+    } & CharacterAttackExecutionSelection)
   | ({
       readonly kind: "attackTargetDistance";
       readonly actorId: CombatantId;
@@ -4188,7 +4192,7 @@ type BattleCreatureStateCommon = {
         readonly classLevels: CharacterBattleClassLevels;
         readonly knownLanguages: ReadonlyNonEmptyArray<Language>;
         readonly d20Statistics: CharacterBattleD20Statistics;
-        readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>[];
+        readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime>[];
         readonly weaponProficiencies: readonly WeaponProficiency[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
         readonly unarmoredArmorClassBases: CharacterBattleUnarmoredArmorClassBases;
@@ -4602,6 +4606,10 @@ export type BattleStateInitLeafIssue =
       readonly ownerPath?: readonly (string | number)[];
     }
   | {
+      readonly tag: "statBlockResourceGraphIssue";
+      readonly issues: ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>;
+    }
+  | {
       readonly tag: "weaponLoadoutMismatch";
       readonly slot: "main-hand" | "off-hand";
       readonly ownerPath?: readonly (string | number)[];
@@ -4619,6 +4627,12 @@ export type BattleInitializationLeafIssue =
       readonly message: string;
       readonly ownerPath?: readonly (string | number)[];
     } & BattleInitializationIssueFacts)
+  | {
+      readonly tag: "statBlockResourceGraphIssue";
+      readonly issues: ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>;
+      readonly combatantId: CombatantId;
+      readonly ownerPath: readonly (string | number)[];
+    }
   | {
       readonly tag: "weaponLoadoutMismatch";
       readonly slot: "main-hand" | "off-hand";
@@ -4696,7 +4710,7 @@ export type BattleActPresentation =
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
       readonly unitId: string;
-      readonly formStatBlockId: BattleDruidWildShapeKnownForm["id"];
+      readonly formStatBlockId: BattleDruidWildShapeKnownFormRuntime["id"];
     };
 
 export type BattleActDiscoveryCandidate = BattleActExecution<BattleSubject>;
@@ -6284,7 +6298,7 @@ export type BattleStatBlockRechargeRollHole = {
 };
 export type BattleStatBlockRechargeRollResult = {
   readonly target: BattleResourcePoolExecutionRef;
-  readonly roll: DieRollResult;
+  readonly roll: D6RollResult;
 };
 export type BattleConcentrationSavingThrowHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -7715,14 +7729,9 @@ export type BattleCreatureSnapshot = BattleCreatureSnapshotCommon &
       }
   );
 
-type WithBattleCreatureDisplayName<T> = T extends BattleCreatureSnapshot
-  ? Omit<T, "displayName"> & {
-      readonly displayName: import("./battle-creature-display-name.ts").BattleCreatureDisplayName;
-    }
-  : never;
-
-export type BattlePresentedCreatureSnapshot =
-  WithBattleCreatureDisplayName<BattleCreatureSnapshot>;
+export type BattlePresentedCreatureSnapshot = BattleCreatureSnapshot & {
+  readonly displayName: import("./battle-creature-display-name.ts").BattleCreatureDisplayName;
+};
 
 export type BattlePresentedSnapshot = Omit<BattleSnapshot, "combatants"> & {
   readonly combatants: readonly BattlePresentedCreatureSnapshot[];
@@ -7760,6 +7769,7 @@ export type BattlePresentationIssues =
 
 export type BattleTurnSnapshot = {
   readonly actionResources: readonly RuntimeActionResource[];
+  readonly actionTakenThisTurn: boolean;
   /** The current turn's unspent Bonus Action quota, not discovered action availability. */
   readonly bonusActionQuotaAvailable: boolean;
   readonly jumpDistanceMultiplier: BattleJumpDistanceMultiplier | null;

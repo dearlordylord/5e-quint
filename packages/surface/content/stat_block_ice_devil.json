@@ -1,0 +1,221 @@
+{
+  "challengeRating": 14,
+  "id": "stat_block_ice_devil",
+  "kind": "statBlock",
+  "name": "Ice Devil",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-H-L.md:350-382"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 18,
+      "con": 18,
+      "dex": 14,
+      "int": 18,
+      "str": 21,
+      "wis": 15
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 18
+      }
+    },
+    "actions": [
+      {
+        "description": "The devil makes three Ice Spear attacks. It can replace one attack with a Tail attack.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee or Ranged Attack Roll: +10, reach 5 ft. or range 30/120 ft. Hit: 14 (2d8 + 5) Piercing damage plus 10 (3d6) Cold damage. Until the end of its next turn, the target can't take a Bonus Action or Reaction, its Speed decreases by 10 feet, and it can move or take one action on its turn, not both. Hit or Miss: The spear magically returns to the devil's hand immediately after a ranged attack.",
+        "kind": "textOnly",
+        "name": "Ice Spear",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 10
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Tail",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 6,
+                  "flat": 5
+                },
+                "kind": "fixed",
+                "static": 15
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 4,
+                  "dieSize": 8
+                },
+                "kind": "fixed",
+                "static": 18
+              },
+              "damageType": "cold",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "The devil casts Wall of Ice (level 8 version), requiring no spell components and using Intelligence as the spellcasting ability (spell save DC 17).",
+        "kind": "textOnly",
+        "name": "Ice Wall (Recharge 6)",
+        "procedureOrdinal": 4,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Infernal"
+        ]
+      },
+      "telepathy": {
+        "rangeFeet": 120
+      }
+    },
+    "creatureType": "fiend",
+    "creatureTypeTags": [
+      "devil"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 228
+    },
+    "immunities": {
+      "conditions": [
+        "poisoned"
+      ],
+      "damageTypes": [
+        "cold",
+        "fire",
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 7,
+      "score": 17
+    },
+    "passivePerception": 17,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 6
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 5
+      },
+      {
+        "ability": "dex",
+        "modifier": 7
+      },
+      {
+        "ability": "con",
+        "modifier": 9
+      },
+      {
+        "ability": "int",
+        "modifier": 4
+      },
+      {
+        "ability": "wis",
+        "modifier": 7
+      },
+      {
+        "ability": "cha",
+        "modifier": 9
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "large",
+    "skillModifiers": [
+      {
+        "modifier": 7,
+        "skill": "insight"
+      },
+      {
+        "modifier": 7,
+        "skill": "perception"
+      },
+      {
+        "modifier": 9,
+        "skill": "persuasion"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the devil dies outside the Nine Hells, its body disappears in sulfurous smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Nine Hells.",
+        "name": "Diabolical Restoration"
+      },
+      {
+        "description": "The devil has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      }
+    ]
+  }
+}

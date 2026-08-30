@@ -1,0 +1,283 @@
+{
+  "challengeRating": 6,
+  "id": "stat_block_chimera",
+  "kind": "statBlock",
+  "name": "Chimera",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:79-107"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 10,
+      "con": 19,
+      "dex": 11,
+      "int": 3,
+      "str": 19,
+      "wis": 14
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 14
+      }
+    },
+    "actions": [
+      {
+        "description": "The chimera makes one Ram attack, one Bite attack, and one Claw attack. It can replace the Claw attack with a use of Fire Breath if available.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 7
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 11
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "piercing",
+              "kind": "conditional_bonus_damage",
+              "when": {
+                "kind": "attack_roll_had_advantage"
+              }
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 7
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Claw",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 7
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Ram",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 12,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 10
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            },
+            {
+              "condition": "prone",
+              "kind": "apply_condition_if_target_size_at_most",
+              "maxCreatureSize": "medium"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "dex",
+          "area": {
+            "kind": "cone",
+            "lengthFeet": 15
+          },
+          "dc": {
+            "dc": 15,
+            "kind": "fixed"
+          },
+          "kind": "save",
+          "name": "Fire Breath",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 7,
+                "dieSize": 8
+              },
+              "kind": "fixed",
+              "static": 31
+            },
+            "damageType": "fire",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 5,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "chaotic"
+    },
+    "communication": {
+      "kind": "understood_but_cannot_speak",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Draconic"
+        ]
+      }
+    },
+    "creatureType": "monstrosity",
+    "hp": {
+      "kind": "literal",
+      "value": 114
+    },
+    "initiative": {
+      "modifier": 0,
+      "score": 10
+    },
+    "passivePerception": 18,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
+        "ability": "con",
+        "modifier": 4
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": 2
+      },
+      {
+        "ability": "cha",
+        "modifier": 0
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "large",
+    "skillModifiers": [
+      {
+        "modifier": 8,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 60
+        },
+        "kind": "fly"
+      }
+    ]
+  }
+}

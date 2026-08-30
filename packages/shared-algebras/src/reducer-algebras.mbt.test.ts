@@ -62,6 +62,7 @@ type ActionEconomyProjection = {
   readonly turnActionAvailable: boolean;
   readonly restrictedUnitActionProcedureRefs: readonly BattleProcedureExecutionRef[];
   readonly hasBonusAction: boolean;
+  readonly actionTakenThisTurn: boolean;
 };
 
 type ConditionsProjection = {
@@ -421,6 +422,7 @@ const actionEconomySpecStateSchema = Schema.Struct({
   qTurnActionAvailable: Schema.Boolean,
   qRestrictedUnitActionOrder: quintRestrictedUnitActionOrderSchema,
   qHasBonusAction: Schema.Boolean,
+  qActionTakenThisTurn: Schema.Boolean,
 });
 
 const actionEconomyStateCheck = stateCheck(
@@ -683,6 +685,7 @@ describe("shared reducer algebra trace-state decoders", () => {
 function initialActionEconomyState(): ActionEconomyState {
   return resetTurnActionEconomy({
     actionResources: [],
+    actionTakenThisTurn: false,
     currentHasBonusAction: false,
     actionOrBonusActionExclusion: { kind: "notRestricted" },
     movementActionBonusActionExclusion: { kind: "notRestricted" },
@@ -700,6 +703,7 @@ function projectActionEconomy(
       state.actionResources,
     ),
     hasBonusAction: state.currentHasBonusAction,
+    actionTakenThisTurn: state.actionTakenThisTurn,
   };
 }
 
@@ -799,6 +803,7 @@ function decodeActionEconomySpecState(raw: unknown) {
           ],
         ],
         hasBonusAction: state.qHasBonusAction,
+        actionTakenThisTurn: state.qActionTakenThisTurn,
       }),
     ),
   );

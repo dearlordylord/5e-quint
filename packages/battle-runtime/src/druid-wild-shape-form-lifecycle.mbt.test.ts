@@ -1,5 +1,9 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleObjectId } from "./identity.ts";
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  statBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActSpellPresentation,
@@ -143,10 +147,10 @@ type ActionSpellAvailableAct = Omit<AvailableBattleAct, "subject"> & {
 
 const druidId = combatantId("wild-shape-form-lifecycle-mbt-druid");
 const opponentId = combatantId("wild-shape-form-lifecycle-mbt-opponent");
-const ratId = "stat_block_rat";
-const ridingHorseId = "stat_block_riding_horse";
-const lizardId = "stat_block_lizard";
-const catId = "stat_block_cat";
+const ratId = statBlockId("stat_block_rat");
+const ridingHorseId = statBlockId("stat_block_riding_horse");
+const lizardId = statBlockId("stat_block_lizard");
+const catId = statBlockId("stat_block_cat");
 const selectedIdentityTaskId = "L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT";
 
 const driverSchema = {
@@ -1150,10 +1154,10 @@ function activeFormFromStatBlock(
 
 function druidWildShapeAvailableForms(): readonly StatBlockRecord[] {
   return [
-    statBlockCatalog.requireStatBlock(ratId),
-    statBlockCatalog.requireStatBlock(ridingHorseId),
-    statBlockCatalog.requireStatBlock(lizardId),
-    statBlockCatalog.requireStatBlock(catId),
+    assertStatBlockForTest(statBlockCatalog, ratId),
+    assertStatBlockForTest(statBlockCatalog, ridingHorseId),
+    assertStatBlockForTest(statBlockCatalog, lizardId),
+    assertStatBlockForTest(statBlockCatalog, catId),
   ];
 }
 

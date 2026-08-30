@@ -1,0 +1,245 @@
+{
+  "challengeRating": 13,
+  "id": "stat_block_nalfeshnee",
+  "kind": "statBlock",
+  "name": "Nalfeshnee",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-M-O.md:591-632"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 15,
+      "con": 22,
+      "dex": 10,
+      "int": 19,
+      "str": 21,
+      "wis": 12
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 18
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 3
+              },
+              "procedureOrdinal": 2
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 10
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Rend",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 10,
+                  "flat": 5
+                },
+                "kind": "fixed",
+                "static": 16
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 10
+                },
+                "kind": "fixed",
+                "static": 11
+              },
+              "damageType": "force",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "The nalfeshnee teleports up to 120 feet to an unoccupied space it can see.",
+        "kind": "textOnly",
+        "name": "Teleport",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "chaotic"
+    },
+    "bonusActions": [
+      {
+        "description": "Wisdom Saving Throw: DC 15, each creature in a 15-foot Emanation originating from the nalfeshnee. Failure: 28 (8d6) Psychic damage, and the target has the Frightened condition for 1 minute, until it takes damage, or until it ends its turn with the nalfeshnee out of line of sight. Success: The target is immune to this nalfeshnee's Horror Nimbus for 24 hours.",
+        "kind": "textOnly",
+        "name": "Horror Nimbus (Recharge 5–6)",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Abyssal"
+        ]
+      },
+      "telepathy": {
+        "rangeFeet": 120
+      }
+    },
+    "creatureType": "fiend",
+    "creatureTypeTags": [
+      "demon"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 184
+    },
+    "immunities": {
+      "conditions": [
+        "frightened",
+        "poisoned"
+      ],
+      "damageTypes": [
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 5,
+      "score": 15
+    },
+    "passivePerception": 11,
+    "reactions": [
+      {
+        "description": "Trigger: Another creature the nalfeshnee can see ends its move within 120 feet of the nalfeshnee. Response: The nalfeshnee uses Teleport, but its destination space must be within 10 feet of the triggering creature.",
+        "kind": "textOnly",
+        "name": "Pursuit",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "resistances": {
+      "damageTypes": [
+        "cold",
+        "fire",
+        "lightning"
+      ],
+      "kind": "fixed"
+    },
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "cha",
+        "modifier": 7
+      },
+      {
+        "ability": "con",
+        "modifier": 11
+      },
+      {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": 9
+      },
+      {
+        "ability": "str",
+        "modifier": 5
+      },
+      {
+        "ability": "wis",
+        "modifier": 6
+      }
+    ],
+    "senses": [
+      {
+        "kind": "truesight",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "large",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the nalfeshnee dies outside the Abyss, its body dissolves into ichor, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Abyss.",
+        "name": "Demonic Restoration"
+      },
+      {
+        "description": "The nalfeshnee has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      }
+    ]
+  }
+}

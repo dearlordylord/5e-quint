@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   unitId as parseSharedUnitId,
   statBlockId as parseSharedStatBlockId,
@@ -21,7 +22,11 @@ import { Result } from "effect";
 import * as Option from "effect/Option";
 import { Schema } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { describe, expect, test } from "vitest";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   applyCondition,
@@ -35,6 +40,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import { StatBlockRecordSchema } from "@dnd/surface/surface/schema";
 import {
   spawnedCompanionFormEligibilityForSpell,
   pactOfTheChainSpawnedCompanionFormEligibilityForSpell,
@@ -46,6 +52,7 @@ import {
   admitCompanionToBattleRuntime,
   applySpawnedCompanionZeroHitPointDisappearance,
   battleAvailableDruidWildShapeKnownForms,
+  wildShapeKnownFormsIssueMessage,
   battleCreaturePresentationDisplayName,
   battleDruidWildShapeKnownFormSupportForUnit,
   battleId,
@@ -101,6 +108,7 @@ import {
   assertBattleSnapshotCodecRoundTripForTest,
   characterBattleFeatureInitForTest,
   readyDeclarationFillForTest,
+  projectedStatBlockRuntimeSource,
   requireCharacterSpellProcedureRefForTest,
   battleFrontierInterruptDecisionForState,
   resolveBattleSubject,
@@ -252,10 +260,22 @@ function druidWildShapeKnownForms() {
   const forms = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
-      statBlockCatalog.requireStatBlock("stat_block_rat"),
-      statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
-      statBlockCatalog.requireStatBlock("stat_block_lizard"),
-      statBlockCatalog.requireStatBlock("stat_block_cat"),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        parseSharedStatBlockId("stat_block_rat"),
+      ),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        parseSharedStatBlockId("stat_block_riding_horse"),
+      ),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        parseSharedStatBlockId("stat_block_lizard"),
+      ),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        parseSharedStatBlockId("stat_block_cat"),
+      ),
     ],
   });
   if (Result.isFailure(forms)) {
@@ -270,14 +290,16 @@ function startFixtureBattle(
     readonly includeEnemy?: boolean;
   } = {},
 ): BattleState {
-  const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+  const skeleton = assertStatBlockForTest(
+    statBlockCatalog,
+    parseSharedStatBlockId("stat_block_skeleton"),
+  );
   const maxHp = literalHp(skeleton);
   const result = startBattle({
     battleId: battleId("companion-lifecycle-test"),
     combatants: [
       {
         combatantId: casterId,
-        displayName: "Caster",
         initiative: initiativeScore(12),
         creatureInit: {
           kind: "statBlock",
@@ -288,13 +310,18 @@ function startFixtureBattle(
             { ammunition: "arrow" as const, remaining: resourceCount(20) },
           ],
           conditions: [],
+          presentation: {
+            displayName: "Caster",
+            communication: { kind: "none" as const },
+            traits: [],
+            orderedProcedures: [],
+          },
         },
       },
       ...(input.includeEnemy === true
         ? [
             {
               combatantId: enemyId,
-              displayName: "Enemy",
               initiative: initiativeScore(10),
               creatureInit: {
                 kind: "statBlock" as const,
@@ -310,6 +337,12 @@ function startFixtureBattle(
                   },
                 ],
                 conditions: [],
+                presentation: {
+                  displayName: "Enemy",
+                  communication: { kind: "none" as const },
+                  traits: [],
+                  orderedProcedures: [],
+                },
               },
             },
           ]
@@ -319,7 +352,6 @@ function startFixtureBattle(
         : [
             {
               combatantId: input.extraCombatantId,
-              displayName: "Other Combatant",
               initiative: initiativeScore(10),
               creatureInit: {
                 kind: "statBlock" as const,
@@ -335,6 +367,12 @@ function startFixtureBattle(
                   },
                 ],
                 conditions: [],
+                presentation: {
+                  displayName: "Other Combatant",
+                  communication: { kind: "none" as const },
+                  traits: [],
+                  orderedProcedures: [],
+                },
               },
             },
           ]),
@@ -1155,26 +1193,92 @@ function pactScratchSubject(
   if (familiar?.origin.kind !== "statBlock") {
     throw new Error("Expected the committed familiar Stat Block admission.");
   }
-  const procedureRef = statBlockProcedurePresentations({
-    statBlock: statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
-    execution: familiar.origin.execution,
-  }).find(
+  const procedureRef = Result.getOrThrow(
+    statBlockProcedurePresentations({
+      presentation: Result.getOrThrow(
+        projectAuthoredStatBlock(
+          assertStatBlockForTest(statBlockCatalog, familiar.origin.statBlockId),
+        ),
+      ).presentation,
+      execution: familiar.origin.execution,
+    }),
+  ).find(
     (presentation) =>
       presentation.kind === "attack" && presentation.name === "Scratch",
   )?.procedureRef;
   if (procedureRef === undefined) {
     throw new Error("Expected admitted Scratch procedure.");
   }
+  const attack = statBlockAttackActionOptions(familiar.origin.execution).find(
+    (candidate) => candidate.procedureRef === procedureRef,
+  );
+  if (attack === undefined) {
+    throw new Error("Expected executable Scratch damage selection.");
+  }
   return {
     tag: "companionAttack",
     actorId,
     familiarId: subjectFamiliarId,
-    procedureRef,
-    statBlockDamageNotation: "static",
+    ...attackExecutionSelectionForOption(attack),
   };
 }
 
 describe("Find Familiar lifecycle", () => {
+  test("rejects nonliteral familiar HP before authored projection admission", () => {
+    const source = assertStatBlockForTest(
+      statBlockCatalog,
+      parseSharedStatBlockId("stat_block_cat"),
+    );
+    const malformed = {
+      ...source,
+      id: parseSharedStatBlockId("synthetic_nonliteral_familiar_hp"),
+      name: "Synthetic Nonliteral Familiar HP",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic-nonliteral-familiar-hp",
+      },
+      statBlock: {
+        ...source.statBlock,
+        hp: { kind: "caster_derived", source: "spell_save_dc" },
+      },
+    };
+
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockRecordSchema)(malformed),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects nonliteral familiar Armor Class before authored projection admission", () => {
+    const source = assertStatBlockForTest(
+      statBlockCatalog,
+      parseSharedStatBlockId("stat_block_cat"),
+    );
+    const malformed = {
+      ...source,
+      id: parseSharedStatBlockId("synthetic_nonliteral_familiar_ac"),
+      name: "Synthetic Nonliteral Familiar Armor Class",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic-nonliteral-familiar-armor-class",
+      },
+      statBlock: {
+        ...source.statBlock,
+        ac: {
+          ...source.statBlock.ac,
+          value: { kind: "caster_derived", source: "spell_save_dc" },
+        },
+      },
+    };
+
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(StatBlockRecordSchema)(malformed),
+      ),
+    ).toBe(true);
+  });
+
   test("retained companion presentation follows admission and recast transitions", () => {
     const initial = startBattle({
       battleId: battleId("retained-companion-presentation"),
@@ -1294,23 +1398,21 @@ describe("Find Familiar lifecycle", () => {
       }),
     );
 
-    let presentationCatalogLookups = 0;
-    const presentationStatBlockMissing = admitCompanionToBattleRuntime({
+    let admissionCatalogLookups = 0;
+    const admittedFromOneCatalogResolution = admitCompanionToBattleRuntime({
       session,
       ownerId: casterId,
       companionId: familiarId,
       identity: {
         tag: "retainedBetweenBattles",
-        durableCompanionId: "durable:presentation-missing-stat-block",
+        durableCompanionId: "durable:single-source-projection",
       },
       protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
       catalog: {
         ...statBlockCatalog,
         getStatBlock: (statBlockId) => {
-          presentationCatalogLookups += 1;
-          return presentationCatalogLookups === 1
-            ? statBlockCatalog.getStatBlock(statBlockId)
-            : Option.none();
+          admissionCatalogLookups += 1;
+          return statBlockCatalog.getStatBlock(statBlockId);
         },
       },
       formEligibility: {
@@ -2371,14 +2473,16 @@ describe("Find Familiar lifecycle", () => {
   });
 
   test("preserves a Pact Skeleton familiar's ammunition through dismissal and reappearance", () => {
-    const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+    const skeleton = assertStatBlockForTest(
+      statBlockCatalog,
+      parseSharedStatBlockId("stat_block_skeleton"),
+    );
     const skeletonHp = literalHp(skeleton);
     const started = startBattle({
       battleId: battleId("pact-skeleton-ammunition-lifecycle"),
       combatants: [
         {
           combatantId: casterId,
-          displayName: "Pact Owner",
           initiative: initiativeScore(12),
           creatureInit: {
             kind: "statBlock",
@@ -2389,11 +2493,16 @@ describe("Find Familiar lifecycle", () => {
               { ammunition: "arrow", remaining: resourceCount(20) },
             ],
             conditions: [],
+            presentation: {
+              displayName: "Pact Owner",
+              communication: { kind: "none" as const },
+              traits: [],
+              orderedProcedures: [],
+            },
           },
         },
         {
           combatantId: familiarId,
-          displayName: "Pact Skeleton Familiar",
           initiative: initiativeScore(11),
           creatureInit: {
             kind: "statBlock",
@@ -2404,6 +2513,12 @@ describe("Find Familiar lifecycle", () => {
               { ammunition: "arrow", remaining: resourceCount(7) },
             ],
             conditions: [],
+            presentation: {
+              displayName: "Pact Skeleton Familiar",
+              communication: { kind: "none" as const },
+              traits: [],
+              orderedProcedures: [],
+            },
           },
         },
       ],
@@ -4675,13 +4790,19 @@ describe("Find Familiar lifecycle", () => {
       (act) =>
         act.subject.tag === "companionAttack" &&
         act.subject.procedureRef === scratchProcedureRef &&
-        act.subject.statBlockDamageNotation === undefined,
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          act.subject.statBlockDamageSelection,
+          "rolled",
+        ),
     )?.subject;
     const staticSubject = attackActs.find(
       (act) =>
         act.subject.tag === "companionAttack" &&
         act.subject.procedureRef === scratchProcedureRef &&
-        act.subject.statBlockDamageNotation === "static",
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          act.subject.statBlockDamageSelection,
+          "static",
+        ),
     )?.subject;
     expect(rolledScratchSubject).toBeUndefined();
     if (staticSubject?.tag !== "companionAttack") {
@@ -4893,7 +5014,7 @@ describe("Find Familiar lifecycle", () => {
     expect(Result.isFailure(dismissedAtZeroHp)).toBe(true);
   });
 
-  test("reappearance admission reports missing and malformed retained forms", () => {
+  test("reappearance admission reports missing retained forms", () => {
     const cast = castCatFamiliar(startFixtureBattle());
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;

@@ -20,8 +20,8 @@
     },
     "auditedUniqueSpellIdentitiesByFinalDisposition": {
       "catalog-installed-owner-evidence-present": 50,
-      "catalog-only/dead-for-now": 49,
-      "missing-authored-runtime-closed": 15
+      "catalog-only/dead-for-now": 53,
+      "missing-authored-runtime-closed": 11
     },
     "auditedUniqueSpellIdentitiesByLevelBand": {
       "spell-level-3": 42,
@@ -39,8 +39,8 @@
       "accepted-no-battle-effect": 454
     },
     "rowsByCatalogAdmission": {
-      "installed": 853,
-      "not-installed": 201
+      "installed": 911,
+      "not-installed": 143
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 196,
@@ -55,8 +55,8 @@
     },
     "rowsByFinalDisposition": {
       "catalog-installed-owner-evidence-present": 604,
-      "catalog-only/dead-for-now": 310,
-      "missing-authored-runtime-closed": 32,
+      "catalog-only/dead-for-now": 321,
+      "missing-authored-runtime-closed": 21,
       "non-runtime": 108
     },
     "rowsByLevelBand": {
@@ -91,10 +91,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 30,
+      "not-recorded": 19,
       "profile-subset-supported": 140,
       "supported-profile": 330,
-      "unsupported-profile": 554
+      "unsupported-profile": 565
     }
   },
   "rows": [
@@ -3332,7 +3332,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
         "state": "present"
       },
-      "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+      "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
       "rowId": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -3342,22 +3342,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/mage_hand.json",
+          "state": "authored-record-present",
+          "unitId": "mage_hand"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "mage_hand"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -4054,7 +4061,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
         "state": "present"
       },
-      "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+      "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
       "rowId": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -4064,22 +4071,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/disguise_self.json",
+          "state": "authored-record-present",
+          "unitId": "disguise_self"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion presentation and perception owner",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "disguise_self"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -4385,7 +4399,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "identify"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -5823,7 +5837,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -5919,7 +5933,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -6063,7 +6077,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -6539,7 +6553,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -6657,7 +6671,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-4:spell-unit-pressure:bard_spell_list_confusion",
         "state": "present"
       },
-      "nextAction": "Random target-turn behavior, action and Reaction denial, random movement, forced melee attacks, repeat saves, and slot-scaled area membership require a future active control Spell Effect plus table/spatial random-target and movement owners.",
+      "nextAction": "A future owner must carry the Concentration-owned affected-target set, slot-scaled Sphere radius, action/Reaction denial, target-turn d10 behavior roll, random direction movement, no-action branches, random reachable melee target selection, Attack action forcing, and repeat Wisdom saves. Table/spatial ownership must supply area membership, cardinal directions, reach, target availability, and movement path facts without duplicating map or action state.",
       "rowId": "srd521:classes/bard:spell-level-4:spell-unit-pressure:bard_spell_list_confusion",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -6667,7 +6681,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/confusion.json",
+          "state": "authored-record-present",
+          "unitId": "confusion"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -6681,10 +6697,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "confusion"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -6729,7 +6745,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "dimension_door"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -6939,7 +6955,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:spell-level-4:spell-unit-pressure:bard_spell_list_phantasmal_killer",
         "state": "present"
       },
-      "nextAction": "Single-target fear illusion, initial and repeat Wisdom saves, Psychic damage, Ability Check and attack-roll Disadvantage, and end-turn cleanup require a future repeating-save illusion Spell Effect owner.",
+      "nextAction": "A future owner must carry the target-specific illusion, initial and end-turn Wisdom saves, slot-scaled Psychic damage, failed-save Ability Check and attack-roll Disadvantage, successful-save cleanup, and repeated damage timing. It must consume existing roll-mode, damage, condition/effect lifecycle, and turn-boundary owners without dispatching on the spell name.",
       "rowId": "srd521:classes/bard:spell-level-4:spell-unit-pressure:bard_spell_list_phantasmal_killer",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -6949,7 +6965,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/phantasmal_killer.json",
+          "state": "authored-record-present",
+          "unitId": "phantasmal_killer"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -6963,10 +6981,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "phantasmal_killer"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -11103,7 +11121,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "animate_dead"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -11247,7 +11265,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -11863,7 +11881,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "spirit_guardians"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -11911,7 +11929,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -12077,7 +12095,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:spell-level-4:spell-unit-pressure:cleric_spell_list_control_water",
         "state": "present"
       },
-      "nextAction": "Water volume, waves, trenches, redirected flow, whirlpools, vehicle capsizing, swimming pulls, and water-area persistence are table/spatial/environment facts outside promoted spell runtime owners.",
+      "nextAction": "A future owner must carry the controlled water area, current selected mode, Magic Action mode changes, wave repeats, trenches, redirects, whirlpool geometry, vehicle interactions, creature pull movement, Strength saves, damage, and swim-away checks. Water bodies, depth, flow, vehicles, routes, and environmental persistence are table/environment facts and must not be copied into generic spell reducers.",
       "rowId": "srd521:classes/cleric:spell-level-4:spell-unit-pressure:cleric_spell_list_control_water",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -12087,7 +12105,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/control_water.json",
+          "state": "authored-record-present",
+          "unitId": "control_water"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -12101,10 +12121,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "control_water"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -14599,7 +14619,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
         "state": "present"
       },
-      "nextAction": "Weather signs, harmless sensory effects, plant blossoming, and candle/torch/campfire narration are noncombat environmental effects outside promoted runtime owners.",
+      "nextAction": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
       "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -14609,22 +14629,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/druidcraft.json",
+          "state": "authored-record-present",
+          "unitId": "druidcraft"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply weather, plant, sensory, and harmless flame outcomes to table-owned environment and presentation state without adding duplicate battle state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "druidcraft"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -14640,7 +14667,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
         "state": "present"
       },
-      "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+      "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
       "rowId": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -14650,22 +14677,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/elementalism.json",
+          "state": "authored-record-present",
+          "unitId": "elementalism"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "elementalism"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -17367,7 +17401,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -17581,7 +17615,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:spell-level-4:spell-unit-pressure:druid_spell_list_confusion",
         "state": "present"
       },
-      "nextAction": "Random target-turn behavior, action and Reaction denial, random movement, forced melee attacks, repeat saves, and slot-scaled area membership require a future active control Spell Effect plus table/spatial random-target and movement owners.",
+      "nextAction": "A future owner must carry the Concentration-owned affected-target set, slot-scaled Sphere radius, action/Reaction denial, target-turn d10 behavior roll, random direction movement, no-action branches, random reachable melee target selection, Attack action forcing, and repeat Wisdom saves. Table/spatial ownership must supply area membership, cardinal directions, reach, target availability, and movement path facts without duplicating map or action state.",
       "rowId": "srd521:classes/druid:spell-level-4:spell-unit-pressure:druid_spell_list_confusion",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -17591,7 +17625,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/confusion.json",
+          "state": "authored-record-present",
+          "unitId": "confusion"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -17605,10 +17641,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "confusion"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -17723,7 +17759,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:spell-level-4:spell-unit-pressure:druid_spell_list_control_water",
         "state": "present"
       },
-      "nextAction": "Water volume, waves, trenches, redirected flow, whirlpools, vehicle capsizing, swimming pulls, and water-area persistence are table/spatial/environment facts outside promoted spell runtime owners.",
+      "nextAction": "A future owner must carry the controlled water area, current selected mode, Magic Action mode changes, wave repeats, trenches, redirects, whirlpool geometry, vehicle interactions, creature pull movement, Strength saves, damage, and swim-away checks. Water bodies, depth, flow, vehicles, routes, and environmental persistence are table/environment facts and must not be copied into generic spell reducers.",
       "rowId": "srd521:classes/druid:spell-level-4:spell-unit-pressure:druid_spell_list_control_water",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -17733,7 +17769,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/control_water.json",
+          "state": "authored-record-present",
+          "unitId": "control_water"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -17747,10 +17785,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "control_water"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -18077,7 +18115,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "ice_storm"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -18313,7 +18351,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "wall_of_fire"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -28546,7 +28584,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -31969,7 +32007,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
         "state": "present"
       },
-      "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+      "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
       "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -31979,22 +32017,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/elementalism.json",
+          "state": "authored-record-present",
+          "unitId": "elementalism"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "elementalism"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -32098,7 +32143,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
         "state": "present"
       },
-      "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+      "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
       "rowId": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -32108,22 +32153,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/mage_hand.json",
+          "state": "authored-record-present",
+          "unitId": "mage_hand"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "mage_hand"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -32820,7 +32872,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
         "state": "present"
       },
-      "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+      "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
       "rowId": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -32830,22 +32882,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/disguise_self.json",
+          "state": "authored-record-present",
+          "unitId": "disguise_self"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion presentation and perception owner",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "disguise_self"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -34735,7 +34794,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -34923,7 +34982,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -35255,7 +35314,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -35491,7 +35550,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -35587,7 +35646,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -35801,7 +35860,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-4:spell-unit-pressure:sorcerer_spell_list_confusion",
         "state": "present"
       },
-      "nextAction": "Random target-turn behavior, action and Reaction denial, random movement, forced melee attacks, repeat saves, and slot-scaled area membership require a future active control Spell Effect plus table/spatial random-target and movement owners.",
+      "nextAction": "A future owner must carry the Concentration-owned affected-target set, slot-scaled Sphere radius, action/Reaction denial, target-turn d10 behavior roll, random direction movement, no-action branches, random reachable melee target selection, Attack action forcing, and repeat Wisdom saves. Table/spatial ownership must supply area membership, cardinal directions, reach, target availability, and movement path facts without duplicating map or action state.",
       "rowId": "srd521:classes/sorcerer:spell-level-4:spell-unit-pressure:sorcerer_spell_list_confusion",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -35811,7 +35870,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/confusion.json",
+          "state": "authored-record-present",
+          "unitId": "confusion"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -35825,10 +35886,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "confusion"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -35873,7 +35934,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "dimension_door"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -36065,7 +36126,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "ice_storm"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -36183,7 +36244,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:spell-level-4:spell-unit-pressure:sorcerer_spell_list_vitriolic_sphere",
         "state": "present"
       },
-      "nextAction": "Area Dexterity save Acid damage plus failed-save-only delayed end-of-next-turn damage requires a future area save-damage owner with delayed target damage active effects and table/spatial membership facts.",
+      "nextAction": "A future owner must admit Sphere affected creatures, Dexterity saves, initial Acid damage with half damage on success, failed-save-only delayed Acid damage at each target next-turn end, slot scaling, and cleanup. Table/spatial ownership must provide area membership while target-turn timing and delayed damage use existing active-effect and damage owners.",
       "rowId": "srd521:classes/sorcerer:spell-level-4:spell-unit-pressure:sorcerer_spell_list_vitriolic_sphere",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -36193,7 +36254,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/vitriolic_sphere.json",
+          "state": "authored-record-present",
+          "unitId": "vitriolic_sphere"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -36207,10 +36270,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "vitriolic_sphere"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -36255,7 +36318,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "wall_of_fire"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -38298,7 +38361,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
         "state": "present"
       },
-      "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+      "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
       "rowId": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -38308,22 +38371,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/mage_hand.json",
+          "state": "authored-record-present",
+          "unitId": "mage_hand"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "mage_hand"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -39647,7 +39717,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -39887,7 +39957,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -39983,7 +40053,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -40223,7 +40293,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "dimension_door"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -42170,7 +42240,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
         "state": "present"
       },
-      "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
+      "nextAction": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
       "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -42180,22 +42250,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/elementalism.json",
+          "state": "authored-record-present",
+          "unitId": "elementalism"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration utility-effect owner",
+          "reason": "A future owner must apply harmless elemental shaping, marks, sparks, and small water or air effects to table-owned environment and presentation state without adding duplicate battle state.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "elementalism"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -42299,7 +42376,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
         "state": "present"
       },
-      "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
+      "nextAction": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
       "rowId": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -42309,22 +42386,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/mage_hand.json",
+          "state": "authored-record-present",
+          "unitId": "mage_hand"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future table and exploration object-control owner",
+          "reason": "A future owner must model the spectral hand, eligible object interactions, ten-pound limit, movement and command actions, no-attack and no-magic-item restrictions, and expiry without duplicating object or map state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "mage_hand"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -43025,7 +43109,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
         "state": "present"
       },
-      "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
+      "nextAction": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
       "rowId": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -43035,22 +43119,29 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/disguise_self.json",
+          "state": "authored-record-present",
+          "unitId": "disguise_self"
         },
         "battleReadiness": {
           "state": "recorded",
           "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future illusion presentation and perception owner",
+          "reason": "A future owner must retain the chosen appearance, preserve the same limb arrangement, and adjudicate physical inspection and Study or Investigation discovery without duplicating presentation or social state in battle runtime.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "disguise_self"
         },
         "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -43497,7 +43588,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "identify"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -45719,7 +45810,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "animate_dead"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -45863,7 +45954,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -46003,7 +46094,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -46431,7 +46522,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -46955,7 +47046,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -47051,7 +47142,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -47311,7 +47402,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_confusion",
         "state": "present"
       },
-      "nextAction": "Random target-turn behavior, action and Reaction denial, random movement, forced melee attacks, repeat saves, and slot-scaled area membership require a future active control Spell Effect plus table/spatial random-target and movement owners.",
+      "nextAction": "A future owner must carry the Concentration-owned affected-target set, slot-scaled Sphere radius, action/Reaction denial, target-turn d10 behavior roll, random direction movement, no-action branches, random reachable melee target selection, Attack action forcing, and repeat Wisdom saves. Table/spatial ownership must supply area membership, cardinal directions, reach, target availability, and movement path facts without duplicating map or action state.",
       "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_confusion",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -47321,7 +47412,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/confusion.json",
+          "state": "authored-record-present",
+          "unitId": "confusion"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -47335,10 +47428,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "confusion"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -47405,7 +47498,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_control_water",
         "state": "present"
       },
-      "nextAction": "Water volume, waves, trenches, redirected flow, whirlpools, vehicle capsizing, swimming pulls, and water-area persistence are table/spatial/environment facts outside promoted spell runtime owners.",
+      "nextAction": "A future owner must carry the controlled water area, current selected mode, Magic Action mode changes, wave repeats, trenches, redirects, whirlpool geometry, vehicle interactions, creature pull movement, Strength saves, damage, and swim-away checks. Water bodies, depth, flow, vehicles, routes, and environmental persistence are table/environment facts and must not be copied into generic spell reducers.",
       "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_control_water",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -47415,7 +47508,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/control_water.json",
+          "state": "authored-record-present",
+          "unitId": "control_water"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -47429,10 +47524,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "control_water"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -47477,7 +47572,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "dimension_door"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -47807,7 +47902,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "ice_storm"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -47875,7 +47970,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_phantasmal_killer",
         "state": "present"
       },
-      "nextAction": "Single-target fear illusion, initial and repeat Wisdom saves, Psychic damage, Ability Check and attack-roll Disadvantage, and end-turn cleanup require a future repeating-save illusion Spell Effect owner.",
+      "nextAction": "A future owner must carry the target-specific illusion, initial and end-turn Wisdom saves, slot-scaled Psychic damage, failed-save Ability Check and attack-roll Disadvantage, successful-save cleanup, and repeated damage timing. It must consume existing roll-mode, damage, condition/effect lifecycle, and turn-boundary owners without dispatching on the spell name.",
       "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_phantasmal_killer",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -47885,7 +47980,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/phantasmal_killer.json",
+          "state": "authored-record-present",
+          "unitId": "phantasmal_killer"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -47899,10 +47996,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "phantasmal_killer"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -48201,7 +48298,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_vitriolic_sphere",
         "state": "present"
       },
-      "nextAction": "Area Dexterity save Acid damage plus failed-save-only delayed end-of-next-turn damage requires a future area save-damage owner with delayed target damage active effects and table/spatial membership facts.",
+      "nextAction": "A future owner must admit Sphere affected creatures, Dexterity saves, initial Acid damage with half damage on success, failed-save-only delayed Acid damage at each target next-turn end, slot scaling, and cleanup. Table/spatial ownership must provide area membership while target-turn timing and delayed damage use existing active-effect and damage owners.",
       "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_vitriolic_sphere",
       "rowKind": "spell-unit-pressure",
       "source": {
@@ -48211,7 +48308,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/vitriolic_sphere.json",
+          "state": "authored-record-present",
+          "unitId": "vitriolic_sphere"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -48225,10 +48324,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "vitriolic_sphere"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -48273,7 +48372,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "wall_of_fire"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -49659,7 +49758,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "animate_dead"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -49974,7 +50073,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "clairvoyance"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -50456,7 +50555,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "fear"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -51091,7 +51190,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "major_image"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -52067,7 +52166,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "spirit_guardians"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -52290,7 +52389,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "tongues"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -52442,7 +52541,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "water_breathing"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -53099,12 +53198,14 @@
       ],
       "levelBand": "spell-level-4",
       "nextActions": [
-        "Random target-turn behavior, action and Reaction denial, random movement, forced melee attacks, repeat saves, and slot-scaled area membership require a future active control Spell Effect plus table/spatial random-target and movement owners."
+        "A future owner must carry the Concentration-owned affected-target set, slot-scaled Sphere radius, action/Reaction denial, target-turn d10 behavior roll, random direction movement, no-action branches, random reachable melee target selection, Attack action forcing, and repeat Wisdom saves. Table/spatial ownership must supply area membership, cardinal directions, reach, target availability, and movement path facts without duplicating map or action state."
       ],
       "spellName": "Confusion",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/confusion.json",
+          "state": "authored-record-present",
+          "unitId": "confusion"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -53118,10 +53219,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "confusion"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -53280,12 +53381,14 @@
       ],
       "levelBand": "spell-level-4",
       "nextActions": [
-        "Water volume, waves, trenches, redirected flow, whirlpools, vehicle capsizing, swimming pulls, and water-area persistence are table/spatial/environment facts outside promoted spell runtime owners."
+        "A future owner must carry the controlled water area, current selected mode, Magic Action mode changes, wave repeats, trenches, redirects, whirlpool geometry, vehicle interactions, creature pull movement, Strength saves, damage, and swim-away checks. Water bodies, depth, flow, vehicles, routes, and environmental persistence are table/environment facts and must not be copied into generic spell reducers."
       ],
       "spellName": "Control Water",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/control_water.json",
+          "state": "authored-record-present",
+          "unitId": "control_water"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -53299,10 +53402,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "control_water"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -53431,7 +53534,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "dimension_door"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -54122,7 +54225,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "ice_storm"
         },
         "finalDisposition": "catalog-only/dead-for-now",
@@ -54241,12 +54344,14 @@
       ],
       "levelBand": "spell-level-4",
       "nextActions": [
-        "Single-target fear illusion, initial and repeat Wisdom saves, Psychic damage, Ability Check and attack-roll Disadvantage, and end-turn cleanup require a future repeating-save illusion Spell Effect owner."
+        "A future owner must carry the target-specific illusion, initial and end-turn Wisdom saves, slot-scaled Psychic damage, failed-save Ability Check and attack-roll Disadvantage, successful-save cleanup, and repeated damage timing. It must consume existing roll-mode, damage, condition/effect lifecycle, and turn-boundary owners without dispatching on the spell name."
       ],
       "spellName": "Phantasmal Killer",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/phantasmal_killer.json",
+          "state": "authored-record-present",
+          "unitId": "phantasmal_killer"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -54260,10 +54365,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "phantasmal_killer"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -54668,12 +54773,14 @@
       ],
       "levelBand": "spell-level-4",
       "nextActions": [
-        "Area Dexterity save Acid damage plus failed-save-only delayed end-of-next-turn damage requires a future area save-damage owner with delayed target damage active effects and table/spatial membership facts."
+        "A future owner must admit Sphere affected creatures, Dexterity saves, initial Acid damage with half damage on success, failed-save-only delayed Acid damage at each target next-turn end, slot scaling, and cleanup. Table/spatial ownership must provide area membership while target-turn timing and delayed damage use existing active-effect and damage owners."
       ],
       "spellName": "Vitriolic Sphere",
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/vitriolic_sphere.json",
+          "state": "authored-record-present",
+          "unitId": "vitriolic_sphere"
         },
         "battleReadiness": {
           "state": "recorded",
@@ -54687,10 +54794,10 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "vitriolic_sphere"
         },
-        "finalDisposition": "missing-authored-runtime-closed",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
           "disposition": "unsupported-profile",
           "state": "recorded"
@@ -54758,7 +54865,7 @@
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "wall_of_fire"
         },
         "finalDisposition": "catalog-only/dead-for-now",

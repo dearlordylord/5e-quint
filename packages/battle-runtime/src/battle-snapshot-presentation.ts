@@ -4,7 +4,6 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   AvailableBattleAct,
   BattleCreatureSnapshot,
-  BattleActPresentation,
   BattleInterruptDecisionFrontier,
   BattleInterruptProcedureChoice,
   BattleInterruptChoicePresentationIssue,
@@ -57,7 +56,11 @@ const BattlePresentedInterruptChoiceSchema = Schema.Union([
   }),
 ]);
 
-export const BattlePresentedCheckpointFrontierEnvelopeSchema = Schema.Struct({
+export const BattlePresentedCheckpointFrontierEnvelopeSchema: Schema.Schema<
+  BattlePresentedCheckpointFrontierEnvelope,
+  EncodedBattlePresentedCheckpointFrontierEnvelope,
+  never
+> = Schema.Struct({
   checkpoint: BattlePresentedSnapshotSchema,
   frontier: Schema.Union([
     Schema.Struct({

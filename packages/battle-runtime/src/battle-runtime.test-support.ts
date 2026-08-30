@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   allocateBattleEffectOccurrenceTemplatesForCreature,
@@ -22,7 +23,7 @@ import {
   resolveSpawnedCompanionForm,
   resolvePactOfTheChainSpawnedCompanionForm,
 } from "@dnd/surface/surface/find-familiar-forms";
-import { Match, Result, Schema } from "effect";
+import { Match, Result, Schema, SchemaIssue } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import {
   battleAmmunitionStock,
@@ -65,6 +66,7 @@ import {
   difficultyClass,
   Hp,
   NonNegativeInteger,
+  PositiveInteger,
   movementDeltaFeet,
   movementFeet,
   proficiencyBonus,
@@ -77,18 +79,25 @@ import {
   type UnitId,
   unitId as parseUnitId,
 } from "@dnd/shared/game-facts";
-import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import {
+  decodeStatBlockRecordResult,
+  decodeUnitRecordSync,
+  StatBlockProcedureOrdinalSchema,
+  StatBlockProcedureResourceOrdinalSchema,
+} from "@dnd/surface/surface/schema";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type {
   AreaDirectEffectAtom,
+  AuthoredExecutableProcedure,
   DamageType,
   EffectAtom,
   Size,
   SpellRecord,
   StatBlockRecord,
+  StatBlockProcedureEntry,
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
@@ -187,7 +196,47 @@ import {
 } from "./character-execution-admission.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { characterBattleCreatureInitWeaponAttack } from "./battle-init.ts";
-import type { CharacterWeaponAttackActionOption } from "./battle-action-options.ts";
+import {
+  attackExecutionSelectionForOption,
+  type CharacterAttackExecutionSelection,
+  type CharacterWeaponAttackActionOption,
+} from "./battle-action-options.ts";
+import {
+  statBlockAttackDamageSelection,
+  statBlockAttackDamageSelectionUsesOnlyComponentNotation,
+  statBlockBaseDamageComponentOrdinal,
+  statBlockBaseDamageComponentRef,
+  type StatBlockDamageComponentNotation,
+} from "./stat-block-attack-damage-selection.ts";
+
+export function singleBaseStatBlockAttackDamageSelectionForTest(
+  notation: StatBlockDamageComponentNotation,
+) {
+  return Result.getOrThrow(
+    statBlockAttackDamageSelection([
+      {
+        componentRef: statBlockBaseDamageComponentRef(
+          statBlockBaseDamageComponentOrdinal(PositiveInteger(1)),
+        ),
+        notation,
+      },
+    ]),
+  );
+}
+
+export function battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+  subject: BattleSubject,
+  notation: StatBlockDamageComponentNotation,
+): boolean {
+  return (
+    "statBlockDamageSelection" in subject &&
+    subject.statBlockDamageSelection !== undefined &&
+    statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+      subject.statBlockDamageSelection,
+      notation,
+    )
+  );
+}
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   armorOfShadowsSpellInvocationRef,
@@ -197,6 +246,7 @@ import {
   BATTLE_READIED_SPELL_TRIGGERS,
   battleAreaId,
   battleAvailableDruidWildShapeKnownForms,
+  wildShapeKnownFormsIssueMessage,
   battleBonusActionStandardActionSupportForUnit,
   BattleFillSchema,
   BattleHoleSchema,
@@ -254,6 +304,8 @@ import {
   type BattleAttackExecutionSelection,
   type BattleAttackProcedureExecutionRef,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
+  type StatBlockBattleCombatantInit,
   type BattleCreatureState,
   type BattleFill,
   type BattleHidePrerequisite,
@@ -271,6 +323,7 @@ import {
   type OngoingFeatureSourceKey,
   type SpellInvocationRef,
 } from "./index.ts";
+
 import {
   battleCunningStrikeSupportForUnit,
   type BattleUnitSupportProfileSourceFacts,
@@ -476,7 +529,7 @@ function registerStatBlockPresentationsForTest(
 export function statBlockProcedurePresentationsForStateForTest(
   state: BattleState,
   actorId: CombatantId,
-): ReturnType<typeof statBlockProcedurePresentations> {
+): readonly StatBlockProcedurePresentation[] {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "statBlock") {
     throw new Error("Expected a Stat Block test actor.");
@@ -487,7 +540,12 @@ export function statBlockProcedurePresentationsForStateForTest(
   if (presentations === undefined) {
     throw new Error("Expected registered Stat Block test presentation.");
   }
-  return presentations.procedures;
+  return Result.getOrThrow(
+    statBlockProcedurePresentations({
+      execution: actor.origin.execution,
+      presentation: presentations,
+    }),
+  );
 }
 
 export function battleRuntimeContextForStateForTest(
@@ -1586,10 +1644,7 @@ export function goblinTurnBattle(
 export function fighterAttackSubject(
   state: BattleState,
   attackName: string = "Longsword",
-): Extract<
-  BattleSubject,
-  { readonly tag: "action"; readonly action: "attack" }
-> {
+): ReturnType<typeof characterAttackSubjectForTest> {
   return characterAttackSubjectForTest(state, fighterId, attackName);
 }
 
@@ -1643,6 +1698,15 @@ export function characterAttackSubjectForTest(
 }
 
 export function attackExecutionSelectionForSubjectForTest(
+  subject: ReturnType<typeof characterAttackSubjectForTest>,
+): CharacterAttackExecutionSelection;
+export function attackExecutionSelectionForSubjectForTest(
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+): BattleInterruptAttackExecutionSelection;
+export function attackExecutionSelectionForSubjectForTest(
   subject: Extract<
     BattleSubject,
     { readonly tag: "action"; readonly action: "attack" }
@@ -1653,12 +1717,10 @@ export function attackExecutionSelectionForSubjectForTest(
   }
   return subject.attackAbility === undefined ||
     subject.attackDamageType === undefined
-    ? subject.statBlockDamageNotation === "static"
-      ? {
-          procedureRef: subject.procedureRef,
-          statBlockDamageNotation: "static",
-        }
-      : { procedureRef: subject.procedureRef }
+    ? {
+        procedureRef: subject.procedureRef,
+        statBlockDamageSelection: subject.statBlockDamageSelection,
+      }
     : {
         procedureRef: subject.procedureRef,
         attackAbility: subject.attackAbility,
@@ -1757,14 +1819,17 @@ export function statBlockAttackSubjectForTest(
         actorId,
         candidate.procedureRef,
       ) === section &&
-      candidate.damageNotation === "rolled",
+      statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+        attackExecutionSelectionForOption(candidate).statBlockDamageSelection,
+        "rolled",
+      ),
   );
   if (option === undefined) throw new Error(`Expected ${attackName} attack.`);
   return {
     tag: "action",
     actorId,
     action: "attack",
-    procedureRef: option.procedureRef,
+    ...attackExecutionSelectionForOption(option),
   };
 }
 
@@ -2973,7 +3038,7 @@ export function attackRollFill(
       { readonly kind: "attackRoll" }
     >["value"]["d20TestNaturalOneReroll"];
   },
-): BattleFill {
+): Extract<BattleFill, { readonly kind: "attackRoll" }> {
   if (hole.kind !== "attackRoll") {
     throw new Error("Expected attackRoll hole.");
   }
@@ -3671,7 +3736,7 @@ export function characterSeed(input: {
     { readonly kind: "character" }
   >["spellcasting"];
   readonly size?: Size;
-}): BattleCreatureInit {
+}): CharacterBattleCombatantInit {
   const selectedLoadout =
     input.selectedLoadout ??
     (input.attack === null
@@ -4079,7 +4144,7 @@ export function testPoisonWeaponAttack(): TestCharacterWeaponAttack {
 
 export function statBlockCreatureInit(input: {
   readonly combatantId?: CombatantId;
-  readonly displayName?: string;
+  readonly statBlockName?: string;
   readonly statBlock?: StatBlockRecord;
   readonly initiative: number;
   readonly currentHp?: number;
@@ -4088,23 +4153,28 @@ export function statBlockCreatureInit(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "statBlock" }
   >["ammunitionStocks"];
-}): BattleCreatureInit {
+}): StatBlockBattleCombatantInit {
   const statBlock = input.statBlock ?? statBlockRecord();
-  if (statBlock.statBlock.hp.kind !== "literal") {
+  const namedStatBlock =
+    input.statBlockName === undefined
+      ? statBlock
+      : { ...statBlock, name: input.statBlockName };
+  const projected = Result.getOrThrow(projectAuthoredStatBlock(namedStatBlock));
+  if (projected.runtime.statBlock.hp.kind !== "literal") {
     throw new Error(
       "Battle runtime test Stat Block fixture must use literal HP.",
     );
   }
-  const maxHp = statBlock.statBlock.hp.value;
+  const maxHp = projected.runtime.statBlock.hp.value;
   const ammunitionStocks =
     input.ammunitionStocks ??
     requiredAmmunitionKinds([
-      ...(statBlock.statBlock.actions?.attacks ?? []),
-      ...(statBlock.statBlock.legendaryActions?.actions.attacks ?? []),
+      ...projected.runtime.procedures.flatMap((procedure) =>
+        procedure.kind === "attack" ? [procedure.attack] : [],
+      ),
     ]).map((ammunition) => battleAmmunitionStock(ammunition, 20));
   return {
     combatantId: input.combatantId ?? goblinId,
-    displayName: input.displayName ?? statBlock.statBlock.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
@@ -4113,19 +4183,198 @@ export function statBlockCreatureInit(input: {
       tempHp: Hp(input.tempHp ?? 0),
       ammunitionStocks,
       conditions: [],
+      presentation: projected.presentation,
     },
   };
 }
 
-export function statBlockRecord(): StatBlockRecord {
-  return statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
+type SwarmStandaloneStatBlock = Extract<
+  StatBlockRecord["statBlock"],
+  { readonly swarm: unknown }
+>;
+
+type NonSwarmStandaloneStatBlock = Exclude<
+  StatBlockRecord["statBlock"],
+  SwarmStandaloneStatBlock
+>;
+
+type NonSwarmStatBlockRecord = Omit<StatBlockRecord, "statBlock"> & {
+  readonly statBlock: NonSwarmStandaloneStatBlock;
+};
+
+/** Narrow a catalog fixture before tests replace its aggregate Size. */
+export function requireNonSwarmStatBlockRecordForTest(
+  record: StatBlockRecord,
+): NonSwarmStatBlockRecord {
+  if (record.statBlock.swarm !== undefined) {
+    throw new Error("Expected a non-Swarm Stat Block test fixture.");
+  }
+  return { ...record, statBlock: record.statBlock };
+}
+
+export function statBlockRecord(): NonSwarmStatBlockRecord {
+  return requireNonSwarmStatBlockRecordForTest(
+    assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
+    ),
+  );
+}
+
+export function expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary(
+  record: StatBlockRecord,
+): void {
+  const malformedArmorClass = decodeStatBlockRecordResult({
+    ...record,
+    statBlock: {
+      ...record.statBlock,
+      ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
+    },
+  });
+  expect(Result.isFailure(malformedArmorClass)).toBe(true);
+  if (Result.isSuccess(malformedArmorClass)) {
+    throw new Error("Expected malformed Armor Class source to be rejected.");
+  }
+  expect(malformedArmorClass.failure._tag).toBe("ParseError");
+  const armorClassParseIssues = SchemaIssue.makeFormatterStandardSchemaV1()(
+    malformedArmorClass.failure.issue,
+  ).issues;
+  expect(armorClassParseIssues).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        path: ["statBlock", "ac", "value", "source"],
+      }),
+    ]),
+  );
+}
+
+/** Test-only admission helper: execution tests consume the source-free runtime projection. */
+export function projectedStatBlockRuntimeSource(
+  record: StatBlockRecord = statBlockRecord(),
+) {
+  const projected = projectAuthoredStatBlock(record);
+  if (Result.isFailure(projected)) {
+    throw new Error(
+      `Expected a projectable Stat Block fixture: ${projected.failure.reason}.`,
+    );
+  }
+  return projected.success.runtime;
+}
+
+export function admittedStatBlockSource(
+  record: StatBlockRecord = statBlockRecord(),
+): BattleStatBlockCombatantSource {
+  return Result.getOrThrow(
+    battleStatBlockCombatantSource(projectedStatBlockRuntimeSource(record)),
+  );
+}
+
+type AuthoredExecutableProcedureEntry = Extract<
+  StatBlockProcedureEntry,
+  { readonly kind: "executable" }
+>;
+type AuthoredNonSpellExecutableProcedure = Exclude<
+  AuthoredExecutableProcedure,
+  { readonly kind: "spellcasting" }
+>;
+export type NonSpellExecutableProcedureKind =
+  AuthoredNonSpellExecutableProcedure["kind"];
+export type NonSpellExecutableProcedureEntry = Extract<
+  AuthoredExecutableProcedureEntry,
+  { readonly procedure: AuthoredNonSpellExecutableProcedure }
+>;
+export type NonSpellExecutableProcedureEntryOfKind<
+  Kind extends NonSpellExecutableProcedureKind,
+> = Omit<NonSpellExecutableProcedureEntry, "procedure"> & {
+  readonly procedure: Extract<
+    AuthoredNonSpellExecutableProcedure,
+    { readonly kind: Kind }
+  >;
+};
+type AttackProcedureEntry =
+  NonSpellExecutableProcedureEntryOfKind<"attack_roll">;
+
+export function isNonSpellExecutableProcedureEntryOfKind<
+  Kind extends NonSpellExecutableProcedureKind,
+>(
+  entry: StatBlockProcedureEntry,
+  kind: Kind,
+): entry is NonSpellExecutableProcedureEntryOfKind<Kind> {
+  return entry.kind === "executable" && entry.procedure.kind === kind;
+}
+
+export function authoredProcedureOrdinal(value: number) {
+  return Schema.decodeSync(StatBlockProcedureOrdinalSchema)(value);
+}
+
+function testStatBlockResourceOrdinal(value: number) {
+  return Schema.decodeSync(StatBlockProcedureResourceOrdinalSchema)(value);
+}
+
+function attackProcedureEntry(
+  entries: readonly StatBlockProcedureEntry[] | undefined,
+  name: string,
+): AttackProcedureEntry | undefined {
+  return entries?.find(
+    (entry): entry is AttackProcedureEntry =>
+      isNonSpellExecutableProcedureEntryOfKind(entry, "attack_roll") &&
+      entry.procedure.name === name,
+  );
+}
+
+export function nonSpellExecutableProcedureEntry(
+  procedureOrdinal: number,
+  procedure: AuthoredNonSpellExecutableProcedure,
+): NonSpellExecutableProcedureEntry {
+  return {
+    kind: "executable",
+    procedureOrdinal: authoredProcedureOrdinal(procedureOrdinal),
+    procedure,
+    resourceRefs: { kind: "none" },
+  };
+}
+
+function renamedAttackProcedureEntry(input: {
+  readonly entry: AttackProcedureEntry;
+  readonly name: string;
+  readonly procedureOrdinal: number;
+  readonly resourceOrdinal?: number;
+}): AttackProcedureEntry {
+  return {
+    ...input.entry,
+    procedureOrdinal: authoredProcedureOrdinal(input.procedureOrdinal),
+    procedure: {
+      ...input.entry.procedure,
+      name: input.name,
+    },
+    resourceRefs:
+      input.resourceOrdinal === undefined
+        ? { kind: "none" }
+        : {
+            kind: "some",
+            ordinals: [testStatBlockResourceOrdinal(input.resourceOrdinal)],
+          },
+  };
+}
+
+function textOnlyProcedureEntry(input: {
+  readonly name: string;
+  readonly description: string;
+  readonly procedureOrdinal: number;
+}): Extract<StatBlockProcedureEntry, { readonly kind: "textOnly" }> {
+  return {
+    kind: "textOnly",
+    procedureOrdinal: authoredProcedureOrdinal(input.procedureOrdinal),
+    name: input.name,
+    description: input.description,
+    reason: "unsupported_action_shape",
+    resourceRefs: { kind: "none" },
+  };
 }
 
 export function monsterResourceStatBlock(): StatBlockRecord {
   const base = statBlockRecord();
-  const scimitar = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Scimitar",
-  );
+  const scimitar = attackProcedureEntry(base.statBlock.actions, "Scimitar");
   if (scimitar === undefined) {
     throw new Error("Expected Goblin Warrior Scimitar fixture.");
   }
@@ -4133,42 +4382,100 @@ export function monsterResourceStatBlock(): StatBlockRecord {
     ...base,
     id: statBlockId("stat_block_resource_test_monster"),
     name: "Resource Test Monster",
+    provenance: {
+      kind: "synthetic-test",
+      section: "resource-backed execution fixture",
+    },
     statBlock: {
       ...base.statBlock,
-      displayName: "Resource Test Monster",
-      actions: {
-        attacks: [
-          {
-            ...scimitar,
-            name: "Cinder Breath",
-            limitedUse: { kind: "recharge", minimumRoll: 5 },
-          },
-          {
-            ...scimitar,
-            name: "Dread Gaze",
-            limitedUse: { kind: "daily", uses: 1 },
-          },
+      actions: [
+        renamedAttackProcedureEntry({
+          entry: scimitar,
+          name: "Cinder Breath",
+          procedureOrdinal: 1,
+          resourceOrdinal: 1,
+        }),
+        renamedAttackProcedureEntry({
+          entry: scimitar,
+          name: "Dread Gaze",
+          procedureOrdinal: 2,
+          resourceOrdinal: 2,
+        }),
+      ],
+      resources: [
+        {
+          ordinal: testStatBlockResourceOrdinal(1),
+          ownership: "each",
+          limit: { kind: "recharge", minimumRoll: 5 },
+        },
+        {
+          ordinal: testStatBlockResourceOrdinal(2),
+          ownership: "each",
+          limit: { kind: "daily", uses: 1 },
+        },
+      ],
+      legendaryActions: {
+        uses: { kind: "fixed", uses: 2 },
+        entries: [
+          renamedAttackProcedureEntry({
+            entry: scimitar,
+            name: "Tail Swipe",
+            procedureOrdinal: 1,
+          }),
         ],
       },
-      legendaryActions: {
-        uses: 2,
-        actions: {
-          attacks: [
-            {
-              ...scimitar,
-              name: "Tail Swipe",
-            },
-          ],
+    },
+  };
+}
+
+export function monsterResourceStatBlockWithSharedResource(): StatBlockRecord {
+  const base = monsterResourceStatBlock();
+  const actions = base.statBlock.actions;
+  const resources = base.statBlock.resources;
+  if (actions === undefined || resources === undefined) {
+    throw new Error("Expected resource-backed Stat Block fixture.");
+  }
+  const sharedResource = resources.find((resource) => resource.ordinal === 1);
+  if (sharedResource === undefined) {
+    throw new Error("Expected the first Stat Block resource fixture.");
+  }
+  const cinderBreath = attackProcedureEntry(actions, "Cinder Breath");
+  const dreadGaze = attackProcedureEntry(actions, "Dread Gaze");
+  if (cinderBreath === undefined || dreadGaze === undefined) {
+    throw new Error("Expected both resource-backed action fixtures.");
+  }
+  const sharedDreadGaze = renamedAttackProcedureEntry({
+    entry: dreadGaze,
+    name: "Dread Gaze",
+    procedureOrdinal: 2,
+    resourceOrdinal: 1,
+  });
+  return {
+    ...base,
+    id: statBlockId("stat_block_shared_resource_test_monster"),
+    name: "Shared Resource Test Monster",
+    provenance: {
+      kind: "synthetic-test",
+      section: "shared-resource-execution",
+    },
+    statBlock: {
+      ...base.statBlock,
+      actions: [cinderBreath, sharedDreadGaze],
+      resources: [
+        {
+          ...sharedResource,
+          ownership: "shared" as const,
         },
-      },
+      ],
     },
   };
 }
 
 export function monsterResourceStatBlockWithUnsupportedAttackSections(): StatBlockRecord {
   const base = monsterResourceStatBlock();
-  const cinderBreath = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Cinder Breath",
+  const cinderBreath = attackProcedureEntry(
+    base.statBlock.actions,
+    "Cinder Breath",
   );
   if (cinderBreath === undefined) {
     throw new Error("Expected Cinder Breath fixture.");
@@ -4176,24 +4483,28 @@ export function monsterResourceStatBlockWithUnsupportedAttackSections(): StatBlo
   return {
     ...base,
     id: statBlockId("stat_block_unsupported_attack_sections_test_monster"),
+    name: "Unsupported Section Test Monster",
+    provenance: {
+      kind: "synthetic-test",
+      section: "unsupported Stat Block action sections",
+    },
     statBlock: {
       ...base.statBlock,
-      bonusActions: {
-        attacks: [
-          {
-            ...cinderBreath,
-            name: "Swift Bite",
-          },
-        ],
-      },
-      reactions: {
-        attacks: [
-          {
-            ...cinderBreath,
-            name: "Counter Snap",
-          },
-        ],
-      },
+      bonusActions: [
+        renamedAttackProcedureEntry({
+          entry: cinderBreath,
+          name: "Swift Bite",
+          procedureOrdinal: 1,
+          resourceOrdinal: 1,
+        }),
+      ],
+      reactions: [
+        textOnlyProcedureEntry({
+          name: "Counter Snap",
+          description: "Counter Snap is an unsupported reaction attack.",
+          procedureOrdinal: 1,
+        }),
+      ],
     },
   };
 }
@@ -4204,51 +4515,64 @@ export function monsterMultiattackStatBlock(input?: {
   readonly duplicateScimitarAttack?: boolean;
 }): StatBlockRecord {
   const base = statBlockRecord();
-  const scimitar = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Scimitar",
-  );
-  const shortbow = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Shortbow",
-  );
+  const scimitar = attackProcedureEntry(base.statBlock.actions, "Scimitar");
+  const shortbow = attackProcedureEntry(base.statBlock.actions, "Shortbow");
   if (scimitar === undefined || shortbow === undefined) {
     throw new Error("Expected Goblin Warrior attack fixtures.");
   }
   return {
     ...base,
     id: statBlockId("stat_block_multiattack_test_monster"),
+    name: "Multiattack Test Monster",
+    provenance: {
+      kind: "synthetic-test",
+      section: "multiattack execution fixture",
+    },
     statBlock: {
       ...base.statBlock,
-      displayName: "Multiattack Test Monster",
-      actions: {
-        ...base.statBlock.actions,
-        multiattacks: [
-          {
+      actions: [
+        scimitar,
+        input?.duplicateScimitarAttack === true
+          ? {
+              ...shortbow,
+              procedure: { ...shortbow.procedure, name: "Scimitar" },
+            }
+          : shortbow,
+        {
+          kind: "executable",
+          procedureOrdinal: authoredProcedureOrdinal(3),
+          procedure: {
+            kind: "multiattack",
             name: "Multiattack",
             dispatches: [
               {
-                name: "Scimitar",
-                count: { kind: "literal", value: input?.scimitarCount ?? 2 },
+                procedureOrdinal: scimitar.procedureOrdinal,
+                count: {
+                  kind: "literal",
+                  value: input?.scimitarCount ?? 2,
+                },
               },
               {
-                name: "Shortbow",
-                count: { kind: "literal", value: input?.shortbowCount ?? 1 },
+                procedureOrdinal: shortbow.procedureOrdinal,
+                count: {
+                  kind: "literal",
+                  value: input?.shortbowCount ?? 1,
+                },
               },
             ],
           },
-        ],
-        attacks:
-          input?.duplicateScimitarAttack === true
-            ? [scimitar, { ...shortbow, name: "Scimitar" }]
-            : [scimitar, shortbow],
-      },
+          resourceRefs: { kind: "none" },
+        },
+      ],
     },
   };
 }
 
 export function monsterResourceStatBlockWithTwoRechargeActions(): StatBlockRecord {
   const base = monsterResourceStatBlock();
-  const cinderBreath = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Cinder Breath",
+  const cinderBreath = attackProcedureEntry(
+    base.statBlock.actions,
+    "Cinder Breath",
   );
   if (cinderBreath === undefined) {
     throw new Error("Expected Cinder Breath fixture.");
@@ -4256,27 +4580,38 @@ export function monsterResourceStatBlockWithTwoRechargeActions(): StatBlockRecor
   return {
     ...base,
     id: statBlockId("stat_block_two_recharge_test_monster"),
+    name: "Two Recharge Actions Test Monster",
+    provenance: {
+      kind: "synthetic-test",
+      section: "multiple recharge action fixture",
+    },
     statBlock: {
       ...base.statBlock,
-      actions: {
-        ...base.statBlock.actions,
-        attacks: [
-          ...(base.statBlock.actions?.attacks ?? []),
-          {
-            ...cinderBreath,
-            name: "Ash Cloud",
-            limitedUse: { kind: "recharge", minimumRoll: 6 },
-          },
-        ],
-      },
+      actions: [
+        ...(base.statBlock.actions ?? []),
+        renamedAttackProcedureEntry({
+          entry: cinderBreath,
+          name: "Ash Cloud",
+          procedureOrdinal: 3,
+          resourceOrdinal: 3,
+        }),
+      ],
+      resources: [
+        ...(base.statBlock.resources ?? []),
+        {
+          ordinal: testStatBlockResourceOrdinal(3),
+          ownership: "each",
+          limit: { kind: "recharge", minimumRoll: 6 },
+        },
+      ],
     },
   };
 }
 
 export function skeletonCreatureInit(input: {
   readonly initiative: number;
-}): BattleCreatureInit {
-  return {
+}): StatBlockBattleCombatantInit {
+  return statBlockCreatureInit({
     combatantId: skeletonId,
     displayName: "Skeleton",
     initiative: initiativeScore(input.initiative),
@@ -4290,19 +4625,22 @@ export function skeletonCreatureInit(input: {
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
       conditions: [],
     },
-  };
+  });
 }
 
 export function resistantSkeletonCreatureInit(input: {
   readonly initiative: number;
-}): BattleCreatureInit {
-  const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+}): StatBlockBattleCombatantInit {
+  const skeleton = assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_skeleton"),
+  );
   const {
     vulnerabilities: _vulnerabilities,
     immunities: _immunities,
     ...statBlockWithoutDamageModifiers
   } = skeleton.statBlock;
-  return {
+  return statBlockCreatureInit({
     combatantId: skeletonId,
     displayName: "Slashing Resistant Skeleton",
     initiative: initiativeScore(input.initiative),
@@ -4322,7 +4660,7 @@ export function resistantSkeletonCreatureInit(input: {
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
       conditions: [],
     },
-  };
+  });
 }
 
 export function actionSurgeResource(input?: {
@@ -5036,7 +5374,10 @@ export function opportunityAttackProcedureSelectionForTest(
   const selection: BattleInterruptAttackExecutionSelection =
     choice.subject.attackAbility === undefined ||
     choice.subject.attackDamageType === undefined
-      ? { procedureRef: choice.subject.procedureRef }
+      ? {
+          procedureRef: choice.subject.procedureRef,
+          statBlockDamageSelection: choice.subject.statBlockDamageSelection,
+        }
       : {
           procedureRef: choice.subject.procedureRef,
           attackAbility: choice.subject.attackAbility,

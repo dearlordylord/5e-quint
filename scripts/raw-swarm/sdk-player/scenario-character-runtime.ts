@@ -86,7 +86,7 @@ function characterContext(): CharacterContextResult {
           fillCreationHoles,
           finalizeCharacterDraft,
           hp: Hp,
-          isLeft: Result.isFailure,
+          isFailure: Result.isFailure,
         },
       },
     })),

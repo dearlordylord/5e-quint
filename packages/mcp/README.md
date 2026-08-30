@@ -22,6 +22,11 @@ build:
 - `srdStatBlockCollection` through `buildStatBlockCatalog`;
 - the Character Creation support profile and Admin Mirror publication factory.
 
+The resulting application-service boundary retains Surface's nominal
+`SrdStatBlockCatalog` type. Protocol, discovery, selection, and battle roots
+therefore receive one provenance-homogeneous catalog rather than a generic
+catalog that could be replaced with mixed-provenance records.
+
 Each registry-owned Play Session root then creates one in-memory store for
 character drafts, finalized Character Builds, durable post-battle character
 state, selected Stat Block identity, durable battle state, and accepted battle

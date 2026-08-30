@@ -15,6 +15,7 @@ import {
   type DruidWildShapeFeatureRecord,
   type DruidWildShapeKnownFormsRoster,
 } from "@dnd/surface/surface/druid-wild-shape-readers";
+import { statBlockHasPotentialFlySpeed } from "@dnd/surface/surface/stat-block-speed-readers";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "./types.ts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
@@ -432,15 +433,11 @@ function druidWildShapeStatBlockIssueCodes(input: {
   }
   if (
     input.facts.knownFormRoster.flySpeed === "forbidden" &&
-    statBlockHasFlySpeed(input.statBlock)
+    statBlockHasPotentialFlySpeed(input.statBlock.statBlock)
   ) {
     issues.push("wildShapeKnownFormFlySpeedForbidden");
   }
   return issues;
-}
-
-function statBlockHasFlySpeed(statBlock: StatBlockRecord): boolean {
-  return statBlock.statBlock.speeds.some((speed) => speed.kind === "fly");
 }
 
 function hasDuplicateStatBlockIds(

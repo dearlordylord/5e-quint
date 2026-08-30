@@ -35,7 +35,7 @@ export type ScenarioCharacterSdk = {
   readonly fillCreationHoles: typeof fillCreationHoles;
   readonly finalizeCharacterDraft: typeof finalizeCharacterDraft;
   readonly hp: typeof Hp;
-  readonly isLeft: typeof Result.isFailure;
+  readonly isFailure: typeof Result.isFailure;
 };
 
 export type ScenarioCharacterContext = {

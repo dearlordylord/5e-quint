@@ -1,9 +1,22 @@
-import { characterId } from "@dnd/battle-runtime";
-import type { BattleRosterIssue } from "@dnd/character-battle-runtime";
+import {
+  characterId,
+  combatantId,
+  type BattleInitializationIssue,
+} from "@dnd/battle-runtime";
+import type {
+  BattleCompanionRosterIssue,
+  BattleRosterIssue,
+} from "@dnd/character-battle-runtime";
 import { unitId } from "@dnd/shared/game-facts";
+import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { battleRosterIssuePayload } from "./battle-start-failure.ts";
+import {
+  battleCompanionRosterIssuePayload,
+  battleRosterIssuePayload,
+  battleRuntimeIssuePayload,
+} from "./battle-start-failure.ts";
 
 const characterProjectionIdentity = {
   kind: "characterSheetProjection" as const,
@@ -13,6 +26,88 @@ const characterProjectionIdentity = {
 };
 
 describe("battle start failure projection", () => {
+  test.each([
+    {
+      issue: {
+        kind: "duplicateCompanionOwnerSource",
+        reason: "duplicateOwnerSource",
+        ownerIndex: 2,
+        firstOwnerIndex: 0,
+        ownerCharacterId: characterId("character:duplicate-owner-source"),
+      } satisfies BattleCompanionRosterIssue,
+      expected: {
+        kind: "duplicateCompanionOwnerSource",
+        ownerPath: ["initialCombatants", 2],
+        firstOwnerPath: ["initialCombatants", 0],
+        ownerCharacterId: characterId("character:duplicate-owner-source"),
+        reason: "duplicateOwnerSource",
+      },
+    },
+    {
+      issue: {
+        kind: "duplicateCompanionCombatantId",
+        reason: "duplicateCombatantId",
+        index: 3,
+        firstIndex: 1,
+        companionCombatantId: combatantId("companion:duplicate-combatant"),
+      } satisfies BattleCompanionRosterIssue,
+      expected: {
+        kind: "duplicateCompanionCombatantId",
+        ownerPath: ["companionAdmissions", 3],
+        firstOwnerPath: ["companionAdmissions", 1],
+        companionCombatantId: combatantId("companion:duplicate-combatant"),
+        reason: "duplicateCombatantId",
+      },
+    },
+  ])("retains $issue.kind owner paths", ({ issue, expected }) => {
+    expect(battleCompanionRosterIssuePayload(issue)).toEqual([expected]);
+  });
+
+  test("retains a weapon loadout initialization leaf", () => {
+    const issue = {
+      tag: "weaponLoadoutMismatch",
+      slot: "off-hand",
+    } as const satisfies BattleInitializationIssue;
+
+    expect(battleRuntimeIssuePayload(issue)).toEqual([
+      {
+        kind: "battleInitialization",
+        code: "BATTLE_INITIALIZATION_INVALID",
+        ownerPath: ["battleInitialization", "global"],
+        issueTag: "weaponLoadoutMismatch",
+        slot: "off-hand",
+      },
+    ]);
+  });
+
+  test("retains structured Stat Block resource graph issues", () => {
+    const resourceOrdinal = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(3);
+    const issue = {
+      tag: "statBlockResourceGraphIssue",
+      issues: [
+        {
+          kind: "missingResourceDeclaration",
+          ordinal: resourceOrdinal,
+        },
+      ],
+      combatantId: combatantId("combatant:resource-graph-failure"),
+      ownerPath: ["initialCombatants", 2],
+    } as const satisfies BattleInitializationIssue;
+
+    expect(battleRuntimeIssuePayload(issue)).toEqual([
+      {
+        kind: "battleInitialization",
+        code: "BATTLE_INITIALIZATION_INVALID",
+        ownerPath: ["initialCombatants", 2],
+        issueTag: "statBlockResourceGraphIssue",
+        combatantId: issue.combatantId,
+        issues: issue.issues,
+      },
+    ]);
+  });
+
   test.each([
     {
       cause: "invalidBuildSpellAccess" as const,

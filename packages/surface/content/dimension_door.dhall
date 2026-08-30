@@ -42,7 +42,7 @@ let dimensionDoor =
           , level = 4
           , school = "conjuration"
           , castingTime = { kind = "action" }
-          , range = { kind = "self" }
+          , range = { kind = "point", feet = 500 }
           , components = { v = True, s = False, m = False }
           , duration = { kind = "instantaneous" }
           , phases =
