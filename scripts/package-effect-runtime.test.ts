@@ -18,8 +18,8 @@ import {
 } from "./package-effect-runtime.ts";
 import { repoRoot } from "./raw-swarm/transcript.ts";
 import {
+  buildConsumerDistributionBundle,
   buildConsumerDistribution,
-  buildPackageEffectRuntimeBundle,
 } from "./raw-swarm/sdk-player/consumer-distribution.ts";
 
 describe("package-owned Effect runtime", () => {
@@ -149,7 +149,7 @@ describe("package-owned Effect runtime", () => {
     );
     const output = join(directory, "consumer.mjs");
     try {
-      buildPackageEffectRuntimeBundle(["surface", "battle-runtime"], {
+      buildConsumerDistributionBundle({
         stdin: {
           contents: `import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
 const { Schema, Result } = effectRuntimeForPackageOwners(["surface", "battle-runtime"]).effect;
@@ -217,7 +217,7 @@ console.log("forged bypass accepted");`,
     );
     const output = join(directory, "supervisor.mjs");
     try {
-      buildPackageEffectRuntimeBundle(["surface", "battle-runtime"], {
+      buildConsumerDistributionBundle({
         entryPoints: [
           resolve("scripts/raw-swarm/sdk-player/supervisor-cli.ts"),
         ],
