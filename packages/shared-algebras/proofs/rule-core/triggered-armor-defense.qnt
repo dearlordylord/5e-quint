@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.REACTION.OFFER_DECLINE_RESUME
+// KERNEL-COVERAGE: qnt-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 
-module battleRuntimeTriggeredArmorDefense {
+module triggeredArmorDefense {
   pure val triggeredArmorDefenseArmorClassBonus = 5
   pure val triggeredArmorDefenseDurationRounds = 1
 

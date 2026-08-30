@@ -438,7 +438,7 @@
 {"ownerPath":"packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt","role":"semantic-core","evidence":"Identity-free save-gated condition-immunity semantic core."}
 {"ownerPath":"packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt","role":"semantic-core","evidence":"Identity-free compelled next-turn behavior and hole-ordering semantic core."}
 {"ownerPath":"packages/battle-runtime/battle-runtime-spell-cast-interruption-reaction.qnt","role":"semantic-core","evidence":"Identity-free spell-cast interruption Reaction and continuation semantic core."}
-{"ownerPath":"packages/battle-runtime/battle-runtime-triggered-armor-defense.qnt","role":"semantic-core","evidence":"Identity-free triggered armor-defense Reaction semantic core."}
+{"ownerPath":"packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt","role":"semantic-core","evidence":"Identity-free triggered armor-defense Reaction, Armor Class bonus, one-round duration, and automatic force-packet prevention semantic core."}
 {"ownerPath":"packages/battle-runtime/battle-runtime-granted-area-save-damage.qnt","role":"semantic-core","evidence":"Identity-free granted area save-damage semantic core."}
 {"ownerPath":"packages/battle-runtime/battle-runtime-controlled-vertical-suspension.qnt","role":"semantic-core","evidence":"Identity-free controlled vertical-suspension semantic core."}
 {"ownerPath":"packages/battle-runtime/battle-runtime-duplicate-hit-interception.qnt","role":"semantic-core","evidence":"Identity-free duplicate hit-interception semantic core."}

@@ -2,6 +2,55 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 
 module battleRuntimeSpawnedCompanionLifecycle {
+  type SpawnedCompanionLifecycleStage =
+    | NoSpawnedCompanion
+    | PresentSpawnedCompanion
+    | TemporarilyDismissedSpawnedCompanion
+    | DisappearedAtZeroHitPointsSpawnedCompanion
+    | PermanentlyDismissedSpawnedCompanion
+
+  pure def spawnedCompanionStageAfterTemporaryDismissal(
+    prior: SpawnedCompanionLifecycleStage,
+    magicActionAvailable: bool,
+  ): SpawnedCompanionLifecycleStage =
+    if (prior == PresentSpawnedCompanion and magicActionAvailable)
+      TemporarilyDismissedSpawnedCompanion
+    else
+      prior
+
+  pure def spawnedCompanionStageAfterPermanentDismissal(
+    prior: SpawnedCompanionLifecycleStage,
+  ): SpawnedCompanionLifecycleStage =
+    match prior {
+      | PresentSpawnedCompanion => PermanentlyDismissedSpawnedCompanion
+      | TemporarilyDismissedSpawnedCompanion => PermanentlyDismissedSpawnedCompanion
+      | DisappearedAtZeroHitPointsSpawnedCompanion => PermanentlyDismissedSpawnedCompanion
+      | NoSpawnedCompanion => NoSpawnedCompanion
+      | PermanentlyDismissedSpawnedCompanion => PermanentlyDismissedSpawnedCompanion
+    }
+
+  pure def spawnedCompanionStageAfterReappearance(
+    prior: SpawnedCompanionLifecycleStage,
+    magicActionAvailable: bool,
+    identityAdmitted: bool,
+  ): SpawnedCompanionLifecycleStage =
+    if (
+      prior == TemporarilyDismissedSpawnedCompanion and
+      magicActionAvailable and
+      identityAdmitted
+    )
+      PresentSpawnedCompanion
+    else
+      prior
+
+  pure def spawnedCompanionStageAfterZeroHitPoints(
+    prior: SpawnedCompanionLifecycleStage,
+  ): SpawnedCompanionLifecycleStage =
+    if (prior == PresentSpawnedCompanion)
+      DisappearedAtZeroHitPointsSpawnedCompanion
+    else
+      prior
+
   pure def spawnedCompanionIdentityAdmitted(
     ownerIsCompanion: bool,
     companionAlreadyOrdinaryCombatant: bool,

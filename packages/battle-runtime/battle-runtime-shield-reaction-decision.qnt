@@ -3,7 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.reaction-shield
 
 module battleRuntimeShieldReactionDecision {
-  import battleRuntimeTriggeredArmorDefense.* from "./battle-runtime-triggered-armor-defense"
+  import triggeredArmorDefense.* from "../shared-algebras/proofs/rule-core/triggered-armor-defense"
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"

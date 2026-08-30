@@ -92,7 +92,7 @@ const PURE_VOCABULARY_LEAVES = new Map([
     "identity-free pure temporary roll-mode semantic leaf",
   ],
   [
-    "packages/battle-runtime/battle-runtime-triggered-armor-defense.qnt",
+    "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
     "identity-free pure triggered-defense semantic leaf",
   ],
   [

@@ -22,6 +22,17 @@ module battleRuntimeFindFamiliar {
   import battleRuntimeSpawnedCompanionLifecycle.* from "./battle-runtime-spawned-companion-lifecycle"
   import battleRuntimeModel.* from "./battle-runtime-model"
 
+  pure def spawnedCompanionStageForFindFamiliar(
+    lifecycle: FindFamiliarLifecycle,
+  ): SpawnedCompanionLifecycleStage =
+    match lifecycle {
+      | NoFindFamiliar => NoSpawnedCompanion
+      | PresentFindFamiliar(_) => PresentSpawnedCompanion
+      | TemporarilyDismissedFindFamiliar(_) => TemporarilyDismissedSpawnedCompanion
+      | DisappearedAtZeroHitPointsFindFamiliar(_) => DisappearedAtZeroHitPointsSpawnedCompanion
+      | DismissedForeverFindFamiliar(_) => PermanentlyDismissedSpawnedCompanion
+    }
+
   pure def castFindFamiliarLifecycle(
     prior: FindFamiliarLifecycle,
     ordinaryCombatants: Set[Actor],
@@ -125,7 +136,12 @@ module battleRuntimeFindFamiliar {
   ): FindFamiliarLifecycleResult =
     match prior {
       | PresentFindFamiliar(present) =>
-        if (magicActionAvailable) {
+        if (
+          spawnedCompanionStageAfterTemporaryDismissal(
+            spawnedCompanionStageForFindFamiliar(prior),
+            magicActionAvailable,
+          ) == TemporarilyDismissedSpawnedCompanion
+        ) {
           lifecycle: TemporarilyDismissedFindFamiliar({
             owner: present.owner,
             identity: present.identity,
@@ -157,32 +173,35 @@ module battleRuntimeFindFamiliar {
   // companion slot rather than conflating it with "never admitted".
   pure def permanentlyDismissFindFamiliarLifecycle(
     prior: FindFamiliarLifecycle
-  ): FindFamiliarLifecycleResult =
+  ): FindFamiliarLifecycleResult = {
+    val nextStage = spawnedCompanionStageAfterPermanentDismissal(
+      spawnedCompanionStageForFindFamiliar(prior),
+    )
     match prior {
       | PresentFindFamiliar(present) => {
-          lifecycle: DismissedForeverFindFamiliar({
+          lifecycle: if (nextStage == PermanentlyDismissedSpawnedCompanion) DismissedForeverFindFamiliar({
             owner: present.owner,
             identity: present.identity,
             protocol: present.protocol,
-          }),
+          }) else prior,
           itemDropBoundaryEvents: Set(),
           magicActionSpent: false,
         }
       | TemporarilyDismissedFindFamiliar(absent) => {
-          lifecycle: DismissedForeverFindFamiliar({
+          lifecycle: if (nextStage == PermanentlyDismissedSpawnedCompanion) DismissedForeverFindFamiliar({
             owner: absent.owner,
             identity: absent.identity,
             protocol: absent.protocol,
-          }),
+          }) else prior,
           itemDropBoundaryEvents: Set(),
           magicActionSpent: false,
         }
       | DisappearedAtZeroHitPointsFindFamiliar(absent) => {
-          lifecycle: DismissedForeverFindFamiliar({
+          lifecycle: if (nextStage == PermanentlyDismissedSpawnedCompanion) DismissedForeverFindFamiliar({
             owner: absent.owner,
             identity: absent.identity,
             protocol: absent.protocol,
-          }),
+          }) else prior,
           itemDropBoundaryEvents: Set(),
           magicActionSpent: false,
         }
@@ -195,8 +214,9 @@ module battleRuntimeFindFamiliar {
           lifecycle: NoFindFamiliar,
           itemDropBoundaryEvents: Set(),
           magicActionSpent: false,
-        }
+      }
     }
+  }
 
   pure def reappearFindFamiliarLifecycle(
     prior: FindFamiliarLifecycle,
@@ -207,10 +227,14 @@ module battleRuntimeFindFamiliar {
   ): FindFamiliarLifecycleResult =
     match prior {
       | TemporarilyDismissedFindFamiliar(absent) =>
-        if (magicActionAvailable and spawnedCompanionIdentityAdmitted(
-          absent.owner == familiar,
-          ordinaryCombatants.contains(familiar),
-        )) {
+        if (spawnedCompanionStageAfterReappearance(
+          spawnedCompanionStageForFindFamiliar(prior),
+          magicActionAvailable,
+          spawnedCompanionIdentityAdmitted(
+            absent.owner == familiar,
+            ordinaryCombatants.contains(familiar),
+          ),
+        ) == PresentSpawnedCompanion) {
           lifecycle: PresentFindFamiliar({
             owner: absent.owner,
             familiar: familiar,
@@ -242,14 +266,16 @@ module battleRuntimeFindFamiliar {
   ): FindFamiliarLifecycleResult =
     match prior {
       | PresentFindFamiliar(present) => {
-          lifecycle: DisappearedAtZeroHitPointsFindFamiliar({
+          lifecycle: if (spawnedCompanionStageAfterZeroHitPoints(
+            spawnedCompanionStageForFindFamiliar(prior),
+          ) == DisappearedAtZeroHitPointsSpawnedCompanion) DisappearedAtZeroHitPointsFindFamiliar({
             owner: present.owner,
             identity: present.identity,
             protocol: present.protocol,
             form: present.form,
             creatureTypeOverride: present.creatureTypeOverride,
             reactionAvailable: present.reactionAvailable,
-          }),
+          }) else prior,
           itemDropBoundaryEvents: heldObjectIds.map(objectId => {
             owner: present.owner,
             familiar: present.familiar,
