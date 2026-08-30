@@ -667,30 +667,25 @@ export type BattleActiveEffect = (
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
         readonly kind: "persistentAreaSaveDamage";
-        readonly lifecycle: { readonly kind: "stationary" };
+        readonly lifecycle: "stationary";
         readonly appearanceOccurrence: BattleTurnAnchor;
         readonly areaId: BattleAreaId;
         readonly savedThisTurn: readonly CombatantId[];
-        readonly shapeShiftSuppressed?: never;
         readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
       })
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
         readonly kind: "persistentAreaSaveDamage";
-        readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+        readonly lifecycle: "sourceTurnTranslation";
         readonly appearanceOccurrence: BattleTurnAnchor;
         readonly areaId: BattleAreaId;
         readonly savedThisTurn: readonly CombatantId[];
-        readonly shapeShiftSuppressed?: never;
         readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
       })
   | (BattleSpellEffectBase & {
       readonly kind: "persistentAreaSaveDamage";
-      readonly lifecycle: { readonly kind: "casterActionReposition" };
+      readonly lifecycle: "collisionReposition";
       readonly areaId: BattleAreaId;
-      readonly appearanceOccurrence?: never;
-      readonly savedThisTurn?: never;
-      readonly shapeShiftSuppressed?: never;
       readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -700,9 +695,8 @@ export type BattleActiveEffect = (
     })
   | (BattleSpellEffectBase & {
       readonly kind: "persistentAreaSaveDamage";
-      readonly lifecycle: { readonly kind: "casterActionReposition" };
+      readonly lifecycle: "directedReposition";
       readonly areaId: BattleAreaId;
-      readonly appearanceOccurrence?: never;
       readonly savedThisTurn: readonly CombatantId[];
       readonly shapeShiftSuppressed: readonly CombatantId[];
       readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;

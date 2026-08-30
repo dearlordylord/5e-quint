@@ -647,9 +647,7 @@ describe("battle boundary admission owners", () => {
             ownerId: wizardId,
             effect: {
               kind: "persistentAreaSaveDamage",
-              lifecycle: {
-                kind: "casterActionReposition",
-              },
+              lifecycle: "collisionReposition",
               sourceProcedureRef: codecProcedureRef,
               sourceCombatantId: wizardId,
               areaId: battleAreaId("boundary-movable"),
@@ -678,7 +676,7 @@ describe("battle boundary admission owners", () => {
             ownerId: wizardId,
             effect: {
               kind: "persistentAreaSaveDamage",
-              lifecycle: { kind: "stationary" },
+              lifecycle: "stationary",
               sourceProcedureRef: stationaryAreaScope.subject.procedureRef,
               sourceCombatantId: wizardId,
               appearanceOccurrence: {
@@ -699,9 +697,7 @@ describe("battle boundary admission owners", () => {
             ownerId: wizardId,
             effect: {
               kind: "persistentAreaSaveDamage",
-              lifecycle: {
-                kind: "sourceTurnTranslation",
-              },
+              lifecycle: "sourceTurnTranslation",
               sourceProcedureRef: translatingAreaScope.subject.procedureRef,
               sourceCombatantId: wizardId,
               appearanceOccurrence: {

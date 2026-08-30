@@ -52,12 +52,13 @@ import {
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
-import type { BattleFill } from "./index.ts";
+import type { BattleActiveEffect, BattleFill } from "./index.ts";
 import {
   battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
+import { boundPersistentAreaSaveDamageEffect } from "./battle-reducer/persistent-area-save-damage-binding.ts";
 
 describe("L12G deterministic Flaming Sphere admission", () => {
   test("flaming sphere is admitted as a movable fire Sphere hazard", () => {
@@ -154,15 +155,14 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Flaming Sphere cast to resolve.");
     }
-    expect(
-      requireCombatant(resolved.state, spellCasterId).activeEffects,
-    ).toEqual([
+    const caster = requireCombatant(resolved.state, spellCasterId);
+    expect(caster.activeEffects).toEqual([
       expect.objectContaining({
         kind: "persistentAreaSaveDamage",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: flamingSphereAreaId,
-        lifecycle: { kind: "casterActionReposition" },
+        lifecycle: "collisionReposition",
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
@@ -170,6 +170,34 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         },
       }),
     ]);
+    const sphere = caster.activeEffects.find(
+      (effect) =>
+        effect.kind === "persistentAreaSaveDamage" &&
+        effect.lifecycle === "collisionReposition",
+    );
+    if (
+      sphere?.kind !== "persistentAreaSaveDamage" ||
+      sphere.lifecycle !== "collisionReposition"
+    ) {
+      throw new Error("Expected the active collision-reposition area effect.");
+    }
+    expect(boundPersistentAreaSaveDamageEffect(caster, sphere)?.kind).toBe(
+      "collisionReposition",
+    );
+    const mismatchedDirectedState = {
+      kind: sphere.kind,
+      lifecycle: "directedReposition",
+      effectRef: sphere.effectRef,
+      sourceProcedureRef: sphere.sourceProcedureRef,
+      sourceCombatantId: sphere.sourceCombatantId,
+      areaId: sphere.areaId,
+      savedThisTurn: [],
+      shapeShiftSuppressed: [],
+      expiresAt: sphere.expiresAt,
+    } as const satisfies BattleActiveEffect;
+    expect(
+      boundPersistentAreaSaveDamageEffect(caster, mismatchedDirectedState),
+    ).toBeUndefined();
     expect(
       resolveBattleSubject({
         state: {

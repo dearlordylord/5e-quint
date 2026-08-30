@@ -233,15 +233,14 @@ describe("L12G deterministic Moonbeam admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Moonbeam cast to resolve.");
     }
-    expect(
-      requireCombatant(resolved.state, spellCasterId).activeEffects,
-    ).toEqual([
+    const caster = requireCombatant(resolved.state, spellCasterId);
+    expect(caster.activeEffects).toEqual([
       expect.objectContaining({
         kind: "persistentAreaSaveDamage",
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: moonbeamAreaId,
-        lifecycle: { kind: "casterActionReposition" },
+        lifecycle: "directedReposition",
         savedThisTurn: [],
         shapeShiftSuppressed: [],
         expiresAt: {
@@ -251,6 +250,32 @@ describe("L12G deterministic Moonbeam admission", () => {
         },
       }),
     ]);
+    const beam = caster.activeEffects.find(
+      (effect) =>
+        effect.kind === "persistentAreaSaveDamage" &&
+        effect.lifecycle === "directedReposition",
+    );
+    if (
+      beam?.kind !== "persistentAreaSaveDamage" ||
+      beam.lifecycle !== "directedReposition"
+    ) {
+      throw new Error("Expected the active directed-reposition area effect.");
+    }
+    expect(boundPersistentAreaSaveDamageEffect(caster, beam)?.kind).toBe(
+      "directedReposition",
+    );
+    const mismatchedCollisionState = {
+      kind: beam.kind,
+      lifecycle: "collisionReposition",
+      effectRef: beam.effectRef,
+      sourceProcedureRef: beam.sourceProcedureRef,
+      sourceCombatantId: beam.sourceCombatantId,
+      areaId: beam.areaId,
+      expiresAt: beam.expiresAt,
+    } as const satisfies BattleActiveEffect;
+    expect(
+      boundPersistentAreaSaveDamageEffect(caster, mismatchedCollisionState),
+    ).toBeUndefined();
   });
 
   test("recasting the same Moonbeam occurrence replaces its source-owned area effect", () => {

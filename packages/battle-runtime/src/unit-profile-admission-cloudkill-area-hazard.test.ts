@@ -141,17 +141,17 @@ function cloudkillSavedThisTurn(
     BattleActiveEffect,
     {
       readonly kind: "persistentAreaSaveDamage";
-      readonly lifecycle: { readonly kind: "sourceTurnTranslation" };
+      readonly lifecycle: "sourceTurnTranslation";
     }
   >;
   const effect = requireCombatant(state, spellCasterId).activeEffects.find(
     (candidate): candidate is CloudkillEffect =>
       candidate.kind === "persistentAreaSaveDamage" &&
-      candidate.lifecycle.kind === "sourceTurnTranslation",
+      candidate.lifecycle === "sourceTurnTranslation",
   );
   if (
     effect?.kind !== "persistentAreaSaveDamage" ||
-    effect.lifecycle.kind !== "sourceTurnTranslation"
+    effect.lifecycle !== "sourceTurnTranslation"
   ) {
     throw new Error("Expected active Cloudkill area hazard.");
   }
@@ -223,7 +223,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
           sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           areaId: cloudkillAreaId,
-          lifecycle: { kind: "sourceTurnTranslation" },
+          lifecycle: "sourceTurnTranslation",
           savedThisTurn: [],
           expiresAt: {
             kind: "concentration",
@@ -471,7 +471,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     );
     if (
       effect?.kind !== "persistentAreaSaveDamage" ||
-      effect.lifecycle.kind !== "sourceTurnTranslation"
+      effect.lifecycle !== "sourceTurnTranslation"
     ) {
       throw new Error("Expected active Cloudkill.");
     }

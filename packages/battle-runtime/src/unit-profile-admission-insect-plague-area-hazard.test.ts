@@ -164,17 +164,17 @@ function persistentAreaSaveDamageSavedThisTurn(
     BattleActiveEffect,
     {
       readonly kind: "persistentAreaSaveDamage";
-      readonly lifecycle: { readonly kind: "stationary" };
+      readonly lifecycle: "stationary";
     }
   >;
   const effect = requireCombatant(state, spellCasterId).activeEffects.find(
     (candidate): candidate is InsectPlagueEffect =>
       candidate.kind === "persistentAreaSaveDamage" &&
-      candidate.lifecycle.kind === "stationary",
+      candidate.lifecycle === "stationary",
   );
   if (
     effect?.kind !== "persistentAreaSaveDamage" ||
-    effect.lifecycle.kind !== "stationary"
+    effect.lifecycle !== "stationary"
   ) {
     throw new Error("Expected active Insect Plague area hazard.");
   }
@@ -281,7 +281,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
           sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           areaId: insectPlagueAreaId,
-          lifecycle: { kind: "stationary" },
+          lifecycle: "stationary",
           savedThisTurn: [],
           expiresAt: {
             kind: "concentration",
@@ -627,17 +627,17 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       BattleActiveEffect,
       {
         readonly kind: "persistentAreaSaveDamage";
-        readonly lifecycle: { readonly kind: "stationary" };
+        readonly lifecycle: "stationary";
       }
     >;
     const effect = caster.activeEffects.find(
       (candidate): candidate is InsectPlagueEffect =>
         candidate.kind === "persistentAreaSaveDamage" &&
-        candidate.lifecycle.kind === "stationary",
+        candidate.lifecycle === "stationary",
     );
     if (
       effect?.kind !== "persistentAreaSaveDamage" ||
-      effect.lifecycle.kind !== "stationary"
+      effect.lifecycle !== "stationary"
     ) {
       throw new Error("Expected active Insect Plague.");
     }
@@ -683,17 +683,17 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       BattleActiveEffect,
       {
         readonly kind: "persistentAreaSaveDamage";
-        readonly lifecycle: { readonly kind: "stationary" };
+        readonly lifecycle: "stationary";
       }
     >;
     const effect = caster.activeEffects.find(
       (candidate): candidate is InsectPlagueEffect =>
         candidate.kind === "persistentAreaSaveDamage" &&
-        candidate.lifecycle.kind === "stationary",
+        candidate.lifecycle === "stationary",
     );
     if (
       effect?.kind !== "persistentAreaSaveDamage" ||
-      effect.lifecycle.kind !== "stationary"
+      effect.lifecycle !== "stationary"
     ) {
       throw new Error("Expected active Insect Plague.");
     }
@@ -726,17 +726,17 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       BattleActiveEffect,
       {
         readonly kind: "persistentAreaSaveDamage";
-        readonly lifecycle: { readonly kind: "stationary" };
+        readonly lifecycle: "stationary";
       }
     >;
     const effect = caster.activeEffects.find(
       (candidate): candidate is InsectPlagueEffect =>
         candidate.kind === "persistentAreaSaveDamage" &&
-        candidate.lifecycle.kind === "stationary",
+        candidate.lifecycle === "stationary",
     );
     if (
       effect?.kind !== "persistentAreaSaveDamage" ||
-      effect.lifecycle.kind !== "stationary"
+      effect.lifecycle !== "stationary"
     ) {
       throw new Error("Expected active Insect Plague.");
     }

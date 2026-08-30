@@ -1106,9 +1106,7 @@ function syntheticTargetOwnedFlamingSphereInteraction(
 > {
   return {
     kind: "persistentAreaSaveDamage",
-    lifecycle: {
-      kind: "casterActionReposition",
-    },
+    lifecycle: "collisionReposition",
     sourceProcedureRef,
     sourceCombatantId: spellTargetId,
     areaId: flamingSphereAreaId,
