@@ -855,8 +855,34 @@ describe("complete-catalog Stat Block procedure pressure", () => {
           durationKind === "unresolved",
       ),
     ).toBe(true);
-    expect(identityFallback).toHaveLength(286);
-    expect(identityFallbackCounts.total).toBe(101);
+    const unresolvedFallbackRowId =
+      'stat-block-290:{"kind":"spellReference","section":"actions","procedureOrdinal":4,"groupOrdinal":2,"spellOrdinal":4}';
+    expect(identityFallbackCounts).toEqual({
+      total: 101,
+      shipped: 100,
+      unresolved: 1,
+    });
+    expect(
+      identityFallback.filter(
+        ({ definitionStatus }) => definitionStatus === "unresolved",
+      ),
+    ).toEqual([
+      {
+        rowId: unresolvedFallbackRowId,
+        definitionStatus: "unresolved",
+        profileStatus: "unprofiled",
+        groupKind: "limited",
+        section: "actions",
+        hasCastAtLevel: false,
+        castingTimeKind: "unresolved",
+        durationKind: "unresolved",
+      },
+    ]);
+    expect(
+      identityFallback.filter(
+        ({ definitionStatus }) => definitionStatus === "shipped",
+      ),
+    ).toEqual(shipped.filter(({ rowId }) => rowId !== unresolvedFallbackRowId));
     expect(
       noCastingTime.every(
         ({ definitionStatus, castingTimeKind }) =>
