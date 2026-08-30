@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "a73e67dc5cf4758508c9c7b45249300643976160",
+    "registryCommit": "2dd59f58bbe4da18ca4942df5b38da26f6f907ef",
     "generator": {
       "path": "scripts/gh381-registry-path-manifest.cjs",
       "sha256": "d48ee1ce403362f49f7f03c55f0be276dd5337740cea5f3512367c167d3ad9d5"
@@ -12,11 +12,11 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "7820a5498b586a8b77dd0a0df31b751515b086444e6a0fab333318b0b0b8af6b"
+        "sha256": "2915029f71176084d0e8dae4a6cffdf913b57991d0d61d8c7d8feb4a216a0862"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
-        "sha256": "12cdf9baed90708ed364c88b2bfdb6d59f78149f6128452efb1813e564e439b4"
+        "sha256": "9d6b450915b7da76b0fa7e1d4ac029f75a400c9fac2522a13feae50ec86b3e00"
       }
     ]
   },
@@ -631,6 +631,7 @@
     "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts",
     "packages/battle-runtime/src/unit-profile-admission-alter-self.test.ts",
     "packages/battle-runtime/src/unit-profile-admission-blur.test.ts",
+    "packages/battle-runtime/src/unit-profile-admission-calm-emotions.test.ts",
     "packages/battle-runtime/src/unit-profile-admission-cloudkill-area-hazard.test.ts",
     "packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
     "packages/battle-runtime/src/unit-profile-admission-darkness.test.ts",
@@ -641,6 +642,8 @@
     "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts",
     "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
     "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
+    "packages/battle-runtime/src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts",
+    "packages/battle-runtime/src/unit-profile-admission-hypnotic-pattern.test.ts",
     "packages/battle-runtime/src/unit-profile-admission-insect-plague-area-hazard.test.ts",
     "packages/battle-runtime/src/unit-profile-admission-levitate.test.ts",
     "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts",
@@ -927,7 +930,7 @@
   "pathCounts": {
     "obligationCount": 58,
     "sourceOrPure": 180,
-    "parityOrFixture": 144,
+    "parityOrFixture": 147,
     "qntFixtureSpec": 46,
     "deferredLaterIssue": 2
   },
