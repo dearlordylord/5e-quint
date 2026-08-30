@@ -1,0 +1,316 @@
+# Cleanroom Source Readiness execution ledger
+
+> **Continuity contract:** [GitHub issue #38](https://github.com/dearlordylord/5e-quint/issues/38)
+> owns the terminal Source Readiness outcome, and the recursively linked issues
+> own their requirements. This file is a temporary current-state execution
+> index: it owns ordering, the current frontier, worktree leases, and
+> exact-revision milestone receipts. It is not a second specification or
+> historical journal. Delete it when #38 closes.
+
+## Resume here
+
+This section is the sole mutable handoff for a new session.
+
+- Ledger state observed: 2026-08-30
+- Current frontier: `SR-00`
+- Active work: #368–#386 in the user's separate Effect 4 worktree session
+- Active owner: user
+- Last completed checkpoint: none under this ledger
+- Last accepted milestone SHA: none
+- Observed local `master`: `51beff526`
+- Next action after `SR-00`: start `SR-01` from the exact #386 landing SHA
+- Parallel work allowed now: none that modifies behavior or files owned by
+  #368–#386
+- Cleanroom Acceptance Run #39: excluded
+
+Before acting, compare this section with current `master`, live native GitHub
+dependencies, and active worktree ownership. If they disagree, current source
+and generated artifacts win. Repair this section in a ledger-only commit before
+claiming new implementation work.
+
+For prior system-state evidence and ticket dispositions, consult
+[`docs/research/cleanroom-source-readiness-subgraph-refresh.md`](../docs/research/cleanroom-source-readiness-subgraph-refresh.md).
+Recover the canonical ticket graph by recursively following native blockers and
+subissues from #38. The #368–#386 and #479 convergence sequence is the temporary
+operational overlay recorded here, not a new domain dependency.
+
+## How to update this ledger
+
+For every implementation or gate milestone:
+
+1. Land the coherent implementation/gate result into `master`.
+2. Comment on the owning ticket with the exact landed SHA, focused verification,
+   reviewer convergence, and remaining blockers. Close only satisfied tickets.
+3. Immediately make a ledger-only follow-up commit that:
+   - updates **Resume here**;
+   - updates the checkpoint state below;
+   - appends one receipt row;
+   - records the next available checkpoint and active worktree leases.
+4. Do not begin newly unblocked work until the ledger follow-up is on `master`.
+
+The follow-up commit is necessary because a Git commit cannot contain its own
+future SHA. The receipt records the preceding implementation or gate SHA, not
+the ledger-only commit that describes it.
+
+Do not copy ticket acceptance criteria into this file. Link the ticket and
+record only execution state that the issue graph cannot express: checkpoint
+ordering, exact base/landing SHAs, current leases, verification receipts, and
+what became available.
+
+## Checkpoint states
+
+- `Waiting`: its start prerequisites are not yet satisfied.
+- `Available`: it may be claimed from the named stable base.
+- `Active`: one named owner and worktree hold its write lease.
+- `Receipt pending`: implementation/gates landed, but the ticket comment and
+  ledger follow-up are not both complete.
+- `Complete`: the exact receipt is recorded and downstream work may rely on it.
+
+Only one state may apply to a checkpoint. A ticket may remain open after a
+checkpoint completes when later Slice-derived recalibration is part of that
+ticket's acceptance.
+
+## Stable checkpoint map
+
+There are **20 coordination checkpoints**, `SR-00` through `SR-19`.
+Checkpoints containing several tickets still land each ticket or coherent slice
+separately; their checkpoint becomes `Complete` only after all named results
+are on one coherent `master` line.
+
+| ID      | State   | Outcome / tickets                                          | Start after                  | Complete after                     |
+| ------- | ------- | ---------------------------------------------------------- | ---------------------------- | ---------------------------------- |
+| `SR-00` | Active  | Land and certify the user-owned #368–#386 line             | current user session         | #386 receipt                       |
+| `SR-01` | Waiting | Reconcile and land #479 / PR #480                          | `SR-00`                      | #479 receipt                       |
+| `SR-02` | Waiting | Establish the exact common-base convergence receipt        | `SR-01`                      | stable common-base gate            |
+| `SR-03` | Waiting | Land typed weapon-mastery references, #476                 | `SR-02`                      | #476 receipt                       |
+| `SR-04` | Waiting | Land owner projections, #464/#469/#477/#470/#473/#471/#474 | `SR-03`                      | every named ticket receipt         |
+| `SR-05` | Waiting | Land joins/composition and close #465–#468/#52             | `SR-04`                      | #52 receipt                        |
+| `SR-06` | Waiting | Bind admitted mechanics, #117                              | `SR-05`                      | #117 receipt                       |
+| `SR-07` | Waiting | Derive dynamic availability, #118                          | `SR-06`                      | #118 receipt                       |
+| `SR-08` | Waiting | Generate the Cleanroom Mechanics Slice, #29                | `SR-07`                      | #29 receipt                        |
+| `SR-09` | Waiting | Implement the typed two-slot publication store, #99        | `SR-03` shared-Surface lease | #99 receipt                        |
+| `SR-10` | Waiting | Add live cross-process leasing/recovery, #409              | `SR-09`                      | #409 receipt                       |
+| `SR-11` | Waiting | Route the public CLI and close #410/#45                    | `SR-10`                      | #410 and #45 receipts              |
+| `SR-12` | Waiting | Land QNT protocol/context spine, #389–#393                 | `SR-02`                      | every named ticket receipt         |
+| `SR-13` | Waiting | Land QNT prerequisites/verticals, #394–#408                | `SR-12`; see execution order | `SR-08` plus all vertical receipts |
+| `SR-14` | Waiting | Recalibrate, run #211, and close #31                       | `SR-08`, `SR-13`             | #211 and #31 receipts              |
+| `SR-15` | Waiting | Publish Core and calibrate Oracle, #34/#40                 | `SR-08`, `SR-14`             | #34 and #40 receipts               |
+| `SR-16` | Waiting | Publish the minimal Rust Adapter, #35                      | `SR-15`                      | #35 receipt                        |
+| `SR-17` | Waiting | Assemble the Cleanroom Harness, #36                        | `SR-15`, `SR-16`             | #36 receipt                        |
+| `SR-18` | Waiting | Run and repair Dirty-Cleanroom Rehearsal, #37              | `SR-17`                      | #37 receipt                        |
+| `SR-19` | Waiting | Establish atomic Source Readiness, #38                     | `SR-11`, `SR-18`             | #38 closed                         |
+
+## Milestone receipt ledger
+
+Append one row per completed coordination checkpoint. Ticket/slice landings
+inside a checkpoint are recorded in the checkpoint's active landing table until
+the checkpoint receipt consolidates them.
+
+| Checkpoint | Base SHA | Accepted SHA | Result | Verification | Ticket evidence | Unlocked |
+| ---------- | -------- | ------------ | ------ | ------------ | --------------- | -------- |
+
+## Active landing table
+
+This table prevents worktrees from silently drifting or sharing write ownership.
+Clear a row only after its landing is recorded on the ticket or the work is
+explicitly abandoned.
+
+| Checkpoint | Ticket/slice | Owner | Worktree/branch           | Base SHA        | Write lease                                      | State  |
+| ---------- | ------------ | ----- | ------------------------- | --------------- | ------------------------------------------------ | ------ |
+| `SR-00`    | #368–#386    | user  | separate Effect 4 session | user-owned base | all behavior/files explicitly owned by #368–#386 | Active |
+
+## Landing discipline
+
+- Branch from the latest ledger-accepted green `master`, never from another
+  implementation worktree.
+- Use at most three implementation worktrees plus one landing/review worktree.
+- Give every lane one ticket or one independently useful slice and a declared
+  package/file write lease.
+- Land a coherent slice before its branch crosses a second calendar day. If it
+  cannot, stop and redefine a smaller production-consumed slice from current
+  `master`.
+- Rebase onto the latest accepted `master` before final review and focused
+  verification.
+- Run focused typecheck/tests and applicable focused QNT/MBT gates under the
+  repository lock protocol. Only one worktree runs broad or MBT-heavy gates at
+  a time.
+- Complete RAW traceability where rules change, ubiquitous-language/domain,
+  architecture/connascence, and standards/specification reviewer loops. Fix
+  reasonable findings and repeat until converged.
+- Land immediately after the receipt is green. Other lanes then rebase before
+  making completion claims.
+- Reserve `pnpm quality:milestone` for `SR-02`, `SR-05`, `SR-14`, `SR-17`, and
+  `SR-19`, plus any earlier checkpoint whose cross-package risk justifies it.
+
+## Serialized write hotspots
+
+Only the landing/review worktree may regenerate shared artifacts after the
+canonical owner lands. Never grant these files to concurrent lanes without a
+current-base write-set audit proving disjoint ownership:
+
+- Surface schema and publication files;
+- package entrypoints and barrel exports;
+- root/package manifests and `pnpm-lock.yaml`;
+- rules-kernel/QNT inventories and generated reports;
+- Character-to-Battle handoff composition;
+- global quality and complexity baselines.
+
+`SR-03` receives the first post-convergence shared-Surface lease. `SR-09` may
+develop in parallel only if its write set is proven disjoint; otherwise it
+starts from the accepted `SR-03` SHA. Publication regeneration and `SR-09`–
+`SR-11` finalization alternate through the landing coordinator.
+
+## Checkpoint execution notes
+
+### `SR-00`–`SR-02`: convergence
+
+- `SR-00` is exclusively owned by the user's #368–#386 session. Do not copy or
+  duplicate its work.
+- `SR-01` starts from the exact #386 landing. Treat #479/PR #480 as evidence and
+  selectively reusable commits. Resolve its quality failure rather than
+  bypassing it.
+- If #479 cannot become green in one session, split reconstruction into
+  independently coherent landings; do not create another long-lived aggregate
+  integration line.
+- `SR-02` regenerates Surface publication/reports, reruns Static Mechanics
+  Admission diagnostics, audits rules-kernel/QNT inventory and #407/#408, then
+  runs the stable quality/reviewer gate on one exact SHA.
+- At `SR-02`, audit #102/#103/#105/#56/#119 against landed #386 behavior. Close
+  satisfied tickets with exact evidence instead of duplicating them.
+
+### `SR-03`–`SR-05`: Static Mechanics Admission
+
+- `SR-03` owns the canonical Surface schema/reference change in #476. If needed,
+  slice it into: typed schema plus one production consumer; authored corpus and
+  regenerated publication; remaining consumers and old-path deletion.
+- After `SR-03`, `SR-04` runs three serial-per-package trains in parallel:
+  - Creation: #464, then #469;
+  - Character Sheet: #477, then #470, then #473;
+  - Battle: #471, then #474.
+- #464 may land as: projection plus a production discovery consumer;
+  finalization/selection consumers; repeated-recognition deletion and exact
+  admission closure.
+- `SR-05` serializes #478, #472, and #475 through the Character-to-Battle
+  handoff owner unless a current-base audit proves disjoint files. Then
+  reconcile #465/#466/#467, land #468, regenerate the exact denominator, and
+  close #52.
+
+### `SR-06`–`SR-08`: binding and Slice
+
+These are serial because each changes the next contract. Each ticket lands
+separately.
+
+Before #117, confirm that closed #53's required implementation is present on the
+accepted common base; a closed tracker state alone is not implementation
+evidence.
+
+- #117: binding result plus one consumer; remaining selection consumers;
+  identity-based rebinding deletion.
+- #118: unsupported-versus-currently-unavailable result and discovery;
+  production route consumers; superseded discovery deletion.
+- #29: generator over admitted bindings; deterministic dependency closure and
+  artifact; public gate and handwritten-inventory deletion.
+
+Historical #117 work is selective-reuse evidence only. Do not cherry-pick its
+aggregate blindly.
+
+### `SR-09`–`SR-11`: publication integrity
+
+#98 is already closed. Land #99, then #409, then #410 separately with black-box
+receipts. After #410, close parent #45 only if its full remaining outcome is
+true. This train may advance beside admission/QNT work subject to the shared
+Surface lease.
+
+### `SR-12`–`SR-14`: executable QNT conformance
+
+- `SR-12`: land #389 first; then #390/#391/#392 in parallel; then #393. Resolve
+  #382's closed-while-blocked-by-#381 metadata using `SR-00` evidence.
+- `SR-13` suggested waves:
+  - #394/#395/#396;
+  - #397/#398/#399;
+  - #401/#402/#405;
+  - #400 after #396/#401, #403 after #402, #404 after audited #407/#408;
+  - #406 after #394/#395/#400/#403/#404/#405 and #119.
+- Before #401/#406, implement only interruption work still missing after the
+  `SR-02` audit: #102 first; #103 and #56 in parallel; #105 independently; #119
+  after #56.
+- QNT work may land before #29, but a vertical that derives its completion set
+  from the Slice remains open until `SR-08` recalibration.
+- Split large verticals only at executable seams: semantic core consumed by one
+  real path; driver/bridge; production route and decisive observation. Do not
+  retain model-only branches or let lanes edit shared QNT inventories.
+- `SR-14`: regenerate every eligible set from #29, land only necessary
+  recalibrations, run #211's dynamic terminal proof lane, close #31, and run the
+  stable quality/reviewer gate.
+
+### `SR-15`–`SR-17`: delivery artifacts
+
+- In `SR-15`, #34 and residual #40 run in parallel and land separately. #40
+  preserves the existing Oracle and changes only Slice input, QNT calibration,
+  and source-free distribution evidence.
+- #34 may split into: schema/index with one consumed corpus entry; deterministic
+  builder and complete corpus; portable validation and obsolete-path deletion.
+- `SR-16` lands the minimal Rust Adapter and its one native property-test
+  example.
+- `SR-17` lands deterministic Harness assembly, declared-input validation, and
+  clean-directory discovery. If split, every landing must have its own usable
+  black-box consumer.
+
+### `SR-18`–`SR-19`: diagnostic repair and exact readiness
+
+- `SR-18` runs Dirty-Cleanroom Rehearsal against the exact Harness Candidate
+  SHA. Each defect becomes one bounded owner repair that lands directly into
+  `master`; never accumulate repairs on a rehearsal branch. Rehearsal evidence
+  remains diagnostic.
+- `SR-19` selects one immutable `master` SHA and runs #38's complete source gate
+  and two-round reviewer loop. Every fix lands normally and restarts the full
+  gate on the new SHA. Close #38 only against the final coherent state.
+- Stop before #39.
+
+## Parallel shape
+
+```text
+SR-00 -> SR-01 -> SR-02
+                    |
+           +--------+--------+
+           |                 |
+           v                 v
+        SR-03              SR-12 -> SR-13 implementation
+           |                             |
+       +---+---+                         |
+       |       |                         |
+       v       v                         |
+    SR-04    SR-09                       |
+       |       |                         |
+    SR-05    SR-10                       |
+       |       |                         |
+    SR-06    SR-11                       |
+       |                                 |
+    SR-07                               |
+       |                                 |
+    SR-08 -------------------------------+
+       |
+    SR-13 complete -> SR-14 -> SR-15 -> SR-16 -> SR-17 -> SR-18 --+
+    SR-11 -------------------------------------------------------+-> SR-19
+```
+
+## Receipt format
+
+Use this exact compact shape in the ledger row and link fuller ticket evidence:
+
+```text
+Checkpoint: SR-__
+Base: <master SHA>
+Accepted: <landed implementation/gate SHA>
+Result: <one concrete executable outcome>
+Verification: <exact focused commands>; <milestone gate when applicable>
+Reviews: RAW <result>; domain <result>; architecture/connascence <result>; standards/spec <result>
+Tickets: <closed/kept-open with links>
+Unlocked: <checkpoint ids>
+```
+
+## Deletion rule
+
+Delete this file in the same change that closes #38 or promotes any still-useful
+operational rule to its true owner. Git and issue history retain completed
+receipts; do not archive this ledger as Cleanroom documentation.
