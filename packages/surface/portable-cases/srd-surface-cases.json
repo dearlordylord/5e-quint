@@ -39629,6 +39629,10 @@
                 {
                   "kind": "blindsight",
                   "rangeFeet": 10
+                },
+                {
+                  "kind": "darkvision",
+                  "rangeFeet": 60
                 }
               ],
               "passivePerception": 13,
@@ -118510,6 +118514,10 @@
                 {
                   "kind": "blindsight",
                   "rangeFeet": 10
+                },
+                {
+                  "kind": "darkvision",
+                  "rangeFeet": 60
                 }
               ],
               "passivePerception": 13,
@@ -179609,6 +179617,10 @@
                 {
                   "kind": "blindsight",
                   "rangeFeet": 10
+                },
+                {
+                  "kind": "darkvision",
+                  "rangeFeet": 60
                 }
               ],
               "passivePerception": 13,

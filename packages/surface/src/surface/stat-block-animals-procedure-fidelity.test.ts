@@ -20,6 +20,13 @@ const animalRecordsById = new Map(
 const decodeSrdStatBlockRecord = Schema.decodeUnknownSync(
   SrdStatBlockRecordSchema,
 );
+const animalsSourceText = readFileSync(
+  join(
+    dirname(fileURLToPath(import.meta.url)),
+    "../../../../.references/srd-5.2.1/Animals.md",
+  ),
+  "utf8",
+);
 
 type ProcedureSection = "actions" | "bonusActions" | "reactions";
 
@@ -61,14 +68,7 @@ const expectLimitedUse = (
 
 describe("Animals Stat Block procedure fidelity", () => {
   test("preserves the Swarm of Insects GM-selected Speed alternative", () => {
-    const raw = readFileSync(
-      join(
-        dirname(fileURLToPath(import.meta.url)),
-        "../../../../.references/srd-5.2.1/Animals.md",
-      ),
-      "utf8",
-    );
-    expect(raw).toContain(
+    expect(animalsSourceText).toContain(
       "**Speed** 20 ft., Climb or Fly 20 ft. (GM's choice)",
     );
     const swarm = requireAnimal("stat_block_swarm_of_insects");
@@ -83,6 +83,26 @@ describe("Animals Stat Block procedure fidelity", () => {
           { kind: "fly", feet: 20, hover: false },
         ],
       },
+    ]);
+  });
+
+  test("preserves both Giant Wolf Spider senses from its explicit Animals anchor", () => {
+    const giantWolfSpider = requireAnimal("stat_block_giant_wolf_spider");
+    const sourceSpan = animalsSourceText
+      .split("\n")
+      .slice(1401, 1426)
+      .join("\n");
+
+    expect(giantWolfSpider.provenance.section).toBe(
+      "Animals.md:1402-1426",
+    );
+    expect(sourceSpan).toContain("## Giant Wolf Spider");
+    expect(sourceSpan).toContain(
+      "**Senses** Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 13",
+    );
+    expect(giantWolfSpider.statBlock.senses).toEqual([
+      { kind: "blindsight", rangeFeet: 10 },
+      { kind: "darkvision", rangeFeet: 60 },
     ]);
   });
 
