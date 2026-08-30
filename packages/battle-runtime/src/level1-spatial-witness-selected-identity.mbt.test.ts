@@ -69,17 +69,18 @@ import {
   characterId,
   combatantId,
   discoverBattleActCandidates,
-  FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+  FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND,
   initiativeScore,
   objectInvisibleBenefitDenied,
   openCreatureFallsInterruptWindow,
   resolveBattleInterrupt,
-  resolveFeatherFallLanding,
+  resolveFallingCreatureMitigationLanding,
   snapshotBattle,
   startBattle,
   type BattleActiveEffect,
   type BattleCreatureInit,
   type BattleFill,
+  type BattleFallingCreatureMitigationTriggerWithinRangeFact,
   type BattleHole,
   type BattleIllumination,
   type BattleLightEmitter,
@@ -609,7 +610,7 @@ const selectedUnitIdentityReplays = [
           featherFallSlotExpended: true,
           featherFallMitigatedTargetCountBeforeLanding: 2,
           featherFallLandedTargetDescentRateCapFeetPerRound:
-            FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+            FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND,
           featherFallLandingFallDamagePrevented: true,
           featherFallLandingFallingPronePrevented: true,
           featherFallLandedTargetMitigationCleared: true,
@@ -1450,7 +1451,7 @@ function replayFallMitigationRoute(): readonly BattleReducerRouteEvent[] {
   if (resolved.tag !== "resolved") {
     throw new Error(`Expected Feather Fall to resolve, got ${resolved.tag}.`);
   }
-  const landing = resolveFeatherFallLanding({
+  const landing = resolveFallingCreatureMitigationLanding({
     state: resolved.state,
     targetId: featherFallFallingAllyId,
   });
@@ -2145,7 +2146,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         );
       }
 
-      const landing = resolveFeatherFallLanding({
+      const landing = resolveFallingCreatureMitigationLanding({
         state: resolved.state,
         targetId: featherFallFallingAllyId,
       });
@@ -2172,7 +2173,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
         otherTargetStillMitigated:
           activeFallingCreatureMitigationDescentRateCapFeetPerRound(
             featherFallCombatant(landing.state, featherFallOtherFallingAllyId),
-          ) === FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+          ) === FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND,
       };
       state = landing.state;
       lastResult = "featherFallReactionMitigationLanding";
@@ -4121,7 +4122,7 @@ function persistentAreaSaveConditionSavingThrowOutcomeFill(
 
 function openFeatherFallWindow(
   state: BattleState,
-  reactionSpellTargetFacts: readonly BattleTargetSpatialFact[],
+  reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[],
 ): BattleResolutionResult {
   return openCreatureFallsInterruptWindow({
     state,
@@ -4151,10 +4152,7 @@ function featherFallProcedureRef(
 
 function featherFallTriggerFact(
   sourceProcedureRef: BattleProcedureExecutionRef,
-): Extract<
-  BattleTargetSpatialFact,
-  { readonly kind: "fallingCreatureMitigationTriggerWithinRange" }
-> {
+): BattleFallingCreatureMitigationTriggerWithinRangeFact {
   return {
     kind: "fallingCreatureMitigationTriggerWithinRange",
     reactorId: casterId,
@@ -5320,7 +5318,7 @@ function fallingCreatureMitigationReactionTargetCount(
     (targetId) =>
       activeFallingCreatureMitigationDescentRateCapFeetPerRound(
         featherFallCombatant(state, targetId),
-      ) === FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+      ) === FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND,
   ).length;
 }
 

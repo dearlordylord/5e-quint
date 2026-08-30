@@ -25,7 +25,7 @@ import {
 import {
   openCreatureFallsInterruptWindow as openCreatureFallsInterruptWindowStateOnly,
   resolveFallDamageLanding as resolveFallDamageLandingStateOnly,
-  resolveFeatherFallLanding as resolveFeatherFallLandingStateOnly,
+  resolveFallingCreatureMitigationLanding as resolveFallingCreatureMitigationLandingStateOnly,
   resolveFlySpeedGrantEndFallCleanup as resolveFlySpeedGrantEndFallCleanupStateOnly,
 } from "./battle-reducer/environmental-fall-procedures.ts";
 import {
@@ -223,10 +223,12 @@ export function openCreatureFallsInterruptWindow(
   );
 }
 
-export function resolveFeatherFallLanding(
-  input: Parameters<typeof resolveFeatherFallLandingStateOnly>[0],
-): ReturnType<typeof resolveFeatherFallLandingStateOnly> {
-  return resultWithExecutionSnapshot(resolveFeatherFallLandingStateOnly(input));
+export function resolveFallingCreatureMitigationLanding(
+  input: Parameters<typeof resolveFallingCreatureMitigationLandingStateOnly>[0],
+): ReturnType<typeof resolveFallingCreatureMitigationLandingStateOnly> {
+  return resultWithExecutionSnapshot(
+    resolveFallingCreatureMitigationLandingStateOnly(input),
+  );
 }
 
 export function resolveFallDamageLanding(

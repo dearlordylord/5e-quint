@@ -133,6 +133,7 @@ export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
 export {
   BattleActPresentationSchema,
   BattleCheckpointFrontierEnvelopeSchema,
+  BattleFallingCreatureMitigationTriggerWithinRangeFactSchema,
   BattleInterruptProcedureChoiceSchema,
   BattleInterruptDecisionFrontierSchema,
   BattleSpellPresentationSchema,
@@ -542,6 +543,7 @@ export {
   type BattleStateInitLeafIssue,
   type BattleSuccessfulAbilityCheckFacts,
   type BattleTargetChoiceHole,
+  type BattleFallingCreatureMitigationTriggerWithinRangeFact,
   type BattleTargetSpatialFact,
   type AttackTargetConstraint,
   type BattleCreatureSpaceTraversalMovementFact,
@@ -615,7 +617,7 @@ export {
   battlePerceptionRollModeForObscurement,
   battlePerceptionRollModeForSight,
   battleSightObscurement,
-  FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+  FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND,
 } from "./battle-reducer/spells-active-effects.ts";
 export { activeFeatureSpellSaveDcRouteEvents } from "./battle-reducer/active-feature-spell-routes.ts";
 export { battleReducerStartRouteEvent } from "./battle-reducer/reducer-route.ts";
@@ -659,7 +661,7 @@ export {
   openCreatureFallsInterruptWindow,
   resolveBattleInterrupt,
   resolveFallDamageLanding,
-  resolveFeatherFallLanding,
+  resolveFallingCreatureMitigationLanding,
   resolveFlySpeedGrantEndFallCleanup,
   snapshotBattle,
 } from "./battle-execution-composition.ts";

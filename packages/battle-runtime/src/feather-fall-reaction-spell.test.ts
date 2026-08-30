@@ -24,22 +24,22 @@ import {
   battleId,
   characterId,
   combatantId,
-  FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+  FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND,
   initiativeScore,
   openCreatureFallsInterruptWindow,
   openCreatureFallsRuntimeInterruptWindow,
   resolveBattleInterrupt,
   resolveBattleRuntimeInterrupt,
   resolveFallDamageLanding,
-  resolveFeatherFallLanding,
+  resolveFallingCreatureMitigationLanding,
   startBattle,
   type BattleCreatureInit,
+  type BattleFallingCreatureMitigationTriggerWithinRangeFact,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleRuntimeSession,
   type BattleState,
-  type BattleTargetSpatialFact,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -187,31 +187,11 @@ describe("Feather Fall Reaction spell", () => {
     ).toEqual([]);
   });
 
-  test("ignores unrelated spatial facts while discovering falling reactors", () => {
-    const session = battleWithFeatherFall();
-    const result = openCreatureFallsRuntimeInterruptWindow({
-      session,
-      fallingCreatureId: fallingAId,
-      reactionSpellTargetFacts: [
-        ...featherFallTriggerFacts(session, fallingAId, true),
-        {
-          kind: "retaliationDamagerWithinFiveFeet",
-          damagedId: fallingAId,
-          damageSourceId: casterId,
-        },
-      ],
-    });
-
-    expect(result).toMatchObject({
-      tag: "needsHoles",
-    });
-  });
-
   test("rejects landing resolution for a combatant outside the battle", () => {
     const state = battleWithFeatherFall().state;
 
     expect(
-      resolveFeatherFallLanding({
+      resolveFallingCreatureMitigationLanding({
         state,
         targetId: combatantId("missing-feather-fall-target"),
       }),
@@ -321,7 +301,7 @@ describe("Feather Fall Reaction spell", () => {
       );
       expect(
         activeFallingCreatureMitigationDescentRateCapFeetPerRound(target),
-      ).toBe(FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND);
+      ).toBe(FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND);
     }
   });
 
@@ -363,11 +343,11 @@ describe("Feather Fall Reaction spell", () => {
       activeFallingCreatureMitigationDescentRateCapFeetPerRound(
         stillFallingTarget,
       ),
-    ).toBe(FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND);
+    ).toBe(FALLING_CREATURE_MITIGATION_DESCENT_RATE_CAP_FEET_PER_ROUND);
   });
 
   test("leaves unaffected and stale landing facts to normal Falling resolution", () => {
-    const unaffected = resolveFeatherFallLanding({
+    const unaffected = resolveFallingCreatureMitigationLanding({
       state: battleWithFeatherFall().state,
       targetId: fallingAId,
     });
@@ -379,14 +359,14 @@ describe("Feather Fall Reaction spell", () => {
     });
 
     const mitigatedState = castFeatherFallOn([fallingAId]);
-    const firstLanding = resolveFeatherFallLanding({
+    const firstLanding = resolveFallingCreatureMitigationLanding({
       state: mitigatedState,
       targetId: fallingAId,
     });
     if (firstLanding.tag !== "mitigated") {
       throw new Error("Expected first landing to consume Feather Fall.");
     }
-    const staleLanding = resolveFeatherFallLanding({
+    const staleLanding = resolveFallingCreatureMitigationLanding({
       state: firstLanding.state,
       targetId: fallingAId,
     });
@@ -765,7 +745,7 @@ function featherFallTriggerFacts(
     1,
     "fallingCreatureMitigationReaction",
   ),
-): readonly BattleTargetSpatialFact[] {
+): readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[] {
   return includeTriggerFact
     ? [
         {

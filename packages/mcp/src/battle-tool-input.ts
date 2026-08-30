@@ -1,14 +1,13 @@
 import {
   BattleFillSchema,
-  BattleProcedureExecutionRef,
+  BattleFallingCreatureMitigationTriggerWithinRangeFactSchema,
   BattleSubjectSchema,
   combatantId,
   type BattleFill,
   type BattleSubject,
-  type BattleTargetSpatialFact,
+  type BattleFallingCreatureMitigationTriggerWithinRangeFact,
   type CombatantId,
 } from "@dnd/battle-runtime";
-import { movementFeet } from "@dnd/shared/types";
 import {
   StatBlockId,
   type StatBlockId as StatBlockIdType,
@@ -51,22 +50,11 @@ const FillBattleHoleArgsSchema = Schema.Struct({
 const ResolveBattleActArgsSchema = Schema.Struct({
   subject: BattleSubjectSchema,
   reactionSpellTargetFacts: Schema.optionalKey(
-    Schema.Array(
-      Schema.Struct({
-        kind: Schema.Literal("fallingCreatureMitigationTriggerWithinRange"),
-        reactorId: CombatantIdTextSchema,
-        fallingCreatureId: CombatantIdTextSchema,
-        sourceProcedureRef: BattleProcedureExecutionRef,
-        rangeFeet: Schema.Number.pipe(
-          Schema.check(Schema.isInt()),
-          Schema.check(Schema.isGreaterThan(0)),
-        ),
-      }),
-    ),
+    Schema.Array(BattleFallingCreatureMitigationTriggerWithinRangeFactSchema),
   ).pipe(
     Schema.annotate({
       description:
-        "Table-supplied reaction spell facts for runtime commands that open a reaction window, currently creatureFalls for Feather Fall.",
+        "Table-supplied falling-creature mitigation facts for the creatureFalls reaction window.",
     }),
   ),
 });
@@ -135,7 +123,7 @@ type FillBattleHoleToolInput = {
 
 type ResolveBattleActToolInput = {
   readonly subject: BattleSubject;
-  readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+  readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[];
 };
 
 type EmptyToolInput = Record<string, never>;
@@ -287,15 +275,7 @@ function decodeResolveBattleActArgs(
   if (Result.isFailure(record)) return Result.fail(record.failure);
   return Result.succeed({
     subject: record.success.subject,
-    reactionSpellTargetFacts: (
-      record.success.reactionSpellTargetFacts ?? []
-    ).map((fact) => ({
-      kind: fact.kind,
-      reactorId: combatantId(fact.reactorId),
-      fallingCreatureId: combatantId(fact.fallingCreatureId),
-      sourceProcedureRef: fact.sourceProcedureRef,
-      rangeFeet: movementFeet(fact.rangeFeet),
-    })),
+    reactionSpellTargetFacts: record.success.reactionSpellTargetFacts ?? [],
   });
 }
 

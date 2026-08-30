@@ -30,13 +30,13 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   BattleActDiscoveryCandidate,
   BattleFill,
+  BattleFallingCreatureMitigationTriggerWithinRangeFact,
   BattleHole,
   BattleInterruptDecisionFrontier,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleSnapshot,
   BattleState,
-  BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
 import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
@@ -789,7 +789,7 @@ export function endBattleRuntimeTurnWithTableD20TestCircumstances(
 export function openCreatureFallsRuntimeInterruptWindow(input: {
   readonly session: BattleRuntimeSession;
   readonly fallingCreatureId: CombatantId;
-  readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+  readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[];
 }): BattleRuntimeResolutionResult {
   return battleRuntimeResolutionFromMechanical(
     input.session,

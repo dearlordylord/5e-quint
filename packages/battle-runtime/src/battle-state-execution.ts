@@ -1312,7 +1312,7 @@ export type BattleInterruptCheckpoint =
   | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "creatureFalls";
       readonly fallingCreatureId: CombatantId;
-      readonly reactionSpellTargetFacts: readonly BattleTargetSpatialFact[];
+      readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[];
       readonly landingMitigations: readonly BattleFallDamageLandingMitigationFrame[];
     })
   | (BattleInterruptCheckpointWithContinuationBase & {
@@ -2039,6 +2039,10 @@ export type BattleTargetSpatialFact =
       readonly originalTargetId: CombatantId;
       readonly secondTargetId: CombatantId;
     };
+export type BattleFallingCreatureMitigationTriggerWithinRangeFact = Extract<
+  BattleTargetSpatialFact,
+  { readonly kind: "fallingCreatureMitigationTriggerWithinRange" }
+>;
 export type BattleProcedureRelationshipFact =
   | {
       readonly kind: "attackRollTargetIsEnemy";
