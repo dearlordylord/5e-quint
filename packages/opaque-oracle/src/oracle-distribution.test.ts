@@ -120,9 +120,7 @@ type OracleStreamFrameOptions = {
   readonly timeoutMs?: number;
 };
 
-// Shared-host contention has delayed cold package import to 87.47s. This
-// margin remains below the distribution tests' 300s outer lifecycle policy.
-const ORACLE_SHARED_HOST_COLD_START_DEADLINE_MS = 120_000;
+const ORACLE_SERVE_READINESS_TIMEOUT_MS = 10_000;
 const ORACLE_STREAM_FRAME_TIMEOUT_MS = 10_000;
 const ORACLE_STREAM_CLOSE_TIMEOUT_MS = 10_000;
 
@@ -349,12 +347,7 @@ function evaluateOracleStreamFrame(
     let writesRemaining = 2;
     const phase = process.nextFramePhase;
     process.nextFramePhase = "persistent";
-    const phaseTimeoutMs = Match.value(phase).pipe(
-      Match.when("coldStart", () => ORACLE_SHARED_HOST_COLD_START_DEADLINE_MS),
-      Match.when("persistent", () => ORACLE_STREAM_FRAME_TIMEOUT_MS),
-      Match.exhaustive,
-    );
-    const timeoutMs = options.timeoutMs ?? phaseTimeoutMs;
+    const timeoutMs = options.timeoutMs ?? ORACLE_STREAM_FRAME_TIMEOUT_MS;
     const waiter: OracleStreamFrameWaiter = {
       accept: (line) => {
         try {
@@ -686,7 +679,7 @@ async function launchOracleServe(
               "Oracle serve readiness timed out",
               "phase=coldStart",
               `scenario=${JSON.stringify(scenario)}`,
-              `deadlineMs=${ORACLE_SHARED_HOST_COLD_START_DEADLINE_MS}`,
+              `deadlineMs=${ORACLE_SERVE_READINESS_TIMEOUT_MS}`,
               `pid=${String(child.pid)}`,
               `exitCode=${String(child.exitCode)}`,
               `signalCode=${String(child.signalCode)}`,
@@ -695,7 +688,7 @@ async function launchOracleServe(
             ].join(", "),
           ),
         );
-      }, ORACLE_SHARED_HOST_COLD_START_DEADLINE_MS);
+      }, ORACLE_SERVE_READINESS_TIMEOUT_MS);
       lines.once("line", (line) => {
         try {
           const decoded = decodeJson(OracleHttpReadinessSchema, line);
