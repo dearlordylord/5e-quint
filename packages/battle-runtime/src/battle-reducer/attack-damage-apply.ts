@@ -1050,7 +1050,7 @@ function weaponAttackWithWeaponAttackDamageEnhancement(
     ...(attack.alternateAbilityChoices === undefined
       ? {}
       : {
-          alternateAbilityChoices: magicWeaponAlternateAbilityChoices(
+          alternateAbilityChoices: enhancedWeaponAlternateAbilityChoices(
             attack.alternateAbilityChoices,
             bonus,
           ),
@@ -1058,18 +1058,18 @@ function weaponAttackWithWeaponAttackDamageEnhancement(
   };
 }
 
-function magicWeaponAlternateAbilityChoices(
+function enhancedWeaponAlternateAbilityChoices(
   choices: ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice>,
   bonus: WeaponAttackDamageEnhancementBonus,
 ): ReadonlyNonEmptyArray<CharacterWeaponAttackAbilityChoice> {
   const [first, ...rest] = choices;
   return [
-    magicWeaponAbilityChoice(first, bonus),
-    ...rest.map((choice) => magicWeaponAbilityChoice(choice, bonus)),
+    enhancedWeaponAbilityChoice(first, bonus),
+    ...rest.map((choice) => enhancedWeaponAbilityChoice(choice, bonus)),
   ];
 }
 
-function magicWeaponAbilityChoice(
+function enhancedWeaponAbilityChoice(
   choice: CharacterWeaponAttackAbilityChoice,
   bonus: WeaponAttackDamageEnhancementBonus,
 ): CharacterWeaponAttackAbilityChoice {

@@ -249,7 +249,7 @@ export function discoverSupportedSpellInvocations(
   if (actor?.origin.kind !== "character") {
     return [];
   }
-  const spellcastingPreventedByAntimagicField =
+  const spellcastingPreventedByMagicSuppression =
     combatantInsideActiveMagicSuppressionEmanation(state, actorId);
   const invocations = supportedSpellActs(state, actor);
   const executionInvocations = invocations;
@@ -265,7 +265,7 @@ export function discoverSupportedSpellInvocations(
         return [];
       }
       if (
-        spellcastingPreventedByAntimagicField &&
+        spellcastingPreventedByMagicSuppression &&
         spellInvocationActInterdictedByMagicSuppressionEmanation(
           executionInvocation,
         )

@@ -3844,7 +3844,7 @@ function validateForcedMovementCubeBurstAreaEffect(input: {
       return "forced-movement cube burst creature push facts must not duplicate targets.";
     }
     pushedTargetIds.add(push.targetId);
-    const dispositionValidation = validateThunderwavePushDisposition(
+    const dispositionValidation = validateForcedMovementPushDisposition(
       push.disposition,
       input.effect.creaturePush.distanceFeet,
     );
@@ -3861,7 +3861,7 @@ function validateForcedMovementCubeBurstAreaEffect(input: {
       return "forced-movement cube burst unsecured-object push facts must not duplicate objects.";
     }
     objectIds.add(push.objectId);
-    const dispositionValidation = validateThunderwavePushDisposition(
+    const dispositionValidation = validateForcedMovementPushDisposition(
       push.disposition,
       input.effect.unsecuredObjectPush.distanceFeet,
     );
@@ -3879,7 +3879,7 @@ function validateForcedMovementCubeBurstAreaEffect(input: {
   return "forced-movement cube burst audible-boom fact must match the spell's thunderous boom within 300 feet.";
 }
 
-function validateThunderwavePushDisposition(
+function validateForcedMovementPushDisposition(
   disposition: BattleImmediateAreaPushDisposition,
   distanceFeet: MovementFeet,
 ): string | null {

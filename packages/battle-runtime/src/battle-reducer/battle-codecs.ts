@@ -133,7 +133,7 @@ import { ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS } from "./attack-damage-die-f
 import {
   BATTLE_MAGIC_SUPPRESSION_ONGOING_SPELL_EFFECT_SOURCE_KINDS,
   BATTLE_ATTACK_RANGE_BANDS,
-  BLUR_ATTACK_ROLL_BYPASS_SENSES,
+  PERCEPTION_GATED_ATTACK_ROLL_DEFENSE_BYPASS_SENSES,
   COMPELLED_BEHAVIOR_OPTIONS,
   DUPLICATE_HIT_INTERCEPTION_DUPLICATE_COUNTS,
   DUPLICATE_HIT_INTERCEPTION_DIE_SIZE,
@@ -769,7 +769,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     kind: Schema.Literal("attackerPerceivesObscuredTargetWithSense"),
     attackerId: CombatantId,
     targetId: CombatantId,
-    sense: Schema.Literals(BLUR_ATTACK_ROLL_BYPASS_SENSES),
+    sense: Schema.Literals(PERCEPTION_GATED_ATTACK_ROLL_DEFENSE_BYPASS_SENSES),
   }),
   Schema.Struct({
     kind: Schema.Literal(

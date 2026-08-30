@@ -120,7 +120,7 @@ import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
   MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
-  THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+  TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
 } from "./domain-constants.ts";
 import {
   combatantCanTakeActions,
@@ -424,7 +424,7 @@ export function temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
   dc: DifficultyClass,
 ): BattleAbilityCheckHole {
   const rollMode = requiredAbilityCheckRollMode(state, actorId, "cha", {
-    skill: THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+    skill: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
   });
   return {
     holeInstanceKey:
@@ -433,7 +433,7 @@ export function temporaryAbilityCheckRollModeInfluenceAbilityCheckHole(
     kind: "abilityCheck",
     label: `Influence Charisma (Intimidation) check (DC ${dc})`,
     ability: "cha",
-    skill: THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
+    skill: TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
     dc,
     ...optionalProperty("rollMode", rollMode),
   };
@@ -651,7 +651,7 @@ function activeTemporaryAbilityCheckRollModeAdvantageMatches(
   const actor = state.combatants.get(actorId);
   return (
     ability === "cha" &&
-    skill === THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL &&
+    skill === TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL &&
     (actor?.activeEffects.some(
       (effect) =>
         effect.kind === "temporaryAbilityCheckRollMode" &&

@@ -40,7 +40,7 @@ export type GrantedAreaSaveDamageActionSubject = Extract<
   { readonly command: "grantedAreaSaveDamageAction" }
 >;
 
-const DRAGONS_BREATH_CONE_LENGTH_FEET = 15;
+const GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET = 15;
 
 export function grantedAreaSaveDamageActionActs(
   state: BattleState,
@@ -88,7 +88,7 @@ export function grantedAreaSaveDamageActionSavingThrowOutcomeHole(
     grantedAreaSaveDamageAction: {
       sourceCombatantId: effect.sourceCombatantId,
       sourceProcedureRef: effect.sourceProcedureRef,
-      lengthFeet: DRAGONS_BREATH_CONE_LENGTH_FEET,
+      lengthFeet: GRANTED_AREA_SAVE_DAMAGE_CONE_LENGTH_FEET,
     },
     ability: effect.save.ability,
     dc: effect.save.dc,

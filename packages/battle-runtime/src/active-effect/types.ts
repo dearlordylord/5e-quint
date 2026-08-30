@@ -59,9 +59,9 @@ import type {
   SpellConditionRepeatSave,
 } from "./execution-vocabulary.ts";
 import type {
-  HUNTERS_MARK_FINDING_SKILLS,
+  MARKED_TARGET_FINDING_SKILLS,
   BattleD20RollModifierKind,
-  PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
+  CREATURE_TYPE_PROTECTION_PREVENTED_CONDITIONS,
   SPELL_CONDITION_ABILITY_CHECK_ACTORS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
   DuplicateHitInterceptionDuplicateCount,
@@ -122,7 +122,7 @@ export type BattleSourceTurnActiveEffectExpiration = {
 export type MarkedDamageRiderFindingAdvantage = {
   readonly kind: "findingAdvantage";
   readonly ability: "wis";
-  readonly skills: typeof HUNTERS_MARK_FINDING_SKILLS;
+  readonly skills: typeof MARKED_TARGET_FINDING_SKILLS;
 };
 export type MarkedDamageRiderAbilityCheckBehavior =
   | { readonly kind: "none" }
@@ -166,7 +166,7 @@ export type SpellConditionAbilityCheckSuccessEnd =
 export type SpellConditionAbilityCheckActor =
   (typeof SPELL_CONDITION_ABILITY_CHECK_ACTORS)[number];
 export type CreatureTypeProtectionPreventedCondition =
-  (typeof PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS)[number];
+  (typeof CREATURE_TYPE_PROTECTION_PREVENTED_CONDITIONS)[number];
 export type BattlePossessionAttemptDisposition =
   | {
       readonly tag: "prevented";

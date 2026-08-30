@@ -41,8 +41,8 @@ import {
 import { CharacterWeaponAttackExecutionWeaponSchema } from "../character-weapon-execution-schema.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 import {
-  ELDRITCH_BLAST_BEAM_COUNTS,
-  SCORCHING_RAY_RAY_COUNTS,
+  CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS,
+  SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS,
   SPELL_CONDITION_ABILITY_CHECK_ACTORS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
 } from "./domain-constants.ts";
@@ -454,11 +454,11 @@ export const SaveGatedDamageSpellTargetingSchema = Schema.Union([
 ]);
 
 export const CantripSpellAttackSequenceAttackCountSchema = Schema.Literals(
-  ELDRITCH_BLAST_BEAM_COUNTS,
+  CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS,
 );
 
 export const PreparedSpellAttackSequenceAttackCountSchema = Schema.Literals(
-  SCORCHING_RAY_RAY_COUNTS,
+  SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS,
 );
 
 export const CantripSpellAttackSequenceTargetingSchema = Schema.Struct({

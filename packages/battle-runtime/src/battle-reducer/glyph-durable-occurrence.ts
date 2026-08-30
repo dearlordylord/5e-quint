@@ -41,7 +41,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Result, Match } from "effect";
 import {
-  GLYPH_OF_WARDING_BASE_LEVEL,
+  DURABLE_GLYPH_BASE_SPELL_LEVEL,
   GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS,
   GLYPH_STORED_SPELL_TARGET_SHAPES,
   type GlyphStoredSpellReleaseProfile,
@@ -154,7 +154,7 @@ import {
   effectiveD20TestNaturalOneRerollSavingThrowOutcomes,
 } from "./d20-test-natural-one-reroll.ts";
 
-const GLYPH_OF_WARDING_CASTING_HOURS = 1;
+const DURABLE_GLYPH_INSCRIPTION_HOURS = 1;
 const GLYPH_MAX_COVERED_DIAMETER_FEET = 10;
 const GLYPH_MOVEMENT_INVALIDATION_MORE_THAN_FEET = 10;
 const GLYPH_EXPLOSIVE_RUNE_RADIUS_FEET = 20;
@@ -303,7 +303,7 @@ export type GlyphExplosiveRuneReleaseProfile = {
       readonly baseDice: typeof GLYPH_EXPLOSIVE_RUNE_BASE_DAMAGE_DICE;
       readonly dieSize: typeof GLYPH_EXPLOSIVE_RUNE_DAMAGE_DIE_SIZE;
       readonly perSlotAboveBaseDice: 1;
-      readonly baseLevel: typeof GLYPH_OF_WARDING_BASE_LEVEL;
+      readonly baseLevel: typeof DURABLE_GLYPH_BASE_SPELL_LEVEL;
     };
   };
 };
@@ -627,7 +627,7 @@ export function glyphDurableOccurrenceProfileForSpell(
         minimumSpellLevel,
         creationBoundary: {
           kind: "completedOneHourInscription",
-          castingHours: GLYPH_OF_WARDING_CASTING_HOURS,
+          castingHours: DURABLE_GLYPH_INSCRIPTION_HOURS,
         },
         maxCoveredDiameterFeet: movementFeet(
           spell.mechanics.occurrence.coverage.maxDiameterFeet,
@@ -688,7 +688,7 @@ export function glyphExplosiveRuneReleaseProfileForSpell(
         baseDice: GLYPH_EXPLOSIVE_RUNE_BASE_DAMAGE_DICE,
         dieSize: GLYPH_EXPLOSIVE_RUNE_DAMAGE_DIE_SIZE,
         perSlotAboveBaseDice: 1,
-        baseLevel: GLYPH_OF_WARDING_BASE_LEVEL,
+        baseLevel: DURABLE_GLYPH_BASE_SPELL_LEVEL,
       },
     },
   };
@@ -711,7 +711,7 @@ export function glyphStoredSpellReleaseProfileForSpell(
       spellAccess: "prepared_spell",
       castAsPartOfCreatingGlyph: true,
       immediateEffect: "none",
-      baseMaxStoredSpellLevel: GLYPH_OF_WARDING_BASE_LEVEL,
+      baseMaxStoredSpellLevel: DURABLE_GLYPH_BASE_SPELL_LEVEL,
       upcastMaxStoredSpellLevel: "same_as_cast_slot_level",
       targetShapes: GLYPH_STORED_SPELL_TARGET_SHAPES,
     },
@@ -1185,9 +1185,9 @@ function glyphWardingMechanicsSupportsDurableOccurrence(
   mechanics: GlyphWardingMechanics,
 ): boolean {
   return (
-    mechanics.level === GLYPH_OF_WARDING_BASE_LEVEL &&
+    mechanics.level === DURABLE_GLYPH_BASE_SPELL_LEVEL &&
     mechanics.castingTime.kind === "hours" &&
-    mechanics.castingTime.amount === GLYPH_OF_WARDING_CASTING_HOURS &&
+    mechanics.castingTime.amount === DURABLE_GLYPH_INSCRIPTION_HOURS &&
     mechanics.castingTime.ritual === false &&
     mechanics.range.kind === "touch" &&
     glyphWardingComponentsSupported(mechanics.components) &&
@@ -1303,7 +1303,8 @@ function glyphWardingExplosiveRuneSupported(
     explosiveRune.damage.amount.base.dieSize ===
       GLYPH_EXPLOSIVE_RUNE_DAMAGE_DIE_SIZE &&
     explosiveRune.damage.amount.perLevel.dice === 1 &&
-    explosiveRune.damage.amount.startingAtLevel === GLYPH_OF_WARDING_BASE_LEVEL
+    explosiveRune.damage.amount.startingAtLevel ===
+      DURABLE_GLYPH_BASE_SPELL_LEVEL
   );
 }
 
@@ -1316,7 +1317,7 @@ function glyphWardingSpellGlyphSupported(
     spellGlyph.storage.castAsPartOfCreatingGlyph === true &&
     spellGlyph.storage.immediateEffect === "none" &&
     spellGlyph.storage.maxStoredSpellLevel.baseMaxLevel ===
-      GLYPH_OF_WARDING_BASE_LEVEL &&
+      DURABLE_GLYPH_BASE_SPELL_LEVEL &&
     spellGlyph.storage.maxStoredSpellLevel.upcastMaxLevel ===
       "same_as_cast_slot_level" &&
     spellGlyph.storage.targetShape.length === 2 &&

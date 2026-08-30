@@ -52,7 +52,7 @@ export {
 
 import {
   SAVE_GATED_TURN_CONSTRAINT_ARMOR_CLASS_DELTA,
-  WARDING_BOND_ARMOR_CLASS_BONUS,
+  LINKED_DEFENSE_DAMAGE_SHARE_ARMOR_CLASS_BONUS,
 } from "./domain-constants.ts";
 import { effectiveHitPointMaximum } from "./hit-point-maximum.ts";
 import {
@@ -553,7 +553,9 @@ export function activeEffectArmorClass(
         ? [
             {
               kind: "flat" as const,
-              bonus: armorClassDelta(WARDING_BOND_ARMOR_CLASS_BONUS),
+              bonus: armorClassDelta(
+                LINKED_DEFENSE_DAMAGE_SHARE_ARMOR_CLASS_BONUS,
+              ),
             },
           ]
         : [],

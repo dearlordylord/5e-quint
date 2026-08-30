@@ -6,7 +6,7 @@ import {
 import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import { BattleEffectOccurrenceTemplateSchemaFields } from "./template-codec.ts";
-import { HUNTERS_MARK_FINDING_SKILLS } from "../battle-reducer/domain-constants.ts";
+import { MARKED_TARGET_FINDING_SKILLS } from "../battle-reducer/domain-constants.ts";
 import {
   BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -82,8 +82,8 @@ export const MarkedDamageRiderAbilityCheckBehaviorSchema =
         kind: Schema.Literal("findingAdvantage"),
         ability: Schema.Literal("wis"),
         skills: Schema.Tuple([
-          Schema.Literal(HUNTERS_MARK_FINDING_SKILLS[0]),
-          Schema.Literal(HUNTERS_MARK_FINDING_SKILLS[1]),
+          Schema.Literal(MARKED_TARGET_FINDING_SKILLS[0]),
+          Schema.Literal(MARKED_TARGET_FINDING_SKILLS[1]),
         ]),
       }),
     ]),

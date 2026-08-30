@@ -377,7 +377,7 @@ import {
   type PerceptionGatedAttackRollDefenseBypassSense,
   CRITICAL_HIT_THRESHOLDS,
   DIRECT_CONDITION_REMOVAL_CONDITIONS,
-  HUNTERS_MARK_FINDING_SKILLS,
+  MARKED_TARGET_FINDING_SKILLS,
   type DuplicateHitInterceptionDuplicateCount as DuplicateHitInterceptionCount,
   type DuplicateHitInterceptionUnaffectedSense as DuplicateHitInterceptionUnaffectedSense,
   OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
@@ -4110,7 +4110,7 @@ export type AttackSpellDamageAddition = SpellAttackDamageComponent & {
 export type MarkedDamageRiderFindingAdvantage = {
   readonly kind: "findingAdvantage";
   readonly ability: Extract<Ability, "wis">;
-  readonly skills: typeof HUNTERS_MARK_FINDING_SKILLS;
+  readonly skills: typeof MARKED_TARGET_FINDING_SKILLS;
 };
 export type {
   MarkedDamageRiderAbilityCheckBehavior,
@@ -4703,8 +4703,9 @@ export type BattleStateInitIssue =
 export const SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET = movementFeet(5);
 export const SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET = movementFeet(15);
 export const SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET = movementFeet(20);
-export const COLOR_SPRAY_FAILED_SAVE_CONDITION = "blinded" satisfies Condition;
-export const ENTANGLE_FAILED_SAVE_CONDITION = "restrained" satisfies Condition;
+export const FAILED_SAVE_BLINDED_CONDITION = "blinded" satisfies Condition;
+export const FAILED_SAVE_RESTRAINED_CONDITION =
+  "restrained" satisfies Condition;
 
 type BattleActExecution<TSubject extends BattleSubject> = {
   readonly subject: TSubject;

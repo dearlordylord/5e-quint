@@ -13,10 +13,10 @@ import type {
 import { allocateBattleEffectExecutionRefForCreature } from "../effect-execution-ref.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-  WARDING_BOND_CONNECTION_RANGE_FEET,
+  LINKED_DEFENSE_DAMAGE_SHARE_CONNECTION_RANGE_FEET,
   LINKED_DEFENSE_DAMAGE_SHARE_SEPARATION_FACTS_HOLE_ID,
   LINKED_DEFENSE_DAMAGE_SHARE_SEPARATION_FACTS_HOLE_INSTANCE,
-  WARDING_BOND_SAVING_THROW_BONUS,
+  LINKED_DEFENSE_DAMAGE_SHARE_SAVING_THROW_BONUS,
 } from "./domain-constants.ts";
 
 export type LinkedDefenseResistanceDamageShareEffect = Extract<
@@ -51,7 +51,7 @@ export function linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjection
           targetId: target.combatantId,
           sourceCombatantId: effect.sourceCombatantId,
           sourceProcedureRef: effect.sourceProcedureRef,
-          bonus: WARDING_BOND_SAVING_THROW_BONUS,
+          bonus: LINKED_DEFENSE_DAMAGE_SHARE_SAVING_THROW_BONUS,
         },
       ];
 }
@@ -170,7 +170,7 @@ export function linkedDefenseResistanceDamageShareSeparationFactsHole(input: {
       sourceCombatantId: input.sourceCombatantId,
       targetId: input.targetId,
       sourceProcedureRef: input.sourceProcedureRef,
-      rangeFeet: WARDING_BOND_CONNECTION_RANGE_FEET,
+      rangeFeet: LINKED_DEFENSE_DAMAGE_SHARE_CONNECTION_RANGE_FEET,
     },
     requiresTableSpatialFact: true,
   };
@@ -188,7 +188,8 @@ export function linkedDefenseResistanceDamageShareSeparationFactsAreSatisfied(in
       fact.casterId === input.sourceCombatantId &&
       fact.targetId === input.targetId &&
       fact.sourceProcedureRef === input.sourceProcedureRef &&
-      Number(fact.distanceFeet) > Number(WARDING_BOND_CONNECTION_RANGE_FEET),
+      Number(fact.distanceFeet) >
+        Number(LINKED_DEFENSE_DAMAGE_SHARE_CONNECTION_RANGE_FEET),
   );
 }
 

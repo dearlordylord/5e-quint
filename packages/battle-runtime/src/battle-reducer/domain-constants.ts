@@ -82,14 +82,14 @@ export const BATTLE_MAGIC_SUPPRESSION_ONGOING_SPELL_EFFECT_SOURCE_KINDS = [
 ] as const;
 export type BattleMagicSuppressionOngoingSpellEffectSourceKind =
   (typeof BATTLE_MAGIC_SUPPRESSION_ONGOING_SPELL_EFFECT_SOURCE_KINDS)[number];
-export const BLUR_ATTACK_ROLL_BYPASS_SENSES = [
+export const PERCEPTION_GATED_ATTACK_ROLL_DEFENSE_BYPASS_SENSES = [
   "blindsight",
   "truesight",
 ] as const satisfies ReadonlyArray<CreatureSense["kind"]>;
 export type PerceptionGatedAttackRollDefenseBypassSense =
-  (typeof BLUR_ATTACK_ROLL_BYPASS_SENSES)[number];
+  (typeof PERCEPTION_GATED_ATTACK_ROLL_DEFENSE_BYPASS_SENSES)[number];
 export const DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES =
-  BLUR_ATTACK_ROLL_BYPASS_SENSES;
+  PERCEPTION_GATED_ATTACK_ROLL_DEFENSE_BYPASS_SENSES;
 export type DuplicateHitInterceptionUnaffectedSense =
   (typeof DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_SENSES)[number];
 export const DUPLICATE_HIT_INTERCEPTION_UNAFFECTED_BY = [
@@ -105,7 +105,7 @@ export const DUPLICATE_HIT_INTERCEPTION_DIE_SIZE = 6;
 export const DUPLICATE_HIT_INTERCEPTION_SUCCESS_AT_LEAST = 3;
 export const DUPLICATE_HIT_INTERCEPTION_ROLL_HOLE_KEY_PREFIX =
   "battle:duplicate-hit-interception:roll:";
-export const CHROMATIC_ORB_DAMAGE_TYPES = [
+export const CHAINED_DAMAGE_TYPE_ATTACK_DAMAGE_TYPES = [
   "acid",
   "cold",
   "fire",
@@ -113,7 +113,7 @@ export const CHROMATIC_ORB_DAMAGE_TYPES = [
   "poison",
   "thunder",
 ] as const satisfies ReadonlyArray<DamageType>;
-export const CHROMATIC_ORB_LEAP_RANGE_FEET = movementFeet(30);
+export const CHAINED_SPELL_ATTACK_LEAP_RANGE_FEET = movementFeet(30);
 export const CHAINED_SPELL_ATTACK_CONTINUATION_LIMIT_KINDS = [
   "max_leaps_from_slot_level",
   "exclude_already_targeted_in_same_cast",
@@ -223,12 +223,13 @@ export const DIRECT_CONDITION_REMOVAL_CONDITIONS = [
   "paralyzed",
   "poisoned",
 ] as const satisfies ReadonlyArray<Condition>;
-export const HUNTERS_MARK_FINDING_SKILLS = [
+export const MARKED_TARGET_FINDING_SKILLS = [
   "perception",
   "survival",
 ] as const satisfies ReadonlyArray<Skill>;
-export const THAUMATURGY_BOOMING_VOICE_DURATION_TICKS = elapsedTimeTicks(10);
-export const THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL =
+export const TEMPORARY_ABILITY_CHECK_ROLL_MODE_DURATION_TICKS =
+  elapsedTimeTicks(10);
+export const TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL =
   "intimidation" as const satisfies Skill;
 export const TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS = 3;
 export const MINOR_WONDER_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID = holeId(
@@ -240,34 +241,40 @@ export const MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID =
   holeId("battle:spell:booming-voice:influence-ability-check");
 export const MINOR_WONDER_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE =
   holeInstanceKey("battle:spell:booming-voice:influence-ability-check");
-export const WARDING_BOND_ARMOR_CLASS_BONUS = 1;
-export const WARDING_BOND_SAVING_THROW_BONUS = 1;
-export const WARDING_BOND_CAST_RANGE_FEET = movementFeet(5);
-export const WARDING_BOND_CONNECTION_RANGE_FEET = movementFeet(60);
+export const LINKED_DEFENSE_DAMAGE_SHARE_ARMOR_CLASS_BONUS = 1;
+export const LINKED_DEFENSE_DAMAGE_SHARE_SAVING_THROW_BONUS = 1;
+export const LINKED_DEFENSE_DAMAGE_SHARE_CAST_RANGE_FEET = movementFeet(5);
+export const LINKED_DEFENSE_DAMAGE_SHARE_CONNECTION_RANGE_FEET =
+  movementFeet(60);
 export const LINKED_DEFENSE_DAMAGE_SHARE_SEPARATION_FACTS_HOLE_ID = holeId(
   "battle:linked-defense-damage-share:separation-facts",
 );
 export const LINKED_DEFENSE_DAMAGE_SHARE_SEPARATION_FACTS_HOLE_INSTANCE =
   holeInstanceKey("battle:linked-defense-damage-share:separation-facts");
-export const ELDRITCH_BLAST_BEAM_COUNT_TIERS = [
+export const CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNT_TIERS = [
   { atLevel: 5, value: 2 },
   { atLevel: 11, value: 3 },
   { atLevel: 17, value: 4 },
 ] as const;
-export const ELDRITCH_BLAST_BEAM_COUNTS = [
+export const CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS = [
   1,
-  ...ELDRITCH_BLAST_BEAM_COUNT_TIERS.map((tier) => tier.value),
+  ...CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNT_TIERS.map((tier) => tier.value),
 ] as const;
 export type MultiBeamSpellAttackBeamCount =
-  (typeof ELDRITCH_BLAST_BEAM_COUNTS)[number];
-export const SCORCHING_RAY_RAY_COUNTS = [3, 4, 5, 6, 7, 8, 9, 10] as const;
+  (typeof CHARACTER_LEVEL_SCALED_SPELL_ATTACK_COUNTS)[number];
+export const SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS = [
+  3, 4, 5, 6, 7, 8, 9, 10,
+] as const;
 export type MultiRaySpellAttackRayCount =
-  (typeof SCORCHING_RAY_RAY_COUNTS)[number];
+  (typeof SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS)[number];
 
 export function multiRaySpellAttackRayCount(
   value: number,
 ): MultiRaySpellAttackRayCount | null {
-  return SCORCHING_RAY_RAY_COUNTS.find((count) => count === value) ?? null;
+  return (
+    SLOT_LEVEL_SCALED_SPELL_ATTACK_COUNTS.find((count) => count === value) ??
+    null
+  );
 }
 export const ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID =
   holeId("battle:attack-damage-reduction-zero-damage-redirect:target");
@@ -360,7 +367,7 @@ export const HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID = holeId(
 );
 export const HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_INSTANCE =
   holeInstanceKey("battle:hunters-prey:horde-breaker:damage-disposition");
-export const PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES = [
+export const CREATURE_TYPE_PROTECTION_CREATURE_TYPES = [
   "aberration",
   "celestial",
   "elemental",
@@ -368,14 +375,14 @@ export const PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES = [
   "fiend",
   "undead",
 ] as const satisfies ReadonlyArray<CreatureType>;
-export const DISPEL_EVIL_AND_GOOD_CREATURE_TYPES = [
+export const CREATURE_TYPE_DISMISSAL_CREATURE_TYPES = [
   "celestial",
   "elemental",
   "fey",
   "fiend",
   "undead",
 ] as const satisfies ReadonlyArray<CreatureType>;
-export const PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS = [
+export const CREATURE_TYPE_PROTECTION_PREVENTED_CONDITIONS = [
   "charmed",
   "frightened",
 ] as const satisfies ReadonlyArray<Condition>;

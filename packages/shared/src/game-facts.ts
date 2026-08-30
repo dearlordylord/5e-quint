@@ -345,13 +345,13 @@ export function parseAlignmentOptionId(
 /** Base value for recurring game save DC formulas: 8 + modifier + proficiency bonus. */
 export const SAVE_DC_BASE = 8;
 
-export const FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES = [
+export const SPAWNED_COMPANION_CREATURE_TYPE_OVERRIDE_TYPES = [
   "celestial",
   "fey",
   "fiend",
 ] as const satisfies ReadonlyArray<CreatureType>;
 export type SpawnedCompanionCreatureTypeOverride =
-  (typeof FIND_FAMILIAR_CREATURE_TYPE_OVERRIDE_TYPES)[number];
+  (typeof SPAWNED_COMPANION_CREATURE_TYPE_OVERRIDE_TYPES)[number];
 
 export function featureSaveDC(
   abilityMod: AbilityModifier,
