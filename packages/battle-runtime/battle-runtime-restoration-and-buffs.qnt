@@ -12,6 +12,7 @@ module battleRuntimeRestorationAndBuffs {
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
+  import battleRuntimeFallingCreatureMitigationReaction.* from "./battle-runtime-falling-creature-mitigation-reaction"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
 
   type ScalarBuffSpellResolutionResult = {
