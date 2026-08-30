@@ -213,7 +213,6 @@ function ramMovablePersistentAreaSpell(
       RAM_MOVABLE_PERSISTENT_AREA_OPERATION_COUNT ||
     durationTicks === null ||
     Result.isFailure(durationTicks) ||
-    sphereHole?.holeId !== "flaming_sphere_area" ||
     sphereArea?.kind !== "area" ||
     sphereArea?.origin.kind !== "point_within_range" ||
     sphereArea.shape.kind !== "sphere" ||

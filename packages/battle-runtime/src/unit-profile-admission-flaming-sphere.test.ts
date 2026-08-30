@@ -28,13 +28,17 @@ import {
   spellAct,
   spellHoleInvocation,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   abilityModifier,
   assertBattleSnapshotCodecRoundTripForTest,
   battleAreaId,
   breakBattleConcentration,
   cantripSpellInvocationRef,
+  discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
   Hp,
@@ -61,6 +65,87 @@ import {
 import { boundPersistentAreaSaveDamageEffect } from "./battle-reducer/persistent-area-save-damage-binding.ts";
 
 describe("L12G deterministic Flaming Sphere admission", () => {
+  test("admission correlates the selected area hole structurally instead of recognizing its authored spelling", () => {
+    const spell = spellRecord(flamingSphereUnitId);
+    if (
+      spell.mechanics.family !== "ongoing_effect" ||
+      spell.mechanics.attachment.kind !== "hole"
+    ) {
+      throw new Error("Expected a hole-attached ongoing spell fixture.");
+    }
+    const renamedHoleId = "synthetic_collision_area";
+    const renamed = decodeSpellRecordForTest({
+      ...spell,
+      mechanics: {
+        ...spell.mechanics,
+        attachment: {
+          ...spell.mechanics.attachment,
+          holeId: renamedHoleId,
+        },
+        operations: spell.mechanics.operations.map((operation) => ({
+          ...operation,
+          effect:
+            operation.effect.kind === "save_gate" &&
+            operation.effect.attachment?.kind === "hole"
+              ? {
+                  ...operation.effect,
+                  attachment: {
+                    ...operation.effect.attachment,
+                    holeId: renamedHoleId,
+                  },
+                }
+              : operation.effect,
+        })),
+      },
+    });
+    const session = spellBattle({
+      preparedSpells: [renamed],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+
+    expect(
+      discoverBattleActs(session).some((candidate) => {
+        const invocation = battleActSpellPresentation(candidate)?.invocation;
+        return (
+          invocation?.spellId === flamingSphereUnitId &&
+          invocation.procedure === "persistentAreaSaveDamage"
+        );
+      }),
+    ).toBe(true);
+  });
+
+  test("admission rejects a selected area hole that differs from the save effects' area reference", () => {
+    const spell = spellRecord(flamingSphereUnitId);
+    if (
+      spell.mechanics.family !== "ongoing_effect" ||
+      spell.mechanics.attachment.kind !== "hole"
+    ) {
+      throw new Error("Expected a hole-attached ongoing spell fixture.");
+    }
+    const mismatched = decodeSpellRecordForTest({
+      ...spell,
+      mechanics: {
+        ...spell.mechanics,
+        attachment: {
+          ...spell.mechanics.attachment,
+          holeId: "synthetic_unrelated_area",
+        },
+      },
+    });
+    const session = spellBattle({
+      preparedSpells: [mismatched],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+
+    expect(
+      discoverBattleActs(session).some(
+        (candidate) =>
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+          flamingSphereUnitId,
+      ),
+    ).toBe(false);
+  });
+
   test("flaming sphere is admitted as a movable fire Sphere hazard", () => {
     const spell = spellRecord(flamingSphereUnitId);
     const session = spellBattle({

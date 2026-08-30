@@ -178,8 +178,9 @@ function movablePersistentAreaSpell(
       ? attachment
       : null;
   const cylinderArea = cylinderHole?.value ?? null;
-  const initialDamage = isMovablePersistentAreaSaveGate(
+  const initialDamage = isMovablePersistentAreaInitialSaveGate(
     spell.mechanics.initialPhase,
+    cylinderHole?.holeId,
   );
   const endTurnOperation = spell.mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
@@ -218,7 +219,6 @@ function movablePersistentAreaSpell(
       MOVABLE_PERSISTENT_AREA_OPERATION_COUNT ||
     durationTicks === null ||
     Result.isFailure(durationTicks) ||
-    cylinderHole?.holeId !== "moonbeam_cylinder" ||
     cylinderArea?.kind !== "area" ||
     cylinderArea?.origin.kind !== "point_within_range" ||
     cylinderArea.shape.kind !== "cylinder" ||
@@ -243,6 +243,28 @@ function movablePersistentAreaSpell(
     repositionMaxMoveFeet: repositionOperation.effect.maxMoveFeet,
     damageAmount: initialDamage.amount,
   };
+}
+
+function isMovablePersistentAreaInitialSaveGate(
+  effect: MovablePersistentAreaInitialPhase | undefined,
+  areaHoleId: string | undefined,
+): MovablePersistentAreaSaveGateDamage | null {
+  if (
+    effect?.kind !== "save_gate" ||
+    areaHoleId === undefined ||
+    effect.attachment?.kind !== "hole" ||
+    effect.attachment.holeId !== areaHoleId ||
+    effect.attachment.value.kind !== "area" ||
+    effect.attachment.value.origin.kind !== "point_within_range" ||
+    effect.attachment.value.shape.kind !== "cylinder" ||
+    effect.attachment.value.shape.radiusFeet !==
+      MOVABLE_PERSISTENT_AREA_RADIUS_FEET ||
+    effect.attachment.value.shape.heightFeet !==
+      MOVABLE_PERSISTENT_AREA_HEIGHT_FEET
+  ) {
+    return null;
+  }
+  return isMovablePersistentAreaSaveGate(effect);
 }
 
 function isMovablePersistentAreaSaveGate(

@@ -54,7 +54,10 @@ import {
   spellTargetFill,
   webAreaFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleId,
   breakBattleConcentration,
@@ -91,6 +94,86 @@ import type { MovablePersistentAreaEffect } from "./battle-reducer/persistent-sp
 type MoonbeamEffect = MovablePersistentAreaEffect;
 
 describe("L12G deterministic Moonbeam admission", () => {
+  test("admission correlates the initial save with the selected area hole without recognizing its authored spelling", () => {
+    const spell = spellRecord(moonbeamUnitId);
+    if (
+      spell.mechanics.family !== "ongoing_effect" ||
+      spell.mechanics.attachment.kind !== "hole" ||
+      spell.mechanics.initialPhase?.kind !== "save_gate" ||
+      spell.mechanics.initialPhase.attachment?.kind !== "hole"
+    ) {
+      throw new Error("Expected a hole-attached ongoing save fixture.");
+    }
+    const renamedHoleId = "synthetic_directed_area";
+    const renamed = decodeSpellRecordForTest({
+      ...spell,
+      mechanics: {
+        ...spell.mechanics,
+        attachment: {
+          ...spell.mechanics.attachment,
+          holeId: renamedHoleId,
+        },
+        initialPhase: {
+          ...spell.mechanics.initialPhase,
+          attachment: {
+            ...spell.mechanics.initialPhase.attachment,
+            holeId: renamedHoleId,
+          },
+        },
+      },
+    });
+    const session = spellBattle({
+      preparedSpells: [renamed],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+
+    expect(
+      discoverBattleActs(session).some((candidate) => {
+        const invocation = battleActSpellPresentation(candidate)?.invocation;
+        return (
+          invocation?.spellId === moonbeamUnitId &&
+          invocation.procedure === "persistentAreaSaveDamage"
+        );
+      }),
+    ).toBe(true);
+  });
+
+  test("admission rejects an initial save whose area reference differs from the selected area hole", () => {
+    const spell = spellRecord(moonbeamUnitId);
+    if (
+      spell.mechanics.family !== "ongoing_effect" ||
+      spell.mechanics.initialPhase?.kind !== "save_gate" ||
+      spell.mechanics.initialPhase.attachment?.kind !== "hole"
+    ) {
+      throw new Error("Expected a hole-attached ongoing save fixture.");
+    }
+    const mismatched = decodeSpellRecordForTest({
+      ...spell,
+      mechanics: {
+        ...spell.mechanics,
+        initialPhase: {
+          ...spell.mechanics.initialPhase,
+          attachment: {
+            ...spell.mechanics.initialPhase.attachment,
+            holeId: "synthetic_unrelated_area",
+          },
+        },
+      },
+    });
+    const session = spellBattle({
+      preparedSpells: [mismatched],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+
+    expect(
+      discoverBattleActs(session).some(
+        (candidate) =>
+          battleActSpellPresentation(candidate)?.invocation.spellId ===
+          moonbeamUnitId,
+      ),
+    ).toBe(false);
+  });
+
   test("persistentAreaSaveDamage discovery projects a movable Cylinder CON-save radiant hazard", () => {
     const spell = spellRecord(moonbeamUnitId);
     const state = spellBattle({
