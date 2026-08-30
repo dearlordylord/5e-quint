@@ -2279,7 +2279,7 @@ function featherFallTriggerFacts(
       reactorId: spellCasterId,
       sourceProcedureRef,
       witness: {
-        kind: "visibleCreatureWithinRangeFalls",
+        kind: "visibleCreatureFalls",
         fallingCreatureId,
         distanceFeet: movementFeet(60),
       },

@@ -1,6 +1,6 @@
 -- Continual Flame — SRD 5.2.1 Spell, Level 2, Evocation.
 -- Permanent light source placed on a touched object. No concentration,
--- permanent duration until dispelled. Effect: emit_light 20 ft bright +
+-- permanent duration until dispelled. Effect: emit_bright_and_dim_illumination 20 ft bright +
 -- 20 ft dim additional.
 
 let continualFlame =
@@ -41,7 +41,7 @@ let continualFlame =
                         }
                     }
                 , effects =
-                    [ { kind = "emit_light"
+                    [ { kind = "emit_bright_and_dim_illumination"
                       , brightRadiusFeet = 20
                       , dimAdditionalFeet = 20
                       }

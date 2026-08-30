@@ -40,7 +40,7 @@ describe("Reaction spell route subjects", () => {
             featherFallInvocation,
           ),
           witness: {
-            kind: "visibleCreatureWithinRangeFalls",
+            kind: "visibleCreatureFalls",
             fallingCreatureId: spellTargetId,
             distanceFeet: movementFeet(60),
           },

@@ -226,12 +226,8 @@ function syntheticOutlineSpell(): SpellRecord {
           onFail: {
             ...phase.onFail,
             effects: phase.onFail.effects.map((effect) =>
-              effect.kind === "emit_light"
-                ? {
-                    ...effect,
-                    brightRadiusFeet: 0,
-                    dimAdditionalFeet: 17,
-                  }
+              effect.kind === "emit_dim_illumination"
+                ? { ...effect, radiusFeet: 17 }
                 : effect,
             ),
           },
@@ -261,7 +257,7 @@ function syntheticAfterHitSpell(): SpellRecord {
           ? {
               ...operation,
               effect: {
-                kind: "emit_light" as const,
+                kind: "emit_bright_and_dim_illumination" as const,
                 brightRadiusFeet: 9,
                 dimAdditionalFeet: 4,
               },

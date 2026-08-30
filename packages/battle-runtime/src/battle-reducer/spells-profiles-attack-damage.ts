@@ -174,9 +174,8 @@ export function supportedSpellPostDamageRiders(
       continue;
     }
     if (
-      effect.kind === "emit_dim_light" &&
+      effect.kind === "emit_dim_illumination_until_end_of_caster_next_turn" &&
       effect.radiusFeet === 10 &&
-      effect.expiresAt === "end_of_caster_next_turn" &&
       isDimLightEmissionRiderShape(spell, phase)
     ) {
       riders.push({

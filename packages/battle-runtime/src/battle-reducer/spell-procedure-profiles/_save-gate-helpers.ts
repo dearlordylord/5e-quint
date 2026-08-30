@@ -723,11 +723,11 @@ function visibilityGrantingAreaFailedSaveFacts(
       candidate.condition === "invisible",
   );
   const illuminationEffects = effect.effects.filter(
-    (candidate) => candidate.kind === "emit_light",
+    (candidate) => candidate.kind === "emit_dim_illumination",
   );
   const illumination =
     illuminationEffects.length === 1 &&
-    illuminationEffects[0]?.kind === "emit_light"
+    illuminationEffects[0]?.kind === "emit_dim_illumination"
       ? illuminationEmissionFactsFromSurface({
           effect: illuminationEffects[0],
           opaqueCoverInteraction: { kind: "doesNotBlockEmission" },

@@ -14,7 +14,7 @@
 --
 -- Family: ongoing_effect (Timed, 1 hour, no concentration).
 -- Attachment: area (sphere r=60, point_within_range) — primary mode.
--- Operation: passive → emit_light (bright 60 ft + dim 60 ft beyond).
+-- Operation: passive → emit_bright_and_dim_illumination (bright 60 ft + dim 60 ft beyond).
 --
 -- OMITTED (surface widening, not a blocking failure):
 --   1. Object-attachment mode ("Alternatively, cast on an object"):
@@ -62,7 +62,7 @@ let daylight =
           , operations =
               [ { trigger = { kind = "passive" }
                 , effect =
-                    { kind = "emit_light"
+                    { kind = "emit_bright_and_dim_illumination"
                     , brightRadiusFeet = 60
                     , dimAdditionalFeet = 60
                     }

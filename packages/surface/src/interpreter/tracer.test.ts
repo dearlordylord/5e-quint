@@ -606,8 +606,8 @@ describe("Surface trace interpreter", () => {
           label: "ongoing_predicate\nspell-created held object active",
         }),
         expect.objectContaining({
-          atomKind: "emit_light",
-          label: "emit_light\nbright: 10 ft\ndim: +10 ft",
+          atomKind: "emit_bright_and_dim_illumination",
+          label: "emit_bright_and_dim_illumination\nbright: 10 ft\ndim: +10 ft",
         }),
         expect.objectContaining({
           atomKind: "attack_roll",

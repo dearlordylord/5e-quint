@@ -168,11 +168,11 @@ function afterHitDamageAndIlluminationSpellProjection(
   );
   const illuminationEffect = operationEffects.find(
     (effect) =>
-      effect.kind === "emit_light" ||
+      effect.kind === "emit_bright_and_dim_illumination" ||
       effect.kind === "emit_bright_illumination",
   );
   const illumination =
-    illuminationEffect?.kind === "emit_light" ||
+    illuminationEffect?.kind === "emit_bright_and_dim_illumination" ||
     illuminationEffect?.kind === "emit_bright_illumination"
       ? illuminationEmissionFactsFromSurface({
           effect: illuminationEffect,

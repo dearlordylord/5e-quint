@@ -197,7 +197,7 @@ function ramMovablePersistentAreaSpell(
   const lightOperation = spell.mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "passive" &&
-      operation.effect.kind === "emit_light",
+      operation.effect.kind === "emit_bright_and_dim_illumination",
   );
 
   if (
@@ -231,7 +231,7 @@ function ramMovablePersistentAreaSpell(
     igniteOperation?.effect.kind !== "ignite_objects" ||
     igniteOperation.effect.filter.material !== "flammable" ||
     igniteOperation.effect.filter.targetRelation !== "not_worn_or_carried" ||
-    lightOperation?.effect.kind !== "emit_light" ||
+    lightOperation?.effect.kind !== "emit_bright_and_dim_illumination" ||
     lightOperation.effect.brightRadiusFeet !==
       RAM_MOVABLE_PERSISTENT_AREA_LIGHT_BRIGHT_RADIUS_FEET ||
     lightOperation.effect.dimAdditionalFeet !==

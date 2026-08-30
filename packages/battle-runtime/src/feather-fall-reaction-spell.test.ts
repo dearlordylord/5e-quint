@@ -450,9 +450,40 @@ describe("Feather Fall Reaction spell", () => {
             invocationRef,
           ),
           witness: {
-            kind: "visibleCreatureWithinRangeFalls",
+            kind: "visibleCreatureFalls",
             fallingCreatureId: fallingAId,
             distanceFeet: movementFeet(61),
+          },
+        },
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
+  });
+
+  test("does not offer Feather Fall when the visible witness names another falling creature", () => {
+    const session = battleWithFeatherFall();
+    const invocationRef = spellSlotInvocationRef(
+      featherFallUnitId,
+      1,
+      "fallingCreatureMitigationReaction",
+    );
+    const result = openCreatureFallsInterruptWindow({
+      state: session.state,
+      fallingCreatureId: fallingAId,
+      reactionSpellTargetFacts: [
+        {
+          kind: "fallingCreatureMitigationTrigger",
+          reactorId: casterId,
+          sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+            session,
+            casterId,
+            invocationRef,
+          ),
+          witness: {
+            kind: "visibleCreatureFalls",
+            fallingCreatureId: fallingBId,
+            distanceFeet: movementFeet(30),
           },
         },
       ],
@@ -826,7 +857,7 @@ function featherFallTriggerFacts(
             invocationRef,
           ),
           witness: {
-            kind: "visibleCreatureWithinRangeFalls",
+            kind: "visibleCreatureFalls",
             fallingCreatureId,
             distanceFeet: movementFeet(30),
           },

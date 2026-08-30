@@ -151,7 +151,9 @@ function isObjectLightDirectPhase(
     phase.attachment.value.count === 1 &&
     phase.attachment.value.filter?.targetRelation === "not_worn_or_carried" &&
     phase.attachment.value.filter?.maxSize === LIGHT_OBJECT_MAX_SIZE &&
-    phase.effects?.some((effect) => effect.kind === "emit_light") === true
+    phase.effects?.some(
+      (effect) => effect.kind === "emit_bright_and_dim_illumination",
+    ) === true
   );
 }
 
@@ -169,11 +171,11 @@ function admitCantripObjectLight(
       ? undefined
       : lightPhase.effects;
   const lightEffect = lightEffects?.find(
-    (effect) => effect.kind === "emit_light",
+    (effect) => effect.kind === "emit_bright_and_dim_illumination",
   );
   if (
     lightEffect === undefined ||
-    lightEffect.kind !== "emit_light" ||
+    lightEffect.kind !== "emit_bright_and_dim_illumination" ||
     maxObjectSize === undefined ||
     lightEffect.brightRadiusFeet !== 20 ||
     lightEffect.dimAdditionalFeet !== 20
@@ -251,7 +253,9 @@ function isTouchedObjectLightDirectPhase(
     phase.attachment.value.kind === "object" &&
     phase.attachment.value.count === 1 &&
     phase.attachment.value.filter === undefined &&
-    phase.effects?.some((effect) => effect.kind === "emit_light") === true
+    phase.effects?.some(
+      (effect) => effect.kind === "emit_bright_and_dim_illumination",
+    ) === true
   );
 }
 
@@ -270,13 +274,13 @@ function admitPreparedObjectLight(
       ? undefined
       : lightPhase.effects;
   const lightEffect = lightEffects?.find(
-    (effect) => effect.kind === "emit_light",
+    (effect) => effect.kind === "emit_bright_and_dim_illumination",
   );
   const brightRadiusFeet = lightEffect?.brightRadiusFeet;
   const dimAdditionalFeet = lightEffect?.dimAdditionalFeet;
   if (
     lightEffect === undefined ||
-    lightEffect.kind !== "emit_light" ||
+    lightEffect.kind !== "emit_bright_and_dim_illumination" ||
     brightRadiusFeet !== 20 ||
     dimAdditionalFeet !== 20
   ) {

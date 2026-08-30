@@ -352,16 +352,15 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
       "light names an illumination or weapon-property mechanic",
     ),
   ),
-  ...["emit_light", "movableLightManifestation"].flatMap((identifier) =>
+  ...["movableLightManifestation"].flatMap((identifier) =>
     exactCollision(
       "light",
       identifier,
       [
         "discriminant-literal",
         "protocol-array-member",
-        ...(identifier === "emit_light"
-          ? []
-          : ["registry-key", "schema-discriminant-literal"]),
+        "registry-key",
+        "schema-discriminant-literal",
       ],
       "light names an illumination mechanic",
     ),
@@ -1231,9 +1230,9 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "5e9b769511126464e6498404af0c921f8551531a1dbd48fd95a492be353fb478",
-  siteCount: 1206,
-  violationCount: 1337,
+  sha256: "fd9033a1f5b8374aa27bb42e15312971ecf1a9b9ae9183d5ee73fe9cb5697125",
+  siteCount: 1199,
+  violationCount: 1330,
 };
 
 function escapeForRegExp(text) {

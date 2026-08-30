@@ -162,7 +162,7 @@ type SpellCreatedHeldObjectLightOperation =
   OngoingEffectSpellMechanics["operations"][number] & {
     readonly effect: Extract<
       OngoingEffectSpellMechanics["operations"][number]["effect"],
-      { readonly kind: "emit_light" }
+      { readonly kind: "emit_bright_and_dim_illumination" }
     >;
   };
 
@@ -244,7 +244,7 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
     (operation): operation is SpellCreatedHeldObjectLightOperation =>
       operation.trigger.kind === "passive" &&
       operation.predicate?.kind === "spell_created_held_object_active" &&
-      operation.effect.kind === "emit_light",
+      operation.effect.kind === "emit_bright_and_dim_illumination",
   );
   const attackOperations = mechanics.operations.filter(
     (operation): operation is SpellCreatedHeldObjectAttackOperation =>
@@ -268,9 +268,7 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
     attackOperations.length !== 1 ||
     heldObject?.kind !== "spell_created_held_object" ||
     !spellCreatedHeldObjectLifecycleIsSupported(heldObject) ||
-    lightOperation?.effect.kind !== "emit_light" ||
-    lightOperation.effect.brightRadiusFeet === undefined ||
-    lightOperation.effect.dimAdditionalFeet === undefined ||
+    lightOperation?.effect.kind !== "emit_bright_and_dim_illumination" ||
     attackOperation === undefined ||
     Result.isFailure(durationTicks)
   ) {

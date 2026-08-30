@@ -1527,6 +1527,65 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("keeps combined, bright-only, and dim-only illumination states distinct", () => {
+    const decode = Schema.decodeUnknownResult(Schema.toType(EffectAtomSchema));
+
+    expect(
+      Result.isSuccess(
+        decode({
+          kind: "emit_bright_and_dim_illumination",
+          brightRadiusFeet: 20,
+          dimAdditionalFeet: 20,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decode({
+          kind: "emit_bright_and_dim_illumination",
+          brightRadiusFeet: 0,
+          dimAdditionalFeet: 10,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decode({
+          kind: "emit_bright_and_dim_illumination",
+          brightRadiusFeet: 10,
+          dimAdditionalFeet: 0,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        decode({ kind: "emit_dim_illumination", radiusFeet: 10 }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decode({ kind: "emit_dim_illumination", radiusFeet: 0 }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isSuccess(
+        decode({
+          kind: "emit_dim_illumination_until_end_of_caster_next_turn",
+          radiusFeet: 10,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        decode({
+          kind: "emit_light",
+          brightRadiusFeet: 20,
+          dimAdditionalFeet: 20,
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("keeps See Invisibility as a narrow sight override, not Truesight", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
@@ -3168,7 +3227,7 @@ describe("SRD Unit catalog boundary", () => {
         {
           trigger: { kind: "passive" },
           effect: {
-            kind: "emit_light",
+            kind: "emit_bright_and_dim_illumination",
             brightRadiusFeet: 20,
             dimAdditionalFeet: 20,
           },
@@ -3313,7 +3372,7 @@ describe("SRD Unit catalog boundary", () => {
           trigger: { kind: "passive" },
           predicate: { kind: "spell_created_held_object_active" },
           effect: {
-            kind: "emit_light",
+            kind: "emit_bright_and_dim_illumination",
             brightRadiusFeet: 10,
             dimAdditionalFeet: 10,
           },

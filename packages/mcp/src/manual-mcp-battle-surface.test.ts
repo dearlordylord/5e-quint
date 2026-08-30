@@ -823,7 +823,7 @@ describe("manual MCP battle surface coverage", () => {
           reactorId: "fighter",
           sourceProcedureRef: featherFallProcedureRef,
           witness: {
-            kind: "visibleCreatureWithinRangeFalls",
+            kind: "visibleCreatureFalls",
             fallingCreatureId: "ally",
             distanceFeet: 60,
           },

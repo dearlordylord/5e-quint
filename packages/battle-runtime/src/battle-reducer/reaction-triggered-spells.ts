@@ -348,7 +348,7 @@ function fallingCreatureMitigationTriggerFactMatchesFrame(
       { kind: "reactorFalls" },
       () => fact.reactorId === fallingCreatureId,
     ),
-    Match.when({ kind: "visibleCreatureWithinRangeFalls" }, (witness) =>
+    Match.when({ kind: "visibleCreatureFalls" }, (witness) =>
       witness.fallingCreatureId !== fallingCreatureId
         ? false
         : Match.value(requirement).pipe(

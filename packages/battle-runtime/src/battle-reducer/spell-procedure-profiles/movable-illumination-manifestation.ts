@@ -220,7 +220,7 @@ function movableLightSpell(
   const lightOperation = spell.mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "passive" &&
-      operation.effect.kind === "emit_light",
+      operation.effect.kind === "emit_dim_illumination",
   );
   const repositionOperation = spell.mechanics.operations.find(
     (operation) =>
@@ -229,9 +229,8 @@ function movableLightSpell(
       operation.effect.kind === "reposition_attachment",
   );
   if (
-    lightOperation?.effect.kind !== "emit_light" ||
-    lightOperation.effect.brightRadiusFeet !== 0 ||
-    lightOperation.effect.dimAdditionalFeet !==
+    lightOperation?.effect.kind !== "emit_dim_illumination" ||
+    lightOperation.effect.radiusFeet !==
       Number(MOVABLE_LIGHT_DIM_LIGHT_RADIUS_FEET) ||
     repositionOperation?.effect.kind !== "reposition_attachment" ||
     repositionOperation.effect.maxMoveFeet !== MOVABLE_LIGHT_REPOSITION_MAX_FEET

@@ -23,7 +23,6 @@ let Effect =
             , tiers : List { atLevel : Natural, override : { dice : Natural } }
             }
       , radiusFeet : Optional Natural
-      , expiresAt : Optional Text
       , condition : Optional Text
       }
 
@@ -37,7 +36,6 @@ let defaultEffect : Effect =
           , tiers : List { atLevel : Natural, override : { dice : Natural } }
           }
       , radiusFeet = None Natural
-      , expiresAt = None Text
       , condition = None Text
       }
 
@@ -87,9 +85,8 @@ let starryWisp =
                                 ]
                             }
                       , radiusFeet = None Natural
-                      , expiresAt = None Text
                       }
-                    , defaultEffect // { kind = "emit_dim_light"
+                    , defaultEffect // { kind = "emit_dim_illumination_until_end_of_caster_next_turn"
                       , damageType = None Text
                       , amount =
                           None
@@ -103,7 +100,6 @@ let starryWisp =
                                   }
                             }
                       , radiusFeet = Some 10
-                      , expiresAt = Some "end_of_caster_next_turn"
                       }
                     , defaultEffect // { kind = "suppress_condition_benefit"
                       , condition = Some "invisible"
@@ -120,7 +116,6 @@ let starryWisp =
                                   }
                             }
                       , radiusFeet = None Natural
-                      , expiresAt = None Text
                       }
                     ]
                 , onMiss = [ { kind = "none" } ]

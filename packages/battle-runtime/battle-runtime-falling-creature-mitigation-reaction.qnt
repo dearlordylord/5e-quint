@@ -9,7 +9,7 @@ module battleRuntimeFallingCreatureMitigationReaction {
 
   type FallingCreatureMitigationTriggerWitness[a] =
     | ReactorFalls({ reactor: a })
-    | VisibleCreatureWithinRangeFalls({
+    | VisibleCreatureFalls({
         reactor: a,
         fallingCreature: a,
         distanceFeet: int,
@@ -20,28 +20,34 @@ module battleRuntimeFallingCreatureMitigationReaction {
   ): a =
     match witness {
       | ReactorFalls(data) => data.reactor
-      | VisibleCreatureWithinRangeFalls(data) => data.reactor
+      | VisibleCreatureFalls(data) => data.reactor
     }
 
   pure def fallingCreatureMitigationTriggerAdmitted(
     witness: FallingCreatureMitigationTriggerWitness[a],
+    triggeringFallingCreature: a,
   ): bool =
     match witness {
-      | ReactorFalls(_) => true
-      | VisibleCreatureWithinRangeFalls(data) =>
-          data.distanceFeet >= 0 and
+      | ReactorFalls(data) => data.reactor == triggeringFallingCreature
+      | VisibleCreatureFalls(data) =>
+          data.fallingCreature == triggeringFallingCreature and
+            data.distanceFeet >= 0 and
             data.distanceFeet <= fallingCreatureMitigationTriggerRangeFeet
     }
 
   pure def fallingCreatureMitigationReactionAdmitted(
     triggerWitness: FallingCreatureMitigationTriggerWitness[a],
+    triggeringFallingCreature: a,
     reactorCanReact: bool,
     reactorCanExpendSpellSlot: bool,
     selectedTargetCount: int,
     suppliedTargetCount: int,
     everySelectedTargetIsFalling: bool,
   ): bool =
-    fallingCreatureMitigationTriggerAdmitted(triggerWitness) and
+    fallingCreatureMitigationTriggerAdmitted(
+      triggerWitness,
+      triggeringFallingCreature,
+    ) and
       reactorCanReact and
       reactorCanExpendSpellSlot and
       selectedTargetCount >= 1 and

@@ -2041,7 +2041,7 @@ export type BattleFallingCreatureMitigationTriggerFact = {
   readonly witness:
     | { readonly kind: "reactorFalls" }
     | {
-        readonly kind: "visibleCreatureWithinRangeFalls";
+        readonly kind: "visibleCreatureFalls";
         readonly fallingCreatureId: CombatantId;
         readonly distanceFeet: MovementFeet;
       };

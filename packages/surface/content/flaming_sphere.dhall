@@ -147,7 +147,7 @@ let igniteEffect =
       } : Effect
 
 let lightEffect =
-      { kind = "emit_light"
+      { kind = "emit_bright_and_dim_illumination"
       , attachment = None AreaHole
       , ability = None Text
       , dc = None { kind : Text }

@@ -138,7 +138,7 @@ module battleRuntimeScalarBuffTests {
       assert(invalidWithoutCleanup == FlyEndInvalid({ state: laterCasterTurn, target: Fighter })),
       assert(stateHasFlySpeedGrantEndFallCleanupFrame(pendingCleanup, Fighter)),
       assert(fallsAfterBreak == FlyEndFalls({
-        state: resolveFeatherFallSpell(cleanedLaterCasterTurn, ReactorFalls({ reactor: Fighter }), Set(Fighter), Set(Fighter), 1),
+        state: resolveFeatherFallSpell(cleanedLaterCasterTurn, Fighter, ReactorFalls({ reactor: Fighter }), Set(Fighter), Set(Fighter), 1),
         target: Fighter,
       })),
       assert(fallsAfterExpire == FlyEndFalls({ state: stateWithoutEndedFlySpeedGrant(expiringState, Fighter, Fighter), target: Fighter })),

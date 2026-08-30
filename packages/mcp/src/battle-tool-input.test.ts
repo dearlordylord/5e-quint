@@ -40,7 +40,7 @@ describe("battle tool input", () => {
             reactorId: actorId,
             sourceProcedureRef,
             witness: {
-              kind: "visibleCreatureWithinRangeFalls",
+              kind: "visibleCreatureFalls",
               fallingCreatureId,
               distanceFeet: 60,
             },
@@ -59,7 +59,7 @@ describe("battle tool input", () => {
           reactorId: actorId,
           sourceProcedureRef,
           witness: {
-            kind: "visibleCreatureWithinRangeFalls",
+            kind: "visibleCreatureFalls",
             fallingCreatureId,
             distanceFeet: 60,
           },

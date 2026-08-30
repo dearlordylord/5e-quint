@@ -27,8 +27,7 @@ let Effect =
       , mode : Optional Text
       , on : Optional (List Text)
       , condition : Optional Text
-      , brightRadiusFeet : Optional Natural
-      , dimAdditionalFeet : Optional Natural
+      , radiusFeet : Optional Natural
       }
 
 let defaultEffect
@@ -37,8 +36,7 @@ let defaultEffect
       , mode = None Text
       , on = None (List Text)
       , condition = None Text
-      , brightRadiusFeet = None Natural
-      , dimAdditionalFeet = None Natural
+      , radiusFeet = None Natural
       }
 
 let faerieFire =
@@ -83,9 +81,8 @@ let faerieFire =
                       , condition = Some "invisible"
                       }
                 ,     defaultEffect
-                  //  { kind = "emit_light"
-                      , brightRadiusFeet = Some 0
-                      , dimAdditionalFeet = Some 10
+                  //  { kind = "emit_dim_illumination"
+                      , radiusFeet = Some 10
                       }
                 ]
               }

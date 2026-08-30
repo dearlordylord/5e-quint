@@ -195,9 +195,10 @@ export function traceEffectAtom(
     case "remote_perception":
     case "set_speed":
     case "set_speed_ratio":
-    case "emit_light":
+    case "emit_bright_and_dim_illumination":
     case "emit_bright_illumination":
-    case "emit_dim_light":
+    case "emit_dim_illumination":
+    case "emit_dim_illumination_until_end_of_caster_next_turn":
     case "block_reanimation":
     case "ignite_objects":
     case "create_object":

@@ -154,9 +154,6 @@ export const SpellSlotLevelSchema = Schema.Literals(SPELL_SLOT_LEVELS);
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
 );
-const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
-);
 type StandardActionKind = Schema.Schema.Type<typeof StandardActionKindSchema>;
 
 const ACTION_RESTRICTION_ACTIONS_WITHOUT_ATTACK_LIMIT = [
@@ -1539,7 +1536,7 @@ type EffectAtom =
       readonly switchCost?: "bonus_action";
     }
   | {
-      readonly kind: "emit_light";
+      readonly kind: "emit_bright_and_dim_illumination";
       readonly brightRadiusFeet: number;
       readonly dimAdditionalFeet: number;
     }
@@ -1548,9 +1545,12 @@ type EffectAtom =
       readonly radiusFeet: number;
     }
   | {
-      readonly kind: "emit_dim_light";
+      readonly kind: "emit_dim_illumination";
       readonly radiusFeet: number;
-      readonly expiresAt: "end_of_caster_next_turn";
+    }
+  | {
+      readonly kind: "emit_dim_illumination_until_end_of_caster_next_turn";
+      readonly radiusFeet: number;
     }
   | {
       readonly kind: "spell_created_held_object";
@@ -4291,8 +4291,8 @@ export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
           switchCost: optionalExact(Schema.Literal("bonus_action")),
         }),
         Schema.Struct({
-          kind: Schema.Literal("emit_light"),
-          brightRadiusFeet: NonNegativeIntegerSchema,
+          kind: Schema.Literal("emit_bright_and_dim_illumination"),
+          brightRadiusFeet: PositiveIntegerSchema,
           dimAdditionalFeet: PositiveIntegerSchema,
         }),
         Schema.Struct({
@@ -4300,9 +4300,14 @@ export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
           radiusFeet: PositiveIntegerSchema,
         }),
         Schema.Struct({
-          kind: Schema.Literal("emit_dim_light"),
-          radiusFeet: Schema.Number,
-          expiresAt: Schema.Literal("end_of_caster_next_turn"),
+          kind: Schema.Literal("emit_dim_illumination"),
+          radiusFeet: PositiveIntegerSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal(
+            "emit_dim_illumination_until_end_of_caster_next_turn",
+          ),
+          radiusFeet: PositiveIntegerSchema,
         }),
         strictStruct({
           kind: Schema.Literal("spell_created_held_object"),

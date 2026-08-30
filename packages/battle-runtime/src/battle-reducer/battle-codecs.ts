@@ -683,7 +683,7 @@ export const BattleFallingCreatureMitigationTriggerFactSchema = Schema.Struct({
   witness: Schema.Union([
     Schema.Struct({ kind: Schema.Literal("reactorFalls") }),
     Schema.Struct({
-      kind: Schema.Literal("visibleCreatureWithinRangeFalls"),
+      kind: Schema.Literal("visibleCreatureFalls"),
       fallingCreatureId: CombatantId,
       distanceFeet: MovementFeet,
     }),

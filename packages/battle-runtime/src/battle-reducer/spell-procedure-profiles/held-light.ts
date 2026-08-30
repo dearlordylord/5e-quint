@@ -109,11 +109,11 @@ function admitHeldLight(
   const lightOperation = spell.mechanics.operations.find(
     (operation) =>
       operation.trigger.kind === "passive" &&
-      operation.effect.kind === "emit_light",
+      operation.effect.kind === "emit_bright_and_dim_illumination",
   );
   if (
     lightOperation === undefined ||
-    lightOperation.effect.kind !== "emit_light" ||
+    lightOperation.effect.kind !== "emit_bright_and_dim_illumination" ||
     lightOperation.effect.brightRadiusFeet !== 20 ||
     lightOperation.effect.dimAdditionalFeet !== 20
   ) {
