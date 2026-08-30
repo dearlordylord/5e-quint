@@ -1740,7 +1740,9 @@ function environmentEndedPersistentAreaSaveDamageActs(
         if (effect.kind !== "persistentAreaSaveDamage") {
           return [];
         }
-        const bound = boundPersistentAreaSaveDamageEffect(combatant, effect);
+        const source = state.combatants.get(effect.sourceCombatantId);
+        if (source === undefined) return [];
+        const bound = boundPersistentAreaSaveDamageEffect(source, effect);
         if (bound?.kind !== "sourceTurnTranslation") return [];
         return [
           environmentEndedPersistentAreaSaveDamageAct(

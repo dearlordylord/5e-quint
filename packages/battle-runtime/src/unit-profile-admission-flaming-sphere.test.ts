@@ -162,9 +162,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: spellCasterId,
         areaId: flamingSphereAreaId,
-        save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
-        damage: { expr: { dice: 2, dieSize: 6 }, damageType: "fire" },
-        ramMaxMoveFeet: movementFeet(30),
+        lifecycle: { kind: "casterActionReposition" },
         expiresAt: {
           kind: "concentration",
           combatantId: spellCasterId,
@@ -238,27 +236,10 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     });
     const damage = requireResultHole(needsDamage, "rolledDice");
     const damageFill = damageRollFillWithGroups(damage, [[3, 4]]);
-    const needsSourceTurnTranslation = resolveBattleSubject({
-      state: targetTurn.state,
-      subject: endWithinFiveFeet.subject,
-      fills: [failedSave, damageFill],
-    });
-    const sourceTurnTranslation = requireResultHole(
-      needsSourceTurnTranslation,
-      "persistentAreaSourceTurnTranslation",
-    );
     const resolved = resolveBattleSubject({
       state: targetTurn.state,
       subject: endWithinFiveFeet.subject,
-      fills: [
-        failedSave,
-        damageFill,
-        {
-          kind: "persistentAreaSourceTurnTranslation",
-          holeId: sourceTurnTranslation.holeId,
-          value: { affectedCombatantIdsInResolutionOrder: [] },
-        },
-      ],
+      fills: [failedSave, damageFill],
     });
 
     expect(resolved).toMatchObject({

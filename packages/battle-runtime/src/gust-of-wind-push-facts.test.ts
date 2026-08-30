@@ -48,7 +48,7 @@ describe("Gust of Wind Line push facts", () => {
           pushDistanceFeet,
         }),
       ).toBe(
-        "Gust of Wind requires caller-supplied Line area, direction, and failed-save push facts.",
+        "directional persistent area requires caller-supplied Line area, direction, and failed-save push facts.",
       );
     },
   );
@@ -60,7 +60,9 @@ describe("Gust of Wind Line push facts", () => {
         failedTargetIds: [spellTargetId],
         pushDistanceFeet,
       }),
-    ).toBe("Gust of Wind push facts must match failed-save targets.");
+    ).toBe(
+      "directional persistent area push facts must match failed-save targets.",
+    );
   });
 
   test("rejects duplicate push facts for one creature", () => {
@@ -73,7 +75,9 @@ describe("Gust of Wind Line push facts", () => {
         failedTargetIds: [spellTargetId],
         pushDistanceFeet,
       }),
-    ).toBe("Gust of Wind push facts must not duplicate targets.");
+    ).toBe(
+      "directional persistent area push facts must not duplicate targets.",
+    );
   });
 
   test("requires one push disposition for every failed save", () => {
@@ -83,7 +87,9 @@ describe("Gust of Wind Line push facts", () => {
         failedTargetIds: [spellTargetId, gustOfWindSecondTargetId],
         pushDistanceFeet,
       }),
-    ).toBe("Gust of Wind push facts must cover every failed-save target.");
+    ).toBe(
+      "directional persistent area push facts must cover every failed-save target.",
+    );
   });
 
   test("rejects a disposition with the wrong push distance", () => {
@@ -102,7 +108,7 @@ describe("Gust of Wind Line push facts", () => {
         pushDistanceFeet,
       }),
     ).toBe(
-      "Gust of Wind push disposition must use the spell's 15-foot distance.",
+      "directional persistent area push disposition must use the spell's 15-foot distance.",
     );
   });
 

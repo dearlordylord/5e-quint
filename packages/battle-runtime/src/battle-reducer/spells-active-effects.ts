@@ -63,7 +63,6 @@ import {
   characterExecutionWithMovableLightReposition,
   characterExecutionWithSpellCreatedHeldObjectProcedures,
   characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack,
-  characterRetainedSpellProcedureExecution,
   characterUnitProcedure,
 } from "../character-execution-queries.ts";
 import type {
@@ -144,6 +143,7 @@ import {
   magicalDarknessPointOriginRadiusFeet,
   persistentAreaTraitRadiusFeet,
 } from "./persistent-spell-area-binding.ts";
+import { spellProcedureBoundToActiveEffect } from "./spell-active-effect-binding.ts";
 import {
   endOfNextTurnExpiration,
   END_OF_NEXT_TURN_DURING_TURN,
@@ -1160,7 +1160,7 @@ export function battleObscurementZones(
                 ];
           }
           return effect.kind === "persistentAreaSaveDamage"
-            ? persistentAreaSaveDamageObscurementZone(combatant, effect)
+            ? persistentAreaSaveDamageObscurementZone(state, effect)
             : [];
         },
       ),
@@ -1168,19 +1168,10 @@ export function battleObscurementZones(
 }
 
 function persistentAreaSaveDamageObscurementZone(
-  owner: BattleCreatureState,
+  state: BattleState,
   effect: PersistentAreaSaveDamageEffect,
 ): readonly BattleObscurementZone[] {
-  if (
-    owner.origin.kind !== "character" ||
-    effect.sourceCombatantId !== owner.combatantId
-  ) {
-    return [];
-  }
-  const procedure = characterRetainedSpellProcedureExecution(
-    owner.origin.execution,
-    effect.sourceProcedureRef,
-  );
+  const procedure = spellProcedureBoundToActiveEffect(state, effect);
   if (procedure?.procedure !== "persistentAreaSaveDamage") {
     return [];
   }
@@ -2742,8 +2733,12 @@ export function markPersistentAreaSaveConditionEscapeSavedThisTurn(
     state,
     effectOwnerId: effect.sourceCombatantId,
     update: (activeEffects) =>
-      activeEffects.map((current) =>
-        current === effect && trigger === "entersArea"
+      activeEffects.map((current) => {
+        const matches =
+          current.kind === "persistentAreaSaveConditionEscape" &&
+          current.effectRef === effect.effectRef &&
+          current.areaId === effect.areaId;
+        return matches && trigger === "entersArea"
           ? {
               ...current,
               entrySavedThisTurn: appendCombatantIdOnce(
@@ -2751,7 +2746,7 @@ export function markPersistentAreaSaveConditionEscapeSavedThisTurn(
                 targetId,
               ),
             }
-          : current === effect
+          : matches
             ? {
                 ...current,
                 startTurnSavedThisTurn: appendCombatantIdOnce(
@@ -2759,8 +2754,8 @@ export function markPersistentAreaSaveConditionEscapeSavedThisTurn(
                   targetId,
                 ),
               }
-            : current,
-      ),
+            : current;
+      }),
   });
 }
 

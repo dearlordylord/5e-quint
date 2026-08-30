@@ -328,9 +328,6 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
           sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           areaId: sleetStormAreaId,
-          radiusFeet: movementFeet(20),
-          heightFeet: movementFeet(40),
-          save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
           savedThisTurn: [],
           expiresAt: {
             kind: "concentration",
@@ -607,7 +604,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Sleet Storm save was already resolved for this target this turn.",
+        "persistent-area save-composite save was already resolved for this target this turn.",
     });
     expect(
       requireCombatant(entryResolved.state, spellCasterId).activeEffects,
@@ -715,7 +712,7 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message:
-        "Sleet Storm save was already resolved for this target this turn.",
+        "persistent-area save-composite save was already resolved for this target this turn.",
     });
     expect(
       requireCombatant(startTurnResolved.state, spellCasterId).activeEffects,

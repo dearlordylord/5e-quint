@@ -281,9 +281,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
           sourceProcedureRef: act.subject.procedureRef,
           sourceCombatantId: spellCasterId,
           areaId: insectPlagueAreaId,
-          radiusFeet: movementFeet(20),
-          save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
-          damage: { expr: { dice: 4, dieSize: 10 }, damageType: "piercing" },
+          lifecycle: { kind: "stationary" },
           savedThisTurn: [],
           expiresAt: {
             kind: "concentration",

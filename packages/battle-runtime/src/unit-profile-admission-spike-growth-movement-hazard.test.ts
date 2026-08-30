@@ -18,7 +18,9 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   executeCompelledApproachMovementFill,
   executeCompelledFleeMovementFill,
+  bonusSpellAct,
   fixedCostMovementReplacementAct,
+  jumpSpellTargetListFill,
   spellAct,
   spellHoleInvocation,
   spikeGrowthAreaFill,
@@ -42,6 +44,7 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import {
   orcRelentlessEnduranceUnitId,
+  jumpUnitId,
   spellCasterId,
   spellTargetId,
   spikeGrowthAreaId,
@@ -402,11 +405,6 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
           sourceProcedureRef: expect.any(String),
           sourceCombatantId: spellCasterId,
           areaId: spikeGrowthAreaId,
-          damage: {
-            expr: { dice: 2, dieSize: 4 },
-            damageType: "piercing",
-          },
-          damagePerFeet: movementFeet(5),
           expiresAt: {
             kind: "concentration",
             combatantId: spellCasterId,
@@ -528,7 +526,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Move received a fill that does not match a pending Spike Growth movement damage hole.",
+        "Move received a fill that does not match a pending area movement-distance damage movement damage hole.",
     });
     const movementThroughHazardFill = movementFill(movement, {
       movementCostFeet: 15,
@@ -915,7 +913,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Spike Growth movement damage distance cannot exceed Difficult Terrain distance.",
+        "area movement-distance damage movement damage distance cannot exceed Difficult Terrain distance.",
     });
   });
 
@@ -1138,30 +1136,89 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
   });
 
   test("Jump movement replacement through spike growth applies movement damage", () => {
-    const { hazard, state } = spikeGrowthTargetTurnState();
-    const target = requireCombatant(state, spellTargetId);
+    const jump = spellRecord(jumpUnitId);
+    const spikeGrowth = spellRecord(spikeGrowthUnitId);
+    const session = spellBattle({
+      preparedSpells: [jump, spikeGrowth],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 2, count: 1 },
+      ],
+    });
+    const jumpCastAct = bonusSpellAct({
+      session,
+      spellId: jumpUnitId,
+      slotLevel: 1,
+    });
+    const jumpTargets = requireHole(
+      jumpCastAct.initialHoles,
+      "spellTargetList",
+    );
+    const jumpCast = resolveBattleSubject({
+      state: session.state,
+      subject: jumpCastAct.subject,
+      fills: [
+        jumpSpellTargetListFill(jumpTargets, spellCasterId, jumpUnitId, [
+          spellTargetId,
+        ]),
+      ],
+    });
+    if (jumpCast.tag !== "resolved") {
+      throw new Error("Expected Jump cast to resolve.");
+    }
+    const firstTargetTurn = endTurn({
+      state: jumpCast.state,
+      actorId: spellCasterId,
+    });
+    if (firstTargetTurn.tag !== "resolved") {
+      throw new Error("Expected first target turn after Jump.");
+    }
+    const nextCasterTurn = endTurn({
+      state: firstTargetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (nextCasterTurn.tag !== "resolved") {
+      throw new Error("Expected next caster turn after Jump.");
+    }
+    const spikeGrowthSession = battleRuntimeSessionForTest({
+      ...session,
+      state: nextCasterTurn.state,
+    });
+    const spikeGrowthAct = spellAct({
+      session: spikeGrowthSession,
+      spellId: spikeGrowthUnitId,
+      slotLevel: 2,
+    });
+    const spikeGrowthArea = requireHole(
+      spikeGrowthAct.initialHoles,
+      "spellAreaChoice",
+    );
+    const spikeGrowthCast = resolveBattleSubject({
+      state: nextCasterTurn.state,
+      subject: spikeGrowthAct.subject,
+      fills: [spikeGrowthAreaFill(spikeGrowthArea)],
+    });
+    if (spikeGrowthCast.tag !== "resolved") {
+      throw new Error("Expected Spike Growth cast to resolve after Jump.");
+    }
+    const targetTurn = endTurn({
+      state: spikeGrowthCast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn after Spike Growth.");
+    }
+    const target = requireCombatant(targetTurn.state, spellTargetId);
     const jumpState = {
-      ...state,
-      combatants: new Map(state.combatants).set(spellTargetId, {
+      ...targetTurn.state,
+      combatants: new Map(targetTurn.state.combatants).set(spellTargetId, {
         ...target,
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "fixedCostMovementReplacement" as const,
-            effectRef: battleEffectExecutionRefForTest("spike-jump"),
-            sourceCombatantId: spellCasterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(spikeGrowthUnitId),
-            ),
-            usedThisTurn: false,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
+        hp: Hp(20),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
       }),
     };
+    const hazard = requireSpikeGrowthHazard(jumpState);
     const jumpAct = fixedCostMovementReplacementAct(jumpState);
     const movement = requireHole(jumpAct.initialHoles, "movement");
 

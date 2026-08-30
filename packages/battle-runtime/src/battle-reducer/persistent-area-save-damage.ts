@@ -1493,9 +1493,9 @@ function persistentAreaSaveDamageEffectForRef(
     }
   }
   if (located === undefined) return undefined;
-  const owner = state.combatants.get(located.effectOwnerId);
-  if (owner === undefined) return undefined;
-  const bound = boundPersistentAreaSaveDamageEffect(owner, located.effect);
+  const source = state.combatants.get(located.effect.sourceCombatantId);
+  if (source === undefined) return undefined;
+  const bound = boundPersistentAreaSaveDamageEffect(source, located.effect);
   if (expectedLifecycle === "stationary" && bound?.kind === "stationary") {
     return {
       effectOwnerId: located.effectOwnerId,

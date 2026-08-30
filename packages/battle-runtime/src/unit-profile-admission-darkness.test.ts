@@ -127,7 +127,6 @@ describe("battle runtime: Darkness", () => {
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: wizardId,
         areaId: "darkness-1",
-        radiusFeet: movementFeet(15),
         expiresAt: {
           kind: "concentration",
           combatantId: wizardId,

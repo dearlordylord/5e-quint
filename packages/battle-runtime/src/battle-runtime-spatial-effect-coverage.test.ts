@@ -70,7 +70,7 @@ describe("battle runtime spatial-effect coverage", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Sleet Storm save is no longer available.",
+      message: "persistent-area save-composite save is no longer available.",
     });
 
     const grease = castGrease();

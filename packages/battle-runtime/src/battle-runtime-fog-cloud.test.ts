@@ -105,7 +105,6 @@ describe("battle runtime: Fog Cloud", () => {
         sourceProcedureRef: expect.any(String),
         sourceCombatantId: wizardId,
         areaId: "fog-1",
-        radiusFeet: movementFeet(20),
         expiresAt: {
           kind: "concentration",
           combatantId: wizardId,
@@ -177,7 +176,7 @@ describe("battle runtime: Fog Cloud", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Fog Cloud area is no longer active.",
+      message: "persistent-area trait area is no longer active.",
     });
   });
 
