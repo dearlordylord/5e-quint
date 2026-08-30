@@ -2,7 +2,6 @@ import { createHash } from "node:crypto";
 import { readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { Result, Schema } from "effect";
 import ts from "typescript";
 
 import { BattleFillSchema } from "../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
@@ -10,6 +9,7 @@ import { statBlockRechargeRollFillMatchesHole } from "../../packages/battle-runt
 import type { BattleFill } from "../../packages/battle-runtime/src/battle-state-execution.ts";
 
 import { canonicalJson, isJsonRecord, repoRoot } from "./transcript.ts";
+import { effectRuntimeForPackageOwners } from "../package-effect-runtime.ts";
 import type { JsonValue } from "./sdk-player/continuation-contract.ts";
 import {
   projectPlayerActsFromEvidence,
@@ -25,6 +25,10 @@ import {
   parseSdkTranscript,
   type SdkCallRecord,
 } from "./sdk-player/sdk-transcript.ts";
+
+const { Result, Schema } = effectRuntimeForPackageOwners([
+  "battle-runtime",
+]).effect;
 
 const FIXED_TRANSCRIPT_BYTES = 38_232_957;
 const FIXED_TRANSCRIPT_SHA256 =

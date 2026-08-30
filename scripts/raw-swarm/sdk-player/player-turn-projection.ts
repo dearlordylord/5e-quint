@@ -25,7 +25,7 @@ import {
   PointPoolResourceSchema,
   UseCountResourceSchema,
 } from "../../../packages/surface/src/surface/schema.ts";
-import { surfaceEffect } from "../../surface-effect-runtime.cjs";
+import { effectRuntimeForPackageOwners } from "../../package-effect-runtime.ts";
 import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue, jsonValue } from "./json-value.ts";
 import {
@@ -33,7 +33,10 @@ import {
   type SdkCallRecord,
 } from "./sdk-transcript.ts";
 
-const { Match, Result, Schema } = surfaceEffect;
+const { Match, Result, Schema } = effectRuntimeForPackageOwners([
+  "surface",
+  "battle-runtime",
+]).effect;
 
 export const PLAYER_TURN_PROJECTION_MAX_BYTES = 32 * 1024;
 export const PLAYER_TACTICAL_NOTE_MAX_BYTES = 4 * 1024;

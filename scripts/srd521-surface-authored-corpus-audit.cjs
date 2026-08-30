@@ -3,9 +3,11 @@ const path = require("node:path");
 const { isDeepStrictEqual } = require("node:util");
 require("tsx/cjs");
 const {
-  surfaceEffect: { Result, Schema },
-  surfaceSchemaAst: SchemaAST,
-} = require("./surface-effect-runtime.cjs");
+  effect: { Result, Schema },
+  schemaAst: SchemaAST,
+} = require("./package-effect-runtime.ts").effectRuntimeForPackageOwners([
+  "surface",
+]);
 const { DAMAGE_TYPES } = require("../packages/shared/src/types.ts");
 const {
   PublishedSrdSurfaceSchema,

@@ -8,9 +8,8 @@ import {
 } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 
-import { Result, Match, Schema } from "effect";
-
 import { BattleInterruptProcedureChoiceSchema } from "../../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
+import { effectRuntimeForPackageOwners } from "../../package-effect-runtime.ts";
 
 import {
   canonicalJson,
@@ -26,6 +25,10 @@ import {
 } from "./sdk-transcript.ts";
 import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue } from "./json-value.ts";
+
+const { Result, Match, Schema } = effectRuntimeForPackageOwners([
+  "battle-runtime",
+]).effect;
 
 export const SDK_AUDIT_SCHEMA_VERSION = 1;
 export const SDK_AUDIT_REVIEW_FACTS_MAX_BYTES = 16 * 1024;

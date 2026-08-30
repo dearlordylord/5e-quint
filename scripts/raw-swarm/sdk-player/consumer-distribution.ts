@@ -13,6 +13,7 @@ import { relative, resolve, sep } from "node:path";
 import { buildSync } from "esbuild";
 
 import { CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS } from "../lane-classification.cjs";
+import { validatedPackageEffectRuntimeBundleDefine } from "../../package-effect-runtime.ts";
 import {
   benchmarkContextForRole,
   type BenchmarkContextDelivery,
@@ -312,6 +313,8 @@ function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
 export function buildConsumerDistribution(
   input: ConsumerDistributionInput,
 ): void {
+  const packageEffectRuntimeBundleDefine =
+    validatedPackageEffectRuntimeBundleDefine(["surface", "battle-runtime"]);
   mkdirSync(input.destination, { recursive: true });
   mkdirSync(input.trustedDestination, { recursive: true });
   const declarationMeasure = emitPublicDeclarations(input.destination);
@@ -382,6 +385,7 @@ export function buildConsumerDistribution(
     platform: "node",
     format: "esm",
     target: "node24",
+    define: packageEffectRuntimeBundleDefine,
     sourcemap: false,
     logLevel: "silent",
   });
@@ -394,6 +398,7 @@ export function buildConsumerDistribution(
     platform: "node",
     format: "esm",
     target: "node24",
+    define: packageEffectRuntimeBundleDefine,
     sourcemap: false,
     logLevel: "silent",
   });
