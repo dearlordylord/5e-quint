@@ -1977,6 +1977,45 @@ describe("Opaque Oracle source-free distribution", () => {
         await terminateOracleStream(trailingLineProcess);
       }
 
+      const persistentSilentScript = [
+        "let responded = false;",
+        'process.stdin.on("data", () => {',
+        "  if (responded) return;",
+        "  responded = true;",
+        `  process.stdout.write(${JSON.stringify(`${response}\n`)});`,
+        "});",
+      ].join("\n");
+      const persistentSilentProcess = launchOracleStream(
+        process.execPath,
+        cleanWorkingDirectory,
+        preload,
+        ["-e", persistentSilentScript],
+      );
+      try {
+        const firstObservation = await evaluateOracleStreamFrame(
+          persistentSilentProcess,
+          Buffer.from("{}"),
+          { scenario: "first response before persistent silence" },
+        );
+        expect(firstObservation.rawLine).toBe(response);
+        await expect(
+          evaluateOracleStreamFrame(
+            persistentSilentProcess,
+            Buffer.from("{}"),
+            {
+              scenario: "persistent silent frame",
+              timeoutMs: 25,
+            },
+          ),
+        ).rejects.toThrow(
+          /Oracle stream response timed out, phase=persistent, scenario="persistent silent frame", deadlineMs=25, pid=\d+, exitCode=null, signalCode=null, stdoutCompleteLines=1, stdoutQueuedLines=0, stdoutPartialFrameBytes=0, pendingFrames=1, activeFrames=1, stderr=""/u,
+        );
+        expect(persistentSilentProcess.pendingWaiters).toHaveLength(0);
+        expect(persistentSilentProcess.activeWaiters.size).toBe(0);
+      } finally {
+        await terminateOracleStream(persistentSilentProcess);
+      }
+
       const missingResponseProcess = launchOracleStream(
         process.execPath,
         cleanWorkingDirectory,
