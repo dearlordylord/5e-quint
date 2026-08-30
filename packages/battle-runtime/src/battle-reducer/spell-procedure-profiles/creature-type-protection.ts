@@ -29,9 +29,9 @@ import {
 import { CombatantId } from "../../identity.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
-  DISPEL_EVIL_AND_GOOD_CREATURE_TYPES,
-  PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
-  PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
+  DISPEL_EVIL_AND_GOOD_CREATURE_TYPES as EXPULSION_PROTECTION_CREATURE_TYPES,
+  PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES as CONDITION_PREVENTION_PROTECTION_CREATURE_TYPES,
+  PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS as PROTECTED_CONDITIONS,
 } from "../domain-constants.ts";
 
 import { spellSelectionResolution } from "../needs-holes-result.ts";
@@ -92,15 +92,15 @@ function creatureTypeProtectionSpellProjection(
   CreatureTypeProtectionSpellInvocation,
   "activeEffect" | "rangeFeet" | "targeting"
 > | null {
-  const protectionFromEvilAndGoodProjection =
-    protectionFromEvilAndGoodSpellProjection(actorId, spell);
+  const conditionPreventionProtectionProjection =
+    conditionPreventionProtectionSpellProjection(actorId, spell);
   return (
-    protectionFromEvilAndGoodProjection ??
-    dispelEvilAndGoodProtectionSpellProjection(actorId, spell)
+    conditionPreventionProtectionProjection ??
+    expulsionProtectionSpellProjection(actorId, spell)
   );
 }
 
-function protectionFromEvilAndGoodSpellProjection(
+function conditionPreventionProtectionSpellProjection(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): Pick<
@@ -141,7 +141,7 @@ function protectionFromEvilAndGoodSpellProjection(
     effect.attackerTypeFilter === undefined ||
     !sameCreatureTypeSet(
       effect.attackerTypeFilter,
-      PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
+      CONDITION_PREVENTION_PROTECTION_CREATURE_TYPES,
     ) ||
     expiresAt === null
   ) {
@@ -160,11 +160,9 @@ function protectionFromEvilAndGoodSpellProjection(
       sourceCombatantId: actorId,
       attackRollMode: "disadvantage",
       protectedAgainstCreatureTypes: [
-        ...PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES,
+        ...CONDITION_PREVENTION_PROTECTION_CREATURE_TYPES,
       ],
-      preventedConditions: [
-        ...PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
-      ],
+      preventedConditions: [...PROTECTED_CONDITIONS],
       preventsPossession: true,
       expiresAt,
     },
@@ -172,7 +170,7 @@ function protectionFromEvilAndGoodSpellProjection(
   };
 }
 
-function dispelEvilAndGoodProtectionSpellProjection(
+function expulsionProtectionSpellProjection(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
 ): Pick<
@@ -211,7 +209,7 @@ function dispelEvilAndGoodProtectionSpellProjection(
     effect.attackerTypeFilter === undefined ||
     !sameCreatureTypeSet(
       effect.attackerTypeFilter,
-      DISPEL_EVIL_AND_GOOD_CREATURE_TYPES,
+      EXPULSION_PROTECTION_CREATURE_TYPES,
     ) ||
     expiresAt === null
   ) {
@@ -224,7 +222,7 @@ function dispelEvilAndGoodProtectionSpellProjection(
       kind: "creatureTypeProtection",
       sourceCombatantId: actorId,
       attackRollMode: "disadvantage",
-      protectedAgainstCreatureTypes: [...DISPEL_EVIL_AND_GOOD_CREATURE_TYPES],
+      protectedAgainstCreatureTypes: [...EXPULSION_PROTECTION_CREATURE_TYPES],
       preventedConditions: [],
       preventsPossession: false,
       expiresAt,
@@ -367,9 +365,7 @@ const CreatureTypeProtectionInvocationSchema = spellProcedureExecutionSchema(
       sourceCombatantId: CombatantId,
       attackRollMode: Schema.Literal("disadvantage"),
       protectedAgainstCreatureTypes: Schema.Array(CreatureTypeSchema),
-      preventedConditions: Schema.Array(
-        Schema.Literals(PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS),
-      ),
+      preventedConditions: Schema.Array(Schema.Literals(PROTECTED_CONDITIONS)),
       preventsPossession: Schema.Boolean,
       expiresAt: BattleActiveEffectExpirationSchema,
     }),

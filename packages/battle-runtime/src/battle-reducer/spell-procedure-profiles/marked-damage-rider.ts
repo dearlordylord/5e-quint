@@ -74,7 +74,7 @@ import {
   spellAbilityChoiceHole,
   spellAbilityChoiceHoleId,
 } from "../spells-damage-fills.ts";
-import { HUNTERS_MARK_FINDING_SKILLS } from "../domain-constants.ts";
+import { HUNTERS_MARK_FINDING_SKILLS as MARKED_DAMAGE_RIDER_FINDING_SKILLS } from "../domain-constants.ts";
 import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
 import {
   spendSpellAccessFreeCastResource,
@@ -220,7 +220,7 @@ function markedDamageRiderSpellProjection(spell: BattleSpellAdmissionSource): {
       {
         kind: "findingAdvantage",
         ability: "wis",
-        skills: HUNTERS_MARK_FINDING_SKILLS,
+        skills: MARKED_DAMAGE_RIDER_FINDING_SKILLS,
       },
       "sameTurn",
     );
@@ -229,7 +229,7 @@ function markedDamageRiderSpellProjection(spell: BattleSpellAdmissionSource): {
   if (spell.mechanics.operations.length === 2) {
     const passive = spell.mechanics.operations[1];
     const passiveEffect = passive?.effect;
-    const abilityChoices = hexAbilityChoices(
+    const abilityChoices = markedDamageRiderAbilityChoices(
       passiveEffect?.kind === "modify_roll_advantage"
         ? passiveEffect
         : undefined,
@@ -284,7 +284,7 @@ function markedDamageRiderDamageProjection(
       };
 }
 
-function hexAbilityChoices(
+function markedDamageRiderAbilityChoices(
   effect: EffectAtom | undefined,
 ): readonly Ability[] | null {
   if (effect === undefined || effect.kind !== "modify_roll_advantage") {

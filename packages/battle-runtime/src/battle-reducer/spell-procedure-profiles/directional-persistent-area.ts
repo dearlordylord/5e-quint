@@ -88,14 +88,14 @@ type DirectionalPersistentAreaProfileShape = {
   readonly pushDistanceFeet: number;
 };
 
-const GUST_OF_WIND_LEVEL = 2;
-const GUST_OF_WIND_RANGE_FEET = 0;
-const GUST_OF_WIND_DURATION_MINUTES = 1;
-const GUST_OF_WIND_OPERATION_COUNT = 4;
-const GUST_OF_WIND_LINE_LENGTH_FEET = 60;
-const GUST_OF_WIND_LINE_WIDTH_FEET = 10;
-const GUST_OF_WIND_PUSH_DISTANCE_FEET = 15;
-const GUST_OF_WIND_MOVEMENT_COST_MULTIPLIER = 2;
+const DIRECTIONAL_PERSISTENT_AREA_LEVEL = 2;
+const DIRECTIONAL_PERSISTENT_AREA_RANGE_FEET = 0;
+const DIRECTIONAL_PERSISTENT_AREA_DURATION_MINUTES = 1;
+const DIRECTIONAL_PERSISTENT_AREA_OPERATION_COUNT = 4;
+const DIRECTIONAL_PERSISTENT_AREA_LINE_LENGTH_FEET = 60;
+const DIRECTIONAL_PERSISTENT_AREA_LINE_WIDTH_FEET = 10;
+const DIRECTIONAL_PERSISTENT_AREA_PUSH_DISTANCE_FEET = 15;
+const DIRECTIONAL_PERSISTENT_AREA_MOVEMENT_COST_MULTIPLIER = 2;
 
 function admitDirectionalPersistentArea(
   spell: BattleSpellAdmissionSource,
@@ -108,7 +108,7 @@ function admitDirectionalPersistentArea(
 
   return ctx.spellCastOptions.flatMap(
     (slot): readonly DirectionalPersistentAreaSpellInvocation[] => {
-      if (Number(slot.spellLevel) < GUST_OF_WIND_LEVEL) {
+      if (Number(slot.spellLevel) < DIRECTIONAL_PERSISTENT_AREA_LEVEL) {
         return [];
       }
       return [
@@ -125,10 +125,10 @@ function admitDirectionalPersistentArea(
             widthFeet: movementFeet(line.widthFeet),
           },
           durationTicks: line.durationTicks,
-          rangeFeet: movementFeet(GUST_OF_WIND_RANGE_FEET),
+          rangeFeet: movementFeet(DIRECTIONAL_PERSISTENT_AREA_RANGE_FEET),
           pushDistanceFeet: movementFeet(line.pushDistanceFeet),
           movementCost: {
-            multiplier: GUST_OF_WIND_MOVEMENT_COST_MULTIPLIER,
+            multiplier: DIRECTIONAL_PERSISTENT_AREA_MOVEMENT_COST_MULTIPLIER,
             appliesTo: "towardSource",
           },
         },
@@ -181,20 +181,23 @@ function directionalPersistentAreaSpell(
   );
 
   if (
-    spell.mechanics.level !== GUST_OF_WIND_LEVEL ||
+    spell.mechanics.level !== DIRECTIONAL_PERSISTENT_AREA_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "self" ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== GUST_OF_WIND_DURATION_MINUTES ||
-    spell.mechanics.operations.length !== GUST_OF_WIND_OPERATION_COUNT ||
+    spell.mechanics.duration.upTo.amount !==
+      DIRECTIONAL_PERSISTENT_AREA_DURATION_MINUTES ||
+    spell.mechanics.operations.length !==
+      DIRECTIONAL_PERSISTENT_AREA_OPERATION_COUNT ||
     durationTicks === null ||
     Result.isFailure(durationTicks) ||
     lineArea?.kind !== "area" ||
     lineArea.origin.kind !== "self" ||
     lineArea.shape.kind !== "line" ||
-    lineArea.shape.lengthFeet !== GUST_OF_WIND_LINE_LENGTH_FEET ||
-    lineArea.shape.widthFeet !== GUST_OF_WIND_LINE_WIDTH_FEET ||
+    lineArea.shape.lengthFeet !==
+      DIRECTIONAL_PERSISTENT_AREA_LINE_LENGTH_FEET ||
+    lineArea.shape.widthFeet !== DIRECTIONAL_PERSISTENT_AREA_LINE_WIDTH_FEET ||
     initialSave === null ||
     !isDirectionalPersistentAreaSaveGate(
       endTurnOperation?.effect,
@@ -203,7 +206,7 @@ function directionalPersistentAreaSpell(
     strongWindOperation?.effect.kind !== "area_has_strong_wind" ||
     movementCostOperation?.effect.kind !== "area_movement_cost_multiplier" ||
     movementCostOperation.effect.multiplier !==
-      GUST_OF_WIND_MOVEMENT_COST_MULTIPLIER ||
+      DIRECTIONAL_PERSISTENT_AREA_MOVEMENT_COST_MULTIPLIER ||
     movementCostOperation.effect.appliesTo !== "toward_source" ||
     directionOperation?.effect.kind !== "reposition_attachment" ||
     directionOperation.effect.maxMoveFeet !== undefined
@@ -234,15 +237,17 @@ function isDirectionalPersistentAreaSaveGate(
     effect.attachment.value.origin.kind === "self" &&
     effect.attachment.value.shape.kind === "line" &&
     effect.attachment.value.shape.lengthFeet ===
-      GUST_OF_WIND_LINE_LENGTH_FEET &&
-    effect.attachment.value.shape.widthFeet === GUST_OF_WIND_LINE_WIDTH_FEET &&
+      DIRECTIONAL_PERSISTENT_AREA_LINE_LENGTH_FEET &&
+    effect.attachment.value.shape.widthFeet ===
+      DIRECTIONAL_PERSISTENT_AREA_LINE_WIDTH_FEET &&
     effect.ability === "str" &&
     effect.dc.kind === "caster_spell_save_dc" &&
     effect.onSuccess.kind === "none" &&
     effect.onFail.kind === "force_move" &&
     effect.onFail.movementKind === "push" &&
     effect.onFail.originDirection === "away_from_caster" &&
-    effect.onFail.distanceFeet === GUST_OF_WIND_PUSH_DISTANCE_FEET
+    effect.onFail.distanceFeet ===
+      DIRECTIONAL_PERSISTENT_AREA_PUSH_DISTANCE_FEET
   );
 }
 

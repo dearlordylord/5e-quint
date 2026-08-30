@@ -63,7 +63,7 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 
-const HASTE_POSITIVE_ACTIONS = [
+const COMPOSITE_TARGET_BUFF_GRANTED_ACTIONS = [
   "attack",
   "dash",
   "disengage",
@@ -312,7 +312,7 @@ function isCompositeTargetBuffWithAftermathActionRestriction(
   return (
     sameStringSet(
       restriction.actions.map((action) => action.action),
-      HASTE_POSITIVE_ACTIONS,
+      COMPOSITE_TARGET_BUFF_GRANTED_ACTIONS,
     ) &&
     attack?.attackLimit.kind === "attack_count" &&
     attack.attackLimit.count === 1

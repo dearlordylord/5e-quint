@@ -1,11 +1,11 @@
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-profileShape-ground-hazard unit-feature.metamagic-heightened-save-disadvantage
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
 // The persistentAreaSaveCondition Spell Procedure Profile: action-time Spell Slot
 // casting that creates a one-minute ground-area Difficult Terrain hazard and
-// gates Prone application behind Dexterity Saving Throws when the grease
+// gates Prone application behind Dexterity Saving Throws when the profileShape
 // appears, when a creature enters it, and when a creature ends its turn there.
 //
 // RAW anchors:
@@ -90,8 +90,8 @@ export function supportedPreparedPersistentAreaSaveConditionProfile(
   spell: PersistentAreaSaveConditionSpellInvocation["spell"],
   castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly PersistentAreaSaveConditionSpellInvocation[] {
-  const grease = persistentAreaSaveConditionSpell(spell);
-  if (grease === null) {
+  const profileShape = persistentAreaSaveConditionSpell(spell);
+  if (profileShape === null) {
     return [];
   }
 
@@ -106,11 +106,11 @@ export function supportedPreparedPersistentAreaSaveConditionProfile(
           resource: spellInvocationResourceForCastOption(slot),
           procedure: "persistentAreaSaveCondition",
           spell,
-          ability: grease.phase.ability,
-          dc: grease.phase.dc,
-          targeting: grease.targeting,
-          durationTicks: grease.durationTicks,
-          rangeFeet: grease.rangeFeet,
+          ability: profileShape.phase.ability,
+          dc: profileShape.phase.dc,
+          targeting: profileShape.targeting,
+          durationTicks: profileShape.durationTicks,
+          rangeFeet: profileShape.rangeFeet,
         },
       ];
     },

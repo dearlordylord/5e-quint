@@ -70,13 +70,13 @@ type AreaMovementDistanceDamageProfileShape = {
   readonly damagePerFeet: number;
 };
 
-const SPIKE_GROWTH_LEVEL = 2;
-const SPIKE_GROWTH_RANGE_FEET = 150;
-const SPIKE_GROWTH_DURATION_MINUTES = 10;
-const SPIKE_GROWTH_RADIUS_FEET = 20;
-const SPIKE_GROWTH_DAMAGE_PER_FEET = 5;
-const SPIKE_GROWTH_DAMAGE_DICE = 2;
-const SPIKE_GROWTH_DAMAGE_DIE_SIZE = 4;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_LEVEL = 2;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_RANGE_FEET = 150;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_DURATION_MINUTES = 10;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_RADIUS_FEET = 20;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_INTERVAL_FEET = 5;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_DICE = 2;
+const AREA_MOVEMENT_DISTANCE_DAMAGE_DIE_SIZE = 4;
 
 function admitAreaMovementDistanceDamage(
   spell: BattleSpellAdmissionSource,
@@ -89,7 +89,7 @@ function admitAreaMovementDistanceDamage(
 
   return ctx.spellCastOptions.flatMap(
     (slot): readonly AreaMovementDistanceDamageSpellInvocation[] => {
-      if (Number(slot.spellLevel) < SPIKE_GROWTH_LEVEL) {
+      if (Number(slot.spellLevel) < AREA_MOVEMENT_DISTANCE_DAMAGE_LEVEL) {
         return [];
       }
       return [
@@ -140,30 +140,32 @@ function areaMovementDistanceDamageSpell(
   );
 
   if (
-    spell.mechanics.level !== SPIKE_GROWTH_LEVEL ||
+    spell.mechanics.level !== AREA_MOVEMENT_DISTANCE_DAMAGE_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== SPIKE_GROWTH_RANGE_FEET ||
+    spell.mechanics.range.feet !== AREA_MOVEMENT_DISTANCE_DAMAGE_RANGE_FEET ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== SPIKE_GROWTH_DURATION_MINUTES ||
+    spell.mechanics.duration.upTo.amount !==
+      AREA_MOVEMENT_DISTANCE_DAMAGE_DURATION_MINUTES ||
     durationTicks === null ||
     Result.isFailure(durationTicks) ||
     attachment.kind !== "hole" ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
     area.shape.kind !== "sphere" ||
-    area.shape.radiusFeet !== SPIKE_GROWTH_RADIUS_FEET ||
+    area.shape.radiusFeet !== AREA_MOVEMENT_DISTANCE_DAMAGE_RADIUS_FEET ||
     difficultTerrainOperation?.effect.kind !== "area_is_difficult_terrain" ||
     movementDamageOperation?.trigger.kind !== "on_creature_moves" ||
-    movementDamageOperation.trigger.perFeet !== SPIKE_GROWTH_DAMAGE_PER_FEET ||
+    movementDamageOperation.trigger.perFeet !==
+      AREA_MOVEMENT_DISTANCE_DAMAGE_INTERVAL_FEET ||
     movementDamageOperation.effect.kind !== "damage" ||
     movementDamageOperation.effect.damageType !== "piercing" ||
     movementDamageOperation.effect.amount.kind !== "fixed" ||
     movementDamageOperation.effect.amount.expr.dice !==
-      SPIKE_GROWTH_DAMAGE_DICE ||
+      AREA_MOVEMENT_DISTANCE_DAMAGE_DICE ||
     movementDamageOperation.effect.amount.expr.dieSize !==
-      SPIKE_GROWTH_DAMAGE_DIE_SIZE
+      AREA_MOVEMENT_DISTANCE_DAMAGE_DIE_SIZE
   ) {
     return null;
   }

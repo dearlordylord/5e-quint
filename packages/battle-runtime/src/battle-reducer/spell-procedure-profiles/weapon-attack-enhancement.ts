@@ -112,8 +112,10 @@ function weaponAttackDamageEnhancementProjection(
     spell.mechanics.castingTime.kind !== "bonus_action" ||
     spell.mechanics.range.kind !== "touch" ||
     spell.mechanics.duration.kind !== "timed" ||
-    !magicWeaponAttachmentIsSupported(spell.mechanics.attachment) ||
-    !magicWeaponDurationEarlyEndIsSupported(spell.mechanics.duration) ||
+    !weaponAttackEnhancementAttachmentIsSupported(spell.mechanics.attachment) ||
+    !weaponAttackEnhancementDurationEarlyEndIsSupported(
+      spell.mechanics.duration,
+    ) ||
     spell.mechanics.operations.length !== 1
   ) {
     return null;
@@ -135,7 +137,9 @@ function weaponAttackDamageEnhancementProjection(
   };
 }
 
-function magicWeaponAttachmentIsSupported(attachment: Attachment): boolean {
+function weaponAttackEnhancementAttachmentIsSupported(
+  attachment: Attachment,
+): boolean {
   return (
     attachment.kind === "hole" &&
     attachment.value.kind === "object" &&
@@ -145,7 +149,7 @@ function magicWeaponAttachmentIsSupported(attachment: Attachment): boolean {
   );
 }
 
-function magicWeaponDurationEarlyEndIsSupported(
+function weaponAttackEnhancementDurationEarlyEndIsSupported(
   duration: Extract<
     BattleSpellAdmissionSource["mechanics"]["duration"],
     { readonly kind: "timed" }

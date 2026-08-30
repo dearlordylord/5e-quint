@@ -1,6 +1,6 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 import { ongoingConcentrationAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-profileShape-restraint-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
 //
@@ -82,24 +82,26 @@ type PersistentAreaSaveConditionEscapeProfileShape = {
   readonly sideFeet: number;
 };
 
-const WEB_LEVEL = 2;
-const WEB_RANGE_FEET = 60;
-const WEB_DURATION_HOURS = 1;
-const WEB_OPERATION_COUNT = 7;
-const WEB_CUBE_SIDE_FEET = 20;
+const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_LEVEL = 2;
+const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_RANGE_FEET = 60;
+const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_DURATION_HOURS = 1;
+const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_OPERATION_COUNT = 7;
+const PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CUBE_SIDE_FEET = 20;
 
 function admitPersistentAreaSaveConditionEscape(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly PersistentAreaSaveConditionEscapeSpellInvocation[] {
-  const web = persistentAreaSaveConditionEscapeSpell(spell);
-  if (web === null) {
+  const profileShape = persistentAreaSaveConditionEscapeSpell(spell);
+  if (profileShape === null) {
     return [];
   }
 
   return ctx.spellCastOptions.flatMap(
     (slot): readonly PersistentAreaSaveConditionEscapeSpellInvocation[] => {
-      if (Number(slot.spellLevel) < WEB_LEVEL) {
+      if (
+        Number(slot.spellLevel) < PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_LEVEL
+      ) {
         return [];
       }
       return [
@@ -112,10 +114,10 @@ function admitPersistentAreaSaveConditionEscape(
           dc: { kind: "caster_spell_save_dc" },
           targeting: {
             kind: "pointOriginCube",
-            sideFeet: movementFeet(web.sideFeet),
+            sideFeet: movementFeet(profileShape.sideFeet),
           },
-          durationTicks: web.durationTicks,
-          rangeFeet: movementFeet(web.rangeFeet),
+          durationTicks: profileShape.durationTicks,
+          rangeFeet: movementFeet(profileShape.rangeFeet),
         },
       ];
     },
@@ -162,18 +164,21 @@ function persistentAreaSaveConditionEscapeSpell(
   );
 
   if (
-    mechanics.level !== WEB_LEVEL ||
+    mechanics.level !== PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_LEVEL ||
     mechanics.castingTime.kind !== "action" ||
     mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== WEB_RANGE_FEET ||
+    mechanics.range.feet !== PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_RANGE_FEET ||
     duration.upTo.unit !== "hour" ||
-    duration.upTo.amount !== WEB_DURATION_HOURS ||
-    mechanics.operations.length !== WEB_OPERATION_COUNT ||
+    duration.upTo.amount !==
+      PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_DURATION_HOURS ||
+    mechanics.operations.length !==
+      PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_OPERATION_COUNT ||
     Result.isFailure(durationTicks) ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
     area.shape.kind !== "cube" ||
-    area.shape.sideFeet !== WEB_CUBE_SIDE_FEET ||
+    area.shape.sideFeet !==
+      PERSISTENT_AREA_SAVE_CONDITION_ESCAPE_CUBE_SIDE_FEET ||
     !isPersistentAreaSaveConditionEscapeSaveGate(enterOperation?.effect) ||
     enterOperation?.usageLimit?.kind !== "once_per_turn" ||
     !isPersistentAreaSaveConditionEscapeSaveGate(startTurnOperation?.effect) ||

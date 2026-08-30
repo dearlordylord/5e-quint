@@ -78,12 +78,12 @@ type PersistentAreaSaveCompositeProfileShape = {
   readonly heightFeet: number;
 };
 
-const SLEET_STORM_LEVEL = 3;
-const SLEET_STORM_RANGE_FEET = 150;
-const SLEET_STORM_DURATION_MINUTES = 1;
-const SLEET_STORM_OPERATION_COUNT = 5;
-const SLEET_STORM_RADIUS_FEET = 20;
-const SLEET_STORM_HEIGHT_FEET = 40;
+const PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL = 3;
+const PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET = 150;
+const PERSISTENT_AREA_SAVE_COMPOSITE_DURATION_MINUTES = 1;
+const PERSISTENT_AREA_SAVE_COMPOSITE_OPERATION_COUNT = 5;
+const PERSISTENT_AREA_SAVE_COMPOSITE_RADIUS_FEET = 20;
+const PERSISTENT_AREA_SAVE_COMPOSITE_HEIGHT_FEET = 40;
 
 function admitPersistentAreaSaveComposite(
   spell: BattleSpellAdmissionSource,
@@ -96,7 +96,7 @@ function admitPersistentAreaSaveComposite(
 
   return ctx.spellCastOptions.flatMap(
     (slot): readonly PersistentAreaSaveCompositeSpellInvocation[] => {
-      if (Number(slot.spellLevel) < SLEET_STORM_LEVEL) {
+      if (Number(slot.spellLevel) < PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL) {
         return [];
       }
       return [
@@ -155,19 +155,20 @@ function persistentAreaSaveCompositeSpell(
   );
 
   if (
-    mechanics.level !== SLEET_STORM_LEVEL ||
+    mechanics.level !== PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL ||
     mechanics.castingTime.kind !== "action" ||
     mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== SLEET_STORM_RANGE_FEET ||
+    mechanics.range.feet !== PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET ||
     duration.upTo.unit !== "minute" ||
-    duration.upTo.amount !== SLEET_STORM_DURATION_MINUTES ||
-    mechanics.operations.length !== SLEET_STORM_OPERATION_COUNT ||
+    duration.upTo.amount !== PERSISTENT_AREA_SAVE_COMPOSITE_DURATION_MINUTES ||
+    mechanics.operations.length !==
+      PERSISTENT_AREA_SAVE_COMPOSITE_OPERATION_COUNT ||
     Result.isFailure(durationTicks) ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
     area.shape.kind !== "cylinder" ||
-    area.shape.radiusFeet !== SLEET_STORM_RADIUS_FEET ||
-    area.shape.heightFeet !== SLEET_STORM_HEIGHT_FEET ||
+    area.shape.radiusFeet !== PERSISTENT_AREA_SAVE_COMPOSITE_RADIUS_FEET ||
+    area.shape.heightFeet !== PERSISTENT_AREA_SAVE_COMPOSITE_HEIGHT_FEET ||
     !isPersistentAreaSaveCompositeSaveGate(enterOperation?.effect) ||
     !isPersistentAreaSaveCompositeSaveGate(startTurnOperation?.effect) ||
     sharedSaveLimitGroup === null ||
