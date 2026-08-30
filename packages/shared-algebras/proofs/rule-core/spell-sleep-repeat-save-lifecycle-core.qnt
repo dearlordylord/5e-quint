@@ -49,12 +49,14 @@ module spellSleepRepeatSaveLifecycleCore {
             hadUnconscious,
           ) {
             | NoStagedSaveConditionLifecycle => NoSleepRepeatSaveLifecycle
-            | PendingStagedSaveConditionLifecycle(next) =>
-                PendingSleepRepeatSaveLifecycle({ hadIncapacitated: next.hadCondition })
-            | AppliedStagedSaveConditionLifecycle(next) =>
+            | PendingStagedSaveConditionLifecycle(pendingRepeatSaveLifecycleData) =>
+                PendingSleepRepeatSaveLifecycle({
+                  hadIncapacitated: pendingRepeatSaveLifecycleData.hadCondition,
+                })
+            | AppliedStagedSaveConditionLifecycle(appliedRepeatSaveLifecycleData) =>
                 UnconsciousSleepRepeatSaveLifecycle({
-                  hadIncapacitated: next.hadCondition,
-                  hadUnconscious: next.hadEscalatedCondition,
+                  hadIncapacitated: appliedRepeatSaveLifecycleData.hadCondition,
+                  hadUnconscious: appliedRepeatSaveLifecycleData.hadEscalatedCondition,
                 })
           }
       | NoSleepRepeatSaveLifecycle => NoSleepRepeatSaveLifecycle
