@@ -19,6 +19,7 @@
 //   Action, Bonus Action, Reaction, and Attack Roll.
 
 module battleRuntimeFindFamiliar {
+  import battleRuntimeSpawnedCompanionLifecycle.* from "./battle-runtime-spawned-companion-lifecycle"
   import battleRuntimeModel.* from "./battle-runtime-model"
 
   pure def castFindFamiliarLifecycle(
@@ -32,7 +33,10 @@ module battleRuntimeFindFamiliar {
   ): FindFamiliarLifecycle =
     match prior {
       | PresentFindFamiliar(present) =>
-        if (owner == present.owner and owner != present.familiar and not(ordinaryCombatants.contains(present.familiar))) {
+        if (owner == present.owner and spawnedCompanionIdentityAdmitted(
+          owner == present.familiar,
+          ordinaryCombatants.contains(present.familiar),
+        )) {
           PresentFindFamiliar({
             owner: owner,
             familiar: present.familiar,
@@ -46,7 +50,7 @@ module battleRuntimeFindFamiliar {
           })
         } else prior
       | TemporarilyDismissedFindFamiliar(absent) =>
-        if (owner == familiar or ordinaryCombatants.contains(familiar)) prior
+        if (not(spawnedCompanionIdentityAdmitted(owner == familiar, ordinaryCombatants.contains(familiar)))) prior
         else
           PresentFindFamiliar({
             owner: owner,
@@ -60,7 +64,7 @@ module battleRuntimeFindFamiliar {
             reactionAvailable: absent.reactionAvailable,
           })
       | DisappearedAtZeroHitPointsFindFamiliar(absent) =>
-        if (owner == familiar or ordinaryCombatants.contains(familiar)) prior
+        if (not(spawnedCompanionIdentityAdmitted(owner == familiar, ordinaryCombatants.contains(familiar)))) prior
         else
           PresentFindFamiliar({
             owner: owner,
@@ -74,7 +78,7 @@ module battleRuntimeFindFamiliar {
             reactionAvailable: absent.reactionAvailable,
           })
       | _ =>
-        if (owner == familiar or ordinaryCombatants.contains(familiar)) prior
+        if (not(spawnedCompanionIdentityAdmitted(owner == familiar, ordinaryCombatants.contains(familiar)))) prior
         else
           PresentFindFamiliar({
             owner: owner,
@@ -100,7 +104,7 @@ module battleRuntimeFindFamiliar {
     creatureTypeOverride: FindFamiliarCreatureTypeOverride,
     initiative: int
   ): FindFamiliarLifecycle =
-    if (owner == familiar or ordinaryCombatants.contains(familiar)) prior
+    if (not(spawnedCompanionIdentityAdmitted(owner == familiar, ordinaryCombatants.contains(familiar)))) prior
     else
       PresentFindFamiliar({
         owner: owner,
@@ -203,7 +207,10 @@ module battleRuntimeFindFamiliar {
   ): FindFamiliarLifecycleResult =
     match prior {
       | TemporarilyDismissedFindFamiliar(absent) =>
-        if (magicActionAvailable and absent.owner != familiar and not(ordinaryCombatants.contains(familiar))) {
+        if (magicActionAvailable and spawnedCompanionIdentityAdmitted(
+          absent.owner == familiar,
+          ordinaryCombatants.contains(familiar),
+        )) {
           lifecycle: PresentFindFamiliar({
             owner: absent.owner,
             familiar: familiar,
@@ -273,10 +280,10 @@ module battleRuntimeFindFamiliar {
     actorIsPresentFindFamiliar(lifecycle, actor) and actionAvailable
 
   pure def ordinaryAttackActionAvailableForActor(lifecycle: FindFamiliarLifecycle, actor: Actor, actionAvailable: bool): bool =
-    if (actorIsPresentFindFamiliar(lifecycle, actor)) false else actionAvailable
+    spawnedCompanionOrdinaryAttackAvailable(actorIsPresentFindFamiliar(lifecycle, actor), actionAvailable)
 
   pure def opportunityAttackAvailableForActor(lifecycle: FindFamiliarLifecycle, actor: Actor, reactionAvailable: bool): bool =
-    if (actorIsPresentFindFamiliar(lifecycle, actor)) false else reactionAvailable
+    spawnedCompanionOpportunityAttackAvailable(actorIsPresentFindFamiliar(lifecycle, actor), reactionAvailable)
 
   pure def findFamiliarTelepathicConnection(
     lifecycle: FindFamiliarLifecycle,
@@ -285,7 +292,7 @@ module battleRuntimeFindFamiliar {
   ): Set[FindFamiliarTelepathicConnection] =
     match lifecycle {
       | PresentFindFamiliar(present) =>
-        if (present.owner == owner and familiarWithin100Feet)
+        if (spawnedCompanionConnectionAvailable(present.owner == owner, familiarWithin100Feet))
           Set({
             owner: present.owner,
             familiar: present.familiar,
@@ -304,7 +311,11 @@ module battleRuntimeFindFamiliar {
   ): Set[FindFamiliarSharedSenses] =
     match lifecycle {
       | PresentFindFamiliar(present) =>
-        if (present.owner == owner and familiarWithin100Feet and bonusActionAvailable)
+        if (spawnedCompanionSharedSensesAvailable(
+          present.owner == owner,
+          familiarWithin100Feet,
+          bonusActionAvailable,
+        ))
           Set({
             owner: present.owner,
             familiar: present.familiar,
@@ -325,7 +336,12 @@ module battleRuntimeFindFamiliar {
   ): FindFamiliarTouchSpellDelivery =
     match lifecycle {
       | PresentFindFamiliar(present) =>
-        if (present.owner == owner and spellHasTouchRange and familiarWithin100Feet and present.reactionAvailable)
+        if (spawnedCompanionTouchDeliveryAvailable(
+          present.owner == owner,
+          spellHasTouchRange,
+          familiarWithin100Feet,
+          present.reactionAvailable,
+        ))
           { spellCast: true, familiarReactionSpent: true }
         else
           { spellCast: false, familiarReactionSpent: false }
@@ -341,13 +357,13 @@ module battleRuntimeFindFamiliar {
   ): PactOfTheChainFamiliarReactionAttack =
     match lifecycle {
       | PresentFindFamiliar(present) =>
-        if (
-          present.owner == owner and
-          pactOfTheChainSelected and
-          ownerAttackActionAttackAvailable and
-          present.reactionAvailable and
-          supportedFamiliarActionAttack
-        )
+        if (spawnedCompanionGrantedReactionAttackAvailable(
+          present.owner == owner,
+          pactOfTheChainSelected,
+          ownerAttackActionAttackAvailable,
+          present.reactionAvailable,
+          supportedFamiliarActionAttack,
+        ))
           PactFamiliarReactionAttackResolved
         else
           PactFamiliarReactionAttackRejected

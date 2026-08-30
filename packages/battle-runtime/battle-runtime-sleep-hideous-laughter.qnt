@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-hideous-laughter-repeat-save-lifecycle spell.invocation-hypnotic-pattern-control spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission
 
 module battleRuntimeSleepHideousLaughter {
+  import battleRuntimeRepeatedSaveConditionControl.* from "./battle-runtime-repeated-save-condition-control"
   import battleRuntimeSpellSaveBridge.* from "./battle-runtime-spell-save-bridge"
   import battleRuntimeSpellLifecycleBridge.* from "./battle-runtime-spell-lifecycle-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -186,9 +187,9 @@ module battleRuntimeSleepHideousLaughter {
     }
 
   pure def hideousLaughterMaxTargets(slotLevel: int): int =
-    if (slotLevel <= 1) 1 else slotLevel
+    repeatedSaveConditionMaximumTargets(slotLevel, 1)
 
-  pure def hideousLaughterDurationTicks: int = 10
+  pure def hideousLaughterDurationTicks: int = repeatedSaveConditionDurationTicks
 
   pure def activeEffectsWithoutHideousLaughter(effects: Set[ActiveEffect], source: Actor, targetActor: Actor): Set[ActiveEffect] =
     effects.filter(effect => match effect {
@@ -234,7 +235,7 @@ module battleRuntimeSleepHideousLaughter {
     source: Actor,
     heightenedTarget: Actor,
   ): Combatant =
-    if (savingThrowSucceeded)
+    if (not(repeatedSaveConditionApplies(savingThrowSucceeded, false)))
       target
     else {
       val withoutPrior = combatantWithoutHideousLaughter(target, source, targetActor)
@@ -301,7 +302,7 @@ module battleRuntimeSleepHideousLaughter {
       hideousLaughterDamageRepeatSaveRollMode(target)
 
   pure def combatantAfterHideousLaughterDamageRepeatSave(target: Combatant, source: Actor, targetActor: Actor, damage: int, savingThrowSucceeded: bool): Combatant =
-    if (damage > 0 and savingThrowSucceeded)
+    if (repeatedSaveConditionEndsAfterDamage(damage, savingThrowSucceeded))
       combatantWithoutHideousLaughter(target, source, targetActor)
     else
       target
@@ -312,7 +313,7 @@ module battleRuntimeSleepHideousLaughter {
       | _ => false
     })
 
-  pure def hypnoticPatternDurationTicks: int = 10
+  pure def hypnoticPatternDurationTicks: int = repeatedSaveConditionDurationTicks
 
   pure def activeEffectsWithoutHypnoticPattern(effects: Set[ActiveEffect], source: Actor, targetActor: Actor): Set[ActiveEffect] =
     effects.filter(effect => match effect {
@@ -388,7 +389,10 @@ module battleRuntimeSleepHideousLaughter {
     charmedPrevented: bool,
     source: Actor,
   ): Combatant =
-    if (savingThrowSucceeded or charmedPrevented or combatantHasCharmedImmunity(target))
+    if (not(repeatedSaveConditionApplies(
+      savingThrowSucceeded,
+      charmedPrevented or combatantHasCharmedImmunity(target),
+    )))
       target
     else {
       val withoutPrior = combatantWithoutHypnoticPattern(target, source, targetActor)
@@ -428,13 +432,18 @@ module battleRuntimeSleepHideousLaughter {
     }
 
   pure def combatantAfterHypnoticPatternDamage(target: Combatant, source: Actor, targetActor: Actor, damage: int): Combatant =
-    if (damage > 0)
+    if (damageEndedConditionControl(damage))
       combatantWithoutHypnoticPattern(target, source, targetActor)
     else
       target
 
   pure def shakeAwakeFromHypnoticPattern(state: BattleState, targetActor: Actor, actorWithin5Feet: bool): BattleState =
-    if (not(state.actionAvailable) or not(actorWithin5Feet) or currentActor(state) == targetActor or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated)
+    if (not(adjacentActionEndedConditionControl(
+      state.actionAvailable,
+      actorWithin5Feet,
+      currentActor(state) == targetActor,
+      currentActor(state) == Fighter and not(state.fighter.unconscious) and not(state.fighter.incapacitated),
+    )))
       state
     else {
       match targetActor {

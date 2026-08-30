@@ -1,7 +1,6 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
-
 module spellSleepRepeatSaveLifecycleCore {
+  import spellStagedSaveConditionLifecycleCore.* from "./spell-staged-save-condition-lifecycle-core"
   // RAW anchors:
   // - .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleep:
   //   initial Wisdom Saving Throw, end-of-next-turn repeat save,
@@ -22,16 +21,18 @@ module spellSleepRepeatSaveLifecycleCore {
     savingThrowSucceeded: bool,
     hadIncapacitated: bool,
   ): SleepRepeatSaveLifecycle =
-    if (savingThrowSucceeded)
-      NoSleepRepeatSaveLifecycle
-    else
-      PendingSleepRepeatSaveLifecycle({ hadIncapacitated: hadIncapacitated })
+    match stagedSaveConditionInitialLifecycle(savingThrowSucceeded, hadIncapacitated) {
+      | NoStagedSaveConditionLifecycle => NoSleepRepeatSaveLifecycle
+      | PendingStagedSaveConditionLifecycle(data) =>
+          PendingSleepRepeatSaveLifecycle({ hadIncapacitated: data.hadCondition })
+      | AppliedStagedSaveConditionLifecycle(_) => NoSleepRepeatSaveLifecycle
+    }
 
   pure def sleepSavingThrowAutomaticallySucceeds(
     targetDoesNotSleep: bool,
     targetHasExhaustionImmunity: bool,
   ): bool =
-    targetDoesNotSleep or targetHasExhaustionImmunity
+    stagedSavingThrowAutomaticallySucceeds(targetDoesNotSleep, targetHasExhaustionImmunity)
 
   pure def sleepRepeatSaveLifecycle(
     pending: SleepRepeatSaveLifecycle,
@@ -40,17 +41,25 @@ module spellSleepRepeatSaveLifecycleCore {
   ): SleepRepeatSaveLifecycle =
     match pending {
       | PendingSleepRepeatSaveLifecycle(data) =>
-          if (savingThrowSucceeded)
-            NoSleepRepeatSaveLifecycle
-          else
-            UnconsciousSleepRepeatSaveLifecycle({
-              hadIncapacitated: data.hadIncapacitated,
-              hadUnconscious: hadUnconscious,
-            })
-      | _ => pending
+          match stagedSaveConditionAfterRepeatSave(
+            PendingStagedSaveConditionLifecycle({ hadCondition: data.hadIncapacitated }),
+            savingThrowSucceeded,
+            hadUnconscious,
+          ) {
+            | NoStagedSaveConditionLifecycle => NoSleepRepeatSaveLifecycle
+            | PendingStagedSaveConditionLifecycle(next) =>
+                PendingSleepRepeatSaveLifecycle({ hadIncapacitated: next.hadCondition })
+            | AppliedStagedSaveConditionLifecycle(next) =>
+                UnconsciousSleepRepeatSaveLifecycle({
+                  hadIncapacitated: next.hadCondition,
+                  hadUnconscious: next.hadEscalatedCondition,
+                })
+          }
+      | NoSleepRepeatSaveLifecycle => NoSleepRepeatSaveLifecycle
+      | UnconsciousSleepRepeatSaveLifecycle(data) => UnconsciousSleepRepeatSaveLifecycle(data)
     }
 
-  pure def sleepEffectEndsOnDamage: bool = true
+  pure def sleepEffectEndsOnDamage: bool = stagedConditionEndsOnDamage
 
-  pure def sleepEffectEndsOnAdjacentShakeAwakeAction: bool = true
+  pure def sleepEffectEndsOnAdjacentShakeAwakeAction: bool = stagedConditionEndsOnAdjacentAction
 }
