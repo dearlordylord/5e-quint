@@ -140,7 +140,7 @@
   , savingThrowModifiers =
     [ { ability = "cha", modifier = -1 }
     , { ability = "con", modifier = +8 }
-    , { ability = "dex", modifier = +2 }
+    , { ability = "dex", modifier = +5 }
     , { ability = "int", modifier = +0 }
     , { ability = "str", modifier = +6 }
     , { ability = "wis", modifier = +4 }

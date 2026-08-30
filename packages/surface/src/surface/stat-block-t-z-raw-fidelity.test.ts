@@ -58,10 +58,10 @@ describe("T–Z repeated source occurrence reconciliation", () => {
     );
   });
 
-  test("retains three agreements and the precise Stone Giant save divergence", () => {
+  test("reconciles all repeated records across both source anchors", () => {
     const pToS = projectionByName(repeatedPToS.projection);
     const tToZ = projectionByName(repeatedTToZ.projection);
-    for (const name of ["Stone Golem", "Storm Giant", "Succubus"] as const) {
+    for (const name of REPEATED_NAMES) {
       expect(withoutSourceSection(requireNamed(pToS, name))).toEqual(
         withoutSourceSection(requireNamed(tToZ, name)),
       );
@@ -70,7 +70,7 @@ describe("T–Z repeated source occurrence reconciliation", () => {
       projection.generalFacts.savingThrowModifiers.find(
         ({ name }) => name === "dex",
       )?.modifier;
-    expect(dexSave(requireNamed(pToS, "Stone Giant"))).toBe(2);
+    expect(dexSave(requireNamed(pToS, "Stone Giant"))).toBe(5);
     expect(dexSave(requireNamed(tToZ, "Stone Giant"))).toBe(5);
   });
 });

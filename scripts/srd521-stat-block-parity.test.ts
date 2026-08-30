@@ -84,13 +84,15 @@ describe("SRD Stat Block source parity operation", () => {
       }),
     ]);
     expect(
-      report.issues.filter(
-        (issue) =>
-          issue.kind === "divergent-source" && issue.name === "Stone Giant",
-      ),
-    ).toHaveLength(1);
+      report.issues.filter((issue) => issue.kind === "divergent-source"),
+    ).toEqual([]);
 
-    for (const name of ["Stone Golem", "Storm Giant", "Succubus"]) {
+    for (const name of [
+      "Stone Giant",
+      "Stone Golem",
+      "Storm Giant",
+      "Succubus",
+    ]) {
       const identity = report.discovery.identities.find(
         (candidate) => candidate.name === name,
       );
@@ -118,30 +120,8 @@ describe("SRD Stat Block source parity operation", () => {
 
     expect(srdStatBlockSourceOccurrenceCount(report.discovery)).toBe(334);
     expect(srdStatBlockSourceIdentityCount(report.discovery)).toBe(330);
-    expect(
-      report.issues.filter((issue) => issue.kind === "missing"),
-    ).toHaveLength(
-      report.discovery.identities.length -
-        srdStatBlockCollection.statBlocks.length,
-    );
-    expect(
-      report.issues.filter((issue) => issue.kind === "extra"),
-    ).toHaveLength(0);
-    expect(
-      report.issues
-        .filter((issue) => issue.kind === "provenance")
-        .map((issue) => issue.name)
-        .sort(),
-    ).toEqual([]);
-    expect(
-      report.issues.filter((issue) => issue.kind === "duplicate-id"),
-    ).toHaveLength(0);
-    expect(
-      report.issues.filter((issue) => issue.kind === "duplicate-identity"),
-    ).toHaveLength(0);
-    expect(
-      report.issues.filter((issue) => issue.kind === "cardinality"),
-    ).toHaveLength(0);
+    expect(srdStatBlockCollection.statBlocks).toHaveLength(330);
+    expect(report.issues).toEqual([]);
   });
 
   test("rejects a pilot duplicate identity while preserving source-derived membership", () => {
