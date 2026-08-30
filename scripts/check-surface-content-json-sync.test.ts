@@ -22,6 +22,7 @@ import {
   SURFACE_PUBLICATION_MEMBERS,
 } from "../packages/surface/src/surface/publication-artifacts.ts";
 import { buildSrdSurfacePublication } from "./srd-surface-publication-artifacts.ts";
+import { resolveSurfaceEffectRuntimePaths } from "./surface-effect-runtime.cjs";
 
 const validRecord = readFileSync(
   join(process.cwd(), "packages/surface/content/bless.json"),
@@ -34,6 +35,64 @@ const require = createRequire(import.meta.url);
 const SURFACE_PUBLICATION_INTEGRATION_TIMEOUT_MS = 90_000;
 
 describe("Surface content publication checker", () => {
+  it("requires Effect and SchemaAST to resolve inside the Surface package install", () => {
+    const surfacePackageDirectory = "/repo/packages/surface";
+    const localEffectDirectory = "/store/surface-effect";
+    const realpath = (path: string): string =>
+      path === "/repo/packages/surface/node_modules/effect"
+        ? localEffectDirectory
+        : path;
+    const effectEntry = (
+      directory: string,
+      specifier: "effect" | "effect/SchemaAST",
+    ): string =>
+      `${directory}/dist/${specifier === "effect" ? "index" : "SchemaAST"}.js`;
+
+    expect(
+      resolveSurfaceEffectRuntimePaths({
+        surfacePackageDirectory,
+        resolveModule: (specifier) =>
+          effectEntry(
+            localEffectDirectory,
+            specifier === "effect" ? "effect" : "effect/SchemaAST",
+          ),
+        realpath,
+      }),
+    ).toEqual({
+      effectDirectory: localEffectDirectory,
+      effectEntry: `${localEffectDirectory}/dist/index.js`,
+      schemaAstEntry: `${localEffectDirectory}/dist/SchemaAST.js`,
+    });
+
+    for (const fallbackSpecifier of ["effect", "effect/SchemaAST"] as const) {
+      expect(() =>
+        resolveSurfaceEffectRuntimePaths({
+          surfacePackageDirectory,
+          resolveModule: (specifier) =>
+            effectEntry(
+              specifier === fallbackSpecifier
+                ? "/repo/node_modules/effect"
+                : localEffectDirectory,
+              specifier === "effect" ? "effect" : "effect/SchemaAST",
+            ),
+          realpath,
+        }),
+      ).toThrow("resolved outside /store/surface-effect");
+    }
+
+    expect(() =>
+      resolveSurfaceEffectRuntimePaths({
+        surfacePackageDirectory,
+        resolveModule: () => "/repo/node_modules/effect/dist/index.js",
+        realpath: () => {
+          throw new Error("missing local dependency");
+        },
+      }),
+    ).toThrow(
+      "Surface package-local Effect installation is required at /repo/packages/surface/node_modules/effect: missing local dependency",
+    );
+  });
+
   it("returns unreadable RAW input as a typed publication issue", () => {
     const result = buildSrdSurfacePublication({
       excerptSource: {

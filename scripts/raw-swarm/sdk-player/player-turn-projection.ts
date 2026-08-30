@@ -1,6 +1,5 @@
 import { canonicalJson } from "../transcript.ts";
 import { createHash } from "node:crypto";
-import { Result, Match, Schema } from "effect";
 import {
   BattleHoleSchema,
   BattleInterruptDecisionFrontierSchema,
@@ -26,12 +25,15 @@ import {
   PointPoolResourceSchema,
   UseCountResourceSchema,
 } from "../../../packages/surface/src/surface/schema.ts";
+import { surfaceEffect } from "../../surface-effect-runtime.cjs";
 import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue, jsonValue } from "./json-value.ts";
 import {
   battleEnvelopeMatchesSessionIdentity,
   type SdkCallRecord,
 } from "./sdk-transcript.ts";
+
+const { Match, Result, Schema } = surfaceEffect;
 
 export const PLAYER_TURN_PROJECTION_MAX_BYTES = 32 * 1024;
 export const PLAYER_TACTICAL_NOTE_MAX_BYTES = 4 * 1024;

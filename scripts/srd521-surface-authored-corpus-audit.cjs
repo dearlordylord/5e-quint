@@ -1,13 +1,11 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const { createRequire } = require("node:module");
 const { isDeepStrictEqual } = require("node:util");
 require("tsx/cjs");
-const surfaceRequire = createRequire(
-  path.resolve(__dirname, "../packages/surface/package.json"),
-);
-const { Result, Schema } = surfaceRequire("effect");
-const SchemaAST = surfaceRequire("effect/SchemaAST");
+const {
+  surfaceEffect: { Result, Schema },
+  surfaceSchemaAst: SchemaAST,
+} = require("./surface-effect-runtime.cjs");
 const { DAMAGE_TYPES } = require("../packages/shared/src/types.ts");
 const {
   PublishedSrdSurfaceSchema,

@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 
-import { Result, Schema } from "effect";
+import type { Schema as SchemaTypes } from "effect";
 
 import {
   type SurfacePublicationArtifacts,
@@ -13,6 +13,9 @@ import {
   RulesExcerptSchema,
 } from "../packages/surface/src/surface/schema.ts";
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
+import { surfaceEffect } from "./surface-effect-runtime.cjs";
+
+const { Result, Schema } = surfaceEffect;
 
 const SourceResolutionSchema = Schema.Union([
   Schema.Struct({
@@ -36,7 +39,7 @@ const SourceResolutionSchema = Schema.Union([
     ]),
   }),
 ]);
-type SourceResolution = Schema.Schema.Type<typeof SourceResolutionSchema>;
+type SourceResolution = SchemaTypes.Schema.Type<typeof SourceResolutionSchema>;
 
 const RulesExcerptResultSchema = Schema.Union([
   Schema.Struct({

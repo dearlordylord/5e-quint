@@ -3,8 +3,6 @@ import { join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 
-import { Result, Schema } from "effect";
-
 import {
   formatSurfaceDecodeError,
   StatBlockRecordSchema,
@@ -28,6 +26,9 @@ import {
   describeSurfacePublicationDeltaIssue,
   verifySurfacePublicationDelta,
 } from "../packages/surface/src/surface/publication-delta-verifier.ts";
+import { surfaceEffect } from "./surface-effect-runtime.cjs";
+
+const { Result, Schema } = surfaceEffect;
 
 export type PublicationIssue =
   | {
