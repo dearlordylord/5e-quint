@@ -26,9 +26,9 @@ import {
   describeSurfacePublicationDeltaIssue,
   verifySurfacePublicationDelta,
 } from "../packages/surface/src/surface/publication-delta-verifier.ts";
-import { surfaceEffect } from "./surface-effect-runtime.cjs";
+import { effectRuntimeForPackageOwners } from "./package-effect-runtime.ts";
 
-const { Result, Schema } = surfaceEffect;
+const { Result, Schema } = effectRuntimeForPackageOwners(["surface"]).effect;
 
 export type PublicationIssue =
   | {

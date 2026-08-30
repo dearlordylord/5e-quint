@@ -13,9 +13,9 @@ import {
   RulesExcerptSchema,
 } from "../packages/surface/src/surface/schema.ts";
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
-import { surfaceEffect } from "./surface-effect-runtime.cjs";
+import { effectRuntimeForPackageOwners } from "./package-effect-runtime.ts";
 
-const { Result, Schema } = surfaceEffect;
+const { Result, Schema } = effectRuntimeForPackageOwners(["surface"]).effect;
 
 const SourceResolutionSchema = Schema.Union([
   Schema.Struct({

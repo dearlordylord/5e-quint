@@ -32,7 +32,12 @@ import {
   type DistanceFeet,
   type SpatialSnapshot,
 } from "../../../packages/tactical-space/src/index.ts";
-import { Result, Match, Schema } from "effect";
+import type { Result as ResultTypes } from "effect";
+import { effectRuntimeForPackageOwners } from "../../package-effect-runtime.ts";
+
+const { Result, Match, Schema } = effectRuntimeForPackageOwners([
+  "battle-runtime",
+]).effect;
 
 export type ScenarioTokenId = CombatantId | BattleObjectId;
 
@@ -542,7 +547,7 @@ export function scenarioTableSpatialFingerprint(
 
 export function scenarioDistanceFeet(
   value: number,
-): Result.Result<DistanceFeet, ScenarioSpatialDistanceFeetIssue> {
+): ResultTypes.Result<DistanceFeet, ScenarioSpatialDistanceFeetIssue> {
   if (!isFiniteNonNegativeInteger(value)) {
     return Result.fail({
       tag: "invalid-spatial-distance-feet",
@@ -799,7 +804,7 @@ function unknownDecisionId(value: unknown): string {
 function malformedDecision(
   input: unknown,
   message: string,
-): Result.Result<never, ScenarioSpatialDecisionIssue> {
+): ResultTypes.Result<never, ScenarioSpatialDecisionIssue> {
   return Result.fail(
     spatialDecisionIssue(
       "invalid-spatial-decision",
@@ -820,7 +825,10 @@ function isNonEmptyTrimmedString(value: unknown): value is string {
 function parseProcedureRef(
   value: unknown,
   input: unknown,
-): Result.Result<BattleProcedureExecutionRef, ScenarioSpatialDecisionIssue> {
+): ResultTypes.Result<
+  BattleProcedureExecutionRef,
+  ScenarioSpatialDecisionIssue
+> {
   if (!isString(value) || value.trim().length === 0) {
     return malformedDecision(
       input,
@@ -878,7 +886,7 @@ function isScenarioAttackDamageType(
 function parseSpatialQuestion(
   value: unknown,
   input: unknown,
-): Result.Result<
+): ResultTypes.Result<
   ScenarioSpatialDecisionQuestion,
   ScenarioSpatialDecisionIssue
 > {
@@ -1103,7 +1111,10 @@ function parseSpatialQuestion(
 function parseRelationAnswer(
   value: unknown,
   input: unknown,
-): Result.Result<ScenarioSpatialRelationAnswer, ScenarioSpatialDecisionIssue> {
+): ResultTypes.Result<
+  ScenarioSpatialRelationAnswer,
+  ScenarioSpatialDecisionIssue
+> {
   if (
     !isRecord(value) ||
     !hasOnlyKeys(value, [
@@ -1222,7 +1233,7 @@ function parseCreatureSpaceTraversal(
   value: unknown,
   input: unknown,
   seen: WeakSet<object>,
-): Result.Result<
+): ResultTypes.Result<
   ScenarioMovementRouteAnswerInput["creatureSpaceTraversal"],
   ScenarioSpatialDecisionIssue
 > {
@@ -1326,7 +1337,7 @@ function parseMovementAnswer(
   value: unknown,
   input: unknown,
   seen: WeakSet<object>,
-): Result.Result<
+): ResultTypes.Result<
   ScenarioMovementRouteAnswerInput,
   ScenarioSpatialDecisionIssue
 > {
@@ -1442,7 +1453,10 @@ function parseSpatialDecisionInput(
   input: unknown,
   nested = false,
   seen = new WeakSet<object>(),
-): Result.Result<ScenarioSpatialDecisionInput, ScenarioSpatialDecisionIssue> {
+): ResultTypes.Result<
+  ScenarioSpatialDecisionInput,
+  ScenarioSpatialDecisionIssue
+> {
   if (!isRecord(input) || !isString(input.decisionId)) {
     return malformedDecision(
       input,
@@ -1723,7 +1737,7 @@ function freezeParsedSpatialValue<T>(value: T): T {
 
 function normalizeSpatialDecision(
   rawInput: unknown,
-): Result.Result<ScenarioSpatialDecision, ScenarioSpatialDecisionIssue> {
+): ResultTypes.Result<ScenarioSpatialDecision, ScenarioSpatialDecisionIssue> {
   const parsed = parseSpatialDecisionInput(rawInput);
   if (Result.isFailure(parsed)) return Result.fail(parsed.failure);
   const input = parsed.success;
@@ -1794,6 +1808,6 @@ function normalizeNonMovementSpatialDecision(
 
 export function tableAuthoredSpatialDecision(
   input: unknown,
-): Result.Result<ScenarioSpatialDecision, ScenarioSpatialDecisionIssue> {
+): ResultTypes.Result<ScenarioSpatialDecision, ScenarioSpatialDecisionIssue> {
   return normalizeSpatialDecision(input);
 }
