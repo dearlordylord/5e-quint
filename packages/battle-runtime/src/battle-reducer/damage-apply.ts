@@ -494,7 +494,7 @@ export function applyBattleHitPointDamage(input: {
           input.damageSourceId,
         )
       : afterCasterOrAllyDamageEscapes;
-  const afterSleep =
+  const afterHitPointBudgetConditionRemoval =
     input.damageAmount > 0
       ? removeHitPointBudgetConditionEffectsFromTarget(
           afterTargetActionEarlyEnd,
@@ -503,8 +503,11 @@ export function applyBattleHitPointDamage(input: {
       : afterTargetActionEarlyEnd;
   const afterSaveGatedAreaControl =
     input.damageAmount > 0
-      ? removeSaveGatedAreaControlEffectsFromTarget(afterSleep, targetId)
-      : afterSleep;
+      ? removeSaveGatedAreaControlEffectsFromTarget(
+          afterHitPointBudgetConditionRemoval,
+          targetId,
+        )
+      : afterHitPointBudgetConditionRemoval;
   const afterSaveGatedConditionWithRepeat =
     input.damageAmount > 0
       ? applySaveGatedConditionWithRepeatDamageRepeatSaves(

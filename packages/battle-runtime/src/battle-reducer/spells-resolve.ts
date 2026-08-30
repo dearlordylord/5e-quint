@@ -1953,7 +1953,7 @@ function resolveSpellActInternal(
     invocation.spellRuleFacts.components.verbal
       ? revealHidden(input.state, subject.actorId)
       : input.state;
-  const slowSomaticSpellFailure =
+  const turnConstraintSomaticSpellFailure =
     resolveSaveGatedTurnConstraintSomaticSpellFailure({
       state: input.state,
       castingState,
@@ -1964,8 +1964,8 @@ function resolveSpellActInternal(
       ...optionalProperty("actionCostOverride", options.actionCostOverride),
       metamagicApplications: invocationAdmission.applications,
     });
-  if (slowSomaticSpellFailure.tag !== "continue") {
-    return slowSomaticSpellFailure;
+  if (turnConstraintSomaticSpellFailure.tag !== "continue") {
+    return turnConstraintSomaticSpellFailure;
   }
   if (lane.tag === "action") {
     const actionSubject = lane.input.subject;
@@ -3717,7 +3717,7 @@ export function resolveBonusActionSpellAct(
     invocation.spellRuleFacts.components.verbal
       ? revealHidden(input.state, subject.actorId)
       : input.state;
-  const resolveSlowSomaticFailurePhase = () =>
+  const resolveTurnConstraintSomaticFailurePhase = () =>
     resolveSaveGatedTurnConstraintSomaticSpellFailure({
       state: input.state,
       castingState,
@@ -3738,9 +3738,10 @@ export function resolveBonusActionSpellAct(
       return invalidResult(input.state, "invalidFill", parsedFillInput.message);
     }
     /* v8 ignore stop -- @preserve */
-    const slowSomaticSpellFailure = resolveSlowSomaticFailurePhase();
-    if (slowSomaticSpellFailure.tag !== "continue") {
-      return slowSomaticSpellFailure;
+    const turnConstraintSomaticSpellFailure =
+      resolveTurnConstraintSomaticFailurePhase();
+    if (turnConstraintSomaticSpellFailure.tag !== "continue") {
+      return turnConstraintSomaticSpellFailure;
     }
     return resolveRegisteredSpellProcedureExecution(
       executionRegistry,
@@ -3752,9 +3753,10 @@ export function resolveBonusActionSpellAct(
       }),
     );
   }
-  const slowSomaticSpellFailure = resolveSlowSomaticFailurePhase();
-  if (slowSomaticSpellFailure.tag !== "continue") {
-    return slowSomaticSpellFailure;
+  const turnConstraintSomaticSpellFailure =
+    resolveTurnConstraintSomaticFailurePhase();
+  if (turnConstraintSomaticSpellFailure.tag !== "continue") {
+    return turnConstraintSomaticSpellFailure;
   }
   const fillSet = spellFillSet(
     input.fills,
@@ -3923,7 +3925,7 @@ export function resolveBonusActionDashSpellAct(
     invocation.spellRuleFacts.components.verbal
       ? revealHidden(input.state, subject.actorId)
       : input.state;
-  const slowSomaticSpellFailure =
+  const turnConstraintSomaticSpellFailure =
     resolveSaveGatedTurnConstraintSomaticSpellFailure({
       state: input.state,
       castingState,
@@ -3932,8 +3934,8 @@ export function resolveBonusActionDashSpellAct(
       invocation,
       fills: input.fills,
     });
-  if (slowSomaticSpellFailure.tag !== "continue") {
-    return slowSomaticSpellFailure;
+  if (turnConstraintSomaticSpellFailure.tag !== "continue") {
+    return turnConstraintSomaticSpellFailure;
   }
   const fillSet = spellFillSet(
     input.fills,

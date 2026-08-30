@@ -40,7 +40,7 @@ import {
 } from "./battle-reducer/creature-state.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
-import { SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/domain-constants.ts";
+import { SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/domain-constants.ts";
 import {
   discoverBattleActs,
   endTurn,
@@ -670,7 +670,7 @@ function requestSomaticFailure(
   );
   const hole = requireSlowSomaticSpellFailureHole(act.initialHoles);
   expect(hole.failurePercent).toBe(
-    SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
+    SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
   );
   return {
     battle: state.battle,

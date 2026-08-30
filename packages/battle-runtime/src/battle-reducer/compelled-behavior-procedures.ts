@@ -55,7 +55,7 @@ import {
   compelledNextTurnBehaviorEffectsForActor,
 } from "./compelled-behavior-discovery.ts";
 
-const COMMAND_FOLLOW_UP_BY_OPTION = {
+const COMPELLED_BEHAVIOR_FOLLOW_UP_BY_OPTION = {
   approach: "executeCompelledApproach",
   drop: "executeCompelledDrop",
   flee: "executeCompelledFlee",
@@ -67,7 +67,7 @@ const COMMAND_FOLLOW_UP_BY_OPTION = {
 >;
 
 type CompelledBehaviorFollowUpCommand = Exclude<
-  (typeof COMMAND_FOLLOW_UP_BY_OPTION)[BattleCompelledBehaviorOption],
+  (typeof COMPELLED_BEHAVIOR_FOLLOW_UP_BY_OPTION)[BattleCompelledBehaviorOption],
   null
 >;
 
@@ -102,7 +102,7 @@ export function isCompelledBehaviorFollowUpSubject(
 ): subject is CompelledBehaviorFollowUpSubject {
   return (
     subject.tag === "runtimeCommand" &&
-    Object.values(COMMAND_FOLLOW_UP_BY_OPTION).some(
+    Object.values(COMPELLED_BEHAVIOR_FOLLOW_UP_BY_OPTION).some(
       (command) => command === subject.command,
     )
   );
@@ -157,14 +157,17 @@ export function pendingCompelledBehaviorObligationIssue(
   const pendingEffects = compelledNextTurnBehaviorEffectsForActor(
     state,
     actorId,
-  ).filter((effect) => COMMAND_FOLLOW_UP_BY_OPTION[effect.option] !== null);
+  ).filter(
+    (effect) => COMPELLED_BEHAVIOR_FOLLOW_UP_BY_OPTION[effect.option] !== null,
+  );
   if (pendingEffects.length === 0) return null;
   if (!isCompelledBehaviorFollowUpSubject(subject)) {
     return "A pending compelled behavior effect must be resolved before other battle subjects.";
   }
   return pendingEffects.some(
     (effect) =>
-      COMMAND_FOLLOW_UP_BY_OPTION[effect.option] === subject.command &&
+      COMPELLED_BEHAVIOR_FOLLOW_UP_BY_OPTION[effect.option] ===
+        subject.command &&
       spellActiveEffectExecutionRef(effect) === subject.effectRef,
   )
     ? null

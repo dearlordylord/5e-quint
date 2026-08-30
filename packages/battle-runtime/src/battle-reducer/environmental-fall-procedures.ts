@@ -286,13 +286,13 @@ export function resolveFallDamageLanding(input: {
     mitigationFrameIndex === null
       ? null
       : mitigationLanding.state.interruptStack[mitigationFrameIndex];
-  const slowFallReductionAmount =
+  const fallDamageReductionAmount =
     mitigationFrame?.kind === "fallDamageLandingMitigation"
       ? Number(mitigationFrame.reductionAmount)
       : 0;
   const effectiveFallDamageNumber = mitigationLanding.fallDamagePrevented
     ? 0
-    : Math.max(0, Number(input.fallDamage.amount) - slowFallReductionAmount);
+    : Math.max(0, Number(input.fallDamage.amount) - fallDamageReductionAmount);
   const withoutMitigationFrame =
     mitigationFrameIndex === null
       ? mitigationLanding.state
@@ -321,7 +321,7 @@ export function resolveFallDamageLanding(input: {
     effectiveFallDamage,
     fallDamagePrevented: effectiveFallDamage === 0,
     fallingPronePrevented: effectiveFallDamage === 0,
-    slowFallReductionAmount: toDamageAmount(slowFallReductionAmount),
+    fallDamageReductionAmount: toDamageAmount(fallDamageReductionAmount),
     fallingCreatureMitigated: mitigationLanding.tag === "mitigated",
   };
 }
