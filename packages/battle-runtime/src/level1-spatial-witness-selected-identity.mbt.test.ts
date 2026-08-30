@@ -80,7 +80,7 @@ import {
   type BattleActiveEffect,
   type BattleCreatureInit,
   type BattleFill,
-  type BattleFallingCreatureMitigationTriggerWithinRangeFact,
+  type BattleFallingCreatureMitigationTriggerFact,
   type BattleHole,
   type BattleIllumination,
   type BattleLightEmitter,
@@ -4122,7 +4122,7 @@ function persistentAreaSaveConditionSavingThrowOutcomeFill(
 
 function openFeatherFallWindow(
   state: BattleState,
-  reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[],
+  reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerFact[],
 ): BattleResolutionResult {
   return openCreatureFallsInterruptWindow({
     state,
@@ -4152,13 +4152,16 @@ function featherFallProcedureRef(
 
 function featherFallTriggerFact(
   sourceProcedureRef: BattleProcedureExecutionRef,
-): BattleFallingCreatureMitigationTriggerWithinRangeFact {
+): BattleFallingCreatureMitigationTriggerFact {
   return {
-    kind: "fallingCreatureMitigationTriggerWithinRange",
+    kind: "fallingCreatureMitigationTrigger",
     reactorId: casterId,
-    fallingCreatureId: featherFallFallingAllyId,
     sourceProcedureRef,
-    rangeFeet: movementFeet(60),
+    witness: {
+      kind: "visibleCreatureWithinRangeFalls",
+      fallingCreatureId: featherFallFallingAllyId,
+      distanceFeet: movementFeet(60),
+    },
   };
 }
 

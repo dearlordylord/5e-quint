@@ -204,6 +204,7 @@ export function traceEffectAtomScaling(
     case "natural_weapons":
     case "water_breathing":
     case "emit_light":
+    case "emit_bright_illumination":
     case "emit_dim_light":
     case "spell_created_held_object":
     case "block_reanimation":

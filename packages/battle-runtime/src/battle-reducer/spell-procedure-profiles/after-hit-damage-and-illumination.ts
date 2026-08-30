@@ -65,7 +65,7 @@ import {
 } from "./profile.ts";
 import {
   DamageTypeSchema,
-  BrightAndDimIlluminationEmissionFactsSchema,
+  BrightRadiusIlluminationEmissionFactsSchema,
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -167,10 +167,13 @@ function afterHitDamageAndIlluminationSpellProjection(
     (operation) => operation.effect,
   );
   const illuminationEffect = operationEffects.find(
-    (effect) => effect.kind === "emit_light",
+    (effect) =>
+      effect.kind === "emit_light" ||
+      effect.kind === "emit_bright_illumination",
   );
   const illumination =
-    illuminationEffect?.kind === "emit_light"
+    illuminationEffect?.kind === "emit_light" ||
+    illuminationEffect?.kind === "emit_bright_illumination"
       ? illuminationEmissionFactsFromSurface({
           effect: illuminationEffect,
           opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
@@ -194,7 +197,8 @@ function afterHitDamageAndIlluminationSpellProjection(
     damage?.kind !== "damage" ||
     damage.damageType !== "radiant" ||
     damage.amount === undefined ||
-    illumination?.emission.kind !== "brightAndDim" ||
+    (illumination?.emission.kind !== "bright" &&
+      illumination?.emission.kind !== "brightAndDim") ||
     attackAdvantage?.kind !== "modify_roll_advantage" ||
     attackAdvantage.mode !== "advantage" ||
     attackAdvantage.affects !== "rolls_against_self" ||
@@ -292,7 +296,7 @@ const AfterHitDamageAndIlluminationInvocationSchema =
         expr: DiceExprSchema,
         damageType: DamageTypeSchema,
       }),
-      illumination: BrightAndDimIlluminationEmissionFactsSchema,
+      illumination: BrightRadiusIlluminationEmissionFactsSchema,
       activeEffect: AfterHitDamageAndIlluminationEffectSchema,
     }),
   );

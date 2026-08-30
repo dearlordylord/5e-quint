@@ -2,7 +2,7 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type {
   BattleCreatureState,
-  BattleFallingCreatureMitigationTriggerWithinRangeFact,
+  BattleFallingCreatureMitigationTriggerFact,
   BattleFallingCreatureMitigationLandingResult,
   BattleFallDamageLandingResult,
   BattleInterruptFrame,
@@ -26,7 +26,7 @@ import { fallingCreatureMitigationLandingCleanupForCombatant } from "./spells-ho
 export function openCreatureFallsInterruptWindow(input: {
   readonly state: BattleState;
   readonly fallingCreatureId: CombatantId;
-  readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[];
+  readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerFact[];
 }): BattleResolutionResult {
   const reactionWindow = maybeOpenInterruptWindow(
     input.state,
@@ -66,7 +66,7 @@ export type FlySpeedGrantEndFallWitness =
     }
   | {
       readonly kind: "cannotStopFall";
-      readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[];
+      readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerFact[];
     };
 
 export type FlySpeedGrantEndFallWitnessResult =

@@ -260,6 +260,8 @@ module battleRuntimeLightEmitters {
     match emission {
       | DimLightEmission(data) =>
           if (distanceFeet <= data.radiusFeet) DimLightIllumination else DarknessIllumination
+      | BrightIlluminationEmission(data) =>
+          if (distanceFeet <= data.radiusFeet) BrightLightIllumination else DarknessIllumination
       | BrightAndDimLightEmission(data) =>
           if (distanceFeet <= data.brightRadiusFeet) BrightLightIllumination
           else if (distanceFeet <= data.brightRadiusFeet + data.dimAdditionalFeet) DimLightIllumination
@@ -589,10 +591,7 @@ module battleRuntimeLightEmitters {
       source: Fighter,
       sourceSpell: ShiningSmite,
       attachment: CombatantLightEmitter({ actor: actor }),
-      emission: BrightAndDimLightEmission({
-        brightRadiusFeet: shiningSmiteLightEmitterBrightRadiusFeet,
-        dimAdditionalFeet: 0,
-      }),
+      emission: BrightIlluminationEmission({ radiusFeet: shiningSmiteLightEmitterBrightRadiusFeet }),
       opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
       ongoingSpellTracking: UntrackedSpellLightEmitter,
       expiresAt: ConcentrationLightEmitterExpiration({ actor: Fighter }),

@@ -102,6 +102,10 @@ type LightEmissionMbtProjection =
       readonly radiusFeet: number;
     }
   | {
+      readonly kind: "bright";
+      readonly radiusFeet: number;
+    }
+  | {
       readonly kind: "brightAndDim";
       readonly brightRadiusFeet: number;
       readonly dimAdditionalFeet: number;
@@ -995,6 +999,10 @@ function projectLightEmission(
     Match.when({ kind: "dim" }, (dim) => ({
       kind: "dim" as const,
       radiusFeet: Number(dim.radiusFeet),
+    })),
+    Match.when({ kind: "bright" }, (bright) => ({
+      kind: "bright" as const,
+      radiusFeet: Number(bright.radiusFeet),
     })),
     Match.when({ kind: "brightAndDim" }, (brightAndDim) => ({
       kind: "brightAndDim" as const,

@@ -32,15 +32,18 @@ describe("Reaction spell route subjects", () => {
       fallingCreatureId: spellTargetId,
       reactionSpellTargetFacts: [
         {
-          kind: "fallingCreatureMitigationTriggerWithinRange",
+          kind: "fallingCreatureMitigationTrigger",
           reactorId: spellCasterId,
-          fallingCreatureId: spellTargetId,
           sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
             session,
             spellCasterId,
             featherFallInvocation,
           ),
-          rangeFeet: movementFeet(60),
+          witness: {
+            kind: "visibleCreatureWithinRangeFalls",
+            fallingCreatureId: spellTargetId,
+            distanceFeet: movementFeet(60),
+          },
         },
       ],
     });

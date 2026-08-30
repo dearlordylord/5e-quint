@@ -34,7 +34,7 @@ import {
   resolveFallingCreatureMitigationLanding,
   startBattle,
   type BattleCreatureInit,
-  type BattleFallingCreatureMitigationTriggerWithinRangeFact,
+  type BattleFallingCreatureMitigationTriggerFact,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -73,6 +73,44 @@ const fallingEId = combatantId("feather-fall-target-e");
 const fallingFId = combatantId("feather-fall-target-f");
 
 describe("Feather Fall Reaction spell", () => {
+  test("offers the Reaction when the reactor itself falls", () => {
+    const session = battleWithFeatherFall();
+    const invocationRef = spellSlotInvocationRef(
+      featherFallUnitId,
+      1,
+      "fallingCreatureMitigationReaction",
+    );
+    const awaitingReaction = openCreatureFallsInterruptWindow({
+      state: session.state,
+      fallingCreatureId: casterId,
+      reactionSpellTargetFacts: [
+        {
+          kind: "fallingCreatureMitigationTrigger",
+          reactorId: casterId,
+          sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+            session,
+            casterId,
+            invocationRef,
+          ),
+          witness: { kind: "reactorFalls" },
+        },
+      ],
+    });
+
+    expect(awaitingReaction.tag).toBe("needsHoles");
+    expect(
+      awaitingReaction.tag === "needsHoles"
+        ? battleFrontierInterruptDecisionForState(
+            awaitingReaction.state,
+          )?.choices.some(
+            (choice) =>
+              choice.kind === "castTriggeredReactionSpell" &&
+              choice.reactorId === casterId,
+          )
+        : false,
+    ).toBe(true);
+  });
+
   test("spends a source-scoped free cast when Feather Fall resolves for a falling creature", () => {
     const session = battleWithFeatherFall({ sourceScopedFreeCast: true });
     const caster = session.state.combatants.get(casterId);
@@ -390,6 +428,37 @@ describe("Feather Fall Reaction spell", () => {
     expect(result).toMatchObject({
       tag: "resolved",
     });
+  });
+
+  test("does not offer Feather Fall for a visible creature beyond its range", () => {
+    const session = battleWithFeatherFall();
+    const invocationRef = spellSlotInvocationRef(
+      featherFallUnitId,
+      1,
+      "fallingCreatureMitigationReaction",
+    );
+    const result = openCreatureFallsInterruptWindow({
+      state: session.state,
+      fallingCreatureId: fallingAId,
+      reactionSpellTargetFacts: [
+        {
+          kind: "fallingCreatureMitigationTrigger",
+          reactorId: casterId,
+          sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+            session,
+            casterId,
+            invocationRef,
+          ),
+          witness: {
+            kind: "visibleCreatureWithinRangeFalls",
+            fallingCreatureId: fallingAId,
+            distanceFeet: movementFeet(61),
+          },
+        },
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
   });
 
   test("requests the target list when a Feather Fall Reaction omits it", () => {
@@ -745,19 +814,22 @@ function featherFallTriggerFacts(
     1,
     "fallingCreatureMitigationReaction",
   ),
-): readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[] {
+): readonly BattleFallingCreatureMitigationTriggerFact[] {
   return includeTriggerFact
     ? [
         {
-          kind: "fallingCreatureMitigationTriggerWithinRange",
+          kind: "fallingCreatureMitigationTrigger",
           reactorId: casterId,
-          fallingCreatureId,
           sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
             session,
             casterId,
             invocationRef,
           ),
-          rangeFeet: movementFeet(60),
+          witness: {
+            kind: "visibleCreatureWithinRangeFalls",
+            fallingCreatureId,
+            distanceFeet: movementFeet(30),
+          },
         },
       ]
     : [];

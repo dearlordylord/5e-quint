@@ -242,9 +242,8 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
         sourceCombatantId: spellCasterId,
         attachment: { kind: "combatant", combatantId: spellTargetId },
         emission: {
-          kind: "brightAndDim",
-          brightRadiusFeet: movementFeet(5),
-          dimAdditionalFeet: movementFeet(0),
+          kind: "bright",
+          radiusFeet: movementFeet(5),
         },
         opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
         expiresAt: {

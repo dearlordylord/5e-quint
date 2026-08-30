@@ -247,6 +247,7 @@ module battleRuntimeModel {
     | DancingLightEmitterProjectionFact({ light: int, position: int, combined: bool, distanceFeet: int })
   type LightEmission =
     | DimLightEmission({ radiusFeet: int })
+    | BrightIlluminationEmission({ radiusFeet: int })
     | BrightAndDimLightEmission({ brightRadiusFeet: int, dimAdditionalFeet: int })
   type LightEmitterOpaqueCoverInteraction =
     | LightEmitterBlocksOpaqueCover

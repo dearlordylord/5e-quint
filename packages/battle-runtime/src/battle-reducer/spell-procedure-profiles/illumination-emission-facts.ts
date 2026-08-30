@@ -1,5 +1,6 @@
 import { movementFeet } from "@dnd/shared/types";
 import type { EffectAtom } from "@dnd/surface/surface/types";
+import { Match } from "effect";
 
 import type {
   BattleIlluminationEmissionFacts,
@@ -8,33 +9,52 @@ import type {
 
 type SurfaceIlluminationEmission = Extract<
   EffectAtom,
-  { readonly kind: "emit_light" }
+  { readonly kind: "emit_light" | "emit_bright_illumination" }
 >;
 
 export function illuminationEmissionFactsFromSurface(input: {
   readonly effect: SurfaceIlluminationEmission;
   readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
 }): BattleIlluminationEmissionFacts | null {
-  const brightRadiusFeet = input.effect.brightRadiusFeet;
-  const dimAdditionalFeet = input.effect.dimAdditionalFeet ?? 0;
-  if (
-    !Number.isInteger(brightRadiusFeet) ||
-    !Number.isInteger(dimAdditionalFeet) ||
-    brightRadiusFeet < 0 ||
-    dimAdditionalFeet < 0 ||
-    (brightRadiusFeet === 0 && dimAdditionalFeet === 0)
-  ) {
-    return null;
-  }
-  return {
-    emission:
-      brightRadiusFeet === 0
-        ? { kind: "dim", radiusFeet: movementFeet(dimAdditionalFeet) }
-        : {
-            kind: "brightAndDim",
-            brightRadiusFeet: movementFeet(brightRadiusFeet),
-            dimAdditionalFeet: movementFeet(dimAdditionalFeet),
-          },
-    opaqueCoverInteraction: input.opaqueCoverInteraction,
-  };
+  return Match.value(input.effect).pipe(
+    Match.when({ kind: "emit_bright_illumination" }, ({ radiusFeet }) =>
+      Number.isInteger(radiusFeet) && radiusFeet > 0
+        ? {
+            emission: {
+              kind: "bright" as const,
+              radiusFeet: movementFeet(radiusFeet),
+            },
+            opaqueCoverInteraction: input.opaqueCoverInteraction,
+          }
+        : null,
+    ),
+    Match.when(
+      { kind: "emit_light" },
+      ({ brightRadiusFeet, dimAdditionalFeet }) => {
+        if (
+          !Number.isInteger(brightRadiusFeet) ||
+          !Number.isInteger(dimAdditionalFeet) ||
+          brightRadiusFeet < 0 ||
+          dimAdditionalFeet <= 0
+        ) {
+          return null;
+        }
+        return {
+          emission:
+            brightRadiusFeet === 0
+              ? {
+                  kind: "dim" as const,
+                  radiusFeet: movementFeet(dimAdditionalFeet),
+                }
+              : {
+                  kind: "brightAndDim" as const,
+                  brightRadiusFeet: movementFeet(brightRadiusFeet),
+                  dimAdditionalFeet: movementFeet(dimAdditionalFeet),
+                },
+          opaqueCoverInteraction: input.opaqueCoverInteraction,
+        };
+      },
+    ),
+    Match.exhaustive,
+  );
 }

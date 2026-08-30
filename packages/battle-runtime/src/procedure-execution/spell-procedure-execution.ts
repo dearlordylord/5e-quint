@@ -39,7 +39,7 @@ import type {
 import type { BattleActiveEffectSource } from "../active-effect/source.ts";
 import type {
   AbilityCheckRollModeSpellEffect,
-  BrightAndDimIlluminationEmissionFacts,
+  BrightRadiusIlluminationEmissionFacts,
   DimIlluminationEmissionFacts,
   CantripSpellAttackSequenceTargeting,
   ConditionImmunityActiveEffectTemplate,
@@ -160,7 +160,7 @@ export type AfterHitDamageAndIlluminationSpellProcedureExecution =
       readonly expr: DiceExpr;
       readonly damageType: DamageType;
     };
-    readonly illumination: BrightAndDimIlluminationEmissionFacts;
+    readonly illumination: BrightRadiusIlluminationEmissionFacts;
     readonly procedure: "afterHitDamageAndIllumination";
     readonly resource: LeveledSpellInvocationResource;
   };

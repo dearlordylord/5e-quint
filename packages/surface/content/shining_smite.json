@@ -70,8 +70,8 @@
     "operations": [
       {
         "effect": {
-          "brightRadiusFeet": 5,
-          "kind": "emit_light"
+          "kind": "emit_bright_illumination",
+          "radiusFeet": 5
         },
         "trigger": {
           "kind": "passive"

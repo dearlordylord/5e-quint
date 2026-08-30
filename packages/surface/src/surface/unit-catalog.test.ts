@@ -1504,7 +1504,7 @@ describe("SRD Unit catalog boundary", () => {
         operations: [
           {
             trigger: { kind: "passive" },
-            effect: { kind: "emit_light", brightRadiusFeet: 5 },
+            effect: { kind: "emit_bright_illumination", radiusFeet: 5 },
           },
           {
             trigger: { kind: "passive" },

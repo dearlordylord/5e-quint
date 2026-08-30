@@ -196,6 +196,7 @@ export function traceEffectAtom(
     case "set_speed":
     case "set_speed_ratio":
     case "emit_light":
+    case "emit_bright_illumination":
     case "emit_dim_light":
     case "block_reanimation":
     case "ignite_objects":

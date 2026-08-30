@@ -257,11 +257,11 @@ function syntheticAfterHitSpell(): SpellRecord {
     mechanics: {
       ...base.mechanics,
       operations: base.mechanics.operations.map((operation) =>
-        operation.effect.kind === "emit_light"
+        operation.effect.kind === "emit_bright_illumination"
           ? {
               ...operation,
               effect: {
-                ...operation.effect,
+                kind: "emit_light" as const,
                 brightRadiusFeet: 9,
                 dimAdditionalFeet: 4,
               },

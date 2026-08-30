@@ -1,11 +1,11 @@
 import {
   BattleFillSchema,
-  BattleFallingCreatureMitigationTriggerWithinRangeFactSchema,
+  BattleFallingCreatureMitigationTriggerFactSchema,
   BattleSubjectSchema,
   combatantId,
   type BattleFill,
   type BattleSubject,
-  type BattleFallingCreatureMitigationTriggerWithinRangeFact,
+  type BattleFallingCreatureMitigationTriggerFact,
   type CombatantId,
 } from "@dnd/battle-runtime";
 import {
@@ -50,7 +50,7 @@ const FillBattleHoleArgsSchema = Schema.Struct({
 const ResolveBattleActArgsSchema = Schema.Struct({
   subject: BattleSubjectSchema,
   reactionSpellTargetFacts: Schema.optionalKey(
-    Schema.Array(BattleFallingCreatureMitigationTriggerWithinRangeFactSchema),
+    Schema.Array(BattleFallingCreatureMitigationTriggerFactSchema),
   ).pipe(
     Schema.annotate({
       description:
@@ -123,7 +123,7 @@ type FillBattleHoleToolInput = {
 
 type ResolveBattleActToolInput = {
   readonly subject: BattleSubject;
-  readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[];
+  readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerFact[];
 };
 
 type EmptyToolInput = Record<string, never>;

@@ -29,18 +29,21 @@ const creatureFallsSubject = {
 } as const;
 
 describe("battle tool input", () => {
-  test("decodes the falling-creature mitigation trigger fact", () => {
+  test("decodes a visible falling creature within range trigger witness", () => {
     const decoded = decodeBattleToolCall({
       name: battleToolNames.resolveBattleAct,
       args: {
         subject: creatureFallsSubject,
         reactionSpellTargetFacts: [
           {
-            kind: "fallingCreatureMitigationTriggerWithinRange",
+            kind: "fallingCreatureMitigationTrigger",
             reactorId: actorId,
-            fallingCreatureId,
             sourceProcedureRef,
-            rangeFeet: 60,
+            witness: {
+              kind: "visibleCreatureWithinRangeFalls",
+              fallingCreatureId,
+              distanceFeet: 60,
+            },
           },
         ],
       },
@@ -52,14 +55,36 @@ describe("battle tool input", () => {
       subject: creatureFallsSubject,
       reactionSpellTargetFacts: [
         {
-          kind: "fallingCreatureMitigationTriggerWithinRange",
+          kind: "fallingCreatureMitigationTrigger",
           reactorId: actorId,
-          fallingCreatureId,
           sourceProcedureRef,
-          rangeFeet: 60,
+          witness: {
+            kind: "visibleCreatureWithinRangeFalls",
+            fallingCreatureId,
+            distanceFeet: 60,
+          },
         },
       ],
     });
+  });
+
+  test("decodes the reactor falling without an inapplicable range witness", () => {
+    const decoded = decodeBattleToolCall({
+      name: battleToolNames.resolveBattleAct,
+      args: {
+        subject: { ...creatureFallsSubject, fallingCreatureId: actorId },
+        reactionSpellTargetFacts: [
+          {
+            kind: "fallingCreatureMitigationTrigger",
+            reactorId: actorId,
+            sourceProcedureRef,
+            witness: { kind: "reactorFalls" },
+          },
+        ],
+      },
+    });
+
+    expect(Result.isSuccess(decoded)).toBe(true);
   });
 
   test("rejects an unrelated spatial-fact kind for creature-falls input", () => {
@@ -72,6 +97,26 @@ describe("battle tool input", () => {
             kind: "reactionSpellDamagerVisibleWithinRange",
             reactorId: actorId,
             damageSourceId: fallingCreatureId,
+            sourceProcedureRef,
+            rangeFeet: 60,
+          },
+        ],
+      },
+    });
+
+    expect(Result.isFailure(decoded)).toBe(true);
+  });
+
+  test("rejects a falling creature fact without a self-or-visibility witness", () => {
+    const decoded = decodeBattleToolCall({
+      name: battleToolNames.resolveBattleAct,
+      args: {
+        subject: creatureFallsSubject,
+        reactionSpellTargetFacts: [
+          {
+            kind: "fallingCreatureMitigationTrigger",
+            reactorId: actorId,
+            fallingCreatureId,
             sourceProcedureRef,
             rangeFeet: 60,
           },

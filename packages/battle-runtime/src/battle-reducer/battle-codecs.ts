@@ -676,14 +676,19 @@ type BattleAttackObjectTargetSpatialFactEncoded = Schema.Codec.Encoded<
   typeof BattleAttackObjectTargetSpatialFactSchema
 >;
 
-export const BattleFallingCreatureMitigationTriggerWithinRangeFactSchema =
-  Schema.Struct({
-    kind: Schema.Literal("fallingCreatureMitigationTriggerWithinRange"),
-    reactorId: CombatantId,
-    fallingCreatureId: CombatantId,
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    rangeFeet: MovementFeet,
-  });
+export const BattleFallingCreatureMitigationTriggerFactSchema = Schema.Struct({
+  kind: Schema.Literal("fallingCreatureMitigationTrigger"),
+  reactorId: CombatantId,
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  witness: Schema.Union([
+    Schema.Struct({ kind: Schema.Literal("reactorFalls") }),
+    Schema.Struct({
+      kind: Schema.Literal("visibleCreatureWithinRangeFalls"),
+      fallingCreatureId: CombatantId,
+      distanceFeet: MovementFeet,
+    }),
+  ]),
+});
 const BattleTargetSpatialFactSchema = Schema.Union([
   BattleAttackObjectTargetSpatialFactSchema,
   Schema.Struct({
@@ -1029,7 +1034,6 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     sourceProcedureRef: BattleProcedureExecutionRef,
     rangeFeet: MovementFeet,
   }),
-  BattleFallingCreatureMitigationTriggerWithinRangeFactSchema,
   Schema.Struct({
     kind: Schema.Literal("fallingCreatureTargetWithinRange"),
     casterId: CombatantId,

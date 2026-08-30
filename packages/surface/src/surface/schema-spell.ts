@@ -154,6 +154,9 @@ export const SpellSlotLevelSchema = Schema.Literals(SPELL_SLOT_LEVELS);
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
 );
+const NonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+);
 type StandardActionKind = Schema.Schema.Type<typeof StandardActionKindSchema>;
 
 const ACTION_RESTRICTION_ACTIONS_WITHOUT_ATTACK_LIMIT = [
@@ -1538,7 +1541,11 @@ type EffectAtom =
   | {
       readonly kind: "emit_light";
       readonly brightRadiusFeet: number;
-      readonly dimAdditionalFeet?: number;
+      readonly dimAdditionalFeet: number;
+    }
+  | {
+      readonly kind: "emit_bright_illumination";
+      readonly radiusFeet: number;
     }
   | {
       readonly kind: "emit_dim_light";
@@ -4285,8 +4292,12 @@ export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
         }),
         Schema.Struct({
           kind: Schema.Literal("emit_light"),
-          brightRadiusFeet: Schema.Number,
-          dimAdditionalFeet: optionalExact(Schema.Number),
+          brightRadiusFeet: NonNegativeIntegerSchema,
+          dimAdditionalFeet: PositiveIntegerSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("emit_bright_illumination"),
+          radiusFeet: PositiveIntegerSchema,
         }),
         Schema.Struct({
           kind: Schema.Literal("emit_dim_light"),

@@ -6,6 +6,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
 
 import { CombatantId } from "../identity.ts";
+import type { MovementFeet } from "@dnd/shared/types";
+import { Match } from "effect";
 import type { SpellProcedureExecution } from "../character-execution.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
@@ -34,6 +36,7 @@ import type {
   BattleInterruptCheckpointInput,
   BattleInterruptProcedureChoice,
   BattleExecutableSpellInvocation,
+  BattleFallingCreatureMitigationTriggerFact,
   BattleState,
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
@@ -52,14 +55,8 @@ export function triggeredReactionSpellChoices(
   ) {
     return [];
   }
-  let spellCastInterruptionReactionReactors:
-    | ReturnType<typeof spellCastInterruptionReactionCapableReactors>
-    | undefined;
-  const getSpellCastInterruptionReactors = (): ReturnType<
-    typeof spellCastInterruptionReactionCapableReactors
-  > =>
-    (spellCastInterruptionReactionReactors ??=
-      spellCastInterruptionReactionCapableReactors(state));
+  const spellCastInterruptionReactionReactors =
+    spellCastInterruptionReactionCapableReactors(state);
   const reactorIds =
     frame.trigger === "attackHit"
       ? [frame.targetId]
@@ -101,7 +98,7 @@ export function triggeredReactionSpellChoices(
             spellCastCanTriggerSpellCastInterruption({
               casterId: reactorId,
               invocation: executableInvocation,
-              reactors: getSpellCastInterruptionReactors(),
+              reactors: spellCastInterruptionReactionReactors,
             })
               ? [
                   spellCastReactionFactsHole({
@@ -308,9 +305,12 @@ export function fallingCreatureMitigationReactionSpellMatchesTrigger(
     frame.reactionSpellTargetFacts.some(
       (fact) =>
         fact.reactorId === invocation.activeEffect.sourceCombatantId &&
-        fact.fallingCreatureId === frame.fallingCreatureId &&
         fact.sourceProcedureRef === invocation.sourceProcedureRef &&
-        fact.rangeFeet === invocation.rangeFeet,
+        fallingCreatureMitigationTriggerFactMatchesFrame(
+          fact,
+          frame.fallingCreatureId,
+          { kind: "invocation", rangeFeet: invocation.rangeFeet },
+        ),
     )
   );
 }
@@ -324,12 +324,44 @@ function fallingCreatureMitigationTriggerReactors(
   return [
     ...new Set(
       frame.reactionSpellTargetFacts.flatMap((fact): readonly CombatantId[] =>
-        fact.fallingCreatureId === frame.fallingCreatureId
+        fallingCreatureMitigationTriggerFactMatchesFrame(
+          fact,
+          frame.fallingCreatureId,
+          { kind: "reactorDiscovery" },
+        )
           ? [fact.reactorId]
           : [],
       ),
     ),
   ];
+}
+
+function fallingCreatureMitigationTriggerFactMatchesFrame(
+  fact: BattleFallingCreatureMitigationTriggerFact,
+  fallingCreatureId: CombatantId,
+  requirement:
+    | { readonly kind: "reactorDiscovery" }
+    | { readonly kind: "invocation"; readonly rangeFeet: MovementFeet },
+): boolean {
+  return Match.value(fact.witness).pipe(
+    Match.when(
+      { kind: "reactorFalls" },
+      () => fact.reactorId === fallingCreatureId,
+    ),
+    Match.when({ kind: "visibleCreatureWithinRangeFalls" }, (witness) =>
+      witness.fallingCreatureId !== fallingCreatureId
+        ? false
+        : Match.value(requirement).pipe(
+            Match.when({ kind: "reactorDiscovery" }, () => true),
+            Match.when(
+              { kind: "invocation" },
+              ({ rangeFeet }) => witness.distanceFeet <= rangeFeet,
+            ),
+            Match.exhaustive,
+          ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function spellCastTriggerReactors(

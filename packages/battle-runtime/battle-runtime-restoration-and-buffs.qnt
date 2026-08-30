@@ -234,7 +234,11 @@ module battleRuntimeRestorationAndBuffs {
             FlyEndFalls({
               state: resolveFeatherFallSpell(
                 cleaned,
-                data.featherFallReactor,
+                VisibleCreatureWithinRangeFalls({
+                  reactor: data.featherFallReactor,
+                  fallingCreature: target,
+                  distanceFeet: fallingCreatureMitigationTriggerRangeFeet,
+                }),
                 data.featherFallTargets,
                 Set(target),
                 data.featherFallTargets.size(),

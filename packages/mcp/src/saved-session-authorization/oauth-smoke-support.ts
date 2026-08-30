@@ -30,8 +30,8 @@ export const RedirectResultSchema = Schema.Struct({
 const TokenResponseSchema = Schema.Struct({
   access_token: Schema.Trimmed.check(Schema.isNonEmpty()),
   expires_in: Schema.Number,
-  id_token: Schema.optional(Schema.Trimmed.check(Schema.isNonEmpty())),
-  refresh_token: Schema.optional(Schema.Trimmed.check(Schema.isNonEmpty())),
+  id_token: Schema.optionalKey(Schema.Trimmed.check(Schema.isNonEmpty())),
+  refresh_token: Schema.optionalKey(Schema.Trimmed.check(Schema.isNonEmpty())),
   scope: Schema.Trimmed.check(Schema.isNonEmpty()),
   token_type: Schema.Trimmed.check(Schema.isNonEmpty()),
 });

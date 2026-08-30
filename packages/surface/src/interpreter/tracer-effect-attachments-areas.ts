@@ -27,6 +27,7 @@ export type AttachmentAndAreaEffectAtom = Extract<
       | "set_speed"
       | "set_speed_ratio"
       | "emit_light"
+      | "emit_bright_illumination"
       | "emit_dim_light"
       | "block_reanimation"
       | "ignite_objects"
@@ -231,6 +232,16 @@ export function traceAttachmentAndAreaEffectAtom(
         category: "effect",
         atomKind: "emit_light",
         label: `emit_light\nbright: ${e.brightRadiusFeet} ft${dimTag}`,
+      });
+      return id;
+    }
+    case "emit_bright_illumination": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "emit_bright_illumination",
+        label: `emit_bright_illumination\nradius: ${e.radiusFeet} ft`,
       });
       return id;
     }

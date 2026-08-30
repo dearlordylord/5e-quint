@@ -36,6 +36,10 @@ export type BattleLightEmission =
       readonly radiusFeet: MovementFeet;
     }
   | {
+      readonly kind: "bright";
+      readonly radiusFeet: MovementFeet;
+    }
+  | {
       readonly kind: "brightAndDim";
       readonly brightRadiusFeet: MovementFeet;
       readonly dimAdditionalFeet: MovementFeet;
@@ -65,6 +69,22 @@ export type BrightAndDimIlluminationEmissionFacts = Omit<
     BattleLightEmission,
     { readonly kind: "brightAndDim" }
   >;
+};
+
+export type BrightIlluminationEmissionFacts = Omit<
+  BattleIlluminationEmissionFacts,
+  "emission"
+> & {
+  readonly emission: Extract<BattleLightEmission, { readonly kind: "bright" }>;
+};
+
+export type BrightRadiusIlluminationEmissionFacts = Omit<
+  BattleIlluminationEmissionFacts,
+  "emission"
+> & {
+  readonly emission:
+    | BrightIlluminationEmissionFacts["emission"]
+    | BrightAndDimIlluminationEmissionFacts["emission"];
 };
 
 export type SpellComponent = "V" | "S" | "M";

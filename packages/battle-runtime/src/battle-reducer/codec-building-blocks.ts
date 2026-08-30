@@ -86,6 +86,10 @@ export const DimIlluminationEmissionSchema = Schema.Struct({
 export const IlluminationEmissionSchema = Schema.Union([
   DimIlluminationEmissionSchema,
   Schema.Struct({
+    kind: Schema.Literal("bright"),
+    radiusFeet: MovementFeet,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("brightAndDim"),
     brightRadiusFeet: MovementFeet,
     dimAdditionalFeet: MovementFeet,
@@ -110,6 +114,19 @@ export const BrightAndDimIlluminationEmissionFactsSchema = Schema.Struct({
   }),
   opaqueCoverInteraction: EmitterOpaqueCoverInteractionSchema,
 });
+
+export const BrightIlluminationEmissionFactsSchema = Schema.Struct({
+  emission: Schema.Struct({
+    kind: Schema.Literal("bright"),
+    radiusFeet: MovementFeet,
+  }),
+  opaqueCoverInteraction: EmitterOpaqueCoverInteractionSchema,
+});
+
+export const BrightRadiusIlluminationEmissionFactsSchema = Schema.Union([
+  BrightIlluminationEmissionFactsSchema,
+  BrightAndDimIlluminationEmissionFactsSchema,
+]);
 
 export const SpellPostSaveAreaEffectSchema = Schema.Union([
   Schema.Struct({

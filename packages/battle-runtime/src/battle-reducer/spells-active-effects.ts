@@ -930,6 +930,9 @@ function illuminationFromEmissionAtDistance(
     Match.when({ kind: "dim" }, (dim) =>
       distanceFeet <= dim.radiusFeet ? "dimLight" : "darkness",
     ),
+    Match.when({ kind: "bright" }, (bright) =>
+      distanceFeet <= bright.radiusFeet ? "brightLight" : "darkness",
+    ),
     Match.when({ kind: "brightAndDim" }, (brightAndDim) =>
       distanceFeet <= brightAndDim.brightRadiusFeet
         ? "brightLight"
@@ -1083,6 +1086,10 @@ function projectBoundIlluminationLightEmitter(input: {
     attachment: input.attachment,
     emission: Match.value(input.illumination.emission).pipe(
       Match.when({ kind: "dim" }, (emission) => ({
+        kind: emission.kind,
+        radiusFeet: emission.radiusFeet,
+      })),
+      Match.when({ kind: "bright" }, (emission) => ({
         kind: emission.kind,
         radiusFeet: emission.radiusFeet,
       })),

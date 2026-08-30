@@ -49,12 +49,14 @@ module battleRuntimeFeatherFall {
 
   pure def resolveFeatherFallSpell(
     state: BattleState,
-    reactor: Actor,
+    triggerWitness: FallingCreatureMitigationTriggerWitness,
     targets: Set[Actor],
     fallingTargets: Set[Actor],
     targetCount: int,
   ): BattleState =
+    val reactor = fallingCreatureMitigationTriggerReactor(triggerWitness)
     if (fallingCreatureMitigationReactionAdmitted(
+      triggerWitness,
       reactorCanReact(state, reactor),
       canActorExpendSpellSlotThisTurn(state, reactor),
       targets.size(),

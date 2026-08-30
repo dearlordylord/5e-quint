@@ -2,7 +2,7 @@
 import type { AttackPresentationJoinIssue } from "./attack-presentation-contract.ts";
 import type {
   AbilityCheckRollModeSpellEffect,
-  BrightAndDimIlluminationEmissionFacts,
+  BrightRadiusIlluminationEmissionFacts,
   DimIlluminationEmissionFacts,
   BattleLightEmission,
   BattleLightEmitterOpaqueCoverInteraction,
@@ -37,6 +37,8 @@ export type {
   AbilityCheckRollModeSpellEffect,
   BattleIlluminationEmissionFacts,
   BrightAndDimIlluminationEmissionFacts,
+  BrightIlluminationEmissionFacts,
+  BrightRadiusIlluminationEmissionFacts,
   DimIlluminationEmissionFacts,
   BattleLightEmission,
   BattleLightEmitterOpaqueCoverInteraction,
@@ -1312,7 +1314,7 @@ export type BattleInterruptCheckpoint =
   | (BattleInterruptCheckpointWithContinuationBase & {
       readonly trigger: "creatureFalls";
       readonly fallingCreatureId: CombatantId;
-      readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[];
+      readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerFact[];
       readonly landingMitigations: readonly BattleFallDamageLandingMitigationFrame[];
     })
   | (BattleInterruptCheckpointWithContinuationBase & {
@@ -1973,13 +1975,6 @@ export type BattleTargetSpatialFact =
       readonly targetIds: readonly CombatantId[];
     }
   | {
-      readonly kind: "fallingCreatureMitigationTriggerWithinRange";
-      readonly reactorId: CombatantId;
-      readonly fallingCreatureId: CombatantId;
-      readonly sourceProcedureRef: BattleProcedureExecutionRef;
-      readonly rangeFeet: MovementFeet;
-    }
-  | {
       readonly kind: "fallingCreatureTargetWithinRange";
       readonly casterId: CombatantId;
       readonly targetId: CombatantId;
@@ -2039,10 +2034,18 @@ export type BattleTargetSpatialFact =
       readonly originalTargetId: CombatantId;
       readonly secondTargetId: CombatantId;
     };
-export type BattleFallingCreatureMitigationTriggerWithinRangeFact = Extract<
-  BattleTargetSpatialFact,
-  { readonly kind: "fallingCreatureMitigationTriggerWithinRange" }
->;
+export type BattleFallingCreatureMitigationTriggerFact = {
+  readonly kind: "fallingCreatureMitigationTrigger";
+  readonly reactorId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly witness:
+    | { readonly kind: "reactorFalls" }
+    | {
+        readonly kind: "visibleCreatureWithinRangeFalls";
+        readonly fallingCreatureId: CombatantId;
+        readonly distanceFeet: MovementFeet;
+      };
+};
 export type BattleProcedureRelationshipFact =
   | {
       readonly kind: "attackRollTargetIsEnemy";
@@ -2908,7 +2911,7 @@ export type AfterHitDamageAndIlluminationSpellInvocation = {
     readonly expr: DiceExpr;
     readonly damageType: DamageType;
   };
-  readonly illumination: BrightAndDimIlluminationEmissionFacts;
+  readonly illumination: BrightRadiusIlluminationEmissionFacts;
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<
       BattleActiveEffect,

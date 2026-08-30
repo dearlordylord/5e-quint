@@ -78,7 +78,7 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import type {
   BattleFill,
-  BattleFallingCreatureMitigationTriggerWithinRangeFact,
+  BattleFallingCreatureMitigationTriggerFact,
   BattleFlySpeedGrantEndFallCleanupFrame,
   BattleHole,
   BattleState,
@@ -2272,14 +2272,17 @@ function requirePendingFlySpeedGrantCleanup(
 function featherFallTriggerFacts(
   fallingCreatureId: CombatantId,
   sourceProcedureRef: BattleProcedureExecutionRef,
-): readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[] {
+): readonly BattleFallingCreatureMitigationTriggerFact[] {
   return [
     {
-      kind: "fallingCreatureMitigationTriggerWithinRange",
+      kind: "fallingCreatureMitigationTrigger",
       reactorId: spellCasterId,
-      fallingCreatureId,
       sourceProcedureRef,
-      rangeFeet: movementFeet(60),
+      witness: {
+        kind: "visibleCreatureWithinRangeFalls",
+        fallingCreatureId,
+        distanceFeet: movementFeet(60),
+      },
     },
   ];
 }

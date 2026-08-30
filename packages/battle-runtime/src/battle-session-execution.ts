@@ -30,7 +30,7 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   BattleActDiscoveryCandidate,
   BattleFill,
-  BattleFallingCreatureMitigationTriggerWithinRangeFact,
+  BattleFallingCreatureMitigationTriggerFact,
   BattleHole,
   BattleInterruptDecisionFrontier,
   BattleResolutionInput,
@@ -789,7 +789,7 @@ export function endBattleRuntimeTurnWithTableD20TestCircumstances(
 export function openCreatureFallsRuntimeInterruptWindow(input: {
   readonly session: BattleRuntimeSession;
   readonly fallingCreatureId: CombatantId;
-  readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerWithinRangeFact[];
+  readonly reactionSpellTargetFacts: readonly BattleFallingCreatureMitigationTriggerFact[];
 }): BattleRuntimeResolutionResult {
   return battleRuntimeResolutionFromMechanical(
     input.session,

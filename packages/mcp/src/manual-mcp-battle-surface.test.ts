@@ -819,11 +819,14 @@ describe("manual MCP battle surface coverage", () => {
       subject: fallingSubject,
       reactionSpellTargetFacts: [
         {
-          kind: "fallingCreatureMitigationTriggerWithinRange",
+          kind: "fallingCreatureMitigationTrigger",
           reactorId: "fighter",
-          fallingCreatureId: "ally",
           sourceProcedureRef: featherFallProcedureRef,
-          rangeFeet: 60,
+          witness: {
+            kind: "visibleCreatureWithinRangeFalls",
+            fallingCreatureId: "ally",
+            distanceFeet: 60,
+          },
         },
       ],
     });
