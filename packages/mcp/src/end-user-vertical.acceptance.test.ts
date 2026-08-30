@@ -230,6 +230,10 @@ describe("end-user MCP vertical", () => {
       "Attack",
       "Attack",
       "Attack",
+      "Attack",
+      "Attack",
+      "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
       "Unarmed Strike (Grapple)",
       "Unarmed Strike (Shove)",
@@ -1954,10 +1958,11 @@ function requireAttackAct(
       act.subject.actorId === actorId &&
       "action" in act.subject &&
       act.subject.action === "attack" &&
-      act.subject.attackAbility === undefined &&
-      act.subject.statBlockDamageSelection.every(
-        ({ notation }) => notation === "rolled",
-      ) &&
+      (act.subject.statBlockDamageSelection === undefined ||
+        (act.subject.statBlockDamageSelection.length > 0 &&
+          act.subject.statBlockDamageSelection.every(
+            ({ notation }) => notation === "rolled",
+          ))) &&
       act.summary === `Take the Attack action with ${attackName}.`,
   );
   const [act] = matchingActs;
@@ -2430,6 +2435,12 @@ function fillBattleSubject(
                       subject.attackDamageType === undefined
                         ? {}
                         : { attackDamageType: subject.attackDamageType }),
+                      ...(subject.statBlockDamageSelection === undefined
+                        ? {}
+                        : {
+                            statBlockDamageSelection:
+                              subject.statBlockDamageSelection,
+                          }),
                     },
                   ]
                 : [],

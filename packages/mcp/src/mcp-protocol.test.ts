@@ -1727,6 +1727,12 @@ describe("MCP protocol server", () => {
           ...(typeof attackSubject.attackDamageType === "string"
             ? { attackDamageType: attackSubject.attackDamageType }
             : {}),
+          ...(Array.isArray(attackSubject.statBlockDamageSelection)
+            ? {
+                statBlockDamageSelection:
+                  attackSubject.statBlockDamageSelection,
+              }
+            : {}),
         };
         await callStructuredTool(client, {
           name: "fill_battle_hole",

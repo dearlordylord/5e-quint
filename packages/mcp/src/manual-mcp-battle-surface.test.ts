@@ -678,20 +678,18 @@ describe("manual MCP battle surface coverage", () => {
       "hellish_rebuke",
       2,
     );
+    const attackTarget = attackTargetFill(
+      "battle:attack:target",
+      "goblin",
+      "fighter",
+      goblinAttack.subject,
+    );
     const afterTarget = call(root, "fill_battle_hole", {
       subject: goblinAttack.subject,
       fill: {
-        kind: "targetChoice",
-        holeId: "battle:attack:target",
-        value: "fighter",
+        ...attackTarget,
         spatialFacts: [
-          {
-            kind: "attackTargetDistance",
-            actorId: "goblin",
-            targetId: "fighter",
-            distanceFeet: movementFeet(5),
-            procedureRef: goblinAttack.subject.procedureRef,
-          },
+          ...attackTarget.spatialFacts,
           {
             kind: "reactionSpellDamagerVisibleWithinRange",
             reactorId: "fighter",
@@ -1677,11 +1675,15 @@ function requireAct(
     (candidate) =>
       candidate.label === label &&
       (attackName === undefined ||
-        ("statBlockDamageSelection" in candidate.subject &&
-          candidate.subject.statBlockDamageSelection !== undefined &&
-          candidate.subject.statBlockDamageSelection.every(
-            ({ notation }) => notation === "rolled",
-          ) &&
+        (candidate.subject.tag === "action" &&
+          "action" in candidate.subject &&
+          candidate.subject.action === "attack" &&
+          (!("statBlockDamageSelection" in candidate.subject) ||
+            candidate.subject.statBlockDamageSelection === undefined ||
+            (candidate.subject.statBlockDamageSelection.length > 0 &&
+              candidate.subject.statBlockDamageSelection.every(
+                ({ notation }) => notation === "rolled",
+              ))) &&
           candidate.summary === `Take the Attack action with ${attackName}.`)),
   );
   const [act] = matchingActs;
@@ -1858,6 +1860,10 @@ function attackTargetFill(
   cleaveSecondTargetId?: string,
   cleaveTargetFact?: { readonly firstTargetId: string },
 ) {
+  const statBlockDamageSelection =
+    "statBlockDamageSelection" in attack
+      ? attack.statBlockDamageSelection
+      : undefined;
   const selection = {
     procedureRef: attack.procedureRef,
     ...(!("attackAbility" in attack) || attack.attackAbility === undefined
@@ -1866,6 +1872,9 @@ function attackTargetFill(
     ...(!("attackDamageType" in attack) || attack.attackDamageType === undefined
       ? {}
       : { attackDamageType: attack.attackDamageType }),
+    ...(statBlockDamageSelection === undefined
+      ? {}
+      : { statBlockDamageSelection }),
   };
   return {
     kind: "targetChoice",
