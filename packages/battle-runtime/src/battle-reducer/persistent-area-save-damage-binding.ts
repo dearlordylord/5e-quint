@@ -1,7 +1,9 @@
 import type {
   BattleActiveEffect,
   BattleCreatureState,
+  BattleState,
 } from "../battle-state-execution.ts";
+import type { BattleAreaId, BattleEffectExecutionRef } from "../identity.ts";
 import { characterRetainedSpellProcedureExecution } from "../character-execution-queries.ts";
 import type {
   CollisionRepositionPersistentAreaSaveDamageSpellProcedureExecution,
@@ -55,6 +57,27 @@ export type BoundPersistentAreaSaveDamageEffect =
       readonly effect: DirectedEffect;
       readonly facts: DirectedRepositionPersistentAreaSaveDamageSpellProcedureExecution;
     };
+
+export function boundPersistentAreaSaveDamageEffectForArea(
+  state: BattleState,
+  effectRef: BattleEffectExecutionRef,
+  areaId: BattleAreaId,
+): BoundPersistentAreaSaveDamageEffect | undefined {
+  for (const combatant of state.combatants.values()) {
+    const effect = combatant.activeEffects.find(
+      (candidate): candidate is PersistentAreaSaveDamageEffect =>
+        candidate.kind === "persistentAreaSaveDamage" &&
+        candidate.effectRef === effectRef &&
+        candidate.areaId === areaId,
+    );
+    if (effect === undefined) continue;
+    const owner = state.combatants.get(effect.sourceCombatantId);
+    return owner === undefined
+      ? undefined
+      : boundPersistentAreaSaveDamageEffect(owner, effect);
+  }
+  return undefined;
+}
 
 export function boundPersistentAreaSaveDamageEffect(
   owner: BattleCreatureState,
