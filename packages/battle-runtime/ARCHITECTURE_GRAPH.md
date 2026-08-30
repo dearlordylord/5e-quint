@@ -175,7 +175,8 @@ and `battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`
 `battle-runtime-web-restraint-area-hazard.qnt`,
 `battle-runtime-spike-growth-movement-hazard.qnt`,
 `battle-runtime-sleet-storm-area-hazard.qnt`,
-`battle-runtime-obscuring-area-effects.qnt`, and
+`battle-runtime-persistent-area-core.qnt`,
+`battle-runtime-magical-darkness-point-origin.qnt`, and
 the focused `battle-runtime-flaming-sphere-*.qnt` and
 `battle-runtime-moonbeam-*.qnt` semantic families, and
 `battle-runtime-weapon-attacks.qnt`, when the split follows SRD language and

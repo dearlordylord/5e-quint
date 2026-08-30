@@ -15,29 +15,29 @@ module battleRuntimeFillKinds {
     | AbilityChoiceFillKind
     | AttackDamageDispositionFillKind
     | AttackRollFillKind
-    | CommandOptionChoiceFillKind
+    | CompelledBehaviorOptionChoiceFillKind
     | CompanionReappearanceInitiativeFillKind
     | ConcentrationSavingThrowFillKind
     | ConditionChoiceFillKind
     | DamageTypeChoiceFillKind
     | DeathSavingThrowFillKind
     | GrappleOutcomeFillKind
-    | GustOfWindLineDirectionChoiceFillKind
+    | DirectionalPersistentAreaDirectionChoiceFillKind
     | HitPointHealingDistributionFillKind
     | InterruptDecisionFillKind
-    | LevitateAltitudeChangeFillKind
-    | LevitateInitialRiseFillKind
+    | ControlledVerticalSuspensionAltitudeChangeFillKind
+    | ControlledVerticalSuspensionInitialRiseFillKind
     | MovementFillKind
     | ObjectDropResolutionFillKind
     | OngoingSpellTargetChoiceFillKind
     | ReadyDeclarationFillKind
     | RolledDiceFillKind
-    | SanctuaryInterdictionOutcomeFillKind
+    | TargetingSaveInterdictionOutcomeFillKind
     | SavingThrowOutcomeFillKind
     | SelfTransformationModeChoiceFillKind
     | ShoveOutcomeFillKind
     | SkillChoiceFillKind
-    | SlowSomaticSpellFailureOutcomeFillKind
+    | TurnConstraintSomaticSpellFailureOutcomeFillKind
     | SpellTargetAllocationFillKind
     | SpellTargetListFillKind
     | StartTurnOccurrenceOrderFillKind

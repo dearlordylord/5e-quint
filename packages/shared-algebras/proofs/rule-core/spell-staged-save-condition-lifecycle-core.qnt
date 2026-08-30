@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE
 
 module spellStagedSaveConditionLifecycleCore {

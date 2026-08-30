@@ -157,6 +157,8 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-hole-kinds.qnt",
   "battle-runtime-acid-arrow.qnt",
   "battle-runtime-command-ordering.qnt",
+  "battle-runtime-compelled-next-turn-behavior.qnt",
+  "battle-runtime-duplicate-hit-interception.qnt",
   "battle-runtime-hit-point-restoration-ordering.qnt",
   "battle-runtime-magic-missile-facts.qnt",
   "battle-runtime-mirror-image-constants.qnt",

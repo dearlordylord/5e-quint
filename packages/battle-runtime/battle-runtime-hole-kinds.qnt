@@ -15,29 +15,29 @@ module battleRuntimeHoleKinds {
     | AbilityChoiceHoleKind
     | AttackDamageDispositionHoleKind
     | AttackRollHoleKind
-    | CommandOptionChoiceHoleKind
+    | CompelledBehaviorOptionChoiceHoleKind
     | CompanionReappearanceInitiativeHoleKind
     | ConcentrationSavingThrowHoleKind
     | ConditionChoiceHoleKind
     | DamageTypeChoiceHoleKind
     | DeathSavingThrowHoleKind
     | GrappleOutcomeHoleKind
-    | GustOfWindLineDirectionChoiceHoleKind
+    | DirectionalPersistentAreaDirectionChoiceHoleKind
     | HitPointHealingDistributionHoleKind
     | InterruptDecisionHoleKind
-    | LevitateAltitudeChangeHoleKind
-    | LevitateInitialRiseHoleKind
+    | ControlledVerticalSuspensionAltitudeChangeHoleKind
+    | ControlledVerticalSuspensionInitialRiseHoleKind
     | MovementHoleKind
     | ObjectDropResolutionHoleKind
     | OngoingSpellTargetChoiceHoleKind
     | ReadyDeclarationHoleKind
     | RolledDiceHoleKind
-    | SanctuaryInterdictionOutcomeHoleKind
+    | TargetingSaveInterdictionOutcomeHoleKind
     | SavingThrowOutcomeHoleKind
     | SelfTransformationModeChoiceHoleKind
     | ShoveOutcomeHoleKind
     | SkillChoiceHoleKind
-    | SlowSomaticSpellFailureOutcomeHoleKind
+    | TurnConstraintSomaticSpellFailureOutcomeHoleKind
     | SpellTargetAllocationHoleKind
     | SpellTargetListHoleKind
     | SpellcastingAbilityCheckHoleKind

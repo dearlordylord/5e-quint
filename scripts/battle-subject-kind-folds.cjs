@@ -61,7 +61,7 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeTurnBoundary";
     case "move":
     case "standFromProne":
-    case "jumpMovementReplacement":
+    case "fixedCostMovementReplacement":
     case "creatureFalls":
       return "runtimeMovement";
     case "releaseReadiedSpell":
@@ -77,23 +77,22 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeTableDecision";
     case "releaseGrapple":
       return "runtimeLinkRelease";
-    case "greaseGroundHazardSave":
-    case "webRestraintSave":
-    case "sleetStormAreaHazardSave":
-    case "insectPlagueAreaHazardSave":
-    case "cloudkillAreaHazardSave":
-    case "gustOfWindLineSave":
+    case "persistentAreaSaveConditionSave":
+    case "persistentAreaSaveConditionEscapeSave":
+    case "persistentAreaSaveCompositeSave":
+    case "persistentAreaSaveDamageSave":
+    case "directionalPersistentAreaSave":
     case "movableZoneSave":
-    case "moonbeamCylinderExit":
+    case "persistentAreaSaveDamageExit":
       return "runtimeSavingThrow";
-    case "webRestrainedNoLongerInArea":
-    case "webAreaRemoved":
-    case "disperseFogCloud":
-    case "disperseCloudkill":
-    case "wardingBondSeparation":
+    case "endPersistentAreaSaveConditionEscapeForDeparture":
+    case "endPersistentAreaSaveConditionEscapeForAreaRemoval":
+    case "endPersistentAreaTraitForEnvironment":
+    case "endPersistentAreaSaveDamageForEnvironment":
+    case "linkedDefenseResistanceDamageShareSeparation":
     case "endConcentration":
       return "runtimeEffectCleanup";
-    case "gustOfWindLineDirectionChange":
+    case "directionalPersistentAreaDirectionChange":
     case "movableZoneReposition":
     case "movableZoneRam":
       return "runtimeEffectControl";
@@ -106,14 +105,14 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeProtectionPrevention";
     case "replaceSelfTransformationMode":
       return "runtimeTransformationMode";
-    case "commandGrovel":
-    case "commandDrop":
-    case "commandApproach":
-    case "commandFlee":
+    case "executeCompelledGrovel":
+    case "executeCompelledDrop":
+    case "executeCompelledApproach":
+    case "executeCompelledFlee":
       return "runtimeCompelledAction";
-    case "levitateAltitudeControl":
+    case "controlledVerticalSuspensionAltitudeControl":
       return "runtimeAltitudeControl";
-    case "dragonsBreathExhale":
+    case "grantedAreaSaveDamageAction":
       return "runtimeAreaEffect";
     default:
       return unknownSubjectKind("runtimeCommand", discriminatorValue);
@@ -144,8 +143,8 @@ function subjectKindFromDiscriminators(tag, discriminator, discriminatorValue) {
         case "escapeGrapple":
         case "escapeSpellRestraint":
           return "actionContest";
-        case "shakeAwakeFromSleep":
-        case "shakeAwakeFromHypnoticPattern":
+        case "shakeAwakeFromStagedCondition":
+        case "shakeAwakeFromAreaControl":
           return "actionConditionIntervention";
         default:
           return unknownSubjectKind(tag, discriminatorValue);
@@ -196,7 +195,7 @@ function subjectKindFromDiscriminators(tag, discriminator, discriminatorValue) {
       }
     case "runtimeCommand":
       return runtimeCommandSubjectKind(discriminatorValue);
-    case "findFamiliarTouchSpell":
+    case "spawnedCompanionTouchSpellProxy":
       switch (discriminatorValue) {
         case "action":
         case "bonusAction":
@@ -204,7 +203,7 @@ function subjectKindFromDiscriminators(tag, discriminator, discriminatorValue) {
         default:
           return unknownSubjectKind(tag, discriminatorValue);
       }
-    case "pactOfTheChainFamiliarAttack":
+    case "companionAttack":
       return "companionAttack";
     case "monkFocusFlurryOfBlowsStrike":
       return "featureAttack";
@@ -218,7 +217,7 @@ function subjectKindFromDiscriminators(tag, discriminator, discriminatorValue) {
       return "featureActivation";
     case "unitFeatureHeldWeaponActivation":
       return "featureWeaponActivation";
-    case "findFamiliarSharedSenses":
+    case "spawnedCompanionSharedSenses":
       return "companionSenses";
     default:
       return tag;
@@ -237,7 +236,7 @@ function battleSubjectKindDiscriminator(tag) {
       return "option";
     case "runtimeCommand":
       return "command";
-    case "findFamiliarTouchSpell":
+    case "spawnedCompanionTouchSpellProxy":
       return "spellAction";
     default:
       return undefined;
