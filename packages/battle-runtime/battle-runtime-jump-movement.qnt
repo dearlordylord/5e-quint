@@ -21,14 +21,16 @@ module battleRuntimeJumpMovement {
 
   pure def jumpMovementReplacementLandingIsLegal(landing: JumpMovementLandingFact): bool =
     fixedCostMovementReplacementLandingIsLegal(match landing {
-      | JumpLegalLanding => FixedCostMovementReplacementLegalLanding
+      | JumpLegalLandingNoCheck => FixedCostMovementReplacementLegalLanding
+      | JumpLegalLandingAcrobaticsPassed => FixedCostMovementReplacementLegalLanding
       | JumpLegalLandingAcrobaticsFailed => FixedCostMovementReplacementLegalLandingWithProne
       | JumpIllegalLanding => FixedCostMovementReplacementIllegalLanding
     })
 
   pure def jumpMovementReplacementLandingAppliesProne(landing: JumpMovementLandingFact): bool =
     fixedCostMovementReplacementLandingAppliesProne(match landing {
-      | JumpLegalLanding => FixedCostMovementReplacementLegalLanding
+      | JumpLegalLandingNoCheck => FixedCostMovementReplacementLegalLanding
+      | JumpLegalLandingAcrobaticsPassed => FixedCostMovementReplacementLegalLanding
       | JumpLegalLandingAcrobaticsFailed => FixedCostMovementReplacementLegalLandingWithProne
       | JumpIllegalLanding => FixedCostMovementReplacementIllegalLanding
     })

@@ -7,30 +7,30 @@ module battleRuntimeFallingCreatureMitigationReaction {
   pure val fallingCreatureMitigationMaximumTargets = 5
   pure val fallingCreatureMitigationTriggerRangeFeet = 60
 
-  type FallingCreatureMitigationTriggerWitness[a] =
-    | ReactorFalls({ reactor: a })
-    | VisibleCreatureFalls({
-        reactor: a,
-        fallingCreature: a,
-        distanceFeet: int,
-      })
+  type FallingCreatureMitigationTriggerKind =
+    | ReactorFalls
+    | VisibleCreatureFalls({ distanceFeet: int })
+
+  type FallingCreatureMitigationTriggerWitness[a] = {
+    kind: FallingCreatureMitigationTriggerKind,
+    reactor: a,
+    fallingCreature: a,
+  }
 
   pure def fallingCreatureMitigationTriggerReactor(
     witness: FallingCreatureMitigationTriggerWitness[a],
-  ): a =
-    match witness {
-      | ReactorFalls(data) => data.reactor
-      | VisibleCreatureFalls(data) => data.reactor
-    }
+  ): a = witness.reactor
 
   pure def fallingCreatureMitigationTriggerAdmitted(
     witness: FallingCreatureMitigationTriggerWitness[a],
     triggeringFallingCreature: a,
   ): bool =
-    match witness {
-      | ReactorFalls(data) => data.reactor == triggeringFallingCreature
+    match witness.kind {
+      | ReactorFalls =>
+          witness.reactor == triggeringFallingCreature and
+            witness.fallingCreature == triggeringFallingCreature
       | VisibleCreatureFalls(data) =>
-          data.fallingCreature == triggeringFallingCreature and
+          witness.fallingCreature == triggeringFallingCreature and
             data.distanceFeet >= 0 and
             data.distanceFeet <= fallingCreatureMitigationTriggerRangeFeet
     }

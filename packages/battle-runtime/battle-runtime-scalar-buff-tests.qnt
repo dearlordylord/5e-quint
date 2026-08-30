@@ -5,6 +5,7 @@ module battleRuntimeScalarBuffTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
+  import battleRuntimeFallingCreatureMitigationReaction.* from "./battle-runtime-falling-creature-mitigation-reaction"
   import battleRuntimeFeatherFall.* from "./battle-runtime-feather-fall"
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
@@ -138,7 +139,14 @@ module battleRuntimeScalarBuffTests {
       assert(invalidWithoutCleanup == FlyEndInvalid({ state: laterCasterTurn, target: Fighter })),
       assert(stateHasFlySpeedGrantEndFallCleanupFrame(pendingCleanup, Fighter)),
       assert(fallsAfterBreak == FlyEndFalls({
-        state: resolveFeatherFallSpell(cleanedLaterCasterTurn, Fighter, ReactorFalls({ reactor: Fighter }), Set(Fighter), Set(Fighter), 1),
+        state: resolveFeatherFallSpell(
+          cleanedLaterCasterTurn,
+          Fighter,
+          { kind: ReactorFalls, reactor: Fighter, fallingCreature: Fighter },
+          Set(Fighter),
+          Set(Fighter),
+          1,
+        ),
         target: Fighter,
       })),
       assert(fallsAfterExpire == FlyEndFalls({ state: stateWithoutEndedFlySpeedGrant(expiringState, Fighter, Fighter), target: Fighter })),
