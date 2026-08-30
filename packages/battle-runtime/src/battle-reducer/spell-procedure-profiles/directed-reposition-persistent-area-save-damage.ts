@@ -38,6 +38,7 @@ import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts"
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveMovablePersistentAreaSpellAct } from "../spells-resolve-area-effects.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { hasSharedNonEmptyOncePerTurnLimitGroup } from "./once-per-turn-limit-group-admission.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -182,6 +183,10 @@ function movablePersistentAreaSpell(
     spell.mechanics.initialPhase,
     cylinderHole?.holeId,
   );
+  const initialUsageLimit =
+    spell.mechanics.initialPhase?.kind === "save_gate"
+      ? spell.mechanics.initialPhase.usageLimit
+      : undefined;
   const endTurnOperation = spell.mechanics.operations.find(
     (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
   );
@@ -228,6 +233,12 @@ function movablePersistentAreaSpell(
     isMovablePersistentAreaSaveGate(endTurnOperation?.effect) === null ||
     isMovablePersistentAreaSaveGate(enterOperation?.effect) === null ||
     isMovablePersistentAreaSaveGate(moveIntoOperation?.effect) === null ||
+    !hasSharedNonEmptyOncePerTurnLimitGroup([
+      initialUsageLimit,
+      moveIntoOperation?.usageLimit,
+      enterOperation?.usageLimit,
+      endTurnOperation?.usageLimit,
+    ]) ||
     repositionOperation?.effect.kind !== "reposition_attachment" ||
     repositionOperation.effect.maxMoveFeet !==
       MOVABLE_PERSISTENT_AREA_REPOSITION_MAX_MOVE_FEET ||
