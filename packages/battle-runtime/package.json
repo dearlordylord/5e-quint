@@ -26,6 +26,8 @@
     "test:mbt:weapon-hosted-attack-and-riders": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/weapon-hosted-attack-and-riders.mbt.test.ts",
     "test:mbt:command-option-next-turn": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/command-option-next-turn.mbt.test.ts",
     "test:mbt:ability-check-choice-search": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/ability-check-choice-search.mbt.test.ts",
+    "test:mbt:antimagic-field-action-interdiction": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/antimagic-field-action-interdiction.mbt.test.ts",
+    "test:mbt:antimagic-field-magical-effect-interdiction": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/antimagic-field-magical-effect-interdiction.mbt.test.ts",
     "test:mbt:antimagic-field-ongoing-suppression": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/antimagic-field-ongoing-suppression.mbt.test.ts",
     "test:mbt:blur-attack-roll-defense-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/blur-attack-roll-defense-lifecycle.mbt.test.ts",
     "test:mbt:chained-attack-sequence": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/chained-attack-sequence.mbt.test.ts",
