@@ -17,7 +17,7 @@ This section is the sole mutable handoff for a new session.
 - Active owner: user
 - Last completed checkpoint: none under this ledger
 - Last accepted milestone SHA: none
-- Observed local `master`: `51beff526`
+- Coordination base before `SR-00`: `51beff526`
 - Next action after `SR-00`: start `SR-01` from the exact #386 landing SHA
 - Parallel work allowed now: none that modifies behavior or files owned by
   #368–#386
