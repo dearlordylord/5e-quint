@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleep-target-admission
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hitPointBudgetConditionProfileShape-target-admission
 //
 // The stagedSaveCondition Spell Procedure Profile: action-time Spell Slot
 // casting where creatures chosen in a point-origin Sphere make a Wisdom Saving
@@ -107,8 +107,8 @@ export function supportedPreparedStagedSaveConditionProfile(
   spell: StagedSaveConditionSpellInvocation["spell"],
   castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly StagedSaveConditionSpellInvocation[] {
-  const sleep = stagedSaveConditionSpell(spell);
-  if (sleep === null) {
+  const hitPointBudgetConditionProfileShape = stagedSaveConditionSpell(spell);
+  if (hitPointBudgetConditionProfileShape === null) {
     return [];
   }
 
@@ -123,12 +123,13 @@ export function supportedPreparedStagedSaveConditionProfile(
           resource: spellInvocationResourceForCastOption(slot),
           procedure: "stagedSaveCondition",
           spell,
-          ability: sleep.phase.ability,
-          dc: sleep.phase.dc,
-          targeting: sleep.targeting,
-          rangeFeet: sleep.rangeFeet,
-          automaticSuccessPredicates: sleep.automaticSuccessPredicates,
-          escapeAction: sleep.escapeAction,
+          ability: hitPointBudgetConditionProfileShape.phase.ability,
+          dc: hitPointBudgetConditionProfileShape.phase.dc,
+          targeting: hitPointBudgetConditionProfileShape.targeting,
+          rangeFeet: hitPointBudgetConditionProfileShape.rangeFeet,
+          automaticSuccessPredicates:
+            hitPointBudgetConditionProfileShape.automaticSuccessPredicates,
+          escapeAction: hitPointBudgetConditionProfileShape.escapeAction,
         },
       ];
     },

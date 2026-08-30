@@ -41,9 +41,9 @@ import {
 import type { CharacterBattleSpellcastingExecutionState } from "../character-battle-resource-execution.ts";
 import {
   CHAINED_SPELL_ATTACK_CONTINUATION_LIMIT_KINDS,
-  CHROMATIC_ORB_DAMAGE_TYPES,
-  CHROMATIC_ORB_LEAP_RANGE_FEET,
-  ELDRITCH_BLAST_BEAM_COUNT_TIERS,
+  CHROMATIC_ORB_DAMAGE_TYPES as CHAINED_SPELL_ATTACK_DAMAGE_TYPES,
+  CHROMATIC_ORB_LEAP_RANGE_FEET as CHAINED_SPELL_ATTACK_LEAP_RANGE_FEET,
+  ELDRITCH_BLAST_BEAM_COUNT_TIERS as CANTRIP_MULTI_BEAM_COUNT_TIERS,
   multiRaySpellAttackRayCount,
   type MultiBeamSpellAttackBeamCount,
   type MultiRaySpellAttackRayCount,
@@ -69,7 +69,7 @@ export type AttackBurstSaveDamageInvocation = Extract<
   { readonly procedure: "attackBurstSaveDamage" }
 >;
 
-const SORCEROUS_BURST_DAMAGE_TYPES = [
+const EXPLODING_CANTRIP_DAMAGE_TYPES = [
   "acid",
   "cold",
   "fire",
@@ -78,17 +78,17 @@ const SORCEROUS_BURST_DAMAGE_TYPES = [
   "psychic",
   "thunder",
 ] as const satisfies readonly DamageType[];
-const SCORCHING_RAY_DAMAGE_TYPE = "fire" as const satisfies DamageType;
-const SCORCHING_RAY_RANGE_FEET = 120;
-const SCORCHING_RAY_ATTACK_KIND = "ranged_spell_attack" as const;
-const SCORCHING_RAY_BASE_LEVEL = 2;
-const SCORCHING_RAY_BASE_RAY_COUNT = 3;
-const SCORCHING_RAY_RAYS_PER_SLOT_ABOVE_BASE = 1;
-type ScorchingRayCountProgression = {
+const PREPARED_MULTI_RAY_DAMAGE_TYPE = "fire" as const satisfies DamageType;
+const PREPARED_MULTI_RAY_RANGE_FEET = 120;
+const PREPARED_MULTI_RAY_ATTACK_KIND = "ranged_spell_attack" as const;
+const PREPARED_MULTI_RAY_BASE_LEVEL = 2;
+const PREPARED_MULTI_RAY_BASE_COUNT = 3;
+const PREPARED_MULTI_RAY_COUNT_PER_SLOT_ABOVE_BASE = 1;
+type MultiRayCountProgression = {
   readonly kind: "linear";
-  readonly base: typeof SCORCHING_RAY_BASE_RAY_COUNT;
-  readonly baseLevel: typeof SCORCHING_RAY_BASE_LEVEL;
-  readonly perSlotAboveBase: typeof SCORCHING_RAY_RAYS_PER_SLOT_ABOVE_BASE;
+  readonly base: typeof PREPARED_MULTI_RAY_BASE_COUNT;
+  readonly baseLevel: typeof PREPARED_MULTI_RAY_BASE_LEVEL;
+  readonly perSlotAboveBase: typeof PREPARED_MULTI_RAY_COUNT_PER_SLOT_ABOVE_BASE;
 };
 
 export function supportedSpellAttackKind(
@@ -327,22 +327,22 @@ export function supportedPreparedSpellAttackSequenceProfile(
   const damageEffect = phase?.kind === "attack_roll" ? phase.onHit[0] : null;
   const countProgression =
     phase?.kind === "attack_roll"
-      ? scorchingRayCountProgressionFromAttachment(phase.attachment)
+      ? multiRayCountProgressionFromAttachment(phase.attachment)
       : null;
   const range = spell.mechanics.range;
   if (
     spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== SCORCHING_RAY_BASE_LEVEL ||
+    spell.mechanics.level !== PREPARED_MULTI_RAY_BASE_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.duration.kind !== "instantaneous" ||
     range.kind !== "point" ||
-    range.feet !== SCORCHING_RAY_RANGE_FEET ||
+    range.feet !== PREPARED_MULTI_RAY_RANGE_FEET ||
     spell.mechanics.phases.length !== 1 ||
     phase?.kind !== "attack_roll" ||
-    phase.attackKind !== SCORCHING_RAY_ATTACK_KIND ||
+    phase.attackKind !== PREPARED_MULTI_RAY_ATTACK_KIND ||
     phase.onHit.length !== 1 ||
     damageEffect?.kind !== "damage" ||
-    damageEffect.damageType !== SCORCHING_RAY_DAMAGE_TYPE ||
+    damageEffect.damageType !== PREPARED_MULTI_RAY_DAMAGE_TYPE ||
     phase.onMiss.length !== 1 ||
     phase.onMiss[0]?.kind !== "none" ||
     countProgression === null
@@ -378,10 +378,10 @@ export function supportedPreparedSpellAttackSequenceProfile(
           targeting,
           damage: {
             expr: damageExpr,
-            damageType: SCORCHING_RAY_DAMAGE_TYPE,
+            damageType: PREPARED_MULTI_RAY_DAMAGE_TYPE,
           },
-          rangeFeet: movementFeet(SCORCHING_RAY_RANGE_FEET),
-          attackKind: SCORCHING_RAY_ATTACK_KIND,
+          rangeFeet: movementFeet(PREPARED_MULTI_RAY_RANGE_FEET),
+          attackKind: PREPARED_MULTI_RAY_ATTACK_KIND,
           attackBonus: attackBonus(
             Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
           ),
@@ -452,7 +452,7 @@ export function supportedPreparedChainedSpellAttackDamageProfile(
     typeof hitDamage.damageType.value !== "object" ||
     hitDamage.damageType.value.kind !== "choice" ||
     !sameStringSet(hitDamage.damageType.value.options, [
-      ...CHROMATIC_ORB_DAMAGE_TYPES,
+      ...CHAINED_SPELL_ATTACK_DAMAGE_TYPES,
     ]) ||
     typeof leapHitDamage.damageType !== "object" ||
     leapHitDamage.damageType.kind !== "same_choice_as" ||
@@ -493,9 +493,9 @@ export function supportedPreparedChainedSpellAttackDamageProfile(
         spell,
         targeting,
         damage: { expr: damageExpr },
-        damageTypeChoices: CHROMATIC_ORB_DAMAGE_TYPES,
+        damageTypeChoices: CHAINED_SPELL_ATTACK_DAMAGE_TYPES,
         rangeFeet,
-        leapRangeFeet: CHROMATIC_ORB_LEAP_RANGE_FEET,
+        leapRangeFeet: CHAINED_SPELL_ATTACK_LEAP_RANGE_FEET,
         attackKind: phase.attackKind,
         attackBonus: attackBonus(
           Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
@@ -703,14 +703,14 @@ export function supportedSpellAttackDamageProfile(
   ) {
     return [];
   }
-  const sorcerousBurstProjection = supportedSorcerousBurstProjection(
+  const explodingCantripProjection = supportedExplodingCantripProjection(
     spell,
     damageEffect,
     input.spellcastingAbilityModifier,
   );
   const damageTypeProjection =
-    sorcerousBurstProjection !== null
-      ? { kind: "choice" as const, projection: sorcerousBurstProjection }
+    explodingCantripProjection !== null
+      ? { kind: "choice" as const, projection: explodingCantripProjection }
       : fixedDamageType !== null
         ? { kind: "fixed" as const, damageType: fixedDamageType }
         : null;
@@ -814,7 +814,7 @@ export function supportedSpellAttackDamageProfile(
   ];
 }
 
-function supportedSorcerousBurstProjection(
+function supportedExplodingCantripProjection(
   spell: BattleSpellAdmissionSource,
   damageEffect: SpellAttackHitEffect,
   spellcastingAbilityModifier: AbilityModifier,
@@ -831,7 +831,7 @@ function supportedSorcerousBurstProjection(
     typeof damageEffect.damageType.value !== "object" ||
     damageEffect.damageType.value.kind !== "choice" ||
     !sameStringSet(damageEffect.damageType.value.options, [
-      ...SORCEROUS_BURST_DAMAGE_TYPES,
+      ...EXPLODING_CANTRIP_DAMAGE_TYPES,
     ]) ||
     damageEffect.amount.kind !== "threshold_tiers_exploding_max_die" ||
     damageEffect.amount.axis !== "character" ||
@@ -842,7 +842,7 @@ function supportedSorcerousBurstProjection(
     return null;
   }
   return {
-    damageTypes: SORCEROUS_BURST_DAMAGE_TYPES,
+    damageTypes: EXPLODING_CANTRIP_DAMAGE_TYPES,
     maxAdditionalDice: Math.max(0, Number(spellcastingAbilityModifier)),
   };
 }
@@ -917,7 +917,7 @@ function spellAttackSequenceTargeting(
   if (selection === null) {
     return null;
   }
-  const beamCount = eldritchBlastBeamCount(selection, characterLevel);
+  const beamCount = cantripMultiBeamCount(selection, characterLevel);
   return beamCount === null
     ? null
     : {
@@ -928,10 +928,10 @@ function spellAttackSequenceTargeting(
 }
 
 function spellAttackSequenceSlotTargeting(
-  countProgression: ScorchingRayCountProgression,
+  countProgression: MultiRayCountProgression,
   slotLevel: SpellSlotLevel,
 ): PreparedSpellAttackSequenceTargeting | null {
-  const attackCount = scorchingRayAttackCount(countProgression, slotLevel);
+  const attackCount = preparedMultiRayAttackCount(countProgression, slotLevel);
   return attackCount === null
     ? null
     : {
@@ -951,21 +951,21 @@ function creatureOrObjectTargetSelectionFromAttachment(
     : null;
 }
 
-function scorchingRayCountProgressionFromAttachment(
+function multiRayCountProgressionFromAttachment(
   attachment: Attachment,
-): ScorchingRayCountProgression | null {
+): MultiRayCountProgression | null {
   const selection = creatureOrObjectTargetSelectionFromAttachment(attachment);
-  return selection !== null && scorchingRaySelectionIsCanonical(selection)
+  return selection !== null && multiRaySelectionIsCanonical(selection)
     ? selection.count
     : null;
 }
 
-function scorchingRaySelectionIsCanonical(
+function multiRaySelectionIsCanonical(
   selection: TargetSelection,
 ): selection is TargetSelection & {
   readonly mode: "choose_up_to";
   readonly repeatsAllowed: true;
-  readonly count: ScorchingRayCountProgression;
+  readonly count: MultiRayCountProgression;
 } {
   if (selection.mode !== "choose_up_to" || selection.repeatsAllowed !== true) {
     return false;
@@ -974,14 +974,14 @@ function scorchingRaySelectionIsCanonical(
   return (
     typeof count === "object" &&
     count.kind === "linear" &&
-    count.base === SCORCHING_RAY_BASE_RAY_COUNT &&
-    count.baseLevel === SCORCHING_RAY_BASE_LEVEL &&
-    count.perSlotAboveBase === SCORCHING_RAY_RAYS_PER_SLOT_ABOVE_BASE
+    count.base === PREPARED_MULTI_RAY_BASE_COUNT &&
+    count.baseLevel === PREPARED_MULTI_RAY_BASE_LEVEL &&
+    count.perSlotAboveBase === PREPARED_MULTI_RAY_COUNT_PER_SLOT_ABOVE_BASE
   );
 }
 
-function scorchingRayAttackCount(
-  countProgression: ScorchingRayCountProgression,
+function preparedMultiRayAttackCount(
+  countProgression: MultiRayCountProgression,
   slotLevel: SpellSlotLevel,
 ): MultiRaySpellAttackRayCount | null {
   const slotOffset = Number(slotLevel) - countProgression.baseLevel;
@@ -993,7 +993,7 @@ function scorchingRayAttackCount(
   );
 }
 
-function eldritchBlastBeamCount(
+function cantripMultiBeamCount(
   selection: TargetSelection,
   characterLevel: number,
 ): MultiBeamSpellAttackBeamCount | null {
@@ -1010,9 +1010,9 @@ function eldritchBlastBeamCount(
   }
   if (
     count.base !== 1 ||
-    count.tiers.length !== ELDRITCH_BLAST_BEAM_COUNT_TIERS.length ||
+    count.tiers.length !== CANTRIP_MULTI_BEAM_COUNT_TIERS.length ||
     !count.tiers.every((tier, index) => {
-      const expected = ELDRITCH_BLAST_BEAM_COUNT_TIERS[index];
+      const expected = CANTRIP_MULTI_BEAM_COUNT_TIERS[index];
       return (
         expected !== undefined &&
         tier.atLevel === expected.atLevel &&
@@ -1022,7 +1022,7 @@ function eldritchBlastBeamCount(
   ) {
     return null;
   }
-  return ELDRITCH_BLAST_BEAM_COUNT_TIERS.reduce<MultiBeamSpellAttackBeamCount>(
+  return CANTRIP_MULTI_BEAM_COUNT_TIERS.reduce<MultiBeamSpellAttackBeamCount>(
     (current, tier) => (characterLevel >= tier.atLevel ? tier.value : current),
     count.base,
   );

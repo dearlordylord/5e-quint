@@ -1,6 +1,6 @@
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-careful-save-protection
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-profileShape-active-penalties unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-careful-save-protection
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 //
@@ -112,24 +112,24 @@ type SaveGatedTurnConstraintBundleProfileShape = {
   readonly maxTargets: 6;
 };
 
-const SLOW_ACTIVE_PENALTIES_LEVEL = 3;
-const SLOW_ACTIVE_PENALTIES_RANGE_FEET = 120;
-const SLOW_ACTIVE_PENALTIES_DURATION_MINUTES = 1;
-const SLOW_ACTIVE_PENALTIES_CUBE_SIDE_FEET = 40;
-const SLOW_ACTIVE_PENALTIES_MAX_TARGETS = 6;
-const SLOW_ACTIVE_PENALTIES_FAILED_EFFECT_COUNT = 7;
+const SAVE_GATED_TURN_CONSTRAINT_LEVEL = 3;
+const SAVE_GATED_TURN_CONSTRAINT_RANGE_FEET = 120;
+const SAVE_GATED_TURN_CONSTRAINT_DURATION_MINUTES = 1;
+const SAVE_GATED_TURN_CONSTRAINT_CUBE_SIDE_FEET = 40;
+const SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS = 6;
+const SAVE_GATED_TURN_CONSTRAINT_FAILED_EFFECT_COUNT = 7;
 
 function admitSaveGatedTurnConstraintBundle(
   spell: SaveGatedTurnConstraintBundleSpellInvocation["spell"],
   ctx: SpellAdmissionContext,
 ): readonly SaveGatedTurnConstraintBundleSpellInvocation[] {
-  const slow = saveGatedTurnConstraintBundleSpell(spell);
-  if (slow === null) {
+  const profileShape = saveGatedTurnConstraintBundleSpell(spell);
+  if (profileShape === null) {
     return [];
   }
   return ctx.spellCastOptions.flatMap(
     (slot): readonly SaveGatedTurnConstraintBundleSpellInvocation[] =>
-      Number(slot.spellLevel) < SLOW_ACTIVE_PENALTIES_LEVEL
+      Number(slot.spellLevel) < SAVE_GATED_TURN_CONSTRAINT_LEVEL
         ? []
         : [
             {
@@ -138,17 +138,17 @@ function admitSaveGatedTurnConstraintBundle(
               procedure: "saveGatedTurnConstraintBundle",
               spell,
               actionCost: "magicAction",
-              ability: slow.phase.ability,
-              dc: slow.phase.dc,
+              ability: profileShape.phase.ability,
+              dc: profileShape.phase.dc,
               targeting: {
                 kind: "pointOriginCube",
                 sideFeet: movementFeet(
-                  slow.phase.attachment.value.shape.sideFeet,
+                  profileShape.phase.attachment.value.shape.sideFeet,
                 ),
               },
-              maxTargets: slow.maxTargets,
-              rangeFeet: movementFeet(slow.rangeFeet),
-              durationTicks: slow.durationTicks,
+              maxTargets: profileShape.maxTargets,
+              rangeFeet: movementFeet(profileShape.rangeFeet),
+              durationTicks: profileShape.durationTicks,
             },
           ],
   );
@@ -166,14 +166,14 @@ function saveGatedTurnConstraintBundleSpell(
       ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
       : null;
   if (
-    spell.mechanics.level !== SLOW_ACTIVE_PENALTIES_LEVEL ||
+    spell.mechanics.level !== SAVE_GATED_TURN_CONSTRAINT_LEVEL ||
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== SLOW_ACTIVE_PENALTIES_RANGE_FEET ||
+    spell.mechanics.range.feet !== SAVE_GATED_TURN_CONSTRAINT_RANGE_FEET ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "minute" ||
     spell.mechanics.duration.upTo.amount !==
-      SLOW_ACTIVE_PENALTIES_DURATION_MINUTES ||
+      SAVE_GATED_TURN_CONSTRAINT_DURATION_MINUTES ||
     spell.mechanics.phases.length !== 1 ||
     !isSaveGatedTurnConstraintBundlePhase(phase) ||
     durationTicks === null ||
@@ -185,7 +185,7 @@ function saveGatedTurnConstraintBundleSpell(
     phase,
     rangeFeet: spell.mechanics.range.feet,
     durationTicks: durationTicks.success,
-    maxTargets: SLOW_ACTIVE_PENALTIES_MAX_TARGETS,
+    maxTargets: SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS,
   };
 }
 
@@ -215,11 +215,11 @@ function isSaveGatedTurnConstraintBundlePhase(
     phase.attachment.value.origin.kind === "point_within_range" &&
     phase.attachment.value.shape.kind === "cube" &&
     phase.attachment.value.shape.sideFeet ===
-      SLOW_ACTIVE_PENALTIES_CUBE_SIDE_FEET &&
+      SAVE_GATED_TURN_CONSTRAINT_CUBE_SIDE_FEET &&
     selection?.mode === "choose_up_to" &&
-    selection.count === SLOW_ACTIVE_PENALTIES_MAX_TARGETS &&
+    selection.count === SAVE_GATED_TURN_CONSTRAINT_MAX_TARGETS &&
     sameStringSet(selection.targetKinds, ["creature"]) &&
-    failedEffects.length === SLOW_ACTIVE_PENALTIES_FAILED_EFFECT_COUNT &&
+    failedEffects.length === SAVE_GATED_TURN_CONSTRAINT_FAILED_EFFECT_COUNT &&
     failedEffects.some(isTurnHinderingSpeedRatioEffect) &&
     failedEffects.some(isTurnHinderingArmorClassPenaltyEffect) &&
     failedEffects.some(isTurnHinderingDexteritySavingThrowPenaltyEffect) &&
@@ -340,7 +340,7 @@ function resolveSaveGatedTurnConstraintBundle(
     return areaSave;
   }
   const savingThrowOutcomes = areaSave.savingThrowOutcomes;
-  const areaWitnessValidation = validateSlowAreaWitness(
+  const areaWitnessValidation = validateTurnConstraintAreaWitness(
     savingThrowOutcomes,
     input.invocation.maxTargets,
   );
@@ -473,7 +473,7 @@ function applyTurnHinderingActivePenaltyEffects(
 }
 
 /* v8 ignore start -- @preserve -- Malformed area-witness validator: Slow discovery supplies the typed Cube geometry, unique chosen targets, and matching outcomes; admitted Slow execution remains measured. */
-function validateSlowAreaWitness(
+function validateTurnConstraintAreaWitness(
   savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue,
   maxTargets: 6,
 ): string | null {
@@ -484,7 +484,7 @@ function validateSlowAreaWitness(
   if (area.kind !== "saveGatedTurnConstraintBundleArea") {
     return "The turn-constraint procedure requires explicit Cube membership and caster-choice witnesses.";
   }
-  if (area.cubeSideFeet !== SLOW_ACTIVE_PENALTIES_CUBE_SIDE_FEET) {
+  if (area.cubeSideFeet !== SAVE_GATED_TURN_CONSTRAINT_CUBE_SIDE_FEET) {
     return "The turn-constraint procedure requires a 40-foot Cube witness.";
   }
   if (area.affectedTargetIds.length > maxTargets) {

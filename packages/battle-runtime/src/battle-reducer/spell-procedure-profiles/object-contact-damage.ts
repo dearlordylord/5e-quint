@@ -290,7 +290,7 @@ type LinearPerLevelDiceAmount = Extract<
   DiceAmount,
   { readonly kind: "linear_per_level" }
 >;
-type SupportedHeatMetalDamageAmount = LinearPerLevelDiceAmount & {
+type SupportedObjectContactDamageAmount = LinearPerLevelDiceAmount & {
   readonly axis: "slot";
   readonly base: DiceExpr & {
     readonly dice: 2;
@@ -308,7 +308,7 @@ type SupportedHeatMetalDamageAmount = LinearPerLevelDiceAmount & {
 };
 type SupportedObjectContactDamageEffect = ObjectContactDamageEffect & {
   readonly damageType: Extract<DamageType, "fire">;
-  readonly amount: SupportedHeatMetalDamageAmount;
+  readonly amount: SupportedObjectContactDamageAmount;
 };
 
 function isObjectContactDamageEffect(
@@ -322,14 +322,14 @@ function isObjectContactDamageEffect(
     effect.contact.kind ===
       "table_witnessed_physical_contact_with_spell_object" &&
     effect.damageType === "fire" &&
-    isSupportedHeatMetalDamageAmount(amount) &&
+    isSupportedObjectContactDamageAmount(amount) &&
     isSupportedObjectContactHoldingOrWearingSave(effect.holdingOrWearingSave)
   );
 }
 
-function isSupportedHeatMetalDamageAmount(
+function isSupportedObjectContactDamageAmount(
   amount: DiceAmount,
-): amount is SupportedHeatMetalDamageAmount {
+): amount is SupportedObjectContactDamageAmount {
   return (
     amount.kind === "linear_per_level" &&
     amount.axis === "slot" &&
