@@ -605,6 +605,26 @@ describe("player current-turn projection", () => {
   });
 
   test("keeps projected subjects discriminated by required protocol fields", () => {
+    expect(
+      projectPlayerSubject({
+        tag: "companionAttack",
+        actorId: "fighter",
+        procedureRef: attackProcedureRef,
+      }),
+    ).toEqual({
+      tag: "companionAttack",
+      actorId: "fighter",
+      procedureRef: attackProcedureRef,
+    });
+    expect(
+      projectPlayerSubject({
+        tag: "spawnedCompanionSharedSenses",
+        actorId: "fighter",
+      }),
+    ).toEqual({
+      tag: "spawnedCompanionSharedSenses",
+      actorId: "fighter",
+    });
     expect(projectPlayerSubject({ tag: "action", actorId: "fighter" })).toBe(
       undefined,
     );

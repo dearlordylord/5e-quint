@@ -98,7 +98,7 @@ export type PlayerRejectionProjection =
 
 const PLAYER_SUBJECT_TAGS = [
   "action",
-  "pactOfTheChainFamiliarAttack",
+  "companionAttack",
   "bonusAction",
   "bonusActionStandardAction",
   "monkFocusOption",
@@ -110,8 +110,8 @@ const PLAYER_SUBJECT_TAGS = [
   "unitFeatureHeldWeaponActivation",
   "druidWildShape",
   "companionLifecycle",
-  "findFamiliarSharedSenses",
-  "findFamiliarTouchSpell",
+  "spawnedCompanionSharedSenses",
+  "spawnedCompanionTouchSpellProxy",
   "runtimeCommand",
 ] as const;
 type PlayerSubjectTag = (typeof PLAYER_SUBJECT_TAGS)[number];
@@ -136,7 +136,7 @@ const PLAYER_HOLE_ADMISSION = {
   helpAttackEnemyDecision: true,
   damageRelationshipDecisions: true,
   targetSpatialFacts: true,
-  slowSomaticSpellFailureOutcome: true,
+  turnConstraintSomaticSpellFailureOutcome: true,
   objectTargetChoice: true,
   targetChoice: true,
   objectContactTargets: true,
@@ -144,14 +144,14 @@ const PLAYER_HOLE_ADMISSION = {
   objectDropResolution: true,
   spellAreaChoice: true,
   teleportDestination: true,
-  spiritualWeaponForcePosition: true,
+  spatialMeleeSpellAttackProxyPosition: true,
   heldObjectFacts: true,
   toolPossessionFacts: true,
   cunningStrikeEndTurnCoverFacts: true,
-  findFamiliarConnection: true,
+  spawnedCompanionConnection: true,
   companionReappearancePlacement: true,
   companionReappearanceInitiative: true,
-  magicWeaponTargetItem: true,
+  weaponAttackDamageEnhancementTargetItem: true,
   damageTypeChoice: true,
   spellTargetAllocation: true,
   spellTargetList: true,
@@ -161,11 +161,11 @@ const PLAYER_HOLE_ADMISSION = {
   abilityChoice: true,
   targetAbilityChoices: true,
   conditionChoice: true,
-  thaumaturgyActiveOneMinuteEffectCount: true,
-  commandOptionChoice: true,
+  temporaryAbilityCheckRollModeActiveEffectCount: true,
+  compelledBehaviorOptionChoice: true,
   selfTransformationModeChoice: true,
-  dancingLightsPlacement: true,
-  gustOfWindLineDirectionChoice: true,
+  movableLightPlacement: true,
+  directionalPersistentAreaDirectionChoice: true,
   movableZoneRamMovement: true,
   movableZoneRepositionMovement: true,
   unitFeatureDecision: true,
@@ -175,18 +175,18 @@ const PLAYER_HOLE_ADMISSION = {
   concentrationSavingThrow: true,
   interruptDecision: true,
   movement: true,
-  levitateAltitudeChange: true,
-  levitateInitialRise: true,
+  controlledVerticalSuspensionAltitudeChange: true,
+  controlledVerticalSuspensionInitialRise: true,
   abilityCheck: true,
   spellcastingAbilityCheck: true,
   grappleOutcome: true,
   shoveOutcome: true,
-  sanctuaryInterdictionOutcome: true,
+  targetingSaveInterdictionOutcome: true,
   attackDamageDisposition: true,
   ongoingSpellTargetChoice: true,
   wildShapeEquipmentDisposition: true,
   areaWindStrength: true,
-  cloudkillMovement: true,
+  persistentAreaSourceTurnTranslation: true,
   startTurnOccurrenceOrder: true,
   temporaryHitPointChoice: true,
 } as const satisfies Record<BattleHole["kind"], true>;
@@ -267,7 +267,7 @@ export type PlayerSubjectProjection =
         | "actionSpell"
         | "bonusActionSpell"
         | "bonusActionDashSpell"
-        | "findFamiliarTouchSpell";
+        | "spawnedCompanionTouchSpellProxy";
       readonly mode: PlayerSubjectProjectionMode;
     })
   | (PlayerSubjectProjectionCommon & {
@@ -276,11 +276,11 @@ export type PlayerSubjectProjection =
     })
   | (PlayerSubjectProjectionCommon & {
       readonly tag:
-        | "pactOfTheChainFamiliarAttack"
+        | "companionAttack"
         | "monkFocusFlurryOfBlowsStrike"
         | "unitFeature"
         | "unitFeatureHeldWeaponActivation"
-        | "findFamiliarSharedSenses";
+        | "spawnedCompanionSharedSenses";
     });
 
 export type PlayerCombatantProjection = {
@@ -1087,7 +1087,7 @@ export function projectPlayerSubject(
     case "actionSpell":
     case "bonusActionSpell":
     case "bonusActionDashSpell":
-    case "findFamiliarTouchSpell":
+    case "spawnedCompanionTouchSpellProxy":
       return mode === undefined
         ? undefined
         : { ...common, tag: value.tag, mode };
@@ -1097,11 +1097,11 @@ export function projectPlayerSubject(
         tag: value.tag,
         ...(mode === undefined ? {} : { mode }),
       };
-    case "pactOfTheChainFamiliarAttack":
+    case "companionAttack":
     case "monkFocusFlurryOfBlowsStrike":
     case "unitFeature":
     case "unitFeatureHeldWeaponActivation":
-    case "findFamiliarSharedSenses":
+    case "spawnedCompanionSharedSenses":
       return { ...common, tag: value.tag };
   }
 }

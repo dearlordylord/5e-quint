@@ -35,9 +35,9 @@ import type {
 import {
   GRAPPLE_TARGET_REACH_FEET,
   HELP_ATTACK_TARGET_ADJACENCY_FEET,
-  HYPNOTIC_PATTERN_SHAKE_AWAKE_ADJACENCY_FEET,
+  HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_ADJACENCY_FEET,
   RANGED_ATTACK_ENEMY_PROXIMITY_FEET,
-  SLEEP_SHAKE_AWAKE_ADJACENCY_FEET,
+  SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_ADJACENCY_FEET,
   SHOVE_TARGET_REACH_FEET,
   battleTablePositionId,
   battleRuntimeSessionFollows,
@@ -276,14 +276,14 @@ type ScenarioStatBlockAttackSubject = Extract<
       readonly action: "attack";
       readonly procedureRef: BattleStatBlockProcedureExecutionRef;
     }>
-  | Readonly<{ readonly tag: "pactOfTheChainFamiliarAttack" }>
+  | Readonly<{ readonly tag: "companionAttack" }>
 >;
 
 function isStatBlockAttackSubject(
   subject: BattleSubject,
 ): subject is ScenarioStatBlockAttackSubject {
   return (
-    subject.tag === "pactOfTheChainFamiliarAttack" ||
+    subject.tag === "companionAttack" ||
     (subject.tag === "action" &&
       subject.action === "attack" &&
       !("attackAbility" in subject))
@@ -349,9 +349,8 @@ function sameStatBlockAttackProcedure(
     left.tag === right.tag &&
     left.actorId === right.actorId &&
     left.procedureRef === right.procedureRef &&
-    (left.tag !== "pactOfTheChainFamiliarAttack" ||
-      (right.tag === "pactOfTheChainFamiliarAttack" &&
-        left.familiarId === right.familiarId))
+    (left.tag !== "companionAttack" ||
+      (right.tag === "companionAttack" && left.familiarId === right.familiarId))
   );
 }
 
@@ -1534,12 +1533,12 @@ function scenarioSpatialQuestionEndpoints(
       sourceId: shoverId,
       targetId,
     })),
-    Match.when({ kind: "sleepShakeAwakeTarget" }, ({ actorId, targetId }) => ({
-      sourceId: actorId,
-      targetId,
-    })),
     Match.when(
-      { kind: "hypnoticPatternShakeAwakeTarget" },
+      { kind: "stagedConditionShakeAwakeTarget" },
+      ({ actorId, targetId }) => ({ sourceId: actorId, targetId }),
+    ),
+    Match.when(
+      { kind: "areaControlShakeAwakeTarget" },
       ({ actorId, targetId }) => ({ sourceId: actorId, targetId }),
     ),
     Match.when({ kind: "helpAttackTarget" }, ({ helperId, targetEnemyId }) => ({
@@ -2427,8 +2426,8 @@ export type ScenarioTableSpatialFactQuestion = Extract<
   ScenarioSpatialDecisionQuestion,
   | { readonly kind: "grappleTarget" }
   | { readonly kind: "shoveTarget" }
-  | { readonly kind: "sleepShakeAwakeTarget" }
-  | { readonly kind: "hypnoticPatternShakeAwakeTarget" }
+  | { readonly kind: "stagedConditionShakeAwakeTarget" }
+  | { readonly kind: "areaControlShakeAwakeTarget" }
   | { readonly kind: "helpAttackTarget" }
 >;
 
@@ -2436,8 +2435,8 @@ type ScenarioTableSpatialFactQuestionForSubject = Extract<
   ScenarioTableSpatialFactQuestion,
   | { readonly kind: "grappleTarget" }
   | { readonly kind: "shoveTarget" }
-  | { readonly kind: "sleepShakeAwakeTarget" }
-  | { readonly kind: "hypnoticPatternShakeAwakeTarget" }
+  | { readonly kind: "stagedConditionShakeAwakeTarget" }
+  | { readonly kind: "areaControlShakeAwakeTarget" }
 >;
 
 export function scenarioTableSpatialFactDistanceLimitFeet(
@@ -2447,12 +2446,12 @@ export function scenarioTableSpatialFactDistanceLimitFeet(
     Match.when({ kind: "grappleTarget" }, () => GRAPPLE_TARGET_REACH_FEET),
     Match.when({ kind: "shoveTarget" }, () => SHOVE_TARGET_REACH_FEET),
     Match.when(
-      { kind: "sleepShakeAwakeTarget" },
-      () => SLEEP_SHAKE_AWAKE_ADJACENCY_FEET,
+      { kind: "stagedConditionShakeAwakeTarget" },
+      () => HIT_POINT_BUDGET_CONDITION_SHAKE_AWAKE_ADJACENCY_FEET,
     ),
     Match.when(
-      { kind: "hypnoticPatternShakeAwakeTarget" },
-      () => HYPNOTIC_PATTERN_SHAKE_AWAKE_ADJACENCY_FEET,
+      { kind: "areaControlShakeAwakeTarget" },
+      () => SAVE_GATED_AREA_CONTROL_SHAKE_AWAKE_ADJACENCY_FEET,
     ),
     Match.when(
       { kind: "helpAttackTarget" },
@@ -2486,15 +2485,18 @@ function scenarioTableSpatialFactForQuestion(
       shoverId,
       targetId,
     })),
-    Match.when({ kind: "sleepShakeAwakeTarget" }, ({ actorId, targetId }) => ({
-      kind: "sleepShakeAwakeActorWithin5Feet" as const,
-      actorId,
-      targetId,
-    })),
     Match.when(
-      { kind: "hypnoticPatternShakeAwakeTarget" },
+      { kind: "stagedConditionShakeAwakeTarget" },
       ({ actorId, targetId }) => ({
-        kind: "hypnoticPatternShakeAwakeActorWithin5Feet" as const,
+        kind: "stagedConditionShakeAwakeActorWithin5Feet" as const,
+        actorId,
+        targetId,
+      }),
+    ),
+    Match.when(
+      { kind: "areaControlShakeAwakeTarget" },
+      ({ actorId, targetId }) => ({
+        kind: "areaControlShakeAwakeActorWithin5Feet" as const,
         actorId,
         targetId,
       }),
@@ -2536,19 +2538,19 @@ function scenarioTableSpatialFactQuestionFactoryForSubject(
         }),
     ),
     Match.when(
-      { tag: "action", action: "shakeAwakeFromSleep" },
+      { tag: "action", action: "shakeAwakeFromStagedCondition" },
       ({ actorId }) =>
         (targetId: CombatantId) => ({
-          kind: "sleepShakeAwakeTarget" as const,
+          kind: "stagedConditionShakeAwakeTarget" as const,
           actorId,
           targetId,
         }),
     ),
     Match.when(
-      { tag: "action", action: "shakeAwakeFromHypnoticPattern" },
+      { tag: "action", action: "shakeAwakeFromAreaControl" },
       ({ actorId }) =>
         (targetId: CombatantId) => ({
-          kind: "hypnoticPatternShakeAwakeTarget" as const,
+          kind: "areaControlShakeAwakeTarget" as const,
           actorId,
           targetId,
         }),
@@ -2676,13 +2678,14 @@ export function scenarioTableSpatialFactFills(input: {
       });
     }
     const fact = scenarioTableSpatialFactForQuestion(targetQuestion);
-    const canonicalKinds = new Set([
-      "grappleTargetWithinReach",
-      "shoveTargetWithinReach",
-      "sleepShakeAwakeActorWithin5Feet",
-      "hypnoticPatternShakeAwakeActorWithin5Feet",
-      "helpAttackTargetWithin5Feet",
-    ]);
+    const canonicalKinds: ReadonlySet<BattleTargetSpatialFact["kind"]> =
+      new Set([
+        "grappleTargetWithinReach",
+        "shoveTargetWithinReach",
+        "stagedConditionShakeAwakeActorWithin5Feet",
+        "areaControlShakeAwakeActorWithin5Feet",
+        "helpAttackTargetWithin5Feet",
+      ]);
     projectedFills.push({
       ...fill,
       spatialFacts: [
@@ -3256,8 +3259,8 @@ function sameScenarioMovement(
       movement.creatureSpaceTraversal,
       value.creatureSpaceTraversal,
     ) &&
-    movement.jumpMovementReplacement === undefined &&
-    movement.levitatedMovement === undefined
+    movement.fixedCostMovementReplacement === undefined &&
+    movement.controlledVerticalSuspensionMovement === undefined
   );
 }
 

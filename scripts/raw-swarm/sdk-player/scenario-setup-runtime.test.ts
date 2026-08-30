@@ -133,11 +133,11 @@ const spatialFactBoundaryCases: readonly {
       ),
   },
   {
-    name: "Sleep wake",
+    name: "Staged-condition wake",
     accepts: (distanceFeet) =>
       scenarioTableSpatialFactDistanceWithinLimit(
         {
-          kind: "sleepShakeAwakeTarget",
+          kind: "stagedConditionShakeAwakeTarget",
           actorId: combatantId("boundary-waker"),
           targetId: combatantId("boundary-sleeping"),
         },
@@ -145,11 +145,11 @@ const spatialFactBoundaryCases: readonly {
       ),
   },
   {
-    name: "Hypnotic wake",
+    name: "Area-control wake",
     accepts: (distanceFeet) =>
       scenarioTableSpatialFactDistanceWithinLimit(
         {
-          kind: "hypnoticPatternShakeAwakeTarget",
+          kind: "areaControlShakeAwakeTarget",
           actorId: combatantId("boundary-waker"),
           targetId: combatantId("boundary-hypnotized"),
         },
@@ -3035,7 +3035,7 @@ export const setupScenario = (context) =>
     const pointOriginAct = genericTargetActs.find(
       (act) =>
         battleActSpellPresentation(act)?.invocation.procedure ===
-        "greaseGroundHazard",
+        "persistentAreaSaveCondition",
     );
     expect(pointOriginAct).toBeDefined();
     if (pointOriginAct === undefined) return;

@@ -105,12 +105,12 @@ type ScenarioSpatialDecisionQuestionCore =
       readonly targetId: CombatantId;
     }>
   | Readonly<{
-      readonly kind: "sleepShakeAwakeTarget";
+      readonly kind: "stagedConditionShakeAwakeTarget";
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
     }>
   | Readonly<{
-      readonly kind: "hypnoticPatternShakeAwakeTarget";
+      readonly kind: "areaControlShakeAwakeTarget";
       readonly actorId: CombatantId;
       readonly targetId: CombatantId;
     }>
@@ -215,19 +215,19 @@ type ScenarioShoveTargetSpatialDecisionInput = Readonly<{
   >;
   readonly answer: ScenarioSpatialRelationAnswer;
 }>;
-type ScenarioSleepShakeAwakeTargetSpatialDecisionInput = Readonly<{
+type ScenarioStagedConditionShakeAwakeTargetSpatialDecisionInput = Readonly<{
   readonly decisionId: string;
   readonly question: Extract<
     ScenarioSpatialDecisionQuestionCore,
-    { readonly kind: "sleepShakeAwakeTarget" }
+    { readonly kind: "stagedConditionShakeAwakeTarget" }
   >;
   readonly answer: ScenarioSpatialRelationAnswer;
 }>;
-type ScenarioHypnoticPatternShakeAwakeTargetSpatialDecisionInput = Readonly<{
+type ScenarioAreaControlShakeAwakeTargetSpatialDecisionInput = Readonly<{
   readonly decisionId: string;
   readonly question: Extract<
     ScenarioSpatialDecisionQuestionCore,
-    { readonly kind: "hypnoticPatternShakeAwakeTarget" }
+    { readonly kind: "areaControlShakeAwakeTarget" }
   >;
   readonly answer: ScenarioSpatialRelationAnswer;
 }>;
@@ -255,8 +255,8 @@ export type ScenarioSpatialDecisionInput =
   | ScenarioAttackTargetSpatialDecisionInput
   | ScenarioGrappleTargetSpatialDecisionInput
   | ScenarioShoveTargetSpatialDecisionInput
-  | ScenarioSleepShakeAwakeTargetSpatialDecisionInput
-  | ScenarioHypnoticPatternShakeAwakeTargetSpatialDecisionInput
+  | ScenarioStagedConditionShakeAwakeTargetSpatialDecisionInput
+  | ScenarioAreaControlShakeAwakeTargetSpatialDecisionInput
   | ScenarioHelpAttackTargetSpatialDecisionInput
   | ScenarioMovementRouteSpatialDecisionInput;
 
@@ -308,19 +308,19 @@ type ScenarioShoveTargetSpatialDecision = Readonly<{
   >;
   readonly answer: ScenarioSpatialRelationAnswer;
 }>;
-type ScenarioSleepShakeAwakeTargetSpatialDecision = Readonly<{
+type ScenarioStagedConditionShakeAwakeTargetSpatialDecision = Readonly<{
   readonly decisionId: ScenarioSpatialDecisionId;
   readonly question: Extract<
     ScenarioSpatialDecisionQuestionCore,
-    { readonly kind: "sleepShakeAwakeTarget" }
+    { readonly kind: "stagedConditionShakeAwakeTarget" }
   >;
   readonly answer: ScenarioSpatialRelationAnswer;
 }>;
-type ScenarioHypnoticPatternShakeAwakeTargetSpatialDecision = Readonly<{
+type ScenarioAreaControlShakeAwakeTargetSpatialDecision = Readonly<{
   readonly decisionId: ScenarioSpatialDecisionId;
   readonly question: Extract<
     ScenarioSpatialDecisionQuestionCore,
-    { readonly kind: "hypnoticPatternShakeAwakeTarget" }
+    { readonly kind: "areaControlShakeAwakeTarget" }
   >;
   readonly answer: ScenarioSpatialRelationAnswer;
 }>;
@@ -348,8 +348,8 @@ export type ScenarioSpatialDecision =
   | ScenarioAttackTargetSpatialDecision
   | ScenarioGrappleTargetSpatialDecision
   | ScenarioShoveTargetSpatialDecision
-  | ScenarioSleepShakeAwakeTargetSpatialDecision
-  | ScenarioHypnoticPatternShakeAwakeTargetSpatialDecision
+  | ScenarioStagedConditionShakeAwakeTargetSpatialDecision
+  | ScenarioAreaControlShakeAwakeTargetSpatialDecision
   | ScenarioHelpAttackTargetSpatialDecision
   | ScenarioMovementRouteSpatialDecision;
 
@@ -377,11 +377,11 @@ export function scenarioSpatialDecisionIds(
       decisionId,
     ]),
     Match.when(
-      { question: { kind: "sleepShakeAwakeTarget" } },
+      { question: { kind: "stagedConditionShakeAwakeTarget" } },
       ({ decisionId }) => [decisionId],
     ),
     Match.when(
-      { question: { kind: "hypnoticPatternShakeAwakeTarget" } },
+      { question: { kind: "areaControlShakeAwakeTarget" } },
       ({ decisionId }) => [decisionId],
     ),
     Match.when({ question: { kind: "helpAttackTarget" } }, ({ decisionId }) => [
@@ -407,8 +407,8 @@ export type ScenarioNonMovementSpatialDecisionInput =
   | ScenarioAttackTargetSpatialDecisionInput
   | ScenarioGrappleTargetSpatialDecisionInput
   | ScenarioShoveTargetSpatialDecisionInput
-  | ScenarioSleepShakeAwakeTargetSpatialDecisionInput
-  | ScenarioHypnoticPatternShakeAwakeTargetSpatialDecisionInput
+  | ScenarioStagedConditionShakeAwakeTargetSpatialDecisionInput
+  | ScenarioAreaControlShakeAwakeTargetSpatialDecisionInput
   | ScenarioHelpAttackTargetSpatialDecisionInput;
 type ScenarioNonMovementSpatialDecision =
   | ScenarioRelationSpatialDecision
@@ -417,8 +417,8 @@ type ScenarioNonMovementSpatialDecision =
   | ScenarioAttackTargetSpatialDecision
   | ScenarioGrappleTargetSpatialDecision
   | ScenarioShoveTargetSpatialDecision
-  | ScenarioSleepShakeAwakeTargetSpatialDecision
-  | ScenarioHypnoticPatternShakeAwakeTargetSpatialDecision
+  | ScenarioStagedConditionShakeAwakeTargetSpatialDecision
+  | ScenarioAreaControlShakeAwakeTargetSpatialDecision
   | ScenarioHelpAttackTargetSpatialDecision;
 
 export type ScenarioSpatialBoundary =
@@ -594,12 +594,12 @@ export function spatialQuestionKey(
       JSON.stringify([kind, String(shoverId), String(targetId)]),
     ),
     Match.when(
-      { kind: "sleepShakeAwakeTarget" },
+      { kind: "stagedConditionShakeAwakeTarget" },
       ({ kind, actorId, targetId }) =>
         JSON.stringify([kind, String(actorId), String(targetId)]),
     ),
     Match.when(
-      { kind: "hypnoticPatternShakeAwakeTarget" },
+      { kind: "areaControlShakeAwakeTarget" },
       ({ kind, actorId, targetId }) =>
         JSON.stringify([kind, String(actorId), String(targetId)]),
     ),
@@ -719,11 +719,11 @@ export function scenarioSpatialDecisionEntityReferences(
       question.targetId,
     ]),
     Match.when(
-      { question: { kind: "sleepShakeAwakeTarget" } },
+      { question: { kind: "stagedConditionShakeAwakeTarget" } },
       ({ question }) => [question.actorId, question.targetId],
     ),
     Match.when(
-      { question: { kind: "hypnoticPatternShakeAwakeTarget" } },
+      { question: { kind: "areaControlShakeAwakeTarget" } },
       ({ question }) => [question.actorId, question.targetId],
     ),
     Match.when({ question: { kind: "helpAttackTarget" } }, ({ question }) => [
@@ -998,8 +998,8 @@ function parseSpatialQuestion(
   if (
     value.kind === "grappleTarget" ||
     value.kind === "shoveTarget" ||
-    value.kind === "sleepShakeAwakeTarget" ||
-    value.kind === "hypnoticPatternShakeAwakeTarget"
+    value.kind === "stagedConditionShakeAwakeTarget" ||
+    value.kind === "areaControlShakeAwakeTarget"
   ) {
     const actorField =
       value.kind === "grappleTarget"
@@ -1032,14 +1032,14 @@ function parseSpatialQuestion(
               shoverId: actorId,
               targetId,
             }
-          : value.kind === "sleepShakeAwakeTarget"
+          : value.kind === "stagedConditionShakeAwakeTarget"
             ? {
-                kind: "sleepShakeAwakeTarget" as const,
+                kind: "stagedConditionShakeAwakeTarget" as const,
                 actorId,
                 targetId,
               }
             : {
-                kind: "hypnoticPatternShakeAwakeTarget" as const,
+                kind: "areaControlShakeAwakeTarget" as const,
                 actorId,
                 targetId,
               },
@@ -1531,12 +1531,12 @@ function makeNonMovementSpatialDecisionInput(
       question,
       answer,
     })),
-    Match.when({ kind: "sleepShakeAwakeTarget" }, (question) => ({
+    Match.when({ kind: "stagedConditionShakeAwakeTarget" }, (question) => ({
       decisionId,
       question,
       answer,
     })),
-    Match.when({ kind: "hypnoticPatternShakeAwakeTarget" }, (question) => ({
+    Match.when({ kind: "areaControlShakeAwakeTarget" }, (question) => ({
       decisionId,
       question,
       answer,

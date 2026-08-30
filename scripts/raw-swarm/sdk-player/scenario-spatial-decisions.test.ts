@@ -68,12 +68,12 @@ function nonMovementDecision(kind: string): unknown {
       shoverId: "normalization-actor",
       targetId: "normalization-target",
     },
-    sleepShakeAwakeTarget: {
+    stagedConditionShakeAwakeTarget: {
       kind,
       actorId: "normalization-actor",
       targetId: "normalization-target",
     },
-    hypnoticPatternShakeAwakeTarget: {
+    areaControlShakeAwakeTarget: {
       kind,
       actorId: "normalization-actor",
       targetId: "normalization-target",
@@ -122,8 +122,8 @@ describe("table-authored spatial decision normalization", () => {
     "attackTarget",
     "grappleTarget",
     "shoveTarget",
-    "sleepShakeAwakeTarget",
-    "hypnoticPatternShakeAwakeTarget",
+    "stagedConditionShakeAwakeTarget",
+    "areaControlShakeAwakeTarget",
     "helpAttackTarget",
   ])("normalizes the %s question member", (kind) => {
     const normalized = tableAuthoredSpatialDecision(nonMovementDecision(kind));
