@@ -179,24 +179,36 @@ describe("Character Battle origin feat selected identity replay", () => {
         originFeatUnitId: "feat_magic_initiate_cleric",
         asiOptionId: "two_and_one:int:wis",
         toolOptionId: "calligraphers_supplies",
+        magicInitiate: {
+          cantrips: ["guidance", "sacred_flame"],
+          levelOneSpell: "bless",
+          ability: "wis",
+        },
       },
       {
         backgroundUnitId: CRIMINAL_BACKGROUND_UNIT_ID,
         originFeatUnitId: ALERT_UNIT_ID,
         asiOptionId: "two_and_one:dex:con",
         toolOptionId: "thieves_tools",
+        magicInitiate: false,
       },
       {
         backgroundUnitId: "background_sage",
         originFeatUnitId: "feat_magic_initiate_wizard",
         asiOptionId: "two_and_one:int:wis",
         toolOptionId: "calligraphers_supplies",
+        magicInitiate: {
+          cantrips: ["fire_bolt", "light"],
+          levelOneSpell: "burning_hands",
+          ability: "int",
+        },
       },
       {
         backgroundUnitId: "background_soldier",
         originFeatUnitId: "feat_savage_attacker",
         asiOptionId: "two_and_one:str:con",
         toolOptionId: "tool_dice_set",
+        magicInitiate: false,
       },
     ] as const;
 
@@ -223,6 +235,7 @@ describe("Character Battle origin feat selected identity replay", () => {
       originFeatUnitId: ALERT_UNIT_ID,
       asiOptionId: "two_and_one:dex:con",
       toolOptionId: "thieves_tools",
+      magicInitiate: false,
     });
     const unitRefIds = characterBuildUnitRefs(build, unitLibrary).map(
       (ref) => ref.unitId,
@@ -326,6 +339,7 @@ function criminalAlertOriginFeatProjection(): OriginFeatSelectedIdentityProjecti
     originFeatUnitId: ALERT_UNIT_ID,
     asiOptionId: "two_and_one:dex:con",
     toolOptionId: "thieves_tools",
+    magicInitiate: false,
   });
   const unitRefIds = characterBuildUnitRefs(build, unitLibrary).map(
     (ref) => ref.unitId,
@@ -350,6 +364,7 @@ function alertInitiativeHandoffProjection(): OriginFeatSelectedIdentityProjectio
     originFeatUnitId: ALERT_UNIT_ID,
     asiOptionId: "two_and_one:dex:con",
     toolOptionId: "thieves_tools",
+    magicInitiate: false,
   });
   const score = characterBattleInitiativeScore({
     build,
@@ -451,7 +466,6 @@ function characterSheetForBuild(build: CharacterBuild) {
   const sheet = createFreshCharacterSheet({
     characterId: characterSheetId("character:origin-feat"),
     build,
-    currentHp: Hp(10),
     tempHp: Hp(0),
     hitPointMaximumReduction: Hp(0),
     conditions: [],
@@ -476,12 +490,23 @@ function alertInitiativeScoreForBuild(build: CharacterBuild) {
   return score.right;
 }
 
-function finalizedFighterBuildForBackground(input: {
+type FighterBackgroundFixtureInput = {
   readonly backgroundUnitId: string;
   readonly originFeatUnitId: string;
   readonly asiOptionId: string;
   readonly toolOptionId: string;
-}): CharacterBuild {
+  readonly magicInitiate:
+    | false
+    | {
+        readonly cantrips: readonly [string, string];
+        readonly levelOneSpell: string;
+        readonly ability: "int" | "wis" | "cha";
+      };
+};
+
+function finalizedFighterBuildForBackground(
+  input: FighterBackgroundFixtureInput,
+): CharacterBuild {
   const finalized = finalizeCharacterDraft({
     draft: completeFighterDraftForBackground(input),
     unitLibrary,
@@ -502,11 +527,16 @@ function finalizedFighterBuildForBackground(input: {
   return finalized.build;
 }
 
-function completeFighterDraftForBackground(input: {
-  readonly backgroundUnitId: string;
-  readonly asiOptionId: string;
-  readonly toolOptionId: string;
-}): CharacterDraft {
+function completeFighterDraftForBackground(
+  input: FighterBackgroundFixtureInput,
+): CharacterDraft {
+  const background = unitLibrary.requireUnit(
+    authoredUnitId(input.backgroundUnitId),
+  );
+  if (background.kind !== "background") {
+    throw new Error("Origin feat fixture requires a background Unit.");
+  }
+  const originFeatUnitId = background.originFeatId;
   const draft = createCharacterDraft({
     unitLibrary,
     draftId: characterDraftId(`origin-feat-${input.backgroundUnitId}`),
@@ -543,11 +573,44 @@ function completeFighterDraftForBackground(input: {
       ],
     }),
   );
+  const afterOriginFeatChoices =
+    input.magicInitiate === false
+      ? afterInitial
+      : requireAcceptedBatch(
+          fillCreationHoles({
+            draft: afterInitial,
+            unitLibrary,
+            expectedRevision: afterInitial.revision,
+            fills: [
+              choiceFill(
+                unitChoiceHoleId(
+                  originFeatUnitId,
+                  "origin_feat_magic_initiate_cantrip_choice",
+                ),
+                ...input.magicInitiate.cantrips,
+              ),
+              choiceFill(
+                unitChoiceHoleId(
+                  originFeatUnitId,
+                  "origin_feat_magic_initiate_level_one_spell_choice",
+                ),
+                input.magicInitiate.levelOneSpell,
+              ),
+              choiceFill(
+                unitChoiceHoleId(
+                  originFeatUnitId,
+                  "origin_feat_magic_initiate_spellcasting_ability_choice",
+                ),
+                input.magicInitiate.ability,
+              ),
+            ],
+          }),
+        );
   const afterChoices = requireAcceptedBatch(
     fillCreationHoles({
-      draft: afterInitial,
+      draft: afterOriginFeatChoices,
       unitLibrary,
-      expectedRevision: afterInitial.revision,
+      expectedRevision: afterOriginFeatChoices.revision,
       fills: [
         choiceFill(
           unitChoiceHoleId("class_fighter", "class_skill_proficiency_choice"),
