@@ -460,6 +460,13 @@ function interruptConsumerRouteOptions(
         "pendingAttackDamageAdditions",
         options.pendingAttackDamageAdditions,
       ),
+      ...optionalProperty(
+        "spatialMeleeSpellAttackProxyCommitCheckpoint",
+        options.spatialMeleeSpellAttackProxyCommitCheckpoint ??
+          (occurrence.trigger === "attackHit"
+            ? occurrence.spatialMeleeSpellAttackProxyCommitCheckpoint
+            : undefined),
+      ),
     };
   }
   return handledInterruptRouteOption;
@@ -601,6 +608,11 @@ function battleSubjectObligationAdmissionResult(
     );
   }
   if (
+    spatialMeleeSpellAttackProxyCommitCheckpointMatchesSubject(input, options)
+  ) {
+    return null;
+  }
+  if (
     battleSubjectInterdictedByMagicSuppressionEmanation(
       input.state,
       input.subject,
@@ -619,6 +631,28 @@ function battleSubjectObligationAdmissionResult(
   return actionEligibilityIssue === null
     ? null
     : invalidResult(input.state, "staleSubject", actionEligibilityIssue);
+}
+
+function spatialMeleeSpellAttackProxyCommitCheckpointMatchesSubject(
+  input: AdmittedBattleResolutionInput,
+  options: ResolveBattleSubjectInternalOptions,
+): boolean {
+  const checkpoint =
+    options.interruptRouteOptions
+      .spatialMeleeSpellAttackProxyCommitCheckpoint ??
+    (options.interruptRouteOptions.replayingInterruptedProcedure === true &&
+    options.interruptRouteOptions.handledInterruptOccurrence?.trigger ===
+      "attackHit"
+      ? options.interruptRouteOptions.handledInterruptOccurrence
+          .spatialMeleeSpellAttackProxyCommitCheckpoint
+      : undefined);
+  const subject = input.subject;
+  return (
+    checkpoint?.kind === "spatialMeleeSpellAttackProxyCommitApplied" &&
+    (subject.tag === "actionSpell" || subject.tag === "bonusActionSpell") &&
+    checkpoint.actorId === subject.actorId &&
+    checkpoint.sourceProcedureRef === subject.procedureRef
+  );
 }
 
 function resolveBattleSubjectAfterD20TestNaturalOneReroll(
@@ -790,11 +824,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         {
           ...input,
           subject,
-          ...(handledInterruptTrigger === undefined
-            ? {}
-            : {
-                handledInterruptTrigger,
-              }),
+          ...interruptConsumerOptions,
         },
         options.executionRegistry,
       );

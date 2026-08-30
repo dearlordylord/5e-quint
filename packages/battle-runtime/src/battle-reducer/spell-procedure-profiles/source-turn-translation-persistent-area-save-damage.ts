@@ -15,12 +15,13 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // predicate facts.
 //
 // RAW anchors:
-//   - .references/srd-5.2.1/Spells/Descriptions-A-D.md "TranslatingPersistentArea":
+//   - .references/srd-5.2.1/Spells/Descriptions-A-D.md "Cloudkill":
 //     Action; 120 feet; Concentration up to 10 minutes; 20-foot-radius Sphere;
 //     Heavily Obscured; Constitution save for 5d8 Poison damage or half when
 //     the cloud appears, moves into a creature's space, a creature enters it,
 //     or a creature ends its turn there; once per turn; strong wind disperses;
-//     +1d8 per slot level above 5.
+//     +1d8 per slot level above 5; the Sphere moves 10 feet away from the
+//     caster at the start of each of the caster's turns.
 //   - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Slot, Concentration,
 //     Area of Effect/Sphere, Obscurement, Saving Throw, Damage Type.
 

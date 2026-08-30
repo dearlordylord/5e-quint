@@ -61,6 +61,7 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleResolutionResult,
+  type BattleSpatialMeleeSpellAttackProxyCommitCheckpoint,
   type BattleState,
   type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
@@ -1790,19 +1791,14 @@ function resolveSpellActInternal(
     );
   }
   const invocation = invocationAdmission.invocation;
-  const replayingSpatialMeleeSpellAttackProxyAttackHit =
-    input.handledInterruptTrigger === "attackHit" &&
-    invocation.procedure === "spatialMeleeSpellAttackProxy";
   const spatialProxyCommitAlreadyApplied =
     spatialMeleeSpellAttackProxyResolutionCommitAlreadyApplied({
-      state: input.state,
       actorId: subject.actorId,
       invocation,
-      fills: input.fills,
-      replayingAttackHit: replayingSpatialMeleeSpellAttackProxyAttackHit,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+      checkpoint: input.spatialMeleeSpellAttackProxyCommitCheckpoint,
     });
   if (
-    !replayingSpatialMeleeSpellAttackProxyAttackHit &&
     !spatialProxyCommitAlreadyApplied &&
     !spellHasAvailableSpend(actor, invocation)
   ) {
@@ -1839,6 +1835,7 @@ function resolveSpellActInternal(
     );
   }
   if (
+    !spatialProxyCommitAlreadyApplied &&
     invocation.procedure === "spatialMeleeSpellAttackProxy" &&
     invocation.operation === "repositionAndAttack" &&
     ongoingSpellEffectSuppressedByMagicSuppressionEmanation(
@@ -1917,7 +1914,7 @@ function resolveSpellActInternal(
     !(
       lane.tag === "action" &&
       lane.input.replayingInterruptedProcedure === true &&
-      replayingSpatialMeleeSpellAttackProxyAttackHit
+      spatialProxyCommitAlreadyApplied
     )
   ) {
     return invalidResult(
@@ -1934,7 +1931,6 @@ function resolveSpellActInternal(
     );
   }
   if (
-    !replayingSpatialMeleeSpellAttackProxyAttackHit &&
     !spatialProxyCommitAlreadyApplied &&
     !spellActTurnResourceAvailable(
       input.state.currentTurnResources,
@@ -2792,7 +2788,20 @@ function resolveSpellActInternal(
               ),
             ]),
           ],
-          continuation: spellReplayContinuation(input),
+          continuation:
+            "glyphStoredSpellReleaseReplay" in input &&
+            input.glyphStoredSpellReleaseReplay !== undefined
+              ? spellReplayContinuation(input)
+              : spellReplayContinuation({
+                  ...input,
+                  ...optionalProperty(
+                    "spatialMeleeSpellAttackProxyCommitCheckpoint",
+                    spatialMeleeSpellAttackProxyCommitCheckpointFor(
+                      subject.actorId,
+                      invocationForResolution,
+                    ),
+                  ),
+                }),
         },
         input.handledInterruptTrigger,
       );
@@ -2849,22 +2858,50 @@ function resolveSpellActInternal(
         );
       }
       /* v8 ignore stop -- @preserve */
-      return spendSpellActResolutionResources({
-        state: attackRolledStateAfterHurl,
-        actorId: subject.actorId,
-        invocation: invocationForResolution,
-        errorState: input.state,
-        ...optionalProperty("actionCostOverride", options.actionCostOverride),
-        ...(metamagicApplicationsForDamageAndSpend === undefined
-          ? {}
-          : {
-              metamagicApplications: metamagicApplicationsForDamageAndSpend,
-            }),
-        ...optionalProperty(
-          "spatialMeleeSpellAttackProxyPosition",
-          spatialMeleeSpellAttackProxyPosition,
-        ),
-      });
+      return invocationForResolution.procedure ===
+        "spatialMeleeSpellAttackProxy"
+        ? stateAfterSpatialMeleeSpellAttackProxyCastProxyCreatedBeforeImmediateAttack(
+            {
+              state: attackRolledStateAfterHurl,
+              actorId: subject.actorId,
+              invocation: invocationForResolution,
+              errorState: input.state,
+              ...optionalProperty(
+                "actionCostOverride",
+                options.actionCostOverride,
+              ),
+              ...(metamagicApplicationsForDamageAndSpend === undefined
+                ? {}
+                : {
+                    metamagicApplications:
+                      metamagicApplicationsForDamageAndSpend,
+                  }),
+              ...optionalProperty(
+                "spatialMeleeSpellAttackProxyPosition",
+                spatialMeleeSpellAttackProxyPosition,
+              ),
+              commitAlreadyApplied: spatialProxyCommitAlreadyApplied,
+            },
+          )
+        : spendSpellActResolutionResources({
+            state: attackRolledStateAfterHurl,
+            actorId: subject.actorId,
+            invocation: invocationForResolution,
+            errorState: input.state,
+            ...optionalProperty(
+              "actionCostOverride",
+              options.actionCostOverride,
+            ),
+            ...(metamagicApplicationsForDamageAndSpend === undefined
+              ? {}
+              : {
+                  metamagicApplications: metamagicApplicationsForDamageAndSpend,
+                }),
+            ...optionalProperty(
+              "spatialMeleeSpellAttackProxyPosition",
+              spatialMeleeSpellAttackProxyPosition,
+            ),
+          });
     }
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!hit && !potentCantripMiss && !spellAttackHalfInitialMiss) {
@@ -3352,145 +3389,36 @@ function stateAfterSpatialMeleeSpellAttackProxyCastProxyCreatedBeforeImmediateAt
   return spendSpellActResolutionResources(input);
 }
 
-function spatialMeleeSpellAttackProxyEffectMatches(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly invocation:
-    | Extract<
-        BattleExecutableSpellInvocation,
-        { readonly procedure: "spatialMeleeSpellAttackProxy" }
-      >
-    | Extract<
-        BattleExecutableSpellInvocation,
-        { readonly procedure: "spatialMeleeSpellAttackProxy" }
-      >;
-  readonly forcePositionId: Extract<
-    BattleFill,
-    { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
-  >["value"]["positionId"];
-}): boolean {
-  const actor = input.state.combatants.get(input.actorId);
-  return (
-    actor?.activeEffects.some(
-      (effect) =>
-        effect.kind === "spatialMeleeSpellAttackProxy" &&
-        effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-        effect.sourceCombatantId === input.actorId &&
-        effect.forcePositionId === input.forcePositionId,
-    ) === true
-  );
-}
-
-function spatialMeleeSpellAttackProxyCastCommitAlreadyApplied(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    BattleExecutableSpellInvocation,
-    {
-      readonly procedure: "spatialMeleeSpellAttackProxy";
-      readonly operation: "createAndAttack";
-    }
-  >;
-  readonly forcePositionId: Extract<
-    BattleFill,
-    { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
-  >["value"]["positionId"];
-}): boolean {
-  const actor = input.state.combatants.get(input.actorId);
-  return (
-    input.state.currentTurnResources.currentHasBonusAction === false &&
-    input.state.currentTurnResources.spellSlotUsesThisTurn.some(
-      (use) => use.kind === "committed" && use.combatantId === input.actorId,
-    ) &&
-    actor?.concentration?.effectKind === "spellEffect" &&
-    actor.concentration.sourceProcedureRef ===
-      input.invocation.sourceProcedureRef &&
-    spatialMeleeSpellAttackProxyEffectMatches(input)
-  );
+function spatialMeleeSpellAttackProxyCommitCheckpointFor(
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation,
+): BattleSpatialMeleeSpellAttackProxyCommitCheckpoint | undefined {
+  return invocation.procedure === "spatialMeleeSpellAttackProxy"
+    ? {
+        kind: "spatialMeleeSpellAttackProxyCommitApplied",
+        actorId,
+        sourceProcedureRef: invocation.sourceProcedureRef,
+        operation: invocation.operation,
+      }
+    : undefined;
 }
 
 function spatialMeleeSpellAttackProxyResolutionCommitAlreadyApplied(input: {
-  readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
-  readonly fills: readonly BattleFill[];
-  readonly replayingAttackHit: boolean;
+  readonly handledInterruptTrigger: string | undefined;
+  readonly checkpoint:
+    | BattleSpatialMeleeSpellAttackProxyCommitCheckpoint
+    | undefined;
 }): boolean {
-  if (
-    !input.replayingAttackHit ||
-    input.invocation.procedure !== "spatialMeleeSpellAttackProxy"
-  ) {
-    return false;
-  }
-  if (input.invocation.operation === "repositionAndAttack") {
-    const positionHole = spatialMeleeSpellAttackProxyPositionHole(
-      input.invocation,
-    );
-    const positionFill = input.fills.find(
-      (
-        fill,
-      ): fill is Extract<
-        BattleFill,
-        { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
-      > =>
-        fill.kind === "spatialMeleeSpellAttackProxyPosition" &&
-        fill.holeId === positionHole.holeId,
-    );
-    return (
-      positionFill !== undefined &&
-      spatialMeleeSpellAttackProxyRepeatCommitMatches({
-        state: input.state,
-        actorId: input.actorId,
-        invocation: input.invocation,
-        forcePositionId: positionFill.value.positionId,
-      })
-    );
-  }
-  const fillSet = spellFillSet(
-    input.fills,
-    input.invocation,
-    input.invocation.sourceProcedureRef,
-    input.actorId,
-    input.state,
-  );
-  if (
-    fillSet.tag !== "ok" ||
-    fillSet.spatialMeleeSpellAttackProxyPosition === undefined
-  ) {
-    return false;
-  }
-  return spatialMeleeSpellAttackProxyCastCommitAlreadyApplied({
-    state: input.state,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    forcePositionId: fillSet.spatialMeleeSpellAttackProxyPosition.positionId,
-  });
-}
-
-function spatialMeleeSpellAttackProxyRepeatCommitMatches(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    BattleExecutableSpellInvocation,
-    {
-      readonly procedure: "spatialMeleeSpellAttackProxy";
-      readonly operation: "repositionAndAttack";
-    }
-  >;
-  readonly forcePositionId: Extract<
-    BattleFill,
-    { readonly kind: "spatialMeleeSpellAttackProxyPosition" }
-  >["value"]["positionId"];
-}): boolean {
-  const actor = input.state.combatants.get(input.actorId);
   return (
-    input.state.currentTurnResources.currentHasBonusAction === false &&
-    actor?.activeEffects.some(
-      (effect) =>
-        effect.kind === "spatialMeleeSpellAttackProxy" &&
-        effect.effectRef === input.invocation.activeEffect.effectRef &&
-        effect.forcePositionId === input.forcePositionId,
-    ) === true
+    input.handledInterruptTrigger === "attackHit" &&
+    input.invocation.procedure === "spatialMeleeSpellAttackProxy" &&
+    input.checkpoint?.kind === "spatialMeleeSpellAttackProxyCommitApplied" &&
+    input.checkpoint.actorId === input.actorId &&
+    input.checkpoint.sourceProcedureRef ===
+      input.invocation.sourceProcedureRef &&
+    input.checkpoint.operation === input.invocation.operation
   );
 }
 
@@ -3560,20 +3488,6 @@ function spendSpellActResolutionResources(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
-    if (
-      spatialMeleeSpellAttackProxyCastCommitAlreadyApplied({
-        state: input.state,
-        actorId: input.actorId,
-        invocation: input.invocation,
-        forcePositionId: input.spatialMeleeSpellAttackProxyPosition.positionId,
-      })
-    ) {
-      return {
-        tag: "resolved",
-        state: input.state,
-        snapshot: snapshotBattle(input.state),
-      };
-    }
     const spent = spendSpellCastResources({
       state: input.state,
       actorId: input.actorId,
@@ -3628,20 +3542,6 @@ function spendSpellActResolutionResources(input: {
       );
     }
     /* v8 ignore stop -- @preserve */
-    if (
-      spatialMeleeSpellAttackProxyRepeatCommitMatches({
-        state: input.state,
-        actorId: input.actorId,
-        invocation: input.invocation,
-        forcePositionId: input.spatialMeleeSpellAttackProxyPosition.positionId,
-      })
-    ) {
-      return {
-        tag: "resolved",
-        state: input.state,
-        snapshot: snapshotBattle(input.state),
-      };
-    }
     const spellAttackState = battleStateAfterTargetActionEarlyEndForActor(
       input.state,
       input.actorId,
@@ -3654,7 +3554,7 @@ function spendSpellActResolutionResources(input: {
       return invalidResult(
         input.errorState,
         "staleSubject",
-        "Bonus Action spell is no longer available for the current actor.",
+        "spatial melee spell-attack proxy repeat attack requires an available Bonus Action.",
       );
     }
     const repositioned = repositionSpatialMeleeSpellAttackProxyEffect({
@@ -3763,13 +3663,10 @@ export function resolveBonusActionSpellAct(
   }
   const spatialProxyCommitAlreadyApplied =
     spatialMeleeSpellAttackProxyResolutionCommitAlreadyApplied({
-      state: input.state,
       actorId: subject.actorId,
       invocation,
-      fills: input.fills,
-      replayingAttackHit:
-        input.handledInterruptTrigger === "attackHit" &&
-        invocation.procedure === "spatialMeleeSpellAttackProxy",
+      handledInterruptTrigger: input.handledInterruptTrigger,
+      checkpoint: input.spatialMeleeSpellAttackProxyCommitCheckpoint,
     });
   if (
     !spatialProxyCommitAlreadyApplied &&

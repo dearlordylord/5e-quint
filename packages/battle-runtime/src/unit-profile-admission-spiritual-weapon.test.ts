@@ -894,6 +894,19 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         forcePositionId,
       }),
     );
+    expect(awaitingShield.state.interruptStack.at(-1)).toMatchObject({
+      kind: "interruptCheckpoint",
+      frame: {
+        continuation: {
+          spatialMeleeSpellAttackProxyCommitCheckpoint: {
+            kind: "spatialMeleeSpellAttackProxyCommitApplied",
+            actorId: spellCasterId,
+            sourceProcedureRef: act.subject.procedureRef,
+            operation: "createAndAttack",
+          },
+        },
+      },
+    });
 
     const choice = requireTriggeredReactionSpellChoice({
       session,
@@ -911,15 +924,17 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       ),
     });
 
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        `Expected Shielded Spiritual Weapon cast to resolve: ${JSON.stringify(resolved)}`,
+      );
+    }
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
         turn: { bonusActionQuotaAvailable: false },
       },
     });
-    if (resolved.tag !== "resolved") {
-      throw new Error("Expected Shielded Spiritual Weapon cast to resolve.");
-    }
     expect(requireCombatant(resolved.state, spellTargetId).hp).toStrictEqual(
       Hp(20),
     );
@@ -931,6 +946,128 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         forcePositionId,
       }),
     );
+  });
+
+  test("an attack-hit interrupt replay does not restore a concentration-ended Spiritual Weapon proxy or re-spend its cast", () => {
+    const spell = spellRecord(spiritualWeaponUnitId);
+    const forcePositionId = battleTablePositionId(
+      "spiritual-weapon-force-concentration-replay",
+    );
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 20,
+      targetMaxHp: 20,
+      targetSpellcasting: {
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: abilityModifier(3),
+        },
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [spellRecord(shieldUnitId)],
+        featurePreparedSpells: [],
+        spellAccesses: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      },
+    });
+    const act = bonusSpellAct({
+      session,
+      spellId: spiritualWeaponUnitId,
+      slotLevel: 2,
+    });
+    const forceFill = spatialMeleeSpellAttackProxyPositionFill({
+      hole: requireHole(
+        act.initialHoles,
+        "spatialMeleeSpellAttackProxyPosition",
+      ),
+      positionId: forcePositionId,
+    });
+    const targetFill = spatialMeleeSpellAttackProxyTargetFill(
+      requireHole(act.initialHoles, "targetChoice"),
+      spiritualWeaponUnitId,
+      spellCasterId,
+      spellTargetId,
+      forcePositionId,
+    );
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [forceFill, targetFill],
+      }),
+      "attackRoll",
+    );
+    const awaitingShield = requireNeedsHoles(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          forceFill,
+          targetFill,
+          attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+        ],
+      }),
+    );
+    const concentrationEnded = breakBattleConcentration(
+      awaitingShield.state,
+      spellCasterId,
+    );
+    expect(
+      requireCombatant(concentrationEnded, spellCasterId).activeEffects,
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "spatialMeleeSpellAttackProxy" }),
+    );
+
+    const awaitingDamage = resolveBattleInterrupt({
+      state: concentrationEnded,
+      fill: interruptDecisionFill(
+        requireHole(awaitingShield.holes, "interruptDecision"),
+        { kind: "decline", responderId: spellTargetId },
+      ),
+    });
+    expect(awaitingDamage).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "rolledDice" })],
+    });
+    if (awaitingDamage.tag !== "needsHoles") {
+      throw new Error("Expected replayed Spiritual Weapon damage roll.");
+    }
+    const damage = requireHole(awaitingDamage.holes, "rolledDice");
+    const resolved = resolveBattleSubject({
+      state: awaitingDamage.state,
+      subject: awaitingDamage.subject,
+      fills: [damageRollFillWithGroups(damage, [[5]])],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: {
+          bonusActionQuotaAvailable: false,
+          spellSlotUsesThisTurn: [
+            { kind: "committed", combatantId: spellCasterId },
+          ],
+        },
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected replayed Spiritual Weapon hit to resolve.");
+    }
+    expect(requireCombatant(resolved.state, spellTargetId).hp).toStrictEqual(
+      Hp(12),
+    );
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects,
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "spatialMeleeSpellAttackProxy" }),
+    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toStrictEqual([{ kind: "committed", combatantId: spellCasterId }]);
   });
 
   test("sanctuary loss on cast still spends and records the Spiritual Weapon proxy", () => {
@@ -1737,15 +1874,17 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         triggeredReactionSpellDecision(spellTargetId, choice, []),
       ),
     });
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        `Expected Shielded Spiritual Weapon repeat to resolve: ${JSON.stringify(resolved)}`,
+      );
+    }
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
         turn: { bonusActionQuotaAvailable: false },
       },
     });
-    if (resolved.tag !== "resolved") {
-      throw new Error("Expected Shielded Spiritual Weapon repeat to resolve.");
-    }
     expect(requireCombatant(resolved.state, spellTargetId).hp).toStrictEqual(
       Hp(30),
     );

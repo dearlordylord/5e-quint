@@ -1,7 +1,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-cloudkill-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
 import { Hp } from "@dnd/shared/types";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
@@ -9,7 +9,6 @@ import { describe, expect, test } from "vitest";
 import cloudkillInput from "../../surface/content/cloudkill.json";
 import {
   battleAreaId,
-  battleId,
   type BattleEffectExecutionRef,
   type CombatantId,
 } from "./identity.ts";
@@ -19,6 +18,12 @@ import type {
   BattleStartTurnOccurrenceOrderHole,
   BattleState,
 } from "./battle-state-execution.ts";
+import type { SpellProcedureExecution } from "./character-execution.ts";
+import type { CharacterProcedureBinding } from "./character-execution-vocabulary.ts";
+import type {
+  PersistentAreaSaveConditionSpellProcedureExecution,
+  SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution,
+} from "./procedure-execution/spell-procedure-execution.ts";
 import {
   BattleFillSchema,
   BattleHoleSchema,
@@ -63,13 +68,8 @@ import {
   battleStateWithAllocatedEffectForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
   concentrationSavingThrowFill,
-  characterSeed,
   damageRollFill,
-  DieRollResult,
-  monsterResourceStatBlock,
   reactionChoiceWithSubject,
-  startBattleRight,
-  statBlockCreatureInit,
   targetFill,
 } from "./battle-runtime.test-support.ts";
 
@@ -101,18 +101,39 @@ function withSecondCloudkillMovement(state: BattleState): BattleState {
     const allocation = allocateBattleEffectExecutionRefForCreature({
       owner: combatant,
     });
+    if (allocation.owner.origin.kind !== "character") {
+      throw new Error("Expected the Cloudkill source to be a character.");
+    }
+    const sourceBinding =
+      allocation.owner.origin.execution.procedureBindings.find(
+        (binding) => binding.procedureRef === effect.sourceProcedureRef,
+      );
+    if (sourceBinding?.procedure.kind !== "spellInvocation") {
+      throw new Error("Expected the retained Cloudkill procedure binding.");
+    }
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      "second-cloudkill-movement-occurrence",
+    );
     return {
       ...state,
       combatants: new Map(state.combatants).set(combatantId, {
         ...allocation.owner,
+        origin: {
+          ...allocation.owner.origin,
+          execution: {
+            ...allocation.owner.origin.execution,
+            procedureBindings: [
+              ...allocation.owner.origin.execution.procedureBindings,
+              { ...sourceBinding, procedureRef: sourceProcedureRef },
+            ],
+          },
+        },
         activeEffects: [
           ...allocation.owner.activeEffects,
           {
             ...effect,
             effectRef: allocation.effectRef,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "second-cloudkill-movement-occurrence",
-            ),
+            sourceProcedureRef,
             areaId: battleAreaId("second-cloudkill-movement-area"),
           },
         ],
@@ -120,6 +141,183 @@ function withSecondCloudkillMovement(state: BattleState): BattleState {
     };
   }
   throw new Error("Expected an active Cloudkill effect.");
+}
+
+function withCloudkillTranslationDistance(
+  state: BattleState,
+  distanceFeet: ReturnType<typeof movementFeet>,
+): BattleState {
+  const source = state.combatants.get(spellCasterId);
+  if (source?.origin.kind !== "character") {
+    throw new Error("Expected the Cloudkill source character.");
+  }
+  const effect = source.activeEffects.find(
+    (
+      candidate,
+    ): candidate is SourceTurnTranslationPersistentAreaSaveDamageEffect =>
+      candidate.kind === "persistentAreaSaveDamage" &&
+      candidate.lifecycle.kind === "sourceTurnTranslation",
+  );
+  if (effect === undefined) {
+    throw new Error("Expected the active Cloudkill effect.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(spellCasterId, {
+      ...source,
+      origin: {
+        ...source.origin,
+        execution: {
+          ...source.origin.execution,
+          procedureBindings: source.origin.execution.procedureBindings.map(
+            (binding): CharacterProcedureBinding => {
+              if (
+                binding.procedureRef !== effect.sourceProcedureRef ||
+                binding.procedure.kind !== "spellInvocation" ||
+                binding.procedure.execution.procedure !==
+                  "persistentAreaSaveDamage" ||
+                binding.procedure.execution.lifecycle.kind !==
+                  "sourceTurnTranslation"
+              ) {
+                return binding;
+              }
+              const execution = binding.procedure
+                .execution as SourceTurnTranslationPersistentAreaSaveDamageSpellProcedureExecution;
+              return {
+                procedureRef: binding.procedureRef,
+                procedure: {
+                  kind: "spellInvocation",
+                  execution: {
+                    ...execution,
+                    lifecycle: {
+                      ...execution.lifecycle,
+                      distanceFeet,
+                    },
+                  },
+                },
+              };
+            },
+          ),
+        },
+      },
+    }),
+  };
+}
+
+type NonTranslatingPersistentAreaLifecycle =
+  | "stationary"
+  | "collisionReposition"
+  | "directedReposition";
+
+function withNonTranslatingCloudkillLifecycle(
+  state: BattleState,
+  lifecycle: NonTranslatingPersistentAreaLifecycle,
+): BattleState {
+  const source = state.combatants.get(spellCasterId);
+  if (source?.origin.kind !== "character") {
+    throw new Error("Expected the Cloudkill source character.");
+  }
+  const effect = source.activeEffects.find(
+    (
+      candidate,
+    ): candidate is SourceTurnTranslationPersistentAreaSaveDamageEffect =>
+      candidate.kind === "persistentAreaSaveDamage" &&
+      candidate.lifecycle.kind === "sourceTurnTranslation",
+  );
+  if (effect === undefined) {
+    throw new Error("Expected the active Cloudkill effect.");
+  }
+  const binding = source.origin.execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === effect.sourceProcedureRef,
+  );
+  if (
+    binding?.procedure.kind !== "spellInvocation" ||
+    binding.procedure.execution.procedure !== "persistentAreaSaveDamage"
+  ) {
+    throw new Error("Expected the retained Cloudkill procedure binding.");
+  }
+  const retainedExecution = binding.procedure.execution;
+  const syntheticLifecycle = Match.value(lifecycle).pipe(
+    Match.when("stationary", () => ({ kind: "stationary" }) as const),
+    Match.when(
+      "collisionReposition",
+      () =>
+        ({
+          kind: "casterActionReposition",
+          actionCost: "bonusAction",
+          movedAreaOperation: "saveDamage",
+          collisionDisposition: "stopAndAffectAdjacent",
+        }) as const,
+    ),
+    Match.when(
+      "directedReposition",
+      () =>
+        ({
+          kind: "casterActionReposition",
+          actionCost: "magicAction",
+          movedAreaOperation: "saveDamage",
+          collisionDisposition: "ignoreObstacles",
+        }) as const,
+    ),
+    Match.exhaustive,
+  );
+  const syntheticEffect = Match.value(lifecycle).pipe(
+    Match.when(
+      "stationary",
+      () => ({ ...effect, lifecycle: { kind: "stationary" } }) as const,
+    ),
+    Match.when("collisionReposition", () => {
+      const {
+        appearanceOccurrence: _appearanceOccurrence,
+        savedThisTurn: _savedThisTurn,
+        ...effectBase
+      } = effect;
+      return {
+        ...effectBase,
+        lifecycle: { kind: "casterActionReposition" },
+      } as const;
+    }),
+    Match.when("directedReposition", () => {
+      const { appearanceOccurrence: _appearanceOccurrence, ...effectBase } =
+        effect;
+      return {
+        ...effectBase,
+        lifecycle: { kind: "casterActionReposition" },
+        shapeShiftSuppressed: [],
+      } as const;
+    }),
+    Match.exhaustive,
+  ) as BattleActiveEffect;
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(spellCasterId, {
+      ...source,
+      activeEffects: source.activeEffects.map((candidate) =>
+        candidate.effectRef === effect.effectRef ? syntheticEffect : candidate,
+      ),
+      origin: {
+        ...source.origin,
+        execution: {
+          ...source.origin.execution,
+          procedureBindings: source.origin.execution.procedureBindings.map(
+            (candidate): CharacterProcedureBinding =>
+              candidate.procedureRef === effect.sourceProcedureRef
+                ? {
+                    procedureRef: binding.procedureRef,
+                    procedure: {
+                      kind: "spellInvocation",
+                      execution: {
+                        ...retainedExecution,
+                        lifecycle: syntheticLifecycle,
+                      } as SpellProcedureExecution,
+                    },
+                  }
+                : candidate,
+          ),
+        },
+      },
+    }),
+  };
 }
 
 function withGreaseGroundHazard(state: BattleState): {
@@ -136,6 +334,22 @@ function withGreaseGroundHazard(state: BattleState): {
   if (cloudkill?.kind !== "persistentAreaSaveDamage") {
     throw new Error("Expected the bound persistent-spell source procedure.");
   }
+  if (source.origin.kind !== "character") {
+    throw new Error("Expected the persistent-spell source to be a character.");
+  }
+  const cloudkillBinding = source.origin.execution.procedureBindings.find(
+    (binding) => binding.procedureRef === cloudkill.sourceProcedureRef,
+  );
+  if (
+    cloudkillBinding?.procedure.kind !== "spellInvocation" ||
+    cloudkillBinding.procedure.execution.procedure !==
+      "persistentAreaSaveDamage"
+  ) {
+    throw new Error("Expected the retained Cloudkill procedure binding.");
+  }
+  const greaseProcedureRef = battleProcedureExecutionRefForTest(
+    `cloudkill-grease-${source.nextEffectOrdinal}`,
+  );
   const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
     state,
     occurrences: [
@@ -144,7 +358,7 @@ function withGreaseGroundHazard(state: BattleState): {
         ownerId: source.combatantId,
         effect: {
           kind: "persistentAreaSaveCondition",
-          sourceProcedureRef: cloudkill.sourceProcedureRef,
+          sourceProcedureRef: greaseProcedureRef,
           sourceCombatantId: spellCasterId,
           areaId: greaseAreaId,
           heightenedSpellTargetDisadvantage: null,
@@ -157,7 +371,50 @@ function withGreaseGroundHazard(state: BattleState): {
   if (occurrence?.kind !== "activeEffect") {
     throw new Error("Expected the allocated Grease occurrence.");
   }
-  return { state: allocated.state, effectRef: occurrence.effect.effectRef };
+  const allocatedSource = allocated.state.combatants.get(spellCasterId);
+  if (allocatedSource?.origin.kind !== "character") {
+    throw new Error("Expected the allocated Grease source character.");
+  }
+  return {
+    state: {
+      ...allocated.state,
+      combatants: new Map(allocated.state.combatants).set(spellCasterId, {
+        ...allocatedSource,
+        origin: {
+          ...allocatedSource.origin,
+          execution: {
+            ...allocatedSource.origin.execution,
+            procedureBindings: [
+              ...allocatedSource.origin.execution.procedureBindings,
+              {
+                procedureRef: greaseProcedureRef,
+                procedure: {
+                  kind: "spellInvocation",
+                  execution: {
+                    spellRuleFacts:
+                      cloudkillBinding.procedure.execution.spellRuleFacts,
+                    ability: "dex",
+                    access: cloudkillBinding.procedure.execution.access,
+                    dc: cloudkillBinding.procedure.execution.dc,
+                    durationTicks:
+                      cloudkillBinding.procedure.execution.durationTicks,
+                    procedure: "persistentAreaSaveCondition",
+                    rangeFeet: cloudkillBinding.procedure.execution.rangeFeet,
+                    resource: cloudkillBinding.procedure.execution.resource,
+                    targeting: {
+                      kind: "pointOriginGroundSquare",
+                      sideFeet: movementFeet(10),
+                    },
+                  } satisfies PersistentAreaSaveConditionSpellProcedureExecution,
+                },
+              },
+            ],
+          },
+        },
+      }),
+    },
+    effectRef: occurrence.effect.effectRef,
+  };
 }
 
 function withSourceStartTurnDamage(
@@ -243,53 +500,6 @@ function withCloudkillOwnedTurnStartTemporaryHitPoints(
       expiresAt: { kind: "concentration", combatantId: spellCasterId },
     },
   });
-}
-
-function withUnavailableSourceRecharge(state: BattleState): {
-  readonly state: BattleState;
-  readonly resourcePoolRef: import("./identity.ts").BattleResourcePoolExecutionRef;
-} {
-  const fixture = startBattleRight({
-    battleId: battleId("cloudkill-source-recharge-fixture"),
-    combatants: [
-      statBlockCreatureInit({
-        combatantId: spellCasterId,
-        initiative: 20,
-        statBlock: monsterResourceStatBlock(),
-      }),
-      characterSeed({ combatantId: spellTargetId, initiative: 10 }),
-    ],
-  });
-  const fixtureSource = fixture.combatants.get(spellCasterId);
-  const source = state.combatants.get(spellCasterId);
-  if (fixtureSource?.origin.kind !== "statBlock" || source === undefined) {
-    throw new Error("Expected the Cloudkill source recharge fixture.");
-  }
-  const rechargePool = fixtureSource.origin.execution.resourcePools.find(
-    (pool) => pool.kind === "recharge",
-  );
-  if (rechargePool === undefined) {
-    throw new Error("Expected a recharge resource pool.");
-  }
-  const origin = {
-    ...fixtureSource.origin,
-    execution: {
-      ...fixtureSource.origin.execution,
-      resourcePools: fixtureSource.origin.execution.resourcePools.map((pool) =>
-        pool.kind === "recharge" ? { ...pool, available: false } : pool,
-      ),
-    },
-  };
-  return {
-    resourcePoolRef: rechargePool.resourcePoolRef,
-    state: {
-      ...state,
-      combatants: new Map(state.combatants).set(spellCasterId, {
-        ...source,
-        origin,
-      }),
-    },
-  };
 }
 
 function withCommandGrovel(
@@ -2085,6 +2295,52 @@ describe("Cloudkill source-turn movement", () => {
     });
   });
 
+  test("reads the movement distance from the retained source procedure", () => {
+    const cast = withCloudkillTranslationDistance(
+      castCloudkill().state,
+      movementFeet(35),
+    );
+    const targetTurn = endTurn({ state: cast, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected the target turn to start.");
+    }
+
+    expect(
+      endTurn({ state: targetTurn.state, actorId: spellTargetId }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "persistentAreaSourceTurnTranslation",
+          distanceFeet: movementFeet(35),
+          directionRequirement: "awayFromSource",
+        },
+      ],
+    });
+  });
+
+  test.each<NonTranslatingPersistentAreaLifecycle>([
+    "stationary",
+    "collisionReposition",
+    "directedReposition",
+  ])(
+    "does not schedule source-turn translation for a same-source %s persistent area",
+    (lifecycle) => {
+      const cast = withNonTranslatingCloudkillLifecycle(
+        castCloudkill().state,
+        lifecycle,
+      );
+      const targetTurn = endTurn({ state: cast, actorId: spellCasterId });
+      if (targetTurn.tag !== "resolved") {
+        throw new Error("Expected the target turn to start.");
+      }
+
+      expect(
+        endTurn({ state: targetTurn.state, actorId: spellTargetId }),
+      ).toMatchObject({ tag: "resolved" });
+    },
+  );
+
   test("advances exactly one turn after the table supplies movement facts", () => {
     const cast = castCloudkill().state;
     const targetTurn = endTurn({ state: cast, actorId: spellCasterId });
@@ -2395,36 +2651,9 @@ describe("Cloudkill source-turn movement", () => {
         state: targetTurn.state,
       }),
     );
-    const recharging = withUnavailableSourceRecharge(readied.state);
-    const orderFrontier = endTurn({
-      state: recharging.state,
-      actorId: spellTargetId,
-    });
-    const orderFill = startTurnOccurrenceOrderFill(
-      requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
-      (occurrence) =>
-        occurrence.kind === "persistentAreaSourceTurnTranslation" ? 1 : 0,
-    );
-    const rechargeFrontier = endTurn({
-      state: recharging.state,
-      actorId: spellTargetId,
-      fills: [orderFill],
-    });
-    const rechargeFill = {
-      kind: "statBlockRechargeRoll" as const,
-      holeId: requireResultHole(rechargeFrontier, "statBlockRechargeRoll")
-        .holeId,
-      value: [
-        {
-          target: recharging.resourcePoolRef,
-          roll: DieRollResult(5),
-        },
-      ],
-    };
     const movementFrontier = endTurn({
-      state: recharging.state,
+      state: readied.state,
       actorId: spellTargetId,
-      fills: [orderFill, rechargeFill],
     });
     if (movementFrontier.tag !== "needsHoles") {
       throw new Error("Expected the Cloudkill movement frontier.");
@@ -2437,9 +2666,9 @@ describe("Cloudkill source-turn movement", () => {
       [spellTargetId],
     );
     const saveFrontier = endTurn({
-      state: recharging.state,
+      state: readied.state,
       actorId: spellTargetId,
-      fills: [orderFill, rechargeFill, movementFill],
+      fills: [movementFill],
     });
     if (saveFrontier.tag !== "needsHoles") {
       throw new Error("Expected the movement-triggered save frontier.");
@@ -2450,9 +2679,9 @@ describe("Cloudkill source-turn movement", () => {
       false,
     );
     const interrupted = endTurn({
-      state: recharging.state,
+      state: readied.state,
       actorId: spellTargetId,
-      fills: [orderFill, rechargeFill, movementFill, saveFill],
+      fills: [movementFill, saveFill],
     });
 
     expect(interrupted).toMatchObject({
@@ -2508,8 +2737,6 @@ describe("Cloudkill source-turn movement", () => {
       state: concentrationFrontier.state,
       subject: concentrationFrontier.subject,
       fills: [
-        orderFill,
-        rechargeFill,
         movementFill,
         saveFill,
         damageFill,
@@ -2759,7 +2986,7 @@ describe("Cloudkill source-turn movement", () => {
     expect(secondMovementHole.holeId).not.toBe(firstMovementFill.holeId);
   });
 
-  test("offers the chosen movement occurrence before stat-block recharge", () => {
+  test("offers the chosen movement occurrence before another source start-turn effect", () => {
     const cast = castCloudkill();
     const targetTurn = endTurn({
       state: cast.state,
@@ -2768,9 +2995,16 @@ describe("Cloudkill source-turn movement", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected the target turn to start.");
     }
-    const recharging = withUnavailableSourceRecharge(targetTurn.state);
+    const boundaryState = withSourceTurnStartTemporaryHitPoints(
+      targetTurn.state,
+      {
+        sourceKey: "cloudkill-movement-before-start-turn-effect",
+        amount: 3,
+        persistWithoutConcentration: true,
+      },
+    );
     const orderFrontier = endTurn({
-      state: recharging.state,
+      state: boundaryState,
       actorId: spellTargetId,
     });
     const orderFill = startTurnOccurrenceOrderFill(
@@ -2780,7 +3014,7 @@ describe("Cloudkill source-turn movement", () => {
     );
 
     const movementFrontier = endTurn({
-      state: recharging.state,
+      state: boundaryState,
       actorId: spellTargetId,
       fills: [orderFill],
     });
@@ -2789,37 +3023,8 @@ describe("Cloudkill source-turn movement", () => {
       tag: "needsHoles",
       holes: [{ kind: "persistentAreaSourceTurnTranslation" }],
     });
-    const rechargeFrontier = endTurn({
-      state: recharging.state,
-      actorId: spellTargetId,
-      fills: [
-        orderFill,
-        persistentAreaSourceTurnTranslationFill(
-          requireResultHole(
-            movementFrontier,
-            "persistentAreaSourceTurnTranslation",
-          ),
-          [],
-        ),
-      ],
-    });
-    expect(rechargeFrontier).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "statBlockRechargeRoll" }],
-    });
-    const rechargeFill = {
-      kind: "statBlockRechargeRoll" as const,
-      holeId: requireResultHole(rechargeFrontier, "statBlockRechargeRoll")
-        .holeId,
-      value: [
-        {
-          target: recharging.resourcePoolRef,
-          roll: DieRollResult(5),
-        },
-      ],
-    };
     const completed = endTurn({
-      state: recharging.state,
+      state: boundaryState,
       actorId: spellTargetId,
       fills: [
         orderFill,
@@ -2830,24 +3035,12 @@ describe("Cloudkill source-turn movement", () => {
           ),
           [],
         ),
-        rechargeFill,
       ],
     });
     if (completed.tag !== "resolved") {
       throw new Error("Expected the ordered start-turn occurrences to finish.");
     }
-    const source = completed.state.combatants.get(spellCasterId);
-    expect(source?.origin.kind).toBe("statBlock");
-    if (source?.origin.kind !== "statBlock") {
-      throw new Error("Expected the stat-block Cloudkill source.");
-    }
-    expect(
-      source.origin.execution.resourcePools.find(
-        (pool): pool is Extract<typeof pool, { readonly kind: "recharge" }> =>
-          pool.kind === "recharge" &&
-          pool.resourcePoolRef === recharging.resourcePoolRef,
-      )?.available,
-    ).toBe(true);
+    expect(completed.state.combatants.get(spellCasterId)?.tempHp).toBe(3);
   });
 
   test("opens independent failed-save windows for two movement-affected targets", () => {

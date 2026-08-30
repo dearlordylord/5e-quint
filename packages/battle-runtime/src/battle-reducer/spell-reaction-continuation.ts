@@ -3,8 +3,10 @@ import type {
   ActionSpellBattleResolutionInput,
   BattleFill,
   BattleInterruptedProcedure,
+  BattleSpatialMeleeSpellAttackProxyCommitCheckpoint,
   BonusActionSpellBattleResolutionInput,
 } from "../battle-state-execution.ts";
+import { optionalProperty } from "../optional-property.ts";
 
 type SpellReactionContinuation = {
   readonly subject: BattleSubject;
@@ -21,6 +23,7 @@ type SpellReplayContinuationInput =
       readonly fills: readonly BattleFill[];
       readonly reactionContinuation?: SpellReactionContinuation;
       readonly glyphStoredSpellReleaseReplay?: never;
+      readonly spatialMeleeSpellAttackProxyCommitCheckpoint?: BattleSpatialMeleeSpellAttackProxyCommitCheckpoint;
     };
 
 export function spellReplayContinuation(
@@ -44,5 +47,9 @@ export function spellReplayContinuation(
       subject: input.subject,
       fills: input.fills,
     }),
+    ...optionalProperty(
+      "spatialMeleeSpellAttackProxyCommitCheckpoint",
+      input.spatialMeleeSpellAttackProxyCommitCheckpoint,
+    ),
   };
 }

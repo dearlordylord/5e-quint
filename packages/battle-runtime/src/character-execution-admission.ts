@@ -1857,14 +1857,38 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      movableLightManifestation: (value) => {
-        const { spell: _spell, ...executionWithRetainedIdentity } = value;
-        const { sourceProcedureRef: _sourceProcedureRef, ...execution } =
-          executionWithRetainedIdentity as typeof executionWithRetainedIdentity & {
-            readonly sourceProcedureRef?: BattleProcedureExecutionRef;
-          };
-        return { ...execution, spellRuleFacts };
-      },
+      movableLightManifestation: (value) =>
+        Match.value(value).pipe(
+          Match.when({ operation: "create" }, (created) => ({
+            spellRuleFacts,
+            access: created.access,
+            actionCost: created.actionCost,
+            dimRadiusFeet: created.dimRadiusFeet,
+            expiresAt: created.expiresAt,
+            form: created.form,
+            maxMoveFeet: created.maxMoveFeet,
+            operation: created.operation,
+            procedure: created.procedure,
+            rangeFeet: created.rangeFeet,
+            resource: created.resource,
+            spacingFeet: created.spacingFeet,
+          })),
+          Match.when({ operation: "reposition" }, (reposition) => ({
+            spellRuleFacts,
+            access: reposition.access,
+            actionCost: reposition.actionCost,
+            activeEffectRef: reposition.activeEffectRef,
+            maxMoveFeet: reposition.maxMoveFeet,
+            operation: reposition.operation,
+            procedure: reposition.procedure,
+            rangeFeet: reposition.rangeFeet,
+            resource: reposition.resource,
+            sourceManifestationProcedureRef:
+              reposition.sourceManifestationProcedureRef,
+            spacingFeet: reposition.spacingFeet,
+          })),
+          Match.exhaustive,
+        ),
       directCondition: (value) => ({
         spellRuleFacts,
         access: value.access,
@@ -1925,14 +1949,83 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      persistentAreaSaveDamage: (value) => {
-        const { spell: _spell, ...executionWithRetainedIdentity } = value;
-        const { sourceProcedureRef: _sourceProcedureRef, ...execution } =
-          executionWithRetainedIdentity as typeof executionWithRetainedIdentity & {
-            readonly sourceProcedureRef?: BattleProcedureExecutionRef;
-          };
-        return { ...execution, spellRuleFacts };
-      },
+      persistentAreaSaveDamage: (value) =>
+        Match.value(value).pipe(
+          Match.when({ lifecycle: { kind: "stationary" } }, (stationary) => ({
+            spellRuleFacts,
+            ability: stationary.ability,
+            access: stationary.access,
+            damage: stationary.damage,
+            dc: stationary.dc,
+            durationTicks: stationary.durationTicks,
+            lifecycle: stationary.lifecycle,
+            procedure: stationary.procedure,
+            rangeFeet: stationary.rangeFeet,
+            resource: stationary.resource,
+            targeting: stationary.targeting,
+          })),
+          Match.when(
+            { lifecycle: { kind: "sourceTurnTranslation" } },
+            (translation) => ({
+              spellRuleFacts,
+              ability: translation.ability,
+              access: translation.access,
+              damage: translation.damage,
+              dc: translation.dc,
+              durationTicks: translation.durationTicks,
+              lifecycle: translation.lifecycle,
+              procedure: translation.procedure,
+              rangeFeet: translation.rangeFeet,
+              resource: translation.resource,
+              targeting: translation.targeting,
+            }),
+          ),
+          Match.when(
+            {
+              lifecycle: {
+                kind: "casterActionReposition",
+                collisionDisposition: "stopAndAffectAdjacent",
+              },
+            },
+            (collision) => ({
+              spellRuleFacts,
+              ability: collision.ability,
+              access: collision.access,
+              damage: collision.damage,
+              dc: collision.dc,
+              durationTicks: collision.durationTicks,
+              lifecycle: collision.lifecycle,
+              procedure: collision.procedure,
+              ramMaxMoveFeet: collision.ramMaxMoveFeet,
+              rangeFeet: collision.rangeFeet,
+              resource: collision.resource,
+              targeting: collision.targeting,
+            }),
+          ),
+          Match.when(
+            {
+              lifecycle: {
+                kind: "casterActionReposition",
+                collisionDisposition: "ignoreObstacles",
+              },
+            },
+            (directed) => ({
+              spellRuleFacts,
+              ability: directed.ability,
+              access: directed.access,
+              damage: directed.damage,
+              dc: directed.dc,
+              durationTicks: directed.durationTicks,
+              lifecycle: directed.lifecycle,
+              procedure: directed.procedure,
+              rangeFeet: directed.rangeFeet,
+              repositionMaxMoveFeet: directed.repositionMaxMoveFeet,
+              resource: directed.resource,
+              targeting: directed.targeting,
+            }),
+          ),
+          Match.exhaustive,
+        ),
       persistentAreaTrait: (value) => ({
         spellRuleFacts,
         access: value.access,
@@ -2373,14 +2466,18 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      stagedSaveCondition: (value) => {
-        const { spell: _spell, ...executionWithRetainedIdentity } = value;
-        const { sourceProcedureRef: _sourceProcedureRef, ...execution } =
-          executionWithRetainedIdentity as typeof executionWithRetainedIdentity & {
-            readonly sourceProcedureRef?: BattleProcedureExecutionRef;
-          };
-        return { ...execution, spellRuleFacts };
-      },
+      stagedSaveCondition: (value) => ({
+        spellRuleFacts,
+        ability: value.ability,
+        access: value.access,
+        automaticSuccessPredicates: value.automaticSuccessPredicates,
+        dc: value.dc,
+        escapeAction: value.escapeAction,
+        procedure: value.procedure,
+        rangeFeet: value.rangeFeet,
+        resource: value.resource,
+        targeting: value.targeting,
+      }),
       spellAttackDamage: (value) =>
         Match.value(value).pipe(
           Match.when({ access: isCantripSpellAccess }, (value) => ({
@@ -2501,12 +2598,22 @@ export function spellProcedureExecution(
       spatialMeleeSpellAttackProxy: (value) =>
         Match.value(value).pipe(
           Match.when({ operation: "createAndAttack" }, (created) => {
-            const { spell: _spell, ...executionWithRetainedIdentity } = created;
-            const { sourceProcedureRef: _sourceProcedureRef, ...execution } =
-              executionWithRetainedIdentity as typeof executionWithRetainedIdentity & {
-                readonly sourceProcedureRef?: BattleProcedureExecutionRef;
-              };
-            return { ...execution, spellRuleFacts };
+            return {
+              spellRuleFacts,
+              access: created.access,
+              actionCost: created.actionCost,
+              attackBonus: created.attackBonus,
+              attackKind: created.attackKind,
+              damage: created.damage,
+              durationTicks: created.durationTicks,
+              forceReachFeet: created.forceReachFeet,
+              operation: created.operation,
+              procedure: created.procedure,
+              rangeFeet: created.rangeFeet,
+              repeatMoveMaxFeet: created.repeatMoveMaxFeet,
+              resource: created.resource,
+              targeting: created.targeting,
+            };
           }),
           Match.when({ operation: "repositionAndAttack" }, (repeat) => ({
             activeEffectRef: repeat.activeEffect.effectRef,
