@@ -242,7 +242,8 @@ describe("scenario setup public-SDK boundary", () => {
         battle: setup.session.battle,
         spatial,
         ambientIllumination: battlefield.ambientIllumination,
-        statBlockDamageNotation: battlefield.statBlockDamageNotation,
+        statBlockDamageSelectionPolicy:
+          battlefield.statBlockDamageSelectionPolicy,
         environment: battlefield.environment,
         initialRangedAttackEnemyRelationships:
           battlefield.initialRangedAttackEnemyRelationships,
