@@ -102,7 +102,6 @@ import {
 import { characterBuildDisplayName } from "./character-display.ts";
 import {
   completeMagicalCunningRite,
-  characterSheetCurrentHp,
   characterSheetTempHp,
   parseCharacterSheet,
   parseCharacterSheetRetainedCompanionId,
@@ -4162,7 +4161,10 @@ describe("MCP server route", () => {
       },
     } satisfies StatBlockRecord;
     const incompleteUnitLibrary = {
-      getUnit: () => Option.none(),
+      getUnit: (requestedUnitId: string) =>
+        requestedUnitId === "fighter_fighting_style"
+          ? Option.none()
+          : root.unitLibrary.getUnit(requestedUnitId),
       listUnits: () => root.unitLibrary.listUnits(),
       requireUnit: root.unitLibrary.requireUnit,
     };
@@ -4714,14 +4716,17 @@ describe("MCP server route", () => {
     const invalidCharacterId = testCharacterId(
       "draft:mixed-roster-admission-invalid-character",
     );
+    const invalidCharacterBuild = fighterCharacterBuildAtLevel(
+      root.unitLibrary,
+      2,
+    );
     root.sessionStore.characters.set(
       availableCharacterSessionRight({
         characterId: invalidCharacterId,
-        build: {
-          ...validCharacter.build,
-          species: unitId("species_elf"),
-        },
-        currentHp: characterSheetCurrentHp(validCharacter),
+        build: invalidCharacterBuild,
+        currentHp: Hp(
+          characterBuildMaximumHp(invalidCharacterBuild, root.unitLibrary),
+        ),
         tempHp: characterSheetTempHp(validCharacter),
         hitPointMaximumReduction: validCharacter.hitPointMaximumReduction,
         unitLibrary: root.unitLibrary,
@@ -4753,13 +4758,15 @@ describe("MCP server route", () => {
       collections: [
         defineSrdUnitCollection({
           units: srdUnitCollection.units.filter(
-            (unit) => unit.id !== "species_elf",
+            (unit) => unit.id !== "fighter_action_surge",
           ),
         }),
       ],
     });
     if (unitCatalog.tag !== "ok") {
-      throw new Error("Expected the missing-species test catalog to build.");
+      throw new Error(
+        "Expected the missing runtime feature test catalog to build.",
+      );
     }
     const startRoot = {
       ...root,
@@ -4840,10 +4847,9 @@ describe("MCP server route", () => {
             issueTag: "battleCreatureInitIssue",
             reason: "characterBuildProjection",
             phase: "hitPoints",
-            cause: "unknownUnit",
-            role: "species",
-            unitId: "species_elf",
-            message: expect.stringContaining("species_elf"),
+            cause: "missingHitPointMaximumGrantSourceUnit",
+            sourceUnitId: "fighter_action_surge",
+            message: expect.stringContaining("fighter_action_surge"),
           },
           {
             kind: "statBlockProjection",
