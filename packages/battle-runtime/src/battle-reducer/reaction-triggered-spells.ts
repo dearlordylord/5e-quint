@@ -66,7 +66,7 @@ export function triggeredReactionSpellChoices(
       : frame.trigger === "afterDamage"
         ? [frame.damagedId]
         : frame.trigger === "creatureFalls"
-          ? featherFallTriggerReactors(frame)
+          ? fallingCreatureMitigationTriggerReactors(frame)
           : spellCastTriggerReactors(frame);
   return reactorIds.flatMap(
     (reactorId): readonly BattleInterruptProcedureChoice[] => {
@@ -307,7 +307,6 @@ export function fallingCreatureMitigationReactionSpellMatchesTrigger(
     frame.trigger === "creatureFalls" &&
     frame.reactionSpellTargetFacts.some(
       (fact) =>
-        fact.kind === "fallingCreatureMitigationTriggerWithinRange" &&
         fact.reactorId === invocation.activeEffect.sourceCombatantId &&
         fact.fallingCreatureId === frame.fallingCreatureId &&
         fact.sourceProcedureRef === invocation.sourceProcedureRef &&
@@ -316,7 +315,7 @@ export function fallingCreatureMitigationReactionSpellMatchesTrigger(
   );
 }
 
-function featherFallTriggerReactors(
+function fallingCreatureMitigationTriggerReactors(
   frame: Extract<
     BattleInterruptCheckpointInput,
     { readonly trigger: "creatureFalls" }
@@ -325,7 +324,6 @@ function featherFallTriggerReactors(
   return [
     ...new Set(
       frame.reactionSpellTargetFacts.flatMap((fact): readonly CombatantId[] =>
-        fact.kind === "fallingCreatureMitigationTriggerWithinRange" &&
         fact.fallingCreatureId === frame.fallingCreatureId
           ? [fact.reactorId]
           : [],

@@ -23,6 +23,7 @@ const EXECUTION_ENTRY_POINT_FILES = [
 ];
 const SPELL_EXECUTION_COMPOSITION_MODULE = `${BATTLE_RUNTIME_SRC}/battle-reducer/spell-procedure-profiles/execution-composition.ts`;
 const SPELL_DECLARATION_REGISTRY_MODULE = `${BATTLE_RUNTIME_SRC}/battle-reducer/spell-procedure-profiles/registry.ts`;
+const BATTLE_RUNTIME_PACKAGE_MANIFEST = "packages/battle-runtime/package.json";
 
 const FORBIDDEN_OWNERS = [
   {
@@ -219,6 +220,81 @@ function battleRuntimeExecutionImportClosure() {
   return [...reachableFiles(importGraph(entryPoints), entryPoints)]
     .map(toRepoPath)
     .sort();
+}
+
+function battleRuntimePublicExportOwnerFiles() {
+  const manifestPath = normalizedRepoPath(BATTLE_RUNTIME_PACKAGE_MANIFEST);
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const exportedEntrypoints = Object.values(manifest.exports ?? {}).map(
+    (relativePath) => {
+      assert.equal(
+        typeof relativePath,
+        "string",
+        "Battle-runtime package exports must resolve directly to source entry points.",
+      );
+      return path.normalize(
+        path.resolve(path.dirname(manifestPath), relativePath),
+      );
+    },
+  );
+  assertDeclaredEntryPointsExist(exportedEntrypoints);
+
+  const options = compilerOptions();
+  const resolutionCache = ts.createModuleResolutionCache(
+    ROOT,
+    (fileName) => fileName,
+    options,
+  );
+  const owners = new Set(exportedEntrypoints);
+  const pending = [...exportedEntrypoints];
+  while (pending.length > 0) {
+    const file = pending.pop();
+    const source = fs.readFileSync(file, "utf8");
+    const sourceFile = ts.createSourceFile(
+      file,
+      source,
+      ts.ScriptTarget.Latest,
+      false,
+    );
+    for (const statement of sourceFile.statements) {
+      if (
+        !ts.isExportDeclaration(statement) ||
+        statement.moduleSpecifier === undefined ||
+        !ts.isStringLiteral(statement.moduleSpecifier)
+      ) {
+        continue;
+      }
+      const specifier = statement.moduleSpecifier.text;
+      const resolved = ts.resolveModuleName(
+        specifier,
+        file,
+        options,
+        ts.sys,
+        resolutionCache,
+      ).resolvedModule?.resolvedFileName;
+      if (resolved === undefined) {
+        if (isRepoLocalSpecifier(specifier)) {
+          throw new Error(
+            `Could not resolve public re-export ${JSON.stringify(specifier)} from ${toRepoPath(file)}.`,
+          );
+        }
+        continue;
+      }
+      const owner = path.normalize(resolved);
+      if (
+        !owner.startsWith(
+          `${normalizedRepoPath(BATTLE_RUNTIME_SRC)}${path.sep}`,
+        ) ||
+        !isTypeScriptSource(owner) ||
+        owners.has(owner)
+      ) {
+        continue;
+      }
+      owners.add(owner);
+      pending.push(owner);
+    }
+  }
+  return [...owners].map(toRepoPath).sort();
 }
 
 function declaredDirectoryEntryPoints(directories) {
@@ -938,7 +1014,10 @@ function dispatcherEntryPoint() {
   );
 }
 
-module.exports = { battleRuntimeExecutionImportClosure };
+module.exports = {
+  battleRuntimeExecutionImportClosure,
+  battleRuntimePublicExportOwnerFiles,
+};
 
 if (require.main === module) {
   const cliArguments = process.argv.slice(2);
