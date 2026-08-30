@@ -102,6 +102,13 @@ const unitActionResource = {
   sourceProcedureRef: unitActionProcedureRef,
   restriction: attackOnlyRestriction,
 } as const satisfies RuntimeActionResource;
+const unrestrictedUnitActionResource = {
+  kind: "action",
+  source: "unit",
+  sourceOwnerId,
+  sourceProcedureRef: unitActionProcedureRef,
+  restriction: { kind: "none" },
+} as const satisfies RuntimeActionResource;
 const spellEffectActionResource = {
   kind: "action",
   source: "spellEffect",
@@ -123,7 +130,7 @@ const classFeatureExtraAttackActionResource = {
   source: "classFeatureExtraAttack",
   sourceOwnerId,
   sourceProcedureRef: unitActionProcedureRef,
-  restriction: { kind: "none" },
+  restriction: attackOnlyRestriction,
 } as const satisfies RuntimeActionResource;
 const monkFocusFlurryOfBlowsActionResource = {
   kind: "action",
@@ -263,9 +270,15 @@ describe("action-economy-algebra", () => {
     expect(
       actionResourceAllows(statBlockMultiattackActionResource, "dash"),
     ).toBe(false);
+    expect(actionResourceAllows(unrestrictedUnitActionResource, "magic")).toBe(
+      true,
+    );
+    expect(
+      actionResourceAllows(classFeatureExtraAttackActionResource, "attack"),
+    ).toBe(true);
     expect(
       actionResourceAllows(classFeatureExtraAttackActionResource, "magic"),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("spends restricted unit action resources before the ordinary turn action", () => {
