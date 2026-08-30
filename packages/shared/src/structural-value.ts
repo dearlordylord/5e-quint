@@ -1,3 +1,5 @@
+import * as Option from "effect/Option";
+
 /**
  * Compare strings by Unicode code point. JSON object member ordering and
  * canonical set ordering use the same comparator throughout the workspace.
@@ -22,7 +24,7 @@ const MAX_CANONICAL_STRUCTURAL_ITEMS = 100_000;
 type CanonicalStructuralFrame =
   | {
       readonly tag: "visit";
-      readonly value: unknown;
+      readonly value: CanonicalStructuralValue;
       readonly depth: number;
     }
   | { readonly tag: "close"; readonly value: object; readonly token: string }
@@ -45,6 +47,23 @@ type CanonicalStructuralState = {
   readonly frames: CanonicalStructuralFrame[];
 };
 
+type CanonicalPrimitiveStructuralFunction = CallableFunction;
+type CanonicalPrimitiveStructuralValue =
+  | undefined
+  | boolean
+  | string
+  | number
+  | bigint
+  | symbol
+  | CanonicalPrimitiveStructuralFunction;
+type CanonicalStructuralValue =
+  | { readonly kind: "null" }
+  | { readonly kind: "object"; readonly value: object }
+  | {
+      readonly kind: "primitive";
+      readonly value: CanonicalPrimitiveStructuralValue;
+    };
+
 /**
  * Produce a deterministic key for JSON-like structural equality. Object keys
  * are sorted, arrays retain order and multiplicity, and scalar type tags
@@ -55,7 +74,9 @@ export function canonicalStructuralKey(value: unknown): string {
   const state: CanonicalStructuralState = {
     output: [],
     active: new Set<object>(),
-    frames: [{ tag: "visit", value, depth: 0 }],
+    frames: [
+      { tag: "visit", value: canonicalStructuralValue(value), depth: 0 },
+    ],
   };
 
   while (state.frames.length > 0) {
@@ -110,7 +131,7 @@ function processCanonicalArrayMember(
   }
   state.frames.push({
     tag: "visit",
-    value: member,
+    value: canonicalStructuralValue(member),
     depth: frame.depth,
   });
 }
@@ -129,7 +150,7 @@ function processCanonicalObjectMember(
   state.output.push(`k:${encodeString(frame.key)}=`);
   state.frames.push({
     tag: "visit",
-    value: member,
+    value: canonicalStructuralValue(member),
     depth: frame.depth,
   });
 }
@@ -138,46 +159,65 @@ function processCanonicalStructuralValue(
   frame: Extract<CanonicalStructuralFrame, { readonly tag: "visit" }>,
   state: CanonicalStructuralState,
 ): void {
-  if (frame.value === null) {
-    state.output.push("null;");
-    return;
+  switch (frame.value.kind) {
+    case "null":
+      state.output.push("null;");
+      return;
+    case "object":
+      processCanonicalObjectValue(frame.value.value, frame.depth, state);
+      return;
+    case "primitive":
+      state.output.push(canonicalPrimitiveStructuralToken(frame.value.value));
+      return;
   }
-  if (typeof frame.value === "object") {
-    processCanonicalObjectValue(frame.value, frame.depth, state);
-    return;
-  }
-  appendCanonicalPrimitiveStructuralValue(frame.value, state);
 }
 
-function appendCanonicalPrimitiveStructuralValue(
+function canonicalStructuralValue(value: unknown): CanonicalStructuralValue {
+  const primitive = parseCanonicalPrimitiveStructuralValue(value);
+  if (Option.isSome(primitive)) {
+    return { kind: "primitive", value: primitive.value };
+  }
+  if (value === null) return { kind: "null" };
+  if (typeof value === "object") return { kind: "object", value };
+  return {
+    kind: "primitive",
+    value: Option.getOrThrow(primitive),
+  };
+}
+
+function parseCanonicalPrimitiveStructuralValue(
   value: unknown,
-  state: CanonicalStructuralState,
-): void {
-  if (typeof value === "undefined") {
-    state.output.push("undefined;");
-    return;
+): Option.Option<CanonicalPrimitiveStructuralValue> {
+  return isCanonicalPrimitiveStructuralValue(value)
+    ? Option.some(value)
+    : Option.none();
+}
+
+function isCanonicalPrimitiveStructuralValue(
+  value: unknown,
+): value is CanonicalPrimitiveStructuralValue {
+  return typeof value !== "object";
+}
+
+function canonicalPrimitiveStructuralToken(
+  value: CanonicalPrimitiveStructuralValue,
+): string {
+  switch (typeof value) {
+    case "undefined":
+      return "undefined;";
+    case "boolean":
+      return canonicalBooleanToken(value);
+    case "string":
+      return `string:${encodeString(value)};`;
+    case "number":
+      return `number:${canonicalNumber(value)};`;
+    case "bigint":
+      return `bigint:${encodeString(String(value))};`;
+    case "symbol":
+      return `symbol:${encodeString(symbolDescription(value))};`;
+    case "function":
+      return "function;";
   }
-  if (typeof value === "boolean") {
-    state.output.push(canonicalBooleanToken(value));
-    return;
-  }
-  if (typeof value === "string") {
-    state.output.push(`string:${encodeString(value)};`);
-    return;
-  }
-  if (typeof value === "number") {
-    state.output.push(`number:${canonicalNumber(value)};`);
-    return;
-  }
-  if (typeof value === "bigint") {
-    state.output.push(`bigint:${encodeString(String(value))};`);
-    return;
-  }
-  if (typeof value === "symbol") {
-    state.output.push(`symbol:${encodeString(symbolDescription(value))};`);
-    return;
-  }
-  if (typeof value === "function") state.output.push("function;");
 }
 
 function canonicalBooleanToken(value: boolean): string {
