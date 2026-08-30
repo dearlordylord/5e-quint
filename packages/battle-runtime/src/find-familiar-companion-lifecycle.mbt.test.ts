@@ -1158,7 +1158,10 @@ function spawnedCompanionLifecycleEvent(
     quintVariantTag(raw, "qEvent"),
     FIND_FAMILIAR_COMPANION_LIFECYCLE_QNT_EVENT_TAGS,
   );
-  const value = FIND_FAMILIAR_COMPANION_LIFECYCLE_EVENT_BY_TAG[tag];
+  const value = literalField(
+    FIND_FAMILIAR_COMPANION_LIFECYCLE_EVENT_BY_TAG[tag],
+    SPAWNED_COMPANION_LIFECYCLE_EVENT_TAGS,
+  );
   return { tag: value };
 }
 

@@ -1,10 +1,10 @@
 import {
-  type BattleRuntimeResolutionResult,
   battleCharacterExecutionScopeRef,
   battleCheckpointFrontierEnvelope,
   battleExecutionScopeOrdinal,
   battleId,
   battleProcedureExecutionRef,
+  type BattleRuntimeResolutionResult,
   combatantId
 } from "@dnd/battle-runtime"
 import { NonNegativeInteger } from "@dnd/shared/types"
