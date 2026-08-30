@@ -65,6 +65,56 @@ describe("start battle tool input", () => {
     expect(decoded.right.initialCombatants[0]).not.toHaveProperty("side");
   });
 
+  test("preserves Character and companion ammunition at the typed roster boundary", () => {
+    const decoded = decodeStartBattleArgs({
+      battleId: "battle-with-character-and-companion-ammunition",
+      initiativeMode: "direct",
+      initialCombatants: [
+        {
+          kind: "characterSession",
+          characterId: "character-with-ammunition",
+          combatantId: "character-combatant-with-ammunition",
+          initiative: 16,
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 7 }],
+        },
+      ],
+      companionAdmissions: [
+        {
+          ownerCharacterId: "character-with-ammunition",
+          companionCombatantId: "companion-with-ammunition",
+          initiative: 15,
+          positionId: "companion-starting-position",
+          ammunitionStocks: [{ ammunition: "bolt", remaining: 4 }],
+        },
+      ],
+    });
+
+    expect(Either.isRight(decoded)).toBe(true);
+    if (Either.isLeft(decoded)) return;
+    expect(decoded.right).toEqual({
+      battleId: "battle-with-character-and-companion-ammunition",
+      initiativeMode: "direct",
+      initialCombatants: [
+        {
+          kind: "characterSession",
+          characterId: "character-with-ammunition",
+          combatantId: "character-combatant-with-ammunition",
+          initiative: 16,
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 7 }],
+        },
+      ],
+      companionAdmissions: [
+        {
+          ownerCharacterId: "character-with-ammunition",
+          companionCombatantId: "companion-with-ammunition",
+          initiative: 15,
+          positionId: "companion-starting-position",
+          ammunitionStocks: [{ ammunition: "bolt", remaining: 4 }],
+        },
+      ],
+    });
+  });
+
   test.each([
     [
       "character session",

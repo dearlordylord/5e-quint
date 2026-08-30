@@ -1,6 +1,7 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { combatantId, initiativeScore } from "@dnd/battle-runtime";
 import { statBlockId } from "@dnd/shared/game-facts";
+import { Hp } from "@dnd/shared/types";
 import {
   SrdStatBlockRecordSchema,
   StatBlockProcedureOrdinalSchema,
@@ -22,6 +23,168 @@ const authoredOrdinal = (value: number) =>
   Schema.decodeUnknownSync(StatBlockProcedureOrdinalSchema)(value);
 
 describe("MCP Stat Block battle combatant projection", () => {
+  test("rejects an unknown Stat Block identity with its authored id", () => {
+    const root = createMcpPlaySessionRoot();
+    const missingStatBlockId = statBlockId(
+      "stat_block_synthetic_missing_mcp_combatant",
+    );
+
+    const projected = projectStatBlockBattleCombatant({
+      root,
+      combatant: {
+        kind: "statBlock",
+        statBlockId: missingStatBlockId,
+        combatantId: combatantId("synthetic-missing-mcp-combatant"),
+        initiative: initiativeScore(10),
+        ammunitionStocks: [],
+        admissionSource: { kind: "encounterParticipant" },
+      },
+    });
+
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(jsonContentPayload(projected.left)).toEqual({
+      error: "Unknown Stat Block combatant.",
+      details: {
+        code: "UNKNOWN_STAT_BLOCK_COMBATANT",
+        statBlockId: missingStatBlockId,
+      },
+    });
+  });
+
+  test("retains the complete Stat Block resource graph failure", () => {
+    const baseRoot = createMcpPlaySessionRoot();
+    const base = assertStatBlockForTest(
+      baseRoot.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
+    );
+    const resource = {
+      ordinal: Schema.decodeUnknownSync(
+        StatBlockProcedureResourceOrdinalSchema,
+      )(1),
+      ownership: "shared" as const,
+      limit: { kind: "daily" as const, uses: 1 },
+    };
+    const invalid = {
+      ...base,
+      id: statBlockId("stat_block_synthetic_mcp_resource_graph_failure"),
+      name: "Synthetic MCP Resource Graph Failure",
+      statBlock: {
+        ...base.statBlock,
+        resources: [resource, resource],
+      },
+    } satisfies StatBlockRecord;
+    const root = {
+      ...baseRoot,
+      statBlockCatalog: {
+        ...baseRoot.statBlockCatalog,
+        getStatBlock: () => Option.some(invalid),
+      },
+    } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
+
+    const projected = projectStatBlockBattleCombatant({
+      root,
+      combatant: statBlockCombatant(invalid),
+    });
+
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(jsonContentPayload(projected.left)).toEqual({
+      error:
+        "Battle runtime requires Stat Block resource declaration ordinal 1 to be unique.",
+      details: {
+        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+        statBlockId: invalid.id,
+        issues: [
+          {
+            kind: "duplicateResourceOrdinal",
+            ordinal: resource.ordinal,
+          },
+        ],
+      },
+    });
+  });
+
+  test("projects a supported installed Stat Block combatant", () => {
+    const root = createMcpPlaySessionRoot();
+    const wolf = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_wolf"),
+    );
+    const combatant = {
+      ...statBlockCombatant(wolf),
+      currentHp: Hp(wolf.statBlock.hp.value),
+      tempHp: Hp(2),
+    };
+
+    const projected = projectStatBlockBattleCombatant({ root, combatant });
+
+    expect(Either.isRight(projected)).toBe(true);
+    if (Either.isLeft(projected)) return;
+    expect(projected.right).toMatchObject({
+      tag: "encounterCombatant",
+      creatureInit: {
+        combatantId: combatant.combatantId,
+        creatureInit: {
+          currentHp: combatant.currentHp,
+          tempHp: combatant.tempHp,
+          source: { id: wolf.id },
+        },
+      },
+    });
+  });
+
+  test("does not select lair-conditional Legendary Action uses", () => {
+    const baseRoot = createMcpPlaySessionRoot();
+    const base = assertStatBlockForTest(
+      baseRoot.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
+    );
+    const firstAction = base.statBlock.actions?.[0];
+    if (firstAction === undefined) {
+      throw new Error("Expected a Goblin Warrior action.");
+    }
+    const invalid = {
+      ...base,
+      id: statBlockId("stat_block_synthetic_mcp_lair_legendary_action_uses"),
+      name: "Synthetic MCP Lair Legendary Action Uses",
+      statBlock: {
+        ...base.statBlock,
+        legendaryActions: {
+          uses: {
+            kind: "lair_bonus" as const,
+            usesOutsideLair: 3,
+            additionalUsesInLair: 1,
+          },
+          entries: [firstAction],
+        },
+      },
+    } satisfies StatBlockRecord;
+    const root = {
+      ...baseRoot,
+      statBlockCatalog: {
+        ...baseRoot.statBlockCatalog,
+        getStatBlock: () => Option.some(invalid),
+      },
+    } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
+
+    const projected = projectStatBlockBattleCombatant({
+      root,
+      combatant: statBlockCombatant(invalid),
+    });
+
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(jsonContentPayload(projected.left)).toEqual({
+      error: "Stat Block projection failed.",
+      details: {
+        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+        statBlockId: invalid.id,
+        reason: "unsupportedLairConditionalLegendaryActionUses",
+      },
+    });
+  });
+
   test("preserves every accumulated unsupported procedure location", () => {
     const baseRoot = createMcpPlaySessionRoot();
     const base = assertStatBlockForTest(
