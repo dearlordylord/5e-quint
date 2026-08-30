@@ -3,6 +3,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const assert = require("node:assert/strict");
+const { createHash } = require("node:crypto");
 const ts = require("typescript");
 const {
   battleRuntimeExecutionImportClosure,
@@ -140,9 +141,11 @@ const EXECUTION_IDENTITY_BOUNDARIES = [
 ];
 
 // These are mechanics words which happen to be complete authored spell names.
-// Each exemption is an exact AST role + identifier collision. A wildcard or a
-// path exemption here would permit authored identity laundering. The checker
-// fails when an entry becomes stale so migrations must remove obsolete proof.
+// Each semantic exemption is an exact AST role + identifier collision. The
+// finite site-count certificate below additionally binds those collisions to
+// their reviewed source paths, normalized owning statements, and cardinalities.
+// A new occurrence therefore fails even when it copies an otherwise legitimate
+// identifier.
 function exactCollision(spellId, identifier, roles, reason) {
   return roles.map((role) => ({ spellId, role, identifier, reason }));
 }
@@ -861,6 +864,12 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "the authored rule names this exact cross-record interaction",
   ),
 ];
+
+const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
+  sha256: "987bc7646547aa1e224a6b48d4ea2e01e553e76144e3495c533540d4c001909c",
+  siteCount: 637,
+  violationCount: 733,
+};
 
 function escapeForRegExp(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -2925,6 +2934,29 @@ function isSchemaLiteralNode(node) {
   return false;
 }
 
+const collisionSitePrinter = ts.createPrinter({ removeComments: true });
+const collisionSiteFingerprintCache = new WeakMap();
+
+function collisionSiteFingerprint(source, node) {
+  let current = node;
+  let site = node;
+  while (!ts.isSourceFile(current)) {
+    if (ts.isStatement(current)) site = current;
+    current = current.parent;
+  }
+  const cached = collisionSiteFingerprintCache.get(site);
+  if (cached !== undefined) return cached;
+  const normalizedSource = collisionSitePrinter
+    .printNode(ts.EmitHint.Unspecified, site, source)
+    .replace(/\s+/g, " ")
+    .trim();
+  const fingerprint = `${ts.SyntaxKind[site.kind]}:${createHash("sha256")
+    .update(normalizedSource)
+    .digest("hex")}`;
+  collisionSiteFingerprintCache.set(site, fingerprint);
+  return fingerprint;
+}
+
 function executionIdentityViolation(
   source,
   relativePath,
@@ -2942,6 +2974,7 @@ function executionIdentityViolation(
     spellName: spell.name,
     role,
     identifier,
+    siteFingerprint: collisionSiteFingerprint(source, node),
   };
 }
 
@@ -3082,13 +3115,50 @@ function executionIdentityViolationsForFile(
       spellName: spell.name,
       role: "execution-filename",
       identifier: basename,
+      siteFingerprint: `execution-filename:${basename}`,
     });
   }
   return violations;
 }
 
-function applyExecutionIdentityCollisionExemptions(violations, exemptions) {
+function collisionSiteCountEvidence(violations) {
+  const counts = new Map();
+  for (const violation of violations) {
+    const site = JSON.stringify({
+      relativePath: violation.relativePath,
+      spellId: violation.spellId,
+      role: violation.role,
+      identifier: violation.identifier,
+      siteFingerprint: violation.siteFingerprint,
+    });
+    counts.set(site, (counts.get(site) ?? 0) + 1);
+  }
+  const sites = [...counts.entries()]
+    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+    .map(([site, count]) => ({ site: JSON.parse(site), count }));
+  const canonicalSites = JSON.stringify(sites);
+  return {
+    sha256: createHash("sha256").update(canonicalSites).digest("hex"),
+    siteCount: sites.length,
+    violationCount: violations.length,
+  };
+}
+
+function sameCollisionSiteEvidence(left, right) {
+  return (
+    left.sha256 === right.sha256 &&
+    left.siteCount === right.siteCount &&
+    left.violationCount === right.violationCount
+  );
+}
+
+function applyExecutionIdentityCollisionExemptions(
+  violations,
+  exemptions,
+  expectedSiteEvidence,
+) {
   const usage = new Map(exemptions.map((exemption) => [exemption, 0]));
+  const matched = [];
   const remaining = violations.filter((violation) => {
     const matches = exemptions.filter(
       (exemption) =>
@@ -3102,10 +3172,21 @@ function applyExecutionIdentityCollisionExemptions(violations, exemptions) {
     );
     if (matches.length === 0) return true;
     usage.set(matches[0], (usage.get(matches[0]) ?? 0) + 1);
+    matched.push(violation);
     return false;
   });
   const stale = exemptions.filter((exemption) => usage.get(exemption) === 0);
-  return { remaining, stale, usage };
+  const siteEvidence = collisionSiteCountEvidence(matched);
+  return {
+    remaining,
+    stale,
+    usage,
+    siteEvidence,
+    siteEvidenceMatches: sameCollisionSiteEvidence(
+      siteEvidence,
+      expectedSiteEvidence,
+    ),
+  };
 }
 
 function dedupeExecutionIdentityViolations(violations) {
@@ -3258,35 +3339,131 @@ function runExecutionIdentityCohortSelfTest() {
     0,
     "cohort scanner inspected a module outside the execution import closure",
   );
+  const collisionSource =
+    "export type HeldLightSpellProcedureExecution = { readonly value: true }";
   const collision = executionIdentityViolationsForFile(
     fixturePath,
-    `export type HeldLightSpellProcedureExecution = { readonly value: true }`,
+    collisionSource,
     lexicon,
   );
-  const applied = applyExecutionIdentityCollisionExemptions(collision, [
-    {
-      spellId: "light",
-      role: "declaration-identifier",
-      identifier: "HeldLightSpellProcedureExecution",
-      reason: "synthetic exact collision",
-    },
-  ]);
+  const collisionExemption = {
+    spellId: "light",
+    role: "declaration-identifier",
+    identifier: "HeldLightSpellProcedureExecution",
+    reason: "synthetic exact collision",
+  };
+  const collisionEvidence = collisionSiteCountEvidence(collision);
+  const applied = applyExecutionIdentityCollisionExemptions(
+    collision,
+    [collisionExemption],
+    collisionEvidence,
+  );
   assert.deepEqual(applied.remaining, []);
   assert.deepEqual(applied.stale, []);
+  assert.equal(applied.siteEvidenceMatches, true);
+
+  const unrelatedCollision = executionIdentityViolationsForFile(
+    "packages/battle-runtime/src/battle-reducer/unrelated-procedure.ts",
+    collisionSource,
+    lexicon,
+  );
   assert.equal(
     applyExecutionIdentityCollisionExemptions(
-      [],
-      [
-        {
-          spellId: "light",
-          role: "declaration-identifier",
-          identifier: "HeldLightSpellProcedureExecution",
-          reason: "synthetic stale collision",
-        },
-      ],
-    ).stale.length,
+      unrelatedCollision,
+      [collisionExemption],
+      collisionEvidence,
+    ).siteEvidenceMatches,
+    false,
+    "cohort scanner accepted an exempt identifier copied into an unrelated production file",
+  );
+
+  const surplusCollision = executionIdentityViolationsForFile(
+    fixturePath,
+    `${collisionSource}\nexport interface HeldLightSpellProcedureExecution { readonly value: true }`,
+    lexicon,
+  );
+  assert.equal(
+    applyExecutionIdentityCollisionExemptions(
+      surplusCollision,
+      [collisionExemption],
+      collisionEvidence,
+    ).siteEvidenceMatches,
+    false,
+    "cohort scanner accepted surplus exempt occurrences at an allowed site",
+  );
+
+  const triggeredArmorDefensePath =
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/triggered-armor-defense.ts";
+  const triggeredArmorDefenseSource =
+    'const SHIELD_MAGIC_MISSILE_SPELL_ID = unitId("magic_missile");';
+  const triggeredArmorDefenseCollisions = dedupeExecutionIdentityViolations(
+    executionIdentityViolationsForFile(
+      triggeredArmorDefensePath,
+      triggeredArmorDefenseSource,
+      lexicon,
+    ),
+  );
+  const triggeredArmorDefenseExemptions = [
+    ...["shield", "magic_missile"].map((spellId) => ({
+      spellId,
+      role: "declaration-identifier",
+      identifier: "SHIELD_MAGIC_MISSILE_SPELL_ID",
+      reason: "synthetic authored cross-record interaction",
+    })),
+    {
+      spellId: "magic_missile",
+      role: "execution-diagnostic",
+      identifier: "magic_missile",
+      reason: "synthetic authored cross-record interaction",
+    },
+  ];
+  const triggeredArmorDefenseEvidence = collisionSiteCountEvidence(
+    triggeredArmorDefenseCollisions,
+  );
+  assert.equal(
+    applyExecutionIdentityCollisionExemptions(
+      triggeredArmorDefenseCollisions,
+      triggeredArmorDefenseExemptions,
+      triggeredArmorDefenseEvidence,
+    ).siteEvidenceMatches,
+    true,
+    "cohort scanner rejected the exact triggered-defense admission owner",
+  );
+  const relocatedTriggeredArmorDefenseCollisions =
+    dedupeExecutionIdentityViolations(
+      executionIdentityViolationsForFile(
+        triggeredArmorDefensePath,
+        `function unrelatedProcedure() {
+          const SHIELD_MAGIC_MISSILE_SPELL_ID = unitId("magic_missile");
+          return SHIELD_MAGIC_MISSILE_SPELL_ID;
+        }`,
+        lexicon,
+      ),
+    );
+  assert.equal(
+    applyExecutionIdentityCollisionExemptions(
+      relocatedTriggeredArmorDefenseCollisions,
+      triggeredArmorDefenseExemptions,
+      triggeredArmorDefenseEvidence,
+    ).siteEvidenceMatches,
+    false,
+    "cohort scanner accepted a same-file substitution outside the reviewed triggered-defense declaration",
+  );
+
+  const staleCollision = applyExecutionIdentityCollisionExemptions(
+    [],
+    [collisionExemption],
+    collisionEvidence,
+  );
+  assert.equal(
+    staleCollision.stale.length,
     1,
     "cohort scanner accepted a stale collision exemption",
+  );
+  assert.equal(
+    staleCollision.siteEvidenceMatches,
+    false,
+    "cohort scanner accepted absent reviewed collision-site evidence",
   );
   const augmented = collectSurfaceSpellLexicon([
     { kind: "spell", id: "cloudkill", name: "Cloudkill" },
@@ -4803,12 +4980,14 @@ function main() {
     applyExecutionIdentityCollisionExemptions(
       uniqueExecutionIdentityViolations,
       EXECUTION_IDENTITY_COLLISION_EXEMPTIONS,
+      EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE,
     );
 
   if (
     uniqueViolations.length > 0 ||
     executionIdentityExemptionResult.remaining.length > 0 ||
-    executionIdentityExemptionResult.stale.length > 0
+    executionIdentityExemptionResult.stale.length > 0 ||
+    !executionIdentityExemptionResult.siteEvidenceMatches
   ) {
     if (uniqueViolations.length > 0) {
       console.error("authored-identity dispatch boundary violation(s) found:");
@@ -4862,6 +5041,18 @@ function main() {
         );
       }
     }
+    if (!executionIdentityExemptionResult.siteEvidenceMatches) {
+      console.error("authored-identity collision site evidence changed:");
+      console.error(
+        `  - expected ${JSON.stringify(EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE)}`,
+      );
+      console.error(
+        `  - observed ${JSON.stringify(executionIdentityExemptionResult.siteEvidence)}`,
+      );
+      console.error(
+        "Every exempt occurrence is bound to its reviewed relative path, normalized owning statement, and count; review the added, removed, or copied collision before updating this certificate.",
+      );
+    }
     process.exit(1);
   }
 
@@ -4881,6 +5072,9 @@ function main() {
   console.log(`decoded Surface spell records: ${surfaceSpellLexicon.length}`);
   console.log(
     `exact execution collision exemptions exercised: ${EXECUTION_IDENTITY_COLLISION_EXEMPTIONS.length}`,
+  );
+  console.log(
+    `reviewed execution collision sites exercised: ${executionIdentityExemptionResult.siteEvidence.siteCount} sites / ${executionIdentityExemptionResult.siteEvidence.violationCount} occurrences`,
   );
   console.log(`checked source files: ${stats.checked}`);
   console.log(`excluded files: ${excludedTotal}`);
