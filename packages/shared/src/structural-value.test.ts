@@ -49,6 +49,8 @@ describe("shared structural values", () => {
   });
 
   it("encodes every scalar type without coercion", () => {
+    class SyntheticClass {}
+
     expect(canonicalStructuralKey(null)).toBe("null;");
     expect(canonicalStructuralKey(undefined)).toBe("undefined;");
     expect(canonicalStructuralKey(true)).toBe("boolean:true;");
@@ -57,6 +59,7 @@ describe("shared structural values", () => {
     expect(canonicalStructuralKey(Symbol("named"))).toBe("symbol:5:named;");
     expect(canonicalStructuralKey(Symbol())).toBe("symbol:0:;");
     expect(canonicalStructuralKey(() => "function")).toBe("function;");
+    expect(canonicalStructuralKey(SyntheticClass)).toBe("function;");
 
     expect(canonicalStructuralKey(Number.NaN)).toBe("number:NaN;");
     expect(canonicalStructuralKey(Number.POSITIVE_INFINITY)).toBe(

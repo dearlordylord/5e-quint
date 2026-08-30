@@ -1,5 +1,3 @@
-import * as Option from "effect/Option";
-
 /**
  * Compare strings by Unicode code point. JSON object member ordering and
  * canonical set ordering use the same comparator throughout the workspace.
@@ -47,7 +45,7 @@ type CanonicalStructuralState = {
   readonly frames: CanonicalStructuralFrame[];
 };
 
-type CanonicalPrimitiveStructuralFunction = CallableFunction;
+type CanonicalPrimitiveStructuralFunction = CallableFunction | NewableFunction;
 type CanonicalPrimitiveStructuralValue =
   | undefined
   | boolean
@@ -173,24 +171,15 @@ function processCanonicalStructuralValue(
 }
 
 function canonicalStructuralValue(value: unknown): CanonicalStructuralValue {
-  const primitive = parseCanonicalPrimitiveStructuralValue(value);
-  if (Option.isSome(primitive)) {
-    return { kind: "primitive", value: primitive.value };
+  if (isCanonicalPrimitiveStructuralValue(value)) {
+    return { kind: "primitive", value };
   }
-  if (value === null) return { kind: "null" };
-  if (typeof value === "object") return { kind: "object", value };
-  return {
-    kind: "primitive",
-    value: Option.getOrThrow(primitive),
-  };
-}
-
-function parseCanonicalPrimitiveStructuralValue(
-  value: unknown,
-): Option.Option<CanonicalPrimitiveStructuralValue> {
-  return isCanonicalPrimitiveStructuralValue(value)
-    ? Option.some(value)
-    : Option.none();
+  // The exhaustive primitive guard proves that the remaining value has the
+  // sole JavaScript typeof category `object`, which consists of object or null.
+  const structuralObject = value as object | null;
+  return structuralObject === null
+    ? { kind: "null" }
+    : { kind: "object", value: structuralObject };
 }
 
 function isCanonicalPrimitiveStructuralValue(
