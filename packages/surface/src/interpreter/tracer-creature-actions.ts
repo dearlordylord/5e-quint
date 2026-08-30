@@ -1,6 +1,8 @@
+import { Match } from "effect";
 import type {
   CreatureActions,
   CreatureControl,
+  CreatureLimitedUse,
   CreatureNamedActionOption,
   CreatureNamedAttackRoll,
   CreatureNamedMultiattack,
@@ -141,6 +143,7 @@ export function traceCreatureActions(
   traceCreatureSaveGates(ctx, actions.saves);
   traceCreatureSupports(ctx, actions.supports);
   traceCreatureActionOptions(ctx, actions.actionOptions);
+  traceCreatureSpecials(ctx, actions.specials);
 }
 
 function traceCreatureMultiattacks(
@@ -189,6 +192,48 @@ function traceCreatureActionOptions(
 ): void {
   actionOptions?.forEach((option, idx) =>
     traceCreatureActionOption(ctx, option, idx + 1),
+  );
+}
+
+type CreatureNamedSpecialAction = NonNullable<
+  CreatureActions["specials"]
+>[number];
+
+function traceCreatureSpecials(
+  ctx: CreatureCtx,
+  specials: CreatureActions["specials"],
+): void {
+  specials?.forEach((special, idx) =>
+    traceCreatureSpecial(ctx, special, idx + 1),
+  );
+}
+
+function traceCreatureSpecial(
+  ctx: CreatureCtx,
+  special: CreatureNamedSpecialAction,
+  idx: number,
+): void {
+  const specialId = ctx.ids("hole");
+  ctx.nodes.push({
+    id: specialId,
+    category: "hole",
+    atomKind: "text_only_special_action",
+    label: `text_only [${ctx.kind} ${idx}: ${special.name}]\nlimited use: ${describeCreatureLimitedUse(special.limitedUse)}\n${special.description}`,
+  });
+  ctx.edges.push({ from: ctx.procId, to: specialId, relation: "retains" });
+  ctx.edges.push({ from: specialId, to: ctx.compId, relation: "attaches_to" });
+}
+
+function describeCreatureLimitedUse(
+  limitedUse: CreatureLimitedUse | undefined,
+): string {
+  if (limitedUse === undefined) return "none";
+  return Match.value(limitedUse).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      daily: ({ uses }) => `${uses}/day`,
+      recharge: ({ minimumRoll }) => `recharge ${minimumRoll}–6`,
+      recharge_after_rest: () => "recharge after rest",
+    }),
   );
 }
 

@@ -9,7 +9,6 @@ import {
   buildStatBlockCatalog,
   type SrdStatBlockCollection,
   type StatBlockCatalog,
-  type StatBlockCatalogBuildIssue,
 } from "./stat-block-catalog.ts";
 import type { SrdStatBlockRecord, SrdUnitRecord } from "./types.ts";
 import type {
@@ -118,10 +117,6 @@ export type SurfaceCatalogDecodeIssue =
   | {
       readonly kind: "unit-catalog";
       readonly issue: UnitCatalogBuildIssue;
-    }
-  | {
-      readonly kind: "stat-block-catalog";
-      readonly issue: StatBlockCatalogBuildIssue;
     };
 
 export type SurfaceCatalogInstallIssue<
@@ -237,7 +232,7 @@ function installSrdSurfaceFromPortableDecode<
   const decoded = decode();
   if (decoded.tag === "rejected") {
     return rejected(
-      decoded.issues.map((issue) => ({
+      mapNonEmpty(decoded.issues, (issue) => ({
         phase: "decode" as const,
         issue: { kind: "portable-surface" as const, issue },
       })),
@@ -262,12 +257,6 @@ function installSrdSurfaceFromPortableDecode<
           issue: { kind: "unit-catalog" as const, issue },
         }))
       : []),
-    ...(statBlockBuild.tag === "invalid"
-      ? statBlockBuild.issues.map((issue) => ({
-          phase: "decode" as const,
-          issue: { kind: "stat-block-catalog" as const, issue },
-        }))
-      : []),
   ];
 
   const admissionIssues: SurfaceCatalogInstallIssue<
@@ -288,10 +277,15 @@ function installSrdSurfaceFromPortableDecode<
     ),
   ];
 
-  const issues = [...decodeIssues, ...admissionIssues];
-  if (issues.length > 0) return rejected(issues);
+  const [firstIssue, ...remainingIssues] = [
+    ...decodeIssues,
+    ...admissionIssues,
+  ];
+  if (firstIssue !== undefined) {
+    return rejected([firstIssue, ...remainingIssues]);
+  }
 
-  /* v8 ignore start -- the preceding issue projection proves both builders succeeded */
+  /* v8 ignore start -- @preserve -- accepted portable decode proves every Stat Block builder invariant because canonicalSurface only removes rulesExcerpt; empty projected Unit issues prove the Unit build succeeded */
   if (unitBuild.tag !== "ok" || statBlockBuild.tag !== "ok") {
     throw new Error("Catalog install builders changed after issue projection");
   }
@@ -387,14 +381,10 @@ function rejected<
   UnitMechanicsPath extends SurfaceUnitMechanicsPath,
   StatBlockMechanicsPath extends SurfaceStatBlockMechanicsPath,
 >(
-  issues: readonly SurfaceCatalogInstallIssue<
-    UnitMechanicsPath,
-    StatBlockMechanicsPath
-  >[],
+  issues: readonly [
+    SurfaceCatalogInstallIssue<UnitMechanicsPath, StatBlockMechanicsPath>,
+    ...SurfaceCatalogInstallIssue<UnitMechanicsPath, StatBlockMechanicsPath>[],
+  ],
 ): SurfaceCatalogInstallResult<UnitMechanicsPath, StatBlockMechanicsPath> {
-  const [first, ...rest] = issues;
-  if (first === undefined) {
-    throw new Error("Catalog install rejection requires at least one issue");
-  }
-  return { tag: "rejected", issues: [first, ...rest] };
+  return { tag: "rejected", issues };
 }

@@ -33,6 +33,7 @@ import ropeTrickInput from "../../content/rope_trick.json";
 import silenceInput from "../../content/silence.json";
 import searingSmiteInput from "../../content/searing_smite.json";
 import spiritualWeaponInput from "../../content/spiritual_weapon.json";
+import summonDragonInput from "../../content/summon_dragon.json";
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import webInput from "../../content/web.json";
 import zoneOfTruthInput from "../../content/zone_of_truth.json";
@@ -329,6 +330,21 @@ describe("Surface trace interpreter", () => {
             },
             resourceRefs: { kind: "none" },
           },
+          {
+            kind: "executable",
+            procedureOrdinal: 4,
+            procedure: {
+              kind: "support",
+              name: "Synthetic Self Support",
+              target: "self",
+              effect: {
+                kind: "apply_condition",
+                condition: "invisible",
+                duration: "end_of_next_turn",
+              },
+            },
+            resourceRefs: { kind: "none" },
+          },
         ],
       },
     });
@@ -341,6 +357,629 @@ describe("Surface trace interpreter", () => {
           atomKind: "direct_apply",
           label: expect.stringContaining("Synthetic Support"),
         }),
+        expect.objectContaining({
+          atomKind: "direct_apply",
+          label: expect.stringContaining("Synthetic Self Support"),
+        }),
+      ]),
+    );
+  });
+
+  test("traces every inline spawned-creature action family through one decoded spell", () => {
+    const unit = decodeUnitRecordSync({
+      ...summonDragonInput,
+      id: "synthetic_inline_action_matrix",
+      name: "Synthetic Inline Action Matrix",
+      provenance: {
+        kind: "synthetic-test",
+        section: "Synthetic Tests/Inline Action Matrix",
+      },
+      mechanics: {
+        ...summonDragonInput.mechanics,
+        creature: {
+          ...summonDragonInput.mechanics.creature,
+          statBlock: {
+            ...summonDragonInput.mechanics.creature.statBlock,
+            size: {
+              kind: "choice",
+              label: "synthetic guardian size",
+              options: ["medium", "large"],
+            },
+            actions: {
+              multiattacks: [
+                {
+                  name: "Synthetic Routine",
+                  dispatches: [
+                    {
+                      name: "Fixed Claw",
+                      count: { kind: "literal", value: 1 },
+                    },
+                    {
+                      name: "Guard Ally",
+                      count: { kind: "literal", value: 1 },
+                    },
+                    {
+                      name: "Mobile Option",
+                      count: { kind: "literal", value: 1 },
+                    },
+                  ],
+                },
+              ],
+              attacks: [
+                {
+                  name: "Empty Touch",
+                  attackType: "melee",
+                  attackAbility: "str",
+                  attackBonus: { kind: "literal", value: 3 },
+                  reachFeet: 5,
+                  onHit: [{ kind: "none" }],
+                },
+                {
+                  name: "Fixed Claw",
+                  attackType: "melee",
+                  attackAbility: "str",
+                  attackBonus: { kind: "literal", value: 5 },
+                  reachFeet: 10,
+                  multiattackCount: { kind: "literal", value: 1 },
+                  onHit: [
+                    {
+                      kind: "damage",
+                      damageType: "force",
+                      amount: { kind: "fixed", static: 4 },
+                      timing: "end_of_next_turn",
+                    },
+                    {
+                      kind: "damage",
+                      damageType: "cold",
+                      amount: { kind: "fixed", static: 3 },
+                    },
+                    {
+                      kind: "damage",
+                      damageType: "thunder",
+                      amount: {
+                        kind: "fixed",
+                        expr: { dice: 1, dieSize: 6 },
+                      },
+                      timing: "end_of_next_turn",
+                    },
+                    {
+                      kind: "apply_condition_if_target_size_at_most",
+                      condition: "prone",
+                      maxCreatureSize: "large",
+                    },
+                    {
+                      kind: "conditional_bonus_damage",
+                      when: {
+                        kind: "target_creature_type",
+                        types: ["undead", "construct"],
+                      },
+                      damageType: "radiant",
+                      amount: { kind: "fixed", static: 2 },
+                    },
+                    {
+                      kind: "conditional_bonus_damage",
+                      when: { kind: "attack_roll_had_advantage" },
+                      damageType: "cold",
+                      amount: { kind: "fixed", static: 1 },
+                    },
+                    {
+                      kind: "conditional_bonus_damage",
+                      when: { kind: "attack_roll_had_advantage" },
+                      damageType: "force",
+                      amount: {
+                        kind: "fixed",
+                        expr: { dice: 1, dieSize: 4 },
+                      },
+                    },
+                    {
+                      kind: "conditional_bonus_damage",
+                      when: { kind: "attack_roll_had_advantage" },
+                      damageType: "lightning",
+                      amount: {
+                        kind: "threshold_tiers",
+                        axis: "slot",
+                        base: { dice: 1, dieSize: 4 },
+                        tiers: [
+                          {
+                            atLevel: 5,
+                            override: { dice: 2 },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              ],
+              saves: [
+                {
+                  name: "Focused Pulse",
+                  ability: "con",
+                  dc: { kind: "caster_spell_save_dc" },
+                  target: { kind: "one_creature_in_range", rangeFeet: 30 },
+                  onFail: {
+                    kind: "damage",
+                    damageType: "force",
+                    amount: {
+                      kind: "fixed",
+                      expr: { dice: 1, dieSize: 8 },
+                    },
+                  },
+                  onSuccess: { kind: "none" },
+                },
+              ],
+              supports: [
+                {
+                  name: "Guard Self",
+                  target: "self",
+                  effect: { kind: "none" },
+                },
+                {
+                  name: "Guard Ally",
+                  target: "ally_in_range",
+                  rangeFeet: 30,
+                  multiattackCount: { kind: "literal", value: 1 },
+                  effect: {
+                    kind: "apply_condition",
+                    condition: "charmed",
+                    duration: "spell_duration",
+                  },
+                },
+              ],
+              actionOptions: [
+                {
+                  name: "Mobile Option",
+                  options: ["dash", "disengage"],
+                },
+              ],
+              specials: [
+                {
+                  name: "Constant Warning",
+                  description:
+                    "Synthetic authored prose retained without executable mechanics.",
+                },
+                {
+                  name: "Daily Warning",
+                  description:
+                    "Synthetic authored prose with a daily usage limit.",
+                  limitedUse: { kind: "daily", uses: 2 },
+                },
+                {
+                  name: "Volatile Warning",
+                  description:
+                    "Synthetic authored prose with a recharge usage limit.",
+                  limitedUse: { kind: "recharge", minimumRoll: 5 },
+                },
+              ],
+            },
+            bonusActions: {
+              supports: [
+                {
+                  name: "Quick Guard",
+                  target: "self",
+                  effect: { kind: "none" },
+                },
+              ],
+            },
+            reactions: {
+              specials: [
+                {
+                  name: "Restored Warning",
+                  description:
+                    "Synthetic authored reaction prose restored after a rest.",
+                  limitedUse: { kind: "recharge_after_rest" },
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+
+    const trace = traceUnit(unit);
+    const requireNode = (labelFragment: string): TraceNode => {
+      const node = trace.nodes.find((candidate) =>
+        candidate.label.includes(labelFragment),
+      );
+      expect(
+        node,
+        `Missing trace node containing ${labelFragment}`,
+      ).toBeDefined();
+      if (node === undefined) {
+        throw new Error(`Missing trace node containing ${labelFragment}`);
+      }
+      return node;
+    };
+    const companion = requireNode("companion\nDraconic Spirit");
+    const syntheticRoutine = requireNode(
+      "direct_apply [action 1: Synthetic Routine]\nmultiattack: 1× Fixed Claw + 1× Guard Ally + 1× Mobile Option",
+    );
+    const emptyTouch = requireNode(
+      "attack_roll [action 1: Empty Touch]\nmelee (+3)",
+    );
+    const fixedClaw = requireNode(
+      "attack_roll [action 2: Fixed Claw]\nmelee (+5)\nmultiattack ×1",
+    );
+    const fixedClawHitWindow = requireNode("on_hit_window");
+    const focusedPulse = requireNode(
+      "save_gate [action 1: Focused Pulse]\nCON save\nDC: caster spell save DC\ntarget: one creature within 30 ft.",
+    );
+    const focusedPulseDamage = requireNode("damage: 1d8 force");
+    const fixedDeferredForce = requireNode(
+      "damage (deferred: end_of_next_turn): 4 force",
+    );
+    const fixedColdDamage = requireNode("damage: 3 cold");
+    const fixedDeferredThunder = requireNode(
+      "damage (deferred: end_of_next_turn): 1d6 thunder",
+    );
+    const fixedProne = requireNode(
+      "apply_condition_if_target_size_at_most\nprone\ntarget size <= large",
+    );
+    const fixedRadiantBonus = requireNode(
+      "conditional_bonus_damage\ntarget type: undead/construct\n2 radiant",
+    );
+    const fixedColdAdvantageBonus = requireNode(
+      "conditional_bonus_damage\nattack_roll_had_advantage\n1 cold",
+    );
+    const fixedForceAdvantageBonus = requireNode(
+      "conditional_bonus_damage\nattack_roll_had_advantage\n1d4 force",
+    );
+    const fixedLightningAdvantageBonus = requireNode(
+      "conditional_bonus_damage\nattack_roll_had_advantage\n1d4 (tiered by slot level) lightning",
+    );
+    const fixedLightningScaling = requireNode(
+      "scale_die_count\naxis=slot\ntiers: L5:2d4",
+    );
+    const fixedClawEffects = [
+      fixedDeferredForce,
+      fixedColdDamage,
+      fixedDeferredThunder,
+      fixedProne,
+      fixedRadiantBonus,
+      fixedColdAdvantageBonus,
+      fixedForceAdvantageBonus,
+      fixedLightningAdvantageBonus,
+    ];
+    const guardSelf = requireNode(
+      "direct_apply [action 1: Guard Self]\ntarget: self",
+    );
+    const guardAlly = requireNode(
+      "direct_apply [action 2: Guard Ally]\ntarget: ally_in_range (30 ft)\nmultiattack ×1",
+    );
+    const guardAllyCondition = requireNode(
+      "apply_condition\ncharmed\nuntil: spell_duration",
+    );
+    const mobileOption = requireNode(
+      "action_option [action 1: Mobile Option]\ndash or disengage",
+    );
+    const quickGuard = requireNode(
+      "direct_apply [bonus_action 1: Quick Guard]\ntarget: self",
+    );
+    const constantWarning = requireNode(
+      "text_only [action 1: Constant Warning]\nlimited use: none\nSynthetic authored prose retained without executable mechanics.",
+    );
+    const dailyWarning = requireNode(
+      "text_only [action 2: Daily Warning]\nlimited use: 2/day\nSynthetic authored prose with a daily usage limit.",
+    );
+    const volatileWarning = requireNode(
+      "text_only [action 3: Volatile Warning]\nlimited use: recharge 5–6\nSynthetic authored prose with a recharge usage limit.",
+    );
+    const restoredWarning = requireNode(
+      "text_only [reaction 1: Restored Warning]\nlimited use: recharge after rest\nSynthetic authored reaction prose restored after a rest.",
+    );
+    const procedureOwnerId = trace.edges.find(
+      (edge) => edge.to === syntheticRoutine.id && edge.relation === "grants",
+    )?.from;
+    expect(procedureOwnerId).toBeDefined();
+    if (procedureOwnerId === undefined) {
+      throw new Error("Missing spawned-creature procedure owner");
+    }
+    expect(fixedClawHitWindow).toEqual({
+      id: fixedClawHitWindow.id,
+      category: "window",
+      atomKind: "on_hit_window",
+      label: "on_hit_window",
+    });
+    expect(focusedPulseDamage).toEqual({
+      id: focusedPulseDamage.id,
+      category: "effect",
+      atomKind: "damage",
+      label: "damage: 1d8 force",
+    });
+    expect(guardSelf).toEqual({
+      id: guardSelf.id,
+      category: "procedure",
+      atomKind: "direct_apply",
+      label: "direct_apply [action 1: Guard Self]\ntarget: self",
+    });
+    expect(mobileOption).toEqual({
+      id: mobileOption.id,
+      category: "procedure",
+      atomKind: "action_option",
+      label: "action_option [action 1: Mobile Option]\ndash or disengage",
+    });
+    expect(fixedLightningScaling).toEqual({
+      id: fixedLightningScaling.id,
+      category: "scaling",
+      atomKind: "scale_die_count",
+      label: "scale_die_count\naxis=slot\ntiers: L5:2d4",
+    });
+    expect(
+      fixedClawEffects.map(({ category, atomKind, label }) => ({
+        category,
+        atomKind,
+        label,
+      })),
+    ).toEqual([
+      {
+        category: "effect",
+        atomKind: "damage",
+        label: "damage (deferred: end_of_next_turn): 4 force",
+      },
+      {
+        category: "effect",
+        atomKind: "damage",
+        label: "damage: 3 cold",
+      },
+      {
+        category: "effect",
+        atomKind: "damage",
+        label: "damage (deferred: end_of_next_turn): 1d6 thunder",
+      },
+      {
+        category: "effect",
+        atomKind: "apply_condition_if_target_size_at_most",
+        label:
+          "apply_condition_if_target_size_at_most\nprone\ntarget size <= large",
+      },
+      {
+        category: "effect",
+        atomKind: "conditional_bonus_damage",
+        label:
+          "conditional_bonus_damage\ntarget type: undead/construct\n2 radiant",
+      },
+      {
+        category: "effect",
+        atomKind: "conditional_bonus_damage",
+        label: "conditional_bonus_damage\nattack_roll_had_advantage\n1 cold",
+      },
+      {
+        category: "effect",
+        atomKind: "conditional_bonus_damage",
+        label: "conditional_bonus_damage\nattack_roll_had_advantage\n1d4 force",
+      },
+      {
+        category: "effect",
+        atomKind: "conditional_bonus_damage",
+        label:
+          "conditional_bonus_damage\nattack_roll_had_advantage\n1d4 (tiered by slot level) lightning",
+      },
+    ]);
+    expect(
+      [constantWarning, dailyWarning, volatileWarning, restoredWarning].map(
+        ({ category, atomKind, label }) => ({ category, atomKind, label }),
+      ),
+    ).toEqual([
+      {
+        category: "hole",
+        atomKind: "text_only_special_action",
+        label:
+          "text_only [action 1: Constant Warning]\nlimited use: none\nSynthetic authored prose retained without executable mechanics.",
+      },
+      {
+        category: "hole",
+        atomKind: "text_only_special_action",
+        label:
+          "text_only [action 2: Daily Warning]\nlimited use: 2/day\nSynthetic authored prose with a daily usage limit.",
+      },
+      {
+        category: "hole",
+        atomKind: "text_only_special_action",
+        label:
+          "text_only [action 3: Volatile Warning]\nlimited use: recharge 5–6\nSynthetic authored prose with a recharge usage limit.",
+      },
+      {
+        category: "hole",
+        atomKind: "text_only_special_action",
+        label:
+          "text_only [reaction 1: Restored Warning]\nlimited use: recharge after rest\nSynthetic authored reaction prose restored after a rest.",
+      },
+    ]);
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "direct_apply",
+          label:
+            "direct_apply [action 1: Synthetic Routine]\nmultiattack: 1× Fixed Claw + 1× Guard Ally + 1× Mobile Option",
+        }),
+        expect.objectContaining({
+          atomKind: "attack_roll",
+          label: "attack_roll [action 1: Empty Touch]\nmelee (+3)",
+        }),
+        expect.objectContaining({
+          atomKind: "attack_roll",
+          label:
+            "attack_roll [action 2: Fixed Claw]\nmelee (+5)\nmultiattack ×1",
+        }),
+        expect.objectContaining({
+          atomKind: "damage",
+          label: "damage (deferred: end_of_next_turn): 4 force",
+        }),
+        expect.objectContaining({
+          atomKind: "damage",
+          label: "damage: 3 cold",
+        }),
+        expect.objectContaining({
+          atomKind: "damage",
+          label: "damage (deferred: end_of_next_turn): 1d6 thunder",
+        }),
+        expect.objectContaining({
+          atomKind: "apply_condition_if_target_size_at_most",
+          label:
+            "apply_condition_if_target_size_at_most\nprone\ntarget size <= large",
+        }),
+        expect.objectContaining({
+          atomKind: "conditional_bonus_damage",
+          label:
+            "conditional_bonus_damage\ntarget type: undead/construct\n2 radiant",
+        }),
+        expect.objectContaining({
+          atomKind: "conditional_bonus_damage",
+          label: "conditional_bonus_damage\nattack_roll_had_advantage\n1 cold",
+        }),
+        expect.objectContaining({
+          atomKind: "conditional_bonus_damage",
+          label:
+            "conditional_bonus_damage\nattack_roll_had_advantage\n1d4 force",
+        }),
+        expect.objectContaining({
+          atomKind: "conditional_bonus_damage",
+          label:
+            "conditional_bonus_damage\nattack_roll_had_advantage\n1d4 (tiered by slot level) lightning",
+        }),
+        expect.objectContaining({
+          atomKind: "scale_die_count",
+          label: "scale_die_count\naxis=slot\ntiers: L5:2d4",
+        }),
+        expect.objectContaining({
+          atomKind: "save_gate",
+          label:
+            "save_gate [action 1: Focused Pulse]\nCON save\nDC: caster spell save DC\ntarget: one creature within 30 ft.",
+        }),
+        expect.objectContaining({
+          atomKind: "direct_apply",
+          label:
+            "direct_apply [action 2: Guard Ally]\ntarget: ally_in_range (30 ft)\nmultiattack ×1",
+        }),
+        expect.objectContaining({
+          atomKind: "apply_condition",
+          label: "apply_condition\ncharmed\nuntil: spell_duration",
+        }),
+        expect.objectContaining({
+          atomKind: "direct_apply",
+          label: "direct_apply [bonus_action 1: Quick Guard]\ntarget: self",
+        }),
+      ]),
+    );
+    expect(
+      trace.edges.filter(
+        (edge) =>
+          edge.from === focusedPulse.id && edge.relation === "branches_on_save",
+      ),
+    ).toEqual([
+      {
+        from: focusedPulse.id,
+        to: focusedPulseDamage.id,
+        relation: "branches_on_save",
+      },
+    ]);
+    expect(
+      trace.edges.some(
+        (edge) =>
+          edge.from === emptyTouch.id && edge.relation === "opens_window",
+      ),
+    ).toBe(false);
+    expect(
+      trace.edges.some(
+        (edge) => edge.from === guardSelf.id && edge.relation === "grants",
+      ),
+    ).toBe(false);
+    expect(
+      trace.edges.some(
+        (edge) => edge.from === quickGuard.id && edge.relation === "grants",
+      ),
+    ).toBe(false);
+    expect(trace.edges).toEqual(
+      expect.arrayContaining([
+        {
+          from: emptyTouch.id,
+          to: companion.id,
+          relation: "attaches_to",
+        },
+        {
+          from: fixedClaw.id,
+          to: companion.id,
+          relation: "attaches_to",
+        },
+        {
+          from: fixedClaw.id,
+          to: fixedClawHitWindow.id,
+          relation: "opens_window",
+        },
+        ...fixedClawEffects.flatMap((effect) => [
+          {
+            from: fixedClawHitWindow.id,
+            to: effect.id,
+            relation: "grants",
+          },
+          {
+            from: effect.id,
+            to: companion.id,
+            relation: "attaches_to",
+          },
+        ]),
+        {
+          from: fixedLightningScaling.id,
+          to: fixedLightningAdvantageBonus.id,
+          relation: "modifies",
+        },
+        {
+          from: focusedPulse.id,
+          to: companion.id,
+          relation: "attaches_to",
+        },
+        {
+          from: guardSelf.id,
+          to: companion.id,
+          relation: "attaches_to",
+        },
+        {
+          from: guardAlly.id,
+          to: companion.id,
+          relation: "attaches_to",
+        },
+        {
+          from: guardAlly.id,
+          to: guardAllyCondition.id,
+          relation: "grants",
+        },
+        {
+          from: guardAllyCondition.id,
+          to: companion.id,
+          relation: "attaches_to",
+        },
+        {
+          from: mobileOption.id,
+          to: companion.id,
+          relation: "available_to",
+        },
+        {
+          from: syntheticRoutine.id,
+          to: companion.id,
+          relation: "attaches_to",
+        },
+        {
+          from: quickGuard.id,
+          to: companion.id,
+          relation: "attaches_to",
+        },
+        ...[
+          constantWarning,
+          dailyWarning,
+          volatileWarning,
+          restoredWarning,
+        ].flatMap((special) => [
+          {
+            from: procedureOwnerId,
+            to: special.id,
+            relation: "retains",
+          },
+          {
+            from: special.id,
+            to: companion.id,
+            relation: "attaches_to",
+          },
+        ]),
       ]),
     );
   });

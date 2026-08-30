@@ -2,16 +2,23 @@ import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  AuthoredExecutableProcedureSchema,
   AuthoredStatBlockReactionTriggerSchema,
   CREATURE_RECHARGE_MINIMUM_ROLLS,
+  CreatureNamedAttackRollSchema,
   CreatureStatBlockProjectionSchema,
   EffectAtomSchema,
+  OngoingEffectSchema,
   StandaloneStatBlockSchema,
   StatBlockLegendaryActionSectionSchema,
   StatBlockProcedureEntrySchema,
+  StatBlockProcedureResourceRefsSchema,
   StatBlockProcedureResourceSchema,
+  StatBlockProcedureResourcesSchema,
   StatBlockProcedureSectionSchema,
-} from "./schema.ts";
+  StatBlockReactionSectionSchema,
+  StatBlockSpellcastingComponentsSchema,
+} from "./schema-spell.ts";
 
 const decode = <A, I>(schema: Schema.Schema<A, I>, input: unknown): A =>
   Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(input);
@@ -181,6 +188,88 @@ describe("standalone Stat Block procedure sections", () => {
       ).toThrow();
     },
   );
+
+  test("preserves ordered procedure resources and reports duplicate references precisely", () => {
+    expect(
+      decode(
+        StatBlockProcedureResourcesSchema,
+        syntheticStandaloneStatBlock.resources,
+      ),
+    ).toEqual(syntheticStandaloneStatBlock.resources);
+    expect(() =>
+      decode(StatBlockProcedureResourcesSchema, [
+        syntheticStandaloneStatBlock.resources[1],
+        syntheticStandaloneStatBlock.resources[0],
+      ]),
+    ).toThrow(
+      "Stat Block procedure resources must have strictly increasing ordinals.",
+    );
+    expect(() =>
+      decode(StatBlockProcedureResourceRefsSchema, {
+        kind: "some",
+        ordinals: [1, 1],
+      }),
+    ).toThrow(
+      "A Stat Block procedure must not reference one resource more than once.",
+    );
+  });
+
+  test("decodes recursive ongoing effects and typed reaction procedures", () => {
+    const recursiveEffect = {
+      kind: "composite_ongoing",
+      effects: [{ kind: "none" }],
+    } as const;
+    expect(decode(OngoingEffectSchema, recursiveEffect)).toEqual(
+      recursiveEffect,
+    );
+    const { kind: procedureKind, ...namedAttack } =
+      syntheticStandaloneStatBlock.actions[1].procedure;
+    expect(procedureKind).toBe("attack_roll");
+    const limitedNamedAttack = {
+      ...namedAttack,
+      limitedUse: { kind: "daily", uses: 1 },
+    } as const;
+    expect(decode(CreatureNamedAttackRollSchema, limitedNamedAttack)).toEqual(
+      limitedNamedAttack,
+    );
+
+    const spellcastingProcedure = {
+      ...syntheticStandaloneStatBlock.actions[3].procedure,
+      spellAttackBonus: { kind: "literal", value: -2 },
+      components: { v: true, s: false, m: "a synthetic focus" },
+    } as const;
+    expect(
+      decode(AuthoredExecutableProcedureSchema, spellcastingProcedure),
+    ).toEqual(spellcastingProcedure);
+    expect(
+      decode(StatBlockSpellcastingComponentsSchema, {
+        v: false,
+        s: true,
+        m: false,
+      }),
+    ).toEqual({ v: false, s: true, m: false });
+
+    const reaction = {
+      kind: "executable",
+      procedureOrdinal: 1,
+      procedure: syntheticStandaloneStatBlock.actions[1].procedure,
+      resourceRefs: { kind: "none" },
+      trigger: {
+        kind: "any_of",
+        triggers: [
+          { kind: "hit_by_attack_roll" },
+          {
+            kind: "takes_damage_from_creature",
+            requiresVisibleCreature: true,
+            rangeFeet: 30,
+          },
+        ],
+      },
+    } as const;
+    expect(decode(StatBlockReactionSectionSchema, [reaction])).toEqual([
+      reaction,
+    ]);
+  });
 
   test("keeps spellcasting resources on groups while non-spell procedures may own refs", () => {
     const spellcastingEntry = syntheticStandaloneStatBlock.actions[3];

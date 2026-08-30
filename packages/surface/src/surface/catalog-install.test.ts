@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -54,6 +56,9 @@ const noMechanicsIssues: SurfaceMechanicsAdmission<
   admitUnit: () => ({ tag: "admitted" }),
   admitStatBlock: () => ({ tag: "admitted" }),
 };
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
 
 describe("atomic Surface catalog installation", () => {
   test("installs distinct Unit and Stat Block catalogs after both admissions", () => {
@@ -221,5 +226,52 @@ describe("atomic Surface catalog installation", () => {
     ).toEqual(["schema", "duplicate-authored-identity"]);
     expect(admissionCalled).toBe(false);
     expect(result).not.toHaveProperty("catalog");
+  });
+
+  test("projects duplicate spellcasting-class ownership from a complete published catalog", () => {
+    const published: unknown = JSON.parse(
+      readFileSync(
+        new URL("../../publication/srd-surface.json", import.meta.url),
+        "utf8",
+      ),
+    );
+    if (!isRecord(published) || !Array.isArray(published.units)) {
+      throw new Error("Published Surface fixture lost its Unit collection");
+    }
+    const bard = published.units.find(
+      (unit) => isRecord(unit) && unit.id === "class_bard",
+    );
+    if (!isRecord(bard)) {
+      throw new Error("Published Surface fixture lost the Bard class record");
+    }
+    const duplicateBard = {
+      ...bard,
+      id: "synthetic_duplicate_bard_class",
+    };
+
+    const result = installSrdSurface({
+      raw: {
+        ...published,
+        units: [...published.units, duplicateBard],
+      },
+      mechanicsAdmission: noMechanicsIssues,
+    });
+
+    expect(result).toEqual({
+      tag: "rejected",
+      issues: [
+        {
+          phase: "decode",
+          issue: {
+            kind: "unit-catalog",
+            issue: {
+              code: "duplicateSpellcastingClassName",
+              className: "bard",
+              unitIds: ["class_bard", "synthetic_duplicate_bard_class"],
+            },
+          },
+        },
+      ],
+    });
   });
 });

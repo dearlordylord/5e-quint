@@ -5,7 +5,7 @@ import {
   STAT_BLOCK_SPELL_INVOCATION_DELTA_KINDS,
   StatBlockSpellInvocationRestrictionSchema,
   StatBlockSpellReferenceSchema,
-} from "./schema.ts";
+} from "./schema-spell.ts";
 
 const decode = <A, I>(schema: Schema.Schema<A, I>, input: unknown): A =>
   Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(input);
@@ -134,6 +134,20 @@ describe("Stat Block spell invocation restriction schema", () => {
         ],
       }),
     ).toThrow();
+    expect(() =>
+      decode(StatBlockSpellInvocationRestrictionSchema, {
+        authoredExpression: "synthetic duplicate appearance size expression",
+        deltas: [
+          {
+            kind: "appearance_options",
+            sizes: ["medium", "medium"],
+            bodyPlan: "biped",
+          },
+        ],
+      }),
+    ).toThrow(
+      "Stat Block spell invocation appearance options must not repeat a size.",
+    );
   });
 
   test("keeps protected expression and free-form meaning out of delta payloads", () => {

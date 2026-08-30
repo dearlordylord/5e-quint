@@ -624,14 +624,7 @@ const factorUnionAst = (
             property.annotations,
           ),
       ),
-      ast.indexSignatures.map(
-        (index) =>
-          new SchemaAST.IndexSignature(
-            factor(index.parameter),
-            factor(index.type),
-            index.isReadonly,
-          ),
-      ),
+      ast.indexSignatures,
       ast.annotations,
     );
   }
@@ -665,14 +658,6 @@ const factorUnionAst = (
       factor(ast.from),
       factor(ast.to),
       ast.transformation,
-      ast.annotations,
-    );
-  }
-  if (ast._tag === "Declaration") {
-    return new SchemaAST.Declaration(
-      ast.typeParameters.map(factor),
-      ast.decodeUnknown,
-      ast.encodeUnknown,
       ast.annotations,
     );
   }

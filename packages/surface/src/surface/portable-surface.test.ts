@@ -135,6 +135,9 @@ const dependencyContractPath = fileURLToPath(
 const schemaPath = fileURLToPath(
   new URL("../../publication/srd-surface.schema.json", import.meta.url),
 );
+const publicationPath = fileURLToPath(
+  new URL("../../publication/srd-surface.json", import.meta.url),
+);
 
 function readPortableJson(path: string): unknown {
   let parsed: unknown;
@@ -189,9 +192,10 @@ function productionResultForCase(
     : decodePortableSrdSurface(portableCase.input);
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
 function firstRecordId(input: unknown, family: "units" | "statBlocks"): string {
-  const isRecord = (value: unknown): value is Record<string, unknown> =>
-    typeof value === "object" && value !== null && !Array.isArray(value);
   if (!isRecord(input)) {
     throw new Error("Portable duplicate fixture input must be an object");
   }
@@ -406,34 +410,28 @@ describe("portable SRD Surface boundary", () => {
     if (validCase === undefined || !("input" in validCase)) {
       throw new Error("Portable cases lost their valid aggregate input");
     }
-    if (
-      typeof validCase.input !== "object" ||
-      validCase.input === null ||
-      Array.isArray(validCase.input)
-    ) {
+    if (!isRecord(validCase.input)) {
       throw new Error("Portable aggregate input must be an object");
     }
-    const input = validCase.input as Record<string, unknown>;
+    const input = validCase.input;
     const rawStatBlocks = input.statBlocks;
     if (!Array.isArray(rawStatBlocks) || rawStatBlocks.length === 0) {
       throw new Error("Portable aggregate must contain Stat Blocks");
     }
     const firstStatBlock = rawStatBlocks[0];
     if (
-      typeof firstStatBlock !== "object" ||
-      firstStatBlock === null ||
-      Array.isArray(firstStatBlock) ||
-      typeof Reflect.get(firstStatBlock, "id") !== "string" ||
-      typeof Reflect.get(firstStatBlock, "name") !== "string"
+      !isRecord(firstStatBlock) ||
+      typeof firstStatBlock.id !== "string" ||
+      typeof firstStatBlock.name !== "string"
     ) {
       throw new Error(
         "Portable Stat Block fixture must contain identity fields",
       );
     }
     const duplicateStatBlock = {
-      ...(firstStatBlock as Record<string, unknown>),
-      id: `${String(Reflect.get(firstStatBlock, "id"))}_duplicate_normalized_identity`,
-      name: String(Reflect.get(firstStatBlock, "name")).toUpperCase(),
+      ...firstStatBlock,
+      id: `${firstStatBlock.id}_duplicate_normalized_identity`,
+      name: firstStatBlock.name.toUpperCase(),
     };
     const result = decodePortableSrdSurface({
       ...input,
@@ -471,12 +469,51 @@ describe("portable SRD Surface boundary", () => {
     ["missing member separator", '{"unknown":2 "other":3}'],
     ["missing array value", "[1,]"],
     ["missing array separator", "[1 2]"],
+    ["unterminated array", "[1"],
     ["unterminated string", '{"unknown":"text}'],
     ["invalid string escape", '{"unknown":"\\q"}'],
     ["trailing value", "{} trailing"],
   ])("JSON boundary scanner handles %s", (_name, inputText) => {
     const result = decodePortableSrdSurfaceText(inputText);
     expect(result.tag).toBe("rejected");
+  });
+
+  test("reports one identity issue when an exact Stat Block record repeats", () => {
+    const validCase = caseDocument.cases.find(
+      (portableCase) => portableCase.name === "valid published aggregate",
+    );
+    if (validCase === undefined || !("input" in validCase)) {
+      throw new Error("Portable cases lost their valid aggregate input");
+    }
+    if (!isRecord(validCase.input)) {
+      throw new Error("Portable aggregate input must be an object");
+    }
+    const input = validCase.input;
+    const statBlocks = input.statBlocks;
+    if (!Array.isArray(statBlocks) || statBlocks.length === 0) {
+      throw new Error("Portable aggregate must contain Stat Blocks");
+    }
+    const firstStatBlock = statBlocks[0];
+    if (!isRecord(firstStatBlock) || typeof firstStatBlock.id !== "string") {
+      throw new Error("Portable Stat Block fixture must contain an id");
+    }
+
+    const result = decodePortableSrdSurface({
+      ...input,
+      statBlocks: [firstStatBlock, firstStatBlock, ...statBlocks.slice(1)],
+    });
+
+    expect(result.tag).toBe("rejected");
+    if (result.tag !== "rejected") return;
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        code: "duplicate-authored-identity",
+        path: "$.statBlocks[1].id",
+        targetKind: "statBlock",
+        targetId: firstStatBlock.id,
+        priorPath: "$.statBlocks[0].id",
+      }),
+    );
   });
 
   test("raw boundary reports non-object and malformed collection shapes", () => {
@@ -509,6 +546,24 @@ describe("portable SRD Surface boundary", () => {
     const result = decodePortableSrdSurface(validCase.input);
     expect(result.tag).toBe("accepted");
     if (result.tag !== "accepted") return;
+    expect(derivePortableSrdDependencyFieldRoles(result.surface)).toEqual(
+      dependencyContractDocument.roles,
+    );
+  });
+
+  test("the complete published catalog satisfies the same dependency contract", () => {
+    const result = decodePortableSrdSurface(readPortableJson(publicationPath));
+    expect(result.tag).toBe("accepted");
+    if (result.tag !== "accepted") return;
+
+    expect(result.surface.units.some((unit) => unit.id === "mage_hand")).toBe(
+      true,
+    );
+    expect(
+      result.surface.statBlocks.some(
+        (statBlock) => statBlock.id === "stat_block_zombie",
+      ),
+    ).toBe(true);
     expect(derivePortableSrdDependencyFieldRoles(result.surface)).toEqual(
       dependencyContractDocument.roles,
     );

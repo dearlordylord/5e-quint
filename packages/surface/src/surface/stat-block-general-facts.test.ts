@@ -8,6 +8,8 @@ import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 import {
   CreatureImmunityListSchema,
   CreatureStatBlockProjectionSchema,
+  decodeCreatureImmunityDeclarationSync,
+  decodeCreatureStatBlockSync,
   StatBlockCommunicationSchema,
   StatBlockInitiativeSchema,
   StatBlockGmSpeedChoiceSchema,
@@ -17,6 +19,7 @@ import {
   StandaloneStatBlockSchema,
   StandaloneStatBlockSizeSchema,
 } from "./schema.ts";
+import { statBlockHasPotentialFlySpeed } from "./stat-block-speed-readers.ts";
 
 const decode = <A, I>(schema: Schema.Schema<A, I>, input: unknown): A =>
   Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(input);
@@ -575,6 +578,74 @@ describe("standalone Stat Block general facts", () => {
         alternatives: { minItems: 2, uniqueItems: true },
       },
     });
+  });
+
+  test("reads potential Fly from every decoded standalone Speed state", () => {
+    const speedCases = [
+      [{ kind: "walk", feet: { kind: "literal", value: 30 } }, false],
+      [{ kind: "burrow", feet: { kind: "literal", value: 20 } }, false],
+      [{ kind: "climb", feet: { kind: "literal", value: 20 } }, false],
+      [{ kind: "swim", feet: { kind: "literal", value: 20 } }, false],
+      [{ kind: "fly", feet: { kind: "literal", value: 40 } }, true],
+      [
+        {
+          kind: "gm_choice",
+          alternatives: [
+            { kind: "walk", feet: { kind: "literal", value: 30 } },
+            { kind: "climb", feet: { kind: "literal", value: 30 } },
+          ],
+        },
+        false,
+      ],
+      [
+        {
+          kind: "gm_choice",
+          alternatives: [
+            { kind: "swim", feet: { kind: "literal", value: 40 } },
+            {
+              kind: "fly",
+              feet: { kind: "literal", value: 40 },
+              hover: true,
+            },
+          ],
+        },
+        true,
+      ],
+    ] as const;
+
+    for (const [speed, expected] of speedCases) {
+      const statBlock = decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        speeds: [speed],
+      });
+      expect(statBlockHasPotentialFlySpeed(statBlock)).toBe(expected);
+    }
+  });
+
+  test("public creature and immunity decoders preserve their narrowed facts", () => {
+    const creature = {
+      displayName: "Synthetic Aerial Guardian",
+      size: "medium",
+      creatureType: "construct",
+      ac: { kind: "literal", value: 15 },
+      hp: { kind: "literal", value: 22 },
+      speeds: [{ kind: "fly", feet: { kind: "literal", value: 40 } }],
+      abilityScores: { str: 12, dex: 14, con: 13, int: 10, wis: 11, cha: 9 },
+    } as const;
+    const immunities = {
+      damageTypes: ["poison"],
+      qualifiedConditions: [
+        {
+          condition: "charmed",
+          qualifier: "while the synthetic ward is active",
+        },
+      ],
+    } as const;
+
+    expect(decodeCreatureStatBlockSync(creature)).toEqual(creature);
+    expect(decodeCreatureImmunityDeclarationSync(immunities)).toEqual(
+      immunities,
+    );
   });
 
   test("bounds authored ability scores and sense ranges while keeping projections reusable", () => {

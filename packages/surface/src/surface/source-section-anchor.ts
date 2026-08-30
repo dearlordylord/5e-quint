@@ -18,12 +18,12 @@ export type SourceSectionParseResult =
 export function parseSourceSection(section: string): SourceSectionParseResult {
   const match = /^(.*):(\d+)-(\d+)$/.exec(section);
   if (match === null) return { tag: "malformed" };
-  const lineStart = Number.parseInt(match[2] ?? "", 10);
-  const lineEnd = Number.parseInt(match[3] ?? "", 10);
+  const lineStart = Number.parseInt(match[2]!, 10);
+  const lineEnd = Number.parseInt(match[3]!, 10);
   return lineStart > 0 && lineEnd >= lineStart
     ? {
         tag: "parsed",
-        section: { sourcePath: match[1] ?? "", lineStart, lineEnd },
+        section: { sourcePath: match[1]!, lineStart, lineEnd },
       }
     : { tag: "malformed" };
 }
