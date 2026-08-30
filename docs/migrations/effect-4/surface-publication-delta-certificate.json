@@ -1,5 +1,5 @@
 {
-  "formatVersion": 1,
+  "formatVersion": 2,
   "issue": {
     "number": 373,
     "kind": "effect-4-surface-publication-delta",
@@ -16,22 +16,22 @@
   "artifacts": {
     "aggregate": {
       "path": "packages/surface/publication/srd-surface.json",
-      "semanticClass": "byte-order-only",
-      "cause": "Effect 4 publication encoding changed the key order of the anchored-trigger mechanics object for one record while retaining the same values.",
-      "issue": "The aggregate bytes changed, but recursively key-sorted content and the ordered record identity projection remain equal.",
+      "semanticClass": "reviewed-authored-record-contract-changes",
+      "cause": "Effect 4 Surface review convergence added explicit persistent-rule facts, companion and modal lifecycles, identity-free execution vocabulary, and truthful illumination emission variants to authored records.",
+      "issue": "Every changed authored record is classified by domain purpose and authenticated by its exact baseline and candidate canonical JSON hashes; unclassified, stale, duplicate, and substituted record deltas are rejected.",
       "baseline": {
         "byteLength": 943445,
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 943445,
-        "sha256": "e3b743d94a01f0fed0db4f895a53bb873ed864eef47db5ebb130f681a409e105"
+        "byteLength": 946224,
+        "sha256": "8b3466a7ed3b714788aac208ad6d76684eeb9c59037a9d05b6a7d491d4218867"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
+        "candidateCanonicalJsonSha256": "3b21fae3c1a73a9a6d6ed591aea1b9391dbfcff99e01f79129aeef7d939cc8f2",
         "keyOrderDifferenceCount": 1,
-        "valueDifferenceCount": 0,
+        "valueDifferenceCount": 27,
         "recordCounts": {
           "units": 399,
           "statBlocks": 21,
@@ -41,42 +41,186 @@
           "units": "bc200b3061654b6a3ca19aa5d64195daba6f2dbe2977a6a7dd15e84733849b22",
           "statBlocks": "367c1236b838d3265f1b87f3c297642f6906c72bee951d496fdd4ee996322e4e",
           "all": "1ba47988d91731d46927a075f3d75707a33c83571a81d2075884ec3005f15a92"
-        }
+        },
+        "reviewedRecordDeltas": [
+          {
+            "family": "units",
+            "id": "cloudkill",
+            "semanticClass": "authored-persistent-rule-facts",
+            "baselineCanonicalJsonSha256": "2400df1799d5f8463fc0fa343c139a8463490d7080920aa3af6b6ab168f6a7e3",
+            "candidateCanonicalJsonSha256": "21dbf9006b7a19b2f09b1b6a2a7ebedc24ec69ef44d547429ad354257ca83999"
+          },
+          {
+            "family": "units",
+            "id": "command",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "8ace5e8c85f87102fd58e011c39fb198e962f278363cd6dc46152729582d3682",
+            "candidateCanonicalJsonSha256": "9b9a5ee0d77d785379696736b31c9f0134e1dd8c216be771a39d2fc84824f0eb"
+          },
+          {
+            "family": "units",
+            "id": "continual_flame",
+            "semanticClass": "truthful-illumination-emission",
+            "baselineCanonicalJsonSha256": "f6a2dbdcdb5c03a7dd7cc7ab7e51aea6881e486274e26ef4aa0d303dd636725c",
+            "candidateCanonicalJsonSha256": "1dc5f0415900f721c1c336b4d66b0c9d25fff69a93f964e1645ba5c4dc555f69"
+          },
+          {
+            "family": "units",
+            "id": "dancing_lights",
+            "semanticClass": "truthful-illumination-emission",
+            "baselineCanonicalJsonSha256": "dfde6d289e148c19be815926b84f81a1772573c1a625ba48c523cae2933e4594",
+            "candidateCanonicalJsonSha256": "3cb2bada6bb7dba0bff3551a11de8f1ea80c9facb00ae07226bfa39281c976e4"
+          },
+          {
+            "family": "units",
+            "id": "daylight",
+            "semanticClass": "truthful-illumination-emission",
+            "baselineCanonicalJsonSha256": "cc835412a885c35cfeed1baafd65a42b23affd428469fee5b24fec303319d33a",
+            "candidateCanonicalJsonSha256": "b4b52b61fb51c9a00ba01e18088ee8eb3cfffd7ddfc9b08433f5c46d6bf04747"
+          },
+          {
+            "family": "units",
+            "id": "faerie_fire",
+            "semanticClass": "truthful-illumination-emission",
+            "baselineCanonicalJsonSha256": "f6d468f44127519420966b1ebcb5c67363976df4cb278b58ad2a6ec2ee809a9c",
+            "candidateCanonicalJsonSha256": "637c1953d06353945b63614dbf537cdc775233561f59ad9bd06fdf5c7907e7af"
+          },
+          {
+            "family": "units",
+            "id": "flame_blade",
+            "semanticClass": "truthful-illumination-emission",
+            "baselineCanonicalJsonSha256": "bdf430d85ae78404b82e138aa67469d57a4d852e9030ad22f7536df084289dff",
+            "candidateCanonicalJsonSha256": "eea356f64b88d77c89c206582cf259d98bf698f33cf5676d214b7d24a994c7c6"
+          },
+          {
+            "family": "units",
+            "id": "find_familiar",
+            "semanticClass": "authored-companion-lifecycle",
+            "baselineCanonicalJsonSha256": "e2ea0d9726b3bf348075a1fb1249428995f2b850226cbdd153e9001d70098efd",
+            "candidateCanonicalJsonSha256": "48a5c637df869ce31202f648109f8ae38f91c0afe97995f3b1d224fa46b088b1"
+          },
+          {
+            "family": "units",
+            "id": "flaming_sphere",
+            "semanticClass": "truthful-illumination-emission",
+            "baselineCanonicalJsonSha256": "03699fa76bd62ed8986e9c98e03cd0abac5ecfcf57962032983f9980d20cecc9",
+            "candidateCanonicalJsonSha256": "4b34f9cc34a2f408547923b73e7c28cfd6f9855b8f9c8ad8aeb4af0ad0a501b7"
+          },
+          {
+            "family": "units",
+            "id": "grease",
+            "semanticClass": "authored-persistent-rule-facts",
+            "baselineCanonicalJsonSha256": "a4e09b74308a4a6e07aacd8003e3168b5d159fb21af3bc561dcbd0e29e898051",
+            "candidateCanonicalJsonSha256": "916a244afb7f2a19b0f797cf2e12367a4cce165e0006c4bf2151a4946808f187"
+          },
+          {
+            "family": "units",
+            "id": "insect_plague",
+            "semanticClass": "authored-persistent-rule-facts",
+            "baselineCanonicalJsonSha256": "ac7f1b2aef542258fee154fb3611ab2bf39bd69181749f50e75feddc409989e7",
+            "candidateCanonicalJsonSha256": "a53f002c20d911aed759a87d11be611c8522c65fe426aa1f4bc44df748baa419"
+          },
+          {
+            "family": "units",
+            "id": "light",
+            "semanticClass": "truthful-illumination-emission",
+            "baselineCanonicalJsonSha256": "e8203b1a490d4102c0b67794f4c99f2b305b2fac10ef75802560911d7a8b4c1f",
+            "candidateCanonicalJsonSha256": "ec8ee7be0274af6a3123e973bae8d2fdfd9c9557e3ce2fdeb535ae6466ca2954"
+          },
+          {
+            "family": "units",
+            "id": "magic_weapon",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "483919bdf2bfb895d36e831054300f5803005121695eefadbf1cc1f1be9c0f35",
+            "candidateCanonicalJsonSha256": "3565086e6627a3d704e3c017243b640d5be4ba4012809b362ef176923f60c8d9"
+          },
+          {
+            "family": "units",
+            "id": "produce_flame",
+            "semanticClass": "truthful-illumination-emission",
+            "baselineCanonicalJsonSha256": "fd6b1298a25015300fb7d9f4873c7952b9e8da242ed4b41b62110dd15e5ca5ee",
+            "candidateCanonicalJsonSha256": "882420e20cade20b24aaab7cc4354eaeaa553904a9dd00c0aefa9e3c0a935cc0"
+          },
+          {
+            "family": "units",
+            "id": "shining_smite",
+            "semanticClass": "truthful-illumination-emission",
+            "baselineCanonicalJsonSha256": "8e61e8e7b0cd6716c642d8cf182a9ac5fbaeea6b37c5c1e59d338e4359c2a539",
+            "candidateCanonicalJsonSha256": "bbc1a4e90be29f4256d2d957bafcfd835d16062fd55a40d9e90d0a1575f9d794"
+          },
+          {
+            "family": "units",
+            "id": "sleep",
+            "semanticClass": "authored-persistent-rule-facts",
+            "baselineCanonicalJsonSha256": "f6458a54b44b2d1bb4c11f1a6e7b80c87aabaec9bd9aad6205f5d77d49fbaccf",
+            "candidateCanonicalJsonSha256": "520e453fcdc7e1a425b5914127c4ac81087f5a1559e11d0c229b5a0c25f1cc9d"
+          },
+          {
+            "family": "units",
+            "id": "starry_wisp",
+            "semanticClass": "truthful-illumination-emission",
+            "baselineCanonicalJsonSha256": "313c8fe7c18e4d346eba62c0a7952b95b5532cff15096650ac058abdf2b9067d",
+            "candidateCanonicalJsonSha256": "225f25845496cea57f86ca73752e5b5bf74f701641b1b62c2b9b69604fa7c1db"
+          },
+          {
+            "family": "units",
+            "id": "thaumaturgy",
+            "semanticClass": "authored-modal-ongoing-effect",
+            "baselineCanonicalJsonSha256": "70a7e293ed6dfc28799bddc01ca1a5e250199668355ab06d0fe384ffe7270428",
+            "candidateCanonicalJsonSha256": "26babde59ea7a6a6e36fbd79e56b6f4dff065d19a4f634753d1b692bc8c71eb0"
+          }
+        ]
       }
     },
     "schema": {
       "path": "packages/surface/publication/srd-surface.schema.json",
       "semanticClass": "reviewed-regenerated-v4-schema-graph",
-      "cause": "Effect 4 schema encoding regenerated the reviewed v4 local definition graph with renamed and deduplicated definitions. Its byte hashes authenticate that reviewed graph; they do not establish schema-language equivalence.",
-      "issue": "The schema bytes and local definition/reference graph changed; local reference closure and finite AJV cross-validation of the two canonical aggregate snapshots must remain as recorded.",
+      "cause": "Effect 4 schema encoding and the classified authored-record contract changes regenerated the reviewed local definition graph with renamed and deduplicated definitions. Its byte hashes authenticate that reviewed graph; they do not establish schema-language equivalence.",
+      "issue": "The schema bytes and local definition/reference graph changed; local reference closure and the finite same-version-accepting, cross-version-rejecting AJV matrix must remain exactly as recorded.",
       "baseline": {
         "byteLength": 927510,
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1375908,
-        "sha256": "b7b6ab07de16590f1f731bc0abe4171a4d4e36241d595221f9a9a57f51d46110"
+        "byteLength": 1463610,
+        "sha256": "a585309c35c859c5afcc43b7d3f2f54c7a4151dcbc5394df575b7ac80a9b3c6a"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "5696bbda8ab69b3d6612a8c047abda5c9342d744bf643cee4b4bf810fc98c7fb",
+        "candidateCanonicalJsonSha256": "887cdb6035411546a24cc49029dccf135ce2f5e1e53ba91d98d558d905077d28",
         "definitions": {
           "baseline": 1305,
-          "candidate": 1075
+          "candidate": 1082
         },
         "references": {
           "baseline": 8778,
-          "candidate": 7290
+          "candidate": 7350
         },
         "localReferencesComplete": {
           "baseline": true,
           "candidate": true
         },
         "crossValidation": [
-          "baseline-schema/baseline-aggregate",
-          "baseline-schema/candidate-aggregate",
-          "candidate-schema/baseline-aggregate",
-          "candidate-schema/candidate-aggregate"
+          {
+            "schema": "baseline-schema",
+            "aggregate": "baseline-aggregate",
+            "outcome": "accepted"
+          },
+          {
+            "schema": "baseline-schema",
+            "aggregate": "candidate-aggregate",
+            "outcome": "rejected"
+          },
+          {
+            "schema": "candidate-schema",
+            "aggregate": "baseline-aggregate",
+            "outcome": "rejected"
+          },
+          {
+            "schema": "candidate-schema",
+            "aggregate": "candidate-aggregate",
+            "outcome": "accepted"
+          }
         ]
       }
     }
@@ -86,6 +230,6 @@
     "canonicalJson": "JSON object keys are sorted recursively; array order is retained.",
     "orderedIdHash": "SHA-256(JSON.stringify(ordered IDs)) for each aggregate family and their concatenation.",
     "schemaReferences": "Every $ref is a local #/$defs reference whose definition exists.",
-    "schemaCrossValidation": "Finite AJV checks validate each canonical baseline and candidate aggregate snapshot against each reviewed schema snapshot; this does not prove schema-language equivalence."
+    "schemaCrossValidation": "Finite AJV checks require each schema to accept its own aggregate snapshot and reject the other contract snapshot; this authenticates the reviewed contract transition but does not prove a broader schema-language relationship."
   }
 }

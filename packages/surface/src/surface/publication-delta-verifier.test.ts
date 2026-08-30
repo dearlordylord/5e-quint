@@ -6,6 +6,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
@@ -73,6 +74,36 @@ function issueKinds(
     : new Set();
 }
 
+function baselineAggregate(): unknown {
+  return JSON.parse(
+    execFileSync(
+      "git",
+      [
+        "show",
+        "76d9abaf0ec9c8369d5f95f603c5cce88704d26e:packages/surface/publication/srd-surface.json",
+      ],
+      { cwd: repositoryRoot, encoding: "utf8" },
+    ),
+  );
+}
+
+function recordById(value: unknown, id: string): unknown {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("Expected an aggregate object fixture");
+  }
+  const units = Reflect.get(value, "units");
+  if (!Array.isArray(units)) throw new Error("Expected aggregate units");
+  const record = units.find(
+    (unit) =>
+      typeof unit === "object" &&
+      unit !== null &&
+      !Array.isArray(unit) &&
+      Reflect.get(unit, "id") === id,
+  );
+  if (record === undefined) throw new Error(`Expected fixture unit ${id}`);
+  return record;
+}
+
 describe("Surface publication delta verifier", () => {
   test("verifies the reviewed certificate against the immutable baseline", () => {
     const result = verifySurfacePublicationDelta({ repoRoot: repositoryRoot });
@@ -131,7 +162,7 @@ describe("Surface publication delta verifier", () => {
       writeFileSync(
         fixturePath,
         certificate.replace(
-          "e3b743d94a01f0fed0db4f895a53bb873ed864eef47db5ebb130f681a409e105",
+          "8b3466a7ed3b714788aac208ad6d76684eeb9c59037a9d05b6a7d491d4218867",
           "0000000000000000000000000000000000000000000000000000000000000000",
         ),
       );
@@ -162,8 +193,81 @@ describe("Surface publication delta verifier", () => {
 
     expect(result.tag).toBe("invalid");
     expect(issueKinds(result)).toContain("candidate-hash-mismatch");
-    expect(issueKinds(result)).toContain("aggregate-semantic-mismatch");
     expect(issueKinds(result)).toContain("aggregate-record-mismatch");
+  }, 180_000);
+
+  test("rejects a stale baseline record substituted for a reviewed candidate delta", () => {
+    const result = withFixture(({ publicationDir }) => {
+      const path = join(publicationDir, "srd-surface.json");
+      const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
+        JSON.parse(readFileSync(path, "utf8")),
+      );
+      const staleRecord = recordById(baselineAggregate(), "shining_smite");
+      writeFileSync(
+        path,
+        `${JSON.stringify({
+          ...aggregate,
+          units: aggregate.units.map((record) =>
+            record.id === "shining_smite" ? staleRecord : record,
+          ),
+        })}\n`,
+      );
+    });
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("aggregate-delta-stale");
+  }, 180_000);
+
+  test("rejects a surplus unclassified authored-record delta", () => {
+    const result = withFixture(({ publicationDir }) => {
+      const path = join(publicationDir, "srd-surface.json");
+      const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
+        JSON.parse(readFileSync(path, "utf8")),
+      );
+      writeFileSync(
+        path,
+        `${JSON.stringify({
+          ...aggregate,
+          units: aggregate.units.map((record) =>
+            record.id === "acid_splash"
+              ? { ...record, displayName: "Surplus fixture mutation" }
+              : record,
+          ),
+        })}\n`,
+      );
+    });
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("aggregate-delta-unclassified");
+  }, 180_000);
+
+  test("rejects a copied record substituted for a distinct reviewed delta", () => {
+    const result = withFixture(({ publicationDir }) => {
+      const path = join(publicationDir, "srd-surface.json");
+      const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
+        JSON.parse(readFileSync(path, "utf8")),
+      );
+      const copiedRecord = aggregate.units.find(
+        (record) => record.id === "continual_flame",
+      );
+      if (copiedRecord === undefined) {
+        throw new Error("Expected continual_flame fixture unit");
+      }
+      writeFileSync(
+        path,
+        `${JSON.stringify({
+          ...aggregate,
+          units: aggregate.units.map((record) =>
+            record.id === "shining_smite"
+              ? { ...copiedRecord, id: "shining_smite" }
+              : record,
+          ),
+        })}\n`,
+      );
+    });
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("aggregate-delta-evidence-mismatch");
   }, 180_000);
 
   test("rejects schema mutation", () => {
