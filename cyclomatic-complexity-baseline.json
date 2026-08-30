@@ -107,8 +107,7 @@
       "module/binding:weaponHostedAttackCompositionRouteForResolution": 23
     },
     "packages/battle-runtime/src/battle-reducer/battle-codecs.ts": {
-      "module/binding:characterBattleCreatureSnapshotInvariantsHold": 10,
-      "module/binding:statBlockProcedurePoolShapeIsValid": 10
+      "module/binding:characterBattleCreatureSnapshotInvariantsHold": 10
     },
     "packages/battle-runtime/src/battle-reducer/battle-discovery.ts": {
       "module/binding:companionProtocolActs": 13,
