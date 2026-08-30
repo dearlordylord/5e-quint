@@ -1328,7 +1328,7 @@
       "module/call:Schema.filter:argument-0:selector-e8d6fdfe4db4": 10
     },
     "packages/surface/src/surface/schema.ts": {
-      "module/binding:factorUnionAst": 11
+      "module/binding:factorUnionAst": 10
     },
     "packages/surface/src/surface/unit-catalog.ts": {
       "module/binding:buildUnitCatalog": 9
