@@ -7,6 +7,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
@@ -36,7 +37,10 @@ type FixturePaths = {
 
 function withFixture(
   mutate: (paths: FixturePaths) => void,
-  options: { readonly repoRoot?: string } = {},
+  options: {
+    readonly repoRoot?: string;
+    readonly reviewMutatedCertificate?: boolean;
+  } = {},
 ): ReturnType<typeof verifySurfacePublicationDelta> {
   const fixtureRoot = mkdtempSync("/tmp/surface-delta-test-");
   const publicationDir = join(fixtureRoot, "publication");
@@ -51,6 +55,9 @@ function withFixture(
     join(publicationDir, "srd-surface.schema.json"),
   );
   copyFileSync(certificatePath, fixtureCertificatePath);
+  const reviewedCertificateSha256 = sha256(
+    readFileSync(fixtureCertificatePath),
+  );
   try {
     mutate({
       publicationDir,
@@ -59,11 +66,20 @@ function withFixture(
     return verifySurfacePublicationDelta({
       repoRoot: options.repoRoot ?? repositoryRoot,
       publicationDir,
-      certificatePath: fixtureCertificatePath,
+      certificateAuthority: {
+        path: fixtureCertificatePath,
+        sha256: options.reviewMutatedCertificate
+          ? sha256(readFileSync(fixtureCertificatePath))
+          : reviewedCertificateSha256,
+      },
     });
   } finally {
     rmSync(fixtureRoot, { force: true, recursive: true });
   }
+}
+
+function sha256(value: Uint8Array): string {
+  return createHash("sha256").update(value).digest("hex");
 }
 
 function issueKinds(
@@ -102,6 +118,145 @@ function recordById(value: unknown, id: string): unknown {
   );
   if (record === undefined) throw new Error(`Expected fixture unit ${id}`);
   return record;
+}
+
+function isFixtureObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function fixtureObject(value: unknown, label: string): Record<string, unknown> {
+  if (!isFixtureObject(value)) throw new Error(`Expected ${label} object`);
+  return value;
+}
+
+function fixtureObjectField(
+  value: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> {
+  return fixtureObject(value[key], key);
+}
+
+function fixtureArrayField(
+  value: Record<string, unknown>,
+  key: string,
+): unknown[] {
+  const field = value[key];
+  if (!Array.isArray(field)) throw new Error(`Expected ${key} array`);
+  return field;
+}
+
+function canonicalizeFixture(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalizeFixture);
+  if (!isFixtureObject(value)) return value;
+  return Object.fromEntries(
+    Object.keys(value)
+      .sort()
+      .map((key) => [key, canonicalizeFixture(value[key])]),
+  );
+}
+
+function canonicalFixtureSha256(value: unknown): string {
+  return sha256(Buffer.from(JSON.stringify(canonicalizeFixture(value))));
+}
+
+function membershipEvidence(aggregate: {
+  readonly units: ReadonlyArray<{ readonly id: string }>;
+  readonly statBlocks: ReadonlyArray<{ readonly id: string }>;
+}): Record<string, unknown> {
+  const units = aggregate.units.map((record) => record.id);
+  const statBlocks = aggregate.statBlocks.map((record) => record.id);
+  const all = [...units, ...statBlocks];
+  const orderedIdSha256 = (ids: readonly string[]): string =>
+    sha256(Buffer.from(JSON.stringify(ids)));
+  return {
+    recordCounts: {
+      units: units.length,
+      statBlocks: statBlocks.length,
+      total: all.length,
+    },
+    orderedIdSha256: {
+      units: orderedIdSha256(units),
+      statBlocks: orderedIdSha256(statBlocks),
+      all: orderedIdSha256(all),
+    },
+  };
+}
+
+function certifyMembershipDelta(
+  paths: FixturePaths,
+  kind: "added" | "removed",
+): void {
+  const aggregatePath = join(paths.publicationDir, "srd-surface.json");
+  const aggregate = Schema.decodeUnknownSync(PublishedSrdSurfaceSchema)(
+    JSON.parse(readFileSync(aggregatePath, "utf8")),
+  );
+  const source = aggregate.units.find((record) => record.id === "acid_splash");
+  if (source === undefined)
+    throw new Error("Expected acid_splash fixture unit");
+  const addedRecord = { ...source, id: "addition_fixture" };
+  const candidateAggregate = {
+    ...aggregate,
+    units:
+      kind === "added"
+        ? [...aggregate.units, addedRecord]
+        : aggregate.units.filter((record) => record.id !== "acid_splash"),
+  };
+  const candidateBytes = Buffer.from(`${JSON.stringify(candidateAggregate)}\n`);
+  writeFileSync(aggregatePath, candidateBytes);
+
+  const certificate = fixtureObject(
+    JSON.parse(readFileSync(paths.certificatePath, "utf8")),
+    "certificate",
+  );
+  const artifacts = fixtureObjectField(certificate, "artifacts");
+  const aggregateArtifact = fixtureObjectField(artifacts, "aggregate");
+  const candidateDigest = fixtureObjectField(aggregateArtifact, "candidate");
+  candidateDigest.byteLength = candidateBytes.byteLength;
+  candidateDigest.sha256 = sha256(candidateBytes);
+  const evidence = fixtureObjectField(aggregateArtifact, "evidence");
+  evidence.candidateCanonicalJsonSha256 =
+    canonicalFixtureSha256(candidateAggregate);
+
+  const existingMembership = isFixtureObject(evidence.membership)
+    ? evidence.membership
+    : {
+        baseline: {
+          recordCounts: evidence.recordCounts,
+          orderedIdSha256: evidence.orderedIdSha256,
+        },
+      };
+  existingMembership.candidate = membershipEvidence(candidateAggregate);
+  evidence.membership = existingMembership;
+  Reflect.deleteProperty(evidence, "recordCounts");
+  Reflect.deleteProperty(evidence, "orderedIdSha256");
+
+  const reviewedRecordDeltas = fixtureArrayField(
+    evidence,
+    "reviewedRecordDeltas",
+  );
+  reviewedRecordDeltas.push(
+    kind === "added"
+      ? {
+          kind,
+          family: "units",
+          id: "addition_fixture",
+          semanticClass: "authored-catalog-membership",
+          candidateCanonicalJsonSha256: canonicalFixtureSha256(addedRecord),
+        }
+      : {
+          kind,
+          family: "units",
+          id: "acid_splash",
+          semanticClass: "authored-catalog-membership",
+          baselineCanonicalJsonSha256: canonicalFixtureSha256(
+            recordById(baselineAggregate(), "acid_splash"),
+          ),
+        },
+  );
+  writeFileSync(
+    paths.certificatePath,
+    `${JSON.stringify(certificate, null, 2)}\n`,
+  );
 }
 
 describe("Surface publication delta verifier", () => {
@@ -350,6 +505,60 @@ describe("Surface publication delta verifier", () => {
 
     expect(result.tag).toBe("invalid");
     expect(issueKinds(result)).toContain("aggregate-delta-unclassified");
+  }, 180_000);
+
+  test("verifies an exact classified authored-record addition with candidate membership evidence", () => {
+    const result = withFixture(
+      (paths) => certifyMembershipDelta(paths, "added"),
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("verified");
+  }, 180_000);
+
+  test("verifies an exact classified authored-record removal with candidate membership evidence", () => {
+    const result = withFixture(
+      (paths) => certifyMembershipDelta(paths, "removed"),
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("verified");
+  }, 180_000);
+
+  test("rejects classified addition evidence with stale candidate membership", () => {
+    const result = withFixture(
+      (paths) => {
+        certifyMembershipDelta(paths, "added");
+        const certificate = fixtureObject(
+          JSON.parse(readFileSync(paths.certificatePath, "utf8")),
+          "certificate",
+        );
+        const evidence = fixtureObjectField(
+          fixtureObjectField(
+            fixtureObjectField(certificate, "artifacts"),
+            "aggregate",
+          ),
+          "evidence",
+        );
+        const candidateMembership = fixtureObjectField(
+          fixtureObjectField(evidence, "membership"),
+          "candidate",
+        );
+        const recordCounts = fixtureObjectField(
+          candidateMembership,
+          "recordCounts",
+        );
+        recordCounts.units = 399;
+        writeFileSync(
+          paths.certificatePath,
+          `${JSON.stringify(certificate, null, 2)}\n`,
+        );
+      },
+      { reviewMutatedCertificate: true },
+    );
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("aggregate-record-mismatch");
   }, 180_000);
 
   test("rejects a reviewed record delta encoded with the wrong discriminated shape", () => {

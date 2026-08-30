@@ -1,5 +1,5 @@
 {
-  "formatVersion": 3,
+  "formatVersion": 4,
   "baselineCommit": "76d9abaf0ec9c8369d5f95f603c5cce88704d26e",
   "artifacts": {
     "aggregate": {
@@ -14,15 +14,31 @@
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
         "candidateCanonicalJsonSha256": "3b21fae3c1a73a9a6d6ed591aea1b9391dbfcff99e01f79129aeef7d939cc8f2",
-        "recordCounts": {
-          "units": 399,
-          "statBlocks": 21,
-          "total": 420
-        },
-        "orderedIdSha256": {
-          "units": "bc200b3061654b6a3ca19aa5d64195daba6f2dbe2977a6a7dd15e84733849b22",
-          "statBlocks": "367c1236b838d3265f1b87f3c297642f6906c72bee951d496fdd4ee996322e4e",
-          "all": "1ba47988d91731d46927a075f3d75707a33c83571a81d2075884ec3005f15a92"
+        "membership": {
+          "baseline": {
+            "recordCounts": {
+              "units": 399,
+              "statBlocks": 21,
+              "total": 420
+            },
+            "orderedIdSha256": {
+              "units": "bc200b3061654b6a3ca19aa5d64195daba6f2dbe2977a6a7dd15e84733849b22",
+              "statBlocks": "367c1236b838d3265f1b87f3c297642f6906c72bee951d496fdd4ee996322e4e",
+              "all": "1ba47988d91731d46927a075f3d75707a33c83571a81d2075884ec3005f15a92"
+            }
+          },
+          "candidate": {
+            "recordCounts": {
+              "units": 399,
+              "statBlocks": 21,
+              "total": 420
+            },
+            "orderedIdSha256": {
+              "units": "bc200b3061654b6a3ca19aa5d64195daba6f2dbe2977a6a7dd15e84733849b22",
+              "statBlocks": "367c1236b838d3265f1b87f3c297642f6906c72bee951d496fdd4ee996322e4e",
+              "all": "1ba47988d91731d46927a075f3d75707a33c83571a81d2075884ec3005f15a92"
+            }
+          }
         },
         "reviewedRecordDeltas": [
           {

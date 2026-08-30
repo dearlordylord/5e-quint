@@ -12,8 +12,8 @@ export const SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH =
   "docs/migrations/effect-4/surface-publication-delta-certificate.json";
 
 const CERTIFICATE_SHA256 =
-  "27eaacdc9ebbcfc02dd49d70bbc4873bd10b3a70f040ca8b5e471784b7c94c95";
-const CERTIFICATE_FORMAT_VERSION = 3;
+  "58d17f96c13a8c16f6ddf61818fd83126bf7a22ff8c486e747f182d2cd708b96";
+const CERTIFICATE_FORMAT_VERSION = 4;
 const EFFECT3_SURFACE_BASELINE_COMMIT =
   "76d9abaf0ec9c8369d5f95f603c5cce88704d26e";
 const SURFACE_AGGREGATE_PATH = "packages/surface/publication/srd-surface.json";
@@ -24,6 +24,7 @@ const AGGREGATE_RECORD_FAMILIES = ["units", "statBlocks"] as const;
 type AggregateRecordFamily = (typeof AGGREGATE_RECORD_FAMILIES)[number];
 
 const REVIEWED_AGGREGATE_DELTA_CLASSES = [
+  "authored-catalog-membership",
   "authored-companion-lifecycle",
   "authored-execution-vocabulary",
   "authored-modal-ongoing-effect",
@@ -81,21 +82,27 @@ const ReviewedAggregateOrderDeltaSchema = Schema.Struct({
   candidateKeyOrder: Schema.Array(Schema.String),
   canonicalValueSha256: HashSchema,
 });
+const AggregateMembershipEvidenceSchema = Schema.Struct({
+  recordCounts: Schema.Struct({
+    units: NonNegativeIntegerSchema,
+    statBlocks: NonNegativeIntegerSchema,
+    total: NonNegativeIntegerSchema,
+  }),
+  orderedIdSha256: Schema.Struct({
+    units: HashSchema,
+    statBlocks: HashSchema,
+    all: HashSchema,
+  }),
+});
 const AggregateCertificateSchema = Schema.Struct({
   baseline: ArtifactDigestSchema,
   candidate: ArtifactDigestSchema,
   evidence: Schema.Struct({
     baselineCanonicalJsonSha256: HashSchema,
     candidateCanonicalJsonSha256: HashSchema,
-    recordCounts: Schema.Struct({
-      units: NonNegativeIntegerSchema,
-      statBlocks: NonNegativeIntegerSchema,
-      total: NonNegativeIntegerSchema,
-    }),
-    orderedIdSha256: Schema.Struct({
-      units: HashSchema,
-      statBlocks: HashSchema,
-      all: HashSchema,
+    membership: Schema.Struct({
+      baseline: AggregateMembershipEvidenceSchema,
+      candidate: AggregateMembershipEvidenceSchema,
     }),
     reviewedRecordDeltas: Schema.Array(ReviewedAggregateRecordDeltaSchema),
     reviewedOrderDeltas: Schema.Array(ReviewedAggregateOrderDeltaSchema),
@@ -196,7 +203,10 @@ export type SurfacePublicationDeltaVerificationResult =
 export type SurfacePublicationDeltaVerificationOptions = {
   readonly repoRoot: string;
   readonly publicationDir?: string;
-  readonly certificatePath?: string;
+  readonly certificateAuthority?: {
+    readonly path: string;
+    readonly sha256: string;
+  };
 };
 
 type ArtifactBytes =
@@ -338,7 +348,10 @@ function parseJsonBytes(bytes: Buffer): ParsedArtifact {
   }
 }
 
-function readCertificate(certificatePath: string):
+function readCertificate(
+  certificatePath: string,
+  reviewedCertificateSha256: string,
+):
   | { readonly tag: "ok"; readonly value: SurfacePublicationDeltaCertificate }
   | {
       readonly tag: "invalid";
@@ -379,12 +392,12 @@ function readCertificate(certificatePath: string):
     };
   }
   const observedSha256 = sha256(bytes);
-  return observedSha256 === CERTIFICATE_SHA256
+  return observedSha256 === reviewedCertificateSha256
     ? { tag: "ok", value: decoded.success }
     : {
         tag: "invalid",
         kind: "certificate-digest-mismatch",
-        message: `certificate bytes have SHA-256 ${observedSha256}; expected the reviewed certificate digest ${CERTIFICATE_SHA256}.`,
+        message: `certificate bytes have SHA-256 ${observedSha256}; expected the reviewed certificate digest ${reviewedCertificateSha256}.`,
       };
 }
 
@@ -633,9 +646,10 @@ function compareAggregateRecordEvidence(
   evidence: AggregateEvidence,
   expected: SurfacePublicationDeltaCertificate["artifacts"]["aggregate"]["evidence"],
 ): void {
+  const expectedMembership = expected.membership[label];
   if (
     JSON.stringify(evidence.recordCounts) !==
-    JSON.stringify(expected.recordCounts)
+    JSON.stringify(expectedMembership.recordCounts)
   ) {
     issues.push({
       kind: "aggregate-record-mismatch",
@@ -644,7 +658,7 @@ function compareAggregateRecordEvidence(
   }
   if (
     JSON.stringify(evidence.orderedIdSha256) !==
-    JSON.stringify(expected.orderedIdSha256)
+    JSON.stringify(expectedMembership.orderedIdSha256)
   ) {
     issues.push({
       kind: "aggregate-record-mismatch",
@@ -1289,10 +1303,14 @@ export function verifySurfacePublicationDelta(
   const publicationDir =
     options.publicationDir ??
     join(options.repoRoot, "packages/surface/publication");
-  const certificatePath =
-    options.certificatePath ??
-    join(options.repoRoot, SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH);
-  const certificate = readCertificate(certificatePath);
+  const certificateAuthority = options.certificateAuthority ?? {
+    path: join(options.repoRoot, SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH),
+    sha256: CERTIFICATE_SHA256,
+  };
+  const certificate = readCertificate(
+    certificateAuthority.path,
+    certificateAuthority.sha256,
+  );
   if (certificate.tag === "invalid")
     return invalidCertificateResult(certificate);
 

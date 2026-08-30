@@ -15,6 +15,9 @@ has the hashes applicable to that shape, and has one reviewed semantic class.
 The current candidate has 18 changed records, no additions, and no removals.
 Their classes are persistent rule facts, companion lifecycle, modal ongoing
 effect, identity-free execution vocabulary, and truthful illumination emission.
+The baseline and candidate membership evidence each record counts and ordered
+identity hashes for every family, so a classified addition or removal can
+change one snapshot without contradicting the other.
 The verifier rejects unclassified membership or value changes, stale expected
 changes, duplicate classifications, and copied or otherwise substituted record
 content while separately retaining whole-artifact hashes and ordered-record
