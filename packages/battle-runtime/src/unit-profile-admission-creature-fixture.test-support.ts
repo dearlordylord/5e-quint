@@ -368,11 +368,11 @@ export function statBlockAttackAct(
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
-      candidate.subject.statBlockDamageSelection !== undefined &&
-      statBlockAttackDamageSelectionUsesOnlyComponentNotation(
-        candidate.subject.statBlockDamageSelection,
-        "rolled",
-      ) &&
+      (candidate.subject.statBlockDamageSelection === undefined ||
+        statBlockAttackDamageSelectionUsesOnlyComponentNotation(
+          candidate.subject.statBlockDamageSelection,
+          "rolled",
+        )) &&
       candidate.presentation.kind === "attack" &&
       candidate.presentation.name === attackName,
   );
