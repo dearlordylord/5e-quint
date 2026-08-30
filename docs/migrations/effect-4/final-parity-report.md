@@ -1,11 +1,10 @@
 # Effect 4 final parity report
 
 This is the current certification narrative for GitHub issue #386. It records
-the integrated source fixed point through `15ba8ebe2`, the refreshed
-certification-artifact fixed point `0cd6b8133`, and the reviewed Raw Swarm
-declaration-measure fixed point `abc67795b`. It is not yet a final closure
-claim: the full proof terminal result, broad workspace gates, final review
-Round 2, and live GitHub closure remain pending below. The four required Battle
+the integrated source fixed point through `595a3ac1c`, including the refreshed
+certification artifacts and reviewed Raw Swarm declaration measure. It is not
+yet a final closure claim: the full proof terminal result, broad workspace
+gates, and live GitHub closure remain pending below. The five refreshed Battle
 MBT results are recorded below.
 
 ## Selected cohort and controlled-red state
@@ -60,10 +59,10 @@ from 76 to 119 artifacts. Array-authority counts are stable; the
 `positional-value-sequence-v1` site set retains 101,977 sites and has current
 SHA-256 `0c7bca197ab4752257da59eeef34a1532e647947497009925cd7ebbbdf56e0b7`.
 The strict decoder accepts the v2 artifact. Two independent self-test
-invocations passed all 15 tests. Two independent full current verifications
-passed and reported the same 7,246 identities. The second
-`pnpm check:effect4-oracle-delta` ran under the broad lock and completed at
-2026-08-30T20:49Z with exit 0 and
+invocations passed all 15 tests. The final pinned current verification at
+approximately 2026-08-30T22:05Z completed with exit 0, retained the candidate
+byte count and SHA-256 above, and retained the same 7,246-identity SHA-256. It
+reported
 `Effect 4 finite oracle delta verified (7246 reviewed identities).`
 
 ## Clean-consumer distribution
@@ -110,15 +109,16 @@ Two review-raised rule dispositions are explicit:
   damage-ended, and self-shake cases. Execution of that QNT evidence remains
   part of the unobserved full proof lane.
 
-## Required Battle MBT evidence
+## Refreshed Battle MBT evidence
 
-The four SR-00 Battle MBT public scripts completed with exit 0 on the integrated
-line:
+The four originally required SR-00 Battle MBT public scripts and the
+repair-sensitive chained-attack lane completed with exit 0 at `595a3ac1c`:
 
 | Public command                                                                            |             Final result |
 | ----------------------------------------------------------------------------------------- | -----------------------: |
 | `pnpm --filter @dnd/battle-runtime run test:mbt:condition-saving-throw-selected-identity` | 2/2 tests passed; exit 0 |
 | `pnpm --filter @dnd/battle-runtime run test:mbt:turn-boundary-effect-lifecycle`           | 8/8 tests passed; exit 0 |
+| `pnpm --filter @dnd/battle-runtime run test:mbt:chained-attack-sequence`                  | 3/3 tests passed; exit 0 |
 | `pnpm --filter @dnd/battle-runtime run test:mbt:insect-plague-area-hazard`                | 4/4 tests passed; exit 0 |
 | `pnpm --filter @dnd/battle-runtime run test:mbt:cloudkill-area-hazard`                    | 6/6 tests passed; exit 0 |
 
@@ -139,11 +139,21 @@ report does not call it passed.
 
 ## Review convergence
 
-The Standards axis has converged at `b8ef76bec`. The final correction moved
-persistent-area usage-limit admission to one shared typed owner, removing the
-last duplicated algorithm identified by review. The reviewed tree otherwise
-converged on authored-identity/PHB+ safety, invalid-state ownership, Effect 4
-boundaries, architecture, and connascence.
+Final Standards and independent RAW, domain, QNT/runtime, architecture, and
+connascence reviews converged at `595a3ac1c` with no implementation findings.
+The final repairs closed the Hideous Laughter damage-triggered repeat-save gap
+for every positive-damage owner, including redirected damage. Durable attack
+continuations now admit only the exact pending repeat-save hole and leave state
+unchanged for an invalid hole. Canonical occurrence identities separate damage
+events across ordinary, chained, turn-boundary, and resumed procedures, and no
+production caller selects `noRepeatSave`. These runtime projections align with
+the existing identity-free QNT semantic core and obligation mapping, so no QNT
+model change was required. Authored-identity/PHB+ safety and route/fill
+partitioning also converged without findings.
+
+Focused integration evidence at the same fixed point includes an exit-0 Battle
+Runtime typecheck, an eight-file suite with 68 passing tests, and the final
+redirect-focused three-file suite with 31 passing tests.
 
 Spec certification is still partial. The refreshed Oracle, #381 manifest,
 coverage authorities, Temporary Hit Point disposition, A51 reachability model,
@@ -188,8 +198,6 @@ are recorded:
   operator decision and is not a proof pass;
 - broad `pnpm typecheck`, `pnpm test`, and production build;
 - `pnpm quality:milestone`;
-- final code-review Round 2, including the Spec-axis disposition after the
-  commands above;
 - live GitHub status and closure of #381 and #386, followed by the SR-00
   Cleanroom ledger disposition.
 

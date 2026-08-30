@@ -1191,11 +1191,10 @@ not run for this issue snapshot.
 
 ## Issue #386 current certification and controlled-red closure
 
-The current integrated source fixed point is `15ba8ebe2`; refreshed generated
-certification artifacts are committed at `0cd6b8133`, and the reviewed Raw
-Swarm declaration measure is committed at `abc67795b`. The final controlled-red
-inventory still covers all 13 package owners with zero recorded diagnostics,
-and its SHA-256 remains
+The current integrated source fixed point is `595a3ac1c`, including the
+refreshed generated certification artifacts and reviewed Raw Swarm declaration
+measure. The final controlled-red inventory still covers all 13 package owners
+with zero recorded diagnostics, and its SHA-256 remains
 `347dde4c3f6ed0a2c0f674fd0c2dce8edfacbc3135ebc7f7b0ee7c29c008c036`.
 The retired inventory generator and mutation scripts remain absent. This
 stored inventory does not substitute for the pending broad `pnpm typecheck` at
@@ -1212,10 +1211,10 @@ and is 4,656,210 bytes with artifact SHA-256
 `63eade8b0bd7bfa304d7bff83bfade023d70cc9cd1f9435d271b9bc208eed502`.
 Exactly two `scripts/raw-swarm/OPERATIONS.md` identities were replaced under
 the existing Raw Swarm reason; all per-reason counts remain unchanged. The
-strict decoder passed, two self-test invocations passed all 15 tests, and one
-full current verification passed for all 7,246 identities. A second independent
-`pnpm check:effect4-oracle-delta` ran under the broad lock and completed at
-2026-08-30T20:49Z with exit 0 and
+strict decoder passed, two self-test invocations passed all 15 tests, and the
+final pinned current verification at approximately 2026-08-30T22:05Z completed
+with exit 0. The candidate byte count and SHA-256 and the 7,246-identity SHA-256
+above remained unchanged. The command reported
 `Effect 4 finite oracle delta verified (7246 reviewed identities).` The
 #381 generated manifest selects 58 obligations and has SHA-256
 `998be34b672077873b47937ae532d781d144e5dfdec6329af38eae16c096e01b`;
@@ -1244,12 +1243,15 @@ was lost. The operator directed that this full lane not be rerun. This records
 an accepted execution risk and does not describe the full proof lane as
 verified.
 
-The four required SR-00 Battle MBT public scripts have final observed results:
+The four originally required SR-00 Battle MBT public scripts and the
+repair-sensitive chained-attack lane have final observed results at
+`595a3ac1c`:
 
 | Public command                                                                            |             Final result |
 | ----------------------------------------------------------------------------------------- | -----------------------: |
 | `pnpm --filter @dnd/battle-runtime run test:mbt:condition-saving-throw-selected-identity` | 2/2 tests passed; exit 0 |
 | `pnpm --filter @dnd/battle-runtime run test:mbt:turn-boundary-effect-lifecycle`           | 8/8 tests passed; exit 0 |
+| `pnpm --filter @dnd/battle-runtime run test:mbt:chained-attack-sequence`                  | 3/3 tests passed; exit 0 |
 | `pnpm --filter @dnd/battle-runtime run test:mbt:insect-plague-area-hazard`                | 4/4 tests passed; exit 0 |
 | `pnpm --filter @dnd/battle-runtime run test:mbt:cloudkill-area-hazard`                    | 6/6 tests passed; exit 0 |
 
@@ -1264,6 +1266,19 @@ assertion names the canonical
 full `pnpm proof:qnt` record above: its terminal result remains unobserved, the
 operator declined a rerun, and it is not recorded as passed.
 
+Final Standards and independent RAW, domain, QNT/runtime, architecture, and
+connascence reviews converged at `595a3ac1c` with no implementation findings.
+The final repairs make every positive-damage owner, including redirected
+damage, request and resolve the Hideous Laughter damage-triggered repeat save.
+Durable attack continuations validate the exact pending repeat-save hole and
+remain unchanged on invalid input. Canonical occurrence identities distinguish
+ordinary, chained, turn-boundary, and resumed damage, and there are zero
+production `noRepeatSave` callers. This behavior matches the existing
+identity-free QNT semantic core and obligation mapping; no QNT model change was
+required. Focused integration evidence at this fixed point includes an exit-0
+Battle Runtime typecheck, an eight-file suite with 68 passing tests, and a final
+redirect-focused three-file suite with 31 passing tests.
+
 The complete clean-consumer smoke passed after the reviewed cap correction,
 including deployed MCP, container, Raw Swarm consumer, and SIGINT/SIGTERM
 lifecycle cases. Its exact public declaration graph is 523 files and 3,965,396
@@ -1271,7 +1286,8 @@ bytes under the unchanged 10 MiB cap, leaving 6,520,364 bytes of margin.
 
 This final-current paragraph does not rewrite the historical issue snapshots
 above. It also does not claim a complete QNT proof pass, broad
-typecheck/test/build/quality gates, live GitHub closure, or final review Round 2. The current evidence, 101-file QNT scope,
+typecheck/test/build/quality gates, or live GitHub closure. The current evidence,
+101-file QNT scope,
 Temporary Hit Point keep/replace disposition, A51 Hypnotic Pattern reachability
 model, Standards convergence, and remaining Spec blockers are owned by
 [`final-parity-report.md`](./final-parity-report.md). Issues #381 and #386 and
