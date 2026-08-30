@@ -5,16 +5,17 @@ import type {
   BattleMovementSpeedKind,
   BattleObjectId,
   BattleOpportunityAttackThreat,
+  BattleProcedureExecutionRef,
   BattleTablePositionId,
   CombatantId,
 } from "@dnd/battle-runtime";
 import {
-  BattleAttackProcedureExecutionRef,
-  BattleProcedureExecutionRef,
-  BattleStatBlockProcedureExecutionRef,
   battleObjectId,
   battleTablePositionId,
   combatantId,
+  isBattleAttackProcedureExecutionRef,
+  isBattleProcedureExecutionRef,
+  isBattleStatBlockProcedureExecutionRef,
 } from "../../../packages/battle-runtime/src/index.ts";
 import {
   ABILITIES,
@@ -33,11 +34,7 @@ import {
   type SpatialSnapshot,
 } from "../../../packages/tactical-space/src/index.ts";
 import type { Result as ResultTypes } from "effect";
-import { effectRuntimeForPackageOwners } from "../../package-effect-runtime.ts";
-
-const { Result, Match, Schema } = effectRuntimeForPackageOwners([
-  "battle-runtime",
-]).effect;
+import { Result, Match, Schema } from "effect";
 
 export type ScenarioTokenId = CombatantId | BattleObjectId;
 
@@ -836,15 +833,12 @@ function parseProcedureRef(
     );
   }
   const trimmed = value.trim();
-  const decoded = Schema.decodeUnknownResult(BattleProcedureExecutionRef)(
-    trimmed,
-  );
-  return Result.isFailure(decoded)
+  return !isBattleProcedureExecutionRef(trimmed)
     ? malformedDecision(
         input,
         "A sourceProcedureRef must be a canonical Battle procedure execution reference.",
       )
-    : Result.succeed(decoded.success);
+    : Result.succeed(trimmed);
 }
 
 function isCoordinateInput(value: unknown): value is CoordinateInput {
@@ -1203,30 +1197,28 @@ function parseOpportunityAttackThreatInput(
   const reactorId = combatantId(value.reactorId);
   const distanceFeet = movementFeet(value.distanceFeet);
   if (hasAttackAbility && hasAttackDamageType) {
-    const procedureRef = Schema.decodeUnknownResult(
-      BattleAttackProcedureExecutionRef,
-    )(value.procedureRef);
-    if (Result.isFailure(procedureRef)) return undefined;
+    if (!isBattleAttackProcedureExecutionRef(value.procedureRef)) {
+      return undefined;
+    }
     return {
       reactorId,
       distanceFeet,
-      procedureRef: procedureRef.success,
+      procedureRef: value.procedureRef,
       attackAbility,
       attackDamageType,
     };
   }
-  const procedureRef = Schema.decodeUnknownResult(
-    BattleStatBlockProcedureExecutionRef,
-  )(value.procedureRef);
-  if (Result.isFailure(procedureRef)) return undefined;
+  if (!isBattleStatBlockProcedureExecutionRef(value.procedureRef)) {
+    return undefined;
+  }
   return selection.statBlockDamageNotation === "static"
     ? {
         reactorId,
         distanceFeet,
-        procedureRef: procedureRef.success,
+        procedureRef: value.procedureRef,
         statBlockDamageNotation: "static",
       }
-    : { reactorId, distanceFeet, procedureRef: procedureRef.success };
+    : { reactorId, distanceFeet, procedureRef: value.procedureRef };
 }
 
 function parseCreatureSpaceTraversal(

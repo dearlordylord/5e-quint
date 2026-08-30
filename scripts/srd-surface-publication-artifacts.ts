@@ -13,7 +13,7 @@ import {
   RulesExcerptSchema,
 } from "../packages/surface/src/surface/schema.ts";
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
-import { effectRuntimeForPackageOwners } from "./package-effect-runtime.ts";
+import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
 
 const { Result, Schema } = effectRuntimeForPackageOwners(["surface"]).effect;
 

@@ -5,7 +5,7 @@ require("tsx/cjs");
 const {
   effect: { Result, Schema },
   schemaAst: SchemaAST,
-} = require("./package-effect-runtime.ts").effectRuntimeForPackageOwners([
+} = require("#dnd-package-effect-runtime").effectRuntimeForPackageOwners([
   "surface",
 ]);
 const { DAMAGE_TYPES } = require("../packages/shared/src/types.ts");

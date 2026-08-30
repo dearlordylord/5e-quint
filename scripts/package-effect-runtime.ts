@@ -6,14 +6,10 @@ import { fileURLToPath } from "node:url";
 import * as effect from "effect";
 import * as schemaAst from "effect/SchemaAST";
 
-const PACKAGE_EFFECT_RUNTIME_BUNDLE_VALIDATION =
-  "PACKAGE_EFFECT_RUNTIME_BUNDLE_VALIDATED" as const;
+const PACKAGE_EFFECT_OWNER_VALUES = ["surface", "battle-runtime"] as const;
+type PackageEffectOwner = (typeof PACKAGE_EFFECT_OWNER_VALUES)[number];
 
-declare const PACKAGE_EFFECT_RUNTIME_BUNDLE_VALIDATED: boolean | undefined;
-
-export type PackageEffectOwner = "surface" | "battle-runtime";
-
-export type PackageEffectRuntimePaths = {
+type PackageEffectRuntimePaths = {
   readonly packageOwner: string;
   readonly effectDirectory: string;
   readonly effectEntry: string;
@@ -103,7 +99,7 @@ export function assertSharedPackageEffectRuntime(
     PackageEffectRuntimePaths,
     ...PackageEffectRuntimePaths[],
   ],
-): PackageEffectRuntimePaths {
+): void {
   const [runtimeOwner, ...otherOwners] = packageRuntimePaths;
   for (const candidate of otherOwners) {
     if (
@@ -120,44 +116,49 @@ export function assertSharedPackageEffectRuntime(
       );
     }
   }
-  return runtimeOwner;
+}
+
+function validatedPackageEffectRuntimePaths(
+  packageOwners: readonly [PackageEffectOwner, ...PackageEffectOwner[]],
+): PackageEffectRuntimePaths {
+  const workspaceRequire = createRequire(
+    join(workspaceDirectory, "package.json"),
+  );
+  const workspacePaths = resolvePackageEffectRuntimePaths({
+    packageOwner: "Workspace",
+    packageDirectory: workspaceDirectory,
+    resolveModule: workspaceRequire.resolve,
+    realpath: realpathSync,
+  });
+  const packagePaths = packageOwners.map((owner) => {
+    if (!PACKAGE_EFFECT_OWNER_VALUES.includes(owner)) {
+      throw new Error(`Unknown package Effect runtime owner: ${owner}.`);
+    }
+    const packageEffectOwner = PACKAGE_EFFECT_OWNERS[owner];
+    const requireFromPackage = createRequire(
+      join(packageEffectOwner.packageDirectory, "package.json"),
+    );
+    return resolvePackageEffectRuntimePaths({
+      ...packageEffectOwner,
+      resolveModule: requireFromPackage.resolve,
+      realpath: realpathSync,
+    });
+  });
+  assertSharedPackageEffectRuntime([workspacePaths, ...packagePaths]);
+  return workspacePaths;
+}
+
+export function validatedPackageEffectRuntimeEntries(
+  packageOwners: readonly [PackageEffectOwner, ...PackageEffectOwner[]],
+): { readonly effectEntry: string; readonly schemaAstEntry: string } {
+  const { effectEntry, schemaAstEntry } =
+    validatedPackageEffectRuntimePaths(packageOwners);
+  return { effectEntry, schemaAstEntry };
 }
 
 export function effectRuntimeForPackageOwners(
   packageOwners: readonly [PackageEffectOwner, ...PackageEffectOwner[]],
 ): { readonly effect: typeof effect; readonly schemaAst: typeof schemaAst } {
-  const bundleWasValidated =
-    typeof PACKAGE_EFFECT_RUNTIME_BUNDLE_VALIDATED !== "undefined" &&
-    PACKAGE_EFFECT_RUNTIME_BUNDLE_VALIDATED;
-  if (!bundleWasValidated) {
-    const workspaceRequire = createRequire(
-      join(workspaceDirectory, "package.json"),
-    );
-    const workspacePaths = resolvePackageEffectRuntimePaths({
-      packageOwner: "Workspace",
-      packageDirectory: workspaceDirectory,
-      resolveModule: workspaceRequire.resolve,
-      realpath: realpathSync,
-    });
-    const packagePaths = packageOwners.map((owner) => {
-      const packageEffectOwner = PACKAGE_EFFECT_OWNERS[owner];
-      const requireFromPackage = createRequire(
-        join(packageEffectOwner.packageDirectory, "package.json"),
-      );
-      return resolvePackageEffectRuntimePaths({
-        ...packageEffectOwner,
-        resolveModule: requireFromPackage.resolve,
-        realpath: realpathSync,
-      });
-    });
-    assertSharedPackageEffectRuntime([workspacePaths, ...packagePaths]);
-  }
+  validatedPackageEffectRuntimePaths(packageOwners);
   return { effect, schemaAst };
-}
-
-export function validatedPackageEffectRuntimeBundleDefine(
-  packageOwners: readonly [PackageEffectOwner, ...PackageEffectOwner[]],
-): Readonly<Record<string, string>> {
-  effectRuntimeForPackageOwners(packageOwners);
-  return { [PACKAGE_EFFECT_RUNTIME_BUNDLE_VALIDATION]: "true" };
 }

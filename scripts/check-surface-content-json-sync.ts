@@ -26,7 +26,7 @@ import {
   describeSurfacePublicationDeltaIssue,
   verifySurfacePublicationDelta,
 } from "../packages/surface/src/surface/publication-delta-verifier.ts";
-import { effectRuntimeForPackageOwners } from "./package-effect-runtime.ts";
+import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
 
 const { Result, Schema } = effectRuntimeForPackageOwners(["surface"]).effect;
 

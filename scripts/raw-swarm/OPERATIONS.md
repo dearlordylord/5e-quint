@@ -200,9 +200,9 @@ role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
 The Effect 4 public declaration graph is a reviewed deterministic measurement:
-511 declaration files and 4,074,692 bytes. The file gate admits exactly those
+511 declaration files and 4,075,316 bytes. The file gate admits exactly those
 511 files, so any added file requires review. The reviewed byte gate is 10 MiB,
-leaving 6,411,068 bytes of explicit margin. Deterministic verification asserts
+leaving 6,410,444 bytes of explicit margin. Deterministic verification asserts
 the measured graph, exact-at-cap acceptance, and cap-plus-one rejection for
 both limits; raising either bound requires a new measured graph and review. The
 canonical measurement is owned beside the declaration emitter in

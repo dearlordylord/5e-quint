@@ -9,7 +9,7 @@ import { statBlockRechargeRollFillMatchesHole } from "../../packages/battle-runt
 import type { BattleFill } from "../../packages/battle-runtime/src/battle-state-execution.ts";
 
 import { canonicalJson, isJsonRecord, repoRoot } from "./transcript.ts";
-import { effectRuntimeForPackageOwners } from "../package-effect-runtime.ts";
+import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
 import type { JsonValue } from "./sdk-player/continuation-contract.ts";
 import {
   projectPlayerActsFromEvidence,

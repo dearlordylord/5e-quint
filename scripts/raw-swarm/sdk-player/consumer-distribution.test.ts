@@ -74,7 +74,7 @@ describe("SDK player consumer distribution", () => {
   test("bounds the declaration bundle to accessible declaration files", () => {
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(511);
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(10 * 1024 * 1024);
-    expect(PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN).toBe(6_411_068);
+    expect(PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN).toBe(6_410_444);
     const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-gate-"));
     writeFileSync(
       join(directory, "allowed.d.ts"),

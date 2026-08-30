@@ -140,6 +140,9 @@ export const BattleProcedureExecutionRef = NonEmptyTrimmedStringSchema.pipe(
 );
 export type BattleProcedureExecutionRef =
   typeof BattleProcedureExecutionRef.Type;
+export const isBattleProcedureExecutionRef = Schema.is(
+  BattleProcedureExecutionRef,
+);
 
 export const BattleProcedureExecutionCursor = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
@@ -162,6 +165,9 @@ export const BattleAttackProcedureExecutionRef =
   );
 export type BattleAttackProcedureExecutionRef =
   typeof BattleAttackProcedureExecutionRef.Type;
+export const isBattleAttackProcedureExecutionRef = Schema.is(
+  BattleAttackProcedureExecutionRef,
+);
 
 export const BattleStatBlockProcedureExecutionRef =
   BattleProcedureExecutionRef.pipe(
@@ -175,6 +181,9 @@ export const BattleStatBlockProcedureExecutionRef =
   );
 export type BattleStatBlockProcedureExecutionRef =
   typeof BattleStatBlockProcedureExecutionRef.Type;
+export const isBattleStatBlockProcedureExecutionRef = Schema.is(
+  BattleStatBlockProcedureExecutionRef,
+);
 
 export const BattleResourcePoolExecutionRef = NonEmptyTrimmedStringSchema.pipe(
   Schema.check(

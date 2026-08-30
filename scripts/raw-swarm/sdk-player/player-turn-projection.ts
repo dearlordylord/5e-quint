@@ -25,7 +25,7 @@ import {
   PointPoolResourceSchema,
   UseCountResourceSchema,
 } from "../../../packages/surface/src/surface/schema.ts";
-import { effectRuntimeForPackageOwners } from "../../package-effect-runtime.ts";
+import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
 import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue, jsonValue } from "./json-value.ts";
 import {

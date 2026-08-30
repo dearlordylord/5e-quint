@@ -4,16 +4,19 @@ import {
   cpSync,
   existsSync,
   lstatSync,
+  mkdtempSync,
   mkdirSync,
   readdirSync,
   realpathSync,
+  rmSync,
   writeFileSync,
 } from "node:fs";
-import { relative, resolve, sep } from "node:path";
-import { buildSync } from "esbuild";
+import { tmpdir } from "node:os";
+import { join, relative, resolve, sep } from "node:path";
+import { buildSync, type BuildOptions, type BuildResult } from "esbuild";
 
+import { validatedPackageEffectRuntimeEntries } from "#dnd-package-effect-runtime";
 import { CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS } from "../lane-classification.cjs";
-import { validatedPackageEffectRuntimeBundleDefine } from "../../package-effect-runtime.ts";
 import {
   benchmarkContextForRole,
   type BenchmarkContextDelivery,
@@ -89,11 +92,11 @@ const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
 /** The emitted declaration graph is compilation support, not an unbounded SDK. */
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE = {
   files: 511,
-  bytes: 4_074_692,
+  bytes: 4_075_316,
 } as const;
 /**
  * Effect 4's reviewed declaration graph uses every admitted file and leaves a
- * 6,411,068-byte margin below its reviewed 10 MiB cap. Any graph growth must
+ * 6,410,444-byte margin below its reviewed 10 MiB cap. Any graph growth must
  * update the reviewed measure explicitly.
  */
 export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES =
@@ -310,11 +313,40 @@ function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
   )}\n`;
 }
 
+type PackageEffectOwners = Parameters<
+  typeof validatedPackageEffectRuntimeEntries
+>[0];
+
+export function buildPackageEffectRuntimeBundle(
+  packageOwners: PackageEffectOwners,
+  options: Omit<BuildOptions, "alias" | "plugins">,
+): BuildResult {
+  const runtimeEntries = validatedPackageEffectRuntimeEntries(packageOwners);
+  const substitutionDirectory = mkdtempSync(
+    join(tmpdir(), "dnd-package-effect-runtime-bundle-"),
+  );
+  const substitutionPath = join(substitutionDirectory, "runtime.ts");
+  try {
+    writeFileSync(
+      substitutionPath,
+      `import * as effect from ${JSON.stringify(runtimeEntries.effectEntry)};
+import * as schemaAst from ${JSON.stringify(runtimeEntries.schemaAstEntry)};
+export const effectRuntimeForPackageOwners = () => ({ effect, schemaAst });
+`,
+      "utf8",
+    );
+    return buildSync({
+      ...options,
+      alias: { "#dnd-package-effect-runtime": substitutionPath },
+    });
+  } finally {
+    rmSync(substitutionDirectory, { recursive: true, force: true });
+  }
+}
+
 export function buildConsumerDistribution(
   input: ConsumerDistributionInput,
 ): void {
-  const packageEffectRuntimeBundleDefine =
-    validatedPackageEffectRuntimeBundleDefine(["surface", "battle-runtime"]);
   mkdirSync(input.destination, { recursive: true });
   mkdirSync(input.trustedDestination, { recursive: true });
   const declarationMeasure = emitPublicDeclarations(input.destination);
@@ -376,7 +408,7 @@ export function buildConsumerDistribution(
     resolve(input.trustedDestination, "tooling/typescript"),
     { recursive: true, dereference: true },
   );
-  buildSync({
+  buildPackageEffectRuntimeBundle(["surface", "battle-runtime"], {
     entryPoints: [
       resolve(repoRoot, CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS.supervisor),
     ],
@@ -385,11 +417,10 @@ export function buildConsumerDistribution(
     platform: "node",
     format: "esm",
     target: "node24",
-    define: packageEffectRuntimeBundleDefine,
     sourcemap: false,
     logLevel: "silent",
   });
-  buildSync({
+  buildPackageEffectRuntimeBundle(["surface", "battle-runtime"], {
     entryPoints: [
       resolve(repoRoot, CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS.playerClient),
     ],
@@ -398,7 +429,6 @@ export function buildConsumerDistribution(
     platform: "node",
     format: "esm",
     target: "node24",
-    define: packageEffectRuntimeBundleDefine,
     sourcemap: false,
     logLevel: "silent",
   });

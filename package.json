@@ -1,5 +1,8 @@
 {
   "private": true,
+  "imports": {
+    "#dnd-package-effect-runtime": "./scripts/package-effect-runtime.ts"
+  },
   "packageManager": "pnpm@10.29.3",
   "engines": {
     "node": ">=22.19.0"
