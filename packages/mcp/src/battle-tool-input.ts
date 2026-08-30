@@ -53,9 +53,7 @@ const ResolveBattleActArgsSchema = Schema.Struct({
   reactionSpellTargetFacts: Schema.optionalKey(
     Schema.Array(
       Schema.Struct({
-        kind: Schema.Literal(
-          "featherFallTriggerSelfOrVisibleCreatureWithinRange",
-        ),
+        kind: Schema.Literal("fallingCreatureMitigationTriggerWithinRange"),
         reactorId: CombatantIdTextSchema,
         fallingCreatureId: CombatantIdTextSchema,
         sourceProcedureRef: BattleProcedureExecutionRef,

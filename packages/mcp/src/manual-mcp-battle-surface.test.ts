@@ -819,7 +819,7 @@ describe("manual MCP battle surface coverage", () => {
       subject: fallingSubject,
       reactionSpellTargetFacts: [
         {
-          kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+          kind: "fallingCreatureMitigationTriggerWithinRange",
           reactorId: "fighter",
           fallingCreatureId: "ally",
           sourceProcedureRef: featherFallProcedureRef,
@@ -865,7 +865,7 @@ describe("manual MCP battle surface coverage", () => {
                 value: { targetIds: ["ally"] },
                 spatialFacts: [
                   {
-                    kind: "featherFallTargetFallingWithinRange",
+                    kind: "fallingCreatureTargetWithinRange",
                     casterId: "fighter",
                     targetId: "ally",
                     sourceProcedureRef: featherFallProcedureRef,
@@ -896,7 +896,7 @@ describe("manual MCP battle surface coverage", () => {
       root.sessionStore.battleSession?.state.combatants
         .get(allyId)
         ?.activeEffects.some(
-          (effect) => effect.kind === "featherFallMitigation",
+          (effect) => effect.kind === "fallingCreatureMitigationReaction",
         ),
     ).toBe(true);
   });
