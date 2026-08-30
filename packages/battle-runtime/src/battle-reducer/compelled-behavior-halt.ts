@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-compelled-halt-grovel
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-command-halt-grovel
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 
 import { movementFeet, type Round } from "@dnd/shared/types";

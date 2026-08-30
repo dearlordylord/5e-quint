@@ -1,29 +1,29 @@
 // Spell active-effect application extracted from spells-holes-fills.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-persistent-area-save-condition-escape-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-persistent-area-save-composite-area-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-stationary-persistent-area-area-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-translatingPersistentArea-area-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-area-movement-distance-damage-movement-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spatial-melee-spell-attack-proxy-attack-proxy spell.invocation-glyph-stored-summon-object-placement
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy spell.invocation-glyph-stored-summon-object-placement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-emanation
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.paladin-sacred-weapon
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-directional-persistent-area-line unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOVABLE_PERSISTENT_AREA_MOVABLE_ZONE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.STATIONARY_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.TRANSLATING_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING

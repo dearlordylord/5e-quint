@@ -2,7 +2,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-moonbeam-movable-zone
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOVABLE_PERSISTENT_AREA_MOVABLE_ZONE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 //
 // The Moonbeam Spell Procedure Profile: action-time Spell Slot casting creates
 // a caster-owned Concentration Cylinder. The runtime owns Spell Slot spending,

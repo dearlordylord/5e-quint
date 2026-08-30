@@ -1,5 +1,5 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-controlledVerticalSuspension-creature
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONTROLLED_VERTICAL_SUSPENSIOND_CREATURE_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // ControlledVerticalSuspension creature-branch state and caller-witnessed altitude controls.
 
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";

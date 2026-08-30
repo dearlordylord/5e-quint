@@ -9,7 +9,7 @@ import {
 } from "../battle-runtime-protocol.ts";
 import { spellSavingThrowOutcomeHoleId } from "../spells-damage-fills.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-controlledVerticalSuspension-creature
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 //

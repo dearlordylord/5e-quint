@@ -53,6 +53,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -94,7 +98,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -193,28 +197,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -395,12 +403,16 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -1041,12 +1053,16 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -1071,6 +1087,10 @@
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
@@ -1113,7 +1133,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -1212,28 +1232,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -1375,6 +1399,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -1416,7 +1444,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -1515,28 +1543,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -1725,28 +1757,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -1943,8 +1979,24 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+          "role": "proof-only"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
@@ -1968,7 +2020,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
@@ -2026,16 +2078,20 @@
       "profileKind": "table-caller",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -2061,16 +2117,20 @@
       "profileKind": "table-caller",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -2096,16 +2156,20 @@
       "profileKind": "table-caller",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -2131,16 +2195,20 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-compelled-next-turn-behavior.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -2228,6 +2296,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -2269,7 +2341,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -2411,28 +2483,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -2748,8 +2824,24 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+          "role": "proof-only"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
@@ -2773,7 +2865,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
@@ -2954,6 +3046,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
           "role": "semantic-core"
         },
@@ -3009,28 +3105,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -3072,8 +3172,12 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-falling-creature-mitigation-reaction.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -3495,6 +3599,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -3536,7 +3644,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -3635,7 +3743,7 @@
       "profileKind": "table-caller",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
           "role": "semantic-core"
         }
       ],
@@ -3705,12 +3813,16 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-persistent-area-core.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -3744,12 +3856,16 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-temporary-ability-check-roll-mode.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -3774,6 +3890,10 @@
       "profileId": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
@@ -3816,7 +3936,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -3915,28 +4035,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -4109,6 +4233,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -4150,7 +4278,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -4249,28 +4377,32 @@
       "profileKind": "reaction",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -4320,6 +4452,14 @@
       "profileKind": "reaction",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-interruption-reaction.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-after-damage-save-reaction.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
@@ -4333,23 +4473,23 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -4449,8 +4589,24 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-condition-immunity.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt",
+          "role": "proof-only"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
@@ -4474,7 +4630,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
@@ -4571,6 +4727,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -4612,7 +4772,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -4711,6 +4871,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -4752,7 +4916,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -4851,28 +5015,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -5057,8 +5225,12 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-jump-movement.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-fixed-cost-movement-replacement.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-jump-movement.qnt",
+          "role": "proof-only"
         }
       ],
       "runtime": "battle",
@@ -5133,6 +5305,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
           "role": "semantic-core"
         },
@@ -5188,6 +5364,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -5229,7 +5409,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -5328,28 +5508,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -5491,6 +5675,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -5532,7 +5720,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -5631,28 +5819,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -6344,6 +6536,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -6385,7 +6581,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -6484,28 +6680,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -6647,6 +6847,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -6688,7 +6892,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -6993,6 +7197,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -7034,7 +7242,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -7133,28 +7341,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -7296,6 +7508,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -7337,7 +7553,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -7436,28 +7652,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -7902,6 +8122,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -7943,7 +8167,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -8042,28 +8266,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -8205,12 +8433,16 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-targeting-save-interdiction.qnt",
           "role": "semantic-core"
         },
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
+          "role": "proof-only"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
@@ -8303,28 +8535,32 @@
       "profileKind": "reaction",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -8375,6 +8611,10 @@
       "profileId": "spell.scalar-buff",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt",
           "role": "semantic-core"
@@ -8486,6 +8726,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -8527,7 +8771,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -8626,28 +8870,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -8789,12 +9037,16 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt",
           "role": "semantic-core"
         },
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+          "role": "proof-only"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
@@ -8824,12 +9076,16 @@
       "profileKind": "table-caller",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt",
           "role": "semantic-core"
         },
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
+          "role": "proof-only"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
@@ -8946,6 +9202,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -8987,7 +9247,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -9113,6 +9373,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -9154,7 +9418,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -9253,6 +9517,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -9294,7 +9562,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -9448,6 +9716,10 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-simultaneous-multi-target-force-damage.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
           "role": "semantic-core"
         },
@@ -9489,7 +9761,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -9588,28 +9860,32 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/triggered-armor-defense.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
           "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-          "role": "semantic-core"
+          "role": "proof-only"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",

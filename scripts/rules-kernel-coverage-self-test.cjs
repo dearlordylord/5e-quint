@@ -1406,7 +1406,7 @@ function runSelfTest() {
       "const battleInterruptAttackExecutionSelectionWithFields = (fields) => Schema.Struct(fields);",
       "export const BattleSubjectSchema = Schema.Union(",
       "  Schema.Struct({ tag: Schema.Literal('companionLifecycle'), action: Schema.Literals(['temporarilyDismiss', 'reappear']) }),",
-      "  Schema.Struct({ tag: Schema.Literal('findFamiliarTouchSpell'), spellAction: Schema.Literals(['action', 'bonusAction']) }),",
+      "  Schema.Struct({ tag: Schema.Literal('spawnedCompanionTouchSpellProxy'), spellAction: Schema.Literals(['action', 'bonusAction']) }),",
       "  battleInterruptAttackExecutionSelectionWithFields({ tag: Schema.Literal('runtimeCommand'), command: Schema.Literal('retaliationAttack') }),",
       ");",
     ].join("\n") + "\n",

@@ -1330,8 +1330,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 77,
@@ -1577,8 +1577,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 77,
@@ -1824,8 +1824,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 77,
@@ -2071,8 +2071,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 77,
@@ -2318,8 +2318,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 77,
@@ -2553,8 +2553,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 64,
-              "numerator": 64
+              "denominator": 66,
+              "numerator": 66
             },
             "qntCoveredObligations": {
               "denominator": 77,

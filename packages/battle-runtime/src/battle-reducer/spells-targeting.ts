@@ -1,7 +1,7 @@
 // Spell target holes and target legality validation extracted from spells-holes-fills.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spatial-melee-spell-attack-proxy-attack-proxy spell.invocation-glyph-stored-summon-object-placement
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy spell.invocation-glyph-stored-summon-object-placement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magic-suppression-magical-effect-interdiction
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-range-increase
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE

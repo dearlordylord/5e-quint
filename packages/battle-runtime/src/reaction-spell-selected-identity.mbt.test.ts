@@ -2,10 +2,10 @@ import {
   battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
-// UNIT-IDENTITY-EVIDENCE: selected-identity-replay reaction-interruption shield hellish_rebuke spellCastInterruptionReaction
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay reaction-interruption shield hellish_rebuke counterspell
 // UNIT-IDENTITY-REPLAY: reaction-interruption shield doResolveShieldReactionSpellHit
 // UNIT-IDENTITY-REPLAY: reaction-interruption hellish_rebuke doResolveHellishRebukeFailedSavingThrow
-// UNIT-IDENTITY-REPLAY: reaction-interruption spellCastInterruptionReaction doResolveCounterspellMagicMissileCast
+// UNIT-IDENTITY-REPLAY: reaction-interruption counterspell doResolveCounterspellMagicMissileCast
 import { Result } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";

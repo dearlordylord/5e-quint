@@ -78,13 +78,13 @@
     },
     "qntProofCoverage": {
       "denominator": 150,
-      "numerator": 144,
-      "percent": "96%"
+      "numerator": 147,
+      "percent": "98%"
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 189,
-      "numerator": 165,
-      "percent": "87.3%"
+      "numerator": 168,
+      "percent": "88.9%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 189,
@@ -93,8 +93,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 205,
-      "numerator": 173,
-      "percent": "84.4%"
+      "numerator": 174,
+      "percent": "84.9%"
     },
     "runtimeMappingCoverage": {
       "denominator": 150,
@@ -308,6 +308,7 @@
       "id": "spell.invocation-slow-active-penalties",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
         "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
       ],
       "runtimeOwners": [
@@ -339,6 +340,10 @@
       ],
       "title": "Spell invocation applies Slow active penalties with target-turn and Somatic runtime restrictions",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle-tests.qnt"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts"
@@ -1819,7 +1824,7 @@
       "id": "spell.invocation-sleep-target-admission",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -2064,7 +2069,7 @@
       "id": "spell.invocation-sleep-repeat-save-lifecycle",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -2126,7 +2131,7 @@
       "id": "spell.invocation-fog-cloud-obscurement",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+        "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2153,7 +2158,7 @@
       "id": "spell.invocation-magical-darkness-point-origin",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+        "packages/battle-runtime/battle-runtime-magical-darkness-point-origin.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -3328,7 +3333,7 @@
       "id": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+        "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -3353,7 +3358,7 @@
       "id": "spell.invocation-hypnotic-pattern-control",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+        "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -3364,6 +3369,10 @@
       ],
       "title": "Spell invocation applies Hypnotic Pattern area control and shake-awake cleanup",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt"
+        },
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
@@ -4438,7 +4447,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
-        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-attack-override.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-attack-enhancement.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Magic Weapon item-enhancement Surface shape plus caller-supplied exact holder-plus-item identity and nonmagical weapon witness facts. It owns Bonus Action level-2-or-higher Spell Slot spending, one caster-owned item-attached Spell Effect, one-hour duration cleanup, same-caster recast replacement, other-caster active Magic Weapon rejection for the selected holder-plus-item weapon, magic-weapon status projection, and exact holder-plus-item +1/+2/+3 attack-roll and weapon damage-roll projection without mutating authored weapon records or adding spell-owned loadout state. Touch range, physical item selection, and nonmagical target verification remain table/caller witness facts at the fill boundary.",
       "taskRefs": [
@@ -4891,6 +4900,7 @@
       "id": "spell.invocation-magic-suppression-emanation",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
         "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt"
       ],
       "runtimeOwners": [
@@ -4906,6 +4916,10 @@
       ],
       "title": "Spell invocation suppresses tracked ongoing spell effects inside Antimagic Field",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt"
+        },
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-suppression-tests.qnt"
@@ -4924,6 +4938,7 @@
       "id": "spell.invocation-magic-suppression-action-interdiction",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
         "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt"
       ],
       "runtimeOwners": [
@@ -4942,6 +4957,10 @@
       "title": "Spell invocation blocks spellcasting and Magic actions inside Antimagic Field aura membership witnesses",
       "verificationOwners": [
         {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt"
+        },
+        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts"
         },
@@ -4955,6 +4974,7 @@
       "id": "spell.invocation-magic-suppression-magical-effect-interdiction",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
         "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt"
       ],
       "runtimeOwners": [
@@ -4970,6 +4990,10 @@
       ],
       "title": "Spell invocation blocks magical effects from targeting or affecting things inside Antimagic Field aura membership witnesses",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt"
+        },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts"
@@ -6213,7 +6237,8 @@
       "id": "spell.invocation-haste-positive",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt",
+        "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt",
         "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt"
       ],
       "runtimeOwners": [
@@ -6238,6 +6263,10 @@
       ],
       "title": "Spell invocation applies Haste's active positive target effects, restricted target-turn action, and spell-end lethargy",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath-tests.qnt"
+        },
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt"
@@ -7400,8 +7429,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 189,
-        "numerator": 165,
-        "percent": "87.3%"
+        "numerator": 168,
+        "percent": "88.9%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 189,
@@ -7458,7 +7487,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
@@ -7470,6 +7499,7 @@
         "profileId": "spell.invocation-slow-active-penalties",
         "profileKind": "spell-invocation",
         "qntOwners": [
+          "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
           "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
         ]
       },
@@ -8291,7 +8321,7 @@
         "profileId": "spell.invocation-sleep-target-admission",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+          "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
         ]
       },
       {
@@ -8307,7 +8337,7 @@
         "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+          "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
         ]
       },
       {
@@ -8345,7 +8375,7 @@
         "profileId": "spell.invocation-fog-cloud-obscurement",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+          "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
         ]
       },
       {
@@ -8361,7 +8391,7 @@
         "profileId": "spell.invocation-magical-darkness-point-origin",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+          "packages/battle-runtime/battle-runtime-magical-darkness-point-origin.qnt"
         ]
       },
       {
@@ -8898,8 +8928,7 @@
           "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
           "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
           "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
-        ],
-        "semanticOwnerPolicy": "profile-local-semantic-core"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -9097,7 +9126,7 @@
         "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+          "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt"
         ]
       },
       {
@@ -9113,7 +9142,7 @@
         "profileId": "spell.invocation-hypnotic-pattern-control",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+          "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt"
         ]
       },
       {
@@ -9961,11 +9990,12 @@
         "profileId": "spell.invocation-magic-suppression-emanation",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt"
+          "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt",
+          "packages/battle-runtime/battle-runtime-magic-suppression.qnt"
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION",
@@ -9977,11 +10007,12 @@
         "profileId": "spell.invocation-magic-suppression-action-interdiction",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt"
+          "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt",
+          "packages/battle-runtime/battle-runtime-magic-suppression.qnt"
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION",
@@ -9993,7 +10024,8 @@
         "profileId": "spell.invocation-magic-suppression-magical-effect-interdiction",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt"
+          "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt",
+          "packages/battle-runtime/battle-runtime-magic-suppression.qnt"
         ]
       },
       {
@@ -10013,7 +10045,7 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
@@ -10157,8 +10189,7 @@
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
-        ],
-        "semanticOwnerPolicy": "profile-local-semantic-core"
+        ]
       },
       {
         "joinStatus": "covered",
@@ -10470,7 +10501,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
@@ -10488,8 +10519,9 @@
         "profileId": "spell.invocation-haste-positive",
         "profileKind": "spell-invocation",
         "qntOwners": [
+          "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt",
           "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
-          "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+          "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt"
         ],
         "semanticOwnerPolicy": "profile-local-semantic-core"
       },
@@ -10666,8 +10698,8 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 205,
-          "numerator": 173,
-          "percent": "84.4%"
+          "numerator": 174,
+          "percent": "84.9%"
         }
       },
       "units": [
@@ -12929,7 +12961,7 @@
               "profileId": "spell.invocation-fog-cloud-obscurement",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+                "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
               ]
             }
           ],
@@ -13047,10 +13079,10 @@
           "unitId": "guiding_bolt"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
@@ -13068,8 +13100,9 @@
               "profileId": "spell.invocation-haste-positive",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt",
                 "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
-                "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
+                "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt"
               ],
               "semanticOwnerPolicy": "profile-local-semantic-core"
             }
@@ -13232,7 +13265,7 @@
               "profileId": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+                "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt"
               ]
             }
           ],
@@ -13324,7 +13357,7 @@
               "profileId": "spell.invocation-hypnotic-pattern-control",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+                "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt"
               ]
             }
           ],
@@ -15407,10 +15440,10 @@
           "unitId": "searing_smite"
         },
         {
-          "joinStatus": "covered",
+          "joinStatus": "mapped-open",
           "profiles": [
             {
-              "joinStatus": "covered",
+              "joinStatus": "mapped-open",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
@@ -15481,8 +15514,7 @@
                 "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
                 "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
-              ],
-              "semanticOwnerPolicy": "profile-local-semantic-core"
+              ]
             }
           ],
           "unitId": "shield"
@@ -15630,7 +15662,7 @@
               "profileId": "spell.invocation-sleep-target-admission",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+                "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
               ]
             },
             {
@@ -15646,17 +15678,17 @@
               "profileId": "spell.invocation-sleep-repeat-save-lifecycle",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+                "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
               ]
             }
           ],
           "unitId": "sleep"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
@@ -15668,6 +15700,7 @@
               "profileId": "spell.invocation-slow-active-penalties",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
                 "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
               ]
             }
@@ -15930,8 +15963,7 @@
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
-              ],
-              "semanticOwnerPolicy": "profile-local-semantic-core"
+              ]
             }
           ],
           "unitId": "spiritual_weapon"
@@ -20811,6 +20843,30 @@
         "battle.spell-access-magic-initiate-casting"
       ],
       "taskId": "ISSUE-278-MAGIC-INITIATE-SPELL-ACCESS"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused Quint proofs cover the generic save-gated turn-constraint bundle, including end-turn repeat-save cleanup and the Somatic spell-failure frontier.",
+      "profileIds": [
+        "spell.invocation-slow-active-penalties"
+      ],
+      "taskId": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused Quint proofs cover active magic-suppression aura action-interdiction projection and the promoted focused MBT fixture.",
+      "profileIds": [
+        "spell.invocation-magic-suppression-action-interdiction"
+      ],
+      "taskId": "L3-FOLLOWUP-ANTIMAGIC-AURA-ACTION-INTERDICTION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused Quint proofs cover generic magical-effect targeting and delivery interdiction under caller-supplied suppression-aura membership.",
+      "profileIds": [
+        "spell.invocation-magic-suppression-magical-effect-interdiction"
+      ],
+      "taskId": "L3-FOLLOWUP-ANTIMAGIC-MAGICAL-TARGETING-AND-EFFECT-INTERDICTION"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -33875,6 +33931,7 @@
           "id": "spell.invocation-magic-suppression-emanation",
           "profileKind": "spell-invocation",
           "qntOwners": [
+            "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
             "packages/battle-runtime/battle-runtime-antimagic-suppression.qnt"
           ],
           "runtimeOwners": [
@@ -33890,6 +33947,10 @@
           ],
           "title": "Spell invocation suppresses tracked ongoing spell effects inside Antimagic Field",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/battle-runtime/battle-runtime-antimagic-suppression-tests.qnt"
@@ -33908,6 +33969,7 @@
           "id": "spell.invocation-magic-suppression-action-interdiction",
           "profileKind": "spell-invocation",
           "qntOwners": [
+            "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
             "packages/battle-runtime/battle-runtime-magic-suppression-action-interdiction.mbt.qnt"
           ],
           "runtimeOwners": [
@@ -33926,6 +33988,10 @@
           "title": "Spell invocation blocks spellcasting and Magic actions inside Antimagic Field aura membership witnesses",
           "verificationOwners": [
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts"
             },
@@ -33939,6 +34005,7 @@
           "id": "spell.invocation-magic-suppression-magical-effect-interdiction",
           "profileKind": "spell-invocation",
           "qntOwners": [
+            "packages/battle-runtime/battle-runtime-magic-suppression.qnt",
             "packages/battle-runtime/battle-runtime-magic-suppression-magical-effect-interdiction.mbt.qnt"
           ],
           "runtimeOwners": [
@@ -33954,6 +34021,10 @@
           ],
           "title": "Spell invocation blocks magical effects from targeting or affecting things inside Antimagic Field aura membership witnesses",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-magic-suppression-tests.qnt"
+            },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/antimagic-field-magical-effect-interdiction.mbt.test.ts"
@@ -36594,7 +36665,7 @@
           "id": "spell.invocation-magical-darkness-point-origin",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+            "packages/battle-runtime/battle-runtime-magical-darkness-point-origin.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -38803,7 +38874,7 @@
           "id": "spell.invocation-fog-cloud-obscurement",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
+            "packages/battle-runtime/battle-runtime-persistent-area-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -39543,7 +39614,8 @@
           "id": "spell.invocation-haste-positive",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt",
+            "packages/shared-algebras/proofs/rule-core/composite-target-buff-core.qnt",
+            "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath.qnt",
             "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt"
           ],
           "runtimeOwners": [
@@ -39568,6 +39640,10 @@
           ],
           "title": "Spell invocation applies Haste's active positive target effects, restricted target-turn action, and spell-end lethargy",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-composite-enhancement-aftermath-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core-examples.qnt"
@@ -45137,7 +45213,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
-            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-attack-override.ts"
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/weapon-attack-enhancement.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Magic Weapon item-enhancement Surface shape plus caller-supplied exact holder-plus-item identity and nonmagical weapon witness facts. It owns Bonus Action level-2-or-higher Spell Slot spending, one caster-owned item-attached Spell Effect, one-hour duration cleanup, same-caster recast replacement, other-caster active Magic Weapon rejection for the selected holder-plus-item weapon, magic-weapon status projection, and exact holder-plus-item +1/+2/+3 attack-roll and weapon damage-roll projection without mutating authored weapon records or adding spell-owned loadout state. Touch range, physical item selection, and nonmagical target verification remain table/caller witness facts at the fill boundary.",
           "taskRefs": [
@@ -46172,7 +46248,7 @@
           "id": "spell.invocation-sleep-target-admission",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -46202,7 +46278,7 @@
           "id": "spell.invocation-sleep-repeat-save-lifecycle",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -46412,6 +46488,7 @@
           "id": "spell.invocation-slow-active-penalties",
           "profileKind": "spell-invocation",
           "qntOwners": [
+            "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle.qnt",
             "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
           ],
           "runtimeOwners": [
@@ -46443,6 +46520,10 @@
           ],
           "title": "Spell invocation applies Slow active penalties with target-turn and Somatic runtime restrictions",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-turn-constraint-bundle-tests.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts"
@@ -47858,7 +47939,7 @@
           "id": "spell.invocation-hideous-laughter-repeat-save-lifecycle",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+            "packages/battle-runtime/battle-runtime-repeated-save-condition-control.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -47933,7 +48014,7 @@
           "id": "spell.invocation-hypnotic-pattern-control",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+            "packages/battle-runtime/battle-runtime-save-gated-control-escape.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -47944,6 +48025,10 @@
           ],
           "title": "Spell invocation applies Hypnotic Pattern area control and shake-awake cleanup",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-control-escape-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"

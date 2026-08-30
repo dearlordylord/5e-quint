@@ -503,4 +503,4 @@ function activeInterruptWithReplayContinuationAttackDamageChanges(
     ],
   };
 }
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.TRANSLATING_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE

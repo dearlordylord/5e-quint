@@ -1,6 +1,6 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dancing-lights-movable-dim-light
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOVABLE_LIGHT_EMITTER_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
 //
 // The Dancing Lights profile family: a Magic Action cantrip cast creates either
 // one combined Medium form or one to four separate movable Dim Light emitters,

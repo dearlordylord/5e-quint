@@ -1,5 +1,5 @@
 // MovablePersistentArea movable Cylinder runtime calculations.
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOVABLE_PERSISTENT_AREA_MOVABLE_ZONE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 
 import { halfDamageAfterSuccessfulSave } from "./focused-spell-hazard-damage.ts";
 

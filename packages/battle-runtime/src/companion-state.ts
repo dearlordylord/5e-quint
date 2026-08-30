@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.companion-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import type { RetainedCompanionProtocol } from "@dnd/shared-algebras/companion-protocol-algebra";
 import { Hp, type PositiveInteger } from "@dnd/shared/types";

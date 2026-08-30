@@ -7,8 +7,8 @@ import {
   battleActDruidWildShapePresentation,
   battleActSpellPresentation,
 } from "./battle-act-composition.ts";
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME persistentAreaSaveDamage
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-persistentAreaSaveDamage-movable-zone
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MOONBEAM-MOVABLE-ZONE-RUNTIME moonbeam
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-moonbeam-movable-zone
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 import { describe, expect, test } from "vitest";
 import {

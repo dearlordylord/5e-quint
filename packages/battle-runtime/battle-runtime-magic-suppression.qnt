@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-antimagic-field-ongoing-spell-suppression spell.invocation-antimagic-field-action-interdiction spell.invocation-antimagic-field-magical-effect-interdiction
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-magic-suppression-emanation spell.invocation-magic-suppression-action-interdiction spell.invocation-magic-suppression-magical-effect-interdiction
 
 module battleRuntimeMagicSuppression {
   type SuppressibleOngoingEffect = {

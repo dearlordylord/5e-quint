@@ -2,7 +2,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-flaming-sphere-hazard-ram
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAM_MOVABLE_PERSISTENT_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
 //
 // The ramMovablePersistentArea Spell Procedure Profile: action-time Spell Slot casting
 // creates a caster-owned Concentration sphere hazard. The runtime owns Spell

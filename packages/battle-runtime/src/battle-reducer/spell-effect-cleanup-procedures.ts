@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.TRANSLATING_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import { Match } from "effect";
 import type { BattleSubject } from "../battle-subjects.ts";

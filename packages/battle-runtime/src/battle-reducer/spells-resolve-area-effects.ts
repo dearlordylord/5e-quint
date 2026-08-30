@@ -1,17 +1,17 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-persistent-area-trait-obscurement spell.invocation-ram-movable-persistent-area-hazard-ram spell.invocation-movablePersistentArea-movable-zone
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-area-movement-distance-damage-movement-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-directional-persistent-area-line
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-persistent-area-save-condition-escape-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-persistent-area-save-composite-area-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-stationary-persistent-area-area-hazard
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-translatingPersistentArea-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-fog-cloud-obscurement spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.RAM_MOVABLE_PERSISTENT_AREA_HAZARD_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.STATIONARY_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.TRANSLATING_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOVABLE_PERSISTENT_AREA_MOVABLE_ZONE_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 import { optionalProperty } from "../optional-property.ts";

@@ -13,7 +13,7 @@
 //   60 feet and resolves a Dexterity save plus Fire damage.
 // - UBIQUITOUS_LANGUAGE.md: Reaction, Spell Slot, Magic Action, Saving Throw,
 //   Damage Roll, and Boundary Crossing.
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.reaction-spellCastInterruptionReaction spell.reaction-hellish-rebuke
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.reaction-counterspell spell.reaction-hellish-rebuke
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {

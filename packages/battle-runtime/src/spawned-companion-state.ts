@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.companion-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 import type { BattleState } from "./battle-state-execution.ts";
 import type { CombatantId } from "./identity.ts";

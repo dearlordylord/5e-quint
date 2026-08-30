@@ -1,10 +1,10 @@
 import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 import { ongoingConcentrationAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-translatingPersistentArea-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.TRANSLATING_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 //
 // TranslatingPersistentArea-shaped hazard: action-time Spell Slot casting creates a
 // caster-owned Concentration Sphere. The runtime owns Spell Slot spending,

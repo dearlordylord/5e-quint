@@ -1,5 +1,5 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-spellCastInterruptionReaction
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.reaction-counterspell
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 import { DcSourceSchema } from "@dnd/surface/surface/schema";

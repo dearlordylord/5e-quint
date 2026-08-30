@@ -3,7 +3,7 @@ import { ongoingConcentrationAreaSpellFacts } from "../ongoing-concentration-are
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.STATIONARY_PERSISTENT_AREA_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
 //
 // Insect Plague: action-time Spell Slot casting creates a caster-owned
 // Concentration Sphere. The runtime owns Spell Slot spending, Concentration

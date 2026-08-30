@@ -1,13 +1,13 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
-// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow dragons_breath flame_blade flaming_sphere heat_metal persistentAreaSaveDamage ray_of_enfeeblement scorching_ray shatter spiritual_weapon
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow dragons_breath flame_blade flaming_sphere heat_metal moonbeam ray_of_enfeeblement scorching_ray shatter spiritual_weapon
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH acid_arrow doDiscoverAcidArrowAttackTiming
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH dragons_breath doDiscoverDragonsBreathInitial
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH flame_blade doDiscoverFlameBladeHeldObject
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH flaming_sphere doDiscoverFlamingSphereHazard
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH heat_metal doDiscoverHeatMetalObjectContact
-// UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH persistentAreaSaveDamage doDiscoverMoonbeamMovableZone
+// UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH moonbeam doDiscoverMoonbeamMovableZone
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH ray_of_enfeeblement doDiscoverRayOfEnfeeblementSaveGate
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH scorching_ray doDiscoverScorchingRayAttackSequence
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH shatter doDiscoverShatterSaveGatedDamage

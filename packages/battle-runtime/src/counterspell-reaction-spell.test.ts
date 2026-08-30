@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-spellCastInterruptionReaction spell.reaction-shield spell.invocation-damage-save-or-attack
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-counterspell spell.reaction-shield spell.invocation-damage-save-or-attack
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";

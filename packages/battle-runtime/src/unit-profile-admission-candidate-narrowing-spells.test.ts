@@ -1,7 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84A fire_bolt
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84B sorcerous_burst
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV59B starry_wisp
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield spellCastInterruptionReaction
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT22 shield counterspell
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-marked-damage-rider
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
