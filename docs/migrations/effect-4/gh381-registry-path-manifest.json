@@ -4,7 +4,7 @@
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
   "provenance": {
-    "registryCommit": "2dd59f58bbe4da18ca4942df5b38da26f6f907ef",
+    "registryCommit": "ce4058b5e42d1daf4df51ba37e9a0de0cf815577",
     "generator": {
       "path": "scripts/gh381-registry-path-manifest.cjs",
       "sha256": "d48ee1ce403362f49f7f03c55f0be276dd5337740cea5f3512367c167d3ad9d5"
@@ -12,7 +12,7 @@
     "inputs": [
       {
         "path": "plans/rules-kernel-coverage/obligations.jsonl",
-        "sha256": "2915029f71176084d0e8dae4a6cffdf913b57991d0d61d8c7d8feb4a216a0862"
+        "sha256": "b60fe45f52a56eb8af417b0d2c74c26c794e69a508e671dea9b8d7a2d298972a"
       },
       {
         "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
@@ -432,8 +432,10 @@
     "packages/battle-runtime/src/battle-reducer/glyph-durable-occurrence.ts",
     "packages/battle-runtime/src/battle-reducer/granted-area-save-damage.ts",
     "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+    "packages/battle-runtime/src/battle-reducer/interrupt-checkpoint-identity.ts",
     "packages/battle-runtime/src/battle-reducer/interrupt-continuation.ts",
     "packages/battle-runtime/src/battle-reducer/interrupt-execution.ts",
+    "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts",
     "packages/battle-runtime/src/battle-reducer/linked-defense-damage-share.ts",
     "packages/battle-runtime/src/battle-reducer/magic-suppression-action-interdiction.ts",
     "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
@@ -495,6 +497,7 @@
     "packages/battle-runtime/src/battle-reducer/targeting-save-interdiction.ts",
     "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
     "packages/battle-runtime/src/battle-reducer/unit-features.ts",
+    "packages/battle-runtime/src/battle-runtime-transaction.ts",
     "packages/battle-runtime/src/battle-state-execution.ts",
     "packages/battle-runtime/src/battle-subjects.ts",
     "packages/battle-runtime/src/companion-communication.ts",
@@ -584,6 +587,8 @@
     "packages/battle-runtime/src/antimagic-field-action-interdiction.mbt.test.ts",
     "packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts",
     "packages/battle-runtime/src/battle-runtime-hunters-mark-and-hex.test.ts",
+    "packages/battle-runtime/src/battle-runtime-interrupt-lifecycle-continuation-boundaries.test.ts",
+    "packages/battle-runtime/src/battle-runtime-transaction-unwind.test.ts",
     "packages/battle-runtime/src/blur-attack-roll-defense-lifecycle.mbt.test.ts",
     "packages/battle-runtime/src/cloudkill-area-hazard.mbt.test.ts",
     "packages/battle-runtime/src/cloudkill-strong-wind-dispersal.test.ts",
@@ -929,8 +934,8 @@
   ],
   "pathCounts": {
     "obligationCount": 58,
-    "sourceOrPure": 180,
-    "parityOrFixture": 147,
+    "sourceOrPure": 183,
+    "parityOrFixture": 149,
     "qntFixtureSpec": 46,
     "deferredLaterIssue": 2
   },
