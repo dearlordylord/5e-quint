@@ -1595,8 +1595,12 @@ export const continueBattle: PlayerContinuation = (context) => {
   if (awaitingTarget.tag !== "needsHoles") {
     throw new Error("Expected a static Stat Block attack target frontier");
   }
-  const targetHole = awaitingTarget.holes.find(
-    (hole) => hole.kind === "targetChoice" && hole.attack !== undefined,
+  if (awaitingTarget.envelope.frontier.kind !== "holes") {
+    throw new Error("Expected a static Stat Block attack target Hole frontier");
+  }
+  const targetHole = awaitingTarget.envelope.frontier.holes.find(
+    (hole: (typeof attack.initialHoles)[number]) =>
+      hole.kind === "targetChoice" && hole.attack !== undefined,
   );
   if (targetHole?.kind !== "targetChoice" || targetHole.attack === undefined) {
     throw new Error("Expected a static Stat Block attack target hole");
@@ -1624,7 +1628,7 @@ export const continueBattle: PlayerContinuation = (context) => {
   };
   const resolved = context.sdk.resolveBattleRuntimeSubject({
     session: awaitingTarget.session,
-    subject: awaitingTarget.subject,
+    subject: awaitingTarget.envelope.frontier.subject,
     fills: [targetFill],
   });
   if (resolved.tag !== "needsHoles") {
@@ -1689,7 +1693,15 @@ export const continueBattle: PlayerContinuation = (context) => {
         expect(targetCall).toMatchObject({
           operation: "resolveBattleRuntimeSubject",
           outcome: "returned",
-          result: { tag: "needsHoles", holes: [{ kind: "attackRoll" }] },
+          result: {
+            tag: "needsHoles",
+            envelope: {
+              frontier: {
+                kind: "holes",
+                holes: [{ kind: "attackRoll" }],
+              },
+            },
+          },
           input: {
             fills: [
               {

@@ -928,7 +928,7 @@ describe("level 1 SDK RAW integration", () => {
     const wizardBuild = finalizedLevelOneWizardBuild({
       draftIdText: "draft:l1-sdk-wizard-table-adjudicated-cantrip",
       expectedBuildLabel: "Wizard table-adjudicated cantrip",
-      cantrips: ["mage_hand", fireBoltSpellId, "ray_of_frost"],
+      cantrips: ["message", fireBoltSpellId, "ray_of_frost"],
       spellbook: [
         "detect_magic",
         "feather_fall",
@@ -946,7 +946,7 @@ describe("level 1 SDK RAW integration", () => {
     });
 
     expect(wizardBuild.spellcasting?.sources[0]?.cantrips).toEqual([
-      "mage_hand",
+      "message",
       fireBoltSpellId,
       "ray_of_frost",
     ]);
