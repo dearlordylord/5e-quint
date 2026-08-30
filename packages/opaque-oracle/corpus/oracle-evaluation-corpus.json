@@ -1587,9 +1587,9 @@
                     "movementCostFeet": 10,
                     "provokedOpportunityAttacks": [
                       {
+                        "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-b\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
                         "reactorId": "corpus:stat-block-b",
-                        "distanceFeet": 5,
-                        "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-b\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}"
+                        "distanceFeet": 5
                       }
                     ]
                   }
@@ -47491,13 +47491,13 @@
                         {
                           "kind": "nestedProcedure",
                           "subject": {
+                            "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-b\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}",
                             "tag": "runtimeCommand",
                             "actorId": "corpus:stat-block-a",
                             "command": "opportunityAttack",
                             "reactorId": "corpus:stat-block-b",
                             "targetId": "corpus:stat-block-a",
-                            "distanceFeet": 5,
-                            "procedureRef": "{\"scopeRef\":\"{\\\"battleId\\\":\\\"oracle:battle\\\",\\\"combatantId\\\":\\\"corpus:stat-block-b\\\",\\\"kind\\\":\\\"statBlockExecution\\\",\\\"ordinal\\\":0}\",\"kind\":\"procedure\",\"ordinal\":0}"
+                            "distanceFeet": 5
                           },
                           "initialHoles": []
                         }
