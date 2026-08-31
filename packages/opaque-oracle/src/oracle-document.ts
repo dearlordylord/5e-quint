@@ -31,6 +31,9 @@ function projectDocumentCheck(
     return projectDocumentFilterGroup(check, path);
   }
   if (check.annotations?.toJsonSchema !== undefined) return check;
+  if (documentBrandedRefinementIdentifier(check, path) !== undefined) {
+    return undefined;
+  }
   throw new Error(
     `Document schema has an unannotated refinement at ${path} (${Reflect.ownKeys(
       check.annotations ?? {},
@@ -40,6 +43,43 @@ function projectDocumentCheck(
         ", ",
       )}); mark its semantic admission reason or use a structural check with JSON Schema representation.`,
   );
+}
+
+function documentBrandedRefinementIdentifier(
+  check: AST.Check<unknown>,
+  path: string,
+): string | undefined {
+  const brands = check.annotations?.brands;
+  if (brands === undefined) return undefined;
+  if (
+    !Array.isArray(brands) ||
+    !brands.every((brand): brand is string => typeof brand === "string")
+  ) {
+    throw new Error(
+      `Document schema has invalid brand identifiers at ${path}.`,
+    );
+  }
+  if (brands.length === 1) return brands[0];
+  throw new Error(
+    `Document schema has an unrepresentable refinement with ${String(
+      brands.length,
+    )} brand identifiers at ${path}.`,
+  );
+}
+
+function documentCheckIdentifiers(
+  check: AST.Check<unknown>,
+  path: string,
+): readonly string[] {
+  if (documentCheckIsSemantic(check, path)) return [];
+  if (check._tag === "FilterGroup") {
+    return check.checks.flatMap((nested, index) =>
+      documentCheckIdentifiers(nested, `${path}<${index}>`),
+    );
+  }
+  if (check.annotations?.toJsonSchema !== undefined) return [];
+  const identifier = documentBrandedRefinementIdentifier(check, path);
+  return identifier === undefined ? [] : [identifier];
 }
 
 function documentCheckIsSemantic(
@@ -73,6 +113,55 @@ function projectDocumentFilterGroup(
       );
 }
 
+function documentAstIdentifier(
+  checks: readonly AST.Check<unknown>[] | undefined,
+  path: string,
+  annotatedIdentifier: string | undefined,
+): string | undefined {
+  const identifiers = [
+    ...new Set([
+      ...(annotatedIdentifier === undefined ? [] : [annotatedIdentifier]),
+      ...(checks?.flatMap((check, index) =>
+        documentCheckIdentifiers(check, `${path}<check:${index}>`),
+      ) ?? []),
+    ]),
+  ];
+  if (identifiers.length > 1) {
+    throw new Error(
+      `Document schema has conflicting refinement identifiers at ${path}: ${identifiers.join(
+        ", ",
+      )}.`,
+    );
+  }
+  return identifiers[0];
+}
+
+function documentAnnotatedIdentifier(
+  ast: AST.AST,
+  path: string,
+): string | undefined {
+  const identifier = ast.annotations?.identifier;
+  if (identifier === undefined || typeof identifier === "string") {
+    return identifier;
+  }
+  throw new Error(`Document schema has an invalid identifier at ${path}.`);
+}
+
+function projectDocumentChecks(
+  checks: readonly AST.Check<unknown>[] | undefined,
+  path: string,
+): [AST.Check<unknown>, ...AST.Check<unknown>[]] | undefined {
+  const projected = checks?.flatMap((check, index) => {
+    const projectedCheck = projectDocumentCheck(
+      check,
+      `${path}<check:${index}>`,
+    );
+    return projectedCheck === undefined ? [] : [projectedCheck];
+  });
+  const [first, ...rest] = projected ?? [];
+  return first === undefined ? undefined : [first, ...rest];
+}
+
 /** Project the encoded JSON document shape while removing marked semantic checks. */
 function projectDocumentAst(root: AST.AST): AST.AST {
   const projected = new WeakMap<AST.AST, AST.AST>();
@@ -84,22 +173,25 @@ function projectDocumentAst(root: AST.AST): AST.AST {
       recurrent.recur === undefined
         ? ast
         : recurrent.recur((child) => project(child, path));
-    const checks = nested.checks?.flatMap((check, index) => {
-      const projectedCheck = projectDocumentCheck(
-        check,
-        `${path}<check:${index}>`,
-      );
-      return projectedCheck === undefined ? [] : [projectedCheck];
-    });
+    const checks = projectDocumentChecks(nested.checks, path);
+    const identifier = documentAstIdentifier(
+      nested.checks,
+      path,
+      documentAnnotatedIdentifier(nested, path),
+    );
     const descriptors = Object.getOwnPropertyDescriptors(nested);
-    descriptors.checks.value =
-      checks === undefined || checks.length === 0
-        ? undefined
-        : (checks as [AST.Check<unknown>, ...AST.Check<unknown>[]]);
+    descriptors.checks.value = checks;
     const result = Object.create(
       Object.getPrototypeOf(nested),
       descriptors,
     ) as AST.AST;
+    if (identifier !== undefined) {
+      Object.defineProperty(result, "annotations", {
+        configurable: true,
+        enumerable: true,
+        value: { ...nested.annotations, identifier },
+      });
+    }
     projected.set(ast, result);
     return result;
   };

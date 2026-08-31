@@ -24,6 +24,7 @@ import {
   OracleEvaluationBatchDocumentSchema,
   OracleTraceDocumentJsonSchema,
   OracleTraceDocumentSchema,
+  documentJsonSchema,
   documentSchema,
 } from "./oracle-document.ts";
 import {
@@ -1543,6 +1544,27 @@ describe("Opaque Oracle document JSON Schemas", () => {
       Schema.check(Schema.makeFilter((value) => value.length > 0)),
     );
     expect(() => documentSchema(unmarked)).toThrow("unannotated refinement");
+  });
+
+  it("uses an Effect brand as the identifier for its structural Document projection", () => {
+    const branded = Schema.String.pipe(
+      Schema.check(Schema.makeFilter((value) => value.length > 0)),
+      Schema.brand("SyntheticNonEmptyText"),
+    );
+    const document = documentSchema(branded);
+
+    expect(Result.isFailure(Schema.decodeUnknownResult(branded)(""))).toBe(
+      true,
+    );
+    expect(Result.isSuccess(Schema.decodeUnknownResult(document)(""))).toBe(
+      true,
+    );
+    expect(documentJsonSchema(document)).toMatchObject({
+      $ref: "#/$defs/SyntheticNonEmptyText",
+      $defs: {
+        SyntheticNonEmptyText: { type: "string" },
+      },
+    });
   });
 
   it("keeps canonical equality type-aware, order-aware, and set sorting non-deduplicating", () => {
