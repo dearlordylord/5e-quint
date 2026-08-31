@@ -1230,6 +1230,24 @@ The authored-identity boundary also passes after removing the stale generic
 `runtimeCommandSubject` exemption: 4,735 literals, 795 checked source files,
 552 exercised exact exemptions, and 1,214 reviewed sites / 1,325 occurrences.
 
+The subsequent master-reconciliation authored-identity audit passes with
+7,328 literals from 283 decoded Surface spell records, 817 checked source
+files, 762 excluded fixture or artifact files, and the unchanged 9 narrowly
+allowlisted boundary files. It exercises 620 exact exemptions and authenticates
+1,294 reviewed sites / 1,405 occurrences with SHA-256
+`1a6b83fc6597ebcb817af5b723557f9e8e3cc219562c584de14f3e45bc4ecc02`.
+The audit adds 68 exact exemption keys covering 79 reviewed collision sites:
+55 teleportation keys, 4 Fly Speed keys, 6 illumination keys, 2 damage
+Resistance keys, and 1 healing-link key. Seven Haste-named reusable execution
+declarations were structurally renamed instead of exempted. Normalized evidence
+resolves the prior one-site disagreement: one `storedLightEmitters` occurrence in
+`battleSnapshotInvariantsHold` was replaced by two occurrences in extracted
+serialized-reference and environmental-source validation owners, while the
+`heldLightHurl` semantic relocation into a presentation-procedure set remained
+inside the narrow presentation boundary and was not collision-certificate
+evidence. This focused static checkpoint does not claim a new final fixed point
+or completion of the remaining public gates.
+
 Direct public `pnpm build`, `pnpm typecheck`, and `pnpm test` passed. The exact
 commands, process-drain proof, semantic delta disposition, reviewer findings,
 and non-migration limitations are owned by

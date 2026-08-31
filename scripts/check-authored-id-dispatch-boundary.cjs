@@ -151,6 +151,15 @@ function exactCollision(spellId, identifier, roles, reason) {
   return roles.map((role) => ({ spellId, role, identifier, reason }));
 }
 
+function exactCollisionsAt(spellId, relativePath, collisions, reason) {
+  return collisions.flatMap(({ identifier, roles }) =>
+    exactCollision(spellId, identifier, roles, reason).map((collision) => ({
+      ...collision,
+      relativePath,
+    })),
+  );
+}
+
 const DISCRIMINANT_ROLES = [
   "discriminant-literal",
   "protocol-array-member",
@@ -1226,12 +1235,368 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     ["declaration-identifier"],
     "creation names the generic completed-inscription lifecycle boundary",
   ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-mechanical-frontier.ts",
+    [{ identifier: "teleportDestination", roles: ["registry-key"] }],
+    "teleport names the generic relocation destination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+    [
+      {
+        identifier: "teleportDestination",
+        roles: [
+          "discriminant-literal",
+          "registry-key",
+          "schema-discriminant-literal",
+        ],
+      },
+    ],
+    "teleport names the generic relocation destination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/magic-suppression-transit-blocking.ts",
+    [
+      {
+        identifier:
+          "Teleport destination table fact must include one magic-suppression emanation transit witness for each active aura.",
+        roles: ["execution-diagnostic"],
+      },
+    ],
+    "teleport names the generic relocation destination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/spell-execution-facts.ts",
+    [{ identifier: "selfTeleport", roles: ["registry-key"] }],
+    "self teleport names a generic structurally admitted spell mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/registry.ts",
+    [{ identifier: "selfTeleportProfile", roles: ["declaration-identifier"] }],
+    "self teleport names a generic structurally admitted spell mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/self-teleport.ts",
+    [
+      { identifier: "self-teleport", roles: ["execution-filename"] },
+      {
+        identifier: "BattleTeleportDestination",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "BattleTeleportDestinationFact",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "spellTeleportDestinationHole",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "spellTeleportDestinationHoleId",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "SelfTeleportInvocation",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "selfTeleport", roles: ["discriminant-literal"] },
+      {
+        identifier: "SelfTeleportResolveInput",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "admitSelfTeleport", roles: ["declaration-identifier"] },
+      {
+        identifier: "selfTeleportSpellProjection",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "discoverSelfTeleportCastAct",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "resolveSelfTeleport", roles: ["declaration-identifier"] },
+      {
+        identifier: "selfTeleportOutcomeDestination",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "validateSelfTeleportDestination",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "teleportDestination",
+        roles: ["discriminant-literal"],
+      },
+      {
+        identifier:
+          "Teleport destination must use the selected spell act destination hole.",
+        roles: ["execution-diagnostic"],
+      },
+      {
+        identifier: "Teleport destination table fact must match the caster.",
+        roles: ["execution-diagnostic"],
+      },
+      {
+        identifier: "Teleport destination table fact must match the spell.",
+        roles: ["execution-diagnostic"],
+      },
+      {
+        identifier: "Teleport destination must be more than 0 feet away.",
+        roles: ["execution-diagnostic"],
+      },
+      {
+        identifier: "SelfTeleportInvocationSchema",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "selfTeleport",
+        roles: ["schema-discriminant-literal"],
+      },
+      { identifier: "selfTeleportProfile", roles: ["declaration-identifier"] },
+    ],
+    "self teleport names a generic structurally admitted spell mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+    [{ identifier: "selfTeleport", roles: ["registry-key"] }],
+    "self teleport names a generic structurally admitted spell mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
+    [
+      {
+        identifier: "teleportDestination",
+        roles: ["declaration-identifier", "discriminant-literal"],
+      },
+      {
+        identifier: "Teleport destination does not match this spell act.",
+        roles: ["execution-diagnostic"],
+      },
+      {
+        identifier: "Teleport destination was filled twice.",
+        roles: ["execution-diagnostic"],
+      },
+    ],
+    "teleport names the generic relocation destination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+    [
+      {
+        identifier: "selfTeleport",
+        roles: ["protocol-array-member", "registry-key"],
+      },
+    ],
+    "self teleport names a generic structurally admitted spell mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
+    [
+      {
+        identifier: "BattleTeleportDestinationHole",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "spellTeleportDestinationHole",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "selfTeleport", roles: ["discriminant-literal"] },
+      {
+        identifier: "teleportDestination",
+        roles: ["discriminant-literal"],
+      },
+      {
+        identifier: "spellTeleportDestinationHoleId",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "spellTeleportDestinationHoleKey",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "teleport names the generic relocation destination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-reducer/weapon-attack-override-fill-input.ts",
+    [{ identifier: "teleportDestination", roles: ["registry-key"] }],
+    "teleport names the generic relocation destination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-state-execution.ts",
+    [
+      {
+        identifier: "BattleTeleportDestination",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "BattleTeleportDestinationFact",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "BattleTeleportOutcome",
+        roles: ["declaration-identifier"],
+      },
+      { identifier: "selfTeleport", roles: ["discriminant-literal"] },
+      {
+        identifier: "SelfTeleportSpellInvocation",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "BattleTeleportDestinationHole",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "teleportDestination",
+        roles: ["discriminant-literal"],
+      },
+    ],
+    "teleport names the generic relocation destination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-subjects.ts",
+    [{ identifier: "selfTeleport", roles: ["protocol-array-member"] }],
+    "self teleport names a generic structurally admitted spell mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/battle-trace-contract.ts",
+    [
+      {
+        identifier: "teleportDestination",
+        roles: ["protocol-array-member"],
+      },
+    ],
+    "teleport names the generic relocation destination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "teleport",
+    "packages/battle-runtime/src/procedure-execution/spell-procedure-execution.ts",
+    [
+      {
+        identifier: "SelfTeleportSpellProcedureExecution",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "selfTeleport",
+        roles: ["declaration-identifier", "discriminant-literal"],
+      },
+    ],
+    "self teleport names a generic structurally admitted spell mechanic",
+  ),
+  ...exactCollisionsAt(
+    "fly",
+    "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+    [
+      {
+        identifier: "flySpeedGrantEndFallCleanupFrames",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "fly names the generic creature movement mode",
+  ),
+  ...exactCollisionsAt(
+    "fly",
+    "packages/battle-runtime/src/druid-wild-shape-form-eligibility.ts",
+    [
+      {
+        identifier: "statBlockHasPotentialFlySpeed",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "fly names the generic creature movement mode",
+  ),
+  ...exactCollisionsAt(
+    "fly",
+    "packages/battle-runtime/src/stat-block-authored-projection.ts",
+    [{ identifier: "fly", roles: ["discriminant-literal"] }],
+    "fly names the authored Stat Block movement mode at projection",
+  ),
+  ...exactCollisionsAt(
+    "fly",
+    "packages/battle-runtime/src/stat-block-execution-state.ts",
+    [{ identifier: "fly", roles: ["discriminant-literal"] }],
+    "fly names the generic creature movement mode",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+    [
+      {
+        identifier: "serializedStoredLightEmitterIsValid",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the generic illumination emitter mechanic",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spatial-effect-routes.ts",
+    [
+      { identifier: "movableLightRoute", roles: ["declaration-identifier"] },
+      { identifier: "objectLightRoute", roles: ["declaration-identifier"] },
+      {
+        identifier: "movableLightCompositionRoute",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "objectLightCompositionRoute",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the generic illumination route mechanic",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spells-discovery.ts",
+    [
+      {
+        identifier: "movableLightManifestationPrerequisiteIsMet",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the generic illumination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "resistance",
+    "packages/battle-runtime/src/stat-block-execution-state.ts",
+    [
+      {
+        identifier: "CreatureResistanceList",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "resistance names the generic damage relationship",
+  ),
+  ...exactCollisionsAt(
+    "resistance",
+    "packages/battle-runtime/src/statblock-action-execution-support.ts",
+    [{ identifier: "caster_shared_resistance", roles: ["registry-key"] }],
+    "resistance names a typed Stat Block trait effect rejected at admission",
+  ),
+  ...exactCollisionsAt(
+    "heal",
+    "packages/battle-runtime/src/statblock-action-execution-support.ts",
+    [{ identifier: "caster_heal_link", roles: ["registry-key"] }],
+    "heal names a typed Stat Block trait effect rejected at admission",
+  ),
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "92209efc2f81cfc06905fe879db37157050375be160aecc407ab34e63a0b26d0",
-  siteCount: 1214,
-  violationCount: 1325,
+  sha256: "1a6b83fc6597ebcb817af5b723557f9e8e3cc219562c584de14f3e45bc4ecc02",
+  siteCount: 1294,
+  violationCount: 1405,
 };
 
 function escapeForRegExp(text) {
@@ -3508,11 +3873,13 @@ function applyExecutionIdentityCollisionExemptions(
       (exemption) =>
         exemption.spellId === violation.spellId &&
         exemption.role === violation.role &&
-        exemption.identifier === violation.identifier,
+        exemption.identifier === violation.identifier &&
+        (exemption.relativePath === undefined ||
+          exemption.relativePath === violation.relativePath),
     );
     assert.ok(
       matches.length <= 1,
-      `duplicate authored-identity collision exemption for ${violation.spellId}/${violation.role}/${violation.identifier}`,
+      `duplicate authored-identity collision exemption for ${violation.relativePath}/${violation.spellId}/${violation.role}/${violation.identifier}`,
     );
     if (matches.length === 0) return true;
     usage.set(matches[0], (usage.get(matches[0]) ?? 0) + 1);
@@ -3531,6 +3898,10 @@ function applyExecutionIdentityCollisionExemptions(
       expectedSiteEvidence,
     ),
   };
+}
+
+function staleExecutionIdentityExemptionDiagnostic(exemption) {
+  return `  - ${exemption.relativePath ?? "<any production path>"}/${exemption.spellId}/${exemption.role}/${exemption.identifier}: ${exemption.reason}`;
 }
 
 function dedupeExecutionIdentityViolations(violations) {
@@ -3719,6 +4090,7 @@ function runExecutionIdentityCohortSelfTest() {
     spellId: "light",
     role: "declaration-identifier",
     identifier: "HeldLightSpellProcedureExecution",
+    relativePath: fixturePath,
     reason: "synthetic exact collision",
   };
   const collisionEvidence = collisionSiteCountEvidence(collision);
@@ -3736,12 +4108,14 @@ function runExecutionIdentityCohortSelfTest() {
     collisionSource,
     lexicon,
   );
+  const unrelatedCollisionResult = applyExecutionIdentityCollisionExemptions(
+    unrelatedCollision,
+    [collisionExemption],
+    collisionEvidence,
+  );
+  assert.ok(unrelatedCollisionResult.remaining.length > 0);
   assert.equal(
-    applyExecutionIdentityCollisionExemptions(
-      unrelatedCollision,
-      [collisionExemption],
-      collisionEvidence,
-    ).siteEvidenceMatches,
+    unrelatedCollisionResult.siteEvidenceMatches,
     false,
     "cohort scanner accepted an exempt identifier copied into an unrelated production file",
   );
@@ -3762,6 +4136,7 @@ function runExecutionIdentityCohortSelfTest() {
     spellId: "command",
     role: "declaration-identifier",
     identifier: "command",
+    relativePath: fixturePath,
     reason: "synthetic generic runtime command collision",
   };
   const runtimeCommandEvidence = collisionSiteCountEvidence(
@@ -3786,12 +4161,15 @@ function runExecutionIdentityCohortSelfTest() {
       violation.role === "declaration-identifier" &&
       violation.identifier === "command",
   );
-  assert.equal(
+  const launderedRuntimeCommandResult =
     applyExecutionIdentityCollisionExemptions(
       launderedRuntimeCommandCollision,
       [runtimeCommandExemption],
       runtimeCommandEvidence,
-    ).siteEvidenceMatches,
+    );
+  assert.ok(launderedRuntimeCommandResult.remaining.length > 0);
+  assert.equal(
+    launderedRuntimeCommandResult.siteEvidenceMatches,
     false,
     "cohort scanner accepted a generic command exemption copied into an unrelated production file",
   );
@@ -3883,6 +4261,20 @@ function runExecutionIdentityCohortSelfTest() {
     staleCollision.siteEvidenceMatches,
     false,
     "cohort scanner accepted absent reviewed collision-site evidence",
+  );
+  assert.equal(
+    staleExecutionIdentityExemptionDiagnostic(staleCollision.stale[0]),
+    `  - ${fixturePath}/light/declaration-identifier/HeldLightSpellProcedureExecution: synthetic exact collision`,
+    "cohort scanner stale-exemption diagnostic did not identify the exact reviewed path",
+  );
+  assert.notEqual(
+    staleExecutionIdentityExemptionDiagnostic(staleCollision.stale[0]),
+    staleExecutionIdentityExemptionDiagnostic({
+      ...staleCollision.stale[0],
+      relativePath:
+        "packages/battle-runtime/src/battle-reducer/unrelated-procedure.ts",
+    }),
+    "cohort scanner stale-exemption diagnostics did not distinguish paths",
   );
   const augmented = collectSurfaceSpellLexicon([
     { kind: "spell", id: "cloudkill", name: "Cloudkill" },
@@ -5458,9 +5850,7 @@ function main() {
     if (executionIdentityExemptionResult.stale.length > 0) {
       console.error("stale authored-identity collision exemption(s):");
       for (const exemption of executionIdentityExemptionResult.stale) {
-        console.error(
-          `  - ${exemption.spellId}/${exemption.role}/${exemption.identifier}: ${exemption.reason}`,
-        );
+        console.error(staleExecutionIdentityExemptionDiagnostic(exemption));
       }
     }
     if (!executionIdentityExemptionResult.siteEvidenceMatches) {

@@ -139,6 +139,37 @@ real relocated supervisor test proves initialization, transcript, replay, and
 declaration emission for this graph; this certificate does not claim that the
 remaining issue #386 public gates have run.
 
+### Master-reconciliation authored-identity collision audit
+
+The current static authored-identity boundary check discovers 7,328 authored
+identity literals from 283 decoded Surface spell records across 817 checked
+source files, with 762 excluded fixture or artifact files and 9 files admitted
+through the existing narrow boundary allowlists. It exercises 620 exact
+collision exemptions and authenticates 1,294 reviewed sites / 1,405
+occurrences with SHA-256
+`1a6b83fc6597ebcb817af5b723557f9e8e3cc219562c584de14f3e45bc4ecc02`.
+
+The reconciliation added 79 reviewed mechanics-word collisions: 66 generic
+teleportation sites, 4 Fly Speed sites, 6 illumination sites, 2 damage
+Resistance sites, and 1 healing-link site. Their exemptions are bound to the
+exact spell-word collision, AST role, identifier, and source path; the finite
+site certificate additionally binds the normalized owning statement and
+cardinality. Copying, semantically relocating between files or owning
+statements, or adding an occurrence therefore fails the check. Seven reusable
+execution declarations that instead used `Haste` as a name were renamed to the
+generic limited-additional-Action restriction they model and were not exempted.
+
+The one-site drift already present relative to the preceding certificate was
+not `heldLightHurl`. Normalized evidence shows that one former
+`storedLightEmitters` occurrence inside `battleSnapshotInvariantsHold` was
+replaced by two occurrences owned by the extracted serialized-reference and
+environmental-source validation functions, for a net increase of one reviewed
+site. `heldLightHurl` was semantically relocated into a presentation-procedure
+set owned by the existing narrow Battle presentation boundary and did not enter
+collision-certificate evidence. This focused static audit is not a claim that
+a final certification fixed point or the remaining public gates have
+completed.
+
 ## Public verification
 
 The following public commands were run directly under their owning repository
