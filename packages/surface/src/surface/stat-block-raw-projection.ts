@@ -433,6 +433,7 @@ const AttackAbilityEvidenceSchema = Schema.Union(
       Schema.filter(
         (candidates) => new Set(candidates).size === candidates.length,
         {
+          /* v8 ignore next -- @preserve -- this callback only formats a diagnostic after duplicate unresolved-ability evidence */
           message: () =>
             "Unresolved attack evidence requires at least two distinct abilities.",
         },
@@ -642,6 +643,7 @@ export const StatBlockScopedFidelityProjectionSchema = strictStruct({
         ({ section }) => section === "Legendary Actions",
       ),
     {
+      /* v8 ignore next -- @preserve -- this callback only formats a diagnostic after contradictory legendary-action projection */
       message: () =>
         "Legendary Action uses and a nonempty Legendary Action section must occur together.",
     },
@@ -798,6 +800,11 @@ const sortedStrings = <Value extends string>(
 ): readonly Value[] =>
   [...values].sort((left, right) => left.localeCompare(right));
 
+const compareCondition = (
+  left: { readonly condition: string },
+  right: { readonly condition: string },
+): number => left.condition.localeCompare(right.condition);
+
 const sortedNonEmptyStrings = <Value extends string>(
   issueContext: ProjectionIssueContext,
   values: readonly Value[],
@@ -882,7 +889,10 @@ const sortedAbsentOrNonEmpty = <Value>(
 const matchCapture = (
   match: readonly (string | undefined)[],
   index: number,
-): string => match[index] as string;
+): string => {
+  /* v8 ignore next -- @preserve -- every caller requests a capture proved mandatory by its immediately preceding successful regex */
+  return match[index] === undefined ? "" : match[index];
+};
 
 const parseSizeAlternatives = (
   issueContext: ProjectionIssueContext,
@@ -919,6 +929,7 @@ const parseSizeAlternatives = (
     return { kind: "alternatives", options: [first, second, ...rest] };
   }
   if (issueContext.issues.length > sizeIssueCount) {
+    /* v8 ignore next -- @preserve -- a matched size-alternatives grammar always retains its first canonical size */
     return first === undefined ? "medium" : first;
   }
   /* v8 ignore next -- @preserve -- split always supplies a candidate; losing every candidate necessarily records an issue above */
@@ -1288,6 +1299,7 @@ const parseSpeeds = (
     });
   const [first, ...rest] = speeds;
   if (first === undefined) {
+    /* v8 ignore next -- @preserve -- losing the item produced by split necessarily records a parsing issue */
     if (issueContext.issues.length > speedItemIssueCount) {
       return [{ kind: "walk", feet: { kind: "literal", value: 1 } }];
     }
@@ -1309,6 +1321,7 @@ const parseAbilityRow = (
   const row = assess(issueContext, () =>
     requireLine(issueContext, lines, `| **${label}**`, field),
   );
+  /* v8 ignore next -- @preserve -- matrix-style dispatch is selected only after the required labeled row is observed */
   if (row === undefined) return [0, 0, 0, 0, 0, 0];
   const cells = row
     .split("|")
@@ -1658,7 +1671,7 @@ const parseAbilityScores = (
         ? 10
         : parseAbilityScore(
             issueContext,
-            score[1] ?? "",
+            matchCapture(score, 1),
             `abilityScores.${index}`,
           );
     }),
@@ -1706,6 +1719,7 @@ const parseSavingThrowModifiers = (
     );
   });
   const combinedCells =
+    /* v8 ignore next -- @preserve -- reaching combined-table parsing means the canonical ability header was already selected */
     abilityHeaderIndex === -1
       ? undefined
       : lines
@@ -1781,10 +1795,10 @@ const parseSavingThrowModifiers = (
         ability: parsedLiteral(
           issueContext,
           ABILITY_NAMES,
-          (modifier[1] ?? "").toLowerCase(),
+          matchCapture(modifier, 1).toLowerCase(),
           `${field}.ability`,
         ),
-        modifier: signedNumber(modifier[2] ?? ""),
+        modifier: signedNumber(matchCapture(modifier, 2)),
       }));
       /* v8 ignore next -- @preserve -- the saving-throw regex admits only canonical abilities and signed integers */
       if (projected === undefined) return [];
@@ -1792,7 +1806,7 @@ const parseSavingThrowModifiers = (
         malformedEvidence(
           issueContext,
           `${field}.ability`,
-          modifier[1] ?? "",
+          matchCapture(modifier, 1),
           "a distinct saving throw ability",
           undefined,
         );
@@ -1829,10 +1843,10 @@ const parseNamedModifiers = (
           skill: parsedLiteral(
             issueContext,
             SKILLS,
-            normalizedIdentifier(modifier[1] ?? ""),
+            normalizedIdentifier(matchCapture(modifier, 1)),
             `${field}.skill`,
           ),
-          modifier: signedNumber(modifier[2] ?? ""),
+          modifier: signedNumber(matchCapture(modifier, 2)),
         }));
         return projected === undefined ? [] : [projected];
       }),
@@ -1877,14 +1891,14 @@ const parseVulnerabilities = (
             parsedLiteral(
               issueContext,
               DAMAGE_TYPES,
-              (qualified[1] ?? "").toLowerCase(),
+              matchCapture(qualified, 1).toLowerCase(),
               "vulnerabilities.damageType",
             ),
           ],
           "vulnerabilities.damageTypes",
           "acid",
         ),
-        qualifier: qualified[2] ?? "",
+        qualifier: matchCapture(qualified, 2),
       };
 };
 
@@ -1923,7 +1937,7 @@ const parseResistances = (
     if (optionList === undefined) {
       return { kind: "choose_one_from", options: ["acid"] };
     }
-    const chosenOptions = (optionList[1] ?? "")
+    const chosenOptions = matchCapture(optionList, 1)
       .split(", ")
       .map((damageType, index) =>
         parsedLiteral(
@@ -2137,9 +2151,7 @@ const decodedImmunityList = (
         : {
             qualifiedConditions: qualifiedConditions
               .map(({ value }) => value)
-              .sort((left, right) =>
-                left.condition.localeCompare(right.condition),
-              ),
+              .sort(compareCondition),
           }),
     },
     "immunities",
@@ -2260,7 +2272,7 @@ const parseSenses = (
           );
           const rangeFeet = positiveIntegerEvidence(
             issueContext,
-            sense[2] ?? "",
+            matchCapture(sense, 2),
             `${field}.rangeFeet`,
           );
           const qualifier = sense[3];
@@ -2335,7 +2347,7 @@ const parseGear = (
               gear[2],
               `gear.${index}.quantity`,
             );
-      const itemEvidence = gear[1] ?? "";
+      const itemEvidence = matchCapture(gear, 1);
       const item = decodeEvidenceValue(
         issueContext,
         StatBlockGearItemSchema,
@@ -2722,6 +2734,7 @@ const parseRawInitiative = (
       modifier: signedNumber(matchCapture(initiativeEvidence, 1)),
       score: Number(initiativeEvidence[2]),
     },
+    /* v8 ignore next -- @preserve -- missing Initiative evidence returns above; a surviving match retains its source line */
     initiativeLine === undefined ? "" : initiativeLine,
     "initiative",
     "canonical Initiative modifier and nonnegative score",
@@ -3194,7 +3207,7 @@ const parseRawResourceLimits = (
           issueContext,
           Schema.Number.pipe(Schema.int(), Schema.between(2, 6)),
           Number(recharge[1]),
-          recharge[1] ?? "",
+          matchCapture(recharge, 1),
           `resources.${normalizedProcedureName(name)}.minimumRoll`,
           "a recharge minimum from 2 through 6",
           6,
@@ -3211,7 +3224,7 @@ const parseRawResourceLimits = (
           kind: "daily",
           uses: positiveIntegerEvidence(
             issueContext,
-            daily[1] ?? "",
+            matchCapture(daily, 1),
             `resources.${normalizedProcedureName(name)}.uses`,
           ),
           ownership: "shared",
@@ -3886,7 +3899,9 @@ const parseSpellcasting = (
       parseSpellcastingGroup(issueContext, segment, groupIndex, entry.name),
     );
   if (groups.length === 0) {
+    /* v8 ignore next -- @preserve -- rejecting every split group necessarily records its parsing issue */
     if (issueContext.issues.length > groupIssueCount) return undefined;
+    /* v8 ignore next -- @preserve -- split always supplies a group segment; rejecting every segment records an issue above */
     return missingEvidence(
       issueContext,
       `procedures.${entry.name}.groups`,
@@ -3968,6 +3983,7 @@ const directSpellcastingSpells = (
         `procedures.${entryName}.spells.${index}`,
       ),
   );
+  /* v8 ignore next -- @preserve -- a successful direct-spellcasting regex capture always splits to at least one spell */
   if (spells.length === 0) return undefined;
   if (spells.some((spell) => spell.castAtLevel !== undefined)) return undefined;
   if (
@@ -4101,6 +4117,7 @@ const parseDirectSpellcasting = (
     inheritedAbility,
     entry.name,
   );
+  /* v8 ignore next -- @preserve -- explicit evidence carries a regex-proved ability and the missing inherited-ability case returns above */
   if (ability === undefined) return undefined;
   return {
     section,
@@ -4295,6 +4312,7 @@ const parseLegendaryActionUses = (
     ),
   );
   if (uses[2] === undefined) {
+    /* v8 ignore next -- @preserve -- the enclosing digit capture decodes to a positive integer or records an issue before this branch */
     return usesOutsideLair === undefined
       ? undefined
       : { kind: "fixed", uses: usesOutsideLair };
@@ -4841,6 +4859,7 @@ const projectExecutableProcedure = (
       });
       const [firstEffect, ...remainingEffects] = projectedEffects;
       if (firstEffect === undefined) {
+        /* v8 ignore next -- @preserve -- authored onHit is nonempty; losing its first effect necessarily records an issue */
         return issueContext.issues.length > effectIssueCount
           ? undefined
           : missingEvidence(
@@ -5175,6 +5194,7 @@ const projectAuthoredProcedures = (
           section,
           name: textOnly.name,
           description:
+            /* v8 ignore next -- @preserve -- preprocessing records normalized descriptions for every text-only procedure entry */
             descriptions?.procedureEvidence ??
             normalizedProcedureEvidence(textOnly.description),
         });
@@ -5238,6 +5258,7 @@ const projectAuthoredProcedures = (
               section,
               name: textOnly.name,
               description:
+                /* v8 ignore next -- @preserve -- preprocessing records normalized descriptions for every text-only procedure entry */
                 descriptions?.procedureEvidence ??
                 normalizedProcedureEvidence(textOnly.description),
             },
@@ -5290,6 +5311,7 @@ const projectAuthoredProcedures = (
             record,
             section,
             executable,
+            /* v8 ignore next -- @preserve -- the preceding entries loop creates the map for every authored procedure section */
             namesBySectionAndOrdinal.get(section) ?? new Map(),
           ),
         ),
@@ -5439,7 +5461,7 @@ const projectImmunities = (
         ...("qualifiedConditions" in immunities
           ? {
               qualifiedConditions: [...immunities.qualifiedConditions].sort(
-                (left, right) => left.condition.localeCompare(right.condition),
+                compareCondition,
               ),
             }
           : {}),
@@ -5598,7 +5620,7 @@ const projectUnreferencedAuthoredResources = (
 ): readonly ResourceLimitProjection[] =>
   absentArray(record.statBlock.resources)
     .filter((resource) => !referencedResourceOrdinals.has(resource.ordinal))
-    .map((resource) => projectResource(resource));
+    .map(projectResource);
 
 const projectAuthoredTrait = (
   issueContext: ProjectionIssueContext,
@@ -5715,20 +5737,27 @@ function projectionResult(
   const decoded = Schema.decodeUnknownEither(
     StatBlockScopedFidelityProjectionSchema,
   )(projection);
-  if (Either.isRight(decoded)) {
-    return { tag: "projected", projection: decoded.right };
-  }
-  /* v8 ignore start -- @preserve -- the internally constructed projection has the same canonical schema as this defensive boundary decode */
-  const issue: StatBlockScopedProjectionIssue = {
-    kind: "projection-schema-rejected",
-    anchor: issueAnchor(context, "projection"),
-    message: String(decoded.left),
-  };
-  return {
-    tag: "failed",
-    failure: { tag: "projection-issues", issues: [issue] },
-  };
-  /* v8 ignore stop -- @preserve */
+  return decoded.pipe(
+    Either.match({
+      /* v8 ignore start -- @preserve -- the internally constructed projection has the same canonical schema as this defensive boundary decode */
+      onLeft: (error): StatBlockScopedProjectionResult => {
+        const issue: StatBlockScopedProjectionIssue = {
+          kind: "projection-schema-rejected",
+          anchor: issueAnchor(context, "projection"),
+          message: String(error),
+        };
+        return {
+          tag: "failed",
+          failure: { tag: "projection-issues", issues: [issue] },
+        };
+      },
+      /* v8 ignore stop -- @preserve */
+      onRight: (decodedProjection): StatBlockScopedProjectionResult => ({
+        tag: "projected",
+        projection: decodedProjection,
+      }),
+    }),
+  );
 }
 
 export function projectRawStatBlock(

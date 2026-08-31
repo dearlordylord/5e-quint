@@ -3396,6 +3396,14 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         expectedField: "procedures.Shortbow.rangeFeet",
       },
       {
+        name: "Goblin Warrior",
+        mutate: (line: string) =>
+          line.startsWith("***Shortbow.")
+            ? line.replace("range 80/320 ft.", "range 0/320 ft.")
+            : line,
+        expectedField: "procedures.Shortbow.rangeFeet.normal",
+      },
+      {
         name: "Chimera",
         mutate: (line: string) =>
           line.startsWith("**Ram.") ? line.replace("Prone", "Bogus") : line,
@@ -3446,6 +3454,22 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
             ? line.replace("Uses: 3", "Uses: 0")
             : line,
         expectedField: "legendaryActionUses.usesOutsideLair",
+      },
+      {
+        name: "Adult Gold Dragon",
+        mutate: (line: string) =>
+          line.startsWith("*Legendary Action Uses:")
+            ? "*Legendary Action Uses: malformed."
+            : line,
+        expectedField: "legendaryActionUses",
+      },
+      {
+        name: "Giant Owl",
+        mutate: (line: string) =>
+          line.includes("At Will:")
+            ? line.replace("At Will:", "At Will")
+            : line,
+        expectedField: "procedures.Spellcasting.groups.0",
       },
       {
         name: "Allosaurus",
@@ -3661,7 +3685,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         index + 1 >= occurrence.anchor.lineStart &&
         index + 1 <= occurrence.anchor.lineEnd &&
         line.startsWith("**Immunities** Psychic; Charmed")
-          ? `${line}, Frightened (from a synthetic ward)`
+          ? `${line.replace("Psychic;", ";")}, Frightened (from a synthetic ward)`
           : line,
       )
       .join("\n");
@@ -4129,6 +4153,50 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         anchor: expect.objectContaining({
           field: "procedures.Multiattack.dispatches",
         }),
+      }),
+    );
+  });
+
+  test("binds an authored text-only resource to its parsed attack shape", () => {
+    const minotaur = srdStatBlockCollection.statBlocks.find(
+      ({ name }) => name === "Minotaur of Baphomet",
+    );
+    expect(minotaur).toBeDefined();
+    if (minotaur === undefined) return;
+    const actions = minotaur.statBlock.actions;
+    expect(actions).toBeDefined();
+    if (actions === undefined) return;
+    const [firstAction, ...remainingActions] = actions;
+    const simplifyGore = (action: (typeof actions)[number]) =>
+      action.kind === "textOnly" && action.name === "Gore (Recharge 5–6)"
+        ? {
+            ...action,
+            description:
+              "Melee Attack Roll: +6, reach 5 ft. Hit: 9 (1d10 + 4) Piercing damage.",
+          }
+        : action;
+    const result = projectAuthoredStatBlock(
+      {
+        ...minotaur,
+        statBlock: {
+          ...minotaur.statBlock,
+          actions: [
+            simplifyGore(firstAction),
+            ...remainingActions.map(simplifyGore),
+          ],
+        },
+      },
+      equipmentSource,
+    );
+    expect(result.tag).toBe("projected");
+    if (result.tag !== "projected") return;
+    expect(result.projection.procedures).toContainEqual(
+      expect.objectContaining({
+        name: "Gore",
+        kind: "attack_roll",
+        resourceLimits: [
+          { kind: "recharge", minimumRoll: 5, ownership: "shared" },
+        ],
       }),
     );
   });
