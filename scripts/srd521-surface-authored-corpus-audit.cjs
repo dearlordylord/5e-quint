@@ -522,43 +522,17 @@ function branchDiscriminatorMatches(ast, value) {
   });
 }
 
-const decodedBranchPredicateCache = new WeakMap();
-const branchSuspensionCache = new WeakMap();
+const exactDecodedBranchPredicateCache = new WeakMap();
 
-function uncachedBranchUsesSuspension(branch) {
-  if (SchemaAST.isSuspend(branch)) return true;
-  if (SchemaAST.isUnion(branch)) {
-    return branch.types.some(branchUsesSuspension);
-  }
-  if (SchemaAST.isArrays(branch)) {
-    return [...branch.elements, ...branch.rest].some(branchUsesSuspension);
-  }
-  return (
-    SchemaAST.isObjects(branch) &&
-    branch.propertySignatures.some((property) =>
-      branchUsesSuspension(property.type),
-    )
-  );
-}
-
-function branchUsesSuspension(ast) {
-  const cached = branchSuspensionCache.get(ast);
-  if (cached !== undefined) return cached;
+function decodedBranchAcceptsExactly(ast, value) {
   const branch = unwrappedSchemaAst(ast);
-  const usesSuspension = uncachedBranchUsesSuspension(branch);
-  branchSuspensionCache.set(ast, usesSuspension);
-  return usesSuspension;
-}
-
-function decodedBranchAcceptsValue(ast, value) {
-  if (branchUsesSuspension(ast)) {
-    return branchMatchStatus(ast, value) === "match";
-  }
-  const branch = unwrappedSchemaAst(ast);
-  const cached = decodedBranchPredicateCache.get(branch);
+  const cached = exactDecodedBranchPredicateCache.get(branch);
   if (cached !== undefined) return cached(value);
-  const predicate = Schema.is(Schema.make(branch));
-  decodedBranchPredicateCache.set(branch, predicate);
+  const decode = Schema.decodeUnknownResult(Schema.make(branch), {
+    onExcessProperty: "error",
+  });
+  const predicate = (candidate) => Result.isSuccess(decode(candidate));
+  exactDecodedBranchPredicateCache.set(branch, predicate);
   return predicate(value);
 }
 
@@ -604,7 +578,7 @@ function soleDecodedLiteralDiscriminatorSelection(types, value) {
       untagged.push(type);
     }
   }
-  if (tagged.length !== 1 || !decodedBranchAcceptsValue(tagged[0], value)) {
+  if (tagged.length !== 1 || !decodedBranchAcceptsExactly(tagged[0], value)) {
     return undefined;
   }
   return { branch: tagged[0], untagged };
