@@ -1,9 +1,10 @@
 import * as AST from "effect/SchemaAST";
-import { Result, Match, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
   readSurfaceSchemaRole,
   surfaceSchemaRolesEqual,
+  type SurfaceLinkSourceRole,
   type SurfaceSchemaFieldRole,
 } from "./schema-base.ts";
 import { StatBlockRecordSchema, UnitRecordSchema } from "./schema.ts";
@@ -35,6 +36,7 @@ type SurfaceAuthoredRelationBase<
         readonly fieldPath: string;
         readonly relationKind: Role["category"];
         readonly relation: Role["relation"];
+        readonly sourceRole: SurfaceLinkSourceRole;
         readonly targetKind: Role["targetKind"];
         readonly targetRecordId: SurfaceRecordId<Role["targetKind"]>;
       }
@@ -161,6 +163,10 @@ const decodeSurfaceAuthoredRelation = (input: {
   const shared = {
     sourceRecordName: input.record.value.name,
     fieldPath: input.fieldPath,
+    sourceRole:
+      "sourceRole" in input.role
+        ? (input.role.sourceRole ?? "generic")
+        : "generic",
   } as const;
   return Match.value(input.record).pipe(
     Match.when({ sourceKind: "unit" }, ({ value }) =>
