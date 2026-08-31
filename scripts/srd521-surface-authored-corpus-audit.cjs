@@ -253,6 +253,42 @@ function checkPasses(check, value, ast) {
   return check.checks.every((nested) => checkPasses(nested, value, ast));
 }
 
+function immediateBranchMatchStatus(ast, value) {
+  const branch = unwrappedSchemaAst(ast);
+  let result;
+  if (SchemaAST.isLiteral(branch)) {
+    result = value === branch.literal ? "match" : "no-match";
+  } else if (SchemaAST.isString(branch)) {
+    result = typeof value === "string" ? "match" : "no-match";
+  } else if (SchemaAST.isNull(branch)) {
+    result = value === null ? "match" : "no-match";
+  } else if (SchemaAST.isNumber(branch)) {
+    result = typeof value === "number" ? "match" : "no-match";
+  } else if (SchemaAST.isBoolean(branch)) {
+    result = typeof value === "boolean" ? "match" : "no-match";
+  } else if (
+    SchemaAST.isUnknown(branch) ||
+    SchemaAST.isAny(branch) ||
+    SchemaAST.isNever(branch)
+  ) {
+    result = "match";
+  } else if (SchemaAST.isArrays(branch) && !Array.isArray(value)) {
+    result = "no-match";
+  } else if (
+    SchemaAST.isObjects(branch) &&
+    (!value || typeof value !== "object" || Array.isArray(value))
+  ) {
+    result = "no-match";
+  } else {
+    return undefined;
+  }
+  return result !== "no-match" &&
+    branch?.checks !== undefined &&
+    !branch.checks.every((check) => checkPasses(check, value, branch))
+    ? "no-match"
+    : result;
+}
+
 function branchMatchStatus(ast, value) {
   const local = new Map();
   const pending = [{ ast, value, done: false }];
@@ -292,6 +328,11 @@ function branchMatchStatus(ast, value) {
   const schedule = (schemaAst, current) => {
     const branch = unwrappedSchemaAst(schemaAst);
     if (getResult(schemaAst, current) !== undefined) return;
+    const immediate = immediateBranchMatchStatus(schemaAst, current);
+    if (immediate !== undefined) {
+      putResult(schemaAst, current, immediate);
+      return;
+    }
     const values = keyFor(branch, current);
     if (values.has(current)) return;
     values.set(current, true);
@@ -411,6 +452,11 @@ function branchMatchStatus(ast, value) {
       continue;
     }
     if (getResult(task.ast, task.value) !== undefined) continue;
+    const immediate = immediateBranchMatchStatus(task.ast, task.value);
+    if (immediate !== undefined) {
+      putResult(task.ast, task.value, immediate);
+      continue;
+    }
     const values = keyFor(branch, task.value);
     if (values.has("active")) {
       putResult(task.ast, task.value, "unknown");
@@ -425,67 +471,90 @@ function branchMatchStatus(ast, value) {
   return getResult(ast, value) ?? "unknown";
 }
 
-const discriminatorCache = new WeakMap();
+const literalDiscriminatorAlternativesCache = new WeakMap();
 
-function branchHasLiteralDiscriminator(ast) {
-  const cached = discriminatorCache.get(ast);
+function literalDiscriminatorAlternatives(ast) {
+  const cached = literalDiscriminatorAlternativesCache.get(ast);
   if (cached !== undefined) return cached;
   const branch = structuralSchemaAst(ast);
-  if (!branch || typeof branch !== "object") return false;
+  if (!branch || typeof branch !== "object") return [];
+  let alternatives;
   if (SchemaAST.isSuspend(branch)) {
-    const result = branchHasLiteralDiscriminator(suspendedAst(branch));
-    discriminatorCache.set(ast, result);
-    return result;
-  }
-  if (SchemaAST.isUnion(branch)) {
-    const result = branch.types.some(branchHasLiteralDiscriminator);
-    discriminatorCache.set(ast, result);
-    return result;
-  }
-  const result =
-    SchemaAST.isObjects(branch) &&
-    branch.propertySignatures.some(
-      (property) =>
-        !SchemaAST.isOptional(property.type) &&
-        isLiteralDiscriminatorProperty(property.type),
+    alternatives = literalDiscriminatorAlternatives(suspendedAst(branch));
+  } else if (SchemaAST.isUnion(branch)) {
+    alternatives = branch.types.flatMap(literalDiscriminatorAlternatives);
+  } else if (SchemaAST.isObjects(branch)) {
+    const properties = branch.propertySignatures.flatMap((property) =>
+      !SchemaAST.isOptional(property.type) &&
+      isLiteralDiscriminatorProperty(property.type)
+        ? [{ name: property.name, values: literalValues(property.type) }]
+        : [],
     );
-  discriminatorCache.set(ast, result);
-  return result;
+    alternatives = properties.length === 0 ? [] : [properties];
+  } else {
+    alternatives = [];
+  }
+  literalDiscriminatorAlternativesCache.set(ast, alternatives);
+  return alternatives;
+}
+
+function branchHasLiteralDiscriminator(ast) {
+  return literalDiscriminatorAlternatives(ast).length > 0;
 }
 
 function branchDiscriminatorMatches(ast, value) {
-  const branch = structuralSchemaAst(ast);
-  if (!branch || typeof branch !== "object") return false;
-  if (SchemaAST.isSuspend(branch))
-    return branchDiscriminatorMatches(suspendedAst(branch), value);
-  if (SchemaAST.isUnion(branch))
-    return branch.types.some((type) => branchDiscriminatorMatches(type, value));
-  if (
-    !SchemaAST.isObjects(branch) ||
-    !value ||
-    typeof value !== "object" ||
-    Array.isArray(value)
-  ) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
     return false;
   }
-  let hasDiscriminator = false;
-  let hasPresentDiscriminator = false;
-  for (const property of branch.propertySignatures) {
-    if (
-      SchemaAST.isOptional(property.type) ||
-      !isLiteralDiscriminatorProperty(property.type)
-    )
-      continue;
-    const values = literalValues(property.type);
-    hasDiscriminator = true;
-    if (!Object.prototype.hasOwnProperty.call(value, property.name)) continue;
-    hasPresentDiscriminator = true;
-    if (!values.includes(value[property.name])) return false;
-  }
-  return hasDiscriminator && hasPresentDiscriminator;
+  return literalDiscriminatorAlternatives(ast).some((properties) => {
+    let present = false;
+    for (const property of properties) {
+      if (!Object.prototype.hasOwnProperty.call(value, property.name)) continue;
+      present = true;
+      if (!property.values.includes(value[property.name])) return false;
+    }
+    return present;
+  });
 }
 
-function matchingUnionBranches(types, value) {
+function shallowBranchMayContainValue(ast, value) {
+  const branch = unwrappedSchemaAst(ast);
+  if (SchemaAST.isSuspend(branch)) {
+    return shallowBranchMayContainValue(suspendedAst(branch), value);
+  }
+  if (SchemaAST.isUnion(branch)) {
+    return branch.types.some((type) =>
+      shallowBranchMayContainValue(type, value),
+    );
+  }
+  const immediate = immediateBranchMatchStatus(branch, value);
+  if (immediate !== undefined) return immediate !== "no-match";
+  if (SchemaAST.isArrays(branch)) {
+    const required =
+      branch.elements.filter((element) => !SchemaAST.isOptional(element))
+        .length + Math.max(0, branch.rest.length - 1);
+    return (
+      value.length >= required &&
+      (branch.rest.length > 0 || value.length <= branch.elements.length)
+    );
+  }
+  if (!SchemaAST.isObjects(branch)) return true;
+  for (const property of branch.propertySignatures) {
+    if (
+      !SchemaAST.isOptional(property.type) &&
+      !Object.prototype.hasOwnProperty.call(value, property.name)
+    ) {
+      return false;
+    }
+  }
+  if (branch.indexSignatures.length > 0) return true;
+  const known = new Set(
+    branch.propertySignatures.map((property) => String(property.name)),
+  );
+  return !Object.keys(value).some((name) => !known.has(name));
+}
+
+function decoderCompatibleUnionBranches(types, value) {
   const taggedCandidates = types.filter(
     (type) =>
       branchHasLiteralDiscriminator(type) &&
@@ -517,7 +586,101 @@ function matchingUnionBranches(types, value) {
   return types;
 }
 
-function walkSurfaceValue(schema, value, visitString, pathName = "value") {
+function soleDecodedLiteralDiscriminatorSelection(types, value) {
+  const tagged = [];
+  const untagged = [];
+  for (const type of types) {
+    if (branchHasLiteralDiscriminator(type)) {
+      if (branchDiscriminatorMatches(type, value)) tagged.push(type);
+    } else {
+      untagged.push(type);
+    }
+  }
+  const compatible =
+    tagged.length > 1
+      ? tagged.filter((type) => shallowBranchMayContainValue(type, value))
+      : tagged;
+  if (compatible.length !== 1) return undefined;
+  return { branch: compatible[0], untagged };
+}
+
+function matchingUnionBranches(types, value) {
+  const discriminatorSelection = soleDecodedLiteralDiscriminatorSelection(
+    types,
+    value,
+  );
+  if (discriminatorSelection === undefined) {
+    return decoderCompatibleUnionBranches(types, value);
+  }
+  return [
+    discriminatorSelection.branch,
+    ...discriminatorSelection.untagged.filter(
+      (type) => branchMatchStatus(type, value) === "match",
+    ),
+  ];
+}
+
+const relationReachabilityCache = new WeakMap();
+const relationReachabilityResolving = new WeakSet();
+
+function schemaMayContainAuthoredRelation(ast) {
+  const cached = relationReachabilityCache.get(ast);
+  if (cached !== undefined) return cached;
+  if (relationReachabilityResolving.has(ast)) return true;
+  relationReachabilityResolving.add(ast);
+  const roles = schemaRolesAt(ast);
+  if (
+    roles.some(
+      (role) => role.category === "reference" || role.category === "dependency",
+    )
+  ) {
+    relationReachabilityResolving.delete(ast);
+    relationReachabilityCache.set(ast, true);
+    return true;
+  }
+  if (roles.length > 0) {
+    relationReachabilityResolving.delete(ast);
+    relationReachabilityCache.set(ast, false);
+    return false;
+  }
+  const branch = decodedSchemaAst(ast);
+  let reachable;
+  if (SchemaAST.isSuspend(branch)) {
+    reachable = schemaMayContainAuthoredRelation(suspendedAst(branch));
+  } else if (SchemaAST.isUnion(branch)) {
+    reachable = branch.types.some(schemaMayContainAuthoredRelation);
+  } else if (SchemaAST.isArrays(branch)) {
+    reachable = [...branch.elements, ...branch.rest].some(
+      schemaMayContainAuthoredRelation,
+    );
+  } else if (SchemaAST.isObjects(branch)) {
+    reachable = branch.propertySignatures.some((property) =>
+      schemaMayContainAuthoredRelation(property.type),
+    );
+  } else {
+    reachable = false;
+  }
+  relationReachabilityResolving.delete(ast);
+  relationReachabilityCache.set(ast, reachable);
+  return reachable;
+}
+
+function taskMayContainAuthoredRelation(ast, inheritedRole) {
+  if (inheritedRole === undefined) return schemaMayContainAuthoredRelation(ast);
+  return (
+    inheritedRole.category === "reference" ||
+    inheritedRole.category === "dependency"
+  );
+}
+
+function walkSurfaceValueUsingUnionMatcher(
+  schema,
+  value,
+  visitString,
+  pathName,
+  unionMatcher,
+  shouldVisitTask,
+) {
   const seenObjects = new WeakMap();
   const pending = [
     {
@@ -533,6 +696,7 @@ function walkSurfaceValue(schema, value, visitString, pathName = "value") {
     const task = pending.pop();
     const { ast, current, currentPath, inheritedRole } = task;
     if (current === undefined) continue;
+    if (!shouldVisitTask(ast, inheritedRole)) continue;
     const branch = decodedSchemaAst(ast);
     const localRoles = schemaRolesAt(ast);
     if (localRoles.length > 1) {
@@ -601,7 +765,7 @@ function walkSurfaceValue(schema, value, visitString, pathName = "value") {
         inheritedRole: role,
       });
     } else if (SchemaAST.isUnion(branch)) {
-      for (const member of matchingUnionBranches(branch.types, current)) {
+      for (const member of unionMatcher(branch.types, current)) {
         pending.push({
           ast: member,
           current,
@@ -684,10 +848,54 @@ function walkSurfaceValue(schema, value, visitString, pathName = "value") {
   }
 }
 
-function walkDecodedSurfaceRecord(record, visitString) {
+function walkSurfaceValue(schema, value, visitString, pathName = "value") {
+  walkSurfaceValueUsingUnionMatcher(
+    schema,
+    value,
+    visitString,
+    pathName,
+    matchingUnionBranches,
+    () => true,
+  );
+}
+
+function walkSurfaceValueWithUnionMatcher(
+  schema,
+  value,
+  visitString,
+  unionMatcher,
+  shouldVisitTask,
+) {
+  walkSurfaceValueUsingUnionMatcher(
+    schema,
+    value,
+    visitString,
+    "value",
+    unionMatcher,
+    shouldVisitTask,
+  );
+}
+
+function walkDecodedSurfaceRecordWith(record, visitString, walkValue) {
   const schema =
     record.kind === "statBlock" ? StatBlockRecordSchema : UnitRecordSchema;
-  walkSurfaceValue(schema, record.value, visitString);
+  walkValue(schema, record.value, visitString);
+}
+
+function walkDecodedSurfaceRecord(record, visitString) {
+  walkDecodedSurfaceRecordWith(record, visitString, walkSurfaceValue);
+}
+
+function walkDecodedSurfaceRecordRelations(record, visitString, unionMatcher) {
+  walkDecodedSurfaceRecordWith(record, visitString, (schema, value, visit) =>
+    walkSurfaceValueWithUnionMatcher(
+      schema,
+      value,
+      visit,
+      unionMatcher,
+      taskMayContainAuthoredRelation,
+    ),
+  );
 }
 
 function collectDecodedStringPaths(value, path = "value", paths = new Set()) {
@@ -1156,7 +1364,7 @@ function statusSeverity(status) {
   return "failure";
 }
 
-function collectAuthoredRelations(records) {
+function collectAuthoredRelationsWith(records, walkRecord) {
   const refs = [];
 
   function add(record, fieldPath, targetRecordId, role) {
@@ -1174,7 +1382,7 @@ function collectAuthoredRelations(records) {
   }
 
   for (const record of records) {
-    walkDecodedSurfaceRecord(record, (fieldPath, value, role) => {
+    walkRecord(record, (fieldPath, value, role) => {
       if (
         (role.category !== "reference" && role.category !== "dependency") ||
         typeof value !== "string"
@@ -1186,6 +1394,26 @@ function collectAuthoredRelations(records) {
   }
 
   return refs;
+}
+
+function collectAuthoredRelations(records) {
+  return collectAuthoredRelationsWith(records, (record, visitString) =>
+    walkDecodedSurfaceRecordRelations(
+      record,
+      visitString,
+      matchingUnionBranches,
+    ),
+  );
+}
+
+function collectAuthoredRelationsWithDecoderCompatibleUnions(records) {
+  return collectAuthoredRelationsWith(records, (record, visitString) =>
+    walkDecodedSurfaceRecordRelations(
+      record,
+      visitString,
+      decoderCompatibleUnionBranches,
+    ),
+  );
 }
 
 const auditContextState = new WeakMap();
@@ -3404,6 +3632,7 @@ module.exports = {
   buildReferenceIndex,
   collectDecodedStringPaths,
   collectAuthoredRelations,
+  collectAuthoredRelationsWithDecoderCompatibleUnions,
   createAuditContext,
   decodeSurfaceRecord,
   readSurfaceRecords,
@@ -3414,6 +3643,8 @@ module.exports = {
   sourceContainsIdentity,
   sourceTextForResolution,
   unsupportedSummaryWords,
+  decoderCompatibleUnionBranches,
+  matchingUnionBranches,
   walkDecodedSurfaceRecord,
   walkSchemaShape,
   walkSurfaceValue,
