@@ -13,16 +13,15 @@ This section is the sole mutable handoff for a new session.
 
 - Ledger state observed: 2026-08-31
 - Current frontier: `SR-04`
-- Active work: #464 Character Definition static projection
-- Active owner: Codex orchestrator
-- Last completed checkpoint: `SR-03` typed weapon-mastery references, #476
-- Last accepted milestone SHA: `1520c58f3`
+- Active work: none; next Creation-train ticket is #469
+- Active owner: none
+- Last completed landing unit: `SR-04A` Character Definition static projection,
+  #464
+- Last accepted milestone SHA: `65bbb45b8`
 - Coordination base before `SR-00`: `51beff526`
 - `SR-00` integration base: `301229532`
-- Active landing unit: `integration/cleanroom-sr-04a` at
-  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04a`
-- Next action: audit existing Character Definition readers and production
-  consumers for #464 from lease base `a5b66bf8b`
+- Active landing unit: none
+- Next action: claim `SR-04B` for #469 from the latest ledger-accepted `master`
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded
@@ -129,6 +128,7 @@ required unit has landed.
 | `SR-01`         | `b2457bb42` | `aceda1aa5`  | Local master now contains the reviewed SR-00 line and merged #479 / PR #480 cohort without importing the four excluded deltas               | Standards and Spec/RAW reviews converged with no findings; Battle Runtime typecheck passed; focused transaction 19/19, projection 27/27, spellcasting allocation 40/40, Surface 27/27 plus encoded-reference 1/1; rules-kernel 162 obligations and unit-profile 435 Units/272 profiles passed; the operator-waived interrupted broad/full run was not replayed and is not claimed as passed                                                                                                   | [#479 final merge and preservation receipt](https://github.com/dearlordylord/5e-quint/issues/479#issuecomment-5470608738); [PR #480](https://github.com/dearlordylord/5e-quint/pull/480)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | `SR-02`          |
 | `SR-02`         | `94e28943d` | `22aa1a6f8`  | Exact common-base Surface, RAW-coverage, rules-kernel, QNT, and Static Mechanics Admission evidence converged on local master               | Standards and Spec/RAW reviews converged with no findings; Surface/Battle/publication typechecks passed; Surface 30/30 and admission/projection 29/29 focused tests passed; publication synchronized 932 Dhall/JSON peers and verified its 39 changed/344 added delta; RAW 23,966/23,966, rules-kernel 162, Unit profiles 435/272, and QNT inventory 833/833 passed; the operator-waived broad/full run was not replayed or claimed, and #481 owns the separate Stone Giant parity diagnostic | [#38 SR-02 receipt](https://github.com/dearlordylord/5e-quint/issues/38#issuecomment-5473537527); partial audits [#102](https://github.com/dearlordylord/5e-quint/issues/102#issuecomment-5473536917), [#103](https://github.com/dearlordylord/5e-quint/issues/103#issuecomment-5473537001), [#105](https://github.com/dearlordylord/5e-quint/issues/105#issuecomment-5473537103), [#56](https://github.com/dearlordylord/5e-quint/issues/56#issuecomment-5473537178), [#119](https://github.com/dearlordylord/5e-quint/issues/119#issuecomment-5473537264); accepted behavior retained behind #389: [#407](https://github.com/dearlordylord/5e-quint/issues/407#issuecomment-5473537344), [#408](https://github.com/dearlordylord/5e-quint/issues/408#issuecomment-5473537423) | `SR-03`, `SR-12` |
 | `SR-03`         | `18673a70c` | `1520c58f3`  | Typed weapon-to-mastery authored references landed across Surface content, publication, catalog diagnostics, and narrowed runtime admission | Standards and Spec/RAW/architecture reviews converged locally with no findings; changed-file lint and diff checks passed; Surface and Battle typechecks passed; focused Surface 336/336, Battle 6/6, and Character 4/4 tests passed; publication synchronized 932 Dhall/JSON peers; authored-id dispatch remained baseline-red with the same 130 production violations; no broad/full or QNT/MBT pass claimed                                                                                 | [#476 closed receipt](https://github.com/dearlordylord/5e-quint/issues/476#issuecomment-5474179379)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | `SR-04`, `SR-09` |
+| `SR-04A`        | `c2218a8cd` | `65bbb45b8`  | Context-independent Character Definition projection and graph admission landed for class, subclass, background, and species roots           | Two local RAW/domain/architecture/standards reviews converged; Surface and Character Creation Runtime typechecks passed; focused final suite 140/140 passed; changed-file formatting and lint passed; authored-id dispatch remained baseline-red with the same 130 production violations and collision evidence; no broad/full or QNT/MBT pass claimed                                                                                                                                        | [#464 closed receipt](https://github.com/dearlordylord/5e-quint/issues/464#issuecomment-5474448769)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | #469             |
 
 ## Active landing table
 
@@ -136,9 +136,8 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                      | State  |
-| --------------- | ------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
-| `SR-04A`        | #464 Character Definition static projection | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04a`; `integration/cleanroom-sr-04a` | `a5b66bf8b` | Surface Character Definition projection plus character-creation discovery/finalization consumers, focused verification, and reviewer convergence | Active |
+| Checkpoint/unit | Ticket/slice | Owner | Worktree/branch | Base SHA | Write lease | State |
+| --------------- | ------------ | ----- | --------------- | -------- | ----------- | ----- |
 
 ## Landing discipline
 
