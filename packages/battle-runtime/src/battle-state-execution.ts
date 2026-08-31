@@ -193,6 +193,10 @@ import type {
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
 import type {
+  SpellCastingSource,
+  SpellDefinitionRuleFacts,
+} from "./procedure-execution/spell-rule-facts.ts";
+import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
   BoundAttackExecutionSelection,
@@ -204,17 +208,9 @@ export type BattleSpellAdmissionSource = {
   readonly id: UnitId;
   readonly name: string;
   readonly mechanics: SpellMechanics;
-  readonly castingSource:
-    | {
-        readonly tag: "classSpellcasting";
-        readonly className: ClassName;
-        readonly abilityModifier: AbilityModifier;
-      }
-    | {
-        readonly tag: "spellAccess";
-        readonly spellAccessRef: import("./identity.ts").BattleSpellAccessExecutionRef;
-        readonly abilityModifier: AbilityModifier;
-      };
+  /** Projected exactly once while authored spell admission is still in scope. */
+  readonly spellDefinitionRuleFacts: SpellDefinitionRuleFacts;
+  readonly castingSource: SpellCastingSource;
   /**
    * Resource pool refs that can free-cast this spell through a class feature.
    * Populated at spell-admission time so reducer execution does not need to
@@ -222,6 +218,27 @@ export type BattleSpellAdmissionSource = {
    */
   readonly spellAccessFreeCastResourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
 };
+
+/**
+ * Runtime-facing spell source after admission. The authored mechanics shell is
+ * intentionally excluded here so consumers can migrate without re-parsing it.
+ */
+export type BattleSpellExecutionSource = Omit<
+  BattleSpellAdmissionSource,
+  "mechanics"
+>;
+
+/**
+ * Remove the authored mechanics shell once a spell has crossed admission.
+ * Profile admission owns the call site; execution consumers receive only the
+ * projected Definition facts and dynamic casting source.
+ */
+export function battleSpellExecutionSourceFromAdmission(
+  source: BattleSpellAdmissionSource,
+): BattleSpellExecutionSource {
+  const { mechanics: _mechanics, ...executionSource } = source;
+  return executionSource;
+}
 import type {
   AttackDamageDieFloorChoiceFill,
   AttackDamageDieFloorChoiceProcedureRefs,
@@ -3802,7 +3819,7 @@ export type SupportedSpellInvocation = {
               Spell,
               | "id"
               | "name"
-              | "mechanics"
+              | "spellDefinitionRuleFacts"
               | "castingSource"
               | "spellAccessFreeCastResourcePoolRefs"
             >;

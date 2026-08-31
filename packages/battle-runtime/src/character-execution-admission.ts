@@ -34,12 +34,7 @@ import {
   NonNegativeInteger,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
-import {
-  type Attachment,
-  type AuthoredSpellSource,
-  type TargetSelection,
-  type AuthoredUnitSource,
-} from "@dnd/surface/surface/types";
+import type { AuthoredUnitSource } from "@dnd/surface/surface/types";
 import type {
   BattleCharacterExecutionScopeRef,
   BattleProcedureExecutionRef,
@@ -63,7 +58,6 @@ import {
   type SupportedUnitFeatureProfile,
 } from "./unit-feature-support.ts";
 import type {
-  BattleSpellAdmissionSource,
   BattleSelectedSpellInvocation,
   SelectableSpellProcedureExecution,
   SupportedSpellInvocation,
@@ -96,7 +90,7 @@ export type AuthoredSelectedSpellInvocation<
   I extends AuthoredSupportedSpellInvocation = AuthoredSupportedSpellInvocation,
 > = I & { readonly sourceProcedureRef: BattleProcedureExecutionRef };
 import { Brand, Match } from "effect";
-import type { SpellRuleExecutionFacts } from "./procedure-execution/spell-rule-facts.ts";
+import { spellRuleExecutionFactsWithCastingSource } from "./procedure-execution/spell-rule-facts.ts";
 import type { SpellProcedureExecution } from "./procedure-execution/spell-procedure-execution.ts";
 import { isCantripSpellAccess } from "./procedure-execution/spell-invocation-vocabulary.ts";
 export type { SpellRuleExecutionFacts } from "./procedure-execution/spell-rule-facts.ts";
@@ -1741,91 +1735,6 @@ export function characterSpellProcedureRefs(
   });
 }
 
-function spellRuleExecutionFacts(
-  spell: Pick<BattleSpellAdmissionSource, "mechanics" | "castingSource">,
-): SpellRuleExecutionFacts {
-  const mechanics = spell.mechanics;
-  return {
-    castingSource: spell.castingSource,
-    level: mechanics.level,
-    range: mechanics.range,
-    duration: mechanics.duration,
-    components: {
-      verbal: mechanics.components.v,
-      somatic: mechanics.components.s,
-      hasMaterial: mechanics.components.m !== false,
-      hasPricedOrConsumedMaterial:
-        mechanics.components.m !== false &&
-        (typeof mechanics.components.m === "object" ||
-          ("materialCostGp" in mechanics.components &&
-            mechanics.components.materialCostGp !== undefined) ||
-          ("materialConsumed" in mechanics.components &&
-            mechanics.components.materialConsumed === true)),
-    },
-    twinnedTargetCount: spellTwinnedTargetCountFacts(mechanics),
-  };
-}
-
-function spellTwinnedTargetCountFacts(
-  mechanics: AuthoredSpellSource["mechanics"],
-): SpellRuleExecutionFacts["twinnedTargetCount"] {
-  const selections = spellTargetSelections(mechanics).filter((selection) => {
-    if (!("count" in selection)) return false;
-    const count = selection.count;
-    const baseLevel =
-      typeof count === "object" && count !== null && "baseLevel" in count
-        ? (count.baseLevel ?? mechanics.level)
-        : undefined;
-    return (
-      selection.mode === "choose_up_to" &&
-      !("repeatsAllowed" in selection && selection.repeatsAllowed === true) &&
-      selection.targetKinds?.length === 1 &&
-      selection.targetKinds[0] === "creature" &&
-      typeof count === "object" &&
-      count !== null &&
-      count.kind === "linear" &&
-      count.perSlotAboveBase === 1 &&
-      baseLevel === mechanics.level
-    );
-  });
-  const selection = selections.length === 1 ? selections[0] : undefined;
-  if (
-    selection?.mode !== "choose_up_to" ||
-    typeof selection.count !== "object" ||
-    selection.count === null ||
-    selection.count.kind !== "linear"
-  ) {
-    return null;
-  }
-  return {
-    base: selection.count.base,
-    baseLevel: selection.count.baseLevel ?? mechanics.level,
-  };
-}
-
-function spellTargetSelections(
-  mechanics: AuthoredSpellSource["mechanics"],
-): readonly TargetSelection[] {
-  if (mechanics.family === "ongoing_effect") {
-    const selection = targetSelectionFromAttachment(mechanics.attachment);
-    return selection === null ? [] : [selection];
-  }
-  if (mechanics.family !== "activation") return [];
-  return mechanics.phases.flatMap((phase) => {
-    if (!("attachment" in phase)) return [];
-    const selection = targetSelectionFromAttachment(phase.attachment);
-    return selection === null ? [] : [selection];
-  });
-}
-
-function targetSelectionFromAttachment(
-  attachment: Attachment,
-): TargetSelection | null {
-  return attachment.kind === "hole" && attachment.value.kind === "target"
-    ? attachment.value.selection
-    : null;
-}
-
 export function characterStoredSpellProcedureRef(
   execution: CharacterExecutionState,
   invocation: SupportedSpellInvocation | SpellProcedureExecution,
@@ -1850,7 +1759,10 @@ export function spellProcedureExecution<
 export function spellProcedureExecution(
   invocation: SupportedSpellInvocation,
 ): SpellProcedureExecution {
-  const spellRuleFacts = spellRuleExecutionFacts(invocation.spell);
+  const spellRuleFacts = spellRuleExecutionFactsWithCastingSource(
+    invocation.spell.spellDefinitionRuleFacts,
+    invocation.spell.castingSource,
+  );
   return Match.value(invocation).pipe(
     Match.discriminatorsExhaustive("procedure")({
       abilityD20TestRollModeSaveGate: (value) => ({

@@ -79,6 +79,7 @@ import {
   type UnlimitedActivationResource,
 } from "./character-battle-resource-execution.ts";
 import type { BattleSpellAdmissionSource } from "./battle-state-execution.ts";
+import { projectSpellDefinitionRuleFacts } from "./procedure-admission/spell-definition-rule-facts.ts";
 import { readMagicInitiateSpellAccessSourceFacts } from "@dnd/surface/surface/character-creation-readers";
 export {
   characterBattleResourceIsPointPool,
@@ -573,6 +574,9 @@ export function admittedSpellToAdmissionSource(
     id: admitted.spell.id,
     name: admitted.spell.name,
     mechanics: admitted.spell.mechanics,
+    spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(
+      admitted.spell.mechanics,
+    ),
     castingSource: admitted.castingSource,
     spellAccessFreeCastResourcePoolRefs:
       admitted.spellAccessFreeCastResourcePoolRefs,
@@ -587,6 +591,7 @@ export function spellRecordToAdmissionSource(
     id: spell.id,
     name: spell.name,
     mechanics: spell.mechanics,
+    spellDefinitionRuleFacts: projectSpellDefinitionRuleFacts(spell.mechanics),
     castingSource,
     spellAccessFreeCastResourcePoolRefs: [],
   };

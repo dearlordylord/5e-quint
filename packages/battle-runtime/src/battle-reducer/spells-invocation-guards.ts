@@ -17,7 +17,7 @@ type RuntimeSpellProcedure =
   | SupportedSpellInvocation
   | RuntimeSpellProcedureExecution;
 import type { SpellMechanics } from "@dnd/surface/surface/types";
-import { Match } from "effect";
+import { projectSpellDefinitionRuleFacts } from "../procedure-admission/spell-definition-rule-facts.ts";
 import {
   activeOngoingFeatureOccurrencesForCombatant,
   ongoingFeatureProfileForSourceKey,
@@ -33,14 +33,6 @@ import {
   DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
   type BattleDruidWildShapeKnownFormSupportProfile,
 } from "../druid-wild-shape-support-execution.ts";
-
-const byKind = Match.discriminator("kind");
-
-type SpellComponents = SpellMechanics["components"];
-type StructuredMaterialComponent = Exclude<
-  SpellComponents["m"],
-  boolean | string
->;
 
 export function isPreparedDamageSpellSource(
   source: DamageSpellSource,
@@ -128,7 +120,8 @@ function druidBeastSpellsAllowsInvocation(
     Number(profile.classLevel) >= DRUID_BEAST_SPELLS_CLASS_LEVEL &&
     !("spellRuleFacts" in invocation
       ? invocation.spellRuleFacts.components.hasPricedOrConsumedMaterial
-      : spellDefinitionHasPricedOrConsumedMaterialComponent(invocation.spell))
+      : invocation.spell.spellDefinitionRuleFacts.components
+          .hasPricedOrConsumedMaterial)
   );
 }
 
@@ -165,25 +158,6 @@ function activeDruidWildShapeSupportProfile(
 export function spellDefinitionHasPricedOrConsumedMaterialComponent(spell: {
   readonly mechanics: SpellMechanics;
 }): boolean {
-  const components = spell.mechanics.components;
-  if (components.m === false) {
-    return false;
-  }
-  if (typeof components.m === "string") {
-    return (
-      ("materialCostGp" in components &&
-        components.materialCostGp !== undefined) ||
-      ("materialConsumed" in components && components.materialConsumed === true)
-    );
-  }
-  return structuredMaterialComponentHasSpecifiedCostOrConsumes(components.m);
-}
-
-function structuredMaterialComponentHasSpecifiedCostOrConsumes(
-  materialComponent: StructuredMaterialComponent,
-): boolean {
-  return Match.value(materialComponent).pipe(
-    byKind("paired_worn_items", () => true),
-    Match.exhaustive,
-  );
+  return projectSpellDefinitionRuleFacts(spell.mechanics).components
+    .hasPricedOrConsumedMaterial;
 }

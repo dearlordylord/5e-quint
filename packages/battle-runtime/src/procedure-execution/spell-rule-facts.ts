@@ -10,19 +10,21 @@ import type { ClassName } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import { BattleSpellAccessExecutionRef } from "../identity.ts";
 
-/** Mechanical Spell Definition facts retained for reducer execution. */
-export type SpellRuleExecutionFacts = {
-  readonly castingSource:
-    | {
-        readonly tag: "classSpellcasting";
-        readonly className: ClassName;
-        readonly abilityModifier: AbilityModifier;
-      }
-    | {
-        readonly tag: "spellAccess";
-        readonly spellAccessRef: BattleSpellAccessExecutionRef;
-        readonly abilityModifier: AbilityModifier;
-      };
+/** The dynamic caster/access fact joined to a static Spell Definition. */
+export type SpellCastingSource =
+  | {
+      readonly tag: "classSpellcasting";
+      readonly className: ClassName;
+      readonly abilityModifier: AbilityModifier;
+    }
+  | {
+      readonly tag: "spellAccess";
+      readonly spellAccessRef: BattleSpellAccessExecutionRef;
+      readonly abilityModifier: AbilityModifier;
+    };
+
+/** Spell Definition facts carried across the admission/execution boundary. */
+export type SpellDefinitionRuleFacts = {
   readonly level: SpellLevel;
   readonly range: Range;
   readonly duration: Duration;
@@ -38,19 +40,33 @@ export type SpellRuleExecutionFacts = {
   } | null;
 };
 
-export const SpellRuleExecutionFactsSchema = Schema.Struct({
-  castingSource: Schema.Union([
-    Schema.Struct({
-      tag: Schema.Literal("classSpellcasting"),
-      className: ClassNameSchema,
-      abilityModifier: AbilityModifier,
-    }),
-    Schema.Struct({
-      tag: Schema.Literal("spellAccess"),
-      spellAccessRef: BattleSpellAccessExecutionRef,
-      abilityModifier: AbilityModifier,
-    }),
-  ]),
+/** Static Definition facts plus the cast's dynamic caster/access source. */
+export type SpellRuleExecutionFacts = SpellDefinitionRuleFacts & {
+  readonly castingSource: SpellCastingSource;
+};
+
+/** Join dynamic caster/access state after static Definition projection. */
+export function spellRuleExecutionFactsWithCastingSource(
+  definition: SpellDefinitionRuleFacts,
+  castingSource: SpellCastingSource,
+): SpellRuleExecutionFacts {
+  return { ...definition, castingSource };
+}
+
+export const SpellCastingSourceSchema = Schema.Union([
+  Schema.Struct({
+    tag: Schema.Literal("classSpellcasting"),
+    className: ClassNameSchema,
+    abilityModifier: AbilityModifier,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("spellAccess"),
+    spellAccessRef: BattleSpellAccessExecutionRef,
+    abilityModifier: AbilityModifier,
+  }),
+]);
+
+export const SpellDefinitionRuleFactsSchema = Schema.Struct({
   level: SpellLevelSchema,
   range: RangeSchema,
   duration: DurationSchema,
@@ -67,4 +83,9 @@ export const SpellRuleExecutionFactsSchema = Schema.Struct({
     }),
     Schema.Null,
   ]),
+});
+
+export const SpellRuleExecutionFactsSchema = Schema.Struct({
+  castingSource: SpellCastingSourceSchema,
+  ...SpellDefinitionRuleFactsSchema.fields,
 });
