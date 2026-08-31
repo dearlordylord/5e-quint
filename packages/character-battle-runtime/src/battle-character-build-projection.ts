@@ -719,17 +719,11 @@ function characterWeaponAttackActionOption(
       battleCreatureInitIssueMessage(unit.failure),
     );
   }
-  if (unit.success.kind !== "weapon" || unit.success.damage.kind !== "dice") {
+  if (!isDiceDamageWeapon(unit.success)) {
     return Result.succeed(null);
   }
 
-  const masteryReference = resolveWeaponMasteryReference(
-    unit.success,
-    unitLibrary,
-  );
-  const executionWeapon = Result.isFailure(masteryReference)
-    ? Result.succeed(admitCharacterWeaponExecutionWeapon(unit.success))
-    : admitResolvedCharacterWeaponExecutionWeapon(masteryReference.success);
+  const executionWeapon = characterExecutionWeapon(unit.success, unitLibrary);
   if (Result.isFailure(executionWeapon)) {
     return battleCreatureInitIssue(executionWeapon.failure.message);
   }
@@ -755,10 +749,12 @@ function characterWeaponAttackActionOption(
       battleCreatureInitIssueMessage(martialArts.failure),
     );
   }
-  const projectedAttack =
-    martialArts.success === null || !isMonkWeapon(unit.success)
-      ? baseAttack
-      : martialArtsWeaponAttack(baseAttack, build, martialArts.success);
+  const projectedAttack = characterMartialArtsWeaponAttack(
+    baseAttack,
+    unit.success,
+    build,
+    martialArts.success,
+  );
   return Result.succeed(
     pactBladeWeaponAttack(
       projectedAttack,
@@ -767,6 +763,38 @@ function characterWeaponAttackActionOption(
       pactBladeBondedWeaponItemId,
     ),
   );
+}
+
+function isDiceDamageWeapon(unit: UnitRecord): unit is Extract<
+  UnitRecord,
+  { readonly kind: "weapon" }
+> & {
+  readonly damage: { readonly kind: "dice" };
+} {
+  return unit.kind === "weapon" && unit.damage.kind === "dice";
+}
+
+function characterExecutionWeapon(
+  weapon: Extract<UnitRecord, { readonly kind: "weapon" }> & {
+    readonly damage: { readonly kind: "dice" };
+  },
+  unitLibrary: UnitCatalog,
+) {
+  const masteryReference = resolveWeaponMasteryReference(weapon, unitLibrary);
+  return Result.isFailure(masteryReference)
+    ? Result.succeed(admitCharacterWeaponExecutionWeapon(weapon))
+    : admitResolvedCharacterWeaponExecutionWeapon(masteryReference.success);
+}
+
+function characterMartialArtsWeaponAttack(
+  baseAttack: PhysicalAbilityWeaponAttack,
+  weapon: Extract<UnitRecord, { readonly kind: "weapon" }>,
+  build: CharacterBuild,
+  martialArts: Parameters<typeof martialArtsWeaponAttack>[2] | null,
+): PhysicalAbilityWeaponAttack {
+  return martialArts === null || !isMonkWeapon(weapon)
+    ? baseAttack
+    : martialArtsWeaponAttack(baseAttack, build, martialArts);
 }
 
 export function characterBaseUnarmedStrikeActionOption(
