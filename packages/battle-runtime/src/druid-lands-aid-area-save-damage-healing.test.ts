@@ -9,7 +9,7 @@ import { describe, expect, test } from "vitest";
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import { Result } from "effect";
 import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   magicActionAreaSaveDamageHealingDamageRollHoleId,
   magicActionAreaSaveDamageHealingHealingRollHoleId,
@@ -545,7 +545,7 @@ function landsAidBattle(
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }

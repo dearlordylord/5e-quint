@@ -6,11 +6,14 @@ import type {
   StatBlockRecord,
 } from "./types.ts";
 import type {
-  StatBlockCatalog as StatBlockCatalogContract,
+  StatBlockCatalog,
   StatBlockId,
 } from "./stat-block-catalog-contract.ts";
 
-export type { StatBlockId } from "./stat-block-catalog-contract.ts";
+export type {
+  StatBlockCatalog,
+  StatBlockId,
+} from "./stat-block-catalog-contract.ts";
 
 export type Srd521CollectionProvenance = Pick<SrdProvenance, "kind">;
 
@@ -22,10 +25,6 @@ export type SrdStatBlockCollection = {
   readonly kind: "srdStatBlockCollection";
   readonly provenance: Srd521CollectionProvenance;
   readonly statBlocks: readonly Srd521StatBlock[];
-};
-
-export type StatBlockCatalog = StatBlockCatalogContract & {
-  readonly requireStatBlock: (id: StatBlockId) => StatBlockRecord;
 };
 
 export type StatBlockCatalogBuildIssue =
@@ -121,13 +120,6 @@ export function buildStatBlockCatalog(input: {
     catalog: {
       getStatBlock: (id) => Option.fromNullishOr(records.get(id)),
       listStatBlocks: () => Array.from(records.values()),
-      requireStatBlock: (id) => {
-        const statBlock = records.get(id);
-        if (statBlock === undefined) {
-          throw new Error(`Required Stat Block is unavailable: ${id}`);
-        }
-        return statBlock;
-      },
     },
   };
 }

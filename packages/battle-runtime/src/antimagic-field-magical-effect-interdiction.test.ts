@@ -64,7 +64,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 const antimagicFieldAreaId = battleAreaId(
   "antimagic-magical-effect-interdiction-area",
@@ -411,7 +411,7 @@ function preserveLifeBattle(): BattleRuntimeSession {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }

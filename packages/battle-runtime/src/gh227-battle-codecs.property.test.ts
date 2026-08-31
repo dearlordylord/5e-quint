@@ -273,11 +273,20 @@ describe("GH-227 battle codec properties", () => {
   test("rejects duplicate runtime Stat Block procedure ordinals", () => {
     const encoded = encodedStatBlockSnapshots();
     const ordinalBindings = encoded.procedureBindings.filter(
-      (binding) => "procedureOrdinal" in binding.procedure,
+      (binding) =>
+        binding.procedure.kind !== "effectOccurrenceSource" &&
+        binding.procedure.kind !== "unarmedStrike",
     );
     const first = ordinalBindings[0];
     const second = ordinalBindings[1];
-    if (first === undefined || second === undefined) {
+    if (
+      first === undefined ||
+      second === undefined ||
+      first.procedure.kind === "effectOccurrenceSource" ||
+      second.procedure.kind === "effectOccurrenceSource" ||
+      first.procedure.kind === "unarmedStrike" ||
+      second.procedure.kind === "unarmedStrike"
+    ) {
       throw new Error("Expected two ordinal-bearing procedure bindings.");
     }
     const firstProcedure = first.procedure;

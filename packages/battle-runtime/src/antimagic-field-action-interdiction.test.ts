@@ -23,7 +23,10 @@ import {
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
+import {
+  battleInitializationIssueMessage,
+  removeBattleCombatants,
+} from "./battle-reducer/api-lifecycle.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 import { characterExecutionWithSpatialMeleeSpellAttackProxyRepeatAttack } from "./character-execution-admission.ts";
 import {
@@ -753,7 +756,7 @@ function preserveLifeBattle(): BattleRuntimeSession {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }

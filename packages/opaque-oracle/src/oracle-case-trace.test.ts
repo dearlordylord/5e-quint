@@ -38,6 +38,7 @@ import {
   srdStatBlockCollection,
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import {
   OracleBattleCheckpointSchema,
   OracleBattleContinuationSchema,
@@ -72,7 +73,9 @@ if (statBlockLibraryResult.tag !== "ok") {
   );
 }
 const statBlockCatalog = statBlockLibraryResult.catalog;
-const statBlockRecord = statBlockCatalog.getStatBlock("stat_block_skeleton");
+const statBlockRecord = statBlockCatalog.getStatBlock(
+  statBlockId("stat_block_skeleton"),
+);
 if (Option.isNone(statBlockRecord)) {
   throw new Error("SRD stat-block fixture must be available.");
 }
@@ -84,10 +87,9 @@ const projectionFailureStatBlockCatalog: StatBlockCatalog = {
           ...statBlockRecord.value,
           statBlock: {
             ...statBlockRecord.value.statBlock,
-            immunities: {
-              ...(statBlockRecord.value.statBlock.immunities ?? {}),
-              conditions: ["prone"] as const,
-            },
+            immunities: decodeCreatureImmunityDeclarationSync({
+              conditions: ["prone"],
+            }),
           },
         })
       : statBlockCatalog.getStatBlock(id),

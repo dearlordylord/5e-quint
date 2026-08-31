@@ -88,7 +88,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import { statBlockCatalog } from "./unit-profile-admission-catalog.test-support.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 const FAMILIAR_STATUSES = ["none", "present"] as const;
 type FamiliarStatus = (typeof FAMILIAR_STATUSES)[number];
@@ -594,7 +594,7 @@ function initialRuntimeState(): SpawnedCompanionRuntimeState {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return { battle: result.success, event: { tag: "init" } };
 }
