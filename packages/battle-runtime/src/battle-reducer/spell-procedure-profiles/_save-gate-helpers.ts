@@ -162,6 +162,7 @@ const HUMANOID_PARALYSIS_TARGET_CREATURE_TYPES = [
 ] as const satisfies readonly [CreatureType, ...CreatureType[]];
 const CREATURE_PARALYSIS_BASE_SPELL_LEVEL = 5;
 const CREATURE_PARALYSIS_RANGE_FEET = 90;
+const AREA_RESTRAINT_RANGE_FEET = 90;
 const AREA_CONDITION_IMMUNITY_BASE_SPELL_LEVEL = 2;
 const AREA_CONDITION_IMMUNITY_RANGE_FEET = 60;
 const AREA_CONDITION_IMMUNITY_RADIUS_FEET = 20;
@@ -1235,7 +1236,7 @@ export function persistentAreaRestrainedSaveGateConditionSpell(
     !allAdmissionFactsHold(
       spell.mechanics.level === 1,
       spellHasActionCastingTime(spell),
-      hasPointRangeFeet(spell, 90),
+      hasPointRangeFeet(spell, AREA_RESTRAINT_RANGE_FEET),
       hasOneMinuteConcentrationDuration(spell),
       spell.mechanics.phases.length === 1,
       !hasSaveGateRepeatSaves(phase),
@@ -1270,7 +1271,7 @@ export function persistentAreaRestrainedSaveGateConditionSpell(
       repeatSave: null,
     },
     saveRollModeRule: null,
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
+    rangeFeet: movementFeet(AREA_RESTRAINT_RANGE_FEET),
   };
 }
 
