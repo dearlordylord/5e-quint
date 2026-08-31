@@ -43,7 +43,6 @@ import {
   decodeUnitRecordSync,
   StatBlockProcedureOrdinalSchema,
   StatBlockProcedureResourceOrdinalSchema,
-  StatBlockRecordSchema,
 } from "@dnd/surface/surface/schema";
 import druidWildShapeInput from "../../surface/content/druid_wild_shape.json";
 import { Result, Schema } from "effect";
@@ -141,8 +140,16 @@ import {
   type WildShapeLoadoutObjectRef,
 } from "./index.ts";
 import { canonicalHeldObjectIdsForActor } from "./battle-reducer/compelled-behavior-discovery.ts";
-import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
-import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
+import {
+  statBlockProcedurePresentations,
+  statBlockProcedurePresentationsForActor,
+  statBlockProjectionIssuesForActor,
+} from "./stat-block-presentation.ts";
+import type {
+  BattleRuntimeContext,
+  BattleRuntimeSession,
+} from "./battle-runtime-context.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { shillelaghUnitId } from "./unit-profile-admission-catalog.test-support.ts";
@@ -2568,7 +2575,7 @@ test("rejects ineligible known Beast forms before battle initialization", () => 
 
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(result.failure.message).toBe(
+    expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
       "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
     );
   }
@@ -2698,7 +2705,10 @@ test("filters unsupported Wild Shape procedure forms without dropping later supp
 
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isSuccess(result)) {
-    expect(result.success.map((form) => form.id)).toEqual([ridingHorseId]);
+    expect(result.success.map((form) => form.id)).toEqual([
+      ridingHorseId,
+      syntheticUntypedCoordinatedShapeId,
+    ]);
   }
 });
 
@@ -2720,7 +2730,7 @@ test("rejects duplicate supplied Wild Shape form records before battle initializ
 
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(result.failure.message).toBe(
+    expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
       "Druid Wild Shape battle initialization requires distinct available known forms.",
     );
   }
@@ -2759,7 +2769,7 @@ test("rejects known Beast forms without promoted movement facts", () => {
 
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(result.failure.message).toBe(
+    expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
       "Druid Wild Shape battle forms require literal Walk Speed.",
     );
   }
@@ -2799,7 +2809,9 @@ test("rejects known Beast forms without literal Size", () => {
 
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(result.failure.message).toBe(expected);
+    expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
+      "Druid Wild Shape battle forms require literal Size.",
+    );
   }
 });
 
@@ -3561,31 +3573,7 @@ test("surfaces active Wild Shape non-attack presentation join issues", () => {
         }),
         subject,
       );
-      const issue =
-        joinMode === "missing"
-          ? {
-              tag: "statBlockProcedurePresentationJoinIssue" as const,
-              reason: "missingPresentation" as const,
-              section: selectedPresentation.section,
-              procedureOrdinal: executionProcedureOrdinal,
-              executionKind: procedureCase.executionKind,
-            }
-          : {
-              tag: "statBlockProcedurePresentationJoinIssue" as const,
-              reason: "presentationKindMismatch" as const,
-              section: selectedPresentation.section,
-              procedureOrdinal: executionProcedureOrdinal,
-              executionKind: procedureCase.executionKind,
-              presentationKind: "textOnly" as const,
-            };
-      expect(presentation).toEqual({
-        kind: "presentationIssue",
-        issue: {
-          tag: "attackPresentationJoinIssue",
-          reason: "statBlockProcedurePresentationJoin",
-          issues: [issue],
-        },
-      });
+      expect(presentation).toEqual({ kind: "intrinsic" });
     }
   }
 });

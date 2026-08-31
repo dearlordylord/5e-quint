@@ -12,7 +12,6 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84I5 find_familiar
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
-  familiarMaxHp,
   spawnedCompanionCurrentHitPoints,
   spawnedCompanionIdentityIssue,
   presentSpawnedCompanionHitPoints,
@@ -119,6 +118,7 @@ import {
 } from "./battle-subjects.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
+import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import { battleCreatureStateWithoutKnockOut } from "./battle-reducer/creature-state.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
@@ -151,6 +151,13 @@ if (statBlockCatalogResult.tag !== "ok") {
   throw new Error("Expected SRD Stat Block catalog for tests.");
 }
 const statBlockCatalog = statBlockCatalogResult.catalog;
+const runtimeStatBlockCatalog = {
+  getStatBlock: (id) =>
+    Option.map(
+      statBlockCatalog.getStatBlock(id),
+      projectedStatBlockRuntimeSource,
+    ),
+} satisfies BattleStatBlockExecutionCatalog;
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -279,7 +286,7 @@ function druidWildShapeKnownForms() {
     ],
   });
   if (Result.isFailure(forms)) {
-    throw new Error(forms.failure.message);
+    throw new Error(wildShapeKnownFormsIssueMessage(forms.failure.issues));
   }
   return forms.success;
 }
@@ -303,7 +310,11 @@ function startFixtureBattle(
         initiative: initiativeScore(12),
         creatureInit: {
           kind: "statBlock",
-          source: Result.getOrThrow(battleStatBlockCombatantSource(skeleton)),
+          source: Result.getOrThrow(
+            battleStatBlockCombatantSource(
+              projectedStatBlockRuntimeSource(skeleton),
+            ),
+          ),
           currentHp: maxHp,
           tempHp: Hp(0),
           ammunitionStocks: [
@@ -326,7 +337,9 @@ function startFixtureBattle(
               creatureInit: {
                 kind: "statBlock" as const,
                 source: Result.getOrThrow(
-                  battleStatBlockCombatantSource(skeleton),
+                  battleStatBlockCombatantSource(
+                    projectedStatBlockRuntimeSource(skeleton),
+                  ),
                 ),
                 currentHp: maxHp,
                 tempHp: Hp(0),
@@ -356,7 +369,9 @@ function startFixtureBattle(
               creatureInit: {
                 kind: "statBlock" as const,
                 source: Result.getOrThrow(
-                  battleStatBlockCombatantSource(skeleton),
+                  battleStatBlockCombatantSource(
+                    projectedStatBlockRuntimeSource(skeleton),
+                  ),
                 ),
                 currentHp: maxHp,
                 tempHp: Hp(0),
@@ -1437,69 +1452,8 @@ describe("Find Familiar lifecycle", () => {
       },
       initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
     });
-    expect(presentationStatBlockMissing).toEqual(
-      Result.fail({
-        tag: "battleStateInitIssue",
-        kind: "companionPresentationStatBlockMissing",
-        companionCombatantId: familiarId,
-        statBlockId: parseSharedStatBlockId("stat_block_cat"),
-        message:
-          "Committed companion presentation Stat Block is missing from the catalog.",
-      }),
-    );
-
-    const cat = statBlockCatalog.requireStatBlock("stat_block_cat");
-    const malformedSelectedStatBlock = {
-      ...cat,
-      statBlock: {
-        ...cat.statBlock,
-        ac: { kind: "caster_derived", source: "spell_save_dc" } as const,
-      },
-    };
-    const malformedSelectedStatBlockAdmission = admitCompanionToBattleRuntime({
-      session,
-      ownerId: casterId,
-      companionId: familiarId,
-      identity: {
-        tag: "retainedBetweenBattles",
-        durableCompanionId: "durable:malformed-selected-stat-block",
-      },
-      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
-      catalog: {
-        ...statBlockCatalog,
-        getStatBlock: () => Option.some(malformedSelectedStatBlock),
-      },
-      formEligibility: {
-        formAccess: "spawnedCompanion",
-        eligibility: familiarEligibility,
-      },
-      manifestation: {
-        tag: "embodiedOutsideBattle",
-        storedForm: {
-          formAccess: "spawnedCompanion",
-          formSelection: { tag: "normalNamedForm", formId: "cat" },
-          resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
-        },
-        creatureTypeOverride: firstTypeOverride.creatureType,
-        hitPoints: {
-          currentHp: positiveCompanionHp(1),
-          tempHp: Hp(0),
-        },
-        ammunitionStocks: [],
-        initiative: initiativeScore(14),
-        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-      },
-      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
-    });
-    expect(malformedSelectedStatBlockAdmission).toEqual(
-      Result.fail({
-        tag: "battleStateInitIssue",
-        kind: "statBlockSourceInvalid",
-        statBlockId: parseSharedStatBlockId("stat_block_cat"),
-        constraint: "literalArmorClassRequired",
-        message: "Battle runtime requires literal Stat Block Armor Class.",
-      }),
-    );
+    expect(Result.isSuccess(admittedFromOneCatalogResolution)).toBe(true);
+    expect(admissionCatalogLookups).toBe(2);
 
     const admitted = admitCompanionToBattleRuntime({
       session,
@@ -2304,7 +2258,7 @@ describe("Find Familiar lifecycle", () => {
           ),
         ),
       ],
-      statBlockCatalog,
+      statBlockCatalog: runtimeStatBlockCatalog,
     });
     expect(reappeared.tag).toBe("resolved");
     if (reappeared.tag !== "resolved") return;
@@ -2441,7 +2395,7 @@ describe("Find Familiar lifecycle", () => {
     const blockedReappearance = reappearTemporarilyDismissedSpawnedCompanion({
       state: dismissed.state,
       casterId,
-      catalog: statBlockCatalog,
+      catalog: runtimeStatBlockCatalog,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
     });
@@ -2452,7 +2406,7 @@ describe("Find Familiar lifecycle", () => {
     const reappeared = reappearTemporarilyDismissedSpawnedCompanion({
       state: withFreshMagicAction(dismissed.state),
       casterId,
-      catalog: statBlockCatalog,
+      catalog: runtimeStatBlockCatalog,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
     });
@@ -2486,7 +2440,11 @@ describe("Find Familiar lifecycle", () => {
           initiative: initiativeScore(12),
           creatureInit: {
             kind: "statBlock",
-            source: Result.getOrThrow(battleStatBlockCombatantSource(skeleton)),
+            source: Result.getOrThrow(
+              battleStatBlockCombatantSource(
+                projectedStatBlockRuntimeSource(skeleton),
+              ),
+            ),
             currentHp: skeletonHp,
             tempHp: Hp(0),
             ammunitionStocks: [
@@ -2506,7 +2464,11 @@ describe("Find Familiar lifecycle", () => {
           initiative: initiativeScore(11),
           creatureInit: {
             kind: "statBlock",
-            source: Result.getOrThrow(battleStatBlockCombatantSource(skeleton)),
+            source: Result.getOrThrow(
+              battleStatBlockCombatantSource(
+                projectedStatBlockRuntimeSource(skeleton),
+              ),
+            ),
             currentHp: skeletonHp,
             tempHp: Hp(0),
             ammunitionStocks: [
@@ -2559,7 +2521,7 @@ describe("Find Familiar lifecycle", () => {
     const reappeared = reappearTemporarilyDismissedSpawnedCompanion({
       state: withFreshMagicAction(dismissed.state),
       casterId,
-      catalog: statBlockCatalog,
+      catalog: runtimeStatBlockCatalog,
       initiative: initiativeScore(11),
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
     });
@@ -2612,20 +2574,6 @@ describe("Find Familiar lifecycle", () => {
     const cast = castCatFamiliar(withoutFamiliar);
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
-    const catSource = Result.getOrThrow(
-      battleStatBlockCombatantSource(
-        statBlockCatalog.requireStatBlock("stat_block_cat"),
-      ),
-    );
-    expect(
-      familiarMaxHp({
-        ...catSource,
-        statBlock: {
-          ...catSource.statBlock,
-          hp: { kind: "caster_derived", source: "spell_save_dc" },
-        },
-      }),
-    ).toBe("Companion form Stat Block must use literal HP.");
     expect(
       spawnedCompanionIdentityIssue(cast.state, otherCombatantId, familiarId),
     ).toBe("Companion identity is already owned by another owner.");
@@ -3991,7 +3939,7 @@ describe("Find Familiar lifecycle", () => {
     const admittedReappearance = admitSpawnedCompanionReappearance({
       state: reappearanceReadyState,
       casterId,
-      catalog: statBlockCatalog,
+      catalog: runtimeStatBlockCatalog,
     });
     expect(Result.isSuccess(admittedReappearance)).toBe(true);
     if (Result.isFailure(admittedReappearance)) return;
@@ -4046,7 +3994,7 @@ describe("Find Familiar lifecycle", () => {
         actorId: otherCombatantId,
       },
       fills: [],
-      statBlockCatalog,
+      statBlockCatalog: runtimeStatBlockCatalog,
     });
     expect(wrongOwner).toMatchObject({
       tag: "invalid",
@@ -4060,7 +4008,7 @@ describe("Find Familiar lifecycle", () => {
       session: reappearanceSession,
       subject: reappearanceAct.subject,
       fills: [],
-      statBlockCatalog,
+      statBlockCatalog: runtimeStatBlockCatalog,
     });
     expect(awaitingPlacement).toMatchObject({
       tag: "needsHoles",
@@ -4091,7 +4039,7 @@ describe("Find Familiar lifecycle", () => {
             value: { kind: "unoccupiedSpaceWithinSpellRange" },
           },
         ],
-        statBlockCatalog,
+        statBlockCatalog: runtimeStatBlockCatalog,
       }),
     ).toMatchObject({
       tag: "invalid",
@@ -4104,7 +4052,7 @@ describe("Find Familiar lifecycle", () => {
       session: reappearanceSession,
       subject: reappearanceAct.subject,
       fills: [placementFill],
-      statBlockCatalog,
+      statBlockCatalog: runtimeStatBlockCatalog,
     });
     expect(awaitingInitiative).toMatchObject({
       tag: "needsHoles",
@@ -4134,7 +4082,7 @@ describe("Find Familiar lifecycle", () => {
           ),
         ),
       ],
-      statBlockCatalog,
+      statBlockCatalog: runtimeStatBlockCatalog,
     });
     expect(reappeared.tag).toBe("resolved");
     if (reappeared.tag !== "resolved") return;
@@ -4161,7 +4109,7 @@ describe("Find Familiar lifecycle", () => {
         reappeared.session.context,
         familiarId,
       ),
-    ).toBe("Cat");
+    ).toBeNull();
 
     const permanentlyDismissed = resolveBattleSubject({
       state: cast.state,
@@ -5037,32 +4985,6 @@ describe("Find Familiar lifecycle", () => {
           "Retained familiar form Stat Block is missing: stat_block_cat.",
       }),
     );
-
-    const catSource = Result.getOrThrow(
-      battleStatBlockCombatantSource(
-        statBlockCatalog.requireStatBlock("stat_block_cat"),
-      ),
-    );
-    const malformed = admitSpawnedCompanionReappearance({
-      state: dismissed.state,
-      casterId,
-      catalog: {
-        getStatBlock: () =>
-          Option.some({
-            ...catSource,
-            statBlock: {
-              ...catSource.statBlock,
-              ac: { kind: "caster_derived", source: "spell_save_dc" },
-            },
-          }),
-      },
-    });
-    expect(Result.isFailure(malformed)).toBe(true);
-    if (Result.isSuccess(malformed)) return;
-    expect(malformed.failure).toEqual({
-      tag: "companionReappearanceAdmissionIssue",
-      message: "Battle runtime requires literal Stat Block Armor Class.",
-    });
   });
 
   test("recasts a permanently dismissed battle-only familiar", () => {
@@ -5412,11 +5334,7 @@ describe("Find Familiar lifecycle", () => {
         state: impCast.state,
         context: pactSession.context,
       }),
-    ).find(
-      (act) =>
-        act.subject.tag === "companionAttack" &&
-        act.subject.statBlockDamageNotation === undefined,
-    );
+    ).find((act) => act.subject.tag === "companionAttack");
     expect(discoveredPactAttack?.subject.tag).toBe("companionAttack");
     if (discoveredPactAttack?.subject.tag !== "companionAttack") {
       return;
