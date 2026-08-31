@@ -6,6 +6,7 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import type { BattleSpellProcedureExecution } from "../character-execution-queries.ts";
+import { Match } from "effect";
 import {
   battleReducerRouteFill,
   battleReducerRouteHoles,
@@ -352,7 +353,7 @@ function persistentAreaInvocationRoute(
     | "areaMovementDistanceDamage"
     | "persistentAreaSaveConditionEscape",
 ): BattleReducerRouteEvents {
-  return [
+  const placementRoute = [
     spatialCompositionResolve(
       "spatialEffect",
       "targetChoice",
@@ -364,21 +365,41 @@ function persistentAreaInvocationRoute(
       "spatialEffect",
       "battleConcentration",
     ),
-    ...(procedure === "persistentAreaSaveDamage"
-      ? [
-          spatialCompositionResolveWithoutFill(
-            "spatialEffect",
-            "battleLightProjection",
-          ),
-        ]
-      : []),
+  ] as const satisfies BattleReducerRouteEvents;
+  const hazardRoute = [
     spatialCompositionResolveWithoutFill("spatialEffect", "battleAreaHazard"),
     spatialCompositionResolveWithoutFill(
       "spatialEffect",
       "battleCreatureSpaceMovement",
     ),
-    ...(procedure === "persistentAreaSaveConditionEscape"
-      ? [
+  ] as const satisfies BattleReducerRouteEvents;
+  return Match.value(procedure).pipe(
+    Match.when(
+      "persistentAreaSaveDamage",
+      () =>
+        [
+          ...placementRoute,
+          spatialCompositionResolveWithoutFill(
+            "spatialEffect",
+            "battleLightProjection",
+          ),
+          ...hazardRoute,
+        ] as const satisfies BattleReducerRouteEvents,
+    ),
+    Match.when(
+      "areaMovementDistanceDamage",
+      () =>
+        [
+          ...placementRoute,
+          ...hazardRoute,
+        ] as const satisfies BattleReducerRouteEvents,
+    ),
+    Match.when(
+      "persistentAreaSaveConditionEscape",
+      () =>
+        [
+          ...placementRoute,
+          ...hazardRoute,
           spatialCompositionResolveWithoutFill(
             "spatialEffect",
             "battleObscurementProjection",
@@ -387,9 +408,10 @@ function persistentAreaInvocationRoute(
             "spatialEffect",
             "battleSightProjection",
           ),
-        ]
-      : []),
-  ];
+        ] as const satisfies BattleReducerRouteEvents,
+    ),
+    Match.exhaustive,
+  );
 }
 
 const spatialEffectForcedMovementResolutionRoute = [

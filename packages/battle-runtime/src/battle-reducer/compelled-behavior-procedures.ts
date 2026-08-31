@@ -110,6 +110,17 @@ type CompelledFleeInput =
     CompelledBehaviorReplayRoute;
 
 type CompelledMovementFill = Extract<BattleFill, { readonly kind: "movement" }>;
+type NonEmptyCompelledMovementFills = readonly [
+  CompelledMovementFill,
+  ...CompelledMovementFill[],
+];
+
+function nonEmptyCompelledMovementFills(
+  fills: readonly CompelledMovementFill[],
+): NonEmptyCompelledMovementFills | null {
+  const [first, ...remaining] = fills;
+  return first === undefined ? null : [first, ...remaining];
+}
 
 type CompelledApproachMovementAdmission =
   | {
@@ -127,7 +138,7 @@ type CompelledApproachMovementAdmission =
 
 function admitCompelledApproachMovement(
   input: CompelledApproachInput,
-  movementFills: readonly CompelledMovementFill[],
+  movementFills: NonEmptyCompelledMovementFills,
 ): CompelledApproachMovementAdmission {
   /* v8 ignore start -- @preserve -- Malformed fill set: compelled approach behavior exposes exactly one Movement hole. */
   if (movementFills.length > 1) {
@@ -141,7 +152,7 @@ function admitCompelledApproachMovement(
     };
   }
   /* v8 ignore stop -- @preserve */
-  const movementFill = movementFills[0]!;
+  const movementFill = movementFills[0];
   /* v8 ignore start -- @preserve -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for compelled approach behavior. */
   if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
     return {
@@ -200,7 +211,7 @@ type CompelledFleeMovementAdmission =
 
 function admitCompelledFleeMovement(
   input: CompelledFleeInput,
-  movementFills: readonly CompelledMovementFill[],
+  movementFills: NonEmptyCompelledMovementFills,
 ): CompelledFleeMovementAdmission {
   /* v8 ignore start -- @preserve -- Malformed fill set: compelled flee behavior exposes exactly one Movement hole. */
   if (movementFills.length > 1) {
@@ -214,7 +225,7 @@ function admitCompelledFleeMovement(
     };
   }
   /* v8 ignore stop -- @preserve */
-  const movementFill = movementFills[0]!;
+  const movementFill = movementFills[0];
   /* v8 ignore start -- @preserve -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for compelled flee behavior. */
   if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
     return {
@@ -669,7 +680,8 @@ function resolveCompelledApproachCommand(
     (fill): fill is Extract<BattleFill, { readonly kind: "movement" }> =>
       fill.kind === "movement",
   );
-  if (movementFills.length === 0) {
+  const nonEmptyMovementFills = nonEmptyCompelledMovementFills(movementFills);
+  if (nonEmptyMovementFills === null) {
     if (!combatantCanMoveInState(input.state, input.subject.actorId)) {
       /* v8 ignore start -- @preserve -- Malformed fill set: a compelled approach behavior subject with no available movement exposes no fill holes, so callers cannot supply fills. */
       if (input.fills.length > 0) {
@@ -697,7 +709,7 @@ function resolveCompelledApproachCommand(
   }
   const movementAdmission = admitCompelledApproachMovement(
     input,
-    movementFills,
+    nonEmptyMovementFills,
   );
   if (movementAdmission.tag === "invalid") return movementAdmission.result;
   const extraFills = input.fills.filter((fill) => fill.kind !== "movement");
@@ -818,7 +830,8 @@ function resolveCompelledFleeCommand(
     (fill): fill is Extract<BattleFill, { readonly kind: "movement" }> =>
       fill.kind === "movement",
   );
-  if (movementFills.length === 0) {
+  const nonEmptyMovementFills = nonEmptyCompelledMovementFills(movementFills);
+  if (nonEmptyMovementFills === null) {
     if (!combatantCanMoveInState(input.state, input.subject.actorId)) {
       const withoutPending = stateWithoutCompelledNextTurnBehaviorEffect(
         input.state,
@@ -839,7 +852,10 @@ function resolveCompelledFleeCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
-  const movementAdmission = admitCompelledFleeMovement(input, movementFills);
+  const movementAdmission = admitCompelledFleeMovement(
+    input,
+    nonEmptyMovementFills,
+  );
   if (movementAdmission.tag === "invalid") return movementAdmission.result;
   const extraFills = input.fills.filter((fill) => fill.kind !== "movement");
   const reactionWindow = compelledMovementOpportunityReactionWindow(
