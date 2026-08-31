@@ -4,7 +4,7 @@ import {
   decodeCreatureImmunityDeclarationSync,
   decodeStatBlockRecordSync,
 } from "@dnd/surface/surface/schema";
-import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";

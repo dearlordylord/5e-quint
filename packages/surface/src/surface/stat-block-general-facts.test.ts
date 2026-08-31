@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 
 import { statBlockId } from "@dnd/shared/game-facts";
 
-import { srdStatBlockCollection } from "./stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
 
 import {
   CreatureImmunityListSchema,

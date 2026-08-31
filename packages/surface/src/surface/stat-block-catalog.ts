@@ -1,11 +1,11 @@
-import { Brand, Option } from "effect";
+import { Brand, Either, Option } from "effect";
 
 import { normalizeStatBlockIdentity } from "./stat-block-identity.ts";
 
-// Canonical authored state remains in content/*.dhall and its strict JSON
-// peers; this generated module stores only their deterministic import order.
-import { srdStatBlockAggregateInputs } from "./generated/srd-stat-block-aggregate.ts";
-import { decodeStatBlockRecordSync } from "./schema.ts";
+import {
+  decodeStatBlockRecordEither,
+  formatSurfaceDecodeError,
+} from "./schema.ts";
 import type {
   Provenance,
   SrdProvenance,
@@ -75,6 +75,33 @@ export type StatBlockCatalogBuildResult =
       readonly issues: readonly StatBlockCatalogBuildIssue[];
     };
 
+export type SrdStatBlockCollectionDecodeIssue =
+  | {
+      readonly code: "statBlockDecodeFailed";
+      readonly inputOrdinal: number;
+      readonly message: string;
+    }
+  | {
+      readonly code: "nonSrdStatBlockProvenance";
+      readonly inputOrdinal: number;
+      readonly statBlockId: StatBlockId;
+      readonly actual: Provenance;
+    }
+  | StatBlockCatalogBuildIssue;
+
+export type SrdStatBlockCollectionDecodeResult =
+  | {
+      readonly tag: "decoded";
+      readonly collection: SrdStatBlockCollection;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly issues: readonly [
+        SrdStatBlockCollectionDecodeIssue,
+        ...SrdStatBlockCollectionDecodeIssue[],
+      ];
+    };
+
 export function isSrd521Provenance(
   value: Provenance,
 ): value is Srd521Provenance {
@@ -120,14 +147,49 @@ export function defineSrdStatBlockCollection(input: {
   return collection;
 }
 
-const installedSrdStatBlocks: readonly Srd521StatBlock[] =
-  srdStatBlockAggregateInputs.map((input) =>
-    assertSrd521StatBlock(decodeStatBlockRecordSync(input)),
-  );
+export function decodeSrdStatBlockCollection(
+  inputs: readonly [unknown, ...unknown[]],
+): SrdStatBlockCollectionDecodeResult {
+  const issues: SrdStatBlockCollectionDecodeIssue[] = [];
+  const decodedSrdStatBlocks: Srd521StatBlock[] = [];
 
-export const srdStatBlockCollection = defineSrdStatBlockCollection({
-  statBlocks: installedSrdStatBlocks,
-});
+  for (const [inputIndex, input] of inputs.entries()) {
+    const decoded = decodeStatBlockRecordEither(input);
+    if (Either.isLeft(decoded)) {
+      issues.push({
+        code: "statBlockDecodeFailed",
+        inputOrdinal: inputIndex + 1,
+        message: formatSurfaceDecodeError(decoded.left),
+      });
+    } else if (!isSrd521StatBlock(decoded.right)) {
+      issues.push({
+        code: "nonSrdStatBlockProvenance",
+        inputOrdinal: inputIndex + 1,
+        statBlockId: decoded.right.id,
+        actual: decoded.right.provenance,
+      });
+    } else {
+      decodedSrdStatBlocks.push(decoded.right);
+    }
+  }
+
+  const collection = {
+    kind: "srdStatBlockCollection",
+    provenance: { kind: "srd-5.2.1" },
+    statBlocks: decodedSrdStatBlocks,
+  } as const satisfies SrdStatBlockCollection;
+  issues.push(...collectStatBlockCatalogIssues([collection]).issues);
+  const firstCollectionIssue = issues[0];
+  if (firstCollectionIssue === undefined) return { tag: "decoded", collection };
+
+  const firstIssue = issues[0];
+  /* v8 ignore start -- @preserve -- every non-decoded path records its typed issue before reaching this internal narrowing point */
+  if (firstIssue === undefined) {
+    throw new Error("Rejected SRD Stat Block decode has no issue");
+  }
+  /* v8 ignore stop -- @preserve */
+  return { tag: "rejected", issues: [firstIssue, ...issues.slice(1)] };
+}
 
 export function buildStatBlockCatalog(input: {
   readonly collections: readonly SrdStatBlockCollection[];

@@ -7,7 +7,7 @@ import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
   type StatBlockCatalog,
-} from "@dnd/surface/surface/stat-block-catalog";
+} from "@dnd/surface/surface/installed-srd-stat-block-catalog";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import { Option } from "effect";
 

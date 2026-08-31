@@ -1,12 +1,11 @@
 import { statBlockId } from "@dnd/shared/game-facts";
-import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
 import { Match, Option } from "effect";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import { createMcpApplicationServices } from "./composition-root.ts";
 import {
-  evaluateInstalledSrdStatBlockCatalogReachability,
   evaluateSrdStatBlockCatalogReachability,
   presentStatBlockSummary,
   type SrdStatBlockCatalogReachabilityIssue,
@@ -170,9 +169,11 @@ function mutatedReachability(mutations: readonly IndependentMutation[]) {
 describe("installed SRD Stat Block catalog reachability", () => {
   it("lists, selects, canonically resolves, and presents exactly 330 unique identities", () => {
     const services = createMcpApplicationServices();
-    const result = evaluateInstalledSrdStatBlockCatalogReachability(
-      services.statBlockCatalog,
-    );
+    const result = evaluateSrdStatBlockCatalogReachability({
+      installedStatBlocks: srdStatBlockCollection.statBlocks,
+      catalog: services.statBlockCatalog,
+      present: presentStatBlockSummary,
+    });
 
     Match.value(result).pipe(
       Match.when({ tag: "unreachable" }, ({ issues }) => {

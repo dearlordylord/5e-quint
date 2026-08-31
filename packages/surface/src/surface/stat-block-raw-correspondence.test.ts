@@ -24,7 +24,7 @@ import {
   StatBlockProcedureResourceSchema,
   StatBlockTextOnlyReasonSchema,
 } from "./schema.ts";
-import { srdStatBlockCollection } from "./stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
 import { normalizeStatBlockIdentity } from "./stat-block-identity.ts";
 import { bindRawCorrespondence } from "./stat-block-raw-correspondence-binding.test-support.ts";
 

@@ -7,7 +7,7 @@ import { abilityScore, resourceCount } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
+} from "@dnd/surface/surface/installed-srd-stat-block-catalog";
 import { StatBlockGmSpeedChoiceSchema } from "@dnd/surface/surface/schema";
 import {
   buildUnitCatalog,

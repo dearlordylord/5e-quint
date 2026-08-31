@@ -36,7 +36,8 @@ import {
   type SrdStatBlockParityReport,
 } from "./srd521-stat-block-parity.ts";
 import { discoverCanonicalSurfaceContentPeers } from "./surface-content-peer-discovery.ts";
-import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
+import type { SrdSurface } from "../packages/surface/src/surface/types.ts";
+import type { SrdStatBlockParityInstalledRecord } from "../packages/surface/src/surface/stat-block-parity-observation.ts";
 
 export type PublicationIssue =
   | {
@@ -105,10 +106,9 @@ export type PublicationIssue =
 
 type JsonDocument = unknown;
 
-export type PublicationCheckOptions = {
+type PublicationCheckOptionsBase = {
   readonly repoRoot: string;
   readonly contentDir: string;
-  readonly publicationDir?: string;
   readonly portableCasesPath?: string;
   readonly portableCasesBuilder?: (repoRoot: string) => Buffer;
   readonly publicationExcerptSource?: SurfacePublicationExcerptSource;
@@ -117,6 +117,18 @@ export type PublicationCheckOptions = {
     outputPath: string,
   ) => string | undefined;
 };
+
+export type PublicationCheckOptions = PublicationCheckOptionsBase &
+  (
+    | {
+        readonly publicationDir: string;
+        readonly publicationSurface: SrdSurface;
+      }
+    | {
+        readonly publicationDir?: never;
+        readonly publicationSurface?: never;
+      }
+  );
 
 export type PublicationCheckResult = {
   readonly issues: readonly PublicationIssue[];
@@ -909,12 +921,13 @@ function checkSurfacePublicationArtifacts(
   issues: PublicationIssue[],
   repoRoot: string,
   publicationDir: string,
+  surface: SrdSurface,
   excerptSource?: SurfacePublicationExcerptSource,
 ): void {
-  const publication =
-    excerptSource === undefined
-      ? buildSrdSurfacePublication()
-      : buildSrdSurfacePublication({ excerptSource });
+  const publication = buildSrdSurfacePublication({
+    surface,
+    ...(excerptSource === undefined ? {} : { excerptSource }),
+  });
   if (publication.tag === "invalid") {
     issues.push(
       ...publication.issues.map((issue) => ({
@@ -1250,6 +1263,7 @@ export function runPublicationCheck(
       issues,
       repoRoot,
       options.publicationDir,
+      options.publicationSurface,
       options.publicationExcerptSource,
     );
   }
@@ -1277,11 +1291,12 @@ export type SurfacePublicationCheckResult = PublicationCheckResult & {
 
 export function runSurfacePublicationCheck(
   options: PublicationCheckOptions,
+  installedStatBlocks: readonly SrdStatBlockParityInstalledRecord[],
 ): SurfacePublicationCheckResult {
   const publication = runPublicationCheck(options);
   const statBlockParity = readSrdStatBlockParity({
     repoRoot: options.repoRoot,
-    installedStatBlocks: srdSurface.statBlocks,
+    installedStatBlocks,
     peerObservations: publication.peerObservations.flatMap((observation) => {
       const projected = projectSrdStatBlockPeerObservation(observation);
       return projected === undefined ? [] : [projected];
@@ -1290,7 +1305,7 @@ export function runSurfacePublicationCheck(
   return { ...publication, statBlockParity };
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const repoRoot = process.cwd();
   const contentDir = join(repoRoot, "packages", "surface", "content");
   const compiler = spawnSync("dhall-to-json", ["--version"], {
@@ -1311,17 +1326,23 @@ function main(): void {
     return;
   }
 
+  const { srdSurface } =
+    await import("../packages/surface/src/surface/surface-catalog.ts");
   const { issues, sourceCount, peerCount, statBlockParity } =
-    runSurfacePublicationCheck({
-      repoRoot,
-      contentDir,
-      publicationDir: join(repoRoot, "packages", "surface", "publication"),
-      portableCasesPath: join(
+    runSurfacePublicationCheck(
+      {
         repoRoot,
-        "packages/surface/portable-cases/srd-surface-cases.json",
-      ),
-      compile: compileDhallToJson,
-    });
+        contentDir,
+        publicationDir: join(repoRoot, "packages", "surface", "publication"),
+        publicationSurface: srdSurface,
+        portableCasesPath: join(
+          repoRoot,
+          "packages/surface/portable-cases/srd-surface-cases.json",
+        ),
+        compile: compileDhallToJson,
+      },
+      srdSurface.statBlocks,
+    );
 
   if (issues.length > 0) {
     console.error(
@@ -1385,5 +1406,5 @@ function main(): void {
 }
 
 if (process.argv[1]?.endsWith("check-surface-content-json-sync.ts") === true) {
-  main();
+  void main();
 }

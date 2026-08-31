@@ -51,7 +51,7 @@ import { DieRollResult, Hp } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
+} from "@dnd/surface/surface/installed-srd-stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,

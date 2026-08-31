@@ -15,7 +15,7 @@ import {
 import { Either, Schema } from "effect";
 import { ELAPSED_TIME_TICKS_PER_HOUR } from "@dnd/shared/elapsed-time";
 import { unitId, type Skill } from "@dnd/shared/game-facts";
-import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/installed-srd-stat-block-catalog";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 import { characterIdFromDraftId } from "../src/session-store.ts";
 import { decodeGuestAccessGrant } from "../src/play-session-access.ts";

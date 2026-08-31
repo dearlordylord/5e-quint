@@ -6,6 +6,7 @@ import {
   buildSrdSurfacePublication,
   describeSurfacePublicationBuildIssue,
 } from "./srd-surface-publication-artifacts.ts";
+import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
 
 const publicationDirectory = join(
   process.cwd(),
@@ -15,7 +16,7 @@ const publicationDirectory = join(
 );
 
 mkdirSync(publicationDirectory, { recursive: true });
-const publication = buildSrdSurfacePublication();
+const publication = buildSrdSurfacePublication({ surface: srdSurface });
 if (publication.tag === "invalid") {
   for (const issue of publication.issues) {
     console.error(

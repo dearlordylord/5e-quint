@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { Either, Schema } from "effect";
-import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
+import { srdStatBlockCollection } from "../packages/surface/src/surface/installed-srd-stat-block-catalog.ts";
 import {
   STAT_BLOCK_SPELL_INVOCATION_DELTA_KINDS,
   StatBlockSpellInvocationDeltasSchema,

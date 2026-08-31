@@ -11,7 +11,7 @@ import {
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
-} from "./stat-block-catalog.ts";
+} from "./installed-srd-stat-block-catalog.ts";
 import type { SpellRecord } from "./types.ts";
 import { srdUnitCollection } from "./unit-catalog.ts";
 

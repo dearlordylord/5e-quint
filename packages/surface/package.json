@@ -12,6 +12,7 @@
     "./surface/portable-surface": "./src/surface/portable-surface.ts",
     "./surface/mechanics-graph-path": "./src/surface/mechanics-graph-path.ts",
     "./surface/stat-block-catalog": "./src/surface/stat-block-catalog.ts",
+    "./surface/installed-srd-stat-block-catalog": "./src/surface/installed-srd-stat-block-catalog.ts",
     "./surface/stat-block-catalog.test-support": "./src/surface/stat-block-catalog.test-support.ts",
     "./surface/stat-block-speed-readers": "./src/surface/stat-block-speed-readers.ts",
     "./surface/stat-block-identity": "./src/surface/stat-block-identity.ts",

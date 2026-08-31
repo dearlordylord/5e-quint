@@ -1,17 +1,18 @@
 import { NonNegativeInteger, PositiveInteger } from "@dnd/shared/types";
-import {
-  srdStatBlockCollection,
-  type Srd521StatBlock,
-  type SrdStatBlockCatalog,
-  type StatBlockId,
+import type {
+  Srd521StatBlock,
+  StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
 import { normalizeStatBlockIdentity } from "@dnd/surface/surface/stat-block-identity";
+import { SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY } from "@dnd/surface/surface/stat-block-parity-observation";
 import { Match, Option } from "effect";
 import { isDeepStrictEqual } from "node:util";
 
 import { statBlockSummary } from "./stat-block-content-projection.ts";
 
-const EXPECTED_INSTALLED_SRD_STAT_BLOCK_COUNT = PositiveInteger(330);
+const EXPECTED_INSTALLED_SRD_STAT_BLOCK_COUNT = PositiveInteger(
+  SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY,
+);
 
 type StatBlockSummary = ReturnType<typeof statBlockSummary>;
 type NormalizedStatBlockIdentity = ReturnType<
@@ -344,14 +345,4 @@ export function evaluateSrdStatBlockCatalogReachability(
     tag: "reachable",
     statBlockIds: [firstStatBlockId, ...remainingStatBlockIds],
   };
-}
-
-export function evaluateInstalledSrdStatBlockCatalogReachability(
-  catalog: SrdStatBlockCatalog,
-): SrdStatBlockCatalogReachabilityResult {
-  return evaluateSrdStatBlockCatalogReachability({
-    installedStatBlocks: srdStatBlockCollection.statBlocks,
-    catalog,
-    present: presentStatBlockSummary,
-  });
 }

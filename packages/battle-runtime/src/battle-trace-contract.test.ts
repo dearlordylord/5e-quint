@@ -9,7 +9,7 @@ import { DieRollResult, Hp, movementFeet } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
+} from "@dnd/surface/surface/installed-srd-stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { invalidResult } from "./battle-reducer/result-helpers.ts";

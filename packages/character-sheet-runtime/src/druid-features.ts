@@ -15,7 +15,7 @@ import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
   type StatBlockCatalog,
-} from "@dnd/surface/surface/stat-block-catalog";
+} from "@dnd/surface/surface/installed-srd-stat-block-catalog";
 import {
   DRUID_CIRCLE_LAND_CHOICES,
   type DruidCircleLandChoice,

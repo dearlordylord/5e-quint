@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 
 import { statBlockId } from "../packages/shared/src/game-facts.ts";
 
-import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
+import { srdStatBlockCollection } from "../packages/surface/src/surface/installed-srd-stat-block-catalog.ts";
 import { normalizeStatBlockIdentity } from "../packages/surface/src/surface/stat-block-identity.ts";
 import {
   SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,

@@ -22,7 +22,7 @@ import { Hp, movementFeet } from "../../../packages/shared/src/types.ts";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
-} from "../../../packages/surface/src/surface/stat-block-catalog.ts";
+} from "../../../packages/surface/src/surface/installed-srd-stat-block-catalog.ts";
 import {
   buildUnitCatalog,
   srdUnitCollection,

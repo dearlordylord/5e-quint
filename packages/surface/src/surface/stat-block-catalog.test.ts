@@ -16,8 +16,8 @@ import {
   assertSrd521StatBlock,
   buildStatBlockCatalog,
   defineSrdStatBlockCollection,
-  srdStatBlockCollection,
 } from "./stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
 import { assertStatBlockForTest } from "./stat-block-catalog.test-support.ts";
 import type {
   Srd521StatBlock,

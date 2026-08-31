@@ -12,7 +12,7 @@ import {
   PublishedSrdSurfaceSchema,
   RulesExcerptSchema,
 } from "../packages/surface/src/surface/schema.ts";
-import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
+import type { SrdSurface } from "../packages/surface/src/surface/types.ts";
 
 const SourceResolutionSchema = Schema.Union(
   Schema.Struct({
@@ -144,11 +144,11 @@ const loadAuditModule = ():
   };
 };
 
-export function buildSrdSurfacePublication(
-  options: {
-    readonly excerptSource?: SurfacePublicationExcerptSource;
-  } = {},
-): SurfacePublicationBuildResult {
+export function buildSrdSurfacePublication(options: {
+  readonly surface: SrdSurface;
+  readonly excerptSource?: SurfacePublicationExcerptSource;
+}): SurfacePublicationBuildResult {
+  const srdSurface = options.surface;
   const loaded =
     options.excerptSource === undefined
       ? loadAuditModule()

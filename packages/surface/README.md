@@ -103,6 +103,14 @@ malformed parity evidence to suppress an impossible mechanics comparison.
 Parity and scoped-fidelity results therefore remain distinct facts for the
 final diagnostic boundary.
 
+The standalone `pnpm check:srd-stat-block-catalog` diagnostic joins that parity
+report with aggregate synchronization, total strict catalog decoding,
+homogeneous SRD provenance, installed membership, scoped fidelity, and MCP
+catalog reachability. It proves the complete 334-occurrence to 330-identity to
+330-installed-record catalog without persisting a receipt or support ledger.
+Passing it does not claim runtime execution (#114), selected-graph binding
+(#117), or Hit Dice fidelity; required quality-gate wiring is owned separately.
+
 The `surface/catalog-install` boundary composes that portable decode with
 context-independent Static Mechanics Admission in one atomic operation.
 `installSrdSurface` and `installSrdSurfaceText` keep decoded canonical content

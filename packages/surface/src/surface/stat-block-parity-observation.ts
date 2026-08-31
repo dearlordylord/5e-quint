@@ -27,6 +27,9 @@ export const SRD_STAT_BLOCK_SCOPE = {
   ] as const,
 } as const;
 
+export const SRD_STAT_BLOCK_SOURCE_OCCURRENCE_CARDINALITY = 334 as const;
+export const SRD_STAT_BLOCK_SOURCE_IDENTITY_CARDINALITY = 330 as const;
+
 export type SrdStatBlockSourcePath =
   (typeof SRD_STAT_BLOCK_SOURCE_PATHS)[number];
 

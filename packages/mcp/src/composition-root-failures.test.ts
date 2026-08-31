@@ -3,7 +3,7 @@ import { Option } from "effect";
 import type {
   SrdStatBlockCollection,
   StatBlockCatalog,
-} from "@dnd/surface/surface/stat-block-catalog";
+} from "@dnd/surface/surface/installed-srd-stat-block-catalog";
 import type {
   SrdUnitCollection,
   UnitCatalog,
@@ -41,7 +41,7 @@ vi.mock("@dnd/surface/surface/unit-catalog", () => {
   };
 });
 
-vi.mock("@dnd/surface/surface/stat-block-catalog", () => {
+vi.mock("@dnd/surface/surface/installed-srd-stat-block-catalog", () => {
   const emptyStatBlockCatalog = {
     getStatBlock: () => Option.none(),
     listStatBlocks: () => [],
@@ -69,7 +69,7 @@ const { createMcpApplicationServices } = await import("./composition-root.ts");
 
 afterAll(() => {
   vi.doUnmock("@dnd/surface/surface/unit-catalog");
-  vi.doUnmock("@dnd/surface/surface/stat-block-catalog");
+  vi.doUnmock("@dnd/surface/surface/installed-srd-stat-block-catalog");
   vi.resetModules();
 });
 

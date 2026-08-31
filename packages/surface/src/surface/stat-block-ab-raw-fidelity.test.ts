@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { statBlockId } from "@dnd/shared/game-facts";
 
-import { srdStatBlockCollection } from "./stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./installed-srd-stat-block-catalog.ts";
 import { loadRawStatBlockSourceFixture } from "./stat-block-raw-fidelity-fixture.test-support.ts";
 
 const { records: A_B_RECORDS } = loadRawStatBlockSourceFixture(
