@@ -1,5 +1,5 @@
 import Ajv2020 from "ajv/dist/2020.js";
-import { Result, Schema } from "effect";
+import { Record as EffectRecord, Result, Schema } from "effect";
 import * as AST from "effect/SchemaAST";
 import { describe, expect, it } from "vitest";
 
@@ -412,9 +412,10 @@ function leafChecks(
 function sourceSemanticRefinementReasonCounts(): Readonly<
   Record<SemanticRefinementReason, number>
 > {
-  const counts = Object.fromEntries(
-    SEMANTIC_REFINEMENT_REASONS.map((reason) => [reason, 0]),
-  ) as Record<SemanticRefinementReason, number>;
+  const counts: Record<SemanticRefinementReason, number> =
+    EffectRecord.fromEntries(
+      SEMANTIC_REFINEMENT_REASONS.map((reason) => [reason, 0] as const),
+    );
   const pending: AST.AST[] = [OracleCaseSchema.ast, OracleTraceSchema.ast];
   const visited = new Set<object>();
   while (pending.length > 0) {
@@ -422,9 +423,11 @@ function sourceSemanticRefinementReasonCounts(): Readonly<
     if (ast === undefined || visited.has(ast)) continue;
     visited.add(ast);
     for (const check of leafChecks(ast.checks)) {
-      const reason = (
-        check.annotations as Record<PropertyKey, unknown> | undefined
-      )?.[SemanticRefinementAnnotationId];
+      const reason =
+        check.annotations !== undefined &&
+        SemanticRefinementAnnotationId in check.annotations
+          ? check.annotations[SemanticRefinementAnnotationId]
+          : undefined;
       if (reason === undefined) continue;
       if (!isSemanticRefinementReason(reason)) {
         throw new Error("Unmarked semantic refinement in source AST");
@@ -1461,13 +1464,15 @@ describe("Opaque Oracle document JSON Schemas", () => {
   }, 120_000);
 
   it("retains only closed, annotated structural AST refinements", () => {
+    const identifiers: string[] = [];
+    const openNodes: string[] = [];
     const inventory = {
       refinements: 0,
       unannotatedRefinements: 0,
       uniqueItems: 0,
       minItems: 0,
-      identifiers: [] as string[],
-      openNodes: [] as string[],
+      identifiers,
+      openNodes,
     };
     const pending: AST.AST[] = [
       OracleCaseDocumentSchema.ast,
@@ -1492,7 +1497,10 @@ describe("Opaque Oracle document JSON Schemas", () => {
       }
       for (const check of leafChecks(ast.checks)) {
         inventory.refinements += 1;
-        const annotation = check.annotations?.toJsonSchema?.({} as never);
+        const annotation = check.annotations?.toJsonSchema?.({
+          type: undefined,
+          schemas: [],
+        });
         if (annotation === undefined) inventory.unannotatedRefinements += 1;
         if (typeof annotation === "object" && annotation !== null) {
           if ("uniqueItems" in annotation && annotation.uniqueItems === true) {
@@ -1539,11 +1547,38 @@ describe("Opaque Oracle document JSON Schemas", () => {
     expect(schemaText).not.toContain('"steps"');
   });
 
-  it("rejects an unmarked semantic refinement during Document projection", () => {
+  it("returns a typed issue for an unmarked semantic refinement", () => {
     const unmarked = Schema.String.pipe(
       Schema.check(Schema.makeFilter((value) => value.length > 0)),
     );
-    expect(() => documentSchema(unmarked)).toThrow("unannotated refinement");
+    expect(documentSchema(unmarked)).toEqual(
+      Result.fail([
+        {
+          tag: "unannotatedRefinement",
+          path: "$<check:0>",
+          annotationKeys: [],
+        },
+      ]),
+    );
+
+    const nested = Schema.Struct({
+      first: Schema.suspend(() => unmarked),
+      second: unmarked,
+    });
+    expect(documentSchema(nested)).toEqual(
+      Result.fail([
+        {
+          tag: "unannotatedRefinement",
+          path: "$<property:second><check:0>",
+          annotationKeys: [],
+        },
+        {
+          tag: "unannotatedRefinement",
+          path: "$<property:first><suspend><check:0>",
+          annotationKeys: [],
+        },
+      ]),
+    );
   });
 
   it("uses an Effect brand as the identifier for its structural Document projection", () => {
@@ -1552,14 +1587,16 @@ describe("Opaque Oracle document JSON Schemas", () => {
       Schema.brand("SyntheticNonEmptyText"),
     );
     const document = documentSchema(branded);
+    expect(Result.isSuccess(document)).toBe(true);
+    if (Result.isFailure(document)) return;
 
     expect(Result.isFailure(Schema.decodeUnknownResult(branded)(""))).toBe(
       true,
     );
-    expect(Result.isSuccess(Schema.decodeUnknownResult(document)(""))).toBe(
-      true,
-    );
-    expect(documentJsonSchema(document)).toMatchObject({
+    expect(
+      Result.isSuccess(Schema.decodeUnknownResult(document.success)("")),
+    ).toBe(true);
+    expect(documentJsonSchema(document.success)).toMatchObject({
       $ref: "#/$defs/SyntheticNonEmptyText",
       $defs: {
         SyntheticNonEmptyText: { type: "string" },
