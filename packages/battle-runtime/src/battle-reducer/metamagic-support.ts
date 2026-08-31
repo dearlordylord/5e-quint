@@ -734,17 +734,8 @@ export function subtleSpellComponentProjectionFact(
 ): SubtleSpellComponentProjectionFact | null {
   if (!("spellRuleFacts" in invocation)) return null;
   const components = invocation.spellRuleFacts.components;
-  const suppressedComponents: SubtleSpellSuppressedComponentFact[] = [
-    ...(components.verbal ? ([{ kind: "verbal" }] as const) : []),
-    ...(components.somatic ? ([{ kind: "somatic" }] as const) : []),
-    ...(components.hasMaterial && !components.hasPricedOrConsumedMaterial
-      ? ([{ kind: "material" }] as const)
-      : []),
-  ];
-  const preservedComponents: readonly SubtleSpellPreservedComponentFact[] =
-    components.hasMaterial && components.hasPricedOrConsumedMaterial
-      ? [{ kind: "material", preservation: "pricedOrConsumed" }]
-      : [];
+  const suppressedComponents = subtleSpellSuppressedComponents(components);
+  const preservedComponents = subtleSpellPreservedComponents(components);
   const nonEmptySuppressed = readonlyNonEmptyArray(suppressedComponents);
   if (nonEmptySuppressed !== null) {
     return { suppressedComponents: nonEmptySuppressed, preservedComponents };
@@ -753,6 +744,32 @@ export function subtleSpellComponentProjectionFact(
   return nonEmptyPreserved === null
     ? null
     : { suppressedComponents: [], preservedComponents: nonEmptyPreserved };
+}
+
+function subtleSpellSuppressedComponents(
+  components: Extract<
+    RuntimeSpellProcedure,
+    { readonly spellRuleFacts: unknown }
+  >["spellRuleFacts"]["components"],
+): readonly SubtleSpellSuppressedComponentFact[] {
+  return [
+    ...(components.verbal ? ([{ kind: "verbal" }] as const) : []),
+    ...(components.somatic ? ([{ kind: "somatic" }] as const) : []),
+    ...(components.hasMaterial && !components.hasPricedOrConsumedMaterial
+      ? ([{ kind: "material" }] as const)
+      : []),
+  ];
+}
+
+function subtleSpellPreservedComponents(
+  components: Extract<
+    RuntimeSpellProcedure,
+    { readonly spellRuleFacts: unknown }
+  >["spellRuleFacts"]["components"],
+): readonly SubtleSpellPreservedComponentFact[] {
+  return components.hasMaterial && components.hasPricedOrConsumedMaterial
+    ? [{ kind: "material", preservation: "pricedOrConsumed" }]
+    : [];
 }
 
 export function subtleSpellComponentProjectionForApplications(
@@ -941,28 +958,39 @@ function isTransmutedSpellDamageType(
 function twinnedSpellEffectiveTargetCount(
   invocation: RuntimeSpellProcedure,
 ): number | null {
-  if (
-    !("resource" in invocation) ||
-    invocation.resource.tag !== "spellSlot" ||
-    Number(invocation.resource.slotLevel) >= 9 ||
-    !("targeting" in invocation) ||
-    invocation.targeting.kind !== "targetList" ||
-    typeof invocation.targeting.maxTargets !== "number"
-  ) {
-    return null;
-  }
+  const slotLevel = twinnedSpellSlotLevel(invocation);
+  if (slotLevel === null) return null;
+  const maxTargets = twinnedSpellTargetCount(invocation);
+  if (maxTargets === null || !("spellRuleFacts" in invocation)) return null;
   const countByEffectiveLevel = twinnedTargetCountFromExecutionFacts(
     invocation.spellRuleFacts.twinnedTargetCount,
   );
   if (countByEffectiveLevel === null) return null;
-  const currentCount = countByEffectiveLevel(invocation.resource.slotLevel);
-  const nextEffectiveLevel = spellSlotLevel(
-    Number(invocation.resource.slotLevel) + 1,
-  );
+  const currentCount = countByEffectiveLevel(slotLevel);
+  const nextEffectiveLevel = spellSlotLevel(Number(slotLevel) + 1);
   const nextCount = countByEffectiveLevel(nextEffectiveLevel);
-  return currentCount === invocation.targeting.maxTargets &&
-    nextCount === currentCount + 1
+  return currentCount === maxTargets && nextCount === currentCount + 1
     ? nextCount
+    : null;
+}
+
+function twinnedSpellSlotLevel(
+  invocation: RuntimeSpellProcedure,
+): ReturnType<typeof spellSlotLevel> | null {
+  if (!("resource" in invocation)) return null;
+  if (invocation.resource.tag !== "spellSlot") return null;
+  return Number(invocation.resource.slotLevel) < 9
+    ? invocation.resource.slotLevel
+    : null;
+}
+
+function twinnedSpellTargetCount(
+  invocation: RuntimeSpellProcedure,
+): number | null {
+  if (!("targeting" in invocation)) return null;
+  if (invocation.targeting.kind !== "targetList") return null;
+  return typeof invocation.targeting.maxTargets === "number"
+    ? invocation.targeting.maxTargets
     : null;
 }
 
