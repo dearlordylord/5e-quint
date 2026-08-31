@@ -5915,7 +5915,10 @@ export const CreatureTraitEffectSchema = Schema.Union(
   }),
 );
 
-export const CreatureTraitNameSchema = surfaceIdentity(Schema.String, "name");
+export const CreatureTraitNameSchema = surfaceIdentity(
+  Schema.NonEmptyTrimmedString,
+  "name",
+);
 export const CreatureTraitDescriptionSchema = surfaceExactProse(Schema.String);
 
 export const CreatureTraitSchema = Schema.Struct({

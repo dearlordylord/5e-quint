@@ -2873,6 +2873,20 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Hydra",
         mutate: (line: string) =>
+          line.startsWith("***Hold Breath.")
+            ? line.replace("***Hold Breath.", "***.")
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "traits.0.name",
+            evidence: "",
+          },
+        ],
+      },
+      {
+        name: "Hydra",
+        mutate: (line: string) =>
           line.startsWith("**Immunities**")
             ? "**Immunities** Blinded, Bogus (while sleeping)"
             : line,
