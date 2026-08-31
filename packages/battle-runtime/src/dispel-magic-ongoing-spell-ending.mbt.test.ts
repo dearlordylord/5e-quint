@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
+  requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { magicSuppressionEmanationMembershipForTest } from "./antimagic-field.test-support.ts";
@@ -64,6 +65,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import {
   battleAreaId,
   battleObjectId,
+  spellSlotInvocationRef,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -316,19 +318,31 @@ describe("Dispel Magic ongoing spell ending MBT parity", () => {
 
 function initialRuntimeState(): DispelMagicInitialRuntimeState {
   const base = spellBattle({
-    preparedSpells: [spellRecord(dispelMagicUnitId)],
+    preparedSpells: [
+      spellRecord(dispelMagicUnitId),
+      spellRecord(heatMetalUnitId),
+    ],
     spellSlots: [
       { spellLevel: BASE_DISPEL_SLOT_LEVEL, count: 1 },
       { spellLevel: UPCAST_DISPEL_SLOT_LEVEL, count: 1 },
     ],
   });
+  const highLevelSourceProcedureRef = requireCharacterSpellProcedureRefForTest(
+    base,
+    spellCasterId,
+    spellSlotInvocationRef(
+      heatMetalUnitId,
+      HIGHER_LEVEL_SOURCE_SPELL_LEVEL,
+      "objectContactDamage",
+    ),
+  );
   const allocatedState = battleStateWithAllocatedEffectOccurrencesForTest({
     state: base.state,
     occurrences: [
       {
         kind: "activeEffect",
         ownerId: spellCasterId,
-        effect: highLevelObjectContactEffect(),
+        effect: highLevelObjectContactEffect(highLevelSourceProcedureRef),
       },
       {
         kind: "activeEffect",
@@ -353,9 +367,7 @@ function initialRuntimeState(): DispelMagicInitialRuntimeState {
           .set(spellCasterId, {
             ...allocatedCaster,
             concentration: {
-              sourceProcedureRef: battleProcedureExecutionRefForTest(
-                String(heatMetalUnitId),
-              ),
+              sourceProcedureRef: highLevelSourceProcedureRef,
               effectKind: "spellEffect",
             },
           })
@@ -416,7 +428,6 @@ function requestHigherLevelCheck(
       target: { kind: "object", objectId: dispelledObjectId },
       checkedOccurrence: {
         ownerId: spellCasterId,
-        target: { kind: "object", objectId: dispelledObjectId },
         effect: {
           kind: "spellActiveEffect",
           activeEffectKind: "spellObjectContactDamage",
@@ -653,15 +664,15 @@ function lowLevelObjectLightEmitter(): Extract<
   };
 }
 
-function highLevelObjectContactEffect(): Extract<
+function highLevelObjectContactEffect(
+  sourceProcedureRef: BattleProcedureExecutionRef,
+): Extract<
   BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "spellObjectContactDamage" }
 > {
   return {
     kind: "spellObjectContactDamage",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(heatMetalUnitId),
-    ),
+    sourceProcedureRef,
     sourceCombatantId: spellCasterId,
     sourceSpellLevel: testBattleSpellEffectLevel(
       HIGHER_LEVEL_SOURCE_SPELL_LEVEL,
