@@ -104,10 +104,16 @@ type RegisteredSpellProcedureDeclaration<P extends BattleSpellProcedureKey> = {
   | {
       readonly admission: {
         readonly kind: "authored";
+        /** Contextual invocation admission owned by the profile. */
         readonly admit: SpellProcedureAdmissionDeclaration<
           P,
           SpellInvocationAdmittedByRegisteredProcedure<P>
         >["admit"];
+        /** Context-independent mechanics admission owned by the profile. */
+        readonly admitMechanics: SpellProcedureAdmissionDeclaration<
+          P,
+          SpellInvocationAdmittedByRegisteredProcedure<P>
+        >["admitMechanics"];
       };
     }
   | { readonly admission: { readonly kind: "synthesized" } }
@@ -140,7 +146,11 @@ function registeredSpellProcedureDeclaration<P extends BattleSpellProcedureKey>(
   }
   return {
     procedure: declaration.procedure,
-    admission: { kind: "authored", admit: declaration.admit },
+    admission: {
+      kind: "authored",
+      admit: declaration.admit,
+      admitMechanics: declaration.admitMechanics,
+    },
     execution,
   };
 }

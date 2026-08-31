@@ -44,7 +44,11 @@ import {
 } from "../magic-suppression-ongoing-effect.ts";
 import { characterBattleLevel } from "../../character-class-level.ts";
 import type { SpellProcedureExecutionDeclaration } from "./execution-profile.ts";
+import type {
+  SpellProcedureMechanicsAdmissionDeclaration,
+} from "./spell-mechanics-admission.ts";
 export * from "./execution-profile.ts";
+export * from "./spell-mechanics-admission.ts";
 
 // Context handed to admit() at discovery time. Profiles use only what they
 // need, with character actor facts kept canonical on `actor`.
@@ -230,6 +234,15 @@ export type SpellProcedureAdmissionDeclaration<
     spell: BattleSpellAdmissionSource,
     ctx: SpellAdmissionContext,
   ) => readonly I[];
+  /**
+   * Static authored-mechanics admission.  This is required at the declaration
+   * boundary so every authored profile must migrate before the canonical
+   * static view can claim complete/partial roots. Contextual `admit` stays
+   * responsible for caster/resource/state-dependent invocation creation.
+   */
+  readonly admitMechanics: SpellProcedureMechanicsAdmissionDeclaration<
+    P
+  >["admitMechanics"];
 };
 
 export type SpellProcedureDeclaration<
