@@ -1,5 +1,8 @@
 import { Effect, Schema, Tuple } from "effect";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  DamageDieSizeSchema,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
@@ -5462,7 +5465,7 @@ export const StatBlockProcedureDcSourceSchema = strictStruct({
 
 const StatBlockProcedureDiceExprSchema = strictStruct({
   dice: StatBlockProcedurePositiveIntegerSchema,
-  dieSize: StatBlockProcedurePositiveIntegerSchema,
+  dieSize: DamageDieSizeSchema,
   flat: optionalExact(StatBlockProcedureSignedValueSchema.fields.value),
   spellcastingMod: optionalExact(Schema.Literal(true)),
   abilityModifier: optionalExact(AbilitySchema),
@@ -5879,11 +5882,20 @@ const StatBlockSpellcastingExecutableProcedureEntryFields = {
   resourceRefs: StatBlockProcedureNoResourceRefsSchema,
 } as const;
 
+export const StatBlockProcedureDescriptionSchema = surfaceExactProse(
+  NonEmptyTrimmedStringSchema,
+);
+
+export const StatBlockProcedureNameSchema = surfaceIdentity(
+  NonEmptyTrimmedStringSchema,
+  "name",
+);
+
 const StatBlockTextOnlyProcedureEntryFields = {
   kind: Schema.Literal("textOnly"),
   procedureOrdinal: StatBlockProcedureOrdinalSchema,
-  name: surfaceIdentity(NonEmptyTrimmedStringSchema, "name"),
-  description: surfaceExactProse(NonEmptyTrimmedStringSchema),
+  name: StatBlockProcedureNameSchema,
+  description: StatBlockProcedureDescriptionSchema,
   reason: StatBlockTextOnlyReasonSchema,
   resourceRefs: StatBlockProcedureResourceRefsSchema,
 } as const;
@@ -6116,9 +6128,15 @@ export const CreatureTraitEffectSchema = Schema.Union([
   }),
 ]);
 
+export const CreatureTraitNameSchema = surfaceIdentity(
+  NonEmptyTrimmedStringSchema,
+  "name",
+);
+export const CreatureTraitDescriptionSchema = surfaceExactProse(Schema.String);
+
 export const CreatureTraitSchema = Schema.Struct({
-  name: surfaceIdentity(Schema.String, "name"),
-  description: surfaceExactProse(Schema.String),
+  name: CreatureTraitNameSchema,
+  description: CreatureTraitDescriptionSchema,
   effect: optionalExact(CreatureTraitEffectSchema),
 });
 
@@ -6614,7 +6632,7 @@ const hasDistinctSavingThrowAbilities = (
 ): boolean =>
   new Set(modifiers.map(({ ability }) => ability)).size === modifiers.length;
 
-const CreatureSavingThrowModifiersSchema = nonEmpty(
+export const CreatureSavingThrowModifiersSchema = nonEmpty(
   CreatureSavingThrowModifierSchema,
 ).pipe(
   Schema.check(
@@ -6681,7 +6699,7 @@ export const StandaloneStatBlockValueSchema =
  * values from 1 through 30. Runtime projections intentionally remain broad
  * because their values can be supplied by another rules source.
  */
-const StandaloneStatBlockAbilityScoreSchema = Schema.Number.pipe(
+export const StandaloneStatBlockAbilityScoreSchema = Schema.Number.pipe(
   Schema.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 30 })),
 );
 
@@ -6730,6 +6748,8 @@ export const StatBlockInitiativeSchema = Schema.Struct({
   score: NonNegativeIntegerSchema,
 });
 
+export const StatBlockPassivePerceptionSchema = NonNegativeIntegerSchema;
+
 const StandaloneNonFlyCreatureSpeedKindSchema = CreatureSpeedKindSchema.pipe(
   Schema.check(
     Schema.makeFilter(
@@ -6763,11 +6783,14 @@ const StandaloneUnrestrictedCreatureSpeedSchema = Schema.Union([
   strictStruct({
     kind: StandaloneNonFlyCreatureSpeedKindSchema,
     ...StandaloneCreatureSpeedFields,
+    hover: optionalExact(ForbiddenValueSchema),
+    availability: optionalExact(ForbiddenValueSchema),
   }),
   strictStruct({
     kind: StandaloneFlyCreatureSpeedKindSchema,
     ...StandaloneCreatureSpeedFields,
     hover: optionalExact(Schema.Literal(true)),
+    availability: optionalExact(ForbiddenValueSchema),
   }),
 ]);
 
@@ -6775,6 +6798,7 @@ const StandaloneFormRestrictedCreatureSpeedSchema = Schema.Union([
   strictStruct({
     kind: StandaloneNonFlyCreatureSpeedKindSchema,
     ...StandaloneCreatureSpeedFields,
+    hover: optionalExact(ForbiddenValueSchema),
     availability: StatBlockFormRestrictedSpeedAvailabilitySchema,
   }),
   strictStruct({
@@ -6850,15 +6874,22 @@ export const StandaloneStatBlockSpeedEntrySchema = Schema.Union([
   StatBlockGmSpeedChoiceSchema,
 ]);
 
+export const StatBlockArmorClassAnnotationSchema = surfaceExactProse(
+  NonEmptyTrimmedStringSchema,
+);
+
 export const StatBlockArmorClassSchema = Schema.Struct({
   value: StandaloneStatBlockValueSchema,
-  annotations: optionalExact(
-    nonEmpty(surfaceExactProse(NonEmptyTrimmedStringSchema)),
-  ),
+  annotations: optionalExact(nonEmpty(StatBlockArmorClassAnnotationSchema)),
 });
 
+export const StatBlockGearItemSchema = surfaceIdentity(
+  NonEmptyTrimmedStringSchema,
+  "label",
+);
+
 export const StatBlockGearEntrySchema = Schema.Struct({
-  item: surfaceIdentity(NonEmptyTrimmedStringSchema, "label"),
+  item: StatBlockGearItemSchema,
   quantity: optionalExact(PositiveIntegerSchema),
 });
 
@@ -6866,7 +6897,7 @@ const RESERVED_STAT_BLOCK_LANGUAGE_NAMES = ["all", "none"] as const;
 
 /** Compare reserved labels after trimming and lower-casing, while preserving
  * the authored spelling of every non-reserved language label. */
-const StatBlockLanguageNameSchema = surfaceIdentity(
+export const StatBlockLanguageNameSchema = surfaceIdentity(
   NonEmptyTrimmedStringSchema.pipe(
     Schema.check(
       Schema.makeFilter(
@@ -7008,21 +7039,20 @@ const encodesSwarmStatus = (tag: string): boolean => {
  * facts that a spawned/runtime projection intentionally does not carry.
  * Hit Dice notation is deliberately not represented here yet.
  */
+export const StandaloneStatBlockCreatureTypeTagsSchema = nonEmpty(
+  surfaceIdentity(NonEmptyTrimmedStringSchema, "label"),
+).pipe(
+  Schema.check(
+    Schema.makeFilter((tags) => tags.every((tag) => !encodesSwarmStatus(tag)), {
+      message:
+        "A Stat Block swarm must use the swarm constituent-size field rather than a creature type tag.",
+    }),
+  ),
+);
+
 const StandaloneStatBlockSharedSchema = Schema.Struct({
   creatureType: CreatureTypeSchema,
-  creatureTypeTags: optionalExact(
-    nonEmpty(surfaceIdentity(NonEmptyTrimmedStringSchema, "label")).pipe(
-      Schema.check(
-        Schema.makeFilter(
-          (tags) => tags.every((tag) => !encodesSwarmStatus(tag)),
-          {
-            message:
-              "A Stat Block swarm must use the swarm constituent-size field rather than a creature type tag.",
-          },
-        ),
-      ),
-    ),
-  ),
+  creatureTypeTags: optionalExact(StandaloneStatBlockCreatureTypeTagsSchema),
   alignment: StatBlockAlignmentSchema,
   ac: StatBlockArmorClassSchema,
   hp: StandaloneStatBlockValueSchema,
@@ -7042,7 +7072,7 @@ const StandaloneStatBlockSharedSchema = Schema.Struct({
   resistances: CreatureStatBlockProjectionFields.resistances,
   immunities: CreatureStatBlockProjectionFields.immunities,
   senses: optionalExact(nonEmpty(StandaloneCreatureSenseSchema)),
-  passivePerception: NonNegativeIntegerSchema,
+  passivePerception: StatBlockPassivePerceptionSchema,
   gear: optionalExact(nonEmpty(StatBlockGearEntrySchema)),
   communication: StatBlockCommunicationSchema,
   ...StandaloneStatBlockProcedureFields,
@@ -7054,7 +7084,7 @@ const StandaloneStatBlockSharedSchema = Schema.Struct({
  * structural union makes a non-Swarm distinct from either valid Swarm pair;
  * aggregate Size remains the canonical runtime projection fact.
  */
-const StandaloneStatBlockSizeAndSwarmSchema = Schema.Union([
+export const StandaloneStatBlockSizeAndSwarmSchema = Schema.Union([
   strictStruct({
     size: StandaloneStatBlockSizeSchema,
     swarm: optionalExact(ForbiddenValueSchema),

@@ -19,6 +19,7 @@ import {
 import { statBlockId, type StatBlockId } from "@dnd/shared/game-facts";
 import { movementFeet, resourceCount } from "@dnd/shared/types";
 import { Result, Option, Schema } from "effect";
+import { resolveWeaponMasteryReference } from "@dnd/surface/surface/unit-catalog";
 
 import {
   abilityScoreAssignment,
@@ -33,6 +34,7 @@ import {
   type CreationChoiceOptionId,
   type CreationFill,
   type CreationHole,
+  WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
 } from "@dnd/character-creation-runtime";
 
 import {
@@ -839,7 +841,9 @@ function acceptedFillForHole(
   }
 
   const { min, max } = choiceCardinalityBounds(hole.cardinality);
-  const optionIds = hole.options.map((option) => option.optionId);
+  const optionIds = battleExecutableChoiceOptions(hole, unitLibrary).map(
+    (option) => option.optionId,
+  );
   for (let size = Number(min); size <= Number(max); size += 1) {
     for (const selectedOptionIds of choiceCombinations(optionIds, size, 256)) {
       const fill: CreationFill = {
@@ -862,6 +866,36 @@ function acceptedFillForHole(
     tag: "sourceConstructionFailure",
     message: `Source has no accepted fill for ${hole.holeId}.`,
   });
+}
+
+function battleExecutableChoiceOptions(
+  hole: Extract<CreationHole, { readonly kind: "choice" }>,
+  unitLibrary: OracleEvaluationServices["unitLibrary"],
+): Extract<CreationHole, { readonly kind: "choice" }>["options"] {
+  if (
+    hole.source.tag !== "unitChoice" ||
+    hole.source.choiceKey !== WEAPON_MASTERY_OPTIONS_CHOICE_KEY
+  ) {
+    return hole.options;
+  }
+  const supported: (typeof hole.options)[number][] = [];
+  const unsupportedWeaponMasteries: (typeof hole.options)[number][] = [];
+  for (const option of hole.options) {
+    const unit =
+      option.unitRef === undefined
+        ? Option.none()
+        : unitLibrary.getUnit(option.unitRef.unitId);
+    if (
+      Option.isSome(unit) &&
+      unit.value.kind === "weapon" &&
+      Result.isFailure(resolveWeaponMasteryReference(unit.value, unitLibrary))
+    ) {
+      unsupportedWeaponMasteries.push(option);
+    } else {
+      supported.push(option);
+    }
+  }
+  return [...supported, ...unsupportedWeaponMasteries];
 }
 
 function choiceCombinations(

@@ -559,6 +559,45 @@ describe("Opaque Oracle Case and Trace contract", () => {
     }
   });
 
+  it("admits omitted current HP and rejects an explicitly undefined current HP", () => {
+    const rosterEntry = {
+      combatantId: combatantId("oracle:optional-current-hp"),
+      statBlockId: statBlockId("stat_block_skeleton"),
+      initiative: initiativeScore(0),
+      ammunitionStocks: {},
+      conditions: [],
+      tempHp: 0,
+    };
+    const omittedCurrentHp = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" },
+      battle: {
+        roster: { tag: "statBlocks", entries: [rosterEntry] },
+        attempts: [],
+      },
+    });
+    expect(Result.isSuccess(omittedCurrentHp)).toBe(true);
+
+    const explicitUndefinedCurrentHp = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" },
+      battle: {
+        roster: {
+          tag: "statBlocks",
+          entries: [{ ...rosterEntry, currentHp: undefined }],
+        },
+        attempts: [],
+      },
+    });
+    expect(Result.isFailure(explicitUndefinedCurrentHp)).toBe(true);
+    if (Result.isFailure(explicitUndefinedCurrentHp)) {
+      expect(explicitUndefinedCurrentHp.failure).toContainEqual({
+        path: "/battle/roster/entries/0/currentHp",
+        code: "wrongType",
+      });
+    }
+  });
+
   it("requires every creation trace to own exactly one outcome", () => {
     const incomplete = decodeOracleTrace({
       creation: { started: { holes: [] }, progression: [] },

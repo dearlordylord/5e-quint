@@ -228,6 +228,43 @@ describe("Surface trace effect scaling", () => {
     expect(edges).toEqual([]);
   });
 
+  test("threads scalable target counts through the slot scaling node", () => {
+    const { nodes, edges } = scalingTraceState();
+
+    traceTargetCountScaling(
+      {
+        kind: "target",
+        selection: {
+          mode: "choose_up_to",
+          count: {
+            kind: "linear",
+            base: 1,
+            perSlotAboveBase: 1,
+            baseLevel: 1,
+          },
+        },
+      },
+      "attachment",
+      "slot",
+      nodes,
+      edges,
+      idGen(),
+    );
+
+    expect(nodes).toEqual([
+      {
+        id: "sc1",
+        category: "scaling",
+        atomKind: "scale_target_count",
+        label: "scale_target_count\n+1/slot above 1",
+      },
+    ]);
+    expect(edges).toEqual([
+      { from: "sc1", to: "attachment", relation: "modifies" },
+      { from: "slot", to: "sc1", relation: "modifies" },
+    ]);
+  });
+
   test("walks nested activation effect scaling", () => {
     const unit = decodeUnitRecordSync(powerWordKillInput);
     if (

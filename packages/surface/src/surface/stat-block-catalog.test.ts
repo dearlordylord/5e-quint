@@ -14,10 +14,11 @@ import {
 } from "./schema.ts";
 import {
   assertSrd521StatBlock,
+  buildSrdStatBlockCatalogFromRecords,
   buildStatBlockCatalog,
   defineSrdStatBlockCollection,
-  srdStatBlockCollection,
 } from "./stat-block-catalog.ts";
+import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 import { assertStatBlockForTest } from "./stat-block-catalog.test-support.ts";
 import type {
   Srd521StatBlock,
@@ -67,6 +68,17 @@ const findFamiliarNormalFormSkillModifiers: Record<
 } as const;
 
 describe("Stat Block catalog boundary", () => {
+  test("keeps empty-input rejection at the SRD-from-records boundary", () => {
+    expect(buildSrdStatBlockCatalogFromRecords([])).toEqual({
+      tag: "invalid",
+      issues: [{ code: "emptyStatBlockCollection" }],
+    });
+
+    expect(buildStatBlockCatalog({ collections: [] })).toMatchObject({
+      tag: "ok",
+    });
+  });
+
   test("decodes generic Stat Block records", () => {
     expect(goblinWarrior.kind).toBe("statBlock");
     expect(goblinWarrior.provenance.kind).toBe("srd-5.2.1");

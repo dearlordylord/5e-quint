@@ -182,6 +182,7 @@ import {
 } from "./battle-character-build-projection.ts";
 import {
   battleSupportProfileSourceFactsForBuild,
+  characterBattleSupportAdmission,
   characterBattleWeaponMasterySelections,
 } from "./battle-support-profiles.ts";
 import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
@@ -837,14 +838,29 @@ describe("Character Sheet battle handoff", () => {
     );
   });
 
-  test("ignores invalid and unsupported supplied mastery weapon refs", () => {
+  test("rejects invalid and unsupported supplied mastery weapon refs", () => {
     const refs = characterBattleSupportProjection(build, unitLibrary, [
       { weaponUnitId: authoredUnitId("synthetic:missing-weapon") },
       { weaponUnitId: authoredUnitId("class_fighter") },
       { weaponUnitId: authoredUnitId("weapon_dagger") },
     ]);
 
-    expect(refs).toMatchObject({ _tag: "Success" });
+    expect(refs).toMatchObject({
+      _tag: "Failure",
+      failure: [
+        { message: expect.stringContaining("Unknown selected Weapon Mastery") },
+        {
+          message: expect.stringContaining(
+            "Expected selected Weapon Mastery option to be a weapon Unit",
+          ),
+        },
+        {
+          message: expect.stringContaining(
+            "references unknown mastery Unit mastery_nick",
+          ),
+        },
+      ],
+    });
   });
 
   test("propagates support-profile selection, source-fact, and catalog failures", () => {
@@ -2418,6 +2434,23 @@ describe("Character Sheet battle handoff", () => {
       _tag: "Failure",
       failure: {
         message: expect.stringContaining("no authored ownership context"),
+      },
+    });
+    expect(
+      settle(
+        [resourceState(firstRef)],
+        [
+          {
+            ...ownership(firstRef),
+            unit: unitLibrary.requireUnit("weapon_dagger"),
+          },
+        ],
+      ),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        message:
+          "Battle handoff unit resources must reference supported resource Units.",
       },
     });
   });
@@ -4526,24 +4559,29 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("projects Wild Shape Unit-ref support at Beast Spells levels", () => {
-    const { unitRefs: refs } = expectSuccess(
-      characterBattleSupportProjection(
+    const classLevels = parsedClassLevelsForTest("druid", 18);
+    const support = expectSuccess(
+      characterBattleSupportAdmission(
         druidWildShapeBuildAtLevel(18),
         unitLibrary,
         undefined,
-        [{ className: "druid", level: 18 }],
+        classLevels,
       ),
     );
-    const wildShapeRef = refs.find(
-      (candidate) => candidate.unit.id === "druid_wild_shape",
+    const wildShape = expectSuccess(
+      characterBattleDruidWildShapeProjection(
+        support.unitAdmissions,
+        classLevels,
+      ),
     );
 
-    expect(wildShapeRef?.supportProfiles).toContainEqual(
-      expect.objectContaining({
+    expect(wildShape).toEqual({
+      tag: "present",
+      profile: expect.objectContaining({
         classLevel: 18,
         kind: "druidWildShapeKnownForm",
       }),
-    );
+    });
   });
 
   test("projects retained Hunter's Prey selected option into semantic battle support", () => {
@@ -4937,12 +4975,11 @@ describe("Character Sheet battle handoff", () => {
     if (!isClassFeatureWithUseCountResource(wildShapeUnit)) {
       throw new Error("Expected Wild Shape to carry a use-count resource.");
     }
-    const driftedWildShapeUnit = unitWithUseCountCap(wildShapeUnit, {
-      kind: "fixed",
-      uses: resourceCount(3),
-    });
-    const driftedWildShapeResource =
-      characterBattleResourceForUnit(driftedWildShapeUnit);
+    const baseWildShapeResource = characterBattleResourceForUnit(wildShapeUnit);
+    const driftedWildShapeResource = {
+      ...baseWildShapeResource,
+      cap: { kind: "fixed" as const, uses: resourceCount(3) },
+    };
     if (!hasLimitedCharacterBattleResourceCap(driftedWildShapeResource)) {
       throw new Error("Expected finite drifted Wild Shape resource.");
     }
@@ -4956,7 +4993,7 @@ describe("Character Sheet battle handoff", () => {
       resourceOwnership: [
         {
           resourcePoolRef,
-          unit: driftedWildShapeUnit,
+          unit: wildShapeUnit,
           purpose: { tag: "unitResource" },
         },
       ],
@@ -4985,7 +5022,7 @@ describe("Character Sheet battle handoff", () => {
       _tag: "Failure",
       failure: {
         message:
-          "Class feature use-count battle capacity must match Character Sheet resource capacity.",
+          "Druid Wild Shape battle capacity must match Character Sheet resource capacity.",
       },
     });
 
@@ -5142,6 +5179,74 @@ describe("Character Sheet battle handoff", () => {
           "Druid Wild Shape must carry remaining uses during battle handoff.",
       },
     });
+  });
+
+  test("rejects Wild Shape handoff without matching Druid progression", () => {
+    const sheet = expectSuccess(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:wild-shape-without-druid-progression",
+        ),
+        build: druidWildShapeBuild(),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        unitLibrary,
+        statBlockCatalog,
+        druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+      }),
+    );
+    const wildShapeUnit = unitLibrary.requireUnit("druid_wild_shape");
+    const wildShapeResource = characterBattleResourceForUnit(wildShapeUnit);
+    if (!hasLimitedCharacterBattleResourceCap(wildShapeResource)) {
+      throw new Error("Expected finite Wild Shape resource.");
+    }
+    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
+      "wild-shape-without-druid-progression",
+    );
+
+    expect(
+      settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        resourceOwnership: [
+          {
+            resourcePoolRef,
+            unit: wildShapeUnit,
+            purpose: { tag: "unitResource" },
+          },
+        ],
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId(
+              "character:wild-shape-without-druid-progression",
+            ),
+            classLevels: parsedClassLevelsForTest("monk", 2),
+            resources: [
+              {
+                resourcePoolRef,
+                resource: wildShapeResource,
+                usedThisTurn: false,
+                usesRemaining: resourceCount(2),
+              },
+            ],
+          },
+          hp: Hp(15),
+          maxHp: Hp(15),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    ).toEqual(
+      Result.fail({
+        tag: "characterSheetBattleHandoffIssue",
+        message:
+          "Class feature battle resources require a matching class level during battle handoff.",
+        handoffReason: "validation",
+        check: "classFeatureResourceClassLevelMissing",
+      }),
+    );
   });
 
   test("rejects stable battle handoff when the sheet has in-progress Stable recovery time", () => {
@@ -6919,12 +7024,11 @@ describe("Character Sheet battle handoff", () => {
     if (!isClassFeatureWithUseCountResource(focusUnit)) {
       throw new Error("Expected Monk Focus to carry a use-count resource.");
     }
-    const driftedFocusUnit = unitWithUseCountCap(focusUnit, {
-      kind: "fixed",
-      uses: resourceCount(3),
-    });
-    const driftedFocusResource =
-      characterBattleResourceForUnit(driftedFocusUnit);
+    const baseFocusResource = characterBattleResourceForUnit(focusUnit);
+    const driftedFocusResource = {
+      ...baseFocusResource,
+      cap: { kind: "fixed" as const, uses: resourceCount(3) },
+    };
     if (!hasLimitedCharacterBattleResourceCap(driftedFocusResource)) {
       throw new Error("Expected finite drifted Monk Focus resource.");
     }
@@ -6937,7 +7041,7 @@ describe("Character Sheet battle handoff", () => {
       resourceOwnership: [
         {
           resourcePoolRef,
-          unit: driftedFocusUnit,
+          unit: focusUnit,
           purpose: { tag: "unitResource" },
         },
       ],
@@ -7188,6 +7292,46 @@ describe("Character Sheet battle handoff", () => {
     if (fontOfMagicResource.kind !== "point_pool") {
       throw new Error("Expected Font of Magic point-pool resource.");
     }
+    expect(
+      settleHandoffBranchToCharacterSheet({
+        sheet: sheet.success,
+        unitLibrary,
+        resourceOwnership: [
+          {
+            resourcePoolRef,
+            unit: fontOfMagicUnit,
+            purpose: { tag: "unitResource" },
+          },
+        ],
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:sorcery-point-capacity-drift"),
+            classLevels: parsedClassLevelsForTest("sorcerer", 5),
+            resources: [
+              {
+                resourcePoolRef,
+                resource: {
+                  ...fontOfMagicResource,
+                  poolId: "synthetic_drifted_sorcery_pool",
+                },
+                pointsRemaining: resourceCount(5),
+              },
+            ],
+          },
+          hp: Hp(24),
+          maxHp: sheetMaximumHp(sheet.success),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: {
+        message:
+          "Class feature point-pool battle capacity must match Character Sheet resource capacity.",
+      },
+    });
     expect(
       settleHandoffBranchToCharacterSheet({
         sheet: sheet.success,
@@ -9062,7 +9206,7 @@ describe("Character Build battle projection", () => {
       _tag: "Failure",
       failure: {
         message:
-          "Font of Magic projection requires Sorcerer class progression.",
+          "Class-feature projection requires Sorcerer class progression.",
       },
     });
   });
@@ -9113,9 +9257,22 @@ describe("Character Build battle projection", () => {
     if (wildShape.kind !== "class_feature") {
       throw new Error("Expected Druid Wild Shape class feature.");
     }
+    const support = expectSuccess(
+      characterBattleSupportAdmission(
+        druidWildShapeBuild(),
+        unitLibrary,
+        undefined,
+        parsedClassLevelsForTest("druid", 2),
+      ),
+    );
+    const admission = support.unitAdmissions.find(
+      ({ battleUnitRef }) => battleUnitRef.unit.id === wildShape.id,
+    );
+    if (admission === undefined)
+      throw new Error("Expected Wild Shape admission.");
     expect(
       characterBattleDruidWildShapeProjection(
-        [{ unit: wildShape }, { unit: wildShape }],
+        [admission, admission],
         parsedClassLevelsForTest("druid", 2),
       ),
     ).toEqual(
@@ -12981,25 +13138,6 @@ function isClassFeatureWithPointPoolResource(
     "resource" in unit.mechanics &&
     unit.mechanics.resource?.kind === "point_pool"
   );
-}
-
-function unitWithUseCountCap(
-  unit: UnitWithUseCountResource,
-  cap: LimitedCharacterBattleResource["cap"],
-): UnitRecord {
-  // Cast evidence: the input guard has already narrowed this to a class feature
-  // UnitRecord with a use-count resource; replacing only the typed cap preserves
-  // that UnitRecord shape, but object spread widens the mechanics union.
-  return {
-    ...unit,
-    mechanics: {
-      ...unit.mechanics,
-      resource: {
-        ...unit.mechanics.resource,
-        cap,
-      },
-    },
-  } as UnitRecord;
 }
 
 function unitWithPointPoolCap(

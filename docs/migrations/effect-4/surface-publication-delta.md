@@ -24,6 +24,13 @@ catalog-membership class.
 The baseline and candidate membership evidence each record counts and ordered
 identity hashes for every family, so a classified addition or removal can
 change one snapshot without contradicting the other.
+
+The #481 integration refreshed candidate evidence for ten Stat Blocks that are
+already classified as catalog additions relative to the Effect 3 baseline.
+Eight now retain the reviewed structured Pack Tactics effect, Giant Wolf Spider
+retains its printed Darkvision, and Stone Giant retains its printed Dexterity
+save. These corrections change the authenticated candidate shapes without
+changing their existing `added` classification or catalog membership.
 The verifier rejects unclassified membership or value changes, stale expected
 changes, duplicate classifications, and copied or otherwise substituted record
 content while separately retaining whole-artifact hashes and ordered-record

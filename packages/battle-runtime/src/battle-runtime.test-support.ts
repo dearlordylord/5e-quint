@@ -93,10 +93,8 @@ import {
   StatBlockProcedureOrdinalSchema,
   StatBlockProcedureResourceOrdinalSchema,
 } from "@dnd/surface/surface/schema";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type {
   AreaDirectEffectAtom,
   AuthoredExecutableProcedure,

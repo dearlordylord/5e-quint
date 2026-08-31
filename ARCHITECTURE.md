@@ -442,7 +442,7 @@ local development projections of the same application.
 The MCP runtime path composes:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
-- `srdStatBlockCollection` through `buildStatBlockCatalog`;
+- the canonical installed `srdStatBlockCatalog`;
 - character drafts and finalized Character Builds;
 - selected Stat Block identity;
 - durable `BattleState`;

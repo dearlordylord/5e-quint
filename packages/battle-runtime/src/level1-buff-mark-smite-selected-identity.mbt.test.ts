@@ -53,10 +53,8 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type {
   SpellRecord,
   WeaponProficiency,

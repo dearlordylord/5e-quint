@@ -27,6 +27,7 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
+  type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleSubject,
   type BattleRuntimeSession,
@@ -5582,17 +5583,9 @@ describe("MCP server route", () => {
     const deliveryActs = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     ).envelope.frontier.acts.filter(
-      (act: {
-        readonly subject: {
-          readonly tag: string;
-          readonly procedureRef?: string;
-        };
-        readonly presentation: {
-          readonly kind: string;
-        };
-      }) =>
+      (act: AvailableBattleAct) =>
         act.subject.tag === "spawnedCompanionTouchSpellProxy" &&
-        act.presentation.kind === "spell",
+        battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
     );
     expect(deliveryActs).toHaveLength(1);
     const deliveryAct = deliveryActs[0];

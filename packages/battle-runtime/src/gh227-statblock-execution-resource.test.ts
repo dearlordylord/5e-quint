@@ -1,6 +1,7 @@
 import { statBlockId } from "@dnd/shared/game-facts";
 import { abilityScoreToMod } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { statBlockProficiencyBonusForChallengeRating } from "@dnd/surface/surface/stat-block-proficiency-bonus";
 import { describe, expect, test } from "vitest";
 
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -127,39 +128,25 @@ describe("GH227 Stat Block execution coverage", () => {
    *   Actions and Recharge limited usage.
    */
   test("admits every challenge-rating proficiency boundary and resolves Unarmed Strike", () => {
-    const proficiencyBands = [
-      { challengeRating: 0, proficiencyBonus: 2 },
-      { challengeRating: 4, proficiencyBonus: 2 },
-      { challengeRating: 5, proficiencyBonus: 3 },
-      { challengeRating: 8, proficiencyBonus: 3 },
-      { challengeRating: 9, proficiencyBonus: 4 },
-      { challengeRating: 12, proficiencyBonus: 4 },
-      { challengeRating: 13, proficiencyBonus: 5 },
-      { challengeRating: 16, proficiencyBonus: 5 },
-      { challengeRating: 17, proficiencyBonus: 6 },
-      { challengeRating: 20, proficiencyBonus: 6 },
-      { challengeRating: 21, proficiencyBonus: 7 },
-      { challengeRating: 24, proficiencyBonus: 7 },
-      { challengeRating: 25, proficiencyBonus: 8 },
-      { challengeRating: 28, proficiencyBonus: 8 },
-      { challengeRating: 29, proficiencyBonus: 9 },
-      { challengeRating: 30, proficiencyBonus: 9 },
+    const challengeRatingBandEdges = [
+      0, 0.125, 0.25, 0.5, 1, 4, 5, 8, 9, 12, 13, 16, 17, 20, 21, 24, 25, 28,
+      29, 30,
     ] as const;
     const base = statBlockRecord();
     const strengthScore = 14;
     const strengthModifier = abilityScoreToMod(strengthScore);
 
-    for (const [index, band] of proficiencyBands.entries()) {
-      const displayName = `Synthetic Challenge Band ${band.challengeRating}`;
+    for (const [index, challengeRating] of challengeRatingBandEdges.entries()) {
+      const displayName = `Synthetic Challenge Band ${challengeRating}`;
       const statBlock: StatBlockRecord = {
         ...base,
         id: statBlockId(`synthetic_challenge_band_${index}`),
         name: displayName,
         provenance: {
           kind: "synthetic-test",
-          section: `gh227-stat-block-cr-boundary-${band.challengeRating}`,
+          section: `gh227-stat-block-cr-boundary-${challengeRating}`,
         },
-        challengeRating: band.challengeRating,
+        challengeRating,
         statBlock: {
           ...base.statBlock,
           abilityScores: {
@@ -191,7 +178,8 @@ describe("GH227 Stat Block execution coverage", () => {
       }
 
       expect(rollHole.attackBonus).toBe(
-        strengthModifier + band.proficiencyBonus,
+        strengthModifier +
+          statBlockProficiencyBonusForChallengeRating(challengeRating),
       );
       const resolved = resolveStatBlockAttack(state, subject, fighterId);
       expect(resolved.currentTurnResources.actionResources).toHaveLength(0);

@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2185333,
-        "sha256": "00a95b7dc20797170c7f6fe9947aeee9d76e03970ab44bc8bfbf57ce6b88f63d"
+        "byteLength": 2186122,
+        "sha256": "0aea62ab4531869d274632932c17278161da946bf9a8e3b4ce287239d0dd5e37"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "8f799c929b9867ec4074acc028b0132436ec2e53d2cfcda95d5416238eea1a46",
+        "candidateCanonicalJsonSha256": "f1c4ae718f26c4984f1b17db26f8d7ee88a98caf249a0b82b2d5e49a8b228bd4",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -1010,7 +1010,7 @@
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_giant_wolf_spider",
-            "candidateCanonicalJsonSha256": "97a8d9f1f209eb93ab484bca13d1ac82660fcd973ba2f9bbbf831aacd4d354c8",
+            "candidateCanonicalJsonSha256": "800ad77e21af19cfb971669c54d720bd2ae174efddcdff3a35ae09def3c5a4f8",
             "semanticClass": "authored-catalog-membership"
           },
           {
@@ -2004,7 +2004,7 @@
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_hell_hound",
-            "candidateCanonicalJsonSha256": "1109a75c4fd84ade8f50c39071eb28b28cfa378697e9e0320426b8bedf2c8187",
+            "candidateCanonicalJsonSha256": "1e3b511a2fc830986ffb58bcb339141afd826f69aec7bbfa2309f4103f1b7fc2",
             "semanticClass": "authored-catalog-membership"
           },
           {
@@ -2032,7 +2032,7 @@
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_hobgoblin_warrior",
-            "candidateCanonicalJsonSha256": "edad2f375738e10c78642c411d19e97e761ffa64a14190992d9a4e908f5feedd",
+            "candidateCanonicalJsonSha256": "164fff96846e34f47a8086bfa94d0bd87c122d644c26ab87fc0151050846e60a",
             "semanticClass": "authored-catalog-membership"
           },
           {
@@ -2102,7 +2102,7 @@
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_kobold_warrior",
-            "candidateCanonicalJsonSha256": "a088d694c995c131e4cddb5bf14df7d6ffb754dcde691fcf37769ac315d65b25",
+            "candidateCanonicalJsonSha256": "d5775de6be77eb0f243949b7f4c3e167402d3219787d63cf198115b33a1f3d80",
             "semanticClass": "authored-catalog-membership"
           },
           {
@@ -2585,7 +2585,7 @@
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_stone_giant",
-            "candidateCanonicalJsonSha256": "01138ff55bfd89a3569992731fa342f6b2a77aea491457d9362044cd3f199d3b",
+            "candidateCanonicalJsonSha256": "1df74dfc547837ac025b67c9022aaaa7bf24cf284038ac6abfad1955097daa2b",
             "semanticClass": "authored-catalog-membership"
           },
           {
@@ -2620,14 +2620,14 @@
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_tough",
-            "candidateCanonicalJsonSha256": "5bd2fdb049c296f5361e68a2db1e6253787de06b9e27143c4c37a75540e5344f",
+            "candidateCanonicalJsonSha256": "2313457e1508e73efd4d059652a912e558dc89c929db87a3c0e37f1253f25f54",
             "semanticClass": "authored-catalog-membership"
           },
           {
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_tough_boss",
-            "candidateCanonicalJsonSha256": "c44cb17d1356f8c2dc96e76123da4281d2c3a1a843a26699cc73a169ee61fcd2",
+            "candidateCanonicalJsonSha256": "d13ee94e4647ac0fe06bd334c2ac609237a46018ccf5e85a373d4c4f179210f4",
             "semanticClass": "authored-catalog-membership"
           },
           {
@@ -2690,7 +2690,7 @@
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_warrior_infantry",
-            "candidateCanonicalJsonSha256": "c1c06d484dba4e96e556397eca96bf475b886a6e87f703c8bd63fba63e76bb09",
+            "candidateCanonicalJsonSha256": "743a18961c2df92a31237fec174565a0ac372e9fcd28aa24fb82543aa77bd7cc",
             "semanticClass": "authored-catalog-membership"
           },
           {
@@ -2739,7 +2739,7 @@
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_werewolf",
-            "candidateCanonicalJsonSha256": "a7791bbdb50e3b5b10d6ef0b8127a6c3a624b04790ab82c4b3f4ecb30879cf30",
+            "candidateCanonicalJsonSha256": "9279e630a65bd3282183815f59f06a6901b30c669f0db796e25ab0c41b5a0e0e",
             "semanticClass": "authored-catalog-membership"
           },
           {
@@ -2788,7 +2788,7 @@
             "kind": "added",
             "family": "statBlocks",
             "id": "stat_block_winter_wolf",
-            "candidateCanonicalJsonSha256": "306f54e8fe304f60096ecc13397da8414ddc6394f9209bb1f0dd78fb7479e980",
+            "candidateCanonicalJsonSha256": "f703cdf7da07486a367ffda1186f4a42a7f0920981a666f08ddff2572a2f95a2",
             "semanticClass": "authored-catalog-membership"
           },
           {
@@ -2877,19 +2877,19 @@
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1588630,
-        "sha256": "ac42a65802fe15505b9c8ccff62a00b6885b1191a545043b86d9385df3a057dd"
+        "byteLength": 1589880,
+        "sha256": "cdc52f97f4b37894268442390a38efc54193e64726ae9dd52535db45f24f4a34"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "e69f96da2dcc95915f8a8578617aa3159be332a7797616dc6efe5c1e9f68a70a",
+        "candidateCanonicalJsonSha256": "7f93c3a661b4bc307858b72328621de08f3c1bd61bc95f1f24b8c3f0db97ff8e",
         "definitions": {
           "baseline": 1305,
           "candidate": 1190
         },
         "references": {
           "baseline": 8778,
-          "candidate": 7675
+          "candidate": 7679
         },
         "localReferencesComplete": {
           "baseline": true,

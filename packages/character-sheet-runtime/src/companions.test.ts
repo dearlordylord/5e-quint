@@ -3,9 +3,9 @@ import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import type { Hp as HpType } from "@dnd/shared/types";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildStatBlockCatalog,
-  srdStatBlockCollection,
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";

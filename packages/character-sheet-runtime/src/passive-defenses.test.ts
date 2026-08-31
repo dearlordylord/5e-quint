@@ -7,10 +7,8 @@
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
-import {
-  buildStatBlockCatalog,
-  srdStatBlockCollection,
-} from "@dnd/surface/surface/stat-block-catalog";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { buildStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 
 import {
   Hp,

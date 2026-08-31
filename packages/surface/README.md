@@ -92,6 +92,27 @@ Draft 2020-12 validator. Regenerate them with
 This boundary changes no D&D rules; it only validates the already-authored
 publication contract.
 
+The standalone SRD Stat Block evidence contract is exported from
+`surface/stat-block-parity-observation`. The parity reader derives one report
+containing source discovery, coverage, provenance, and publication-peer facts.
+`surface/stat-block-scoped-fidelity` consumes that already-derived report with
+RAW and authored projection outcomes; it does not rediscover the corpus or
+restate parity issues. Its reconciliation continues across joinable identities,
+using only identity- or anchor-specific missing, duplicate, divergent, and
+malformed parity evidence to suppress an impossible mechanics comparison.
+Parity and scoped-fidelity results therefore remain distinct facts for the
+final diagnostic boundary.
+
+The standalone `pnpm check:srd-stat-block-catalog` diagnostic joins that parity
+report with aggregate synchronization, total strict catalog decoding,
+homogeneous SRD provenance, installed membership, scoped fidelity, and MCP
+catalog reachability. It proves the complete 334-occurrence to 330-identity to
+330-installed-record catalog without persisting a receipt or support ledger.
+The required `pnpm quality:milestone` gate invokes this public diagnostic after
+Surface publication checks. Passing it does not claim runtime execution (#114),
+selected-graph binding (#117), or Hit Dice fidelity, and introduces no receipt,
+baseline, allowlist, support status, or completion ledger.
+
 The `surface/catalog-install` boundary composes that portable decode with
 context-independent Static Mechanics Admission in one atomic operation.
 `installSrdSurface` and `installSrdSurfaceText` keep decoded canonical content

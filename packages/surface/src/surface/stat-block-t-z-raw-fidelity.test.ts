@@ -1,9 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import {
-  defineRawStatBlockFidelityLane,
-  projectRawStatBlockSourceOccurrences,
-} from "./stat-block-raw-fidelity-lane.test-support.ts";
+import { projectRawStatBlockSourceOccurrences } from "./stat-block-raw-fidelity-fixture.test-support.ts";
 import { projectRawStatBlocks } from "./stat-block-raw-projection.test-support.ts";
 
 const REPEATED_NAMES = [
@@ -12,14 +9,6 @@ const REPEATED_NAMES = [
   "Storm Giant",
   "Succubus",
 ] as const;
-
-defineRawStatBlockFidelityLane({
-  label: "T–Z",
-  sourcePath: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
-  authoredSourcePrefix: "Monsters/Monsters-T-Z.md:",
-  expectedRecordCount: 32,
-  retainedIdentityNames: REPEATED_NAMES,
-});
 
 const repeatedPToS = projectRawStatBlockSourceOccurrences({
   sourcePath: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
@@ -58,19 +47,19 @@ describe("T–Z repeated source occurrence reconciliation", () => {
     );
   });
 
-  test("retains three agreements and the precise Stone Giant save divergence", () => {
+  test("reconciles all repeated records across both source anchors", () => {
     const pToS = projectionByName(repeatedPToS.projection);
     const tToZ = projectionByName(repeatedTToZ.projection);
-    for (const name of ["Stone Golem", "Storm Giant", "Succubus"] as const) {
+    for (const name of REPEATED_NAMES) {
       expect(withoutSourceSection(requireNamed(pToS, name))).toEqual(
         withoutSourceSection(requireNamed(tToZ, name)),
       );
     }
     const dexSave = (projection: (typeof repeatedPToS.projection)[number]) =>
       projection.generalFacts.savingThrowModifiers.find(
-        ({ name }) => name === "dex",
+        ({ ability }) => ability === "dex",
       )?.modifier;
-    expect(dexSave(requireNamed(pToS, "Stone Giant"))).toBe(2);
+    expect(dexSave(requireNamed(pToS, "Stone Giant"))).toBe(5);
     expect(dexSave(requireNamed(tToZ, "Stone Giant"))).toBe(5);
   });
 });
@@ -84,40 +73,35 @@ describe("T–Z form-restricted Speed fidelity", () => {
   test("preserves every canonical form-only spelling without making it unrestricted", () => {
     const byName = projectionByName(lycanthropes.projection);
     expect(requireNamed(byName, "Werebear").generalFacts.speeds).toEqual([
-      { kind: "walk", feet: 30, hover: false },
+      { kind: "walk", feet: { kind: "literal", value: 30 } },
       {
         kind: "walk",
-        feet: 40,
-        hover: false,
+        feet: { kind: "literal", value: 40 },
         availability: { kind: "forms_only", forms: ["bear"] },
       },
       {
         kind: "climb",
-        feet: 30,
-        hover: false,
+        feet: { kind: "literal", value: 30 },
         availability: { kind: "forms_only", forms: ["bear"] },
       },
     ]);
     expect(requireNamed(byName, "Wereboar").generalFacts.speeds[1]).toEqual({
       kind: "walk",
-      feet: 40,
-      hover: false,
+      feet: { kind: "literal", value: 40 },
       availability: { kind: "forms_only", forms: ["boar"] },
     });
     expect(requireNamed(byName, "Wererat").generalFacts.speeds).toEqual([
-      { kind: "walk", feet: 30, hover: false },
-      { kind: "climb", feet: 30, hover: false },
+      { kind: "walk", feet: { kind: "literal", value: 30 } },
+      { kind: "climb", feet: { kind: "literal", value: 30 } },
     ]);
     expect(requireNamed(byName, "Weretiger").generalFacts.speeds[1]).toEqual({
       kind: "walk",
-      feet: 40,
-      hover: false,
+      feet: { kind: "literal", value: 40 },
       availability: { kind: "forms_only", forms: ["tiger"] },
     });
     expect(requireNamed(byName, "Werewolf").generalFacts.speeds[1]).toEqual({
       kind: "walk",
-      feet: 40,
-      hover: false,
+      feet: { kind: "literal", value: 40 },
       availability: { kind: "forms_only", forms: ["wolf"] },
     });
   });
@@ -131,7 +115,6 @@ describe("T–Z form-restricted Speed fidelity", () => {
     const projected = projectRawStatBlocks(
       source,
       lycanthropes.occurrences,
-      lycanthropes.records,
       lycanthropes.equipmentSource,
     );
     const werebear = requireNamed(projectionByName(projected), "Werebear");
@@ -158,10 +141,18 @@ describe("qualified condition Immunity fidelity", () => {
       sourcePath: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
       names: ["Vampire Familiar"],
     }).projection[0];
-    expect(archmage?.generalFacts.immunityQualifiedConditions).toEqual([
-      { condition: "charmed", qualifier: "with *Mind Blank*" },
-    ]);
-    expect(vampireFamiliar?.generalFacts.immunityQualifiedConditions).toEqual([
+    expect(
+      archmage?.generalFacts.immunities.kind === "some" &&
+        "qualifiedConditions" in archmage.generalFacts.immunities.value
+        ? archmage.generalFacts.immunities.value.qualifiedConditions
+        : undefined,
+    ).toEqual([{ condition: "charmed", qualifier: "with *Mind Blank*" }]);
+    expect(
+      vampireFamiliar?.generalFacts.immunities.kind === "some" &&
+        "qualifiedConditions" in vampireFamiliar.generalFacts.immunities.value
+        ? vampireFamiliar.generalFacts.immunities.value.qualifiedConditions
+        : undefined,
+    ).toEqual([
       { condition: "charmed", qualifier: "except from its vampire master" },
     ]);
   });

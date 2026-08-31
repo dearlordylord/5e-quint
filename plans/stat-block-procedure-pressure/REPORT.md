@@ -22,8 +22,8 @@ The SRD catalog contributes **330 records** and **2602 procedure-bearing occurre
 
 | Disposition  | Count |
 | ------------ | ----: |
-| executable   |  1142 |
-| textOnly     |   912 |
+| executable   |  1150 |
+| textOnly     |   904 |
 | tableOwned   |    54 |
 | missingOwner |   494 |
 | malformed    |     0 |

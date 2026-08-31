@@ -6,6 +6,7 @@ import { statBlockId } from "../packages/shared/src/game-facts.ts";
 
 import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
 import {
+  SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
   SRD_STAT_BLOCK_SOURCE_PATHS,
   deriveSrdStatBlockParity,
   discoverSrdStatBlocks,
@@ -52,6 +53,76 @@ function completeSourceFiles(
 }
 
 describe("SRD Stat Block source parity operation", () => {
+  test("reports a duplicate source path without inflating its occurrence denominator", () => {
+    const sourceFile = {
+      sourcePath: SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
+      contents: readFileSync(SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH, "utf8"),
+    };
+    const discovery = discoverSrdStatBlocks([sourceFile, sourceFile]);
+
+    expect(discovery.occurrences).toHaveLength(95);
+    expect(discovery.issues).toEqual([
+      {
+        kind: "duplicate-source",
+        sourcePath: SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
+        reason: "identical",
+      },
+    ]);
+  });
+
+  test("makes conflicting duplicate contents incomplete and order invariant", () => {
+    const animalsSource = {
+      sourcePath: SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
+      contents: readFileSync(SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH, "utf8"),
+    };
+    const conflictingAnimalsSource = {
+      ...animalsSource,
+      contents: animalsSource.contents.replace(
+        "## Allosaurus",
+        "## Altered Allosaurus",
+      ),
+    };
+    const remainingSources = SRD_STAT_BLOCK_SOURCE_PATHS.slice(1).map(
+      (sourcePath) => ({
+        sourcePath,
+        contents: readFileSync(sourcePath, "utf8"),
+      }),
+    );
+    const parityInput = {
+      installedStatBlocks: [] as const,
+      sourceReadIssues: [] as const,
+      peerObservations: [] as const,
+    };
+    const canonicalFirst = deriveSrdStatBlockParity({
+      ...parityInput,
+      sourceFiles: [
+        animalsSource,
+        conflictingAnimalsSource,
+        ...remainingSources,
+      ],
+    });
+    const conflictingFirst = deriveSrdStatBlockParity({
+      ...parityInput,
+      sourceFiles: [
+        conflictingAnimalsSource,
+        animalsSource,
+        ...remainingSources,
+      ],
+    });
+
+    expect(canonicalFirst).toEqual(conflictingFirst);
+    expect(canonicalFirst.discovery.occurrences).toHaveLength(239);
+    expect(canonicalFirst.discovery.issues).toContainEqual({
+      kind: "duplicate-source",
+      sourcePath: SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
+      reason: "conflicting",
+    });
+    expect(canonicalFirst.sourceCoverage).toMatchObject({
+      tag: "incomplete",
+      incompletePaths: [SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH],
+    });
+  });
+
   test("derives the standalone denominator and preserves repeated source anchors", () => {
     const report = readSrdStatBlockParity({
       repoRoot: process.cwd(),
@@ -84,13 +155,15 @@ describe("SRD Stat Block source parity operation", () => {
       }),
     ]);
     expect(
-      report.issues.filter(
-        (issue) =>
-          issue.kind === "divergent-source" && issue.name === "Stone Giant",
-      ),
-    ).toHaveLength(1);
+      report.issues.filter((issue) => issue.kind === "divergent-source"),
+    ).toEqual([]);
 
-    for (const name of ["Stone Golem", "Storm Giant", "Succubus"]) {
+    for (const name of [
+      "Stone Giant",
+      "Stone Golem",
+      "Storm Giant",
+      "Succubus",
+    ]) {
       const identity = report.discovery.identities.find(
         (candidate) => candidate.name === name,
       );
@@ -118,30 +191,8 @@ describe("SRD Stat Block source parity operation", () => {
 
     expect(srdStatBlockSourceOccurrenceCount(report.discovery)).toBe(334);
     expect(srdStatBlockSourceIdentityCount(report.discovery)).toBe(330);
-    expect(
-      report.issues.filter((issue) => issue.kind === "missing"),
-    ).toHaveLength(
-      report.discovery.identities.length -
-        srdStatBlockCollection.statBlocks.length,
-    );
-    expect(
-      report.issues.filter((issue) => issue.kind === "extra"),
-    ).toHaveLength(0);
-    expect(
-      report.issues
-        .filter((issue) => issue.kind === "provenance")
-        .map((issue) => issue.name)
-        .sort(),
-    ).toEqual([]);
-    expect(
-      report.issues.filter((issue) => issue.kind === "duplicate-id"),
-    ).toHaveLength(0);
-    expect(
-      report.issues.filter((issue) => issue.kind === "duplicate-identity"),
-    ).toHaveLength(0);
-    expect(
-      report.issues.filter((issue) => issue.kind === "cardinality"),
-    ).toHaveLength(0);
+    expect(srdStatBlockCollection.statBlocks).toHaveLength(330);
+    expect(report.issues).toEqual([]);
   });
 
   test("rejects a pilot duplicate identity while preserving source-derived membership", () => {
@@ -164,7 +215,6 @@ describe("SRD Stat Block source parity operation", () => {
     expect(report.issues).toContainEqual({
       kind: "duplicate-identity",
       name: "Bat",
-      normalizedIdentity: "bat",
       statBlockIds: [bat.id, duplicateBat.id],
     });
     expect(
@@ -227,7 +277,6 @@ describe("SRD Stat Block source parity operation", () => {
     expect(report.issues).toContainEqual({
       kind: "duplicate-identity",
       name: "Alpha",
-      normalizedIdentity: "alpha",
       statBlockIds: [alpha.id, duplicateAlpha.id],
     });
     expect(report.issues).toContainEqual({

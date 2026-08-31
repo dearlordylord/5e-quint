@@ -3,13 +3,16 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 import {
   combatantKnockedOutUnconscious,
+  admitResourceFeature,
   combatantHasActiveDruidWildShape,
   classFeatureSpellFreeCastProfileForResource,
   characterBattleResourceIsPointPool,
-  characterBattleResourceMaxPoints,
-  characterBattleResourceMaxUses,
+  characterBattleResourceForUnit,
+  characterBattleResourceMaxPointsForExecutionFacts,
+  characterBattleResourceMaxUsesForExecutionFacts,
+  characterBattleResourceSupportedForUnit,
+  resourceFeatureExecutionFacts,
   KNOCKED_OUT_UNCONSCIOUS,
-  parseSupportedUnitFeatureProfile,
   type BattleCreatureInit,
   type BattleId,
   type BattleCreatureState,
@@ -18,6 +21,8 @@ import {
   type CombatantId,
   type CharacterBattleResourceOwnership,
   type CharacterBattleResourceState,
+  type CharacterBattleResourceExecutionFacts,
+  type ResourceFeatureAdmission,
   type CharacterBattleClassLevels,
   type CharacterBattleRuntimeContext,
   type CharacterZeroHpLifecycleInit,
@@ -1474,10 +1479,23 @@ function characterResourceExpendituresFromBattle(input: {
     return Result.fail(ownedBattleResources.failure);
   }
   const battleResources = ownedBattleResources.success;
-  const wildShapeResource = druidWildShapeBattleResourceProjection(
-    battleResources,
-    origin.classLevels,
-  );
+  for (const resource of battleResources) {
+    const resourceUnit = resource.ownership.unit;
+    if (
+      resource.tag === "unitResource" &&
+      resourceUnit.kind === "class_feature" &&
+      !origin.classLevels.some(
+        (classLevel) => classLevel.className === resourceUnit.className,
+      )
+    ) {
+      return characterBattleHandoffValidationIssue(
+        "classFeatureResourceClassLevelMissing",
+        "Class feature battle resources require a matching class level during battle handoff.",
+      );
+    }
+  }
+  const wildShapeResource =
+    druidWildShapeBattleResourceProjection(battleResources);
   if (Result.isFailure(wildShapeResource)) {
     return Result.fail(wildShapeResource.failure);
   }
@@ -1536,17 +1554,7 @@ function characterResourceExpendituresFromBattle(input: {
       nextFreeCastExpenditures.push(freeCastExpenditure.success);
       continue;
     }
-    if (
-      resourceUnit.kind === "class_feature" &&
-      !origin.classLevels.some(
-        (classLevel) => classLevel.className === resourceUnit.className,
-      )
-    ) {
-      return characterBattleHandoffValidationIssue(
-        "classFeatureResourceClassLevelMissing",
-        "Class feature battle resources require a matching class level during battle handoff.",
-      );
-    }
+    if (resource.tag === "spellAccessFreeCast") continue;
     const pointPoolExpenditure = characterSheetPointPoolExpenditureFromBattle({
       resource,
       classLevels: input.combatant.origin.classLevels,
@@ -1602,12 +1610,7 @@ function characterResourceExpendituresFromBattle(input: {
       }
       continue;
     }
-    if (
-      parseSupportedUnitFeatureProfile(
-        resource.ownership.unit,
-        origin.classLevels,
-      )?.kind === "druidWildShapeKnownForm"
-    ) {
+    if (ownedResourceIsDruidWildShape(resource)) {
       continue;
     }
     const useCountUnitId =
@@ -1616,14 +1619,26 @@ function characterResourceExpendituresFromBattle(input: {
       useCountUnitId !== null &&
       !characterBattleResourceIsPointPool(resource.state)
     ) {
-      const maxUses = characterBattleResourceMaxUses({
+      const maxUses = characterBattleResourceMaxUsesForExecutionFacts({
         unit: resourceUnit,
+        resource: ownedResourceExecutionFacts(resource),
         classLevels: input.combatant.origin.classLevels,
       });
       if (maxUses === undefined || resource.state.usesRemaining === undefined) {
         return characterBattleHandoffValidationIssue(
           "classFeatureUseCountRemainingUsesInvalid",
           "Class feature use-count resources must carry finite remaining uses during battle handoff.",
+        );
+      }
+      if (
+        !characterBattleResourceExecutionFactsEqual(
+          resource.state.resource,
+          ownedResourceExecutionFacts(resource),
+        )
+      ) {
+        return characterBattleHandoffValidationIssue(
+          "classFeatureUseCountCapacityMismatch",
+          "Class feature use-count battle capacity must match Character Sheet resource capacity.",
         );
       }
       const sheetCount = sheetUseCountResourceCapacity({
@@ -1678,19 +1693,32 @@ function characterSheetPointPoolExpenditureFromBattle(input: {
   const pointPoolUnitId =
     characterSheetPointPoolResourceUnitIdForBattleResource(input.resource);
   if (
+    input.resource.tag !== "unitResource" ||
     pointPoolUnitId === null ||
     !characterBattleResourceIsPointPool(input.resource.state)
   ) {
     return Result.succeed(null);
   }
-  const maxPoints = characterBattleResourceMaxPoints({
+  const maxPoints = characterBattleResourceMaxPointsForExecutionFacts({
     unit: input.resource.ownership.unit,
+    resource: ownedResourceExecutionFacts(input.resource),
     classLevels: input.classLevels,
   });
   if (maxPoints === undefined) {
     return characterBattleHandoffValidationIssue(
       "pointPoolRemainingPointsInvalid",
       "Class feature point-pool resources must carry finite remaining points during battle handoff.",
+    );
+  }
+  if (
+    !characterBattleResourceExecutionFactsEqual(
+      input.resource.state.resource,
+      ownedResourceExecutionFacts(input.resource),
+    )
+  ) {
+    return characterBattleHandoffValidationIssue(
+      "pointPoolCapacityMismatch",
+      "Class feature point-pool battle capacity must match Character Sheet resource capacity.",
     );
   }
   const sheetCount = sheetPointPoolResourceCapacity({
@@ -1784,10 +1812,74 @@ function retainedCharacterSheetResourceExpenditure(
   );
 }
 
-type OwnedCharacterBattleResource = {
-  readonly state: CharacterBattleResourceState;
-  readonly ownership: CharacterBattleResourceOwnership;
-};
+type OwnedCharacterBattleResource =
+  | {
+      readonly tag: "spellAccessFreeCast";
+      readonly state: CharacterBattleResourceState;
+      readonly ownership: CharacterBattleResourceOwnership & {
+        readonly purpose: Extract<
+          CharacterBattleResourceOwnership["purpose"],
+          { readonly tag: "spellAccessFreeCast" }
+        >;
+      };
+    }
+  | {
+      readonly tag: "unitResource";
+      readonly state: CharacterBattleResourceState;
+      readonly ownership: CharacterBattleResourceOwnership & {
+        readonly purpose: Extract<
+          CharacterBattleResourceOwnership["purpose"],
+          { readonly tag: "unitResource" }
+        >;
+      };
+      readonly resourceAdmission:
+        | {
+            readonly tag: "admitted";
+            readonly procedure: Extract<
+              ResourceFeatureAdmission,
+              { readonly tag: "admitted" }
+            >["procedure"];
+          }
+        | {
+            readonly tag: "battleResource";
+            readonly executionFacts: CharacterBattleResourceExecutionFacts;
+          };
+    };
+
+function ownedResourceIsDruidWildShape(
+  resource: Extract<
+    OwnedCharacterBattleResource,
+    { readonly tag: "unitResource" }
+  >,
+): boolean {
+  return Match.value(resource.resourceAdmission).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      battleResource: () => false,
+      admitted: ({ procedure }) =>
+        Match.value(procedure).pipe(
+          Match.discriminatorsExhaustive("kind")({
+            failedSavingThrowReroll: () => false,
+            monkFocus: () => false,
+            druidWildShape: () => true,
+          }),
+        ),
+    }),
+  );
+}
+
+function ownedResourceExecutionFacts(
+  resource: Extract<
+    OwnedCharacterBattleResource,
+    { readonly tag: "unitResource" }
+  >,
+): CharacterBattleResourceExecutionFacts {
+  return Match.value(resource.resourceAdmission).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      admitted: ({ procedure }) => resourceFeatureExecutionFacts(procedure),
+      battleResource: ({ executionFacts }) => executionFacts,
+    }),
+  );
+}
 
 type FixedUseCountBattleResourceState = CharacterBattleResourceState & {
   readonly resource: {
@@ -1804,6 +1896,73 @@ function isFixedUseCountBattleResourceState(
     state.resource.kind === "use_count" &&
     state.resource.cap.kind === "fixed" &&
     "usesRemaining" in state
+  );
+}
+
+type CharacterBattleResourceCap =
+  CharacterBattleResourceState["resource"]["cap"];
+
+function characterBattleResourceExecutionFactsEqual(
+  left: CharacterBattleResourceState["resource"],
+  right: CharacterBattleResourceState["resource"],
+): boolean {
+  return Match.value(left).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      use_count: (resource) =>
+        right.kind === "use_count" &&
+        characterBattleResourceCapsEqual(resource.cap, right.cap),
+      point_pool: (resource) =>
+        right.kind === "point_pool" &&
+        resource.poolId === right.poolId &&
+        characterBattleResourceCapsEqual(resource.cap, right.cap),
+    }),
+  );
+}
+
+function characterBattleResourceCapsEqual(
+  left: CharacterBattleResourceCap,
+  right: CharacterBattleResourceCap,
+): boolean {
+  return Match.value(left).pipe(
+    Match.when(
+      { kind: "fixed" },
+      (cap) => right.kind === "fixed" && cap.uses === right.uses,
+    ),
+    Match.when(
+      { kind: "proficiency_bonus" },
+      () => right.kind === "proficiency_bonus",
+    ),
+    Match.when(
+      { kind: "linear_per_level" },
+      (cap) =>
+        right.kind === "linear_per_level" &&
+        cap.axis === right.axis &&
+        cap.base === right.base &&
+        cap.perLevel === right.perLevel &&
+        cap.startingAtLevel === right.startingAtLevel,
+    ),
+    Match.when(
+      { kind: "threshold_tiers" },
+      (cap) =>
+        right.kind === "threshold_tiers" &&
+        cap.axis === right.axis &&
+        cap.base === right.base &&
+        cap.tiers.length === right.tiers.length &&
+        cap.tiers.every(
+          (tier, index) =>
+            tier.atLevel === right.tiers[index]?.atLevel &&
+            tier.value === right.tiers[index]?.value,
+        ),
+    ),
+    Match.when(
+      { kind: "ability_modifier" },
+      (cap) =>
+        right.kind === "ability_modifier" &&
+        cap.ability === right.ability &&
+        cap.minimum === right.minimum,
+    ),
+    Match.when({ kind: "unlimited" }, () => right.kind === "unlimited"),
+    Match.exhaustive,
   );
 }
 
@@ -1849,15 +2008,75 @@ function characterBattleResourcesWithOwnership(input: {
         "Battle handoff mechanical resource has no authored ownership context.",
       );
     }
-    ownedResources.push({ state, ownership });
+    if (ownership.purpose.tag === "spellAccessFreeCast") {
+      ownedResources.push({
+        tag: "spellAccessFreeCast",
+        state,
+        ownership: { ...ownership, purpose: ownership.purpose },
+      });
+      continue;
+    }
+    const ownedResource = characterBattleOwnedUnitResource({
+      state,
+      ownership: { ...ownership, purpose: ownership.purpose },
+    });
+    if (Result.isFailure(ownedResource)) {
+      return Result.fail(ownedResource.failure);
+    }
+    ownedResources.push(ownedResource.success);
   }
   return Result.succeed(ownedResources);
+}
+
+function characterBattleOwnedUnitResource(input: {
+  readonly state: CharacterBattleResourceState;
+  readonly ownership: Extract<
+    OwnedCharacterBattleResource,
+    { readonly tag: "unitResource" }
+  >["ownership"];
+}): Result.Result<
+  Extract<OwnedCharacterBattleResource, { readonly tag: "unitResource" }>,
+  CharacterSheetBattleHandoffIssue
+> {
+  const unsupported = () =>
+    characterBattleHandoffValidationIssue(
+      "battleResourceUnitUnsupported",
+      "Battle handoff unit resources must reference supported resource Units.",
+    );
+  return Match.value(admitResourceFeature(input.ownership.unit)).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      rejected: unsupported,
+      admitted: (admission) =>
+        Result.succeed({
+          tag: "unitResource" as const,
+          ...input,
+          resourceAdmission: {
+            tag: "admitted" as const,
+            procedure: admission.procedure,
+          },
+        }),
+      notBattleOwned: () =>
+        characterBattleResourceSupportedForUnit(input.ownership.unit)
+          ? Result.succeed({
+              tag: "unitResource" as const,
+              ...input,
+              resourceAdmission: {
+                tag: "battleResource" as const,
+                executionFacts: characterBattleResourceForUnit(
+                  input.ownership.unit,
+                ),
+              },
+            })
+          : unsupported(),
+    }),
+  );
 }
 
 function characterSheetPointPoolResourceUnitIdForBattleResource(
   resource: OwnedCharacterBattleResource,
 ): CharacterSheetPointPoolResourceUnitId | null {
-  return characterBattleResourceIsPointPool(resource.state) &&
+  return resource.tag === "unitResource" &&
+    characterBattleResourceIsPointPool(resource.state) &&
     isCharacterSheetPointPoolResourceUnitId(resource.ownership.unit.id)
     ? resource.ownership.unit.id
     : null;
@@ -1866,7 +2085,8 @@ function characterSheetPointPoolResourceUnitIdForBattleResource(
 function characterSheetUseCountResourceUnitIdForBattleResource(
   resource: OwnedCharacterBattleResource,
 ): CharacterSheetUseCountResourceUnitId | null {
-  return resource.state.resource.kind === "use_count" &&
+  return resource.tag === "unitResource" &&
+    resource.state.resource.kind === "use_count" &&
     isCharacterSheetUseCountResourceUnitId(resource.ownership.unit.id)
     ? resource.ownership.unit.id
     : null;
@@ -1928,21 +2148,28 @@ type DruidWildShapeBattleResourceProjection =
   | { readonly tag: "absent" }
   | {
       readonly tag: "present";
-      readonly resource: OwnedCharacterBattleResource;
+      readonly resource: Extract<
+        OwnedCharacterBattleResource,
+        { readonly tag: "unitResource" }
+      >;
       readonly unitId: CharacterSheetUseCountResourceUnitId;
     };
 
 function druidWildShapeBattleResourceProjection(
   battleResources: readonly OwnedCharacterBattleResource[],
-  classLevels: CharacterBattleClassLevels,
 ): Result.Result<
   DruidWildShapeBattleResourceProjection,
   CharacterSheetBattleHandoffIssue
 > {
   const resources = battleResources.filter(
-    (resource) =>
-      parseSupportedUnitFeatureProfile(resource.ownership.unit, classLevels)
-        ?.kind === "druidWildShapeKnownForm",
+    (
+      resource,
+    ): resource is Extract<
+      OwnedCharacterBattleResource,
+      { readonly tag: "unitResource" }
+    > =>
+      resource.tag === "unitResource" &&
+      ownedResourceIsDruidWildShape(resource),
   );
   if (resources.length > 1) {
     return characterBattleHandoffValidationIssue(
@@ -1995,8 +2222,20 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
       "Druid Wild Shape must carry remaining uses during battle handoff.",
     );
   }
-  const maxUses = characterBattleResourceMaxUses({
+  if (
+    !characterBattleResourceExecutionFactsEqual(
+      resource.state.resource,
+      ownedResourceExecutionFacts(resource),
+    )
+  ) {
+    return characterBattleHandoffValidationIssue(
+      "wildShapeCapacityMismatch",
+      "Druid Wild Shape battle capacity must match Character Sheet resource capacity.",
+    );
+  }
+  const maxUses = characterBattleResourceMaxUsesForExecutionFacts({
     unit: resource.ownership.unit,
+    resource: ownedResourceExecutionFacts(resource),
     classLevels: input.combatant.origin.classLevels,
   });
   const sheetCount = sheetUseCountResourceCapacity({

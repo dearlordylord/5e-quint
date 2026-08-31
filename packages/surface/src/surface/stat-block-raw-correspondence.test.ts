@@ -119,7 +119,7 @@ const literal = (value: number): EncodedLiteralValue => ({
 
 const dice = (
   diceCount: number,
-  dieSize: number,
+  dieSize: EncodedDamageExpression["dieSize"],
   flat?: number,
 ): EncodedDamageExpression => ({
   dice: diceCount,

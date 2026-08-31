@@ -67,7 +67,7 @@ import {
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
 } from "../unit-feature-support.ts";
-import { Match, Schema } from "effect";
+import { Match, Schema, type Brand } from "effect";
 import { SpellExecutionFactsSchema } from "./spell-execution-facts-codec.ts";
 import { battleActiveEffectOccurrenceSpatialClass } from "./creature-state-execution.ts";
 import {
@@ -193,6 +193,7 @@ import type {
   BattlePresentedCreatureSnapshot,
   BattlePresentedSnapshot,
   BattleSnapshot,
+  BattleTurnSnapshot,
 } from "../battle-state-execution.ts";
 import {
   BATTLE_START_TURN_OCCURRENCE_KINDS,
@@ -5894,6 +5895,30 @@ const BattleActionRestrictionSchema = Schema.Union([
   }),
 ]);
 
+type SnapshotEncoded<T> =
+  T extends Brand.Brand<infer _BrandKey>
+    ? SnapshotEncoded<Brand.Brand.Unbranded<T>>
+    : T extends readonly unknown[]
+      ? { readonly [K in keyof T]: SnapshotEncoded<T[K]> }
+      : T extends object
+        ? { readonly [K in keyof T]: SnapshotEncoded<T[K]> }
+        : T;
+
+type SameKeys<Left, Right> = [Exclude<keyof Left, keyof Right>] extends [never]
+  ? [Exclude<keyof Right, keyof Left>] extends [never]
+    ? unknown
+    : never
+  : never;
+
+function portableCodec<Type, Encoded>() {
+  return <ActualType extends Type, ActualEncoded extends Encoded>(
+    schema: Schema.Codec<ActualType, ActualEncoded, never, never> &
+      ([Type] extends [ActualType] ? unknown : never) &
+      ([Encoded] extends [ActualEncoded] ? unknown : never) &
+      SameKeys<Encoded, ActualEncoded>,
+  ): Schema.Codec<Type, Encoded, never, never> => schema;
+}
+
 export const RuntimeActionResourceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("action"),
@@ -5950,7 +5975,26 @@ export const RuntimeActionResourceSchema = Schema.Union([
   }),
 ]);
 
-const BattleTurnSnapshotSchema = Schema.Struct({
+const BattleTurnUnitExcludedUsageSchema = Schema.Struct({
+  attackerId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+  unitId: Schema.optionalKey(Schema.Never),
+});
+
+type EncodedBattleTurnSnapshot = Omit<
+  SnapshotEncoded<BattleTurnSnapshot>,
+  | "actionResources"
+  | "stunningStrikesUsedThisTurn"
+  | "weaponDamageDiceRollChoicesUsedThisTurn"
+  | "huntersPreyHordeBreakerUsedThisTurn"
+> & {
+  readonly actionResources: readonly (typeof RuntimeActionResourceSchema.Encoded)[];
+  readonly stunningStrikesUsedThisTurn: readonly (typeof BattleTurnUnitExcludedUsageSchema.Encoded)[];
+  readonly weaponDamageDiceRollChoicesUsedThisTurn: readonly (typeof BattleTurnUnitExcludedUsageSchema.Encoded)[];
+  readonly huntersPreyHordeBreakerUsedThisTurn: readonly (typeof BattleTurnUnitExcludedUsageSchema.Encoded)[];
+};
+
+const BattleTurnSnapshotInferredSchema = Schema.Struct({
   actionResources: Schema.Array(RuntimeActionResourceSchema),
   actionTakenThisTurn: Schema.Boolean,
   bonusActionQuotaAvailable: Schema.Boolean,
@@ -5976,13 +6020,7 @@ const BattleTurnSnapshotSchema = Schema.Struct({
       procedureRef: BattleProcedureExecutionRef,
     }),
   ),
-  stunningStrikesUsedThisTurn: Schema.Array(
-    Schema.Struct({
-      attackerId: CombatantId,
-      procedureRef: BattleProcedureExecutionRef,
-      unitId: Schema.optionalKey(Schema.Never),
-    }),
-  ),
+  stunningStrikesUsedThisTurn: Schema.Array(BattleTurnUnitExcludedUsageSchema),
   recklessAttackWhileRagingUsedThisTurn: Schema.Array(
     Schema.Struct({
       attackerId: CombatantId,
@@ -5991,19 +6029,11 @@ const BattleTurnSnapshotSchema = Schema.Struct({
     }),
   ),
   weaponDamageDiceRollChoicesUsedThisTurn: Schema.Array(
-    Schema.Struct({
-      attackerId: CombatantId,
-      procedureRef: BattleProcedureExecutionRef,
-      unitId: Schema.optionalKey(Schema.Never),
-    }),
+    BattleTurnUnitExcludedUsageSchema,
   ),
   weaponMasteryCleaveAttackersUsedThisTurn: Schema.Array(CombatantId),
   huntersPreyHordeBreakerUsedThisTurn: Schema.Array(
-    Schema.Struct({
-      attackerId: CombatantId,
-      procedureRef: BattleProcedureExecutionRef,
-      unitId: Schema.optionalKey(Schema.Never),
-    }),
+    BattleTurnUnitExcludedUsageSchema,
   ),
   grapplerPunchAndGrabUsedThisTurn: Schema.Array(CombatantId),
   lightWeaponAttackMade: Schema.optionalKey(
@@ -6024,6 +6054,11 @@ const BattleTurnSnapshotSchema = Schema.Struct({
   dashMovementBonusFeet: MovementFeet,
   disengaged: Schema.Boolean,
 });
+
+const BattleTurnSnapshotSchema = portableCodec<
+  BattleTurnSnapshot,
+  EncodedBattleTurnSnapshot
+>()(BattleTurnSnapshotInferredSchema);
 
 const BattleCharacterResourceSnapshotSchema = Schema.Union([
   Schema.Struct({
@@ -9678,11 +9713,121 @@ const battleSnapshotInvariantAnnotations = {
     "Battle combatants, execution scopes, and scope cursors must be unique, battle-owned, and monotonic.",
 };
 
-const BattlePresentedSnapshotShapeSchema = Schema.Struct({
+type EncodedCharacterBattleCreatureOriginSnapshot = {
+  readonly kind: "character";
+  readonly characterId: typeof CharacterIdSchema.Encoded;
+  readonly execution: {
+    readonly scopeRef: typeof BattleCharacterExecutionScopeRef.Encoded;
+    readonly nextProcedureOrdinal?: never;
+    readonly procedureBindings: readonly (typeof CharacterProcedureBindingSnapshotSchema.Encoded)[];
+  };
+  readonly attackExecution: {
+    readonly scopeRef: typeof BattleAttackExecutionScopeRef.Encoded;
+    readonly attackProcedureRef:
+      | typeof BattleAttackProcedureExecutionRef.Encoded
+      | null;
+    readonly unarmedStrikeProcedureRef: typeof BattleAttackProcedureExecutionRef.Encoded;
+    readonly offHandAttackProcedureRef:
+      | typeof BattleAttackProcedureExecutionRef.Encoded
+      | null;
+  };
+  readonly resources: readonly (typeof BattleCharacterResourceSnapshotSchema.Encoded)[];
+  readonly druidWildShapeAvailableForms: readonly {
+    readonly statBlockId: typeof StatBlockId.Encoded;
+    readonly execution: typeof StatBlockExecutionSnapshotSchema.Encoded;
+  }[];
+  readonly spellcasting: {
+    readonly spellSlots: readonly {
+      readonly spellLevel: typeof SpellSlotLevel.Encoded;
+      readonly count: typeof ResourceCount.Encoded;
+      readonly expended: typeof ResourceCount.Encoded;
+    }[];
+  } | null;
+};
+
+type EncodedStatBlockBattleCreatureOriginSnapshot = {
+  readonly kind: "statBlock";
+  readonly statBlockId: typeof StatBlockId.Encoded;
+  readonly execution: typeof StatBlockExecutionSnapshotSchema.Encoded;
+};
+
+type EncodedCharacterBattleCreatureSnapshot<T> = Omit<
+  SnapshotEncoded<T>,
+  "origin"
+> & {
+  readonly origin: EncodedCharacterBattleCreatureOriginSnapshot;
+};
+
+type EncodedStatBlockBattleCreatureSnapshot<T> = Omit<
+  SnapshotEncoded<T>,
+  "origin"
+> & {
+  readonly origin: EncodedStatBlockBattleCreatureOriginSnapshot;
+};
+
+type EncodedBattleCreatureSnapshotWire =
+  | (EncodedCharacterBattleCreatureSnapshot<
+      Extract<
+        BattleCreatureSnapshot,
+        { readonly origin: { readonly kind: "character" } }
+      >
+    > & { readonly displayName?: never })
+  | (EncodedStatBlockBattleCreatureSnapshot<
+      Extract<
+        BattleCreatureSnapshot,
+        { readonly origin: { readonly kind: "statBlock" } }
+      >
+    > & { readonly displayName?: never });
+
+type EncodedBattlePresentedCreatureSnapshot =
+  | EncodedCharacterBattleCreatureSnapshot<
+      Extract<
+        BattlePresentedCreatureSnapshot,
+        { readonly origin: { readonly kind: "character" } }
+      >
+    >
+  | EncodedStatBlockBattleCreatureSnapshot<
+      Extract<
+        BattlePresentedCreatureSnapshot,
+        { readonly origin: { readonly kind: "statBlock" } }
+      >
+    >;
+
+type EncodedBattleSnapshotExcludedFields = {
+  readonly executionScopeCursors?: never;
+  readonly retiredExecutionScopeAllocations?: never;
+  readonly acts?: never;
+  readonly pendingInterrupt?: never;
+};
+
+type EncodedBattlePresentedSnapshot = Omit<
+  SnapshotEncoded<BattlePresentedSnapshot>,
+  "combatants" | "turn"
+> &
+  EncodedBattleSnapshotExcludedFields & {
+    readonly combatants: readonly EncodedBattlePresentedCreatureSnapshot[];
+    readonly turn: EncodedBattleTurnSnapshot;
+  };
+
+type EncodedBattleSnapshot = Omit<
+  SnapshotEncoded<BattleSnapshot>,
+  "combatants" | "turn"
+> &
+  EncodedBattleSnapshotExcludedFields & {
+    readonly combatants: readonly EncodedBattleCreatureSnapshotWire[];
+    readonly turn: EncodedBattleTurnSnapshot;
+  };
+
+const BattlePresentedSnapshotInferredShapeSchema = Schema.Struct({
   ...BattleSnapshotCommonFields,
   ...BattleSnapshotExcludedFields,
   combatants: Schema.Array(BattlePresentedCreatureSnapshotSchema),
 });
+
+const BattlePresentedSnapshotShapeSchema = portableCodec<
+  BattlePresentedSnapshot,
+  EncodedBattlePresentedSnapshot
+>()(BattlePresentedSnapshotInferredShapeSchema);
 
 export const BattlePresentedSnapshotSchema: Schema.Codec<
   BattlePresentedSnapshot,
@@ -9703,11 +9848,16 @@ export const BattlePresentedSnapshotSchema: Schema.Codec<
   Schema.annotate({ identifier: "BattlePresentedSnapshot" }),
 );
 
-const BattleSnapshotShapeSchema = Schema.Struct({
+const BattleSnapshotInferredShapeSchema = Schema.Struct({
   ...BattleSnapshotCommonFields,
   ...BattleSnapshotExcludedFields,
   combatants: Schema.Array(BattleCreatureSnapshotSchema),
 });
+
+const BattleSnapshotShapeSchema = portableCodec<
+  BattleSnapshot,
+  EncodedBattleSnapshot
+>()(BattleSnapshotInferredShapeSchema);
 
 export const BattleSnapshotSchema: Schema.Codec<
   BattleSnapshot,

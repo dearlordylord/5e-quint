@@ -25,6 +25,7 @@ import {
 } from "../packages/surface/src/surface/publication-artifacts.ts";
 import { buildSrdSurfacePublication } from "./srd-surface-publication-artifacts.ts";
 import { SRD_STAT_BLOCK_SOURCE_PATHS } from "./srd521-stat-block-parity.ts";
+import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
 
 const validRecord = readFileSync(
   join(process.cwd(), "packages/surface/content/bless.json"),
@@ -81,6 +82,7 @@ describe(
   () => {
     it("returns unreadable RAW input as a typed publication issue", () => {
       const result = buildSrdSurfacePublication({
+        surface: srdSurface,
         excerptSource: {
           buildReferenceIndex: () => {
             throw new Error("synthetic unreadable RAW");
@@ -138,6 +140,7 @@ describe(
       },
     ])("rejects $name at the excerpt boundary", ({ result }) => {
       const publication = buildSrdSurfacePublication({
+        surface: srdSurface,
         excerptSource: {
           buildReferenceIndex: () => ({ synthetic: true }),
           rulesExcerptForSection: () => result,
@@ -191,6 +194,7 @@ describe(
         );
 
         const publication = buildSrdSurfacePublication({
+          surface: srdSurface,
           excerptSource: {
             buildReferenceIndex: () => index,
             rulesExcerptForSection: () => actualAliasResult,
@@ -415,7 +419,7 @@ describe(
     it("detects drift in committed language-neutral artifacts", () => {
       const contentDir = mkdtempSync(join(tmpdir(), "surface-artifact-test-"));
       const publicationDir = join(contentDir, "publication");
-      const publication = buildSrdSurfacePublication();
+      const publication = buildSrdSurfacePublication({ surface: srdSurface });
       expect(publication.tag).toBe("ok");
       if (publication.tag !== "ok") {
         throw new Error("Production Surface publication did not build");
@@ -439,6 +443,7 @@ describe(
           repoRoot: contentDir,
           contentDir,
           publicationDir,
+          publicationSurface: srdSurface,
           compile: () => undefined,
         });
 
@@ -462,6 +467,7 @@ describe(
           repoRoot: contentDir,
           contentDir,
           publicationDir,
+          publicationSurface: srdSurface,
           publicationExcerptSource: {
             buildReferenceIndex: () => {
               throw new Error("synthetic unreadable RAW");
@@ -523,11 +529,14 @@ describe(
 
       try {
         writeCompleteSyntheticStatBlockSources(contentDir);
-        const result = runSurfacePublicationCheck({
-          repoRoot: contentDir,
-          contentDir,
-          compile: () => undefined,
-        });
+        const result = runSurfacePublicationCheck(
+          {
+            repoRoot: contentDir,
+            contentDir,
+            compile: () => undefined,
+          },
+          [],
+        );
 
         expect(result.issues).toEqual([]);
         expect(result.statBlockParity.sourceCoverage.tag).toBe("complete");
@@ -562,14 +571,17 @@ describe(
             "utf8",
           ),
         );
-        const result = runSurfacePublicationCheck({
-          repoRoot: contentDir,
-          contentDir,
-          compile: (_sourcePath, outputPath) => {
-            writeFileSync(outputPath, validStatBlockRecord);
-            return undefined;
+        const result = runSurfacePublicationCheck(
+          {
+            repoRoot: contentDir,
+            contentDir,
+            compile: (_sourcePath, outputPath) => {
+              writeFileSync(outputPath, validStatBlockRecord);
+              return undefined;
+            },
           },
-        });
+          [],
+        );
 
         expect(result.peerObservations).toContainEqual({
           tag: "missing",
