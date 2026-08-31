@@ -6,7 +6,6 @@ import {
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
-  battleCreatureInitFromStatBlock,
   battleAmmunitionStock,
   battleId,
   combatantId,
@@ -16,10 +15,7 @@ import {
   startBattle,
   startBattleWithInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
-import {
-  characterSheetBattleInit,
-  type BattleRosterStatBlockCombatant,
-} from "@dnd/character-battle-runtime";
+import { characterSheetBattleInit } from "@dnd/character-battle-runtime";
 import {
   characterSheetDruidWildShapeKnownForms,
   characterSheetId,
@@ -437,17 +433,15 @@ describe("MCP character sessions", () => {
       root.statBlockCatalog,
       statBlockId("stat_block_goblin_warrior"),
     );
-    const combatant = expectRight(
-      battleCreatureInitFromStatBlock({
-        combatantId: combatantId("store-transition-goblin"),
-        statBlock: goblin,
-        initiative: initiativeScore(10),
-        currentHp: Hp(10),
-        tempHp: Hp(0),
-        conditions: [],
-        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      }),
-    );
+    const combatant = {
+      combatantId: combatantId("store-transition-goblin"),
+      statBlock: goblin,
+      initiative: initiativeScore(10),
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      conditions: [],
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    };
     const ownedSetup = expectRight(
       startBattleWithInitialInitiativeSetup({
         battleId: battleId("battle:store-transition-owned"),
@@ -567,56 +561,42 @@ describe("MCP character sessions", () => {
       root.statBlockCatalog,
       statBlockId("stat_block_wolf"),
     );
-    const initial = expectRight(
-      battleCreatureInitFromStatBlock({
-        combatantId: combatantId("store-plan-initial"),
-        statBlock: goblin,
-        initiative: initiativeScore(10),
-        currentHp: Hp(10),
-        tempHp: Hp(0),
-        conditions: [],
-        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      }),
-    );
-    const staleCombatant = expectStatBlockCombatant(
-      expectRight(
-        battleCreatureInitFromStatBlock({
-          combatantId: combatantId("store-plan-stale"),
-          statBlock: skeleton,
-          initiative: initiativeScore(8),
-          currentHp: Hp(10),
-          tempHp: Hp(0),
-          conditions: [],
-          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-        }),
-      ),
-    );
-    const interveningCombatant = expectStatBlockCombatant(
-      expectRight(
-        battleCreatureInitFromStatBlock({
-          combatantId: combatantId("store-plan-intervening"),
-          statBlock: wolf,
-          initiative: initiativeScore(6),
-          currentHp: Hp(10),
-          tempHp: Hp(0),
-          conditions: [],
-          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-        }),
-      ),
-    );
-    const foreignCombatant = expectStatBlockCombatant(
-      expectRight(
-        battleCreatureInitFromStatBlock({
-          combatantId: combatantId("store-plan-foreign"),
-          statBlock: skeleton,
-          initiative: initiativeScore(4),
-          currentHp: Hp(10),
-          tempHp: Hp(0),
-          conditions: [],
-          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-        }),
-      ),
-    );
+    const initial = {
+      combatantId: combatantId("store-plan-initial"),
+      statBlock: goblin,
+      initiative: initiativeScore(10),
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      conditions: [],
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    };
+    const staleCombatant = {
+      combatantId: combatantId("store-plan-stale"),
+      statBlock: skeleton,
+      initiative: initiativeScore(8),
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      conditions: [],
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    };
+    const interveningCombatant = {
+      combatantId: combatantId("store-plan-intervening"),
+      statBlock: wolf,
+      initiative: initiativeScore(6),
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      conditions: [],
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    };
+    const foreignCombatant = {
+      combatantId: combatantId("store-plan-foreign"),
+      statBlock: skeleton,
+      initiative: initiativeScore(4),
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      conditions: [],
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    };
     const active = expectRight(
       startBattle({
         battleId: battleId("battle:store-plan-owned"),
@@ -700,20 +680,18 @@ describe("MCP character sessions", () => {
         statBlockCatalog: root.statBlockCatalog,
       }),
     );
-    const goblin = expectRight(
-      battleCreatureInitFromStatBlock({
-        combatantId: combatantId("store-plan-character-goblin"),
-        statBlock: assertStatBlockForTest(
-          root.statBlockCatalog,
-          statBlockId("stat_block_goblin_warrior"),
-        ),
-        initiative: initiativeScore(8),
-        currentHp: Hp(10),
-        tempHp: Hp(0),
-        conditions: [],
-        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      }),
-    );
+    const goblin = {
+      combatantId: combatantId("store-plan-character-goblin"),
+      statBlock: assertStatBlockForTest(
+        root.statBlockCatalog,
+        statBlockId("stat_block_goblin_warrior"),
+      ),
+      initiative: initiativeScore(8),
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      conditions: [],
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    };
     const active = expectRight(
       startBattle({
         battleId: battleId("battle:store-plan-character-stale"),
@@ -765,36 +743,30 @@ describe("MCP character sessions", () => {
       statBlockCatalog: root.statBlockCatalog,
       unitLibrary: root.unitLibrary,
     });
-    const goblin = expectRight(
-      battleCreatureInitFromStatBlock({
-        combatantId: combatantId("store-plan-fills-goblin"),
-        statBlock: assertStatBlockForTest(
-          root.statBlockCatalog,
-          statBlockId("stat_block_goblin_warrior"),
-        ),
-        initiative: initiativeScore(10),
-        currentHp: Hp(10),
-        tempHp: Hp(0),
-        conditions: [],
-        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      }),
-    );
-    const skeleton = expectStatBlockCombatant(
-      expectRight(
-        battleCreatureInitFromStatBlock({
-          combatantId: combatantId("store-plan-fills-skeleton"),
-          statBlock: assertStatBlockForTest(
-            root.statBlockCatalog,
-            statBlockId("stat_block_skeleton"),
-          ),
-          initiative: initiativeScore(6),
-          currentHp: Hp(10),
-          tempHp: Hp(0),
-          conditions: [],
-          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-        }),
+    const goblin = {
+      combatantId: combatantId("store-plan-fills-goblin"),
+      statBlock: assertStatBlockForTest(
+        root.statBlockCatalog,
+        statBlockId("stat_block_goblin_warrior"),
       ),
-    );
+      initiative: initiativeScore(10),
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      conditions: [],
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    };
+    const skeleton = {
+      combatantId: combatantId("store-plan-fills-skeleton"),
+      statBlock: assertStatBlockForTest(
+        root.statBlockCatalog,
+        statBlockId("stat_block_skeleton"),
+      ),
+      initiative: initiativeScore(6),
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      conditions: [],
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    };
     const active = expectRight(
       startBattle({
         battleId: battleId("battle:store-plan-fills-stale"),
@@ -910,16 +882,4 @@ function expectRight<T, E>(value: Result.Result<T, E>): T {
     throw new Error(`Expected success: ${JSON.stringify(value.failure)}`);
   }
   return value.success;
-}
-
-function expectStatBlockCombatant(
-  combatant: import("@dnd/battle-runtime").BattleCreatureInit,
-): BattleRosterStatBlockCombatant {
-  if (combatant.creatureInit.kind !== "statBlock") {
-    throw new Error("Expected a Stat Block combatant.");
-  }
-  return {
-    ...combatant,
-    creatureInit: combatant.creatureInit,
-  };
 }
