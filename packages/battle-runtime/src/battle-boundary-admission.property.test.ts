@@ -2,7 +2,7 @@
 import fc from "fast-check";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
-import { classLevel, PositiveInteger, resourceCount } from "@dnd/shared/types";
+import { PositiveInteger, resourceCount } from "@dnd/shared/types";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
@@ -139,6 +139,7 @@ import {
   unitFeatureProcedureExecution,
   unitSupportProcedureExecution,
 } from "./character-execution-admission.ts";
+import { parseCharacterBattleClassLevels } from "./character-class-level.ts";
 import {
   parseSupportedUnitFeatureProfile,
   battleUnitSupportProfilesForUnit,
@@ -2419,6 +2420,13 @@ describe("battle boundary admission owners", () => {
       ),
     ).toMatchObject({ _tag: "Failure" });
 
+    const fighterLevelsResult = parseCharacterBattleClassLevels([
+      { className: "fighter", level: 2 },
+    ]);
+    if (Result.isFailure(fighterLevelsResult)) {
+      throw new Error("Expected valid Fighter class levels.");
+    }
+    const fighterLevels = fighterLevelsResult.success;
     expect(
       characterExecutionFromUnits({
         battleId: battleId("boundary-character-execution"),
@@ -2428,13 +2436,10 @@ describe("battle boundary admission owners", () => {
         resourceUnits: [],
         units: [],
         unitRefs: [],
-        classLevels: [],
+        classLevels: fighterLevels,
       }),
     ).toMatchObject({ _tag: "Success" });
     const tacticalMind = unitLibrary.requireUnit("fighter_tactical_mind");
-    const fighterLevels = [
-      { className: "fighter" as const, level: classLevel(2) },
-    ];
     const tacticalProfile = parseSupportedUnitFeatureProfile(
       tacticalMind,
       fighterLevels,

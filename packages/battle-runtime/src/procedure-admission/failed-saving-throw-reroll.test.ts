@@ -65,17 +65,17 @@ describe("atomic failed Saving Throw reroll admission", () => {
           },
         },
         resource: {
-          kind: "useCount",
+          kind: "use_count",
           cap: {
-            kind: "classLevelThresholdTiers",
-            className: "fighter",
+            kind: "threshold_tiers",
+            axis: "class",
             base: 1,
             tiers: [
               { atLevel: 13, value: 2 },
               { atLevel: 17, value: 3 },
             ],
           },
-          resetCadence: "longRest",
+          resetCadence: { kind: "long_rest" },
         },
         evidence: {
           consumed: [ROOT_MECHANICS_EVIDENCE],
@@ -265,7 +265,7 @@ function admittedProcedure() {
   }
   return {
     sourceUnitId: admission.source.unitId,
-    procedure: admission.procedure,
+    facts: admission.procedure.facts,
   };
 }
 

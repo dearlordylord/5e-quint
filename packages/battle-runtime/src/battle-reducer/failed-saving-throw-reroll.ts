@@ -1,7 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.failed-saving-throw-reroll
 import type {
   Ability,
-  ClassLevel,
   DieRollResult,
   DifficultyClass,
 } from "@dnd/shared/types";
@@ -30,7 +29,6 @@ export type FailedSavingThrowRerollInput = {
     { readonly kind: "failedSavingThrowReroll" }
   >;
   readonly resource: CharacterBattleUseCountResourceState;
-  readonly fighterLevel: ClassLevel;
   readonly failedSave: {
     readonly ability: Ability;
     readonly dc: DifficultyClass;
@@ -83,7 +81,7 @@ export function resolveFailedSavingThrowReroll(
 
   const finalTotal =
     input.replacementRoll.totalBeforeIndomitableBonus +
-    Number(input.fighterLevel);
+    Number(input.execution.savingThrow.reroll.bonus.level);
   return {
     tag: "resolved",
     finalTotal,

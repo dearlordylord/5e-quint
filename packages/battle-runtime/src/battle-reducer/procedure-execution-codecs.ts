@@ -986,10 +986,10 @@ export const FailedSavingThrowRerollProcedureExecutionSchema = Schema.Struct({
       bonus: Schema.Struct({
         kind: Schema.Literal("classLevel"),
         className: Schema.Literal("fighter"),
+        level: ClassLevel,
       }),
     }),
     spends: MechanicalSingleResourceSpendSchema,
-    resetCadence: Schema.Literal("longRest"),
   }),
 });
 

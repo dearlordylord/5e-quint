@@ -40,7 +40,6 @@ export {
 } from "./character-class-level.ts";
 import {
   battleBardicInspirationGrantSupportForUnit,
-  battleFailedSavingThrowRerollSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
   bonusActionDashTemporaryHitPointsProfileForUnit,
   requireCharacterClassLevel,
@@ -62,6 +61,7 @@ import {
   admitPersistentArmorEffectSpell,
   type PersistentArmorEffectAdmission,
 } from "./procedure-admission/persistent-armor-effect-facts.ts";
+import { admitFailedSavingThrowRerollProcedure } from "./procedure-admission/failed-saving-throw-reroll.ts";
 import {
   type CharacterBattleActivationResource,
   type CharacterBattleMetamagicOptionFact,
@@ -883,6 +883,13 @@ export function unitIsSupportedClassFeatureSpellFreeCastResource(
 function characterBattleResourceForUnitOrNull(
   unit: UnitRecord,
 ): CharacterBattleResourceExecutionFacts | null {
+  const failedSavingThrowReroll = admitFailedSavingThrowRerollProcedure(unit);
+  if (failedSavingThrowReroll.tag === "rejected") return null;
+  if (failedSavingThrowReroll.tag === "admitted") {
+    const { resetCadence: _resetCadence, ...resource } =
+      failedSavingThrowReroll.procedure.resource;
+    return resource;
+  }
   const freeCastResource = classFeatureSpellFreeCastResource(unit);
   if (freeCastResource !== null) {
     return freeCastResource;
@@ -928,7 +935,6 @@ function characterBattleResourceForUnitOrNull(
   if (
     unit.kind !== "class_feature" ||
     (unit.mechanics.family !== "activation" &&
-      unit.mechanics.family !== "failed_saving_throw_reroll" &&
       unit.mechanics.family !== "reaction_roll_or_damage_reduction") ||
     !("resource" in unit.mechanics) ||
     unit.mechanics.resource === undefined
@@ -1036,13 +1042,9 @@ function unitHasSupportedAbilityModifierBattleResourceProfile(
   }
   const bardicInspirationSupport =
     battleBardicInspirationGrantSupportForUnit(unit);
-  const failedSavingThrowRerollSupport =
-    battleFailedSavingThrowRerollSupportForUnit(unit);
   return (
-    (bardicInspirationSupport !== null &&
-      bardicInspirationSupport !== "unsupported") ||
-    (failedSavingThrowRerollSupport !== null &&
-      failedSavingThrowRerollSupport !== "unsupported")
+    bardicInspirationSupport !== null &&
+    bardicInspirationSupport !== "unsupported"
   );
 }
 

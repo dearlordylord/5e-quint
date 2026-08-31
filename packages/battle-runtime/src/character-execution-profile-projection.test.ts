@@ -13,7 +13,11 @@ import {
   unitFeatureProcedureExecution,
   unitSupportProcedureExecution,
 } from "./character-execution-admission.ts";
-import type { CharacterBattleClassLevel } from "./character-class-level.ts";
+import {
+  parseCharacterBattleClassLevels,
+  type CharacterBattleClassLevel,
+  type CharacterBattleClassLevels,
+} from "./character-class-level.ts";
 import {
   battleUnitSupportProfilesForUnit,
   parseSupportedUnitFeatureProfile,
@@ -41,12 +45,8 @@ const classLevels = CLASS_NAMES.map((className) => ({
   className,
   level: classLevel(20),
 }));
-const FIGHTER_TACTICAL_MIND_CLASS_LEVELS = [
-  { className: "fighter", level: classLevel(2) },
-] as const satisfies ReadonlyArray<CharacterBattleClassLevel>;
-const ROGUE_SUPREME_SNEAK_CLASS_LEVELS = [
-  { className: "rogue", level: classLevel(9) },
-] as const satisfies ReadonlyArray<CharacterBattleClassLevel>;
+const FIGHTER_TACTICAL_MIND_CLASS_LEVELS = parsedClassLevels("fighter", 2);
+const ROGUE_SUPREME_SNEAK_CLASS_LEVELS = parsedClassLevels("rogue", 9);
 const scopeRef = battleCharacterExecutionScopeRef(
   battleId("character-execution-profile-projection"),
   combatantId("profile-projection-character"),
@@ -63,6 +63,17 @@ const procedureRef = battleProcedureExecutionRef(
 const resourcePoolRefsByUnitId = new Map(
   units.map((unit) => [unit.id, resourcePoolRef] as const),
 );
+
+function parsedClassLevels(
+  className: CharacterBattleClassLevel["className"],
+  level: number,
+): CharacterBattleClassLevels {
+  const result = parseCharacterBattleClassLevels([{ className, level }]);
+  if (Result.isFailure(result)) {
+    throw new Error(result.failure.messages.join("; "));
+  }
+  return result.success;
+}
 const procedureRefsByUnitId = new Map(
   units.map((unit) => [unit.id, procedureRef] as const),
 );
@@ -160,7 +171,11 @@ describe("character execution profile projection", () => {
 
     expect(projectedKinds.size).toBeGreaterThan(20);
     expect(supportOwnedKinds).toEqual(
-      new Set(["cunningStrike", "cunningStrikeOptionGrant"]),
+      new Set([
+        "cunningStrike",
+        "cunningStrikeOptionGrant",
+        "failedSavingThrowReroll",
+      ]),
     );
   });
 
@@ -183,6 +198,10 @@ describe("character execution profile projection", () => {
         });
         const profileKind =
           typeof profile === "string" ? profile : profile.kind;
+        if (profileKind === "failedSavingThrowReroll") {
+          expect(execution).toBeUndefined();
+          continue;
+        }
         expect(execution, `${unit.id}:${profileKind}`).toBeDefined();
         if (execution !== undefined) {
           const executionKind =
@@ -293,6 +312,62 @@ describe("character execution profile projection", () => {
         },
       ]),
     );
+  });
+
+  test("binds a failed-save reroll to its same-source pool and canonical class level", () => {
+    const unit = requireUnit(unitId("fighter_indomitable"));
+    const fighterLevels = parsedClassLevels("fighter", 9);
+    const profile = parseSupportedUnitFeatureProfile(unit, fighterLevels);
+    if (profile?.kind !== "failedSavingThrowReroll") {
+      throw new Error("Expected failed Saving Throw reroll profile.");
+    }
+    const supportProfile = requireSupportProfile(
+      unit,
+      "failedSavingThrowReroll",
+      fighterLevels,
+    );
+
+    const admission = characterExecutionFromUnits({
+      battleId: battleId("bound-failed-save-reroll"),
+      combatantId: combatantId("bound-failed-save-reroll-character"),
+      scopeOrdinal: battleExecutionScopeOrdinal(0),
+      unitFeatureProcedures: [
+        boundUnitFeatureProcedureFactsFromProfile(profile),
+      ],
+      resourceUnits: [unit],
+      units: [unit],
+      unitRefs: [{ unit, supportProfiles: [supportProfile] }],
+      classLevels: fighterLevels,
+    });
+    if (Result.isFailure(admission)) {
+      throw new Error(
+        admission.failure.map(({ message }) => message).join("; "),
+      );
+    }
+
+    expect(admission.success.execution.procedureBindings).toEqual([
+      expect.objectContaining({
+        procedure: {
+          kind: "unitFeature",
+          source: expect.objectContaining({ kind: "resourcePool" }),
+          execution: {
+            kind: "failedSavingThrowReroll",
+            savingThrow: {
+              trigger: "failedSavingThrow",
+              reroll: {
+                use: "newRoll",
+                bonus: {
+                  kind: "classLevel",
+                  className: "fighter",
+                  level: classLevel(9),
+                },
+              },
+              spends: expect.objectContaining({ amount: 1 }),
+            },
+          },
+        },
+      }),
+    ]);
   });
 
   test("rejects character admission when a primary support dependency is absent", () => {

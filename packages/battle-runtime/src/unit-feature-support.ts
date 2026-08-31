@@ -57,6 +57,10 @@ import type {
 import { type BrutalStrikeProfile } from "./procedure-execution/brutal-strike.ts";
 import { admitAtomicClassFeatureProcedure } from "./procedure-admission/atomic-class-feature.ts";
 import { admitAtomicSpeciesTraitProcedure } from "./procedure-admission/atomic-species-trait-procedure.ts";
+import {
+  admitFailedSavingThrowRerollProcedure,
+  type FailedSavingThrowRerollProcedureFacts,
+} from "./procedure-admission/failed-saving-throw-reroll.ts";
 import { admitWeaponMasteryProcedure } from "./procedure-admission/weapon-mastery.ts";
 export {
   battleWeaponMasteryCleaveSupportForUnit,
@@ -459,21 +463,8 @@ export type BattleFailedAbilityCheckResourceBoostSupportProfile = {
   readonly kind: typeof FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE;
   readonly abilityCheck: FailedAbilityCheckResourceBoostProfile;
 };
-export type FailedSavingThrowRerollProfile = {
-  readonly trigger: "failedSavingThrow";
-  readonly reroll: {
-    readonly use: "newRoll";
-    readonly bonus: {
-      readonly kind: "classLevel";
-      readonly className: "fighter";
-    };
-  };
-  readonly spends: {
-    readonly resourceUnitId: AuthoredUnitSource["id"];
-    readonly amount: 1;
-  };
-  readonly resetCadence: "longRest";
-};
+export type FailedSavingThrowRerollProfile =
+  FailedSavingThrowRerollProcedureFacts["savingThrow"];
 export type BattleFailedSavingThrowRerollSupportProfile = {
   readonly kind: typeof FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE;
   readonly savingThrow: FailedSavingThrowRerollProfile;
@@ -1665,18 +1656,26 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     supportProfiles.push(failedAbilityCheckResourceBoostSupport);
   }
 
-  const failedSavingThrowRerollSupport =
-    battleFailedSavingThrowRerollSupportForUnit(input.unit);
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (failedSavingThrowRerollSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle failed Saving Throw reroll Unit hook: ${input.unit.id}.`,
-    );
+  const failedSavingThrowRerollProcedure = Match.value(
+    admitFailedSavingThrowRerollProcedure(input.unit),
+  ).pipe(
+    Match.when({ tag: "notBattleOwned" }, () =>
+      Result.succeed<readonly BattleUnitSupportProfile[]>([]),
+    ),
+    Match.when({ tag: "admitted" }, ({ procedure }) =>
+      Result.succeed<readonly BattleUnitSupportProfile[]>([procedure.facts]),
+    ),
+    Match.when({ tag: "rejected" }, () =>
+      battleUnitSupportProfileIssue(
+        `Unsupported battle failed Saving Throw reroll Unit hook: ${input.unit.id}.`,
+      ),
+    ),
+    Match.exhaustive,
+  );
+  if (Result.isFailure(failedSavingThrowRerollProcedure)) {
+    return Result.fail(failedSavingThrowRerollProcedure.failure);
   }
-  /* v8 ignore stop -- @preserve */
-  if (failedSavingThrowRerollSupport !== null) {
-    supportProfiles.push(failedSavingThrowRerollSupport);
-  }
+  supportProfiles.push(...failedSavingThrowRerollProcedure.success);
 
   const spellSlotHealingModifierSupport =
     battleSpellSlotHealingModifierSupportForUnit(input.unit);
@@ -3612,16 +3611,12 @@ export function battleFailedAbilityCheckResourceBoostSupportForUnit(
 export function battleFailedSavingThrowRerollSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleFailedSavingThrowRerollSupport {
-  if (!hasFailedSavingThrowRerollMechanics(unit)) {
-    return null;
-  }
-  const profile = failedSavingThrowRerollProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE,
-        savingThrow: profile.savingThrow,
-      };
+  return Match.value(admitFailedSavingThrowRerollProcedure(unit)).pipe(
+    Match.when({ tag: "notBattleOwned" }, () => null),
+    Match.when({ tag: "rejected" }, () => "unsupported" as const),
+    Match.when({ tag: "admitted" }, ({ procedure }) => procedure.facts),
+    Match.exhaustive,
+  );
 }
 
 export function battleSpellSlotHealingModifierSupportForUnit(
@@ -3869,12 +3864,6 @@ function hasClassFeatureMechanicsFamily(
   family: string,
 ): boolean {
   return unit.kind === "class_feature" && unit.mechanics.family === family;
-}
-
-function hasFailedSavingThrowRerollMechanics(
-  unit: AuthoredUnitSource,
-): boolean {
-  return hasClassFeatureMechanicsFamily(unit, "failed_saving_throw_reroll");
 }
 
 function hasPassiveArmorClassBonusMechanics(unit: AuthoredUnitSource): boolean {
@@ -4241,50 +4230,10 @@ export function failedSavingThrowRerollProfileForUnit(
   SupportedUnitFeatureProfile,
   { readonly kind: "failedSavingThrowReroll" }
 > | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.mechanics.family !== "failed_saving_throw_reroll"
-  ) {
-    return null;
-  }
-  const mechanics = unit.mechanics;
-  if (
-    mechanics.trigger.kind !== "failed_saving_throw" ||
-    mechanics.reroll.mustUseNewRoll !== true ||
-    mechanics.reroll.bonus.kind !== "class_level" ||
-    mechanics.reroll.bonus.className !== "fighter" ||
-    mechanics.resource.kind !== "use_count" ||
-    mechanics.resource.cap.kind !== "threshold_tiers" ||
-    mechanics.resource.cap.axis !== "class" ||
-    mechanics.resource.cap.base !== 1 ||
-    mechanics.resource.cap.tiers.length !== 2 ||
-    mechanics.resource.cap.tiers[0]?.atLevel !== 13 ||
-    mechanics.resource.cap.tiers[0]?.value !== 2 ||
-    mechanics.resource.cap.tiers[1]?.atLevel !== 17 ||
-    mechanics.resource.cap.tiers[1]?.value !== 3 ||
-    mechanics.resetCadence.kind !== "long_rest"
-  ) {
-    return null;
-  }
-  return {
-    kind: "failedSavingThrowReroll",
-    unit,
-    savingThrow: {
-      trigger: "failedSavingThrow",
-      reroll: {
-        use: "newRoll",
-        bonus: {
-          kind: "classLevel",
-          className: "fighter",
-        },
-      },
-      spends: {
-        resourceUnitId: unit.id,
-        amount: 1,
-      },
-      resetCadence: "longRest",
-    },
-  };
+  const admission = admitFailedSavingThrowRerollProcedure(unit);
+  return admission.tag === "admitted"
+    ? { ...admission.procedure.facts, unit }
+    : null;
 }
 
 export function spellSlotHealingModifierProfileForUnit(

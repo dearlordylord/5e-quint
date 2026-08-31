@@ -28,17 +28,17 @@ export type FailedSavingThrowRerollProcedureFacts = {
 };
 
 export type FailedSavingThrowRerollUseCountResourceProjection = {
-  readonly kind: "useCount";
+  readonly kind: "use_count";
   readonly cap: {
-    readonly kind: "classLevelThresholdTiers";
-    readonly className: "fighter";
+    readonly kind: "threshold_tiers";
+    readonly axis: "class";
     readonly base: 1;
     readonly tiers: readonly [
       { readonly atLevel: 13; readonly value: 2 },
       { readonly atLevel: 17; readonly value: 3 },
     ];
   };
-  readonly resetCadence: "longRest";
+  readonly resetCadence: { readonly kind: "long_rest" };
 };
 
 export type FailedSavingThrowRerollBindingRequirements = {
@@ -156,17 +156,17 @@ function admittedFailedSavingThrowRerollProcedure(): AdmittedFailedSavingThrowRe
       },
     },
     resource: {
-      kind: "useCount",
+      kind: "use_count",
       cap: {
-        kind: "classLevelThresholdTiers",
-        className: "fighter",
+        kind: "threshold_tiers",
+        axis: "class",
         base: 1,
         tiers: [
           { atLevel: 13, value: 2 },
           { atLevel: 17, value: 3 },
         ],
       },
-      resetCadence: "longRest",
+      resetCadence: { kind: "long_rest" },
     },
     evidence: {
       consumed: [FAILED_SAVING_THROW_REROLL_ROOT_MECHANICS_PATH],
@@ -247,7 +247,7 @@ export type FailedSavingThrowRerollProcedureBinding =
 export function bindFailedSavingThrowRerollProcedure(
   admitted: {
     readonly sourceUnitId: AuthoredUnitSource["id"];
-    readonly procedure: AdmittedFailedSavingThrowRerollProcedure;
+    readonly facts: FailedSavingThrowRerollProcedureFacts;
   },
   input: FailedSavingThrowRerollProcedureBindingInput,
 ): FailedSavingThrowRerollProcedureBinding {
@@ -271,13 +271,13 @@ export function bindFailedSavingThrowRerollProcedure(
     procedure: {
       binding: "ready",
       execution: {
-        kind: admitted.procedure.facts.kind,
+        kind: admitted.facts.kind,
         savingThrow: {
-          trigger: admitted.procedure.facts.savingThrow.trigger,
+          trigger: admitted.facts.savingThrow.trigger,
           reroll: {
-            use: admitted.procedure.facts.savingThrow.reroll.use,
+            use: admitted.facts.savingThrow.reroll.use,
             bonus: {
-              ...admitted.procedure.facts.savingThrow.reroll.bonus,
+              ...admitted.facts.savingThrow.reroll.bonus,
               level: fighterLevel.level,
             },
           },

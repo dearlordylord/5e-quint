@@ -29,7 +29,7 @@ export {
   type CharacterUnitProcedureQuery,
 } from "./character-execution-queries.ts";
 import { Result } from "effect";
-import type { CharacterBattleClassLevel } from "./character-class-level.ts";
+import type { CharacterBattleClassLevels } from "./character-class-level.ts";
 import {
   NonNegativeInteger,
   type ReadonlyNonEmptyArray,
@@ -75,6 +75,7 @@ import type {
   CharacterUnitProcedureSource,
   UnitFeatureProcedureExecution,
 } from "./character-execution-vocabulary.ts";
+import { bindFailedSavingThrowRerollProcedure } from "./procedure-admission/failed-saving-throw-reroll.ts";
 export type {
   CharacterExecutionState,
   CharacterProcedureBinding,
@@ -213,6 +214,16 @@ function unitSupportProcedureIsOwnedByUnitFeature(
   candidate: UnitSupportProcedureCandidate,
   context: UnitSupportProcedureExecutionContext,
 ): boolean {
+  if (
+    typeof candidate.profile === "object" &&
+    candidate.profile.kind === "failedSavingThrowReroll"
+  ) {
+    return unitFeatureProcedures.some(
+      (feature) =>
+        feature.unitId === candidate.unitId &&
+        feature.execution.kind === candidate.profile.kind,
+    );
+  }
   const supportExecution = unitSupportProcedureExecution(
     candidate.profile,
     context,
@@ -238,7 +249,7 @@ export function characterExecutionFromUnits(input: {
     readonly unit: BattleUnitSupportSource;
     readonly supportProfiles: readonly BattleUnitSupportProfile[];
   }[];
-  readonly classLevels: readonly CharacterBattleClassLevel[];
+  readonly classLevels: CharacterBattleClassLevels;
 }): Result.Result<
   CharacterExecutionAdmission,
   ReadonlyNonEmptyArray<BattleUnitSupportProfileIssue>
@@ -272,10 +283,34 @@ export function characterExecutionFromUnits(input: {
     ),
   ];
   const unitProcedures = unitFeatureProcedures.flatMap((procedure) => {
-    const execution = unitFeatureProcedureExecution(
-      procedure.facts,
-      unitFeatureExecutionContext,
-    );
+    const failedSavingThrowBinding =
+      procedure.facts.kind === "failedSavingThrowReroll"
+        ? bindFailedSavingThrowRerollProcedure(
+            {
+              sourceUnitId: procedure.sourceUnitId,
+              facts: procedure.facts,
+            },
+            {
+              resourcePoolRefsByUnitId,
+              classLevels: input.classLevels,
+            },
+          )
+        : null;
+    if (failedSavingThrowBinding?.tag === "rejected") {
+      supportProfileIssues.push(
+        ...failedSavingThrowBinding.issues.map((issue) => ({
+          tag: "battleUnitSupportProfileIssue" as const,
+          message: issue.message,
+        })),
+      );
+      return [];
+    }
+    const execution =
+      failedSavingThrowBinding?.procedure.execution ??
+      unitFeatureProcedureExecution(
+        procedure.facts,
+        unitFeatureExecutionContext,
+      );
     if (
       execution === undefined &&
       procedure.facts.kind !== "cunningStrike" &&
@@ -1005,23 +1040,8 @@ export function unitFeatureProcedureExecution(
             };
       },
       failedSavingThrowReroll: (value) => {
-        const resourcePoolRef = context.resourcePoolRefsByUnitId.get(
-          value.savingThrow.spends.resourceUnitId,
-        );
-        return resourcePoolRef === undefined
-          ? undefined
-          : {
-              kind: value.kind,
-              savingThrow: {
-                trigger: value.savingThrow.trigger,
-                reroll: value.savingThrow.reroll,
-                spends: {
-                  resourcePoolRef,
-                  amount: value.savingThrow.spends.amount,
-                },
-                resetCadence: value.savingThrow.resetCadence,
-              },
-            };
+        void value;
+        return undefined;
       },
       spellSlotHealingModifier: (value) => ({
         kind: value.kind,
@@ -1353,23 +1373,8 @@ export function unitSupportProcedureExecution(
             };
       },
       failedSavingThrowReroll: (value) => {
-        const resourcePoolRef = context.resourcePoolRefsByUnitId.get(
-          value.savingThrow.spends.resourceUnitId,
-        );
-        return resourcePoolRef === undefined
-          ? undefined
-          : {
-              kind: value.kind,
-              savingThrow: {
-                trigger: value.savingThrow.trigger,
-                reroll: value.savingThrow.reroll,
-                spends: {
-                  resourcePoolRef,
-                  amount: value.savingThrow.spends.amount,
-                },
-                resetCadence: value.savingThrow.resetCadence,
-              },
-            };
+        void value;
+        return undefined;
       },
       magicActionHealingPool: (value) => {
         const resourcePoolRef = context.resourcePoolRefsByUnitId.get(
