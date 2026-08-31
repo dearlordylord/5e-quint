@@ -23,7 +23,7 @@ const STANDARD_ACTION_KIND_SET: ReadonlySet<string> = new Set(
   STANDARD_ACTION_KINDS,
 );
 
-export const HasteActionResourceRestrictionSchema = Schema.Struct({
+export const AdditionalActionResourceRestrictionSchema = Schema.Struct({
   kind: Schema.Literal("allow_only"),
   actions: Schema.Tuple([
     Schema.Struct({
@@ -39,10 +39,10 @@ export const HasteActionResourceRestrictionSchema = Schema.Struct({
     Schema.Struct({ action: Schema.Literal("utilize") }),
   ]),
 });
-export type HasteActionResourceRestriction = Schema.Schema.Type<
-  typeof HasteActionResourceRestrictionSchema
+export type AdditionalActionResourceRestriction = Schema.Schema.Type<
+  typeof AdditionalActionResourceRestrictionSchema
 >;
-export const HASTE_ACTION_RESOURCE_RESTRICTION = {
+export const ADDITIONAL_ACTION_RESOURCE_RESTRICTION = {
   kind: "allow_only",
   actions: [
     {
@@ -54,15 +54,16 @@ export const HASTE_ACTION_RESOURCE_RESTRICTION = {
     { action: "hide" },
     { action: "utilize" },
   ],
-} as const satisfies HasteActionResourceRestriction;
+} as const satisfies AdditionalActionResourceRestriction;
 
-export function isHasteActionResourceRestriction(
+export function isAdditionalActionResourceRestriction(
   restriction: ActionRestriction | undefined,
 ): boolean {
   if (restriction?.kind !== "allow_only") return false;
-  const expectedActionKinds = HASTE_ACTION_RESOURCE_RESTRICTION.actions.map(
-    (allowed) => allowed.action,
-  );
+  const expectedActionKinds =
+    ADDITIONAL_ACTION_RESOURCE_RESTRICTION.actions.map(
+      (allowed) => allowed.action,
+    );
   const actualActionKinds = new Set(
     restriction.actions.map((allowed) => allowed.action),
   );
@@ -91,7 +92,7 @@ export type RuntimeActionResource =
       readonly kind: "action";
       readonly source: "spellEffect";
       readonly sourceEffectRef: BattleEffectExecutionRef;
-      readonly restriction: HasteActionResourceRestriction;
+      readonly restriction: AdditionalActionResourceRestriction;
     }
   | {
       readonly kind: "action";
@@ -781,7 +782,7 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
 export function grantSpellEffectActionResource<T extends ActionEconomyState>(
   state: T,
   sourceEffectRef: BattleEffectExecutionRef,
-  restriction: HasteActionResourceRestriction,
+  restriction: AdditionalActionResourceRestriction,
 ): Result.Result<T, ActionEconomySpendError> {
   if (hasSpellEffectActionResource(state, sourceEffectRef)) {
     return Result.fail("spell-effect action resource already granted");
