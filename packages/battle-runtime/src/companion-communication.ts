@@ -164,6 +164,57 @@ export type PreparedSpawnedCompanionTouchSpellDelivery = {
   readonly targetChoiceCount: number;
 };
 
+function spawnedCompanionTouchDeliveryProcedure(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell" | "bonusActionSpell" }
+  >,
+) {
+  const actor = state.combatants.get(subject.actorId);
+  if (actor?.origin.kind !== "character") return null;
+  const procedure = characterSpellProcedure(
+    actor.origin.execution,
+    subject.procedureRef,
+    actor,
+  );
+  if (procedure === undefined) return null;
+  if (!("spellRuleFacts" in procedure)) return null;
+  return spellInvocationIsSpellcasting(procedure) ? procedure : null;
+}
+
+function spawnedCompanionTouchDeliveryConnection(
+  state: BattleState,
+  fact: SpawnedCompanionWithin100FeetFact,
+  ownerId: CombatantId,
+): SpawnedCompanionTelepathicConnection | null {
+  const connection = spawnedCompanionTelepathicConnection(state, fact);
+  return connection !== null && connection.ownerId === ownerId
+    ? connection
+    : null;
+}
+
+function spawnedCompanionTouchDeliveryReactionIssue(input: {
+  readonly state: BattleState;
+  readonly familiarId: CombatantId;
+  readonly commitment: "uncommitted" | "committed";
+}): string | null {
+  const familiar = input.state.combatants.get(input.familiarId);
+  if (
+    input.commitment === "uncommitted" &&
+    !combatantCanTakeReactions(familiar)
+  ) {
+    return "Companion touch delivery requires the familiar's available Reaction.";
+  }
+  if (
+    input.commitment === "committed" &&
+    familiar?.reactionAvailable !== false
+  ) {
+    return "Companion touch delivery continuation requires its committed Reaction.";
+  }
+  return null;
+}
+
 export function prepareTouchSpellDeliveryThroughSpawnedCompanion(input: {
   readonly state: BattleState;
   readonly subject: Extract<
@@ -179,26 +230,12 @@ export function prepareTouchSpellDeliveryThroughSpawnedCompanion(input: {
       SpawnedCompanionMechanicalTransition,
       { readonly tag: "resolved" }
     > {
-  const actor = input.state.combatants.get(input.subject.actorId);
-  /* v8 ignore start -- @preserve -- Familiar delivery acts are projected only for a character caster; reaching this guard requires a forged subject owner. */
-  if (actor?.origin.kind !== "character") {
-    return invalidTransition(
-      "unsupportedActOption",
-      "Companion touch delivery requires a supported spell invocation.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const procedure = characterSpellProcedure(
-    actor.origin.execution,
-    input.subject.procedureRef,
-    actor,
+  const procedure = spawnedCompanionTouchDeliveryProcedure(
+    input.state,
+    input.subject,
   );
-  /* v8 ignore start -- @preserve -- Familiar delivery acts retain their admitted spell binding; a missing or non-spell procedure requires a forged procedure reference. */
-  if (
-    procedure === undefined ||
-    !("spellRuleFacts" in procedure) ||
-    !spellInvocationIsSpellcasting(procedure)
-  ) {
+  /* v8 ignore start -- @preserve -- Familiar delivery acts retain a spellcasting procedure on a character caster; reaching this guard requires a forged owner or procedure reference. */
+  if (procedure === null) {
     return invalidTransition(
       "unsupportedActOption",
       "Companion touch delivery requires a supported spell invocation.",
@@ -211,35 +248,24 @@ export function prepareTouchSpellDeliveryThroughSpawnedCompanion(input: {
       "Companion touch delivery supports only spells with a range of Touch.",
     );
   }
-  const connection = spawnedCompanionTelepathicConnection(
+  const connection = spawnedCompanionTouchDeliveryConnection(
     input.state,
     input.fact,
+    input.subject.actorId,
   );
-  if (connection === null || connection.ownerId !== input.subject.actorId) {
+  if (connection === null) {
     return invalidTransition(
       "invalidFill",
       "Companion touch delivery requires a present familiar within 100 feet of its caster.",
     );
   }
-  const familiar = input.state.combatants.get(connection.familiarId);
-  if (
-    input.reactionCommitment === "uncommitted" &&
-    !combatantCanTakeReactions(familiar)
-  ) {
-    return invalidTransition(
-      "staleSubject",
-      "Companion touch delivery requires the familiar's available Reaction.",
-    );
-  }
-  if (
-    input.reactionCommitment === "committed" &&
-    familiar?.reactionAvailable !== false
-  ) {
-    return invalidTransition(
-      "staleSubject",
-      "Companion touch delivery continuation requires its committed Reaction.",
-    );
-  }
+  const reactionIssue = spawnedCompanionTouchDeliveryReactionIssue({
+    state: input.state,
+    familiarId: connection.familiarId,
+    commitment: input.reactionCommitment,
+  });
+  if (reactionIssue !== null)
+    return invalidTransition("staleSubject", reactionIssue);
   const deliveryFills = spawnedCompanionTouchDeliveryFills({
     fills: input.fills,
     ownerId: input.subject.actorId,
