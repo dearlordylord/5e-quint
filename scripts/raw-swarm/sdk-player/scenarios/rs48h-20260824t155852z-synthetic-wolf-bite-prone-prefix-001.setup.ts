@@ -46,7 +46,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(bitingWolf)) {
+  if (sdk.isFailure(bitingWolf)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(bitingWolf.failure),
@@ -65,7 +65,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(targetWolf)) {
+  if (sdk.isFailure(targetWolf)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(targetWolf.failure),
@@ -81,7 +81,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     battleId: sdk.battleId(SCENARIO_ID),
     combatants: [bitingWolf.success, targetWolf.success],
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(battle.failure),
@@ -122,7 +122,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],
@@ -135,7 +135,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     opportunityAttackEnemyRelationships: [],
     objects: [],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
       obstruction: sdk.scenarioSessionIssueMessage(session.failure),

@@ -1,4 +1,5 @@
 import type {
+  authoredStatBlockBattleInitIssueMessage,
   battleCreatureInitFromStatBlock,
   battleAmmunitionStock,
   battleId,
@@ -7,6 +8,7 @@ import type {
   combatantId,
   initiativeScore,
   startBattle,
+  AuthoredStatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
 import type { CharacterSheetBattleInit } from "../../../packages/character-battle-runtime/src/battle-creature-init.ts";
 import type { CharacterBattleRuntimeIssueMessage } from "../../../packages/character-battle-runtime/src/battle-character-build-projection.ts";
@@ -62,11 +64,22 @@ export type {
   ScenarioSessionUpdateIssue,
 } from "./scenario-session.ts";
 
+/**
+ * Scenario setup consumes authored catalog records at the public SDK boundary.
+ */
+export type ScenarioAuthoredStatBlockBattleInitInput =
+  AuthoredStatBlockBattleInitInput;
+
+export type ScenarioBattleCreatureInitFromStatBlock = (
+  input: ScenarioAuthoredStatBlockBattleInitInput,
+) => ReturnType<typeof battleCreatureInitFromStatBlock>;
+
 export type ScenarioSetupSdk = {
   readonly battleAmmunitionStock: typeof battleAmmunitionStock;
-  readonly battleCreatureInitFromStatBlock: typeof battleCreatureInitFromStatBlock;
+  readonly battleCreatureInitFromStatBlock: ScenarioBattleCreatureInitFromStatBlock;
   readonly battleId: typeof battleId;
   readonly battleObjectId: typeof battleObjectId;
+  readonly authoredStatBlockBattleInitIssueMessage: typeof authoredStatBlockBattleInitIssueMessage;
   readonly battleStateInitIssueMessage: typeof battleStateInitIssueMessage;
   readonly characterBattleRuntimeIssueMessage: CharacterBattleRuntimeIssueMessage;
   readonly characterSheetBattleInit: CharacterSheetBattleInit;

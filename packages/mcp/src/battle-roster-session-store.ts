@@ -11,7 +11,7 @@ import {
   removeBattleRuntimeCombatants,
 } from "@dnd/battle-runtime";
 import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type { SrdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Match, Option, Result } from "effect";
 
@@ -50,7 +50,7 @@ export type BattleRosterTransitionPlanner = {
 
 export function createBattleRosterTransitionPlanner(input: {
   readonly characters: CharacterSessionRegistry;
-  readonly statBlockCatalog: StatBlockCatalog;
+  readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
   readonly storeIdentity: object;
 }): BattleRosterTransitionPlanner {
@@ -132,7 +132,7 @@ function planActiveBattleRosterTransition(input: {
   readonly operation: McpBattleRosterOperation;
   readonly activeBattle: BattleRuntimeSession;
   readonly characters: CharacterSessionRegistry;
-  readonly statBlockCatalog: StatBlockCatalog;
+  readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
   readonly storeIdentity: object;
 }): Result.Result<
@@ -255,7 +255,7 @@ function planRemoveBattleCombatant(input: {
   >;
   readonly activeBattle: BattleRuntimeSession;
   readonly characters: CharacterSessionRegistry;
-  readonly statBlockCatalog: StatBlockCatalog;
+  readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
   readonly storeIdentity: object;
 }): Result.Result<
@@ -317,7 +317,7 @@ function settledCharacterSessionForBattleRemoval(input: {
   readonly combatant: BattleCreatureState;
   readonly activeBattle: BattleRuntimeSession;
   readonly characters: CharacterSessionRegistry;
-  readonly statBlockCatalog: StatBlockCatalog;
+  readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
 }): Result.Result<
   ActiveBattleRosterTransitionPlanData["characterSessionTransitions"],
@@ -350,9 +350,8 @@ function settledCharacterSessionForBattleRemoval(input: {
     });
   }
   const settled = settleCharacterSheetFromBattle({
-    combatant: input.combatant,
-    state: input.activeBattle.state,
-    context: input.activeBattle.context,
+    battleSession: input.activeBattle,
+    combatantId: input.combatant.combatantId,
     sheet: session.sheet,
     unitLibrary: input.unitLibrary,
     statBlockCatalog: input.statBlockCatalog,

@@ -61,7 +61,7 @@ export const setupScenario: ScenarioSetup = ({
       initiative: sdk.initiativeScore(choice.initiative),
       ammunitionStocks: [],
     });
-    if (sdk.isLeft(projected)) {
+    if (sdk.isFailure(projected)) {
       return {
         kind: "obstructed",
         obstruction: sdk.characterBattleRuntimeIssueMessage(projected.failure),
@@ -132,7 +132,7 @@ export const setupScenario: ScenarioSetup = ({
           : [],
       conditions: [],
     });
-    if (sdk.isLeft(projected)) {
+    if (sdk.isFailure(projected)) {
       return {
         kind: "obstructed",
         obstruction: sdk.battleStateInitIssueMessage(projected.failure),
@@ -150,7 +150,7 @@ export const setupScenario: ScenarioSetup = ({
     battleId: sdk.battleId("synthetic-beacon-eight-round-defense"),
     combatants,
   });
-  if (sdk.isLeft(started)) {
+  if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(started.failure),
@@ -238,7 +238,7 @@ export const setupScenario: ScenarioSetup = ({
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: boundaries
@@ -287,7 +287,7 @@ export const setupScenario: ScenarioSetup = ({
       },
     ],
   });
-  return sdk.isLeft(scenarioSession)
+  return sdk.isFailure(scenarioSession)
     ? {
         kind: "obstructed",
         obstruction: sdk.scenarioSessionIssueMessage(scenarioSession.failure),

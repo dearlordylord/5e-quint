@@ -1,3 +1,8 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import {
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
+  projectedStatBlockRuntimeSource,
+} from "./battle-runtime.test-support.ts";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ANIMAL-FRIENDSHIP animal_friendship
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good
@@ -90,6 +95,7 @@ import {
   characterSpellProcedure,
   type SpellProcedureExecution,
 } from "./character-execution-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 
 type CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
   | "init"
@@ -1750,19 +1756,24 @@ function statBlockCreature(input: {
   readonly statBlock: StatBlockRecord;
   readonly initiative: number;
 }): BattleCreatureInit {
+  const projected = Result.getOrThrow(
+    projectAuthoredStatBlock(input.statBlock),
+  );
   return {
     combatantId: input.combatantId,
-    displayName: input.statBlock.statBlock.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
       source: Result.getOrThrow(
-        battleStatBlockCombatantSource(input.statBlock),
+        battleStatBlockCombatantSource(
+          projectedStatBlockRuntimeSource(input.statBlock),
+        ),
       ),
-      currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
+      currentHp: Hp(projected.runtime.statBlock.hp.value),
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
       conditions: [],
+      presentation: projected.presentation,
     },
   };
 }
@@ -1770,29 +1781,19 @@ function statBlockCreature(input: {
 function statBlockWithCreatureType(
   creatureType: StatBlockRecord["statBlock"]["creatureType"],
 ): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
+  const base = assertStatBlockForTest(
+    statBlockCatalog,
+    parseSharedStatBlockId("stat_block_goblin_warrior"),
+  );
   return {
     ...base,
     id: parseSharedStatBlockId(`stat_block_selected_identity_${creatureType}`),
     name: `Selected Identity ${creatureType}`,
     statBlock: {
       ...base.statBlock,
-      displayName: `Selected Identity ${creatureType}`,
       creatureType,
     },
   };
-}
-
-function statBlockLiteralNumber(
-  value: StatBlockRecord["statBlock"]["hp"],
-): number {
-  if (typeof value === "number") {
-    return value;
-  }
-  if (value.kind === "literal") {
-    return value.value;
-  }
-  throw new Error("Expected literal stat block number.");
 }
 
 function protectionFromEvilAndGoodSpellAct(state: BattleState): ActionSpellAct {
@@ -1874,7 +1875,10 @@ function statBlockAttackAct(
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
       candidate.subject.procedureRef === procedureRef &&
-      candidate.subject.statBlockDamageNotation === undefined &&
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        candidate.subject,
+        "rolled",
+      ) &&
       candidate.subject.procedureRef !== undefined,
   );
   if (matchingActs.length !== 1) {

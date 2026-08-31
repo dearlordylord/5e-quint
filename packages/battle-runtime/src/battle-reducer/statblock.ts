@@ -1,6 +1,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.bonus-action-lifecycle stat-block.legendary-action-lifecycle stat-block.multiattack stat-block.resource-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
-// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
 
 import type {
   CharacterAttackExecutionSelection,
@@ -15,18 +17,36 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import {
+  type BattleCreatureState,
   type BattleState,
   type StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
 import {
   statBlockProcedureBinding,
   spendStatBlockProcedureResources,
+  type StatBlockMultiattackDispatchResourceDemand,
+  type StatBlockMultiattackProcedure,
+  type StatBlockProcedureBindingFor,
 } from "../stat-block-execution-state.ts";
 export { statBlockAttackActionOptions } from "../stat-block-execution-state.ts";
 import {
   activeDruidWildShape,
   spendActiveDruidWildShapeProcedureResources,
 } from "./druid-wild-shape.ts";
+import { slowActivePenaltiesEffects } from "./slow-active-penalties-effects.ts";
+
+export function statBlockMultiattackDispatchResourceDemandForActor(
+  actor: StatBlockBattleCreatureState,
+  binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
+): StatBlockMultiattackDispatchResourceDemand {
+  return {
+    kind:
+      slowActivePenaltiesEffects(actor).length > 0
+        ? "oneListedDispatch"
+        : "allListedDispatches",
+    procedureRefs: binding.procedure.dispatchProcedureRefs,
+  };
+}
 
 export function attackActionOptionIsOrdinaryAttackAction(
   state: BattleState,
@@ -46,15 +66,25 @@ export function statBlockAttackProcedureSection(
   procedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockAttackSection | null {
   const actor = state.combatants.get(actorId);
-  const execution =
-    actor?.origin.kind === "statBlock"
-      ? actor.origin.execution
-      : activeDruidWildShape(actor)?.admission.execution;
+  const execution = statBlockExecutionForActor(actor);
   if (execution === undefined) return null;
   const binding = statBlockProcedureBinding(execution, procedureRef);
-  return binding?.procedure.kind === "attack"
-    ? binding.procedure.section
-    : null;
+  return statBlockAttackBindingSection(binding);
+}
+
+function statBlockExecutionForActor(actor: BattleCreatureState | undefined) {
+  if (actor?.origin.kind === "statBlock") return actor.origin.execution;
+  return activeDruidWildShape(actor)?.admission.execution;
+}
+
+function statBlockAttackBindingSection(
+  binding: ReturnType<typeof statBlockProcedureBinding>,
+): StatBlockAttackSection | null {
+  if (binding?.procedure.kind === "attack") return binding.procedure.section;
+  if (binding?.procedure.kind === "unarmedStrike") {
+    return binding.procedure.section;
+  }
+  return null;
 }
 
 export function spendStatBlockAttackResources(input: {
@@ -112,12 +142,8 @@ export function updateStatBlockActorResources(
   };
 }
 
-export function attackSubjectPart(attack: BoundSupportedAttackActionOption):
-  | (CharacterAttackExecutionSelection & {
-      readonly statBlockDamageNotation?: never;
-    })
-  | (StatBlockAttackExecutionSelection & {
-      readonly statBlockDamageNotation?: "static";
-    }) {
+export function attackSubjectPart(
+  attack: BoundSupportedAttackActionOption,
+): CharacterAttackExecutionSelection | StatBlockAttackExecutionSelection {
   return attackExecutionSelectionForOption(attack);
 }

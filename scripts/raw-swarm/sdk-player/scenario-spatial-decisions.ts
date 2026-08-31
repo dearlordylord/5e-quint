@@ -16,6 +16,7 @@ import {
   battleTablePositionId,
   combatantId,
 } from "../../../packages/battle-runtime/src/index.ts";
+import { StatBlockAttackDamageSelection } from "../../../packages/battle-runtime/src/stat-block-attack-damage-selection.ts";
 import {
   ABILITIES,
   DAMAGE_TYPES,
@@ -1156,7 +1157,7 @@ function parseOpportunityAttackThreatInput(
       "attackAbility",
       "attackDamageType",
       "attackName",
-      "statBlockDamageNotation",
+      "statBlockDamageSelection",
     ]) ||
     !isNonEmptyTrimmedString(value.reactorId) ||
     !isFiniteNonNegativeInteger(value.distanceFeet) ||
@@ -1180,13 +1181,10 @@ function parseOpportunityAttackThreatInput(
     return undefined;
   }
   if (selection.attackName !== undefined) return undefined;
-  if (
-    selection.statBlockDamageNotation !== undefined &&
-    selection.statBlockDamageNotation !== "static"
-  ) {
+  if (hasAttackAbility && selection.statBlockDamageSelection !== undefined) {
     return undefined;
   }
-  if (hasAttackAbility && selection.statBlockDamageNotation !== undefined) {
+  if (!hasAttackAbility && selection.statBlockDamageSelection === undefined) {
     return undefined;
   }
   const reactorId = combatantId(value.reactorId);
@@ -1208,14 +1206,16 @@ function parseOpportunityAttackThreatInput(
     BattleStatBlockProcedureExecutionRef,
   )(value.procedureRef);
   if (Result.isFailure(procedureRef)) return undefined;
-  return selection.statBlockDamageNotation === "static"
-    ? {
-        reactorId,
-        distanceFeet,
-        procedureRef: procedureRef.success,
-        statBlockDamageNotation: "static",
-      }
-    : { reactorId, distanceFeet, procedureRef: procedureRef.success };
+  const statBlockDamageSelection = Schema.decodeUnknownResult(
+    StatBlockAttackDamageSelection,
+  )(selection.statBlockDamageSelection);
+  if (Result.isFailure(statBlockDamageSelection)) return undefined;
+  return {
+    reactorId,
+    distanceFeet,
+    procedureRef: procedureRef.success,
+    statBlockDamageSelection: statBlockDamageSelection.success,
+  };
 }
 
 function parseCreatureSpaceTraversal(

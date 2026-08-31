@@ -1,0 +1,52 @@
+let S = ./_stat_block_types.dhall
+
+in  { challengeRating = 0
+    , id = "stat_block_badger"
+    , kind = "statBlock"
+    , name = "Badger"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:139-160" }
+    , statBlock =
+      { abilityScores =
+        { cha = 5, con = 16, dex = 11, int = 2, str = 10, wis = 12 }
+      , ac.value = { kind = "literal", value = 11 }
+      , actions =
+        [ S.executable
+            { procedureOrdinal = 1
+            , procedure =
+                S.meleeAttack
+                  { name = "Bite"
+                  , attackAbility = "str"
+                  , attackBonus = +2
+                  , reachFeet = 5
+                  , onHit =
+                    { first =
+                        S.staticDamage { damageType = "piercing", static = 1 }
+                    , rest = [] : List S.Effect
+                    }
+                  }
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 5 }
+      , initiative = { modifier = +0, score = 10 }
+      , passivePerception = 13
+      , resistances = { damageTypes = [ "poison" ], kind = "fixed" }
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +0 }
+        , { ability = "dex", modifier = +0 }
+        , { ability = "con", modifier = +3 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = +1 }
+        , { ability = "cha", modifier = -3 }
+        ]
+      , senses = [ { kind = "darkvision", rangeFeet = 30 } ]
+      , size = "tiny"
+      , skillModifiers = [ { modifier = +3, skill = "perception" } ]
+      , speeds =
+        [ { feet = { kind = "literal", value = 20 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 5 }, kind = "burrow" }
+        ]
+      }
+    }

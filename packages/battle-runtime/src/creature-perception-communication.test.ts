@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION druid_wild_shape
 import { expect, test } from "vitest";
@@ -35,12 +37,20 @@ const characterCombatantId = combatantId("projection-character");
 const statBlockCombatantId = combatantId("projection-stat-block");
 
 test("projects Stat Block senses and authored communication text", () => {
+  const base = statBlockRecord();
   const statBlock = {
-    ...statBlockRecord(),
+    ...base,
     statBlock: {
-      ...statBlockRecord().statBlock,
+      ...base.statBlock,
       senses: [{ kind: "darkvision", rangeFeet: 60 }],
-      languages: ["Common", "Synthetic Signal Code"],
+      passivePerception: 14,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: {
+          kind: "named",
+          languages: ["Common", "Synthetic Signal Code"],
+        },
+      },
       skillModifiers: [{ skill: "perception", modifier: 4 }],
     },
   } satisfies StatBlockRecord;
@@ -64,11 +74,12 @@ test("projects Stat Block senses and authored communication text", () => {
 
 test("projects absent Stat Block languages distinctly from authored entries", () => {
   const base = statBlockRecord();
-  const { languages: _languages, ...statBlockWithoutLanguages } =
-    base.statBlock;
   const session = statBlockSession({
     ...base,
-    statBlock: statBlockWithoutLanguages,
+    statBlock: {
+      ...base.statBlock,
+      communication: { kind: "none" },
+    },
   });
   const combatant = requireCombatant(session.state, statBlockCombatantId);
 
@@ -137,21 +148,37 @@ test("projects retained character speech as blocked by Incapacitated", () => {
 
 test("projects Wild Shape form senses while retaining character communication", () => {
   const form = {
-    ...statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
+    ...assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_riding_horse"),
+    ),
     statBlock: {
-      ...statBlockCatalog.requireStatBlock("stat_block_riding_horse").statBlock,
+      ...assertStatBlockForTest(
+        statBlockCatalog,
+        statBlockId("stat_block_riding_horse"),
+      ).statBlock,
       senses: [{ kind: "blindsight", rangeFeet: 10 }],
-      languages: ["Synthetic Beast Vocalization"],
+      passivePerception: 15,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: {
+          kind: "named",
+          languages: ["Synthetic Beast Vocalization"],
+        },
+      },
       skillModifiers: [{ skill: "perception", modifier: 5 }],
     },
   } satisfies StatBlockRecord;
   const initial = wildShapeBattle({
     knownLanguages: ["Common", "Druidic", "Goblin"],
     knownForms: [
-      statBlockCatalog.requireStatBlock("stat_block_rat"),
+      assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_rat")),
       form,
-      statBlockCatalog.requireStatBlock("stat_block_lizard"),
-      statBlockCatalog.requireStatBlock("stat_block_cat"),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        statBlockId("stat_block_lizard"),
+      ),
+      assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_cat")),
     ],
   });
   const assumed = requireResolved(
@@ -179,14 +206,20 @@ test("projects Wild Shape form senses while retaining character communication", 
 });
 
 test("projects no special senses when the active Wild Shape form has none", () => {
-  const form = statBlockCatalog.requireStatBlock("stat_block_riding_horse");
+  const form = assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_riding_horse"),
+  );
   const initial = wildShapeBattle({
     knownLanguages: ["Common", "Druidic", "Goblin"],
     knownForms: [
-      statBlockCatalog.requireStatBlock("stat_block_rat"),
+      assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_rat")),
       form,
-      statBlockCatalog.requireStatBlock("stat_block_lizard"),
-      statBlockCatalog.requireStatBlock("stat_block_cat"),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        statBlockId("stat_block_lizard"),
+      ),
+      assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_cat")),
     ],
   });
   const assumed = requireResolved(

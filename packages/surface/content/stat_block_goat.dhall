@@ -1,0 +1,43 @@
+let S = ./_stat_block_types.dhall
+
+in  { challengeRating = 0
+    , id = "stat_block_goat"
+    , kind = "statBlock"
+    , name = "Goat"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1430-1450" }
+    , statBlock =
+      { abilityScores =
+        { cha = 5, con = 11, dex = 10, int = 2, str = 11, wis = 10 }
+      , ac.value = { kind = "literal", value = 10 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Ram"
+            , description =
+                "*Melee Attack Roll:* +2, reach 5 ft. *Hit:* 1 Bludgeoning damage, or 2 (1d4) Bludgeoning damage if the goat moved 20+ feet straight toward the target immediately before the hit."
+            , reason = "unsupported_action_shape"
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 4 }
+      , initiative = { modifier = +0, score = 10 }
+      , passivePerception = 12
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +2 }
+        , { ability = "dex", modifier = +0 }
+        , { ability = "con", modifier = +0 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = +0 }
+        , { ability = "cha", modifier = -3 }
+        ]
+      , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+      , size = "medium"
+      , skillModifiers = [ { modifier = +2, skill = "perception" } ]
+      , speeds =
+        [ { feet = { kind = "literal", value = 40 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 30 }, kind = "climb" }
+        ]
+      }
+    }

@@ -53,6 +53,7 @@ function classifyWeaponAttackOverrideFill(
       helpAttackAllyDecision: ordinaryFillIsInvalid,
       helpAttackEnemyDecision: ordinaryFillIsInvalid,
       areaWindStrength: ordinaryFillIsInvalid,
+      slowSomaticSpellFailureOutcome: ordinaryFillIsInvalid,
       attackRoll: ordinaryFillIsInvalid,
       rolledDice: ordinaryFillIsInvalid,
       damageTypeChoice: ordinaryFillIsInvalid,

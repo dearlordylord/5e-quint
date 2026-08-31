@@ -232,6 +232,8 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
         projectHoleWithoutPresentationLabel(value),
       turnConstraintSomaticSpellFailureOutcome: (value) =>
         projectHoleWithoutPresentationLabel(value),
+      slowSomaticSpellFailureOutcome: (value) =>
+        projectHoleWithoutPresentationLabel(value),
       shoveOutcome: (value) => projectHoleWithoutPresentationLabel(value),
       skillChoice: (value) => projectHoleWithoutPresentationLabel(value),
       spellAreaChoice: (value) => projectHoleWithoutPresentationLabel(value),

@@ -341,7 +341,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     }
 
     expect(dodged.state.currentTurnResources.actionResources).toEqual([]);
-    expect(dodged.state.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(dodged.state.currentTurnResources.currentHasBonusAction).toBe(true);
     expect(
       dodged.state.currentTurnResources.actionOrBonusActionExclusion,
     ).toEqual({
@@ -381,7 +381,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       expect.objectContaining({ kind: "saveGatedTurnConstraintBundle" }),
     ]);
     expect(cast.state.currentTurnResources.actionResources).toEqual([]);
-    expect(cast.state.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(cast.state.currentTurnResources.currentHasBonusAction).toBe(true);
     expect(
       cast.state.currentTurnResources.actionOrBonusActionExclusion,
     ).toEqual({
@@ -458,7 +458,7 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     );
   });
 
-  test("slowed Stat Block Multiattack does not open follow-up dispatch attacks", () => {
+  test("slowed Stat Block Multiattack allows one chosen listed dispatch", () => {
     const targetTurn = statBlockTargetTurnAfterFailedSlow();
 
     const multiattack = actionAct(
@@ -477,16 +477,81 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       );
     }
 
-    expect(
+    const [multiattackChoiceResource] =
       resolved.state.currentTurnResources.actionResources.filter(
         (resource) => resource.source === "statBlockMultiattack",
-      ),
-    ).toEqual([]);
+      );
+    expect(multiattackChoiceResource).toMatchObject({
+      dispatch: { kind: "oneListedChoice" },
+    });
+    expect(
+      multiattackChoiceResource?.source === "statBlockMultiattack" &&
+        multiattackChoiceResource.dispatch.kind === "oneListedChoice"
+        ? multiattackChoiceResource.dispatch.attackProcedureRefs
+        : [],
+    ).toHaveLength(3);
     expect(canSpendAction(resolved.state.currentTurnResources, "attack")).toBe(
       false,
     );
+    const activated = battleRuntimeSessionForTest({
+      ...targetTurn,
+      state: resolved.state,
+    });
     expect(
-      discoverBattleActCandidates(resolved.state).some(
+      discoverBattleActs(activated).some(
+        (candidate) =>
+          candidate.subject.tag === "action" &&
+          candidate.subject.actorId === slowMultiattackTargetId &&
+          candidate.subject.action === "attack",
+      ),
+    ).toBe(true);
+    const selectedDispatch = actionAct(
+      activated,
+      slowMultiattackTargetId,
+      "attack",
+      "Shortbow",
+    );
+    const targetHole = requireResultHole(
+      resolveBattleSubject({
+        state: activated.state,
+        subject: selectedDispatch.subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(
+      targetHole,
+      slowMultiattackTargetId,
+      spellCasterId,
+    );
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: activated.state,
+        subject: selectedDispatch.subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const dispatched = resolveBattleSubject({
+      state: activated.state,
+      subject: selectedDispatch.subject,
+      fills: [
+        targetFill,
+        attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+      ],
+    });
+    if (dispatched.tag !== "resolved") {
+      throw new Error(
+        `Expected one chosen slowed Multiattack dispatch to resolve: ${JSON.stringify(dispatched)}`,
+      );
+    }
+    expect(
+      dispatched.state.currentTurnResources.actionResources.filter(
+        (resource) => resource.source === "statBlockMultiattack",
+      ),
+    ).toEqual([]);
+    expect(
+      discoverBattleActCandidates(dispatched.state).some(
         (candidate) =>
           candidate.subject.tag === "action" &&
           candidate.subject.actorId === slowMultiattackTargetId &&
@@ -573,7 +638,9 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       );
     }
 
-    expect(moved.state.currentTurnResources.actionResources).toEqual([]);
+    expect(moved.state.currentTurnResources.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
     expect(moved.state.currentTurnResources.currentHasBonusAction).toBe(false);
     expect(
       moved.state.currentTurnResources.actionOrBonusActionExclusion,
@@ -685,7 +752,9 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     expect(target.activeEffects).toEqual([
       expect.objectContaining({ kind: "saveGatedTurnConstraintBundle" }),
     ]);
-    expect(failed.state.currentTurnResources.actionResources).toEqual([]);
+    expect(failed.state.currentTurnResources.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
     expect(failed.state.currentTurnResources.currentHasBonusAction).toBe(false);
     expect(
       failed.state.currentTurnResources.actionOrBonusActionExclusion,

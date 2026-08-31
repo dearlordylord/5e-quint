@@ -4,6 +4,7 @@ export const setupScenario: ScenarioSetup = ({
   sdk,
   characterSheets,
   statBlockCatalog,
+  statBlocks,
   unitCatalog,
 }) => {
   if (characterSheets.length !== 1) {
@@ -27,8 +28,10 @@ export const setupScenario: ScenarioSetup = ({
     initiative: sdk.initiativeScore(15),
     ammunitionStocks: [],
   });
-  const statBlock = statBlockCatalog.getStatBlock("stat_block_skeleton");
-  if (sdk.isLeft(character) || statBlock._tag === "None") {
+  const statBlock = statBlocks.find(
+    (candidate) => candidate.id === "stat_block_skeleton",
+  );
+  if (sdk.isFailure(character) || statBlock === undefined) {
     return {
       kind: "obstructed",
       obstruction: "Mixed composition projection failed.",
@@ -37,12 +40,12 @@ export const setupScenario: ScenarioSetup = ({
   }
   const monster = sdk.battleCreatureInitFromStatBlock({
     combatantId: sdk.combatantId("external-skeleton"),
-    statBlock: statBlock.value,
+    statBlock,
     initiative: sdk.initiativeScore(10),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(monster)) {
+  if (sdk.isFailure(monster)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(monster.failure),
@@ -53,7 +56,7 @@ export const setupScenario: ScenarioSetup = ({
     battleId: sdk.battleId("external-mixed-session"),
     combatants: [character.success, monster.success],
   });
-  if (sdk.isLeft(started)) {
+  if (sdk.isFailure(started)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(started.failure),
@@ -79,7 +82,7 @@ export const setupScenario: ScenarioSetup = ({
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: { overhead: { kind: "open" }, barrierHeights: [] },
     initialRangedAttackEnemyRelationships: [
       {
@@ -100,7 +103,7 @@ export const setupScenario: ScenarioSetup = ({
     ],
     objects: [],
   });
-  return sdk.isLeft(session)
+  return sdk.isFailure(session)
     ? {
         kind: "obstructed",
         obstruction: sdk.scenarioSessionIssueMessage(session.failure),

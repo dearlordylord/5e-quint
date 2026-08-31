@@ -48,7 +48,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(skeletonResult)) {
+  if (sdk.isFailure(skeletonResult)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(skeletonResult.failure),
@@ -67,7 +67,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(goblinResult)) {
+  if (sdk.isFailure(goblinResult)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(goblinResult.failure),
@@ -82,7 +82,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     battleId: sdk.battleId(SCENARIO_ID),
     combatants: [skeletonResult.success, goblinResult.success],
   });
-  if (sdk.isLeft(battleResult)) {
+  if (sdk.isFailure(battleResult)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(battleResult.failure),
@@ -105,7 +105,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],
@@ -117,7 +117,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     opportunityAttackEnemyRelationships: [],
     objects: [],
   });
-  if (sdk.isLeft(sessionResult)) {
+  if (sdk.isFailure(sessionResult)) {
     return {
       kind: "obstructed",
       obstruction: sdk.scenarioSessionIssueMessage(sessionResult.failure),

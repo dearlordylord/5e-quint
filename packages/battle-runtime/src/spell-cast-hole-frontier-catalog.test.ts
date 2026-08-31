@@ -419,12 +419,12 @@ describe("spell cast hole frontier catalog", () => {
           }),
           statBlockCreatureInit({
             combatantId: firstTargetId,
-            displayName: "First catalog target",
+            statBlockName: "First catalog target",
             initiative: 10,
           }),
           statBlockCreatureInit({
             combatantId: secondTargetId,
-            displayName: "Second catalog target",
+            statBlockName: "Second catalog target",
             initiative: 5,
           }),
         ],

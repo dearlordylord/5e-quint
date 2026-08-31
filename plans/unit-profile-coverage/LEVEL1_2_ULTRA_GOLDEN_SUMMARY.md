@@ -12,7 +12,7 @@ This summary is layer-by-layer. It deliberately does not publish a blended ultra
 
 | Layer | Status | Evidence | Blocking issue |
 | --- | --- | --- | --- |
-| Support completeness | pass | strict target closure 117/117 (100%); selected identity 104/104 (100%); SRD authored product readiness 91/91 (100%) | _none_ |
+| Support completeness | pass | strict target closure 121/121 (100%); selected identity 104/104 (100%); SRD authored product readiness 91/91 (100%) | _none_ |
 | QNT/generator readiness | pass | QNT-covered obligations 50/50; generator-ready semantic-core obligations 41/41 | _none_ |
 | MBT/parity evidence | pass | parity-witnessed obligations 50/50; witness kinds contract-test: 5, deterministic-qnt-replay: 8, focused-mbt: 56, runtime-test: 18 | _none_ |
 | MCP scenario evidence | pass | scenario flows 4/4; check pnpm --filter @dnd/mcp test:mcp-scenario-evidence | _none_ |
@@ -23,7 +23,7 @@ Full-support claim gate: **pass**.
 
 | Gate | Result | Blocking rows |
 | --- | ---: | ---: |
-| Strict target closure | 117/117 (100%) | 0 |
+| Strict target closure | 121/121 (100%) | 0 |
 | Selected identity readiness | 104/104 (100%) | 0 |
 | SRD authored product readiness | 91/91 (100%) | 0 |
 

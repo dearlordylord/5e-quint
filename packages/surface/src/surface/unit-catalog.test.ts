@@ -42,9 +42,12 @@ import {
   allLeveledSpellsFromAnyClassSpellList,
   assertSrd521Unit,
   buildUnitCatalog,
+  classSpellListForClassName,
+  classSpellListForSpellcastingClassRecord,
   classSpellListPreparedSpellLevel,
   defineSrdUnitCollection,
   srdUnitCollection,
+  spellcastingClassRecordForClassName,
 } from "./unit-catalog.ts";
 import { CREATURE_TYPES } from "./types.ts";
 import type { Srd521Unit, SrdUnitCollection } from "./unit-catalog.ts";
@@ -315,6 +318,15 @@ describe("SRD Unit catalog boundary", () => {
     const fireball = UnitIdSchema.make("fireball");
     const healingWord = UnitIdSchema.make("healing_word");
     const unknownSpell = UnitIdSchema.make("synthetic_unknown_spell");
+    const wizardClass = spellcastingClassRecordForClassName({
+      unitLibrary,
+      className: "wizard",
+    });
+    expect(wizardClass).toBeDefined();
+    if (wizardClass === undefined) return;
+    expect(classSpellListForSpellcastingClassRecord(wizardClass)).toEqual(
+      classSpellListForClassName({ unitLibrary, className: "wizard" }),
+    );
 
     expect(
       classSpellListPreparedSpellLevel({
@@ -342,6 +354,13 @@ describe("SRD Unit catalog boundary", () => {
         unitLibrary,
         className: "wizard",
         spellIds: [acidArrow],
+      }),
+    ).toBe(false);
+    expect(
+      allCantripsFromClassSpellList({
+        unitLibrary,
+        className: "fighter",
+        spellIds: [fireBolt],
       }),
     ).toBe(false);
     expect(

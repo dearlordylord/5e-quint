@@ -49,7 +49,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     unitLibrary: context.unitCatalog,
     statBlockCatalog: context.statBlockCatalog,
   });
-  if (sdk.isLeft(fighterInit)) {
+  if (sdk.isFailure(fighterInit)) {
     return obstructed(
       `The canonical battle projection rejected the completed Fighter Character Sheet: ${sdk.characterBattleRuntimeIssueMessage(fighterInit.failure)}`,
       { code: "fighter-battle-projection-rejected" },
@@ -65,17 +65,29 @@ export const setupScenario: ScenarioSetup = (context) => {
     unitLibrary: context.unitCatalog,
     statBlockCatalog: context.statBlockCatalog,
   });
-  if (sdk.isLeft(rogueInit)) {
+  if (sdk.isFailure(rogueInit)) {
     return obstructed(
       `The canonical battle projection rejected the completed Rogue Character Sheet: ${sdk.characterBattleRuntimeIssueMessage(rogueInit.failure)}`,
       { code: "rogue-battle-projection-rejected" },
     );
   }
 
-  const wolf = context.statBlockCatalog.requireStatBlock("stat_block_wolf");
-  const goblin = context.statBlockCatalog.requireStatBlock(
-    "stat_block_goblin_warrior",
+  const wolf = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_wolf",
   );
+  const goblin = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_goblin_warrior",
+  );
+  if (wolf === undefined || goblin === undefined) {
+    return obstructed(
+      "The supplied Stat Block catalog is missing a required scenario combatant.",
+      {
+        code: "missing-required-stat-block",
+        wolfFound: wolf !== undefined,
+        goblinWarriorFound: goblin !== undefined,
+      },
+    );
+  }
   const sharedWolfInitiative = sdk.initiativeScore(12);
 
   const wolfAInit = sdk.battleCreatureInitFromStatBlock({
@@ -85,7 +97,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(wolfAInit)) {
+  if (sdk.isFailure(wolfAInit)) {
     return obstructed(
       `The canonical battle projection rejected Wolf A: ${sdk.battleStateInitIssueMessage(wolfAInit.failure)}`,
       { code: "wolf-a-battle-projection-rejected" },
@@ -99,7 +111,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [],
     conditions: [],
   });
-  if (sdk.isLeft(wolfBInit)) {
+  if (sdk.isFailure(wolfBInit)) {
     return obstructed(
       `The canonical battle projection rejected Wolf B: ${sdk.battleStateInitIssueMessage(wolfBInit.failure)}`,
       { code: "wolf-b-battle-projection-rejected" },
@@ -113,7 +125,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
-  if (sdk.isLeft(goblinInit)) {
+  if (sdk.isFailure(goblinInit)) {
     return obstructed(
       `The canonical battle projection rejected Goblin Warrior A: ${sdk.battleStateInitIssueMessage(goblinInit.failure)}`,
       { code: "goblin-battle-projection-rejected" },
@@ -130,7 +142,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       goblinInit.success,
     ],
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return obstructed(
       `The canonical battle could not start: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
       { code: "battle-start-rejected" },
@@ -181,7 +193,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "static",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "static" },
     environment: { overhead: { kind: "open" }, barrierHeights: [] },
     initialRangedAttackEnemyRelationships: [
       { attackerId: goblinId, enemyId: fighterId },
@@ -221,7 +233,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       },
     ],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return obstructed(
       `The canonical scenario session rejected the fixed battlefield facts: ${sdk.scenarioSessionIssueMessage(session.failure)}`,
       { code: "scenario-session-rejected" },

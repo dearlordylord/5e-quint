@@ -84,15 +84,132 @@ function contextText(delivery: ContextDelivery): string {
     : benchmarkContextForRole(delivery.profile, delivery.role);
 }
 
-const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
+const DECLARATION_SERIALIZATION_LENGTH_MESSAGE =
+  "The inferred type of this node exceeds the maximum length the compiler will serialize. An explicit type annotation is needed.";
+const DECLARATION_SERIALIZATION_LENGTH_BASELINE = [
+  {
+    owner: "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+    count: 2,
+  },
+  {
+    owner: "packages/battle-runtime/src/battle-mechanical-frontier.ts",
+    count: 1,
+  },
+  {
+    owner: "packages/battle-runtime/src/battle-snapshot-presentation.ts",
+    count: 1,
+  },
+  {
+    owner:
+      "packages/battle-runtime/src/battle-reducer/ongoing-concentration-area-spell.ts",
+    count: 1,
+  },
+  { owner: "packages/surface/src/surface/schema-nonspell.ts", count: 53 },
+  { owner: "packages/surface/src/surface/schema-spell.ts", count: 1 },
+  { owner: "packages/surface/src/surface/schema.ts", count: 4 },
+] as const;
+
+const PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_CODES = [
+  "TS4023",
+  "TS4058",
+  "TS7056",
+] as const;
+type PublicDeclarationSerializationDiagnosticCode =
+  (typeof PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_CODES)[number];
+export type PublicDeclarationSerializationDiagnosticBaselineEntry = {
+  readonly owner: string;
+  readonly code: PublicDeclarationSerializationDiagnosticCode;
+  readonly message: string;
+  readonly count: number;
+};
+
+function declarationDiagnosticFingerprintFromParts(
+  owner: string,
+  code: PublicDeclarationSerializationDiagnosticCode,
+  message: string,
+): string {
+  return `${owner}: error ${code}: ${message}`;
+}
+
+export const PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE: readonly PublicDeclarationSerializationDiagnosticBaselineEntry[] =
+  DECLARATION_SERIALIZATION_LENGTH_BASELINE.map(
+    ({
+      owner,
+      count,
+    }): PublicDeclarationSerializationDiagnosticBaselineEntry => ({
+      owner,
+      code: "TS7056",
+      message: DECLARATION_SERIALIZATION_LENGTH_MESSAGE,
+      count,
+    }),
+  );
+
+function diagnosticCountMap(
+  baseline: readonly PublicDeclarationSerializationDiagnosticBaselineEntry[],
+): ReadonlyMap<string, number> {
+  const counts = new Map<string, number>();
+  for (const { owner, code, message, count } of baseline) {
+    const fingerprint = declarationDiagnosticFingerprintFromParts(
+      owner,
+      code,
+      message,
+    );
+    counts.set(fingerprint, (counts.get(fingerprint) ?? 0) + count);
+  }
+  return counts;
+}
+
+const PINNED_DECLARATION_SERIALIZATION_DIAGNOSTIC_COUNTS = diagnosticCountMap(
+  PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE,
+);
+
+function publicDeclarationSerializationDiagnosticCode(
+  value: string,
+): PublicDeclarationSerializationDiagnosticCode | null {
+  return (
+    PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_CODES.find(
+      (code) => code === value,
+    ) ?? null
+  );
+}
+
+function declarationDiagnosticFingerprint(diagnostic: string): string | null {
+  const normalizedRepoRoot = repoRoot.replaceAll("\\", "/");
+  const normalizedDiagnostic = diagnostic
+    .replaceAll("\\", "/")
+    .replaceAll(normalizedRepoRoot, "<repo>");
+  const parsed = /^(.*)\(\d+,\d+\): error (TS\d+): (.*)$/.exec(
+    normalizedDiagnostic,
+  );
+  if (parsed === null) return null;
+  const [, ownerWithOptionalRoot, code, message] = parsed;
+  if (
+    ownerWithOptionalRoot === undefined ||
+    code === undefined ||
+    message === undefined
+  ) {
+    return null;
+  }
+  const diagnosticCode = publicDeclarationSerializationDiagnosticCode(code);
+  if (diagnosticCode === null) return null;
+  const owner = ownerWithOptionalRoot.startsWith("<repo>/")
+    ? ownerWithOptionalRoot.slice("<repo>/".length)
+    : ownerWithOptionalRoot;
+  return declarationDiagnosticFingerprintFromParts(
+    owner,
+    diagnosticCode,
+    message,
+  );
+}
+
 /** The emitted declaration graph is compilation support, not an unbounded SDK. */
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE = {
-  files: 523,
-  bytes: 3_969_709,
+  files: 536,
+  bytes: 5_710_631,
 } as const;
 /**
- * Effect 4's reviewed declaration graph uses every admitted file. Any graph
- * growth must update the reviewed measure explicitly.
+ * The reviewed declaration graph uses every admitted file. Any graph growth
+ * must update the exact measure explicitly.
  */
 export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files;
@@ -104,6 +221,33 @@ export type PublicDeclarationBundleMeasure = {
   readonly files: number;
   readonly bytes: number;
 };
+
+export function publicDeclarationDiagnosticBaselineMismatches(
+  diagnostics: readonly string[],
+): readonly string[] {
+  const remainingExpected = new Map(
+    PINNED_DECLARATION_SERIALIZATION_DIAGNOSTIC_COUNTS,
+  );
+  const unexpected = diagnostics.flatMap((diagnostic) => {
+    const fingerprint = declarationDiagnosticFingerprint(diagnostic);
+    if (fingerprint === null) return [diagnostic];
+    const remainingCount = remainingExpected.get(fingerprint);
+    if (remainingCount === undefined || remainingCount === 0) {
+      return [diagnostic];
+    }
+    remainingExpected.set(fingerprint, remainingCount - 1);
+    return [];
+  });
+  const missing = [...remainingExpected.entries()].flatMap(
+    ([fingerprint, remainingCount]) =>
+      remainingCount === 0
+        ? []
+        : [
+            `Missing pinned public declaration diagnostic (${String(remainingCount)} occurrence${remainingCount === 1 ? "" : "s"}): ${fingerprint}`,
+          ],
+  );
+  return [...unexpected, ...missing];
+}
 const PLAYER_RUN_START_OBSERVATION = {
   kind: "awaitingFirstContinuation",
   tacticalNote: "",
@@ -191,23 +335,25 @@ export function emitPublicDeclarations(
   if (result.signal !== null) {
     throw new Error(`Public declaration emission stopped by ${result.signal}.`);
   }
+  const diagnostics = `${result.stdout}${result.stderr}`
+    .split("\n")
+    .filter((line) => line.includes("error TS"));
+  const diagnosticBaselineMismatches =
+    publicDeclarationDiagnosticBaselineMismatches(diagnostics);
+  if (
+    diagnosticBaselineMismatches.length > 0 ||
+    (result.status !== 0 && diagnostics.length === 0)
+  ) {
+    throw new Error(
+      `Public declaration emission failed:\n${diagnosticBaselineMismatches.join("\n") || result.stderr}`,
+    );
+  }
   if (result.status !== 0) {
-    const diagnostics = `${result.stdout}${result.stderr}`
-      .split("\n")
-      .filter((line) => line.includes("error TS"));
-    const unexpected = diagnostics.filter((line) => {
-      const code = line.match(/error (TS\d+):/)?.[1];
-      return code === undefined || !declarationDiagnosticCodes.has(code);
-    });
-    if (diagnostics.length === 0 || unexpected.length > 0) {
-      throw new Error(
-        `Public declaration emission failed:\n${unexpected.join("\n") || result.stderr}`,
-      );
-    }
-    // TypeScript 5.9 reports these only while serializing large inferred
-    // schemas, after it emits the reachable declarations. Required-file checks
-    // below and the isolated consumer typecheck are the executable completeness
-    // boundary for this narrow SDK; any other diagnostic fails the build.
+    // TypeScript 5.9 reports the explicitly partitioned pre-existing
+    // diagnostics only while serializing the listed giant inferred schemas.
+    // Required-file checks below and the isolated consumer typecheck are the
+    // executable completeness boundary for this narrow SDK. New owners,
+    // including #427 attack-selection schemas, must emit without diagnostics.
   }
 
   const requiredDeclarations = [

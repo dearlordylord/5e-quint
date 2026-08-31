@@ -1,0 +1,110 @@
+{ challengeRating = 5
+, id = "stat_block_troll"
+, kind = "statBlock"
+, name = "Troll"
+, provenance =
+  { kind = "srd-5.2.1", section = "Monsters/Monsters-T-Z.md:318-351" }
+, statBlock =
+  { abilityScores = { cha = 7, con = 20, dex = 13, int = 7, str = 18, wis = 9 }
+  , ac.value = { kind = "literal", value = 15 }
+  , actions =
+    [ { kind = "executable"
+      , procedure =
+        { attackAbility = None Text
+        , attackBonus = None { kind : Text, value : Natural }
+        , attackType = None Text
+        , dispatches = Some
+          [ { count = { kind = "literal", value = 3 }, procedureOrdinal = 2 } ]
+        , kind = "multiattack"
+        , name = "Multiattack"
+        , onHit =
+            None
+              ( List
+                  { amount :
+                      { expr :
+                          { dice : Natural, dieSize : Natural, flat : Natural }
+                      , kind : Text
+                      , static : Natural
+                      }
+                  , damageType : Text
+                  , kind : Text
+                  }
+              )
+        , reachFeet = None Natural
+        }
+      , procedureOrdinal = 1
+      , resourceRefs.kind = "none"
+      }
+    , { kind = "executable"
+      , procedure =
+        { attackAbility = Some "str"
+        , attackBonus = Some { kind = "literal", value = 7 }
+        , attackType = Some "melee"
+        , dispatches =
+            None
+              ( List
+                  { count : { kind : Text, value : Natural }
+                  , procedureOrdinal : Natural
+                  }
+              )
+        , kind = "attack_roll"
+        , name = "Rend"
+        , onHit = Some
+          [ { amount =
+              { expr = { dice = 2, dieSize = 6, flat = 4 }
+              , kind = "fixed"
+              , static = 11
+              }
+            , damageType = "slashing"
+            , kind = "damage"
+            }
+          ]
+        , reachFeet = Some 10
+        }
+      , procedureOrdinal = 2
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , alignment = { morality = "evil", order = "chaotic" }
+  , bonusActions =
+    [ { description =
+          "The troll moves up to half its Speed straight toward an enemy it can see."
+      , kind = "textOnly"
+      , name = "Charge"
+      , procedureOrdinal = 1
+      , reason = "unsupported_action_shape"
+      , resourceRefs.kind = "none"
+      }
+    ]
+  , communication =
+    { kind = "spoken_and_understood"
+    , languages = { kind = "named", languages = [ "Giant" ] }
+    }
+  , creatureType = "giant"
+  , hp = { kind = "literal", value = 94 }
+  , initiative = { modifier = 1, score = 11 }
+  , passivePerception = 15
+  , savingThrowModifiers =
+    [ { ability = "cha", modifier = -2 }
+    , { ability = "con", modifier = +5 }
+    , { ability = "dex", modifier = +1 }
+    , { ability = "int", modifier = -2 }
+    , { ability = "str", modifier = +4 }
+    , { ability = "wis", modifier = -1 }
+    ]
+  , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+  , size = "large"
+  , skillModifiers = [ { modifier = 5, skill = "perception" } ]
+  , speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" } ]
+  , traits =
+    [ { description =
+          "If the troll ends any turn Bloodied and took 15+ Slashing damage during that turn, one of the troll's limbs is severed, falls into the troll's space, and becomes a Troll Limb. The limb acts immediately after the troll's turn. The troll has 1 Exhaustion level for each missing limb, and it grows replacement limbs the next time it regains Hit Points."
+      , name = "Loathsome Limbs (4/Day)"
+      }
+    , { description =
+          "The troll regains 15 Hit Points at the start of each of its turns. If the troll takes Acid or Fire damage, this trait doesn't function on the troll's next turn. The troll dies only if it starts its turn with 0 Hit Points and doesn't regenerate."
+      , name = "Regeneration"
+      }
+    ]
+  }
+}

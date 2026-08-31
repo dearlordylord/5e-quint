@@ -13,10 +13,11 @@ import type { Language } from "@dnd/shared/game-facts";
 import type {
   Ability,
   Size,
+  StatBlockId,
   StatBlockRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import { Match, Result } from "effect";
 import type {
   AttackDamageAbilityModifierChoice,
   CharacterUnarmedStrikeActionOption,
@@ -37,27 +38,42 @@ import type {
   BattleUnitSupportSource,
   BattleUnitSupportProfile,
 } from "./unit-feature-support.ts";
-import type { BattleStatBlockExecutionSource } from "./stat-block-execution.ts";
+import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
+import {
+  battleStatBlockProjectionFailureMessage,
+  projectAuthoredStatBlock,
+  type AuthoredStatBlockProjection,
+  type BattleStatBlockInvalidResourceDeclaration,
+  type BattleStatBlockProjectionFailure,
+} from "./stat-block-authored-projection.ts";
+import {
+  admitStatBlockResourceGraph,
+  type StatBlockResourceGraphAdmissionFailure,
+} from "./stat-block-execution-state.ts";
 import type {
-  BattleDruidWildShapeFormSpeeds,
   BattleDruidWildShapeKnownForm,
   BattleDruidWildShapeKnownFormProjection,
+} from "./druid-wild-shape-known-form-execution.ts";
+import type {
+  BattleDruidWildShapeFormSpeeds,
   LiteralStatBlockSpeed,
   LiteralWalkStatBlockSpeed,
-} from "./druid-wild-shape-known-form-execution.ts";
+} from "./druid-wild-shape-known-form-runtime.ts";
 export type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
 import type {
   BattleAmmunitionStock,
-  BattleStatBlockInitializationIssue,
+  BattleStateInitLeafIssue,
   CharacterBattleUnarmoredArmorClassBases,
 } from "./battle-state-execution.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleStatBlockCombatantSource,
   statBlockInitialConditionImmunityIssue,
   type BattleStatBlockCombatantSource,
+  type StatBlockResourceGraphCombatantAdmissionIssue,
 } from "./stat-block-combatant-admission.ts";
 import type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
-import { statBlockActionSurfaceIsSupported } from "./statblock-action-support.ts";
+import { statBlockTraitsAreSupported } from "./statblock-action-support.ts";
 import {
   wildShapeKnownFormEligibilityIssue,
   type WildShapeKnownFormEligibilityIssueCode,
@@ -124,9 +140,45 @@ export type {
   CharacterBattleWeaponMasterySelection,
 } from "./character-creature-execution-facts.ts";
 
-export type BattleDruidWildShapeKnownFormIssue = {
-  readonly tag: "battleDruidWildShapeKnownFormIssue";
-  readonly message: string;
+export type BattleDruidWildShapeKnownFormIssue =
+  | {
+      readonly tag: "battleDruidWildShapeKnownFormIssue";
+      readonly statBlockId: StatBlockId;
+      readonly reason: "duplicateFormIdentity";
+    }
+  | {
+      readonly tag: "battleDruidWildShapeKnownFormIssue";
+      readonly statBlockId: StatBlockId;
+      readonly reason: "ineligible";
+      readonly eligibilityIssue: WildShapeKnownFormEligibilityIssueCode;
+    }
+  | {
+      readonly tag: "battleDruidWildShapeKnownFormIssue";
+      readonly statBlockId: StatBlockId;
+      readonly reason:
+        | "nonLiteralSize"
+        | "unresolvedGmSpeedChoice"
+        | "unsupportedFormRestrictedSpeed"
+        | "unsupportedQualifiedConditionImmunity"
+        | "unsupportedLairConditionalLegendaryActionUses"
+        | "missingWalkSpeed";
+    }
+  | {
+      readonly tag: "battleDruidWildShapeKnownFormIssue";
+      readonly statBlockId: StatBlockId;
+      readonly reason: "invalidResourceLimit";
+      readonly issues: ReadonlyNonEmptyArray<BattleStatBlockInvalidResourceDeclaration>;
+    }
+  | {
+      readonly tag: "battleDruidWildShapeKnownFormIssue";
+      readonly statBlockId: StatBlockId;
+      readonly reason: "resourceGraph";
+      readonly issues: ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>;
+    };
+
+export type BattleDruidWildShapeKnownFormsIssue = {
+  readonly tag: "battleDruidWildShapeKnownFormsIssue";
+  readonly issues: ReadonlyNonEmptyArray<BattleDruidWildShapeKnownFormIssue>;
 };
 
 const WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES = {
@@ -138,113 +190,330 @@ const WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES = {
     "Druid Wild Shape battle forms cannot have a Fly Speed at this Druid level.",
 } as const satisfies Record<WildShapeKnownFormEligibilityIssueCode, string>;
 
+type WildShapeKnownFormScalarProjectionFailureReason = Exclude<
+  BattleStatBlockProjectionFailure["reason"],
+  "unsupportedProcedureBinding"
+>;
+
+const WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES = {
+  nonLiteralSize: "Druid Wild Shape battle forms require literal Size.",
+  unsupportedLairConditionalLegendaryActionUses:
+    "Druid Wild Shape battle forms cannot select lair-conditional Legendary Action uses without lair context.",
+  unsupportedFormRestrictedSpeed:
+    "Druid Wild Shape battle forms require an active form before selecting form-restricted Speeds.",
+  unresolvedGmSpeedChoice:
+    "Druid Wild Shape battle forms require the GM's Table Decision selecting one authored Speed alternative.",
+  unsupportedQualifiedConditionImmunity:
+    "Druid Wild Shape battle forms cannot apply a qualified condition Immunity without its qualifying state.",
+  invalidResourceLimit:
+    "Druid Wild Shape battle forms require valid Stat Block resource limits.",
+} as const satisfies Record<
+  WildShapeKnownFormScalarProjectionFailureReason,
+  string
+>;
+
+type DruidWildShapeKnownFormDisposition =
+  | { readonly kind: "skip" }
+  | {
+      readonly kind: "issue";
+      readonly issue: BattleDruidWildShapeKnownFormIssue;
+    }
+  | {
+      readonly kind: "admitted";
+      readonly form: BattleDruidWildShapeKnownForm;
+    };
+
 export function battleAvailableDruidWildShapeKnownForms(input: {
   readonly forms: readonly StatBlockRecord[];
   readonly profile: BattleDruidWildShapeKnownFormSupportProfile;
 }): Result.Result<
   readonly BattleDruidWildShapeKnownForm[],
-  BattleDruidWildShapeKnownFormIssue
+  BattleDruidWildShapeKnownFormsIssue
 > {
-  if (new Set(input.forms.map((form) => form.id)).size !== input.forms.length) {
-    return Result.fail({
-      tag: "battleDruidWildShapeKnownFormIssue",
-      message:
-        "Druid Wild Shape battle initialization requires distinct available known forms.",
-    });
-  }
+  const issues = duplicateWildShapeKnownFormIssues(input.forms);
   const parsed: BattleDruidWildShapeKnownForm[] = [];
   for (const form of input.forms) {
-    const eligibilityIssue = wildShapeKnownFormEligibilityIssue({
-      form,
-      profile: input.profile,
-    });
-    if (eligibilityIssue !== undefined) {
-      return Result.fail({
+    const disposition = admitDruidWildShapeKnownForm(form, input.profile);
+    Match.value(disposition).pipe(
+      Match.when({ kind: "skip" }, () => undefined),
+      Match.when({ kind: "issue" }, ({ issue }) => issues.push(issue)),
+      Match.when({ kind: "admitted" }, ({ form: admittedForm }) =>
+        parsed.push(admittedForm),
+      ),
+      Match.exhaustive,
+    );
+  }
+  const [firstIssue, ...remainingIssues] = issues;
+  return firstIssue === undefined
+    ? Result.succeed(parsed)
+    : Result.fail({
+        tag: "battleDruidWildShapeKnownFormsIssue",
+        issues: [firstIssue, ...remainingIssues],
+      });
+}
+
+function duplicateWildShapeKnownFormIssues(
+  forms: readonly StatBlockRecord[],
+): BattleDruidWildShapeKnownFormIssue[] {
+  const seenIds = new Set<StatBlockId>();
+  const duplicateIssues: BattleDruidWildShapeKnownFormIssue[] = [];
+  const duplicateIds = new Set<StatBlockId>();
+  for (const form of forms) {
+    if (seenIds.has(form.id) && !duplicateIds.has(form.id)) {
+      duplicateIds.add(form.id);
+      duplicateIssues.push({
         tag: "battleDruidWildShapeKnownFormIssue",
-        message:
-          WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES[eligibilityIssue.code],
+        statBlockId: form.id,
+        reason: "duplicateFormIdentity",
       });
     }
-    const projected = battleDruidWildShapeFormProjectionStatBlock(form);
-    if (Result.isFailure(projected)) return Result.fail(projected.failure);
-    if (!statBlockActionSurfaceIsSupported(form.statBlock)) {
-      continue;
-    }
-    parsed.push(battleDruidWildShapeKnownForm(projected.success));
+    seenIds.add(form.id);
   }
-  return Result.succeed(parsed);
+  return duplicateIssues;
+}
+
+function admitDruidWildShapeKnownForm(
+  form: StatBlockRecord,
+  profile: BattleDruidWildShapeKnownFormSupportProfile,
+): DruidWildShapeKnownFormDisposition {
+  const eligibilityIssue = wildShapeKnownFormEligibilityIssue({
+    form,
+    profile,
+  });
+  if (eligibilityIssue !== undefined) {
+    return {
+      kind: "issue",
+      issue: {
+        tag: "battleDruidWildShapeKnownFormIssue",
+        statBlockId: form.id,
+        reason: "ineligible",
+        eligibilityIssue: eligibilityIssue.code,
+      },
+    };
+  }
+  if (!statBlockTraitsAreSupported(form.statBlock.traits)) {
+    return { kind: "skip" };
+  }
+  const projected = projectAuthoredStatBlock(form);
+  if (Result.isFailure(projected)) {
+    return wildShapeProjectionDisposition(form.id, projected.failure);
+  }
+  const formProjection = battleDruidWildShapeFormProjectionStatBlock(
+    projected.success,
+  );
+  if (Result.isFailure(formProjection)) {
+    return { kind: "issue", issue: formProjection.failure };
+  }
+  const resourceGraph = admitStatBlockResourceGraph(formProjection.success);
+  if (Result.isFailure(resourceGraph)) {
+    return {
+      kind: "issue",
+      issue: {
+        tag: "battleDruidWildShapeKnownFormIssue",
+        statBlockId: form.id,
+        reason: "resourceGraph",
+        issues: resourceGraph.failure,
+      },
+    };
+  }
+  return {
+    kind: "admitted",
+    form: battleDruidWildShapeKnownForm(resourceGraph.success),
+  };
+}
+
+function wildShapeProjectionDisposition(
+  statBlockId: StatBlockId,
+  failure: BattleStatBlockProjectionFailure,
+): DruidWildShapeKnownFormDisposition {
+  return Match.value(failure).pipe(
+    Match.when({ reason: "unsupportedProcedureBinding" }, () => ({
+      kind: "skip" as const,
+    })),
+    Match.when({ reason: "nonLiteralSize" }, ({ reason }) => ({
+      kind: "issue" as const,
+      issue: {
+        tag: "battleDruidWildShapeKnownFormIssue" as const,
+        statBlockId,
+        reason,
+      },
+    })),
+    Match.when(
+      { reason: "unsupportedLairConditionalLegendaryActionUses" },
+      ({ reason }) => ({
+        kind: "issue" as const,
+        issue: {
+          tag: "battleDruidWildShapeKnownFormIssue" as const,
+          statBlockId,
+          reason,
+        },
+      }),
+    ),
+    Match.when({ reason: "unsupportedFormRestrictedSpeed" }, ({ reason }) => ({
+      kind: "issue" as const,
+      issue: {
+        tag: "battleDruidWildShapeKnownFormIssue" as const,
+        statBlockId,
+        reason,
+      },
+    })),
+    Match.when({ reason: "unresolvedGmSpeedChoice" }, ({ reason }) => ({
+      kind: "issue" as const,
+      issue: {
+        tag: "battleDruidWildShapeKnownFormIssue" as const,
+        statBlockId,
+        reason,
+      },
+    })),
+    Match.when(
+      { reason: "unsupportedQualifiedConditionImmunity" },
+      ({ reason }) => ({
+        kind: "issue" as const,
+        issue: {
+          tag: "battleDruidWildShapeKnownFormIssue" as const,
+          statBlockId,
+          reason,
+        },
+      }),
+    ),
+    Match.when(
+      { reason: "invalidResourceLimit" },
+      ({ issues: resourceIssues }) => ({
+        kind: "issue" as const,
+        issue: {
+          tag: "battleDruidWildShapeKnownFormIssue" as const,
+          statBlockId,
+          reason: "invalidResourceLimit" as const,
+          issues: resourceIssues,
+        },
+      }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function battleDruidWildShapeKnownForm(
   form: BattleDruidWildShapeKnownFormProjection,
 ): BattleDruidWildShapeKnownForm {
   // Brands are erased at runtime; the parser applies this brand only after
-  // proving roster eligibility, projection facts, and supported actions.
+  // proving roster eligibility, projection facts, supported actions, and the
+  // closed procedure/resource graph.
   return form as BattleDruidWildShapeKnownForm;
 }
 
+export function wildShapeKnownFormsIssueMessage(
+  issues: ReadonlyNonEmptyArray<BattleDruidWildShapeKnownFormIssue>,
+): string {
+  return issues
+    .map((issue) =>
+      Match.value(issue).pipe(
+        Match.when(
+          { reason: "duplicateFormIdentity" },
+          () =>
+            "Druid Wild Shape battle initialization requires distinct available known forms.",
+        ),
+        Match.when(
+          { reason: "ineligible" },
+          ({ eligibilityIssue }) =>
+            WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES[eligibilityIssue],
+        ),
+        Match.when(
+          { reason: "nonLiteralSize" },
+          () =>
+            WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.nonLiteralSize,
+        ),
+        Match.when(
+          { reason: "unsupportedLairConditionalLegendaryActionUses" },
+          () =>
+            WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.unsupportedLairConditionalLegendaryActionUses,
+        ),
+        Match.when(
+          { reason: "unsupportedFormRestrictedSpeed" },
+          () =>
+            WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.unsupportedFormRestrictedSpeed,
+        ),
+        Match.when(
+          { reason: "unresolvedGmSpeedChoice" },
+          () =>
+            WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.unresolvedGmSpeedChoice,
+        ),
+        Match.when(
+          { reason: "unsupportedQualifiedConditionImmunity" },
+          () =>
+            WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.unsupportedQualifiedConditionImmunity,
+        ),
+        Match.when(
+          { reason: "missingWalkSpeed" },
+          () => "Druid Wild Shape battle forms require literal Walk Speed.",
+        ),
+        Match.when(
+          { reason: "invalidResourceLimit" },
+          () =>
+            WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.invalidResourceLimit,
+        ),
+        Match.when({ reason: "resourceGraph" }, ({ issues: resourceIssues }) =>
+          resourceIssues
+            .map((resourceIssue) =>
+              Match.value(resourceIssue).pipe(
+                Match.when(
+                  { kind: "duplicateResourceOrdinal" },
+                  ({ ordinal }) =>
+                    `resource declaration ordinal ${String(ordinal)} is duplicated`,
+                ),
+                Match.when(
+                  { kind: "missingResourceDeclaration" },
+                  ({ ordinal }) =>
+                    `resource reference ${String(ordinal)} is missing`,
+                ),
+                Match.exhaustive,
+              ),
+            )
+            .join(", "),
+        ),
+        Match.exhaustive,
+      ),
+    )
+    .join("; ");
+}
+
 function battleDruidWildShapeFormProjectionStatBlock(
-  form: StatBlockRecord,
+  projection: AuthoredStatBlockProjection,
 ): Result.Result<
   BattleDruidWildShapeKnownFormProjection,
   BattleDruidWildShapeKnownFormIssue
 > {
-  const armorClass = form.statBlock.ac;
-  if (armorClass.kind !== "literal") {
+  const speeds = battleDruidWildShapeFormProjectionSpeeds(
+    projection.runtime.statBlock.speeds,
+  );
+  if (Result.isFailure(speeds)) {
     return Result.fail({
       tag: "battleDruidWildShapeKnownFormIssue",
-      message: "Druid Wild Shape battle forms require literal Armor Class.",
+      statBlockId: projection.runtime.id,
+      reason: "missingWalkSpeed",
     });
   }
-  const creatureSize = form.statBlock.size;
-  if (typeof creatureSize !== "string") {
-    return Result.fail({
-      tag: "battleDruidWildShapeKnownFormIssue",
-      message: "Druid Wild Shape battle forms require literal Size.",
-    });
-  }
-  const speeds = battleDruidWildShapeFormProjectionSpeeds(form);
-  if (Result.isFailure(speeds)) return Result.fail(speeds.failure);
   return Result.succeed({
-    id: form.id,
-    challengeRating: form.challengeRating,
+    ...projection.runtime,
+    presentation: projection.presentation,
     statBlock: {
-      ...form.statBlock,
-      ac: armorClass,
-      size: creatureSize,
+      ...projection.runtime.statBlock,
       speeds: speeds.success,
     },
   });
 }
 
 function battleDruidWildShapeFormProjectionSpeeds(
-  form: StatBlockRecord,
-): Result.Result<
-  BattleDruidWildShapeFormSpeeds,
-  BattleDruidWildShapeKnownFormIssue
-> {
-  const literalSpeeds: LiteralStatBlockSpeed[] = [];
-  for (const speed of form.statBlock.speeds) {
-    if (
-      speed.feet.kind !== "literal" ||
-      speed.requiresSlotLevel !== undefined
-    ) {
-      return Result.fail({
-        tag: "battleDruidWildShapeKnownFormIssue",
-        message:
-          "Druid Wild Shape battle forms require unconditional literal Speeds.",
-      });
-    }
-    literalSpeeds.push({ kind: speed.kind, feet: speed.feet });
-  }
+  speeds: AuthoredStatBlockProjection["runtime"]["statBlock"]["speeds"],
+): Result.Result<BattleDruidWildShapeFormSpeeds, "missingWalkSpeed"> {
+  const literalSpeeds: LiteralStatBlockSpeed[] = speeds.map((speed) => ({
+    kind: speed.kind,
+    feet: speed.feet,
+  }));
   const walkSpeed = literalSpeeds.find(
     (speed): speed is LiteralWalkStatBlockSpeed => speed.kind === "walk",
   );
   if (walkSpeed === undefined) {
-    return Result.fail({
-      tag: "battleDruidWildShapeKnownFormIssue",
-      message: "Druid Wild Shape battle forms require literal Walk Speed.",
-    });
+    return Result.fail("missingWalkSpeed");
   }
   return Result.succeed([
     walkSpeed,
@@ -300,15 +569,40 @@ export type CharacterBattleCreatureInit = {
   readonly spellcasting?: CharacterBattleSpellcastingInit;
 };
 
-export type StatBlockBattleInitInput = {
+/** Authored Stat Block input accepted by the public battle initializer. */
+export type AuthoredStatBlockBattleInitInput = {
   readonly combatantId: CombatantId;
-  readonly statBlock: BattleStatBlockExecutionSource;
+  readonly statBlock: StatBlockRecord;
   readonly initiative: InitiativeScore;
   // defaults to max
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly conditions: readonly StatBlockInitialCondition[];
+};
+
+export type AuthoredStatBlockBattleInitIssue =
+  | StatBlockBattleInitIssue
+  | StatBlockResourceGraphCombatantAdmissionIssue
+  | {
+      readonly tag: "statBlockProjectionFailure";
+      readonly failure: BattleStatBlockProjectionFailure;
+    };
+
+export type StatBlockBattleInitIssue = Extract<
+  BattleStateInitLeafIssue,
+  { readonly tag: "battleStateInitIssue" }
+>;
+
+type RuntimeStatBlockBattleInitInput = {
+  readonly combatantId: CombatantId;
+  readonly statBlock: BattleStatBlockCombatantSource;
+  readonly initiative: InitiativeScore;
+  readonly currentHp?: Hp;
+  readonly tempHp?: Hp;
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
+  readonly conditions: readonly StatBlockInitialCondition[];
+  readonly presentation: BattleStatBlockPresentationSource;
 };
 
 export const STAT_BLOCK_INITIAL_CONDITIONS = ["prone"] as const;
@@ -322,56 +616,93 @@ export type StatBlockBattleCreatureInit = {
   readonly tempHp: Hp;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly conditions: readonly StatBlockInitialCondition[];
+  readonly presentation: BattleStatBlockPresentationSource;
 };
 
-export type BattleCreatureInit = {
+type BattleCreatureInitCommon = {
   readonly combatantId: CombatantId;
-  readonly displayName: string;
   readonly initiative: InitiativeScore;
+};
+
+export type CharacterBattleCombatantInit = BattleCreatureInitCommon & {
   // The creature init kind is the zero-HP lifecycle authority:
   // characters use death saves; stat block creatures die at 0 HP.
-  readonly creatureInit:
-    | CharacterBattleCreatureInit
-    | StatBlockBattleCreatureInit;
+  readonly creatureInit: CharacterBattleCreatureInit;
+  /** Character presentation is owned by the character combatant branch. */
+  readonly displayName: string;
 };
 
-/** Stat Block projection cannot admit a Character combatant. */
-export type BattleStatBlockCreatureInitResult = Omit<
-  BattleCreatureInit,
-  "creatureInit"
-> & {
+export type StatBlockBattleCombatantInit = BattleCreatureInitCommon & {
+  // The creature init kind is the zero-HP lifecycle authority:
+  // characters use death saves; stat block creatures die at 0 HP.
   readonly creatureInit: StatBlockBattleCreatureInit;
 };
 
+export type BattleCreatureInit =
+  | CharacterBattleCombatantInit
+  | StatBlockBattleCombatantInit;
+
 export function battleCreatureInitFromStatBlock(
-  input: StatBlockBattleInitInput,
+  input: AuthoredStatBlockBattleInitInput,
 ): Result.Result<
-  BattleStatBlockCreatureInitResult,
-  BattleStatBlockInitializationIssue
+  StatBlockBattleCombatantInit,
+  AuthoredStatBlockBattleInitIssue
 > {
-  const source = battleStatBlockCombatantSource(input.statBlock);
+  const projected = projectAuthoredStatBlock(input.statBlock);
+  if (Result.isFailure(projected)) {
+    return Result.fail({
+      tag: "statBlockProjectionFailure",
+      failure: projected.failure,
+    });
+  }
+  const source = battleStatBlockCombatantSource(projected.success.runtime);
   if (Result.isFailure(source)) return Result.fail(source.failure);
+  return battleCreatureInitFromRuntimeStatBlock({
+    ...input,
+    statBlock: source.success,
+    presentation: projected.success.presentation,
+  });
+}
+
+function battleCreatureInitFromRuntimeStatBlock(
+  input: RuntimeStatBlockBattleInitInput,
+): Result.Result<StatBlockBattleCombatantInit, StatBlockBattleInitIssue> {
   const initialConditionImmunityIssue = statBlockInitialConditionImmunityIssue(
-    source.success,
+    input.statBlock,
     input.conditions,
     input.combatantId,
   );
   if (initialConditionImmunityIssue !== null) {
     return Result.fail(initialConditionImmunityIssue);
   }
-  const maxHp = toHp(source.success.statBlock.hp.value);
+  const maxHp = toHp(input.statBlock.statBlock.hp.value);
   return Result.succeed({
     combatantId: input.combatantId,
-    displayName: input.statBlock.statBlock.displayName,
     initiative: input.initiative,
     creatureInit: {
       kind: "statBlock",
-      source: source.success,
+      source: input.statBlock,
       currentHp: input.currentHp ?? maxHp,
       tempHp: input.tempHp ?? toHp(0),
       ammunitionStocks: input.ammunitionStocks,
       conditions: input.conditions,
+      presentation: input.presentation,
     },
   });
+}
+
+export function authoredStatBlockBattleInitIssueMessage(
+  issue: AuthoredStatBlockBattleInitIssue,
+): string {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "battleStateInitIssue" }, ({ message }) => message),
+    Match.when({ tag: "statBlockResourceGraphIssue" }, (resourceGraphIssue) =>
+      battleStateInitIssueMessage(resourceGraphIssue),
+    ),
+    Match.when({ tag: "statBlockProjectionFailure" }, ({ failure }) =>
+      battleStatBlockProjectionFailureMessage(failure),
+    ),
+    Match.exhaustive,
+  );
 }
 // KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE

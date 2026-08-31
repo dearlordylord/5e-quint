@@ -36,6 +36,21 @@ part of canonical records where the expression is itself authored input or
 where an existing typed migration has not yet replaced prose-sensitive support
 code.
 
+Standalone Stat Block records preserve every Save modifier printed by their
+source in `savingThrowModifiers`, including values equal to the corresponding
+ability modifier. The field remains optional because a source may omit a Saves
+section; a source that prints a six-ability Save table must retain all six
+entries rather than treating the table as a derived shorthand.
+
+A restricted Stat Block spell reference owns a
+`StatBlockSpellInvocationRestriction`: its exact `authoredExpression` remains at
+the authored/presentation boundary, while its non-empty `deltas` carry the
+closed semantic vocabulary. Delta payloads use domain values rather than prose,
+and one reference cannot repeat a delta kind. An absent restriction means an
+unrestricted reference; there is no second empty-list spelling. Consumers must
+select the reference at an identity-retaining boundary, then pass only its
+narrowed deltas to semantic admission or execution.
+
 ## Goal (read this first)
 
 This package is **where the taxonomy actually lives and evolves**. It is the
@@ -65,8 +80,44 @@ consume Surface through typed authored-record boundaries, then derive their own
 execution state at package boundaries. Surface records remain
 provenance-bearing authored content, not a projected executable IR.
 
+The portable publication boundary is `surface/portable-surface`. Its
+`decodePortableSrdSurface` entrypoint accepts the JSON publication aggregate,
+validates every member, rejects duplicate authored identities and missing
+authored dependencies, and returns either the complete published Surface or a
+non-empty issue list. A rejected aggregate never exposes a partial Surface.
+The self-contained language-neutral cases in
+`portable-cases/srd-surface-cases.json` are also checked by an independent
+Draft 2020-12 validator. Regenerate them with
+`pnpm generate:surface-portable-cases` after publication changes.
+This boundary changes no D&D rules; it only validates the already-authored
+publication contract.
+
+The `surface/catalog-install` boundary composes that portable decode with
+context-independent Static Mechanics Admission in one atomic operation.
+`installSrdSurface` and `installSrdSurfaceText` keep decoded canonical content
+call-local, invoke distinct Unit and Stat Block admission functions, and
+accumulate their typed issues with record roots and mechanics paths. A rejected
+result exposes only its non-empty issue collection; an accepted result exposes
+the separate Unit and Stat Block catalogs. No receipt, support-status record,
+or diagnostic-path state is stored or returned as installed state. A mechanics
+admission function must explicitly return `admitted`; a valid record with no
+matching executable procedure returns a typed `no_admitted_procedure` issue.
+Portable decoding may retain typed `textOnly` mechanics in canonical content;
+whether a profile admits that content for execution remains the supplied
+admission function's decision.
+Mechanics paths use the closed domain-role vocabulary in
+`surface/mechanics-graph-path`. Profiles can narrow that vocabulary, while the
+installer requires every path to be a structured Unit or Stat Block path and
+keeps it correlated with the matching authored-record root. Arbitrary strings,
+presentation fields, and cross-family paths are not accepted.
+
 Detailed record-family rules live next to the code that owns them. For monster
 Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.
+
+`buildStatBlockCatalog` admits only validated `SrdStatBlockCollection` values
+and returns an `SrdStatBlockCatalog`. Its lookup methods retain the SRD record
+type, so a production consumer cannot widen the installed collection into a
+mixed-provenance catalog while continuing to present it as the SRD catalog.
 
 ## Why Surface Is Not Runtime Code
 

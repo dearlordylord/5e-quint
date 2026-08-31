@@ -1080,7 +1080,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
         }),
         statBlockCreatureInit({
           combatantId: goblinId,
-          displayName: "Synthetic condition target",
+          statBlockName: "Synthetic condition target",
           initiative: 10,
           statBlock: {
             ...targetStatBlock,

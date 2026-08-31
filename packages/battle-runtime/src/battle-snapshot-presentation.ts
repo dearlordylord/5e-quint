@@ -3,8 +3,8 @@ import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   AvailableBattleAct,
-  BattleCreatureSnapshot,
   BattleActPresentation,
+  BattleCreatureSnapshot,
   BattleInterruptDecisionFrontier,
   BattleInterruptProcedureChoice,
   BattleInterruptChoicePresentationIssue,

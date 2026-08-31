@@ -215,7 +215,7 @@ Out of scope for QCORE6:
 - Stand from Prone and Movement cost accounting, deferred to QCORE7;
 - reaction windows, continuations, and Concentration, deferred to QCORE8;
 - spell action profiles, deferred to QCORE10;
-- stat-block Multiattack dispatches, deferred to QCORE11.
+- Stat Block Multiattack dispatches, owned by `stat-block-multiattack.qnt`.
 
 `action-turn-procedures-inductive.qnt` is the owned proof machine. Its invariant
 links Dash bonus bounds to remaining action/bonus-action resources, keeping the
@@ -287,8 +287,8 @@ Out of scope for QCORE8:
 
 - Readied Spell Response effect release, owned by QCORE10's spell profile
   module;
-- all possible reaction features, deferred to QCORE9/QCORE11 procedure
-  profiles;
+- all possible reaction features, deferred to QCORE9 profiles and the separate
+  Stat Block Reaction capability gap;
 - battle-wide queue/stack policy beyond the QCORE8 reaction-window protocol;
 - pathfinding, line of sight, reach derivation, or authored catalog
   enumeration.
@@ -369,7 +369,7 @@ Out of scope for QCORE9:
 
 - Unit id or authored Surface feature admission breadth;
 - spell procedure profiles and Readied Spell Response, deferred to QCORE10;
-- stat-block controls, deferred to QCORE11;
+- Stat Block family procedures, owned by their focused family modules;
 - full ability-check procedure modeling beyond the Cutting Words roll-reduction
   fact;
 - catalog-level class/subclass progression parsers.
@@ -537,42 +537,69 @@ and Readied Spell Response hold/release while tracking only scalar outputs plus
 ordinary and Mage Armor Spell Effect fixtures and one readied spell held-effect
 fixture.
 
-## QCORE11: Stat-Block Controls
+## Slow semantic lifecycle and Stat Block composition
 
-`stat-block-controls.qnt` models projection-shaped Stat Block control facts
-after authored `StatBlockRecord` projection. The module uses fixture attack
-names and bounded resources rather than importing Surface records, monster ids,
-or catalog entries.
+`spell-slow-active-penalties-core.qnt` owns the identity-independent Slow
+occurrence lifecycle after initial failed saves: Speed, Armor Class, Dexterity
+Saving Throw, and Reaction projections; the at-most-one Action-or-Bonus-Action
+turn restriction, including reconciliation when either resource was already
+spent; the Attack-action one-attack cap; effective-Somatic 25 percent failure;
+per-target repeat saves; and exact-source occurrence cleanup.
 
-Scope:
+The source reference is a per-execution occurrence reference, not an authored
+spell or procedure identity. The core consumes typed concentration-ended and
+duration-expired signals. QCORE8 remains the canonical generic Concentration
+lifecycle and owns why Concentration ended; the elapsed-time scheduler remains
+the owner of duration advancement. Slow owns only its affected-target cleanup
+and the command to end source Concentration when its last target or duration is
+removed. Every occurrence transition reconciles the affected target's
+Slow-specific turn restriction: once that target is no longer affected, the
+gate becomes unrestricted. This does not restore or otherwise model an Action
+or Bonus Action; the runtime action economy remains the canonical owner of
+which generic resource was spent and retains an unspent resource while Slow
+temporarily suppresses it.
 
-- Stat Block Actions-section attack options spend the Attack action;
-- Multiattack is a named dispatch procedure inside the Attack action: the first
-  listed attack spends the Attack action, remaining named dispatch attacks stay
-  pending, Movement and End Turn may interleave, and End Turn closes unspent
-  dispatches;
-- admitted Stat Block Bonus Action options spend the shared Bonus Action
-  resource;
-- Stat Block Reaction options use QCORE8's shared offered trigger window and
-  spend Reaction quota only when taken;
-- Legendary Action windows open after another creature's turn, spend one
-  Legendary Action use, close after one action, refresh at the monster's start
-  turn, and leave per-action-name cooldowns to the caller;
-- X/Day, Recharge, Recharge after Short or Long Rest, and start-turn keyed d6
-  Recharge rolls mutate only executable resource state.
+`spell-slow-stat-block-multiattack-core.qnt` composes that typed active Slow
+state with `stat-block-multiattack.qnt`. It derives `OneListedDispatch` at the
+atomic Multiattack activation boundary and preserves the activation-owned
+source, full ordered dispatch list, duplicate occurrences, and continuation.
+The open dispatch continuation is an implementation decomposition of one
+Attack action; the composition intentionally has no mid-Action Slow-state
+rewrite.
 
-Out of scope for QCORE11:
+`spell-slow-active-penalties-examples.qnt` contains focused executable cases,
+and `spell-slow-active-penalties-inductive.qnt` owns the bounded state machine,
+invariant, and branch witnesses. Runtime parity is connected through the
+focused Slow MBT lane in `packages/battle-runtime`.
 
-- authored Stat Block catalog breadth or parser admission;
-- monster-specific tactics or action priority guidance;
-- per-Legendary-Action identity cooldown tracking, left to the caller;
-- broad battle reducer replay beyond the reusable control procedure facts.
+## Stat Block procedure families
 
-`stat-block-controls-inductive.qnt` is the owned proof machine. It samples
-bounded action/Bonus Action/Reaction resources, two fixture named attacks,
-daily use, Recharge, rest recharge, start-turn recharge rolls, Legendary Action
-windows, and Multiattack dispatch closure while keeping projection state
-Surface-free.
+Stat Block execution is modeled by six independent, projection-shaped rule
+cores after authored `StatBlockRecord` admission:
+
+- `stat-block-action-lifecycle.qnt` spends the ordinary Action resource;
+- `stat-block-attack-resolution.qnt` owns Attack Roll hit/miss, independent
+  notation selection for each damage instance, Critical Hit dice, typed damage
+  aggregation, Advantage-only bonus damage, and the admitted size-gated Prone
+  hit rider;
+- `stat-block-bonus-action-lifecycle.qnt` spends the Bonus Action resource;
+- `stat-block-multiattack.qnt` spends one Attack action, retains only the listed
+  pending dispatches, permits Movement and End Turn interleaving, and closes
+  pending dispatches at End Turn;
+- `stat-block-legendary-action-lifecycle.qnt` owns the post-turn window,
+  limited-use spend, and start-turn refresh;
+- `stat-block-resource-lifecycle.qnt` owns X/Day, Recharge, and rest-recharge
+  resources, including keyed d6 Recharge rolls.
+
+Each rule core has its own `-inductive.qnt` proof machine and `-examples.qnt`
+run-block evidence. Shared action-turn helpers remain lower-level rule facts;
+there is no aggregate Stat Block procedure state or proof owner. Stat Block
+Reaction execution is not modeled by these covered families and remains the
+separate missing-owner capability tracked by GitHub #423. Additional-effect
+continuations beyond the admitted typed hit rider remain owned by GitHub #425.
+
+Authored catalog breadth, monster tactics, per-Legendary-Action identity
+cooldowns, and broad reducer replay remain outside these focused rule cores.
 
 ## Focused Runtime MBT Contract
 
@@ -601,3 +628,9 @@ Movement/Grapple/OA-decline parity, and
 `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts` for QCORE8
 Reaction offer/decline/spend, continuation resume, Readied Movement release,
 and Concentration damage-save parity.
+Stat Block Attack Roll parity lives in
+`packages/battle-runtime/battle-runtime-stat-block-attack-resolution.mbt.qnt`
+with
+`packages/battle-runtime/src/stat-block-attack-resolution.mbt.test.ts`; its
+five synthetic fixture families compare the reusable QNT resolver with actual
+production reducer state and hole projections.

@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // KERNEL-COVERAGE: parity-witness CHARACTER.BATTLE.HANDOFF.SETTLEMENT CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
@@ -17,7 +18,7 @@ import {
   type BattleState,
   type OngoingFeatureSourceKey,
 } from "@dnd/battle-runtime";
-import { battleStateWithAllocatedEffectForTest } from "@dnd/battle-runtime/test-support";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   classUnitId,
@@ -37,7 +38,7 @@ import {
   convertFontOfMagicSorceryPointsToSpellSlot,
   rebuildCharacterSheet as rebuildCharacterSheetCore,
   type CharacterSheet,
-  type CharacterSheetInput,
+  type CharacterSheetRebuildInput,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
@@ -54,7 +55,8 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Result } from "effect";
+import type { BattleEffectExecutionRef } from "@dnd/shared/types";
+import { Brand, Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -278,11 +280,13 @@ function settleHitPointsConditionsSlotsAndPreservedSheetState(): BattleSettlemen
   };
   const settled = requireSuccess(
     settleCharacterSheetFromBattle({
-      state: battleStateWithCombatant(battle.session.state, settledCombatant),
-      context: battle.session.context,
+      battleSession: battleSessionWithCombatant(
+        battle.session,
+        settledCombatant,
+      ),
+      combatantId: settledCombatant.combatantId,
       sheet,
       unitLibrary,
-      combatant: settledCombatant,
     }),
   );
   return projectFromSheet({
@@ -325,11 +329,13 @@ function settlePurePactMagicSlotExpenditure(): BattleSettlementProjection {
   };
   const settled = requireSuccess(
     settleCharacterSheetFromBattle({
-      state: battleStateWithCombatant(battle.session.state, settledCombatant),
-      context: battle.session.context,
+      battleSession: battleSessionWithCombatant(
+        battle.session,
+        settledCombatant,
+      ),
+      combatantId: settledCombatant.combatantId,
       sheet,
       unitLibrary,
-      combatant: settledCombatant,
     }),
   );
   return projectFromSheet({
@@ -360,11 +366,10 @@ function rejectMixedSpellAndPactSlotSettlement(): BattleSettlementProjection {
     }),
   });
   const result = settleCharacterSheetFromBattle({
-    state: battle.session.state,
-    context: battle.session.context,
+    battleSession: battle.session,
+    combatantId: battle.combatant.combatantId,
     sheet: mixedSheet,
     unitLibrary,
-    combatant: battle.combatant,
   });
   if (Result.isSuccess(result)) {
     throw new Error(
@@ -424,11 +429,13 @@ function settleFeatureResourceExpenditure(): BattleSettlementProjection {
   };
   const settled = requireSuccess(
     settleCharacterSheetFromBattle({
-      state: battleStateWithCombatant(battle.session.state, settledCombatant),
-      context: battle.session.context,
+      battleSession: battleSessionWithCombatant(
+        battle.session,
+        settledCombatant,
+      ),
+      combatantId: settledCombatant.combatantId,
       sheet,
       unitLibrary,
-      combatant: settledCombatant,
     }),
   );
   return projectFromSheet({
@@ -477,11 +484,13 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
     },
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.session.state, ambiguousCombatant),
-    context: battle.session.context,
+    battleSession: battleSessionWithCombatant(
+      battle.session,
+      ambiguousCombatant,
+    ),
+    combatantId: ambiguousCombatant.combatantId,
     sheet: withCreatedSlot,
     unitLibrary,
-    combatant: ambiguousCombatant,
   });
   if (Result.isSuccess(result)) {
     throw new Error("Expected ambiguous created Spell Slot handoff rejection.");
@@ -516,11 +525,13 @@ function rejectMismatchedCharacterIdentity(): BattleSettlementProjection {
     },
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.session.state, mismatchedCombatant),
-    context: battle.session.context,
+    battleSession: battleSessionWithCombatant(
+      battle.session,
+      mismatchedCombatant,
+    ),
+    combatantId: mismatchedCombatant.combatantId,
     sheet,
     unitLibrary,
-    combatant: mismatchedCombatant,
   });
   if (Result.isSuccess(result)) {
     throw new Error("Expected mismatched identity handoff rejection.");
@@ -550,11 +561,10 @@ function rejectMaximumHpDrift(): BattleSettlementProjection {
     maxHp: Hp(wizardBattleFixtureMaximumHp + 1),
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.session.state, driftedCombatant),
-    context: battle.session.context,
+    battleSession: battleSessionWithCombatant(battle.session, driftedCombatant),
+    combatantId: driftedCombatant.combatantId,
     sheet,
     unitLibrary,
-    combatant: driftedCombatant,
   });
   if (Result.isSuccess(result)) {
     throw new Error("Expected maximum HP drift handoff rejection.");
@@ -581,40 +591,45 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
     sheet,
   });
   const combatant = battle.combatant;
-  const form = combatant.origin.druidWildShapeAvailableForms?.[0];
-  if (form === undefined) {
-    throw new Error("Expected an admitted Wild Shape form.");
+  const formAdmission = combatant.origin.druidWildShapeAvailableForms?.[0];
+  if (formAdmission === undefined) {
+    throw new Error("Expected an admitted Druid Wild Shape form.");
   }
-  const activeWildShapeState = battleStateWithAllocatedEffectForTest({
-    state: battle.session.state,
-    ownerId: combatant.combatantId,
-    effect: {
-      kind: "druidWildShapeForm",
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "settlement-active-wild-shape",
-      ),
-      sourceCombatantId: combatant.combatantId,
-      formScopeRef: form.execution.scopeRef,
-      formLimbs: { kind: "cannotHandleObjects" },
-      equipmentDisposition: [],
-      expiresAt: {
-        kind: "duration",
-        durationTicks: elapsedTimeTicks(600),
+  const activeWildShapeCombatant: CharacterBattleCombatant = {
+    ...combatant,
+    activeEffects: [
+      ...combatant.activeEffects,
+      {
+        kind: "druidWildShapeForm",
+        effectRef: Brand.nominal<BattleEffectExecutionRef>()(
+          JSON.stringify({
+            kind: "effectOccurrence",
+            ownerScopeRef: formAdmission.execution.scopeRef,
+            ordinal: 0,
+          }),
+        ),
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "settlement-active-wild-shape",
+        ),
+        sourceCombatantId: combatant.combatantId,
+        formScopeRef: formAdmission.execution.scopeRef,
+        formLimbs: { kind: "cannotHandleObjects" },
+        equipmentDisposition: [],
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(600),
+        },
       },
-    },
-  });
-  const activeWildShapeCombatant = activeWildShapeState.combatants.get(
-    combatant.combatantId,
-  );
-  if (!isCharacterBattleCombatant(activeWildShapeCombatant)) {
-    throw new Error("Expected active Wild Shape character combatant.");
-  }
+    ],
+  };
   const result = settleCharacterSheetFromBattle({
-    state: activeWildShapeState,
-    context: battle.session.context,
+    battleSession: battleSessionWithCombatant(
+      battle.session,
+      activeWildShapeCombatant,
+    ),
+    combatantId: activeWildShapeCombatant.combatantId,
     sheet,
     unitLibrary,
-    combatant: activeWildShapeCombatant,
   });
   if (Result.isSuccess(result)) {
     throw new Error("Expected active Wild Shape handoff rejection.");
@@ -662,11 +677,13 @@ function rejectActiveBattleStateHandoff(): BattleSettlementProjection {
     ]),
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(battle.session.state, activeStateCombatant),
-    context: battle.session.context,
+    battleSession: battleSessionWithCombatant(
+      battle.session,
+      activeStateCombatant,
+    ),
+    combatantId: activeStateCombatant.combatantId,
     sheet,
     unitLibrary,
-    combatant: activeStateCombatant,
   });
   if (Result.isSuccess(result)) {
     throw new Error("Expected active battle-state handoff rejection.");
@@ -722,14 +739,13 @@ function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
     },
   };
   const result = settleCharacterSheetFromBattle({
-    state: battleStateWithCombatant(
-      battle.session.state,
+    battleSession: battleSessionWithCombatant(
+      battle.session,
       stableRecoveryCombatant,
     ),
-    context: battle.session.context,
+    combatantId: stableRecoveryCombatant.combatantId,
     sheet: stableSheet,
     unitLibrary,
-    combatant: stableRecoveryCombatant,
   });
   if (Result.isSuccess(result)) {
     throw new Error("Expected in-progress Stable recovery handoff rejection.");
@@ -788,11 +804,13 @@ function settleZeroHpStableLifecycle(): BattleSettlementProjection {
   };
   const settled = requireSuccess(
     settleCharacterSheetFromBattle({
-      state: battleStateWithCombatant(battle.session.state, stableCombatant),
-      context: battle.session.context,
+      battleSession: battleSessionWithCombatant(
+        battle.session,
+        stableCombatant,
+      ),
+      combatantId: stableCombatant.combatantId,
       sheet: stableSheet,
       unitLibrary,
-      combatant: stableCombatant,
     }),
   );
   return projectFromSheet({
@@ -828,7 +846,10 @@ function startCharacterBattle(input: {
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: combatantId(`${input.battleIdText}:skeleton`),
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
         }),
       ],
@@ -849,6 +870,16 @@ function battleStateWithCombatant(
     ...state,
     combatants: new Map(state.combatants).set(combatant.combatantId, combatant),
   };
+}
+
+function battleSessionWithCombatant(
+  session: BattleRuntimeSession,
+  combatant: BattleCreatureState,
+): BattleRuntimeSession {
+  return battleRuntimeSessionForTest({
+    state: battleStateWithCombatant(session.state, combatant),
+    context: session.context,
+  });
 }
 
 function isCharacterBattleCombatant(
@@ -994,7 +1025,7 @@ function sheetFixture(
     readonly tempHp?: number;
   } & Partial<
     Pick<
-      CharacterSheetInput,
+      CharacterSheetRebuildInput,
       | "conditions"
       | "druidWildShapeKnownFormStatBlockIds"
       | "hitPointMaximumReduction"

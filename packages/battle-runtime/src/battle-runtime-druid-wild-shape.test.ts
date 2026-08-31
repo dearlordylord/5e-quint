@@ -1,8 +1,13 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
+  statBlockId,
   unitId as parseSharedUnitId,
   statBlockId as parseSharedStatBlockId,
 } from "@dnd/shared/game-facts";
-import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  battleRuntimeContextForTest,
+  battleRuntimeSessionForTest,
+} from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION druid_wild_shape
@@ -12,7 +17,11 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS druid_wild_shape
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  battleActSpellPresentation,
+  discoverBattleActsWithStatBlockProjectionIssues,
+  battleSubjectPresentation,
+} from "./battle-act-composition.ts";
 import {
   armorClass,
   armorClassDelta,
@@ -25,12 +34,16 @@ import {
   abilityModifier,
   attackBonus,
   ClassLevel,
-  DieRollResult,
+  D6RollResult,
   Hp,
   movementFeet,
 } from "@dnd/shared/types";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
-import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import {
+  decodeUnitRecordSync,
+  StatBlockProcedureOrdinalSchema,
+  StatBlockProcedureResourceOrdinalSchema,
+} from "@dnd/surface/surface/schema";
 import druidWildShapeInput from "../../surface/content/druid_wild_shape.json";
 import { Result, Schema } from "effect";
 import { expect, test } from "vitest";
@@ -41,6 +54,13 @@ import {
 } from "./character-battle-resource-execution.ts";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import { spellDefinitionHasPricedOrConsumedMaterialComponent } from "./battle-reducer/spells-invocation-guards.ts";
+import { isNonSpellStatBlockProcedureBinding } from "./stat-block-execution-state.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import {
+  statBlockProcedurePresentationsForActor,
+  statBlockProjectionIssuesForActor,
+} from "./stat-block-presentation.ts";
+import type { BattleRuntimeContext } from "./battle-runtime-context.ts";
 
 type CharacterSeedInput = Parameters<typeof characterSeed>[0];
 
@@ -72,6 +92,7 @@ import {
   goblinId,
   movementFill,
   requireHole,
+  requireNonSwarmStatBlockRecordForTest,
   requireResolved,
   resolveBattleSubject,
   resource,
@@ -94,6 +115,7 @@ import {
   battleStateWithGroundObjects,
   battleAvailableDruidWildShapeKnownForms,
   battleCheckpointFrontierEnvelope,
+  wildShapeKnownFormsIssueMessage,
   BattleFillSchema,
   BattleCheckpointFrontierEnvelopeSchema,
   battleShapeShiftedRuntimeState,
@@ -132,10 +154,10 @@ import { shillelaghUnitId } from "./unit-profile-admission-catalog.test-support.
 import { bonusSpellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
 
 const druidId = combatantId("wild-shape-druid");
-const ratId = "stat_block_rat";
-const ridingHorseId = "stat_block_riding_horse";
-const lizardId = "stat_block_lizard";
-const catId = "stat_block_cat";
+const ratId = statBlockId("stat_block_rat");
+const ridingHorseId = statBlockId("stat_block_riding_horse");
+const lizardId = statBlockId("stat_block_lizard");
+const catId = statBlockId("stat_block_cat");
 
 type DruidWildShapeInputPhase =
   (typeof druidWildShapeInput.mechanics.phases)[number];
@@ -155,11 +177,15 @@ function syntheticDruidWildShapeUnit(
     },
   });
 }
-const wolfId = "stat_block_wolf";
-const spiderId = "stat_block_spider";
+const wolfId = statBlockId("stat_block_wolf");
+const spiderId = statBlockId("stat_block_spider");
+const syntheticNonLiteralSizeFormId = "synthetic_non_literal_size_form";
 const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
-const syntheticProseProneFormId = "synthetic_prose_prone_form";
+const syntheticUntypedCoordinatedShapeId =
+  "synthetic_untyped_coordinated_shape";
 const syntheticActionSectionFormId = "synthetic_action_section_form";
+const syntheticSupportedNonAttackFormId = "synthetic_supported_non_attack_form";
+const syntheticTraitProjectionFormId = "synthetic_trait_projection_form";
 const syntheticTypedRidersFormId = "synthetic_typed_riders_form";
 const packAllyId = combatantId("wild-shape-pack-ally");
 const druidGroundPositionId = battleTablePositionId(
@@ -171,6 +197,27 @@ const druidOffHandGroundPositionId = battleTablePositionId(
 const incapacitatedPackAllyId = combatantId(
   "wild-shape-incapacitated-pack-ally",
 );
+
+type AttackProcedureEntry = Extract<
+  NonNullable<StatBlockRecord["statBlock"]["actions"]>[number],
+  { readonly kind: "executable" }
+> & {
+  readonly procedure: Extract<
+    Extract<
+      NonNullable<StatBlockRecord["statBlock"]["actions"]>[number],
+      { readonly kind: "executable" }
+    >["procedure"],
+    { readonly kind: "attack_roll" }
+  >;
+};
+
+function testProcedureOrdinal(value: number) {
+  return Schema.decodeSync(StatBlockProcedureOrdinalSchema)(value);
+}
+
+function testResourceOrdinal(value: number) {
+  return Schema.decodeSync(StatBlockProcedureResourceOrdinalSchema)(value);
+}
 
 test("replay rejects a Wild Shape subject bound to an unrelated procedure", () => {
   const state = druidWildShapeBattle();
@@ -533,9 +580,12 @@ test("rejects Wild Shape subjects when their form lifecycle becomes stale", () =
 });
 
 test("re-assuming a Wild Shape form preserves its committed Stat Block resources", () => {
-  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const limitedFormId = "synthetic_limited_wild_shape_form";
-  const baseAttack = baseForm.statBlock.actions?.attacks?.[0];
+  const baseAttack = baseForm.statBlock.actions?.find(
+    (entry): entry is AttackProcedureEntry =>
+      entry.kind === "executable" && entry.procedure.kind === "attack_roll",
+  );
   if (baseAttack === undefined) {
     throw new Error("Expected the Riding Horse attack fixture.");
   }
@@ -549,16 +599,23 @@ test("re-assuming a Wild Shape form preserves its committed Stat Block resources
     },
     statBlock: {
       ...baseForm.statBlock,
-      displayName: "Synthetic Limited Wild Shape Form",
-      actions: {
-        ...baseForm.statBlock.actions,
-        attacks: [
-          {
-            ...baseAttack,
-            limitedUse: { kind: "daily", uses: 1 },
+      actions: [
+        {
+          ...baseAttack,
+          procedureOrdinal: testProcedureOrdinal(1),
+          resourceRefs: {
+            kind: "some",
+            ordinals: [testResourceOrdinal(1)],
           },
-        ],
-      },
+        },
+      ],
+      resources: [
+        {
+          ordinal: testResourceOrdinal(1),
+          ownership: "each",
+          limit: { kind: "daily", uses: 1 },
+        },
+      ],
     },
   };
   const initial = druidWildShapeBattle({
@@ -624,9 +681,12 @@ test("re-assuming a Wild Shape form preserves its committed Stat Block resources
 });
 
 test("an active Wild Shape form restores a spent recharge action from its start-turn roll", () => {
-  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const rechargeFormId = "synthetic_recharge_wild_shape_form";
-  const baseAttack = baseForm.statBlock.actions?.attacks?.[0];
+  const baseAttack = baseForm.statBlock.actions?.find(
+    (entry): entry is AttackProcedureEntry =>
+      entry.kind === "executable" && entry.procedure.kind === "attack_roll",
+  );
   if (baseAttack === undefined) {
     throw new Error("Expected the Riding Horse attack fixture.");
   }
@@ -640,21 +700,29 @@ test("an active Wild Shape form restores a spent recharge action from its start-
     },
     statBlock: {
       ...baseForm.statBlock,
-      displayName: "Synthetic Recharge Wild Shape Form",
-      actions: {
-        ...baseForm.statBlock.actions,
-        attacks: [
-          {
-            ...baseAttack,
-            limitedUse: { kind: "recharge", minimumRoll: 5 },
+      actions: [
+        {
+          ...baseAttack,
+          procedureOrdinal: testProcedureOrdinal(1),
+          resourceRefs: {
+            kind: "some",
+            ordinals: [testResourceOrdinal(1)],
           },
-        ],
-      },
+        },
+      ],
+      resources: [
+        {
+          ordinal: testResourceOrdinal(1),
+          ownership: "each",
+          limit: { kind: "recharge", minimumRoll: 5 },
+        },
+      ],
     },
   };
-  const initial = druidWildShapeBattle({
+  const initialSession = druidWildShapeSession({
     knownForms: druidWildShapeKnownFormsReplacingRidingHorse(rechargeForm),
   });
+  const initial = initialSession.state;
   const assumed = requireResolved(
     resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
@@ -672,8 +740,10 @@ test("an active Wild Shape form restores a spent recharge action from its start-
   const rechargeBinding =
     rechargePool === undefined
       ? undefined
-      : active?.admission.execution.procedureBindings.find((binding) =>
-          binding.resourcePoolRefs.includes(rechargePool.resourcePoolRef),
+      : active?.admission.execution.procedureBindings.find(
+          (binding) =>
+            isNonSpellStatBlockProcedureBinding(binding) &&
+            binding.resourcePoolRefs.includes(rechargePool.resourcePoolRef),
         );
   if (
     active === null ||
@@ -682,7 +752,11 @@ test("an active Wild Shape form restores a spent recharge action from its start-
   ) {
     throw new Error("Expected the active recharge form procedure.");
   }
-  const attackSubject = statBlockAttackSubject(assumed.state, baseAttack.name);
+  const attackSubject = statBlockAttackSubject(
+    assumed.state,
+    baseAttack.procedure.name,
+    initialSession.context,
+  );
   expect(attackSubject.procedureRef).toBe(rechargeBinding.procedureRef);
   const targetHole = attackInitialTargetHole(assumed.state, attackSubject);
   const targetSelection = attackTargetFill(targetHole, druidId, goblinId);
@@ -748,7 +822,7 @@ test("an active Wild Shape form restores a spent recharge action from its start-
           value: [
             {
               target: rechargePool.resourcePoolRef,
-              roll: DieRollResult(rechargePool.minimumRoll),
+              roll: D6RollResult(rechargePool.minimumRoll),
             },
           ],
         },
@@ -2333,9 +2407,9 @@ test("projects Beast physical and retained character mental Ability Scores", () 
 
 test("projects retained and Beast Skill modifiers while in Wild Shape", () => {
   const ridingHorseWithSkills: StatBlockRecord = {
-    ...statBlockCatalog.requireStatBlock(ridingHorseId),
+    ...assertStatBlockForTest(statBlockCatalog, ridingHorseId),
     statBlock: {
-      ...statBlockCatalog.requireStatBlock(ridingHorseId).statBlock,
+      ...assertStatBlockForTest(statBlockCatalog, ridingHorseId).statBlock,
       skillModifiers: [
         { modifier: 5, skill: "perception" },
         { modifier: 4, skill: "stealth" },
@@ -2380,9 +2454,9 @@ test("projects retained and Beast Skill modifiers while in Wild Shape", () => {
 
 test("projects retained and higher Beast Saving Throw modifiers while in Wild Shape", () => {
   const ridingHorseWithSavingThrows: StatBlockRecord = {
-    ...statBlockCatalog.requireStatBlock(ridingHorseId),
+    ...assertStatBlockForTest(statBlockCatalog, ridingHorseId),
     statBlock: {
-      ...statBlockCatalog.requireStatBlock(ridingHorseId).statBlock,
+      ...assertStatBlockForTest(statBlockCatalog, ridingHorseId).statBlock,
       savingThrowModifiers: [
         { ability: "dex", modifier: 6 },
         { ability: "wis", modifier: 1 },
@@ -2487,16 +2561,19 @@ test("rejects ineligible known Beast forms before battle initialization", () => 
   const result = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
-      statBlockCatalog.requireStatBlock(ratId),
-      statBlockCatalog.requireStatBlock(ridingHorseId),
-      statBlockCatalog.requireStatBlock(catId),
-      statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      assertStatBlockForTest(statBlockCatalog, ratId),
+      assertStatBlockForTest(statBlockCatalog, ridingHorseId),
+      assertStatBlockForTest(statBlockCatalog, catId),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        parseSharedStatBlockId("stat_block_skeleton"),
+      ),
     ],
   });
 
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(result.failure.message).toBe(
+    expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
       "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
     );
   }
@@ -2595,6 +2672,41 @@ test("rejects decoded synthetic Wild Shape mechanics outside the admitted suppor
   ).toBeNull();
 });
 
+test("filters unsupported Wild Shape procedure forms without dropping later supported forms", () => {
+  const profile = parseSupportedUnitFeatureProfile(
+    unitLibrary.requireUnit("druid_wild_shape"),
+    [{ className: "druid", level: ClassLevel.make(2) }],
+  );
+  if (profile?.kind !== "druidWildShapeKnownForm") {
+    throw new Error("Expected Druid Wild Shape support profile.");
+  }
+  const unsupportedForm = syntheticActionSectionForm();
+  const projection = projectAuthoredStatBlock(unsupportedForm);
+  if (Result.isSuccess(projection)) {
+    throw new Error(
+      "Expected the synthetic action-section form to be unsupported.",
+    );
+  }
+  expect(projection.failure.reason).toBe("unsupportedProcedureBinding");
+  if (projection.failure.reason !== "unsupportedProcedureBinding") {
+    throw new Error("Expected accumulated unsupported procedure bindings.");
+  }
+  expect(projection.failure.issues.length).toBeGreaterThan(1);
+
+  const result = battleAvailableDruidWildShapeKnownForms({
+    profile,
+    forms: [
+      unsupportedForm,
+      assertStatBlockForTest(statBlockCatalog, ridingHorseId),
+    ],
+  });
+
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isSuccess(result)) {
+    expect(result.success.map((form) => form.id)).toEqual([ridingHorseId]);
+  }
+});
+
 test("rejects duplicate supplied Wild Shape form records before battle initialization", () => {
   const profile = parseSupportedUnitFeatureProfile(
     unitLibrary.requireUnit("druid_wild_shape"),
@@ -2606,14 +2718,14 @@ test("rejects duplicate supplied Wild Shape form records before battle initializ
   const result = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
-      statBlockCatalog.requireStatBlock(ratId),
-      statBlockCatalog.requireStatBlock(ratId),
+      assertStatBlockForTest(statBlockCatalog, ratId),
+      assertStatBlockForTest(statBlockCatalog, ratId),
     ],
   });
 
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(result.failure.message).toBe(
+    expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
       "Druid Wild Shape battle initialization requires distinct available known forms.",
     );
   }
@@ -2627,7 +2739,7 @@ test("rejects known Beast forms without promoted movement facts", () => {
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected Druid Wild Shape support profile.");
   }
-  const ridingHorse = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const ridingHorse = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const noWalkSpeedForm = {
     ...ridingHorse,
     statBlock: {
@@ -2643,84 +2755,60 @@ test("rejects known Beast forms without promoted movement facts", () => {
   const result = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
-      statBlockCatalog.requireStatBlock(ratId),
+      assertStatBlockForTest(statBlockCatalog, ratId),
       noWalkSpeedForm,
-      statBlockCatalog.requireStatBlock(lizardId),
-      statBlockCatalog.requireStatBlock(catId),
+      assertStatBlockForTest(statBlockCatalog, lizardId),
+      assertStatBlockForTest(statBlockCatalog, catId),
     ],
   });
 
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(result.failure.message).toBe(
+    expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
       "Druid Wild Shape battle forms require literal Walk Speed.",
     );
   }
 });
 
-test.each([
-  {
-    label: "literal Armor Class",
-    expected: "Druid Wild Shape battle forms require literal Armor Class.",
-    mutate: (form: StatBlockRecord): StatBlockRecord => ({
-      ...form,
-      statBlock: {
-        ...form.statBlock,
-        ac: { kind: "caster_derived", source: "spell_save_dc" },
+test("rejects known Beast forms without literal Size", () => {
+  const profile = parseSupportedUnitFeatureProfile(
+    unitLibrary.requireUnit("druid_wild_shape"),
+    [{ className: "druid", level: ClassLevel.make(2) }],
+  );
+  if (profile?.kind !== "druidWildShapeKnownForm") {
+    throw new Error("Expected Druid Wild Shape support profile.");
+  }
+  const baseForm = requireNonSwarmStatBlockRecordForTest(
+    assertStatBlockForTest(statBlockCatalog, ratId),
+  );
+  const nonLiteralSizeForm: StatBlockRecord = {
+    ...baseForm,
+    id: parseSharedStatBlockId(syntheticNonLiteralSizeFormId),
+    name: "Synthetic Nonliteral Size Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-non-literal-size-form",
+    },
+    statBlock: {
+      ...baseForm.statBlock,
+      size: {
+        kind: "alternatives",
+        options: ["small", "medium"],
       },
-    }),
-  },
-  {
-    label: "literal Size",
-    expected: "Druid Wild Shape battle forms require literal Size.",
-    mutate: (form: StatBlockRecord): StatBlockRecord => ({
-      ...form,
-      statBlock: {
-        ...form.statBlock,
-        size: {
-          kind: "choice",
-          label: "Synthetic form size",
-          options: ["small", "medium"],
-        },
-      },
-    }),
-  },
-  {
-    label: "unconditional literal Speeds",
-    expected:
-      "Druid Wild Shape battle forms require unconditional literal Speeds.",
-    mutate: (form: StatBlockRecord): StatBlockRecord => ({
-      ...form,
-      statBlock: {
-        ...form.statBlock,
-        speeds: [
-          { ...form.statBlock.speeds[0], requiresSlotLevel: 2 },
-          ...form.statBlock.speeds.slice(1),
-        ],
-      },
-    }),
-  },
-] as const)(
-  "rejects known Beast forms without $label",
-  ({ mutate, expected }) => {
-    const profile = parseSupportedUnitFeatureProfile(
-      unitLibrary.requireUnit("druid_wild_shape"),
-      [{ className: "druid", level: ClassLevel.make(2) }],
-    );
-    if (profile?.kind !== "druidWildShapeKnownForm") {
-      throw new Error("Expected Druid Wild Shape support profile.");
-    }
-    const result = battleAvailableDruidWildShapeKnownForms({
-      profile,
-      forms: [mutate(statBlockCatalog.requireStatBlock(ratId))],
-    });
+    },
+  };
+  const result = battleAvailableDruidWildShapeKnownForms({
+    profile,
+    forms: [nonLiteralSizeForm],
+  });
 
-    expect(Result.isFailure(result)).toBe(true);
-    if (Result.isFailure(result)) {
-      expect(result.failure.message).toBe(expected);
-    }
-  },
-);
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(wildShapeKnownFormsIssueMessage(result.failure.issues)).toBe(
+      "Druid Wild Shape battle forms require literal Size.",
+    );
+  }
+});
 
 test("admits selected Beast forms with multi-component attack damage and typed hit riders", () => {
   const profile = parseSupportedUnitFeatureProfile(
@@ -2733,10 +2821,10 @@ test("admits selected Beast forms with multi-component attack damage and typed h
   const result = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
-      statBlockCatalog.requireStatBlock(ratId),
-      statBlockCatalog.requireStatBlock(ridingHorseId),
-      statBlockCatalog.requireStatBlock(spiderId),
-      statBlockCatalog.requireStatBlock(wolfId),
+      assertStatBlockForTest(statBlockCatalog, ratId),
+      assertStatBlockForTest(statBlockCatalog, ridingHorseId),
+      assertStatBlockForTest(statBlockCatalog, spiderId),
+      assertStatBlockForTest(statBlockCatalog, wolfId),
     ],
   });
 
@@ -2751,7 +2839,7 @@ test("admits selected Beast forms with multi-component attack damage and typed h
   }
 });
 
-test("filters untyped trait-derived attack-roll advantage from battle-available forms", () => {
+test("retains text-only traits without inferring typed attack-roll support", () => {
   const profile = parseSupportedUnitFeatureProfile(
     unitLibrary.requireUnit("druid_wild_shape"),
     [{ className: "druid", level: ClassLevel.make(2) }],
@@ -2759,10 +2847,14 @@ test("filters untyped trait-derived attack-roll advantage from battle-available 
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected Druid Wild Shape support profile.");
   }
-  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const traitAdvantageForm = {
     ...baseForm,
-    id: parseSharedStatBlockId("synthetic_untyped_coordinated_shape"),
+    id: parseSharedStatBlockId(syntheticUntypedCoordinatedShapeId),
+    provenance: {
+      kind: "synthetic-test" as const,
+      section: "synthetic-untyped-coordinated-shape",
+    },
     statBlock: {
       ...baseForm.statBlock,
       traits: [
@@ -2794,7 +2886,7 @@ test("admits typed trait-derived attack-roll advantage from battle-available for
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected Druid Wild Shape support profile.");
   }
-  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const traitAdvantageForm = syntheticCoordinatedShape();
 
   const result = battleAvailableDruidWildShapeKnownForms({
@@ -2813,7 +2905,7 @@ test("admits typed trait-derived attack-roll advantage from battle-available for
 
 test("threads typed trait-derived attack-roll advantage through caller spatial witnesses", () => {
   const form = syntheticCoordinatedShape();
-  const initial = druidWildShapeBattle({
+  const initialSession = druidWildShapeSession({
     knownForms: druidWildShapeKnownFormsReplacingRidingHorse(form),
     extraCombatants: [
       characterSeed({
@@ -2831,6 +2923,7 @@ test("threads typed trait-derived attack-roll advantage through caller spatial w
       }),
     ],
   });
+  const initial = initialSession.state;
   const assumed = requireResolved(
     resolveDruidWildShapeWithoutLoadoutEquipment(
       initial,
@@ -2840,7 +2933,11 @@ test("threads typed trait-derived attack-roll advantage through caller spatial w
       }),
     ),
   );
-  const subject = statBlockAttackSubject(assumed.state, "Hooves");
+  const subject = statBlockAttackSubject(
+    assumed.state,
+    "Hooves",
+    initialSession.context,
+  );
   const targetHole = attackInitialTargetHole(assumed.state, subject);
   const rollWithoutWitness = requireHole(
     resolveBattleSubject({
@@ -2904,8 +3001,10 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
   const inventory = wildShapeFormActionSurfaceInventory({
     forms: [
       ...statBlockCatalog.listStatBlocks(),
-      statBlockCatalog.requireStatBlock("stat_block_skeleton"),
-      syntheticProseProneForm(),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        parseSharedStatBlockId("stat_block_skeleton"),
+      ),
       syntheticTypedRidersForm(),
       syntheticActionSectionForm(),
     ],
@@ -2924,36 +3023,24 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
       }),
       expect.objectContaining({
         category: "attackHitTargetSizeConditionRider",
-        exampleStatBlockIds: expect.arrayContaining([wolfId]),
+        exampleStatBlockIds: expect.arrayContaining([
+          wolfId,
+          syntheticTypedRidersFormId,
+        ]),
       }),
       expect.objectContaining({
         category: "traitDerivedConditionalAttackRollAdvantage",
         exampleStatBlockIds: expect.arrayContaining([wolfId]),
       }),
       expect.objectContaining({
-        category: "attackHitConditionRider",
-        exampleStatBlockIds: expect.arrayContaining([
-          syntheticProseProneFormId,
-          syntheticTypedRidersFormId,
-        ]),
-        closedBoundary: expect.objectContaining({
-          owner: expect.stringContaining("condition rider owner"),
-          reason: expect.stringContaining(
-            "outside the typed target Size Prone payload",
-          ),
-        }),
-      }),
-      expect.objectContaining({
-        category: "attackHitForcedMovementRider",
-        exampleStatBlockIds: expect.arrayContaining([
-          syntheticTypedRidersFormId,
-        ]),
-      }),
-      expect.objectContaining({
         category: "attackHitOtherRider",
         exampleStatBlockIds: expect.arrayContaining([
           syntheticTypedRidersFormId,
         ]),
+        closedBoundary: expect.objectContaining({
+          owner: expect.stringContaining("attack-hit rider owner"),
+          reason: expect.stringContaining("typed payload"),
+        }),
       }),
       expect.objectContaining({
         category: "tableOrProseOnlyTrait",
@@ -3058,42 +3145,21 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
     ]),
   );
   expect(
+    inventory.some((entry) => entry.category === "attackHitConditionRider"),
+  ).toBe(false);
+  expect(
     inventory.some(
       (entry) => entry.category === "attackHitForcedMovementRider",
     ),
-  ).toBe(true);
+  ).toBe(false);
 });
 
-function syntheticProseProneForm(): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock(ridingHorseId);
-  const hooves = base.statBlock.actions?.attacks?.[0];
-  if (hooves === undefined) {
-    throw new Error("Expected Riding Horse Hooves fixture.");
-  }
-  return {
-    ...base,
-    id: parseSharedStatBlockId(syntheticProseProneFormId),
-    name: "Synthetic Prose Prone Form",
-    statBlock: {
-      ...base.statBlock,
-      displayName: "Synthetic Prose Prone Form",
-      actions: {
-        attacks: [
-          {
-            ...hooves,
-            description:
-              "If the target is a Medium or smaller creature, it has the Prone condition.",
-            name: "Synthetic Bite",
-          },
-        ],
-      },
-    },
-  };
-}
-
 function syntheticTypedRidersForm(): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock(ridingHorseId);
-  const hooves = base.statBlock.actions?.attacks?.[0];
+  const base = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
+  const hooves = base.statBlock.actions?.find(
+    (entry): entry is AttackProcedureEntry =>
+      entry.kind === "executable" && entry.procedure.kind === "attack_roll",
+  );
   if (hooves === undefined) {
     throw new Error("Expected Riding Horse Hooves fixture.");
   }
@@ -3101,40 +3167,45 @@ function syntheticTypedRidersForm(): StatBlockRecord {
     ...base,
     id: parseSharedStatBlockId(syntheticTypedRidersFormId),
     name: "Synthetic Typed Riders Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-typed-riders-form",
+    },
     statBlock: {
       ...base.statBlock,
-      displayName: "Synthetic Typed Riders Form",
-      actions: {
-        attacks: [
-          {
-            ...hooves,
-            description:
-              "The target gains the Prone condition and is pushed 5 feet.",
-            name: "Synthetic Rider Strike",
+      actions: [
+        {
+          ...hooves,
+          procedure: {
+            ...hooves.procedure,
             onHit: [
-              ...hooves.onHit,
-              { kind: "apply_condition", condition: "prone" },
+              ...hooves.procedure.onHit,
               {
-                kind: "force_move",
-                movementKind: "push",
-                distanceFeet: 5,
+                kind: "apply_condition_if_target_size_at_most",
+                condition: "prone",
+                maxCreatureSize: "medium",
               },
               {
-                kind: "audible",
-                sound: "Synthetic chime",
-                audibleRadiusFeet: 30,
+                kind: "conditional_bonus_damage",
+                when: { kind: "attack_roll_had_advantage" },
+                damageType: "bludgeoning",
+                amount: { kind: "fixed", static: 1 },
               },
             ],
+            name: "Synthetic Rider Strike",
           },
-        ],
-      },
+        },
+      ],
     },
   };
 }
 
 function syntheticActionSectionForm(): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock(ridingHorseId);
-  const hooves = base.statBlock.actions?.attacks?.[0];
+  const base = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
+  const hooves = base.statBlock.actions?.find(
+    (entry): entry is AttackProcedureEntry =>
+      entry.kind === "executable" && entry.procedure.kind === "attack_roll",
+  );
   if (hooves === undefined) {
     throw new Error("Expected Riding Horse Hooves fixture.");
   }
@@ -3142,21 +3213,34 @@ function syntheticActionSectionForm(): StatBlockRecord {
     ...base,
     id: parseSharedStatBlockId(syntheticActionSectionFormId),
     name: "Synthetic Action Section Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-action-section-form",
+    },
     statBlock: {
       ...base.statBlock,
-      displayName: "Synthetic Action Section Form",
-      actions: {
-        attacks: [hooves],
-        multiattacks: [
-          {
+      actions: [
+        hooves,
+        {
+          kind: "executable",
+          procedureOrdinal: testProcedureOrdinal(2),
+          procedure: {
+            kind: "multiattack",
             name: "Synthetic Multiattack",
             dispatches: [
-              { name: hooves.name, count: { kind: "literal", value: 1 } },
+              {
+                procedureOrdinal: hooves.procedureOrdinal,
+                count: { kind: "literal", value: 1 },
+              },
             ],
           },
-        ],
-        saves: [
-          {
+          resourceRefs: { kind: "none" },
+        },
+        {
+          kind: "executable",
+          procedureOrdinal: testProcedureOrdinal(3),
+          procedure: {
+            kind: "save",
             name: "Synthetic Save Pulse",
             ability: "dex",
             dc: { kind: "fixed", dc: 12 },
@@ -3164,73 +3248,354 @@ function syntheticActionSectionForm(): StatBlockRecord {
             onFail: {
               kind: "damage",
               damageType: "bludgeoning",
-              amount: {
-                kind: "fixed",
-                expr: { dice: 0, dieSize: 1, flat: 1 },
-              },
+              amount: { kind: "fixed", static: 1 },
             },
             onSuccess: { kind: "half_damage" },
           },
-        ],
-        supports: [
-          {
+          resourceRefs: { kind: "none" },
+        },
+        {
+          kind: "executable",
+          procedureOrdinal: testProcedureOrdinal(4),
+          procedure: {
+            kind: "support",
             name: "Synthetic Self Aid",
             target: "self",
             effect: {
-              kind: "heal_hp",
+              kind: "damage",
+              damageType: "bludgeoning",
               amount: {
                 kind: "fixed",
-                expr: { dice: 0, dieSize: 1, flat: 1 },
+                static: 1,
               },
-              target: "self",
             },
           },
-        ],
-        actionOptions: [
-          {
+          resourceRefs: { kind: "none" },
+        },
+        {
+          kind: "executable",
+          procedureOrdinal: testProcedureOrdinal(5),
+          procedure: {
+            kind: "action_option",
             name: "Synthetic Action Option",
             options: ["disengage", "utilize"],
           },
-        ],
-        specials: [
-          {
-            name: "Synthetic Special",
-            description:
-              "The form attempts a table-adjudicated special action.",
-          },
-        ],
-      },
-      bonusActions: {
-        actionOptions: [
-          {
+          resourceRefs: { kind: "none" },
+        },
+        {
+          kind: "textOnly",
+          procedureOrdinal: testProcedureOrdinal(6),
+          name: "Synthetic Special",
+          description: "The form attempts a table-adjudicated special action.",
+          reason: "required_table_adjudication",
+          resourceRefs: { kind: "none" },
+        },
+      ],
+      bonusActions: [
+        {
+          kind: "executable",
+          procedureOrdinal: testProcedureOrdinal(1),
+          procedure: {
+            kind: "action_option",
             name: "Synthetic Quick Option",
             options: ["disengage", "hide"],
           },
-        ],
-      },
-      reactions: {
-        specials: [
+          resourceRefs: { kind: "none" },
+        },
+      ],
+      reactions: [
+        {
+          kind: "textOnly",
+          procedureOrdinal: testProcedureOrdinal(1),
+          name: "Synthetic Response",
+          description: "The form responds to a table-supplied trigger.",
+          reason: "required_table_adjudication",
+          resourceRefs: { kind: "none" },
+        },
+      ],
+      legendaryActions: {
+        uses: { kind: "fixed", uses: 1 },
+        entries: [
           {
-            name: "Synthetic Response",
-            description: "The form responds to a table-supplied trigger.",
+            kind: "textOnly",
+            procedureOrdinal: testProcedureOrdinal(1),
+            name: "Synthetic Legendary Move",
+            description: "The form uses a table-adjudicated legendary action.",
+            reason: "required_table_adjudication",
+            resourceRefs: { kind: "none" },
           },
         ],
-      },
-      legendaryActions: {
-        uses: 1,
-        actions: {
-          specials: [
-            {
-              name: "Synthetic Legendary Move",
-              description:
-                "The form uses a table-adjudicated legendary action.",
-            },
-          ],
-        },
       },
     },
   };
 }
+
+function syntheticSupportedNonAttackForm(): StatBlockRecord {
+  const base = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
+  const hooves = base.statBlock.actions?.find(
+    (entry): entry is AttackProcedureEntry =>
+      entry.kind === "executable" && entry.procedure.kind === "attack_roll",
+  );
+  if (hooves === undefined) {
+    throw new Error("Expected Riding Horse Hooves fixture.");
+  }
+  return {
+    ...base,
+    id: parseSharedStatBlockId(syntheticSupportedNonAttackFormId),
+    name: "Synthetic Supported Non-Attack Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-supported-non-attack-form",
+    },
+    statBlock: {
+      ...base.statBlock,
+      actions: [
+        hooves,
+        {
+          kind: "executable",
+          procedureOrdinal: testProcedureOrdinal(2),
+          procedure: {
+            kind: "multiattack",
+            name: "Synthetic Multiattack",
+            dispatches: [
+              {
+                procedureOrdinal: hooves.procedureOrdinal,
+                count: { kind: "literal", value: 1 },
+              },
+            ],
+          },
+          resourceRefs: { kind: "none" },
+        },
+      ],
+      bonusActions: [
+        {
+          kind: "executable",
+          procedureOrdinal: testProcedureOrdinal(1),
+          procedure: {
+            kind: "action_option",
+            name: "Synthetic Quick Option",
+            options: ["disengage", "hide"],
+          },
+          resourceRefs: { kind: "none" },
+        },
+      ],
+    },
+  };
+}
+
+test("surfaces active Wild Shape typed trait projection issues", () => {
+  const baseForm = syntheticSupportedNonAttackForm();
+  const traitForm: StatBlockRecord = {
+    ...baseForm,
+    id: parseSharedStatBlockId(syntheticTraitProjectionFormId),
+    name: "Synthetic Trait Projection Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-trait-projection-form",
+    },
+    statBlock: {
+      ...baseForm.statBlock,
+      traits: [
+        {
+          name: "Table Trait",
+          description: "The form has a table-adjudicated trait.",
+        },
+      ],
+    },
+  };
+  const initial = druidWildShapeSession({ knownForms: [traitForm] });
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial.state,
+      wildShapeSubject(initial.state, {
+        action: "assumeForm",
+        formStatBlockId: syntheticTraitProjectionFormId,
+      }),
+    ),
+  );
+
+  expect(
+    statBlockProjectionIssuesForActor(assumed.state, initial.context, druidId),
+  ).toEqual([
+    {
+      tag: "statBlockProjectionIssue",
+      source: { kind: "trait", nonExecutableReason: "textOnlyTrait" },
+    },
+  ]);
+  expect(
+    discoverBattleActsWithStatBlockProjectionIssues(
+      battleRuntimeSessionForTest({
+        state: assumed.state,
+        context: initial.context,
+      }),
+    ).statBlockProjectionIssues,
+  ).toEqual([
+    {
+      combatantId: druidId,
+      issues: [
+        {
+          tag: "statBlockProjectionIssue",
+          source: { kind: "trait", nonExecutableReason: "textOnlyTrait" },
+        },
+      ],
+    },
+  ]);
+});
+
+test("surfaces active Wild Shape non-attack presentation join issues", () => {
+  const initial = startBattleSessionRight({
+    battleId: battleId("battle-druid-wild-shape-presentation-join"),
+    combatants: [
+      druidWildShapeCreatureInit({
+        knownForms: [syntheticSupportedNonAttackForm()],
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial.state,
+      wildShapeSubject(initial.state, {
+        action: "assumeForm",
+        formStatBlockId: syntheticSupportedNonAttackFormId,
+      }),
+    ),
+  );
+  const activeDruid = requireCharacter(assumed.state, druidId);
+  const activeForm = activeDruidWildShape(activeDruid);
+  if (activeForm === null) {
+    throw new Error("Expected active Wild Shape form.");
+  }
+  const druidContext = initial.context.characters.get(druidId);
+  if (druidContext === undefined) {
+    throw new Error("Expected Druid presentation context.");
+  }
+  const formPresentations = druidContext.druidWildShapeFormPresentations;
+  if (formPresentations === undefined) {
+    throw new Error("Expected Wild Shape form presentations.");
+  }
+  const source = formPresentations.get(activeForm.admission.execution.scopeRef);
+  if (source === undefined) {
+    throw new Error("Expected active Wild Shape presentation source.");
+  }
+
+  for (const joinMode of ["missing", "mismatch"] as const) {
+    for (const procedureCase of [
+      {
+        action: "multiattack",
+        presentationKind: "multiattack",
+        executionKind: "multiattack",
+      },
+      {
+        action: "statBlockActionOption",
+        presentationKind: "bonusActionOption",
+        executionKind: "bonusActionOption",
+      },
+    ] as const) {
+      const binding = activeForm.admission.execution.procedureBindings.find(
+        ({ procedure }) => procedure.kind === procedureCase.executionKind,
+      );
+      if (binding === undefined || !("procedureOrdinal" in binding.procedure)) {
+        throw new Error(
+          `Expected active Wild Shape ${procedureCase.executionKind} binding.`,
+        );
+      }
+      const subject =
+        procedureCase.action === "multiattack"
+          ? {
+              tag: "action" as const,
+              actorId: druidId,
+              action: "multiattack" as const,
+              procedureRef: binding.procedureRef,
+            }
+          : binding.procedure.kind === "bonusActionOption"
+            ? {
+                tag: "bonusAction" as const,
+                actorId: druidId,
+                action: "statBlockActionOption" as const,
+                procedureRef: binding.procedureRef,
+                standardAction: binding.procedure.standardActions[0],
+              }
+            : (() => {
+                throw new Error(
+                  "Expected the active Wild Shape bonus action option binding.",
+                );
+              })();
+      const selectedPresentation = source.orderedProcedures.find(
+        ({ kind }) => kind === procedureCase.presentationKind,
+      );
+      if (selectedPresentation === undefined) {
+        throw new Error(
+          `Expected ${procedureCase.presentationKind} presentation.`,
+        );
+      }
+      const executionProcedureOrdinal = binding.procedure.procedureOrdinal;
+      const orderedProcedures = source.orderedProcedures.map((procedure) => {
+        if (procedure !== selectedPresentation) return procedure;
+        if (joinMode === "missing") {
+          return {
+            ...procedure,
+            procedureOrdinal: testProcedureOrdinal(
+              procedure.procedureOrdinal + 100,
+            ),
+          };
+        }
+        return {
+          section: procedure.section,
+          procedureOrdinal: procedure.procedureOrdinal,
+          name: `Synthetic ${procedureCase.presentationKind} mismatch`,
+          description: "Synthetic text-only presentation mismatch.",
+          kind: "textOnly" as const,
+          reason: "required_table_adjudication" as const,
+          resourceRefs: procedure.resourceRefs,
+        };
+      });
+      const formPresentationsWithIssue = new Map(formPresentations).set(
+        activeForm.admission.execution.scopeRef,
+        { ...source, orderedProcedures },
+      );
+      const contextWithIssue = battleRuntimeContextForTest(
+        new Map(initial.context.characters).set(druidId, {
+          ...druidContext,
+          druidWildShapeFormPresentations: formPresentationsWithIssue,
+        }),
+        initial.context.statBlocks,
+      );
+      const presentation = battleSubjectPresentation(
+        battleRuntimeSessionForTest({
+          state: assumed.state,
+          context: contextWithIssue,
+        }),
+        subject,
+      );
+      const issue =
+        joinMode === "missing"
+          ? {
+              tag: "statBlockProcedurePresentationJoinIssue" as const,
+              reason: "missingPresentation" as const,
+              section: selectedPresentation.section,
+              procedureOrdinal: executionProcedureOrdinal,
+              executionKind: procedureCase.executionKind,
+            }
+          : {
+              tag: "statBlockProcedurePresentationJoinIssue" as const,
+              reason: "presentationKindMismatch" as const,
+              section: selectedPresentation.section,
+              procedureOrdinal: executionProcedureOrdinal,
+              executionKind: procedureCase.executionKind,
+              presentationKind: "textOnly" as const,
+            };
+      expect(presentation).toEqual({
+        kind: "presentationIssue",
+        issue: {
+          tag: "attackPresentationJoinIssue",
+          reason: "statBlockProcedurePresentationJoin",
+          issues: [issue],
+        },
+      });
+    }
+  }
+});
 
 test("projects automatic reversion when Wild Shape ends from Incapacitated", () => {
   const initial = druidWildShapeBattle();
@@ -3750,7 +4115,7 @@ test("Beast Spells admits focus-replaceable Material spell invocation while Wild
   const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
     preparedSpells: [spellRecord("animal_friendship")],
-    targetStatBlock: statBlockCatalog.requireStatBlock(catId),
+    targetStatBlock: assertStatBlockForTest(statBlockCatalog, catId),
   });
   const initial = session.state;
   const assumed = requireResolved(
@@ -4009,13 +4374,16 @@ function weakTrueFormWeaponAttack(
 }
 
 function druidWildShapeKnownFormsWith(
-  fourthFormId: string,
-  fourthForm: StatBlockRecord = statBlockCatalog.requireStatBlock(fourthFormId),
+  fourthFormId: StatBlockRecord["id"],
+  fourthForm: StatBlockRecord = assertStatBlockForTest(
+    statBlockCatalog,
+    fourthFormId,
+  ),
 ): readonly StatBlockRecord[] {
   return [
-    statBlockCatalog.requireStatBlock(ratId),
-    statBlockCatalog.requireStatBlock(ridingHorseId),
-    statBlockCatalog.requireStatBlock(lizardId),
+    assertStatBlockForTest(statBlockCatalog, ratId),
+    assertStatBlockForTest(statBlockCatalog, ridingHorseId),
+    assertStatBlockForTest(statBlockCatalog, lizardId),
     fourthForm,
   ];
 }
@@ -4024,22 +4392,25 @@ function druidWildShapeKnownFormsReplacingRidingHorse(
   ridingHorse: StatBlockRecord,
 ): readonly StatBlockRecord[] {
   return [
-    statBlockCatalog.requireStatBlock(ratId),
+    assertStatBlockForTest(statBlockCatalog, ratId),
     ridingHorse,
-    statBlockCatalog.requireStatBlock(lizardId),
-    statBlockCatalog.requireStatBlock(catId),
+    assertStatBlockForTest(statBlockCatalog, lizardId),
+    assertStatBlockForTest(statBlockCatalog, catId),
   ];
 }
 
 function syntheticCoordinatedShape(): StatBlockRecord {
-  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   return {
     ...baseForm,
     id: parseSharedStatBlockId(syntheticCoordinatedShapeId),
     name: "Synthetic Coordinated Shape",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-coordinated-shape",
+    },
     statBlock: {
       ...baseForm.statBlock,
-      displayName: "Synthetic Coordinated Shape",
       traits: [
         {
           name: "Coordinated Strike",
@@ -4057,11 +4428,16 @@ function syntheticCoordinatedShape(): StatBlockRecord {
 function statBlockAttackSubject(
   state: BattleState,
   attackName: string,
+  context?: BattleRuntimeContext,
 ): Extract<
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
-  const procedureRef = wildShapeStatBlockAttackProcedureRef(state, attackName);
+  const procedureRef = wildShapeStatBlockAttackProcedureRef(
+    state,
+    attackName,
+    context,
+  );
   const subject = discoverBattleActCandidates(state).find((act) =>
     isAttackActForProcedure(act, procedureRef),
   )?.subject;
@@ -4098,11 +4474,37 @@ function isAttackActForProcedure(
 function wildShapeStatBlockAttackProcedureRef(
   state: BattleState,
   attackName: string,
+  context?: BattleRuntimeContext,
 ): AttackProcedureRef | null {
   const active = activeDruidWildShape(requireCharacter(state, druidId));
   if (active === null) return null;
+  if (context !== undefined) {
+    const presentations = statBlockProcedurePresentationsForActor(
+      state,
+      context,
+      druidId,
+    );
+    if (presentations === null) return null;
+    if (Result.isFailure(presentations)) return null;
+    return (
+      presentations.success.find(
+        (presentation) =>
+          presentation.kind === "attack" && presentation.name === attackName,
+      )?.procedureRef ?? null
+    );
+  }
+  const presentation = Result.getOrThrow(
+    projectAuthoredStatBlock(
+      assertStatBlockForTest(statBlockCatalog, active.admission.statBlock.id),
+    ),
+  ).presentation;
   return (
-    statBlockProcedurePresentations(active.admission).find(
+    Result.getOrThrow(
+      statBlockProcedurePresentations({
+        execution: active.admission.execution,
+        presentation,
+      }),
+    ).find(
       (presentation) =>
         presentation.kind === "attack" && presentation.name === attackName,
     )?.procedureRef ?? null

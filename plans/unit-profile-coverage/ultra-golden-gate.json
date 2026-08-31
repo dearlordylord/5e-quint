@@ -67,8 +67,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 96,
-              "numerator": 96,
+              "denominator": 100,
+              "numerator": 100,
               "percent": "100%"
             }
           },
@@ -447,8 +447,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 117,
-              "numerator": 117,
+              "denominator": 121,
+              "numerator": 121,
               "percent": "100%"
             }
           },
@@ -830,8 +830,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 200,
-              "numerator": 200,
+              "denominator": 204,
+              "numerator": 204,
               "percent": "100%"
             }
           },
@@ -1074,8 +1074,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 213,
-              "numerator": 213,
+              "denominator": 217,
+              "numerator": 217,
               "percent": "100%"
             }
           },
@@ -1318,8 +1318,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 265,
-              "numerator": 265,
+              "denominator": 269,
+              "numerator": 269,
               "percent": "100%"
             }
           },
@@ -1330,12 +1330,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
@@ -1347,13 +1347,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 80,
+              "focused-mbt": 81,
               "runtime-test": 30
             }
           },
@@ -1503,6 +1503,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
@@ -1565,8 +1566,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 266,
-              "numerator": 266,
+              "denominator": 270,
+              "numerator": 270,
               "percent": "100%"
             }
           },
@@ -1577,12 +1578,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
@@ -1594,13 +1595,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 80,
+              "focused-mbt": 81,
               "runtime-test": 30
             }
           },
@@ -1750,6 +1751,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
@@ -1812,8 +1814,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 287,
-              "numerator": 287,
+              "denominator": 295,
+              "numerator": 295,
               "percent": "100%"
             }
           },
@@ -1824,12 +1826,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
@@ -1841,13 +1843,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 80,
+              "focused-mbt": 81,
               "runtime-test": 30
             }
           },
@@ -1997,6 +1999,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
@@ -2059,8 +2062,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 288,
-              "numerator": 288,
+              "denominator": 296,
+              "numerator": 296,
               "percent": "100%"
             }
           },
@@ -2071,12 +2074,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
@@ -2088,13 +2091,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 80,
+              "focused-mbt": 81,
               "runtime-test": 30
             }
           },
@@ -2244,6 +2247,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
@@ -2306,8 +2310,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 334,
-              "numerator": 334,
+              "denominator": 342,
+              "numerator": 342,
               "percent": "100%"
             }
           },
@@ -2318,12 +2322,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
@@ -2335,13 +2339,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 80,
+              "focused-mbt": 81,
               "runtime-test": 30
             }
           },
@@ -2479,6 +2483,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
@@ -2541,8 +2546,8 @@
               "percent": "100%"
             },
             "strictTargetClosure": {
-              "denominator": 346,
-              "numerator": 346,
+              "denominator": 354,
+              "numerator": 354,
               "percent": "100%"
             }
           },
@@ -2553,12 +2558,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 66,
-              "numerator": 66
+              "denominator": 67,
+              "numerator": 67
             },
             "qntCoveredObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             }
           },
           "generatorBlockingRows": [],
@@ -2570,13 +2575,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 77,
-              "numerator": 77
+              "denominator": 78,
+              "numerator": 78
             },
             "witnessKinds": {
               "contract-test": 5,
               "deterministic-qnt-replay": 12,
-              "focused-mbt": 80,
+              "focused-mbt": 81,
               "runtime-test": 30
             }
           },
@@ -2714,6 +2719,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
         "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",

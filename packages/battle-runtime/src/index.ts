@@ -116,6 +116,7 @@ export {
 } from "./character-execution-admission.ts";
 
 export type {
+  BattleStatBlockExecutionSource,
   StatBlockExecutionAdmission,
   StatBlockExecutionRestoreIssue,
   StatBlockExecutionRestoration,
@@ -131,6 +132,12 @@ export {
   restoreStatBlockExecutionAdmissions,
   statBlockExecutionSnapshot,
 } from "./stat-block-execution.ts";
+
+export {
+  projectAuthoredStatBlock,
+  type AuthoredStatBlockProjection,
+  type BattleStatBlockProjectionFailure,
+} from "./stat-block-authored-projection.ts";
 
 export type {
   CharacterZeroHpLifecycleInit,
@@ -175,8 +182,11 @@ export {
   battleSelectedSpellInvocationForProcedure,
   battleSubjectPresentation,
   discoverBattleActs,
+  discoverBattleActsWithStatBlockProjectionIssues,
   presentBattleActs,
 } from "./battle-act-composition.ts";
+
+export type { BattleStatBlockActDiscovery } from "./battle-act-composition.ts";
 
 export {
   BattlePresentedCheckpointFrontierEnvelopeSchema,
@@ -329,6 +339,7 @@ export type { PactOfTheChainFamiliarAttackSubject } from "./companion-reaction-a
 
 export {
   battleCreaturePresentationDisplayName,
+  statBlockProjectionIssuesForActor,
   statBlockProcedurePresentations,
 } from "./stat-block-presentation.ts";
 
@@ -394,17 +405,25 @@ export type {
   CharacterWeaponAttackActionOption,
   CharacterWeaponAttackDamageTypeChoices,
   StatBlockAttackActionOption,
-  StatBlockDamageNotation,
   SupportedAttackActionOption,
   UnarmedStrikeDamageEffect,
   UnarmedStrikeDamageProfile,
 } from "./battle-action-options.ts";
 
 export type {
+  StatBlockAttackDamageComponentRef,
+  StatBlockAttackDamageSelection,
+  StatBlockDamageComponentNotation,
+} from "./stat-block-attack-damage-selection.ts";
+
+export type {
+  AuthoredStatBlockBattleInitInput,
+  AuthoredStatBlockBattleInitIssue,
   BattleDruidWildShapeKnownForm,
   BattleDruidWildShapeKnownFormIssue,
+  BattleDruidWildShapeKnownFormsIssue,
   BattleCreatureInit,
-  BattleStatBlockCreatureInitResult,
+  CharacterBattleCombatantInit,
   BattlePositiveHpUnconscious,
   BattleUnitRef,
   BattleWalkSpeed,
@@ -415,11 +434,30 @@ export type {
   CharacterBattleLoadoutRef,
   CharacterBattleWeaponMasterySelection,
   StatBlockBattleCreatureInit,
-  StatBlockBattleInitInput,
+  StatBlockBattleCombatantInit,
+  StatBlockBattleInitIssue,
   StatBlockInitialCondition,
 } from "./battle-init.ts";
 
+export type {
+  StatBlockActionProjectionSection,
+  StatBlockAuthoredProcedurePresentationKind,
+  StatBlockExecutableProcedureKind,
+  StatBlockProcedurePresentationJoinIssue,
+  StatBlockProcedurePresentationKind,
+} from "./stat-block-presentation-contract.ts";
+
+export type {
+  StatBlockActionProjectionShape,
+  StatBlockProjectionIssue,
+  StatBlockSpellcastingActionCost,
+} from "./stat-block-execution-state.ts";
+
+export { statBlockSpellcastingActionCost } from "./stat-block-execution-state.ts";
+
 export {
+  authoredStatBlockBattleInitIssueMessage,
+  wildShapeKnownFormsIssueMessage,
   KNOCKED_OUT_UNCONSCIOUS,
   STAT_BLOCK_INITIAL_CONDITIONS,
   battleAvailableDruidWildShapeKnownForms,

@@ -4,7 +4,6 @@ import {
   battleActSpellPresentation,
   battleActUnitPresentation,
 } from "./battle-act-composition.ts";
-// RAW-COVERAGE: runtime-owner RAW-SRD521-PALADIN-ABJURE-FOES-001
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-06-PALADIN-ABJURE-FOES paladin_abjure_foes
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.magic-action-save-gated-condition
 import { describe, expect, test } from "vitest";

@@ -140,6 +140,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       ),
     )
     .pipe(
+      byBattleFillKind(
+        "slowSomaticSpellFailureOutcome",
+        () => "slowSomaticSpellFailureOutcome" as const,
+      ),
       byBattleFillKind("shoveOutcome", () => "shoveOutcome" as const),
       byBattleFillKind("skillChoice", () => "skillChoice" as const),
       byBattleFillKind("spellAreaChoice", () => "spellAreaChoice" as const),

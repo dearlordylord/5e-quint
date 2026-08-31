@@ -33,7 +33,6 @@ export function spellGrantedActionResourceTurnResources(
     .reduce((nextResources, effect) => {
       const granted = grantSpellEffectActionResource(
         nextResources,
-        effect.sourceCombatantId,
         spellActiveEffectExecutionRef(effect),
         effect.restriction,
       );
@@ -105,7 +104,6 @@ function spellEffectActionResourceMatchesEffect(
 ): boolean {
   return (
     resource.source === "spellEffect" &&
-    resource.sourceOwnerId === effect.sourceCombatantId &&
     resource.sourceEffectRef === spellActiveEffectExecutionRef(effect)
   );
 }

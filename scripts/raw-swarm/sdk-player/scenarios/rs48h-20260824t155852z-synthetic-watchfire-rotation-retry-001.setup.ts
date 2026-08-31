@@ -111,13 +111,13 @@ export const setupScenario: ScenarioSetup = (context) => {
     const missingStatBlockIds: (typeof combatantInputs)[number]["statBlockId"][] =
       [];
     for (const input of combatantInputs) {
-      const statBlock = context.statBlockCatalog.getStatBlock(
-        input.statBlockId,
+      const statBlock = context.statBlocks.find(
+        ({ id }) => id === input.statBlockId,
       );
-      if (statBlock._tag === "None") {
+      if (statBlock === undefined) {
         missingStatBlockIds.push(input.statBlockId);
       } else {
-        statBlocks.push({ input, statBlock: statBlock.value });
+        statBlocks.push({ input, statBlock });
       }
     }
     return missingStatBlockIds.length > 0
@@ -147,7 +147,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       ammunitionStocks: input.ammunitionStocks,
       conditions: [],
     });
-    if (context.sdk.isLeft(initialized)) {
+    if (context.sdk.isFailure(initialized)) {
       return {
         kind: "obstructed",
         obstruction: context.sdk.battleStateInitIssueMessage(
@@ -166,7 +166,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     battleId: context.sdk.battleId(SCENARIO_ID),
     combatants,
   });
-  if (context.sdk.isLeft(battle)) {
+  if (context.sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
       obstruction: context.sdk.battleStateInitIssueMessage(battle.failure),
@@ -202,7 +202,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights,
@@ -226,7 +226,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ],
     objects: [],
   });
-  if (context.sdk.isLeft(session)) {
+  if (context.sdk.isFailure(session)) {
     return {
       kind: "obstructed",
       obstruction: context.sdk.scenarioSessionIssueMessage(session.failure),

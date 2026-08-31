@@ -9,6 +9,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
@@ -19,6 +20,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-values";
+import type { HasteActionResourceRestriction } from "@dnd/shared-algebras/action-economy-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
@@ -34,7 +36,6 @@ import type {
 import type { GlyphStoredSpellRelease } from "../procedure-execution/glyph-stored-spell.ts";
 import type {
   Ability,
-  ActionRestriction,
   CreatureSense,
   DamageType,
   DcSource,
@@ -640,6 +641,17 @@ export type BattleActiveEffect = (
       > & { readonly durationTicks: ElapsedTimeTicks };
     })
   | (BattleSpellEffectBase & {
+      readonly kind: "slowActivePenalties";
+      readonly save: {
+        readonly ability: Extract<Ability, "wis">;
+        readonly dc: DcSource;
+      };
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    })
+  | (BattleSpellEffectBase & {
       readonly kind: "persistentAreaSaveCondition";
       readonly areaId: BattleAreaId;
       readonly heightenedSpellTargetDisadvantage: AreaSpellEffectHeightenedRepeatSaveRider;
@@ -851,7 +863,7 @@ export type BattleActiveEffect = (
   | (BattleSpellEffectBase &
       BattleReplayAddressableEffect & {
         readonly kind: "spellGrantedActionResource";
-        readonly restriction: ActionRestriction;
+        readonly restriction: HasteActionResourceRestriction;
         readonly expiresAt: BattleActiveEffectExpiration;
       })
   | (BattleSpellEffectBase &
@@ -1082,6 +1094,7 @@ export const BATTLE_ACTIVE_EFFECT_KINDS = [
   "stagedSaveConditionApplied",
   "persistentAreaSaveComposite",
   "saveGatedTurnConstraintBundle",
+  "slowActivePenalties",
   "sourceDamageRollPenalty",
   "specialSpeedGrant",
   "speedDelta",

@@ -15,6 +15,7 @@ import {
   attackTargetFill,
   battleId,
   battleRuntimeContextForStateForTest,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   characterSeed,
   damageRollFill,
   discoverBattleActs,
@@ -24,6 +25,7 @@ import {
   goblinId,
   monsterAttackSubject,
   monsterResourceStatBlock,
+  monsterResourceStatBlockWithSharedResource,
   requireHole,
   requireResolved,
   resolveBattleSubject,
@@ -89,7 +91,12 @@ function resolveStatBlockAttack(
     subject,
     fills: [target, attackRoll],
   });
-  if (subject.statBlockDamageNotation === "static") {
+  if (
+    battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+      subject,
+      "static",
+    )
+  ) {
     return requireResolved(beforeDamage).state;
   }
   const damageHole = requireHole(beforeDamage, "rolledDice");
@@ -155,7 +162,6 @@ describe("GH227 Stat Block execution coverage", () => {
         challengeRating: band.challengeRating,
         statBlock: {
           ...base.statBlock,
-          displayName,
           abilityScores: {
             ...base.statBlock.abilityScores,
             str: strengthScore,
@@ -239,6 +245,51 @@ describe("GH227 Stat Block execution coverage", () => {
     expect(
       resolveBattleSubject({ state: spent, subject, fills: [] }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
+  test("reuses a shared resource pool across procedure bindings", () => {
+    const admission = statBlockCreatureInit({
+      initiative: 10,
+      statBlock: monsterResourceStatBlockWithSharedResource(),
+    });
+    const battle = startBattleRight({
+      battleId: battleId("battle-gh227-shared-resource-pool"),
+      combatants: [characterSeed({ initiative: 20 }), admission],
+    });
+    const goblin = battle.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected the admitted shared-resource Stat Block.");
+    }
+    const attackBindings = goblin.origin.execution.procedureBindings.filter(
+      (binding) =>
+        binding.procedure.kind === "attack" &&
+        binding.procedure.section === "actions",
+    );
+    const cinderBinding = attackBindings.find(
+      (binding) =>
+        binding.procedure.kind === "attack" &&
+        binding.procedure.procedureOrdinal === 1,
+    );
+    const dreadBinding = attackBindings.find(
+      (binding) =>
+        binding.procedure.kind === "attack" &&
+        binding.procedure.procedureOrdinal === 2,
+    );
+    if (cinderBinding === undefined || dreadBinding === undefined) {
+      throw new Error("Expected both shared-resource attack bindings.");
+    }
+    expect(cinderBinding.resourcePoolRefs).toEqual(
+      dreadBinding.resourcePoolRefs,
+    );
+    const sharedPoolRef = cinderBinding.resourcePoolRefs[0];
+    if (sharedPoolRef === undefined) {
+      throw new Error("Expected the shared resource pool reference.");
+    }
+    expect(
+      goblin.origin.execution.resourcePools.filter(
+        (pool) => pool.resourcePoolRef === sharedPoolRef,
+      ),
+    ).toHaveLength(1);
   });
 
   test("resolves a Legendary Action attack in the post-turn window", () => {

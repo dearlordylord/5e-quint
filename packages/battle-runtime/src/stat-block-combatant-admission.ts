@@ -1,11 +1,12 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
-import type { Condition } from "@dnd/shared/game-facts";
-import { Hp, type Size } from "@dnd/shared/types";
-import type { StatBlockMechanics } from "@dnd/surface/surface/types";
+import type { Condition, SurfaceCondition } from "@dnd/shared/game-facts";
+import { Hp, PositiveInteger } from "@dnd/shared/types";
 import { Brand, Result } from "effect";
 
+import { optionalProperty } from "./optional-property.ts";
 import type {
   BattleInitializationIssueFacts,
+  BattleStateInitLeafIssue,
   BattleStatBlockInitializationIssue,
 } from "./battle-state-execution.ts";
 import {
@@ -14,7 +15,14 @@ import {
   type CombatantId,
 } from "./identity.ts";
 import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
-import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
+import {
+  parseStatBlockLegendaryActionUses,
+  admitStatBlockResourceGraph,
+  type BattleStatBlockCombatantFacts,
+  type BattleStatBlockExecutionSource,
+  type BattleStatBlockExecutionSourceInput,
+  type BattleStatBlockRuntimeResource,
+} from "./stat-block-execution-state.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
 
@@ -24,29 +32,40 @@ const AdmittedBattleStatBlockCombatant =
 export type BattleStatBlockCombatantSource = {
   readonly id: BattleStatBlockExecutionSource["id"];
   readonly challengeRating: BattleStatBlockExecutionSource["challengeRating"];
-  readonly statBlock: Omit<StatBlockMechanics, "ac" | "hp" | "size"> & {
-    readonly ac: Extract<
-      StatBlockMechanics["ac"],
-      { readonly kind: "literal" }
-    >;
-    readonly hp: Extract<
-      StatBlockMechanics["hp"],
-      { readonly kind: "literal" }
-    >;
-    readonly size: Size;
-  };
+  readonly statBlock: BattleStatBlockCombatantFacts;
+  readonly procedures: BattleStatBlockExecutionSource["procedures"];
+  readonly resources: readonly BattleStatBlockRuntimeResource[];
+  readonly legendaryActionUses?: NonNullable<
+    BattleStatBlockExecutionSource["legendaryActionUses"]
+  >;
 } & Brand.Brand<"BattleStatBlockCombatantSource">;
 
 const BattleStatBlockCombatantSource =
   Brand.nominal<BattleStatBlockCombatantSource>();
+
+type StatBlockCombatantAdmissionIssue = Extract<
+  BattleStateInitLeafIssue,
+  | { readonly tag: "battleStateInitIssue" }
+  | { readonly tag: "statBlockResourceGraphIssue" }
+>;
+
+export type StatBlockResourceGraphCombatantAdmissionIssue = Extract<
+  StatBlockCombatantAdmissionIssue,
+  { readonly tag: "statBlockResourceGraphIssue" }
+>;
 
 export function statBlockInitialConditionImmunityIssue(
   source: BattleStatBlockCombatantSource,
   conditions: readonly Condition[],
   combatantId: CombatantId,
 ): BattleStatBlockInitializationIssue | null {
+  const authoredImmunities = source.statBlock.immunities;
+  const fixedConditionImmunities: readonly SurfaceCondition[] =
+    authoredImmunities !== undefined && "conditions" in authoredImmunities
+      ? authoredImmunities.conditions
+      : [];
   const immuneInitialCondition = conditions.find((condition) =>
-    source.statBlock.immunities?.conditions?.includes(condition),
+    fixedConditionImmunities.includes(condition),
   );
   return immuneInitialCondition === undefined
     ? null
@@ -66,7 +85,7 @@ export function admitBattleStatBlockCombatant(input: {
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
 }): Result.Result<
   AdmittedBattleStatBlockCombatant,
-  BattleStatBlockInitializationIssue
+  StatBlockCombatantAdmissionIssue
 > {
   const source = battleStatBlockCombatantSource(input.statBlock);
   if (Result.isFailure(source)) return Result.fail(source.failure);
@@ -85,9 +104,16 @@ export function admitBattleStatBlockCombatantSource(input: {
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
 }): Result.Result<
   AdmittedBattleStatBlockCombatant,
-  BattleStatBlockInitializationIssue
+  StatBlockCombatantAdmissionIssue
 > {
-  const statBlock = input.source;
+  const resourceGraph = admitStatBlockResourceGraph(input.source);
+  if (Result.isFailure(resourceGraph)) {
+    return Result.fail({
+      tag: "statBlockResourceGraphIssue",
+      issues: resourceGraph.failure,
+    });
+  }
+  const statBlock = resourceGraph.success;
   if (typeof statBlock.statBlock.creatureType !== "string") {
     return issue("Battle runtime requires a concrete creature type.", {
       kind: "statBlockCombatantInvalid",
@@ -120,21 +146,10 @@ export function admitBattleStatBlockCombatantSource(input: {
       combatantId: input.combatantId,
       origin: {
         statBlockId: statBlock.id,
-        mechanics: {
-          creatureType: statBlock.statBlock.creatureType,
-          speeds: statBlock.statBlock.speeds,
-          abilityScores: statBlock.statBlock.abilityScores,
-          savingThrowModifiers: statBlock.statBlock.savingThrowModifiers ?? [],
-          skillModifiers: statBlock.statBlock.skillModifiers ?? [],
-          vulnerabilities:
-            statBlock.statBlock.vulnerabilities?.damageTypes ?? [],
-          resistances: statBlock.statBlock.resistances?.damageTypes ?? [],
-          immunities: {
-            damageTypes: statBlock.statBlock.immunities?.damageTypes ?? [],
-            conditions: statBlock.statBlock.immunities?.conditions ?? [],
-          },
-          specialSenses: statBlock.statBlock.senses ?? [],
-        },
+        mechanics: statBlockCombatantMechanics(
+          statBlock.statBlock,
+          statBlock.statBlock.resistances?.damageTypes ?? [],
+        ),
         execution: allocation.execution,
       },
       initialization: {
@@ -150,11 +165,47 @@ export function admitBattleStatBlockCombatantSource(input: {
   );
 }
 
+function statBlockCombatantMechanics(
+  statBlock: BattleStatBlockCombatantFacts,
+  resistances: AdmittedBattleStatBlockCombatant["origin"]["mechanics"]["resistances"],
+): AdmittedBattleStatBlockCombatant["origin"]["mechanics"] {
+  return {
+    creatureType: statBlock.creatureType,
+    speeds: statBlock.speeds,
+    abilityScores: statBlock.abilityScores,
+    savingThrowModifiers: statBlock.savingThrowModifiers ?? [],
+    skillModifiers: statBlock.skillModifiers ?? [],
+    vulnerabilities: statBlock.vulnerabilities?.damageTypes ?? [],
+    resistances,
+    immunities: statBlockFixedImmunities(statBlock),
+    specialSenses: statBlock.senses ?? [],
+    initiativeModifier: statBlock.initiativeModifier,
+    initiativeScore: statBlock.initiativeScore,
+    passivePerception: statBlock.passivePerception,
+  };
+}
+
+function statBlockFixedImmunities(
+  statBlock: BattleStatBlockCombatantFacts,
+): AdmittedBattleStatBlockCombatant["origin"]["mechanics"]["immunities"] {
+  return {
+    damageTypes:
+      statBlock.immunities !== undefined &&
+      "damageTypes" in statBlock.immunities
+        ? statBlock.immunities.damageTypes
+        : [],
+    conditions:
+      statBlock.immunities !== undefined && "conditions" in statBlock.immunities
+        ? statBlock.immunities.conditions
+        : [],
+  };
+}
+
 export function battleStatBlockCombatantSource(
-  statBlock: BattleStatBlockExecutionSource,
+  statBlock: BattleStatBlockExecutionSourceInput,
 ): Result.Result<
   BattleStatBlockCombatantSource,
-  BattleStatBlockInitializationIssue
+  StatBlockCombatantAdmissionIssue
 > {
   if (statBlock.statBlock.ac.kind !== "literal") {
     return issue("Battle runtime requires literal Stat Block Armor Class.", {
@@ -170,10 +221,8 @@ export function battleStatBlockCombatantSource(
       constraint: "literalMaximumHitPointsRequired",
     });
   }
-  if (
-    !Number.isInteger(statBlock.statBlock.hp.value) ||
-    statBlock.statBlock.hp.value < 1
-  ) {
+  const hp = PositiveInteger.result(statBlock.statBlock.hp.value);
+  if (Result.isFailure(hp)) {
     return issue(
       "Battle runtime requires Stat Block maximum HP to be a positive integer.",
       {
@@ -190,13 +239,34 @@ export function battleStatBlockCombatantSource(
       constraint: "concreteSizeRequired",
     });
   }
+  const legendaryActionUses = parseStatBlockLegendaryActionUses(
+    statBlock.legendaryActionUses,
+  );
+  if (Result.isFailure(legendaryActionUses)) {
+    return issue(
+      "Battle runtime requires Stat Block Legendary Action uses to be a positive integer.",
+    );
+  }
+  const resourceGraph = admitStatBlockResourceGraph(statBlock);
+  if (Result.isFailure(resourceGraph)) {
+    return Result.fail({
+      tag: "statBlockResourceGraphIssue",
+      issues: resourceGraph.failure,
+    } satisfies StatBlockResourceGraphCombatantAdmissionIssue);
+  }
+  const {
+    legendaryActionUses: _unbrandedLegendaryActionUses,
+    ...sourceWithoutLegendaryActionUses
+  } = statBlock;
   return Result.succeed(
     BattleStatBlockCombatantSource({
-      ...statBlock,
+      ...sourceWithoutLegendaryActionUses,
+      ...optionalProperty("legendaryActionUses", legendaryActionUses.success),
+      resources: resourceGraph.success.resources,
       statBlock: {
         ...statBlock.statBlock,
         ac: statBlock.statBlock.ac,
-        hp: statBlock.statBlock.hp,
+        hp: { kind: "literal", value: hp.success },
         size: statBlock.statBlock.size,
       },
     }),
@@ -205,11 +275,13 @@ export function battleStatBlockCombatantSource(
 
 function issue(
   message: string,
-  facts: BattleInitializationIssueFacts,
-): Result.Result<never, BattleStatBlockInitializationIssue> {
-  return Result.fail({
-    tag: "battleStateInitIssue",
-    message,
-    ...facts,
-  });
+  facts?: BattleInitializationIssueFacts,
+): Result.Result<never, StatBlockCombatantAdmissionIssue> {
+  return facts === undefined
+    ? Result.fail({ tag: "battleStateInitIssue", message })
+    : Result.fail({
+        tag: "battleStateInitIssue",
+        message,
+        ...facts,
+      });
 }

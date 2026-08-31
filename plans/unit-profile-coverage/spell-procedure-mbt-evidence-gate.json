@@ -109,7 +109,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -259,23 +259,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -515,7 +515,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -566,7 +566,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -645,7 +645,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -795,23 +795,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -1040,7 +1040,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -1190,23 +1190,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -1462,23 +1462,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -1695,7 +1695,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
@@ -1719,7 +1719,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
@@ -1790,15 +1790,15 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -1916,7 +1916,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -2117,23 +2117,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -2503,7 +2503,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
@@ -2527,7 +2527,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
@@ -2830,23 +2830,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -2901,7 +2901,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -2980,7 +2980,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -3173,7 +3173,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -3224,7 +3224,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -3303,7 +3303,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -3453,23 +3453,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -3737,7 +3737,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -3993,7 +3993,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
@@ -4017,7 +4017,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
@@ -4175,7 +4175,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -4353,7 +4353,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -4503,23 +4503,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -4759,7 +4759,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-jump-movement.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -4968,7 +4968,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -5118,23 +5118,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -5363,7 +5363,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -5513,23 +5513,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -5758,7 +5758,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -5908,23 +5908,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -6153,7 +6153,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -6413,7 +6413,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -6563,23 +6563,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -6808,7 +6808,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -6958,23 +6958,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -7250,7 +7250,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -7400,23 +7400,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -7605,11 +7605,11 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
@@ -7909,7 +7909,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -8059,23 +8059,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -8264,11 +8264,11 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
@@ -8351,7 +8351,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -8564,7 +8564,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -8742,7 +8742,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -8983,7 +8983,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -9133,23 +9133,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -9409,7 +9409,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -9559,23 +9559,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -9815,7 +9815,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -9866,7 +9866,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -9945,7 +9945,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -10095,23 +10095,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -10340,7 +10340,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -10490,23 +10490,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -10762,23 +10762,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -10995,7 +10995,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
@@ -11019,7 +11019,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
@@ -11090,15 +11090,15 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -11216,7 +11216,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -11417,23 +11417,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -11803,7 +11803,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
@@ -11827,7 +11827,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
@@ -12130,23 +12130,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -12201,7 +12201,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-feather-fall.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -12280,7 +12280,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -12473,7 +12473,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -12524,7 +12524,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-thaumaturgy.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -12603,7 +12603,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -12753,23 +12753,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -13037,7 +13037,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -13293,7 +13293,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-prone-movement.qnt",
@@ -13317,7 +13317,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray.qnt",
@@ -13475,7 +13475,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -13653,7 +13653,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -13803,23 +13803,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -14059,7 +14059,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-jump-movement.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -14268,7 +14268,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -14418,23 +14418,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -14663,7 +14663,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -14813,23 +14813,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -15125,7 +15125,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -15275,23 +15275,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -15520,7 +15520,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -15780,7 +15780,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -15930,23 +15930,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -16175,7 +16175,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -16325,23 +16325,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -16617,7 +16617,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -16767,23 +16767,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -16972,11 +16972,11 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
@@ -17276,7 +17276,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -17426,23 +17426,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
@@ -17631,11 +17631,11 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
@@ -17718,7 +17718,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -17931,7 +17931,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -18109,7 +18109,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -18350,7 +18350,7 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -18500,23 +18500,23 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
-              "role": "proof-only"
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",

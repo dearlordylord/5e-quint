@@ -1,6 +1,5 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime.test-support.ts";
-// RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-area-save-damage-replacement
@@ -40,6 +39,7 @@ import {
   battleUnitRefWithSupportProfiles,
   classLevel,
   combatantId,
+  discoverBattleActs,
   discoverBattleActCandidates,
   resolveBattleSubject,
   startBattle,
@@ -193,17 +193,14 @@ defineSelectedIdentityReplayAndQntReplay({
 
 describe("Dragonborn Breath Weapon runtime", () => {
   test("observes copied qRoute through public reducer entrypoints", () => {
-    const resolved = resolvedBreathWeaponPublicRoute(
-      breathWeaponBattle().state,
-      {
-        outcomes: [
-          { targetId: spellTargetId, succeeded: false },
-          { targetId: secondTargetId, succeeded: true },
-        ],
-        areaTargetIds: [spellTargetId, secondTargetId],
-        damageRolls: [6, 4],
-      },
-    );
+    const resolved = resolvedBreathWeaponPublicRoute(breathWeaponBattle(), {
+      outcomes: [
+        { targetId: spellTargetId, succeeded: false },
+        { targetId: secondTargetId, succeeded: true },
+      ],
+      areaTargetIds: [spellTargetId, secondTargetId],
+      damageRolls: [6, 4],
+    });
     expect(resolved).toEqual([
       battleReducerStartRouteEvent(),
       attackActionAreaSaveDamageReplacementDiscoverRoute([
@@ -242,7 +239,7 @@ describe("Dragonborn Breath Weapon runtime", () => {
     ]);
 
     const openedExtraAttack = resolvedBreathWeaponPublicRoute(
-      breathWeaponBattle({ extraAttack: true }).state,
+      breathWeaponBattle({ extraAttack: true }),
       {
         outcomes: [{ targetId: spellTargetId, succeeded: false }],
         areaTargetIds: [spellTargetId],
@@ -309,8 +306,9 @@ describe("Dragonborn Breath Weapon runtime", () => {
       ),
     ]);
 
-    const mismatchedAreaState = breathWeaponBattle().state;
-    const mismatchedAreaAct = breathWeaponAct(mismatchedAreaState);
+    const mismatchedAreaSession = breathWeaponBattle();
+    const mismatchedAreaState = mismatchedAreaSession.state;
+    const mismatchedAreaAct = breathWeaponPublicAct(mismatchedAreaSession);
     const mismatchedArea = resolveBreathWeaponSave(mismatchedAreaState, {
       outcomes: [{ targetId: spellTargetId, succeeded: false }],
       areaTargetIds: [spellTargetId, secondTargetId],
@@ -333,7 +331,7 @@ describe("Dragonborn Breath Weapon runtime", () => {
     ]);
 
     const invalidDamageRoll = invalidDamageRollPublicRoute(
-      breathWeaponBattle().state,
+      breathWeaponBattle(),
       {
         outcomes: [{ targetId: spellTargetId, succeeded: false }],
         areaTargetIds: [spellTargetId],
@@ -381,10 +379,6 @@ describe("Dragonborn Breath Weapon runtime", () => {
       ),
     });
     expect(requireHole(act.initialHoles, "savingThrowOutcome")).toMatchObject({
-      unitFeature: {
-        unitId: speciesDragonbornBreathWeaponUnitId,
-        label: "Breath Weapon",
-      },
       ability: "dex",
       dc: { kind: "fixed", dc: 11 },
       targetIds: expect.arrayContaining([spellTargetId, secondTargetId]),
@@ -405,7 +399,7 @@ describe("Dragonborn Breath Weapon runtime", () => {
       holes: [
         expect.objectContaining({
           kind: "rolledDice",
-          label: "Breath Weapon damage (2d10)",
+          label: "Area damage replacement (2d10)",
         }),
       ],
     });
@@ -442,7 +436,8 @@ describe("Dragonborn Breath Weapon runtime", () => {
   });
 
   test("opens the remaining Extra Attack slot after replacing the first attack", () => {
-    const state = breathWeaponBattle({ extraAttack: true }).state;
+    const session = breathWeaponBattle({ extraAttack: true });
+    const state = session.state;
     const resolved = recordResolvedState(
       resolveBreathWeapon(state, {
         outcomes: [{ targetId: spellTargetId, succeeded: false }],
@@ -454,7 +449,12 @@ describe("Dragonborn Breath Weapon runtime", () => {
     expect(resolved.currentTurnResources.actionResources).toEqual([
       expect.objectContaining({
         source: "classFeatureExtraAttack",
-        sourceUnitId: fighterExtraAttackUnitId,
+        sourceOwnerId: spellCasterId,
+        sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+          session,
+          spellCasterId,
+          fighterExtraAttackUnitId,
+        ),
       }),
     ]);
   });
@@ -470,7 +470,7 @@ describe("Dragonborn Breath Weapon runtime", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Breath Weapon Saving Throw outcomes must cover every table-supplied area affected target.",
+        "Area damage replacement Saving Throw outcomes must cover every table-supplied affected target.",
     });
   });
 });
@@ -562,6 +562,18 @@ function breathWeaponAct(state: BattleState) {
   return act;
 }
 
+function breathWeaponPublicAct(session: BattleRuntimeSession) {
+  const act = discoverBattleActs(session).find(
+    (candidate) =>
+      candidate.subject.tag === "unitFeature" &&
+      candidate.subject.actorId === spellCasterId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected presented Breath Weapon act.");
+  }
+  return act;
+}
+
 function breathWeaponSubject(state: BattleState) {
   return breathWeaponAct(state).subject;
 }
@@ -615,7 +627,7 @@ function resolveBreathWeapon(
 }
 
 function resolvedBreathWeaponPublicRoute(
-  state: BattleState,
+  session: BattleRuntimeSession,
   input: {
     readonly outcomes: readonly {
       readonly targetId: CombatantId;
@@ -625,7 +637,8 @@ function resolvedBreathWeaponPublicRoute(
     readonly damageRolls: readonly number[];
   },
 ): readonly BattleReducerRouteEvent[] {
-  const act = breathWeaponAct(state);
+  const state = session.state;
+  const act = breathWeaponPublicAct(session);
   const save = requireHole(act.initialHoles, "savingThrowOutcome");
   const savingThrowFill = breathWeaponSavingThrowFill(
     save,
@@ -634,7 +647,7 @@ function resolvedBreathWeaponPublicRoute(
   );
   const pendingDamage = resolveBattleSubject({
     state,
-    subject: breathWeaponSubject(state),
+    subject: act.subject,
     fills: [savingThrowFill],
   });
   if (pendingDamage.tag !== "needsHoles") {
@@ -643,7 +656,7 @@ function resolvedBreathWeaponPublicRoute(
   const damage = requireHole(pendingDamage.holes, "rolledDice");
   const resolved = resolveBattleSubject({
     state,
-    subject: breathWeaponSubject(state),
+    subject: act.subject,
     fills: [savingThrowFill, rolledDiceFill(damage, input.damageRolls)],
   });
   recordResolvedState(resolved);
@@ -656,7 +669,7 @@ function resolvedBreathWeaponPublicRoute(
 }
 
 function invalidDamageRollPublicRoute(
-  state: BattleState,
+  session: BattleRuntimeSession,
   input: {
     readonly outcomes: readonly {
       readonly targetId: CombatantId;
@@ -666,7 +679,8 @@ function invalidDamageRollPublicRoute(
     readonly damageRolls: readonly number[];
   },
 ): readonly BattleReducerRouteEvent[] {
-  const act = breathWeaponAct(state);
+  const state = session.state;
+  const act = breathWeaponPublicAct(session);
   const save = requireHole(act.initialHoles, "savingThrowOutcome");
   const savingThrowFill = breathWeaponSavingThrowFill(
     save,
@@ -675,7 +689,7 @@ function invalidDamageRollPublicRoute(
   );
   const pendingDamage = resolveBattleSubject({
     state,
-    subject: breathWeaponSubject(state),
+    subject: act.subject,
     fills: [savingThrowFill],
   });
   if (pendingDamage.tag !== "needsHoles") {
@@ -684,7 +698,7 @@ function invalidDamageRollPublicRoute(
   const damage = requireHole(pendingDamage.holes, "rolledDice");
   const invalid = resolveBattleSubject({
     state,
-    subject: breathWeaponSubject(state),
+    subject: act.subject,
     fills: [savingThrowFill, rolledDiceFill(damage, input.damageRolls)],
   });
   recordInvalidResult(invalid);

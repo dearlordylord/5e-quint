@@ -32,7 +32,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     ammunitionStocks: [arrowStock()],
     conditions: [],
   });
-  if (sdk.isLeft(meleeGoblinWarrior)) {
+  if (sdk.isFailure(meleeGoblinWarrior)) {
     return {
       kind: "obstructed",
       obstruction: `The public battle initializer rejected the melee Goblin Warrior: ${sdk.battleStateInitIssueMessage(meleeGoblinWarrior.failure)}`,
@@ -50,7 +50,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     ammunitionStocks: [arrowStock()],
     conditions: [],
   });
-  if (sdk.isLeft(rangedGoblinWarrior)) {
+  if (sdk.isFailure(rangedGoblinWarrior)) {
     return {
       kind: "obstructed",
       obstruction: `The public battle initializer rejected the ranged Goblin Warrior: ${sdk.battleStateInitIssueMessage(rangedGoblinWarrior.failure)}`,
@@ -68,7 +68,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     ammunitionStocks: [],
     conditions: ["prone"],
   });
-  if (sdk.isLeft(wolfCreature)) {
+  if (sdk.isFailure(wolfCreature)) {
     return {
       kind: "obstructed",
       obstruction: `The public battle initializer rejected the Wolf's initial Prone condition: ${sdk.battleStateInitIssueMessage(wolfCreature.failure)}`,
@@ -88,7 +88,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
       wolfCreature.success,
     ],
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
       obstruction: `The public battle initializer could not start the required encounter: ${sdk.battleStateInitIssueMessage(battle.failure)}`,
@@ -131,7 +131,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],
@@ -148,7 +148,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     ],
     objects: [],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
       obstruction: `The public scenario-session surface rejected the required battlefield: ${sdk.scenarioSessionIssueMessage(session.failure)}`,
@@ -197,7 +197,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
         rangedGoblinWarrior: [],
         wolf: ["prone"],
       },
-      statBlockDamageNotation: "rolled",
+      statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     },
   };
 };

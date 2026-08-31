@@ -4,8 +4,6 @@ import type {
   CharacterWeaponAttackAbilityChoice,
   CharacterWeaponAttackActionOption,
   SupportedAttackActionOption,
-  SupportedCreatureAttackRollMechanics,
-  SupportedStaticDamageCreatureAttackRollMechanics,
 } from "./battle-action-options.ts";
 import type { MechanicalSupportedAttackActionOption } from "./battle-reducer/codec-building-blocks.ts";
 import type {
@@ -13,8 +11,6 @@ import type {
   CharacterWeaponAttackExecutionWeaponFacts,
 } from "./character-weapon-execution-schema.ts";
 import { optionalProperty } from "./optional-property.ts";
-
-type MechanicalStatBlockDamageNotation = "rolled" | "static";
 
 type MechanicalWeaponAttackActionOption = Extract<
   MechanicalSupportedAttackActionOption,
@@ -30,30 +26,6 @@ type MechanicalStatBlockAttackActionOption = Extract<
   MechanicalSupportedAttackActionOption,
   { readonly kind: "statBlockAttack" }
 >;
-type MechanicalRolledStatBlockAttackActionOption = Extract<
-  MechanicalStatBlockAttackActionOption,
-  { readonly damageNotation: "rolled" }
->;
-type MechanicalStaticStatBlockAttackActionOption = Extract<
-  MechanicalStatBlockAttackActionOption,
-  { readonly damageNotation: "static" }
->;
-type MechanicalRolledStatBlockAttackRollMechanics =
-  MechanicalRolledStatBlockAttackActionOption["attack"];
-type MechanicalStaticStatBlockAttackRollMechanics =
-  MechanicalStaticStatBlockAttackActionOption["attack"];
-type MechanicalRolledStatBlockAttackEffect =
-  MechanicalRolledStatBlockAttackRollMechanics["onHit"][number];
-type MechanicalStaticStatBlockAttackEffect =
-  MechanicalStaticStatBlockAttackRollMechanics["onHit"][number];
-type MechanicalRolledStatBlockDamageAmount = Extract<
-  MechanicalRolledStatBlockAttackEffect,
-  { readonly kind: "damage" }
->["amount"];
-type MechanicalStaticStatBlockDamageAmount = Extract<
-  MechanicalStaticStatBlockAttackEffect,
-  { readonly kind: "damage" }
->["amount"];
 
 /**
  * Projects an admitted attack option into the execution-only shape exposed by
@@ -205,150 +177,5 @@ function projectMechanicalStatBlockAttackActionOption(
     { readonly kind: "statBlockAttack" }
   >,
 ): MechanicalStatBlockAttackActionOption {
-  return Match.value(attack).pipe(
-    Match.discriminatorsExhaustive("damageNotation")({
-      rolled: (value) => ({
-        kind: "statBlockAttack" as const,
-        procedureRef: value.procedureRef,
-        attack: projectMechanicalStatBlockAttack(value.attack, "rolled"),
-        damageNotation: "rolled" as const,
-        ...optionalProperty("traitAttackRollModes", value.traitAttackRollModes),
-      }),
-      static: (value) => ({
-        kind: "statBlockAttack" as const,
-        procedureRef: value.procedureRef,
-        attack: projectMechanicalStatBlockAttack(value.attack, "static"),
-        damageNotation: "static" as const,
-        ...optionalProperty("traitAttackRollModes", value.traitAttackRollModes),
-      }),
-    }),
-  );
-}
-
-function projectMechanicalStatBlockAttack(
-  attack: SupportedStaticDamageCreatureAttackRollMechanics,
-  damageNotation: "static",
-): MechanicalStaticStatBlockAttackRollMechanics;
-function projectMechanicalStatBlockAttack(
-  attack: SupportedCreatureAttackRollMechanics,
-  damageNotation: "rolled",
-): MechanicalRolledStatBlockAttackRollMechanics;
-function projectMechanicalStatBlockAttack(
-  attack: SupportedCreatureAttackRollMechanics,
-  damageNotation: MechanicalStatBlockDamageNotation,
-):
-  | MechanicalRolledStatBlockAttackRollMechanics
-  | MechanicalStaticStatBlockAttackRollMechanics {
-  return Match.value(attack).pipe(
-    Match.discriminatorsExhaustive("attackType")({
-      melee: (value) => ({
-        attackAbility: value.attackAbility,
-        attackBonus: {
-          kind: "literal" as const,
-          value: value.attackBonus.value,
-        },
-        attackType: "melee" as const,
-        reachFeet: value.reachFeet,
-        onHit: projectMechanicalStatBlockAttackEffects(
-          value.onHit,
-          damageNotation,
-        ),
-      }),
-      ranged: (value) => ({
-        attackAbility: value.attackAbility,
-        attackBonus: {
-          kind: "literal" as const,
-          value: value.attackBonus.value,
-        },
-        attackType: "ranged" as const,
-        rangeFeet: value.rangeFeet,
-        ...optionalProperty("ammunition", value.ammunition),
-        onHit: projectMechanicalStatBlockAttackEffects(
-          value.onHit,
-          damageNotation,
-        ),
-      }),
-    }),
-  );
-}
-
-function projectMechanicalStatBlockAttackEffects(
-  effects: SupportedCreatureAttackRollMechanics["onHit"],
-  damageNotation: MechanicalStatBlockDamageNotation,
-): ReadonlyNonEmptyArray<
-  MechanicalRolledStatBlockAttackEffect | MechanicalStaticStatBlockAttackEffect
-> {
-  const [first, ...rest] = effects;
-  return [
-    projectMechanicalStatBlockAttackEffect(first, damageNotation),
-    ...rest.map((effect) =>
-      projectMechanicalStatBlockAttackEffect(effect, damageNotation),
-    ),
-  ];
-}
-
-function projectMechanicalStatBlockAttackEffect(
-  effect: SupportedCreatureAttackRollMechanics["onHit"][number],
-  damageNotation: MechanicalStatBlockDamageNotation,
-):
-  | MechanicalRolledStatBlockAttackEffect
-  | MechanicalStaticStatBlockAttackEffect {
-  return Match.value(effect).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      damage: (value) => ({
-        kind: "damage" as const,
-        damageType: value.damageType,
-        amount: projectMechanicalStatBlockDamageAmount(
-          value.amount,
-          damageNotation,
-        ),
-        ...optionalProperty("timing", value.timing),
-      }),
-      conditional_bonus_damage: (value) => ({
-        kind: "conditional_bonus_damage" as const,
-        when: { kind: "attack_roll_had_advantage" as const },
-        damageType: value.damageType,
-        amount: projectMechanicalStatBlockDamageAmount(
-          value.amount,
-          damageNotation,
-        ),
-      }),
-      apply_condition_if_target_size_at_most: (value) => ({
-        kind: "apply_condition_if_target_size_at_most" as const,
-        condition: "prone" as const,
-        maxCreatureSize: value.maxCreatureSize,
-      }),
-    }),
-  );
-}
-
-function projectMechanicalStatBlockDamageAmount(
-  amount: Extract<
-    SupportedCreatureAttackRollMechanics["onHit"][number],
-    { readonly kind: "damage" | "conditional_bonus_damage" }
-  >["amount"],
-  damageNotation: MechanicalStatBlockDamageNotation,
-):
-  | MechanicalRolledStatBlockDamageAmount
-  | MechanicalStaticStatBlockDamageAmount {
-  return Match.value(damageNotation).pipe(
-    Match.when("static", () => {
-      if (amount.static === undefined) {
-        throw new Error(
-          "Static Stat Block damage must include a static amount.",
-        );
-      }
-      return {
-        kind: "fixed" as const,
-        expr: amount.expr,
-        static: amount.static,
-      };
-    }),
-    Match.when("rolled", () => ({
-      kind: "fixed" as const,
-      expr: amount.expr,
-      ...optionalProperty("static", amount.static),
-    })),
-    Match.exhaustive,
-  );
+  return attack;
 }

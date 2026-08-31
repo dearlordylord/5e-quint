@@ -1,5 +1,6 @@
 import {
   battleAvailableDruidWildShapeKnownForms,
+  wildShapeKnownFormsIssueMessage,
   characterBattleResourceForUnit,
   characterBattleResourceMaxPoints,
   characterBattleResourceMaxUses,
@@ -128,15 +129,10 @@ export type CharacterBuildCreatureInput = {
 };
 
 /** Character-build projection cannot admit a Stat Block creature. */
-export type CharacterBattleCreatureInitResult = Omit<
+export type CharacterBattleCreatureInitResult = Extract<
   BattleCreatureInit,
-  "creatureInit"
-> & {
-  readonly creatureInit: Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >;
-};
+  { readonly creatureInit: { readonly kind: "character" } }
+>;
 
 export type CharacterSheetBattleInitInput = Omit<
   CharacterBuildCreatureInput,
@@ -574,7 +570,9 @@ function battleDruidWildShapeAvailableFormsFromInput(
     profile: projection.profile,
   });
   if (Result.isFailure(availableForms)) {
-    return battleCreatureInitIssue(availableForms.failure.message);
+    return battleCreatureInitIssue(
+      wildShapeKnownFormsIssueMessage(availableForms.failure.issues),
+    );
   }
   return Result.succeed(availableForms.success);
 }

@@ -50,7 +50,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     conditions: [],
   });
 
-  if (sdk.isLeft(skeletonOne)) {
+  if (sdk.isFailure(skeletonOne)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(skeletonOne.failure),
@@ -60,7 +60,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       },
     };
   }
-  if (sdk.isLeft(skeletonTwo)) {
+  if (sdk.isFailure(skeletonTwo)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(skeletonTwo.failure),
@@ -70,7 +70,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       },
     };
   }
-  if (sdk.isLeft(goblinWarrior)) {
+  if (sdk.isFailure(goblinWarrior)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(goblinWarrior.failure),
@@ -92,7 +92,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ],
   });
 
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(battle.failure),
@@ -146,7 +146,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: partitionBoundaries.map(({ between }) => ({
@@ -170,7 +170,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     objects: [],
   });
 
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
       obstruction: sdk.scenarioSessionIssueMessage(session.failure),

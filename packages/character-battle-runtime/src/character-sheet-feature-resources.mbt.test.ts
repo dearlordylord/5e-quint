@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // KERNEL-COVERAGE: parity-witness SHEET.FEATURE_RESOURCES.TRANSITIONS
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
@@ -14,6 +15,7 @@ import {
   type BattleCreatureState,
   type BattleState,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   classUnitId,
@@ -43,7 +45,7 @@ import {
   startShortRest,
   useMonkUncannyMetabolismWhenRollingInitiative,
   type CharacterSheet,
-  type CharacterSheetInput,
+  type CharacterSheetRebuildInput,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
@@ -758,7 +760,10 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: combatantId("combatant:metamagic-skeleton"),
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
         }),
       ],
@@ -806,10 +811,12 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
   const handoff = requireSuccess(
     settleCharacterSheetFromBattle({
       sheet,
-      state: battleStateWithCombatant(battle.state, spentSorcerer),
-      context: battle.context,
+      battleSession: battleRuntimeSessionForTest({
+        state: battleStateWithCombatant(battle.state, spentSorcerer),
+        context: battle.context,
+      }),
+      combatantId: spentSorcerer.combatantId,
       unitLibrary,
-      combatant: spentSorcerer,
     }),
   );
   const expended = resourceExpended(
@@ -898,7 +905,7 @@ function sheetFixture(
     readonly tempHp?: number;
   } & Partial<
     Pick<
-      CharacterSheetInput,
+      CharacterSheetRebuildInput,
       | "conditions"
       | "spellSlotExpenditures"
       | "resourceExpenditures"

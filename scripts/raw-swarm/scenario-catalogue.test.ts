@@ -1699,6 +1699,45 @@ describe("Raw Swarm scenario catalogue", () => {
     }
   });
 
+  test("surfaces the #283 scenario as an explicit unsupported probe before play", () => {
+    const catalogue = readRawSwarmCatalogue({
+      repositoryRoot: repoRoot,
+      scenarioDirectory: resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios",
+      ),
+      evidenceDirectory: resolve(repoRoot, "scripts/raw-swarm/out"),
+    });
+    expect(Result.isSuccess(catalogue)).toBe(true);
+    if (Result.isFailure(catalogue)) {
+      throw new Error(JSON.stringify(catalogue.failure));
+    }
+
+    const scenario = findAuthorableScenarioInCatalogue({
+      catalogue: catalogue.success,
+      scenarioId: decodeRight(
+        decodeScenarioId("orc-fighter-rogue-close-interception"),
+      ),
+    });
+    expect(scenario).toMatchObject({
+      _tag: "Success",
+      success: {
+        purpose:
+          "Probe issue #283 ordinary-object targeting during a constrained Character Sheet close interception.",
+        sdkCapability: {
+          tag: "assessed",
+          sdkCapabilityIntent: "probeUnsupportedCapability",
+          sdkCapabilityReview: {
+            classification: "explicitUnsupportedProbe",
+            evidence: expect.stringContaining(
+              "Wolf Bite against the synthetic prism",
+            ),
+          },
+        },
+      },
+    });
+  });
+
   test("identity parsers reject traversal and opaque generated scenario ids", () => {
     for (const decode of [
       decodeScenarioCampaignId,

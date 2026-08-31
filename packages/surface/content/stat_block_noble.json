@@ -1,0 +1,138 @@
+{
+  "challengeRating": 0.125,
+  "id": "stat_block_noble",
+  "kind": "statBlock",
+  "name": "Noble",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-M-O.md:723-750"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 16,
+      "con": 11,
+      "dex": 12,
+      "int": 12,
+      "str": 11,
+      "wis": 14
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 15
+      }
+    },
+    "actions": [
+      {
+        "description": "Melee Attack Roll: +3, reach 5 ft. Hit: 5 (1d8 + 1) Piercing damage.",
+        "kind": "textOnly",
+        "name": "Rapier",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "additionalLanguages": 2,
+        "kind": "named_plus_other_languages",
+        "languages": [
+          "Common"
+        ]
+      }
+    },
+    "creatureType": "humanoid",
+    "gear": [
+      {
+        "item": "Breastplate"
+      },
+      {
+        "item": "Rapier"
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 9
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 12,
+    "reactions": [
+      {
+        "description": "Trigger: The noble is hit by a melee attack roll while holding a weapon. Response: The noble adds 2 to its AC against that attack, possibly causing it to miss.",
+        "kind": "textOnly",
+        "name": "Parry",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "cha",
+        "modifier": 3
+      },
+      {
+        "ability": "con",
+        "modifier": 0
+      },
+      {
+        "ability": "dex",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": 1
+      },
+      {
+        "ability": "str",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": 2
+      }
+    ],
+    "size": {
+      "kind": "alternatives",
+      "options": [
+        "medium",
+        "small"
+      ]
+    },
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "deception"
+      },
+      {
+        "modifier": 4,
+        "skill": "insight"
+      },
+      {
+        "modifier": 5,
+        "skill": "persuasion"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}

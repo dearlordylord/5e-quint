@@ -867,20 +867,25 @@ describe("battle runtime: attack pipeline boundaries", () => {
       ...statBlockSelection,
       distanceFeet: movementFeet(5),
     };
-    const conflictingStatBlockNotation: AttackTargetDistanceFact =
-      statBlockAttack.damageNotation === "rolled"
-        ? {
-            ...statBlockDistance,
-            statBlockDamageNotation: "static" as const,
-            distanceFeet: movementFeet(100),
-          }
-        : {
-            kind: "attackTargetDistance",
-            actorId: skeletonId,
-            targetId: wizardId,
-            procedureRef: statBlockSelection.procedureRef,
-            distanceFeet: movementFeet(100),
-          };
+    const conflictingStatBlockAttack = attackActionOptionsForActor(
+      statBlockState,
+      skeletonId,
+    ).find(
+      (attack) =>
+        attack.kind === "statBlockAttack" &&
+        attack.procedureRef === statBlockAttack.procedureRef &&
+        !attackExecutionSelectionMatchesOption(statBlockSelection, attack),
+    );
+    if (conflictingStatBlockAttack?.kind !== "statBlockAttack") {
+      throw new Error("Expected a distinct Stat Block damage selection.");
+    }
+    const conflictingStatBlockNotation: AttackTargetDistanceFact = {
+      kind: "attackTargetDistance",
+      actorId: skeletonId,
+      targetId: wizardId,
+      ...attackExecutionSelectionForOption(conflictingStatBlockAttack),
+      distanceFeet: movementFeet(100),
+    };
     expect(
       attackTargetDistanceFeet(
         [conflictingStatBlockNotation, statBlockDistance],

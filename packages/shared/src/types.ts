@@ -173,6 +173,15 @@ export const DieRollResult = Brand.all(
   Brand.nominal<DieRollResult>(),
 );
 
+export const D6_ROLL_RESULTS = [1, 2, 3, 4, 5, 6] as const;
+export type D6RollResult = DieRollResult & Brand.Brand<"D6RollResult">;
+export const D6RollResult = Brand.all(
+  DieRollResult,
+  Brand.make<D6RollResult>((value: number) =>
+    D6_ROLL_RESULTS.some((rollResult) => rollResult === value),
+  ),
+);
+
 export type Initiative = Integer & Brand.Brand<"Initiative">;
 export const Initiative = Brand.all(Integer, Brand.nominal<Initiative>());
 

@@ -62,7 +62,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const combatants: BattleCreatureInit[] = [];
   for (const projected of [ardenInit, brynInit]) {
-    if (sdk.isLeft(projected)) {
+    if (sdk.isFailure(projected)) {
       return {
         kind: "obstructed",
         obstruction:
@@ -89,7 +89,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     }),
   );
   for (const projected of skeletonInits) {
-    if (sdk.isLeft(projected)) {
+    if (sdk.isFailure(projected)) {
       return {
         kind: "obstructed",
         obstruction:
@@ -108,7 +108,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     battleId: sdk.battleId("sand-band-four-skeleton-skirmish"),
     combatants,
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
       obstruction:
@@ -175,7 +175,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions: [],
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],
@@ -185,7 +185,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     opportunityAttackEnemyRelationships,
     objects: [],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
       obstruction:

@@ -45,7 +45,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
 
   const shoveDistance = sdk.scenarioDistanceFeet(5);
-  if (sdk.isLeft(shoveDistance)) {
+  if (sdk.isFailure(shoveDistance)) {
     return {
       kind: "obstructed",
       obstruction: shoveDistance.failure.message,
@@ -107,7 +107,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   const spatialDecisions = [];
   for (const input of shoveDecisionInputs) {
     const decision = sdk.tableAuthoredSpatialDecision(input);
-    if (sdk.isLeft(decision)) {
+    if (sdk.isFailure(decision)) {
       return {
         kind: "obstructed",
         obstruction: decision.failure.message,
@@ -144,7 +144,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       conditions: [],
     }),
   ];
-  const invalidCombatant = combatantInits.find(sdk.isLeft);
+  const invalidCombatant = combatantInits.find(sdk.isFailure);
   if (invalidCombatant !== undefined) {
     return {
       kind: "obstructed",
@@ -156,14 +156,14 @@ export const setupScenario: ScenarioSetup = (context) => {
     };
   }
   const combatants = combatantInits
-    .filter((combatant) => !sdk.isLeft(combatant))
+    .filter((combatant) => !sdk.isFailure(combatant))
     .map((combatant) => combatant.success);
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId("table-authored-three-shove-cycle"),
     combatants,
   });
-  if (sdk.isLeft(battle)) {
+  if (sdk.isFailure(battle)) {
     return {
       kind: "obstructed",
       obstruction: sdk.battleStateInitIssueMessage(battle.failure),
@@ -181,7 +181,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       spatialDecisions,
     },
     ambientIllumination: "brightLight",
-    statBlockDamageNotation: "rolled",
+    statBlockDamageSelectionPolicy: { preferredComponentNotation: "rolled" },
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],
@@ -191,7 +191,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     opportunityAttackEnemyRelationships: [],
     objects: [],
   });
-  if (sdk.isLeft(session)) {
+  if (sdk.isFailure(session)) {
     return {
       kind: "obstructed",
       obstruction: sdk.scenarioSessionIssueMessage(session.failure),

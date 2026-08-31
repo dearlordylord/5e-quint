@@ -1,0 +1,111 @@
+import {
+  battleCreatureInitFromStatBlock,
+  battleStateInitIssueMessage,
+  type BattleStatBlockProjectionFailure,
+} from "@dnd/battle-runtime";
+import { Match, Option, Result } from "effect";
+import type { StatBlockId } from "@dnd/shared/game-facts";
+
+import type { McpPlaySessionRoot } from "./composition-root.ts";
+import type { StatBlockCombatantToolInput } from "./start-battle-tool-input.ts";
+import { errorContent } from "./tool-content.ts";
+
+export function projectStatBlockBattleCombatant(input: {
+  readonly root: McpPlaySessionRoot;
+  readonly combatant: StatBlockCombatantToolInput;
+}) {
+  const statBlock = input.root.statBlockCatalog.getStatBlock(
+    input.combatant.statBlockId,
+  );
+  if (Option.isNone(statBlock)) {
+    return Result.fail(
+      errorContent("Unknown Stat Block combatant.", {
+        code: "UNKNOWN_STAT_BLOCK_COMBATANT",
+        statBlockId: input.combatant.statBlockId,
+      }),
+    );
+  }
+  const creatureInit = battleCreatureInitFromStatBlock({
+    combatantId: input.combatant.combatantId,
+    statBlock: statBlock.value,
+    initiative: input.combatant.initiative,
+    ammunitionStocks: input.combatant.ammunitionStocks,
+    conditions: [],
+    ...(input.combatant.currentHp === undefined
+      ? {}
+      : { currentHp: input.combatant.currentHp }),
+    ...(input.combatant.tempHp === undefined
+      ? {}
+      : { tempHp: input.combatant.tempHp }),
+  });
+  if (Result.isFailure(creatureInit)) {
+    return Result.fail(
+      Match.value(creatureInit.failure).pipe(
+        Match.when({ tag: "statBlockProjectionFailure" }, ({ failure }) =>
+          statBlockProjectionFailureContent(
+            input.combatant.statBlockId,
+            failure,
+          ),
+        ),
+        Match.when({ tag: "battleStateInitIssue" }, (issue) =>
+          errorContent(battleStateInitIssueMessage(issue), {
+            code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+            statBlockId: input.combatant.statBlockId,
+          }),
+        ),
+        Match.when({ tag: "statBlockResourceGraphIssue" }, (issue) =>
+          errorContent(battleStateInitIssueMessage(issue), {
+            code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+            statBlockId: input.combatant.statBlockId,
+            issues: issue.issues,
+          }),
+        ),
+        Match.exhaustive,
+      ),
+    );
+  }
+  return Result.succeed({
+    tag: "encounterCombatant" as const,
+    creatureInit: {
+      ...creatureInit.success,
+      creatureInit: creatureInit.success.creatureInit,
+    },
+  });
+}
+
+function statBlockProjectionFailureContent(
+  statBlockId: StatBlockId,
+  failure: BattleStatBlockProjectionFailure,
+) {
+  const details = Match.value(failure).pipe(
+    Match.when(
+      { reason: "unsupportedProcedureBinding" },
+      ({ reason, issues }) => ({ reason, issues }),
+    ),
+    Match.when({ reason: "nonLiteralSize" }, ({ reason }) => ({ reason })),
+    Match.when({ reason: "unresolvedGmSpeedChoice" }, ({ reason }) => ({
+      reason,
+    })),
+    Match.when({ reason: "unsupportedFormRestrictedSpeed" }, ({ reason }) => ({
+      reason,
+    })),
+    Match.when(
+      { reason: "unsupportedQualifiedConditionImmunity" },
+      ({ reason }) => ({ reason }),
+    ),
+    Match.when({ reason: "invalidResourceLimit" }, ({ reason, issues }) => ({
+      reason,
+      issues,
+    })),
+    Match.when(
+      { reason: "unsupportedLairConditionalLegendaryActionUses" },
+      ({ reason }) => ({ reason }),
+    ),
+    Match.exhaustive,
+  );
+  return errorContent("Stat Block projection failed.", {
+    code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+    statBlockId,
+    ...details,
+  });
+}

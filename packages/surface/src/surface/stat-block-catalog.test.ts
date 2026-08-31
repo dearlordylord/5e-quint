@@ -1,8 +1,10 @@
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
-import spawnedCompanionInput from "../../content/find_familiar.json";
-import spawnedCompanionStatBlocksInput from "../../content/stat_block_find_familiar_forms.json";
+import { statBlockId } from "@dnd/shared/game-facts";
+
+import findFamiliarInput from "../../content/find_familiar.json";
+import findFamiliarStatBlocksInput from "../../content/stat_block_find_familiar_forms.json";
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import skeletonInput from "../../content/stat_block_skeleton.json";
 import sphinxOfWonderInput from "../../content/stat_block_sphinx_of_wonder.json";
@@ -16,6 +18,7 @@ import {
   defineSrdStatBlockCollection,
   srdStatBlockCollection,
 } from "./stat-block-catalog.ts";
+import { assertStatBlockForTest } from "./stat-block-catalog.test-support.ts";
 import type {
   Srd521StatBlock,
   SrdStatBlockCollection,
@@ -23,14 +26,14 @@ import type {
 
 const goblinWarrior = decodeStatBlockRecordSync(goblinWarriorInput);
 const skeleton = decodeStatBlockRecordSync(skeletonInput);
-const pseudodragonInput = spawnedCompanionStatBlocksInput.find(
+const pseudodragonInput = findFamiliarStatBlocksInput.find(
   (input) => input.id === "stat_block_pseudodragon",
 );
 if (pseudodragonInput === undefined) {
   throw new Error("Expected authored Pseudodragon Stat Block input.");
 }
 
-const spawnedCompanionNormalFormSkillModifiers: Record<
+const findFamiliarNormalFormSkillModifiers: Record<
   string,
   ReadonlyArray<{ readonly modifier: number; readonly skill: string }>
 > = {
@@ -67,42 +70,10 @@ describe("Stat Block catalog boundary", () => {
   test("decodes generic Stat Block records", () => {
     expect(goblinWarrior.kind).toBe("statBlock");
     expect(goblinWarrior.provenance.kind).toBe("srd-5.2.1");
-    expect(goblinWarrior.statBlock.displayName).toBe("Goblin Warrior");
-  });
-
-  test("decodes Stat Block Multiattack and Bonus Action procedure sections", () => {
-    const decoded = decodeStatBlockRecordSync({
-      ...goblinWarriorInput,
-      id: "stat_block_surface_contract_multiattack",
-      statBlock: {
-        ...goblinWarriorInput.statBlock,
-        actions: {
-          ...goblinWarriorInput.statBlock.actions,
-          multiattacks: [
-            {
-              name: "Multiattack",
-              dispatches: [
-                { name: "Scimitar", count: { kind: "literal", value: 1 } },
-                { name: "Shortbow", count: { kind: "literal", value: 1 } },
-              ],
-            },
-          ],
-        },
-      },
-    });
-
-    expect(decoded.statBlock.actions?.multiattacks).toEqual([
-      {
-        name: "Multiattack",
-        dispatches: [
-          { name: "Scimitar", count: { kind: "literal", value: 1 } },
-          { name: "Shortbow", count: { kind: "literal", value: 1 } },
-        ],
-      },
-    ]);
-    expect(decoded.statBlock.bonusActions?.actionOptions).toEqual([
-      { name: "Nimble Escape", options: ["disengage", "hide"] },
-    ]);
+    expect(goblinWarrior.name).toBe("Goblin Warrior");
+    expect(
+      goblinWarrior.statBlock.actions?.map((entry) => entry.procedureOrdinal),
+    ).toEqual([1, 2]);
   });
 
   test("rejects empty Stat Block ids and names", () => {
@@ -148,52 +119,17 @@ describe("Stat Block catalog boundary", () => {
     ).toBe(true);
   });
 
-  test("rejects Stat Block save gates without exactly one recipient shape", () => {
-    const sting = pseudodragonInput.statBlock.actions.saves?.[0];
-    expect(sting).toBeDefined();
-    if (sting === undefined) {
-      throw new Error("Expected authored Pseudodragon Sting save input.");
-    }
-
-    const { target: _target, ...targetlessSting } = sting;
-    expect(
-      Result.isFailure(
-        decodeStatBlockRecordResult({
-          ...pseudodragonInput,
-          id: "stat_block_reject_targetless_save_gate",
-          statBlock: {
-            ...pseudodragonInput.statBlock,
-            actions: {
-              ...pseudodragonInput.statBlock.actions,
-              saves: [targetlessSting],
-            },
-          },
-        }),
-      ),
-    ).toBe(true);
-    expect(
-      Result.isFailure(
-        decodeStatBlockRecordResult({
-          ...pseudodragonInput,
-          id: "stat_block_reject_ambiguous_save_gate",
-          statBlock: {
-            ...pseudodragonInput.statBlock,
-            actions: {
-              ...pseudodragonInput.statBlock.actions,
-              saves: [
-                {
-                  ...sting,
-                  area: { kind: "sphere", radiusFeet: 5 },
-                },
-              ],
-            },
-          },
-        }),
-      ),
-    ).toBe(true);
+  test("retains the complete unsupported saving-throw procedure", () => {
+    const sting = pseudodragonInput.statBlock.actions?.[2];
+    expect(sting).toMatchObject({
+      kind: "textOnly",
+      name: "Sting",
+      reason: "unsupported_action_shape",
+      description: expect.stringContaining("Constitution Saving Throw: DC 12"),
+    });
   });
 
-  test("catalog returns generic records and rejects duplicate ids", () => {
+  test("catalog returns only SRD records and rejects duplicate ids", () => {
     const collection = defineSrdStatBlockCollection({
       statBlocks: [assertSrd521StatBlock(goblinWarrior)],
     });
@@ -201,9 +137,14 @@ describe("Stat Block catalog boundary", () => {
 
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
-      expect(valid.catalog.requireStatBlock(goblinWarrior.id)).toEqual(
+      expect(assertStatBlockForTest(valid.catalog, goblinWarrior.id)).toEqual(
         goblinWarrior,
       );
+      expect(
+        valid.catalog
+          .listStatBlocks()
+          .map((statBlock) => statBlock.provenance.kind),
+      ).toEqual(["srd-5.2.1"]);
     }
 
     const duplicate = buildStatBlockCatalog({
@@ -221,6 +162,45 @@ describe("Stat Block catalog boundary", () => {
     });
   });
 
+  test("rejects distinct records with the same normalized identity", () => {
+    const srdGoblinWarrior = assertSrd521StatBlock(goblinWarrior);
+    const duplicateName = assertSrd521StatBlock({
+      ...srdGoblinWarrior,
+      id: statBlockId("stat_block_goblin_warrior_duplicate_identity"),
+      name: "  GOBLIN   WARRIOR ",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: srdGoblinWarrior.provenance.section,
+      },
+    });
+    expect(() =>
+      defineSrdStatBlockCollection({
+        statBlocks: [srdGoblinWarrior, duplicateName],
+      }),
+    ).toThrow(
+      '"code":"duplicateStatBlockIdentity","normalizedIdentity":"goblin warrior"',
+    );
+
+    const result = buildStatBlockCatalog({
+      collections: [
+        defineSrdStatBlockCollection({ statBlocks: [srdGoblinWarrior] }),
+        defineSrdStatBlockCollection({ statBlocks: [duplicateName] }),
+      ],
+    });
+
+    expect(result).toEqual({
+      tag: "invalid",
+      issues: [
+        {
+          code: "duplicateStatBlockIdentity",
+          normalizedIdentity: "goblin warrior",
+          statBlockId: duplicateName.id,
+          priorStatBlockId: srdGoblinWarrior.id,
+        },
+      ],
+    });
+  });
+
   test("exports the authored SRD Goblin Warrior Stat Block collection", () => {
     const valid = buildStatBlockCatalog({
       collections: [srdStatBlockCollection],
@@ -228,61 +208,89 @@ describe("Stat Block catalog boundary", () => {
 
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
-      const goblin = valid.catalog.requireStatBlock(
-        "stat_block_goblin_warrior",
+      const goblin = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_goblin_warrior"),
       );
 
-      expect(goblin.statBlock.displayName).toBe("Goblin Warrior");
+      expect(goblin.name).toBe("Goblin Warrior");
       expect(goblin.challengeRating).toBe(0.25);
-      expect(goblin.statBlock.ac).toEqual({ kind: "literal", value: 15 });
+      expect(goblin.statBlock.ac).toEqual({
+        value: { kind: "literal", value: 15 },
+      });
       expect(goblin.statBlock.hp).toEqual({ kind: "literal", value: 10 });
-      expect(goblin.statBlock.initiativeModifier).toBe(2);
+      expect(goblin.statBlock.initiative).toEqual({ modifier: 2, score: 12 });
       expect(goblin.statBlock.savingThrowModifiers).toEqual([
         { ability: "dex", modifier: 2 },
       ]);
       expect(goblin.statBlock.saveProficiencies).toBeUndefined();
       expect(
-        goblin.statBlock.actions?.attacks?.map((attack) => attack.name),
+        goblin.statBlock.actions?.map((entry) =>
+          entry.kind === "executable" ? entry.procedure.name : entry.name,
+        ),
       ).toEqual(["Scimitar", "Shortbow"]);
-      const shortbow = goblin.statBlock.actions?.attacks?.[1];
+      const shortbow = goblin.statBlock.actions?.[1];
       expect(
-        shortbow?.attackType === "ranged" ? shortbow.ammunition : undefined,
+        shortbow?.kind === "executable" &&
+          shortbow.procedure.kind === "attack_roll" &&
+          shortbow.procedure.attackType === "ranged"
+          ? shortbow.procedure.ammunition
+          : undefined,
       ).toBe("arrow");
-      expect(goblin.statBlock.actions?.attacks?.[0]?.onHit).toContainEqual({
+      const scimitar = goblin.statBlock.actions?.[0];
+      expect(
+        scimitar?.kind === "executable" &&
+          scimitar.procedure.kind === "attack_roll"
+          ? scimitar.procedure.onHit
+          : [],
+      ).toContainEqual({
         amount: { expr: { dice: 1, dieSize: 4 }, kind: "fixed", static: 2 },
         damageType: "slashing",
         kind: "conditional_bonus_damage",
         when: { kind: "attack_roll_had_advantage" },
       });
-      expect(goblin.statBlock.actions?.attacks?.[1]?.onHit).toContainEqual({
+      expect(
+        shortbow?.kind === "executable" &&
+          shortbow.procedure.kind === "attack_roll"
+          ? shortbow.procedure.onHit
+          : [],
+      ).toContainEqual({
         amount: { expr: { dice: 1, dieSize: 4 }, kind: "fixed", static: 2 },
         damageType: "piercing",
         kind: "conditional_bonus_damage",
         when: { kind: "attack_roll_had_advantage" },
       });
-      expect(goblin.statBlock.bonusActions?.actionOptions).toEqual([
-        {
+      expect(goblin.statBlock.bonusActions?.[0]).toMatchObject({
+        kind: "executable",
+        procedure: {
+          kind: "action_option",
           name: "Nimble Escape",
           options: ["disengage", "hide"],
         },
-      ]);
+      });
     }
   });
 
   test("rejects ammunition on a melee creature attack", () => {
-    const attacks = goblinWarriorInput.statBlock.actions?.attacks;
-    expect(attacks).toBeDefined();
-    if (attacks === undefined) return;
+    const actions = goblinWarriorInput.statBlock.actions;
+    expect(actions).toBeDefined();
+    if (actions === undefined) return;
+    const first = actions[0];
+    expect(first?.kind).toBe("executable");
+    if (first?.kind !== "executable" || first.procedure.kind !== "attack_roll")
+      return;
     const malformed = {
       ...goblinWarriorInput,
       statBlock: {
         ...goblinWarriorInput.statBlock,
-        actions: {
-          ...goblinWarriorInput.statBlock.actions,
-          attacks: attacks.map((attack, index) =>
-            index === 0 ? { ...attack, ammunition: "arrow" } : attack,
-          ),
-        },
+        actions: actions.map((entry, index) =>
+          index === 0
+            ? {
+                ...entry,
+                procedure: { ...first.procedure, ammunition: "arrow" },
+              }
+            : entry,
+        ),
       },
     };
     expect(Result.isFailure(decodeStatBlockRecordResult(malformed))).toBe(true);
@@ -295,12 +303,13 @@ describe("Stat Block catalog boundary", () => {
 
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
-      const skeletonRecord = valid.catalog.requireStatBlock(
-        "stat_block_skeleton",
+      const skeletonRecord = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_skeleton"),
       );
 
       expect(skeletonRecord).toEqual(skeleton);
-      expect(skeletonRecord.statBlock.displayName).toBe("Skeleton");
+      expect(skeletonRecord.name).toBe("Skeleton");
       expect(skeletonRecord.challengeRating).toBe(0.25);
       expect(skeletonRecord.statBlock.creatureType).toBe("undead");
       expect(skeletonRecord.statBlock.vulnerabilities).toEqual({
@@ -312,9 +321,13 @@ describe("Stat Block catalog boundary", () => {
         damageTypes: ["poison"],
       });
       expect(
-        skeletonRecord.statBlock.actions?.attacks?.map((attack) => ({
-          name: attack.name,
-          attackType: attack.attackType,
+        skeletonRecord.statBlock.actions?.map((entry) => ({
+          name: entry.kind === "executable" ? entry.procedure.name : entry.name,
+          attackType:
+            entry.kind === "executable" &&
+            entry.procedure.kind === "attack_roll"
+              ? entry.procedure.attackType
+              : undefined,
         })),
       ).toEqual([
         { attackType: "melee", name: "Shortsword" },
@@ -324,9 +337,9 @@ describe("Stat Block catalog boundary", () => {
   });
 
   test("exports SRD Stat Blocks for Find Familiar normal forms", () => {
-    const spawnedCompanionCreature = spawnedCompanionInput.mechanics.creature;
-    expect(spawnedCompanionCreature.kind).toBe("familiar_form_catalog");
-    if (spawnedCompanionCreature.kind !== "familiar_form_catalog") {
+    const findFamiliarCreature = findFamiliarInput.mechanics.creature;
+    expect(findFamiliarCreature.kind).toBe("familiar_form_catalog");
+    if (findFamiliarCreature.kind !== "familiar_form_catalog") {
       throw new Error("Expected Find Familiar form catalog input.");
     }
     const valid = buildStatBlockCatalog({
@@ -335,19 +348,19 @@ describe("Stat Block catalog boundary", () => {
 
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
-      for (const form of spawnedCompanionCreature.normalForms) {
-        const statBlock = valid.catalog.requireStatBlock(form.statBlockId);
-        expect(statBlock.statBlock.displayName).toBe(form.displayName);
+      for (const form of findFamiliarCreature.normalForms) {
+        const statBlock = assertStatBlockForTest(
+          valid.catalog,
+          statBlockId(form.statBlockId),
+        );
+        expect(statBlock.name).toBe(form.displayName);
         expect(statBlock.statBlock.creatureType).toBe("beast");
         expect(statBlock.challengeRating).toBe(0);
         expect(
-          Object.hasOwn(
-            spawnedCompanionNormalFormSkillModifiers,
-            form.statBlockId,
-          ),
+          Object.hasOwn(findFamiliarNormalFormSkillModifiers, form.statBlockId),
         ).toBe(true);
         expect(statBlock.statBlock.skillModifiers ?? []).toEqual(
-          spawnedCompanionNormalFormSkillModifiers[form.statBlockId],
+          findFamiliarNormalFormSkillModifiers[form.statBlockId],
         );
       }
     }
@@ -360,15 +373,19 @@ describe("Stat Block catalog boundary", () => {
 
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
-      const ridingHorse = valid.catalog.requireStatBlock(
-        "stat_block_riding_horse",
+      const ridingHorse = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_riding_horse"),
       );
-      expect(ridingHorse.statBlock.displayName).toBe("Riding Horse");
+      expect(ridingHorse.name).toBe("Riding Horse");
       expect(ridingHorse.statBlock.creatureType).toBe("beast");
       expect(ridingHorse.challengeRating).toBe(0.25);
 
-      const wolf = valid.catalog.requireStatBlock("stat_block_wolf");
-      expect(wolf.statBlock.displayName).toBe("Wolf");
+      const wolf = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_wolf"),
+      );
+      expect(wolf.name).toBe("Wolf");
       expect(wolf.statBlock.creatureType).toBe("beast");
       expect(wolf.challengeRating).toBe(0.25);
       expect(wolf.statBlock.skillModifiers ?? []).toEqual([
@@ -385,43 +402,74 @@ describe("Stat Block catalog boundary", () => {
 
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
-      const imp = valid.catalog.requireStatBlock("stat_block_imp");
+      const imp = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_imp"),
+      );
       expect(imp.statBlock.skillModifiers).toEqual([
         { modifier: 4, skill: "deception" },
         { modifier: 3, skill: "insight" },
         { modifier: 5, skill: "stealth" },
       ]);
       expect(
-        imp.statBlock.actions?.specials?.map((action) => action.name),
-      ).toEqual(["Invisibility", "Shape-Shift"]);
+        imp.statBlock.actions?.map((entry) =>
+          entry.kind === "executable" ? entry.procedure.name : entry.name,
+        ),
+      ).toEqual(["Sting", "Invisibility", "Shape-Shift"]);
+      expect(imp.statBlock.actions?.[1]).toMatchObject({
+        kind: "textOnly",
+        name: "Invisibility",
+        description:
+          "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+        reason: "unsupported_procedure_family",
+      });
 
-      const pseudodragon = valid.catalog.requireStatBlock(
-        "stat_block_pseudodragon",
+      const pseudodragon = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_pseudodragon"),
       );
       expect(pseudodragon.statBlock.skillModifiers).toEqual([
         { modifier: 5, skill: "perception" },
         { modifier: 4, skill: "stealth" },
       ]);
-      expect(pseudodragon.statBlock.actions?.saves?.[0]).toMatchObject({
-        ability: "con",
-        dc: { dc: 12, kind: "fixed" },
+      expect(pseudodragon.statBlock.actions?.[2]).toMatchObject({
+        kind: "textOnly",
         name: "Sting",
-        target: { kind: "one_creature_in_range", rangeFeet: 5 },
+        reason: "unsupported_action_shape",
+        description: expect.stringContaining(
+          "Constitution Saving Throw: DC 12",
+        ),
       });
 
-      const quasit = valid.catalog.requireStatBlock("stat_block_quasit");
+      const quasit = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_quasit"),
+      );
       expect(quasit.statBlock.skillModifiers).toEqual([
         { modifier: 5, skill: "stealth" },
       ]);
-      expect(quasit.statBlock.actions?.attacks?.[0]?.description).toContain(
-        "Poisoned condition",
-      );
       expect(
-        quasit.statBlock.actions?.specials?.map((action) => action.name),
-      ).toEqual(["Invisibility", "Scare", "Shape-Shift"]);
+        quasit.statBlock.actions?.map((entry) =>
+          entry.kind === "executable" ? entry.procedure.name : entry.name,
+        ),
+      ).toEqual(["Rend", "Invisibility", "Scare", "Shape-Shift"]);
+      expect(quasit.statBlock.actions?.[0]).toMatchObject({
+        kind: "textOnly",
+        description: expect.stringContaining(
+          "Hit: 5 (1d4 + 3) Slashing damage",
+        ),
+      });
+      expect(quasit.statBlock.actions?.[1]).toMatchObject({
+        kind: "textOnly",
+        name: "Invisibility",
+        description:
+          "The quasit casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+        reason: "unsupported_procedure_family",
+      });
 
-      const sphinxOfWonder = valid.catalog.requireStatBlock(
-        "stat_block_sphinx_of_wonder",
+      const sphinxOfWonder = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_sphinx_of_wonder"),
       );
       expect(sphinxOfWonder).toEqual(
         decodeStatBlockRecordSync(sphinxOfWonderInput),
@@ -431,26 +479,42 @@ describe("Stat Block catalog boundary", () => {
         { modifier: 4, skill: "religion" },
         { modifier: 5, skill: "stealth" },
       ]);
-      expect(sphinxOfWonder.statBlock.reactions?.specials).toEqual([
-        {
-          description:
-            "Trigger: The sphinx or another creature within 30 feet makes an ability check or a saving throw. Response: The sphinx adds 2 to the roll.",
-          limitedUse: { kind: "daily", uses: 2 },
-          name: "Burst of Ingenuity",
-        },
-      ]);
+      expect(sphinxOfWonder.statBlock.reactions?.[0]).toMatchObject({
+        kind: "textOnly",
+        name: "Burst of Ingenuity",
+        reason: "unsupported_procedure_family",
+        resourceRefs: { kind: "some", ordinals: [1] },
+      });
 
-      const sprite = valid.catalog.requireStatBlock("stat_block_sprite");
+      const sprite = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_sprite"),
+      );
       expect(sprite.statBlock.skillModifiers).toEqual([
         { modifier: 3, skill: "perception" },
         { modifier: 8, skill: "stealth" },
       ]);
-      expect(sprite.statBlock.actions?.attacks?.[1]?.description).toContain(
-        "Charmed condition",
-      );
       expect(
-        sprite.statBlock.actions?.specials?.map((action) => action.name),
-      ).toEqual(["Heart Sight", "Invisibility"]);
+        sprite.statBlock.actions?.map((entry) =>
+          entry.kind === "executable" ? entry.procedure.name : entry.name,
+        ),
+      ).toEqual([
+        "Needle Sword",
+        "Enchanting Bow",
+        "Heart Sight",
+        "Invisibility",
+      ]);
+      expect(sprite.statBlock.actions?.[1]).toMatchObject({
+        kind: "textOnly",
+        description: expect.stringContaining("Hit: 1 Piercing damage"),
+      });
+      expect(sprite.statBlock.actions?.[3]).toMatchObject({
+        kind: "textOnly",
+        name: "Invisibility",
+        description:
+          "The sprite casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+        reason: "unsupported_procedure_family",
+      });
     }
   });
 

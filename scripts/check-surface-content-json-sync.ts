@@ -28,6 +28,19 @@ import {
   describeSurfacePublicationDeltaIssue,
   verifySurfacePublicationDelta,
 } from "../packages/surface/src/surface/publication-delta-verifier.ts";
+import { buildSrdSurfacePortableCases } from "./generate-surface-portable-cases.ts";
+import {
+  readSrdStatBlockParity,
+  type SrdStatBlockParityReport,
+} from "./srd521-stat-block-parity.ts";
+import {
+  projectSrdStatBlockPeerObservation,
+  type SurfacePublicationPeerObservation,
+  type SurfacePublicationKnownRecordKind,
+  type SurfacePublicationRecordKind,
+} from "./surface-publication-peer-observations.ts";
+import { discoverCanonicalSurfaceContentPeers } from "./surface-content-peer-discovery.ts";
+import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
 
 export type PublicationIssue =
   | {
@@ -61,6 +74,21 @@ export type PublicationIssue =
       readonly file: string;
       readonly message: string;
     }
+  | { readonly kind: "missing-portable-case-artifact"; readonly file: string }
+  | {
+      readonly kind: "out-of-sync-portable-case-artifact";
+      readonly file: string;
+    }
+  | {
+      readonly kind: "unreadable-portable-case-artifact";
+      readonly file: string;
+      readonly message: string;
+    }
+  | {
+      readonly kind: "portable-case-generation-failed";
+      readonly file: string;
+      readonly message: string;
+    }
   | {
       readonly kind: "publication-schema-bound-exceeded";
       readonly measure: keyof typeof SRD_SURFACE_SCHEMA_BOUNDS;
@@ -74,6 +102,13 @@ export type PublicationIssue =
   | {
       readonly kind: "publication-delta-verification-failed";
       readonly message: string;
+    }
+  | {
+      readonly kind: "peer-family-mismatch";
+      readonly source: string;
+      readonly peer: string;
+      readonly expectedRecordKind: SurfacePublicationKnownRecordKind;
+      readonly actualRecordKind: SurfacePublicationKnownRecordKind;
     };
 
 type JsonDocument = unknown;
@@ -82,6 +117,8 @@ export type PublicationCheckOptions = {
   readonly repoRoot: string;
   readonly contentDir: string;
   readonly publicationDir?: string;
+  readonly portableCasesPath?: string;
+  readonly portableCasesBuilder?: (repoRoot: string) => Buffer;
   readonly publicationExcerptSource?: SurfacePublicationExcerptSource;
   readonly compile: (
     sourcePath: string,
@@ -93,6 +130,8 @@ export type PublicationCheckResult = {
   readonly issues: readonly PublicationIssue[];
   readonly sourceCount: number;
   readonly peerCount: number;
+  /** Every publication peer state observed by this content-sync owner. */
+  readonly peerObservations: readonly SurfacePublicationPeerObservation[];
 };
 
 export function checkDhallJsonCompilerVersion(
@@ -118,14 +157,12 @@ function contentFiles(
 }
 
 function canonicalDhallFiles(contentDir: string): readonly string[] {
-  // Files beginning with `_` are Dhall authoring helpers, not authored records.
-  // This source-shape convention keeps discovery closed under new record kinds.
-  return contentFiles(contentDir, ".dhall").filter(
-    (name) => !name.startsWith("_"),
+  return discoverCanonicalSurfaceContentPeers(contentDir).map(
+    ({ sourceName }) => sourceName,
   );
 }
 
-function compileDhallToJson(
+export function compileDhallToJson(
   sourcePath: string,
   outputPath: string,
 ): string | undefined {
@@ -150,18 +187,486 @@ function readJson(
   filePath: string,
 ):
   | { readonly tag: "ok"; readonly value: JsonDocument }
+  | { readonly tag: "unreadable"; readonly message: string }
   | { readonly tag: "invalid"; readonly message: string } {
+  let contents: string;
   try {
+    contents = readFileSync(filePath, "utf8");
+  } catch (error) {
     return {
-      tag: "ok",
-      value: JSON.parse(readFileSync(filePath, "utf8")),
+      tag: "unreadable",
+      message: error instanceof Error ? error.message : String(error),
     };
+  }
+  try {
+    return { tag: "ok", value: JSON.parse(contents) };
   } catch (error) {
     return {
       tag: "invalid",
       message: error instanceof Error ? error.message : String(error),
     };
   }
+}
+
+function surfacePublicationRecordKind(
+  value: unknown,
+): SurfacePublicationRecordKind {
+  const values = Array.isArray(value) ? value : [value];
+  if (values.length === 0) return "unknown";
+  const kinds = values.map((entry) => {
+    if (
+      typeof entry !== "object" ||
+      entry === null ||
+      Array.isArray(entry) ||
+      !("kind" in entry)
+    ) {
+      return "unknown" as const;
+    }
+    return entry.kind === "statBlock" ? ("statBlock" as const) : "other";
+  });
+  const first = kinds[0];
+  return first !== undefined && kinds.every((kind) => kind === first)
+    ? first
+    : "unknown";
+}
+
+type DhallToken = {
+  readonly tag: "word" | "string" | "symbol";
+  readonly value: string;
+  readonly depth: number;
+};
+
+function sourceRecordKind(sourcePath: string): SurfacePublicationRecordKind {
+  try {
+    return parseDhallRecordKind(readFileSync(sourcePath, "utf8"));
+  } catch {
+    return "unknown";
+  }
+}
+
+function parseDhallRecordKind(contents: string): SurfacePublicationRecordKind {
+  const tokens = tokenizeDhall(contents);
+  const resultIndex = lastTopLevelTokenIndex(tokens, "in");
+  const firstTokenIndex = tokens.findIndex((token) => token.depth === 0);
+  if (firstTokenIndex < 0) return "unknown";
+  const firstToken = tokens[firstTokenIndex];
+  if (resultIndex !== undefined && firstToken?.value === "in") {
+    const result = tokens[resultIndex + 1];
+    return result?.value === "{" || result?.value === "["
+      ? (resolveDhallExpressionWithinBounds(
+          tokens,
+          resultIndex + 1,
+          tokens.length,
+          new Map(),
+          new Set(),
+        )?.kind ?? "unknown")
+      : "unknown";
+  }
+  return (
+    resolveDhallExpressionWithinBounds(
+      tokens,
+      firstTokenIndex,
+      tokens.length,
+      new Map(),
+      new Set(),
+    )?.kind ?? "unknown"
+  );
+}
+
+function tokenizeDhall(contents: string): readonly DhallToken[] {
+  const tokens: DhallToken[] = [];
+  let index = 0;
+  let depth = 0;
+  while (index < contents.length) {
+    const character = contents[index];
+    if (character === undefined) break;
+    if (/\s/.test(character)) {
+      index += 1;
+      continue;
+    }
+    if (character === "-" && contents[index + 1] === "-") {
+      index = contents.indexOf("\n", index + 2);
+      if (index < 0) break;
+      continue;
+    }
+    if (character === '"') {
+      const end = dhallStringEnd(contents, index);
+      tokens.push({
+        tag: "string",
+        value: contents.slice(index + 1, Math.max(index + 1, end - 1)),
+        depth,
+      });
+      index = end;
+      continue;
+    }
+    if ("{[()]}".includes(character)) {
+      const tokenDepth = "]]})".includes(character)
+        ? Math.max(depth - 1, 0)
+        : depth;
+      tokens.push({ tag: "symbol", value: character, depth: tokenDepth });
+      depth = "]]})".includes(character) ? Math.max(depth - 1, 0) : depth + 1;
+      index += 1;
+      continue;
+    }
+    if (/[A-Za-z_]/.test(character)) {
+      const end = readDhallWordEnd(contents, index);
+      tokens.push({
+        tag: "word",
+        value: contents.slice(index, end),
+        depth,
+      });
+      index = end;
+      continue;
+    }
+    tokens.push({ tag: "symbol", value: character, depth });
+    index += 1;
+  }
+  return tokens;
+}
+
+function dhallStringEnd(contents: string, start: number): number {
+  let index = start + 1;
+  while (index < contents.length) {
+    if (contents[index] === "\\") {
+      index += 2;
+      continue;
+    }
+    if (contents[index] === '"') return index + 1;
+    index += 1;
+  }
+  return contents.length;
+}
+
+function readDhallWordEnd(contents: string, start: number): number {
+  let index = start + 1;
+  while (
+    index < contents.length &&
+    /[A-Za-z0-9_'-]/.test(contents[index] ?? "")
+  ) {
+    index += 1;
+  }
+  return index;
+}
+
+function lastTopLevelTokenIndex(
+  tokens: readonly DhallToken[],
+  value: string,
+): number | undefined {
+  let match: number | undefined;
+  tokens.forEach((token, index) => {
+    if (token.tag === "word" && token.depth === 0 && token.value === value) {
+      match = index;
+    }
+  });
+  return match;
+}
+
+function recordKindFromResult(
+  tokens: readonly DhallToken[],
+  resultIndex: number,
+  limitIndex = tokens.length,
+  scope: ReadonlyMap<string, DhallBinding> = new Map(),
+  aliasStack: ReadonlySet<number> = new Set(),
+): SurfacePublicationRecordKind {
+  const result = tokens[resultIndex];
+  if (result?.value === "{") return recordKindAtObject(tokens, resultIndex);
+  if (result?.value !== "[") return "unknown";
+  const endIndex = delimitedExpressionEndIndex(tokens, resultIndex, limitIndex);
+  if (endIndex === undefined) return "unknown";
+
+  const elementKinds: SurfacePublicationRecordKind[] = [];
+  const closingIndex = endIndex - 1;
+  let elementIndex = resultIndex + 1;
+  while (elementIndex < closingIndex) {
+    const token = tokens[elementIndex];
+    if (token?.tag === "symbol" && token.value === ",") {
+      elementIndex += 1;
+      continue;
+    }
+    const element = resolveDhallExpression(
+      tokens,
+      elementIndex,
+      closingIndex,
+      scope,
+      aliasStack,
+    );
+    if (
+      element === undefined ||
+      element.shape !== "record" ||
+      element.endIndex <= elementIndex
+    ) {
+      return "unknown";
+    }
+    elementKinds.push(element.kind);
+    elementIndex = element.endIndex;
+    const separator = tokens[elementIndex];
+    if (separator?.tag === "symbol" && separator.value === ",") {
+      elementIndex += 1;
+      continue;
+    }
+    if (elementIndex !== closingIndex) return "unknown";
+  }
+
+  const firstKind = elementKinds[0];
+  return firstKind !== undefined &&
+    firstKind !== "unknown" &&
+    elementKinds.every((kind) => kind === firstKind)
+    ? firstKind
+    : "unknown";
+}
+
+type DhallExpressionShape = "record" | "list" | "unknown";
+
+type DhallExpressionFacts = {
+  readonly kind: SurfacePublicationRecordKind;
+  readonly shape: DhallExpressionShape;
+};
+
+type DhallExpressionResolution = DhallExpressionFacts & {
+  readonly endIndex: number;
+};
+
+type DhallBinding = {
+  readonly expressionStart: number;
+  readonly expressionEnd: number;
+  readonly scope: ReadonlyMap<string, DhallBinding>;
+};
+
+function resolveDhallExpressionWithinBounds(
+  tokens: readonly DhallToken[],
+  startIndex: number,
+  limitIndex: number,
+  scope: ReadonlyMap<string, DhallBinding>,
+  aliasStack: ReadonlySet<number>,
+): DhallExpressionResolution | undefined {
+  const resolution = resolveDhallExpression(
+    tokens,
+    startIndex,
+    limitIndex,
+    scope,
+    aliasStack,
+  );
+  return resolution?.endIndex === limitIndex ? resolution : undefined;
+}
+
+function resolveDhallExpression(
+  tokens: readonly DhallToken[],
+  startIndex: number,
+  limitIndex: number,
+  scope: ReadonlyMap<string, DhallBinding>,
+  aliasStack: ReadonlySet<number>,
+): DhallExpressionResolution | undefined {
+  const start = tokens[startIndex];
+  if (start === undefined) return undefined;
+  if (start.tag === "word" && start.value === "let") {
+    return resolveDhallLetExpression(
+      tokens,
+      startIndex,
+      limitIndex,
+      scope,
+      aliasStack,
+    );
+  }
+  if (start.value === "{") {
+    const endIndex = delimitedExpressionEndIndex(
+      tokens,
+      startIndex,
+      limitIndex,
+    );
+    return endIndex === undefined
+      ? undefined
+      : {
+          kind: recordKindAtObject(tokens, startIndex),
+          shape: "record",
+          endIndex,
+        };
+  }
+  if (start.value === "[") {
+    const endIndex = delimitedExpressionEndIndex(
+      tokens,
+      startIndex,
+      limitIndex,
+    );
+    return endIndex === undefined
+      ? undefined
+      : {
+          kind: recordKindFromResult(
+            tokens,
+            startIndex,
+            endIndex,
+            scope,
+            aliasStack,
+          ),
+          shape: "list",
+          endIndex,
+        };
+  }
+  if (start.value === "(") {
+    const endIndex = delimitedExpressionEndIndex(
+      tokens,
+      startIndex,
+      limitIndex,
+    );
+    if (endIndex === undefined) return undefined;
+    const inner = resolveDhallExpressionWithinBounds(
+      tokens,
+      startIndex + 1,
+      endIndex - 1,
+      scope,
+      aliasStack,
+    );
+    return {
+      kind: inner?.kind ?? "unknown",
+      shape: inner?.shape ?? "unknown",
+      endIndex,
+    };
+  }
+  const binding = start.tag === "word" ? scope.get(start.value) : undefined;
+  const resolvedBinding =
+    binding === undefined
+      ? undefined
+      : resolveDhallBinding(tokens, binding, aliasStack);
+  return {
+    kind: resolvedBinding?.kind ?? "unknown",
+    shape: resolvedBinding?.shape ?? "unknown",
+    endIndex: startIndex + 1,
+  };
+}
+
+function resolveDhallLetExpression(
+  tokens: readonly DhallToken[],
+  startIndex: number,
+  limitIndex: number,
+  scope: ReadonlyMap<string, DhallBinding>,
+  aliasStack: ReadonlySet<number>,
+): DhallExpressionResolution | undefined {
+  let bindingIndex = startIndex;
+  let currentScope = scope;
+  while (isDhallLetToken(tokens[bindingIndex])) {
+    const name = tokens[bindingIndex + 1];
+    const equalsIndex = topLevelBindingEqualsIndex(
+      tokens,
+      bindingIndex,
+      limitIndex,
+    );
+    if (name?.tag !== "word" || equalsIndex === undefined) return undefined;
+    const value = resolveDhallExpression(
+      tokens,
+      equalsIndex + 1,
+      limitIndex,
+      currentScope,
+      aliasStack,
+    );
+    if (value === undefined) return undefined;
+    if (value.endIndex <= bindingIndex) return undefined;
+    const binding: DhallBinding = {
+      expressionStart: equalsIndex + 1,
+      expressionEnd: value.endIndex,
+      scope: currentScope,
+    };
+    currentScope = new Map(currentScope).set(name.value, binding);
+    const boundary = tokens[value.endIndex];
+    if (isDhallLetToken(boundary)) {
+      bindingIndex = value.endIndex;
+      continue;
+    }
+    if (!isDhallInToken(boundary)) return undefined;
+    return resolveDhallExpression(
+      tokens,
+      value.endIndex + 1,
+      limitIndex,
+      currentScope,
+      aliasStack,
+    );
+  }
+  return undefined;
+}
+
+function resolveDhallBinding(
+  tokens: readonly DhallToken[],
+  binding: DhallBinding,
+  aliasStack: ReadonlySet<number>,
+): DhallExpressionFacts {
+  if (aliasStack.has(binding.expressionStart)) {
+    return { kind: "unknown", shape: "unknown" };
+  }
+  const nextAliasStack = new Set(aliasStack).add(binding.expressionStart);
+  const resolution = resolveDhallExpressionWithinBounds(
+    tokens,
+    binding.expressionStart,
+    binding.expressionEnd,
+    binding.scope,
+    nextAliasStack,
+  );
+  return resolution === undefined
+    ? { kind: "unknown", shape: "unknown" }
+    : { kind: resolution.kind, shape: resolution.shape };
+}
+
+function isDhallLetToken(token: DhallToken | undefined): boolean {
+  return token?.tag === "word" && token.value === "let";
+}
+
+function isDhallInToken(token: DhallToken | undefined): boolean {
+  return token?.tag === "word" && token.value === "in";
+}
+
+function topLevelBindingEqualsIndex(
+  tokens: readonly DhallToken[],
+  bindingIndex: number,
+  limitIndex: number,
+): number | undefined {
+  const binding = tokens[bindingIndex];
+  if (binding === undefined) return undefined;
+  for (let index = bindingIndex + 2; index < limitIndex; index += 1) {
+    const token = tokens[index];
+    if (token?.depth !== binding.depth) continue;
+    if (token.tag === "symbol" && token.value === "=") return index;
+    if (isDhallLetToken(token) || isDhallInToken(token)) return undefined;
+  }
+  return undefined;
+}
+
+function delimitedExpressionEndIndex(
+  tokens: readonly DhallToken[],
+  startIndex: number,
+  resultIndex: number,
+): number | undefined {
+  const opening = tokens[startIndex];
+  if (opening === undefined) return undefined;
+  const closing = { "{": "}", "[": "]", "(": ")" }[opening.value];
+  if (closing === undefined) return undefined;
+  for (let index = startIndex + 1; index < resultIndex; index += 1) {
+    const token = tokens[index];
+    if (token?.value === closing && token.depth === opening.depth) {
+      return index + 1;
+    }
+  }
+  return undefined;
+}
+
+function recordKindAtObject(
+  tokens: readonly DhallToken[],
+  objectIndex: number,
+): SurfacePublicationRecordKind {
+  const object = tokens[objectIndex];
+  if (object?.value !== "{") return "unknown";
+  const fieldDepth = object.depth + 1;
+  for (let index = objectIndex + 1; index < tokens.length - 2; index += 1) {
+    const field = tokens[index];
+    if (field?.value === "}" && field.depth === object.depth) break;
+    if (
+      field?.tag === "word" &&
+      field.depth === fieldDepth &&
+      field.value === "kind" &&
+      tokens[index + 1]?.value === "="
+    ) {
+      const value = tokens[index + 2];
+      if (value?.tag !== "string") return "unknown";
+      return value.value === "statBlock" ? "statBlock" : "other";
+    }
+  }
+  return "unknown";
 }
 
 const MAX_DECODE_DIAGNOSTIC_CHARS = 4000;
@@ -244,37 +749,142 @@ function decodeDocument(value: unknown): readonly string[] {
   return errors;
 }
 
-function addDecodeIssues(
+type JsonInspection =
+  | {
+      readonly tag: "ok";
+      readonly value: JsonDocument;
+      readonly recordKind: SurfacePublicationRecordKind;
+    }
+  | {
+      readonly tag: "failed";
+      readonly reason: "decode" | "read";
+      readonly recordKind: SurfacePublicationRecordKind;
+      readonly message: string;
+    };
+
+type PeerFamilyMismatch = {
+  readonly expectedRecordKind: SurfacePublicationKnownRecordKind;
+  readonly actualRecordKind: SurfacePublicationKnownRecordKind;
+};
+
+function ownedPeerRecordKind(
+  sourceKind: SurfacePublicationRecordKind,
+  peerKind: SurfacePublicationRecordKind,
+): SurfacePublicationRecordKind {
+  return sourceKind === "unknown" ? peerKind : sourceKind;
+}
+
+function peerFamilyMismatch(
+  expectedRecordKind: SurfacePublicationRecordKind,
+  actualRecordKind: SurfacePublicationRecordKind,
+): PeerFamilyMismatch | undefined {
+  if (
+    expectedRecordKind === "unknown" ||
+    actualRecordKind === "unknown" ||
+    expectedRecordKind === actualRecordKind
+  ) {
+    return undefined;
+  }
+  return { expectedRecordKind, actualRecordKind };
+}
+
+function reportPeerFamilyMismatch(
   issues: PublicationIssue[],
+  observations: SurfacePublicationPeerObservation[],
+  role: "generated" | "committed",
+  sourcePath: string,
+  peerPath: string,
+  sourceKind: SurfacePublicationRecordKind,
+  inspection: JsonInspection,
+): boolean {
+  const mismatch = peerFamilyMismatch(sourceKind, inspection.recordKind);
+  if (mismatch === undefined) return false;
+  const message = `${role} peer ${peerPath} advertises ${mismatch.actualRecordKind}; source ${sourcePath} declares ${mismatch.expectedRecordKind}.`;
+  issues.push({
+    kind: "peer-family-mismatch",
+    source: sourcePath,
+    peer: peerPath,
+    ...mismatch,
+  });
+  observations.push({
+    tag: "peer-family-mismatch",
+    role,
+    recordKind: sourceKind,
+    actualRecordKind: mismatch.actualRecordKind,
+    sourcePath,
+    peerPath,
+    message,
+  });
+  return true;
+}
+
+function inspectJsonFile(
+  issues: PublicationIssue[],
+  filePath: string,
   displayFile: string,
-  value: unknown,
   context: string,
-): void {
-  for (const message of decodeDocument(value)) {
+  fallbackRecordKind: SurfacePublicationRecordKind,
+): JsonInspection {
+  const parsed = readJson(filePath);
+  if (parsed.tag === "unreadable") {
+    const message = `${context}: file could not be read: ${parsed.message}`;
+    issues.push({
+      kind: "decode-failed",
+      file: displayFile,
+      message,
+    });
+    return {
+      tag: "failed",
+      reason: "read",
+      recordKind: fallbackRecordKind,
+      message,
+    };
+  }
+  if (parsed.tag === "invalid") {
+    const message = `${context}: invalid JSON: ${parsed.message}`;
+    issues.push({ kind: "decode-failed", file: displayFile, message });
+    return {
+      tag: "failed",
+      reason: "decode",
+      recordKind: fallbackRecordKind,
+      message,
+    };
+  }
+  const recordKind = surfacePublicationRecordKind(parsed.value);
+  const decodeMessages = decodeDocument(parsed.value);
+  for (const message of decodeMessages) {
     issues.push({
       kind: "decode-failed",
       file: displayFile,
       message: `${context}: ${message}`,
     });
   }
+  if (decodeMessages.length > 0) {
+    return {
+      tag: "failed",
+      reason: "decode",
+      recordKind: recordKind === "unknown" ? fallbackRecordKind : recordKind,
+      message: decodeMessages
+        .map((message) => `${context}: ${message}`)
+        .join("\n"),
+    };
+  }
+  return { tag: "ok", value: parsed.value, recordKind };
 }
 
-function checkJsonFile(
-  issues: PublicationIssue[],
-  filePath: string,
-  displayFile: string,
-  context: string,
-): void {
-  const parsed = readJson(filePath);
-  if (parsed.tag === "invalid") {
-    issues.push({
-      kind: "decode-failed",
-      file: displayFile,
-      message: `${context}: invalid JSON: ${parsed.message}`,
-    });
-    return;
+type PeerBytesResult =
+  | { readonly tag: "ok"; readonly bytes: Buffer }
+  | { readonly tag: "unreadable"; readonly message: string };
+
+function readPeerBytes(filePath: string): PeerBytesResult {
+  try {
+    return { tag: "ok", bytes: readFileSync(filePath) };
+  } catch (error) {
+    return {
+      tag: "unreadable",
+      message: error instanceof Error ? error.message : String(error),
+    };
   }
-  addDecodeIssues(issues, displayFile, parsed.value, context);
 }
 
 type PublicationArtifactReadResult =
@@ -365,6 +975,46 @@ function checkSurfacePublicationArtifacts(
   }
 }
 
+function checkPortableCasesArtifact(
+  issues: PublicationIssue[],
+  repoRoot: string,
+  filePath: string,
+  builder: (repoRoot: string) => Buffer,
+): void {
+  const displayFile = repoPath(repoRoot, filePath);
+  const committed = readPublicationArtifact(filePath);
+  if (committed.tag === "missing") {
+    issues.push({ kind: "missing-portable-case-artifact", file: displayFile });
+    return;
+  }
+  if (committed.tag === "unreadable") {
+    issues.push({
+      kind: "unreadable-portable-case-artifact",
+      file: displayFile,
+      message: committed.message,
+    });
+    return;
+  }
+
+  let generated: Buffer;
+  try {
+    generated = builder(repoRoot);
+  } catch (error) {
+    issues.push({
+      kind: "portable-case-generation-failed",
+      file: displayFile,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return;
+  }
+  if (!committed.bytes.equals(generated)) {
+    issues.push({
+      kind: "out-of-sync-portable-case-artifact",
+      file: displayFile,
+    });
+  }
+}
+
 export function runPublicationCheck(
   options: PublicationCheckOptions,
 ): PublicationCheckResult {
@@ -375,6 +1025,7 @@ export function runPublicationCheck(
     sources.map((source) => source.replace(/\.dhall$/, ".json")),
   );
   const issues: PublicationIssue[] = [];
+  const peerObservations: SurfacePublicationPeerObservation[] = [];
   const temporaryDirectory = mkdtempSync(join(tmpdir(), "surface-json-sync-"));
 
   try {
@@ -383,65 +1034,220 @@ export function runPublicationCheck(
       const sourcePath = join(contentDir, source);
       const peerPath = join(contentDir, peer);
       const generatedPath = join(temporaryDirectory, peer);
+      const displaySource = repoPath(repoRoot, sourcePath);
+      const displayPeer = repoPath(repoRoot, peerPath);
+      const peerExists = peers.includes(peer);
+      let sourceKind = sourceRecordKind(sourcePath);
+      let peerIsHealthy = peerExists;
 
-      if (!peers.includes(peer)) {
+      if (!peerExists) {
         issues.push({
           kind: "missing-json",
-          source: repoPath(repoRoot, sourcePath),
-          peer: repoPath(repoRoot, peerPath),
+          source: displaySource,
+          peer: displayPeer,
         });
       }
 
       const compileError = compile(sourcePath, generatedPath);
+      let generatedInspection: JsonInspection | undefined;
       if (compileError !== undefined) {
+        peerIsHealthy = false;
         issues.push({
           kind: "compile-failed",
-          source: repoPath(repoRoot, sourcePath),
+          source: displaySource,
           message: compileError,
         });
+        peerObservations.push({
+          tag: "source-failed",
+          reason: "compile",
+          recordKind: sourceKind,
+          sourcePath: displaySource,
+          peerPath: displayPeer,
+          message: `Dhall compilation failed: ${compileError}`,
+        });
       } else {
-        checkJsonFile(
+        generatedInspection = inspectJsonFile(
           issues,
           generatedPath,
-          repoPath(repoRoot, peerPath),
-          `generated from ${repoPath(repoRoot, sourcePath)}`,
+          displayPeer,
+          `generated from ${displaySource}`,
+          sourceKind,
         );
-        if (peers.includes(peer)) {
-          const generated = readFileSync(generatedPath);
-          const committed = readFileSync(peerPath);
-          if (!generated.equals(committed)) {
+        if (sourceKind === "unknown" && generatedInspection.tag === "ok") {
+          sourceKind = generatedInspection.recordKind;
+        }
+        const generatedFamilyMismatch = reportPeerFamilyMismatch(
+          issues,
+          peerObservations,
+          "generated",
+          displaySource,
+          displayPeer,
+          sourceKind,
+          generatedInspection,
+        );
+        if (generatedInspection.tag === "failed") {
+          peerIsHealthy = false;
+          peerObservations.push({
+            tag: "generated-peer-failed",
+            reason: generatedInspection.reason,
+            recordKind: ownedPeerRecordKind(
+              sourceKind,
+              generatedInspection.recordKind,
+            ),
+            sourcePath: displaySource,
+            peerPath: displayPeer,
+            message: generatedInspection.message,
+          });
+        } else if (generatedFamilyMismatch) {
+          peerIsHealthy = false;
+        }
+      }
+
+      if (!peerExists) {
+        peerObservations.push({
+          tag: "missing",
+          recordKind: sourceKind,
+          sourcePath: displaySource,
+          peerPath: displayPeer,
+        });
+      }
+
+      let committedInspection: JsonInspection | undefined;
+      if (peerExists) {
+        committedInspection = inspectJsonFile(
+          issues,
+          peerPath,
+          displayPeer,
+          `committed peer for ${displaySource}`,
+          ownedPeerRecordKind(
+            sourceKind,
+            generatedInspection?.recordKind ?? "unknown",
+          ),
+        );
+        const committedFamilyMismatch = reportPeerFamilyMismatch(
+          issues,
+          peerObservations,
+          "committed",
+          displaySource,
+          displayPeer,
+          sourceKind,
+          committedInspection,
+        );
+        if (committedInspection.tag === "failed") {
+          peerIsHealthy = false;
+          peerObservations.push({
+            tag: "committed-peer-failed",
+            reason: committedInspection.reason,
+            recordKind: ownedPeerRecordKind(
+              sourceKind,
+              committedInspection.recordKind,
+            ),
+            sourcePath: displaySource,
+            peerPath: displayPeer,
+            message: committedInspection.message,
+          });
+        } else if (committedFamilyMismatch) {
+          peerIsHealthy = false;
+        }
+
+        if (
+          generatedInspection?.tag === "ok" &&
+          committedInspection.tag === "ok"
+        ) {
+          const generated = readPeerBytes(generatedPath);
+          const committed = readPeerBytes(peerPath);
+          if (generated.tag === "unreadable") {
+            peerIsHealthy = false;
+            peerObservations.push({
+              tag: "generated-peer-failed",
+              reason: "read",
+              recordKind: ownedPeerRecordKind(
+                sourceKind,
+                generatedInspection.recordKind,
+              ),
+              sourcePath: displaySource,
+              peerPath: displayPeer,
+              message: `Generated peer could not be read: ${generated.message}`,
+            });
+          } else if (committed.tag === "unreadable") {
+            peerIsHealthy = false;
+            peerObservations.push({
+              tag: "committed-peer-failed",
+              reason: "read",
+              recordKind: ownedPeerRecordKind(
+                sourceKind,
+                committedInspection.recordKind,
+              ),
+              sourcePath: displaySource,
+              peerPath: displayPeer,
+              message: `Committed peer could not be read: ${committed.message}`,
+            });
+          } else if (!generated.bytes.equals(committed.bytes)) {
+            peerIsHealthy = false;
             issues.push({
               kind: "out-of-sync-json",
-              source: repoPath(repoRoot, sourcePath),
-              peer: repoPath(repoRoot, peerPath),
+              source: displaySource,
+              peer: displayPeer,
+            });
+            peerObservations.push({
+              tag: "out-of-sync",
+              recordKind: ownedPeerRecordKind(
+                sourceKind,
+                generatedInspection.recordKind,
+              ),
+              sourcePath: displaySource,
+              peerPath: displayPeer,
             });
           }
         }
       }
 
-      if (peers.includes(peer)) {
-        checkJsonFile(
-          issues,
-          peerPath,
-          repoPath(repoRoot, peerPath),
-          `committed peer for ${repoPath(repoRoot, sourcePath)}`,
-        );
+      if (peerIsHealthy) {
+        const healthyPeerKind =
+          committedInspection?.tag === "ok"
+            ? committedInspection.recordKind
+            : generatedInspection?.tag === "ok"
+              ? generatedInspection.recordKind
+              : sourceKind;
+        peerObservations.push({
+          tag: "present",
+          recordKind: ownedPeerRecordKind(sourceKind, healthyPeerKind),
+          sourcePath: displaySource,
+          peerPath: displayPeer,
+        });
       }
     }
 
     for (const peer of peers) {
       if (sourcePeers.has(peer)) continue;
       const peerPath = join(contentDir, peer);
+      const displayPeer = repoPath(repoRoot, peerPath);
       issues.push({
         kind: "orphaned-json",
-        peer: repoPath(repoRoot, peerPath),
+        peer: displayPeer,
       });
-      checkJsonFile(
+      const peerInspection = inspectJsonFile(
         issues,
         peerPath,
-        repoPath(repoRoot, peerPath),
+        displayPeer,
         "orphaned JSON",
+        "unknown",
       );
+      const recordKind = peerInspection.recordKind;
+      peerObservations.push({
+        tag: "orphaned",
+        recordKind,
+        peerPath: displayPeer,
+      });
+      if (peerInspection.tag === "failed") {
+        peerObservations.push({
+          tag: "orphaned-peer-failed",
+          reason: peerInspection.reason,
+          recordKind: peerInspection.recordKind,
+          peerPath: displayPeer,
+          message: peerInspection.message,
+        });
+      }
     }
   } finally {
     rmSync(temporaryDirectory, { force: true, recursive: true });
@@ -455,8 +1261,41 @@ export function runPublicationCheck(
       options.publicationExcerptSource,
     );
   }
+  if (options.portableCasesPath !== undefined) {
+    checkPortableCasesArtifact(
+      issues,
+      repoRoot,
+      options.portableCasesPath,
+      options.portableCasesBuilder ?? buildSrdSurfacePortableCases,
+    );
+  }
 
-  return { issues, sourceCount: sources.length, peerCount: peers.length };
+  return {
+    issues,
+    sourceCount: sources.length,
+    peerCount: peers.length,
+    peerObservations,
+  };
+}
+
+export type SurfacePublicationCheckResult = PublicationCheckResult & {
+  /** Source-derived stat-block parity is reported beside, not merged into, sync acceptance. */
+  readonly statBlockParity: SrdStatBlockParityReport;
+};
+
+export function runSurfacePublicationCheck(
+  options: PublicationCheckOptions,
+): SurfacePublicationCheckResult {
+  const publication = runPublicationCheck(options);
+  const statBlockParity = readSrdStatBlockParity({
+    repoRoot: options.repoRoot,
+    installedStatBlocks: srdSurface.statBlocks,
+    peerObservations: publication.peerObservations.flatMap((observation) => {
+      const projected = projectSrdStatBlockPeerObservation(observation);
+      return projected === undefined ? [] : [projected];
+    }),
+  });
+  return { ...publication, statBlockParity };
 }
 
 function main(): void {
@@ -480,10 +1319,14 @@ function main(): void {
     return;
   }
 
-  const publicationCheck = runPublicationCheck({
+  const publicationCheck = runSurfacePublicationCheck({
     repoRoot,
     contentDir,
     publicationDir: join(repoRoot, "packages", "surface", "publication"),
+    portableCasesPath: join(
+      repoRoot,
+      "packages/surface/portable-cases/srd-surface-cases.json",
+    ),
     compile: compileDhallToJson,
   });
   const issues: PublicationIssue[] = [...publicationCheck.issues];
@@ -520,12 +1363,28 @@ function main(): void {
         console.error(
           `- unreadable-publication-artifact: ${issue.file}\n${issue.message}`,
         );
+      } else if (issue.kind === "missing-portable-case-artifact") {
+        console.error(`- missing-portable-case-artifact: ${issue.file}`);
+      } else if (issue.kind === "out-of-sync-portable-case-artifact") {
+        console.error(`- out-of-sync-portable-case-artifact: ${issue.file}`);
+      } else if (issue.kind === "unreadable-portable-case-artifact") {
+        console.error(
+          `- unreadable-portable-case-artifact: ${issue.file}\n${issue.message}`,
+        );
+      } else if (issue.kind === "portable-case-generation-failed") {
+        console.error(
+          `- portable-case-generation-failed: ${issue.file}\n${issue.message}`,
+        );
       } else if (issue.kind === "publication-generation-failed") {
         console.error(
           `- publication-generation-failed: ${describeSurfacePublicationBuildIssue(issue.issue)}`,
         );
       } else if (issue.kind === "publication-delta-verification-failed") {
         console.error(`- ${issue.message}`);
+      } else if (issue.kind === "peer-family-mismatch") {
+        console.error(
+          `- peer-family-mismatch: ${issue.peer} from ${issue.source} advertises ${issue.actualRecordKind}; expected ${issue.expectedRecordKind}`,
+        );
       } else {
         console.error(
           `- publication-schema-bound-exceeded: ${issue.measure} ${issue.actual} >= ${issue.limit}`,
@@ -538,6 +1397,9 @@ function main(): void {
 
   console.log(
     `Surface content publication passed: ${publicationCheck.sourceCount} canonical Dhall sources and ${publicationCheck.peerCount} generated JSON peers decoded and synchronized.`,
+  );
+  console.log(
+    `SRD stat-block parity report: ${publicationCheck.statBlockParity.discovery.occurrences.length} source occurrences, ${publicationCheck.statBlockParity.discovery.identities.length} source identities, ${publicationCheck.statBlockParity.issues.length} report issues; parity acceptance remains a separate operation.`,
   );
 }
 

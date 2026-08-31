@@ -1,4 +1,3 @@
-// RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement
 
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";

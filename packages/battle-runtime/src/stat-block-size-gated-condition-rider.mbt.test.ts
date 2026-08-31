@@ -1,12 +1,14 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { movementFeet } from "@dnd/shared/types";
-// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
-// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import { isDeepStrictEqual } from "node:util";
 
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type {
+  AuthoredExecutableProcedure,
+  StatBlockRecord,
+} from "@dnd/surface/surface/types";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -34,15 +36,16 @@ import {
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   battleId,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   combatantId,
   damageRollFill,
   DieRollResult,
   discoverBattleActCandidates,
+  nonSpellExecutableProcedureEntry,
   hasCondition,
   resolveBattleSubject,
   startBattleRight,
   statBlockCreatureInit,
-  statBlockRecord,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -70,9 +73,10 @@ type SizeGatedConditionRiderRouteProjection =
     readonly route: readonly ReducerRouteEvent[];
   };
 
-type StatBlockAttack = NonNullable<
-  NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
->[number];
+type StatBlockAttack = Extract<
+  AuthoredExecutableProcedure,
+  { readonly kind: "attack_roll" }
+>;
 
 const actorId = combatantId("stat-block-size-rider-mbt-actor");
 const targetId = combatantId("stat-block-size-rider-mbt-target");
@@ -120,6 +124,8 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
 ) {
   return defineDriver<typeof driverSchema, State>(driverSchema, () => {
     let state = sizeGatedConditionRiderBattle("mediumOrSmaller");
+    let resolutionState = state;
+    let subject = attackSubject(state);
     let targetSizeGate: TargetSizeGate = "mediumOrSmaller";
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
@@ -135,12 +141,14 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
 
     function reset(nextTargetSizeGate: TargetSizeGate): void {
       state = sizeGatedConditionRiderBattle(nextTargetSizeGate);
+      resolutionState = state;
+      subject = attackSubject(state);
       targetSizeGate = nextTargetSizeGate;
       targetChoice = null;
       attackRoll = null;
       const result = resolveBattleSubject({
-        state,
-        subject: attackSubject(state),
+        state: resolutionState,
+        subject,
         fills: [],
       });
       if (result.tag !== "needsHoles") {
@@ -203,7 +211,7 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
         return;
       }
       throw new Error(
-        `Unexpected Stat Block size-gated condition MBT invalid result: ${result.reason}`,
+        `Unexpected Stat Block size-gated condition MBT invalid result: ${result.reason}: ${result.message}`,
       );
     }
 
@@ -214,8 +222,8 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
     }): void {
       recordResult(
         resolveBattleSubject({
-          state,
-          subject: attackSubject(state),
+          state: resolutionState,
+          subject,
           fills: input.fills,
         }),
         input.routeFill,
@@ -297,6 +305,18 @@ const sizeGatedConditionRiderRouteStateCheck = stateCheck(
 const sizeGatedConditionRiderDefaultMbtSteps = 3;
 
 describe("Stat Block size-gated condition rider focused MBT", () => {
+  it("discovers the authored Bite as the ordinary rolled attack", () => {
+    const subject = attackSubject(
+      sizeGatedConditionRiderBattle("mediumOrSmaller"),
+    );
+    expect(
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        subject,
+        "rolled",
+      ),
+    ).toBe(true);
+  });
+
   it(
     "replays a hit applying Prone to a Medium-or-smaller target",
     async () => {
@@ -436,10 +456,22 @@ function attackSubject(
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
       candidate.subject.procedureRef !== undefined &&
-      candidate.subject.statBlockDamageNotation === undefined,
+      battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
+        candidate.subject,
+        "rolled",
+      ),
   );
   if (matchingActs.length !== 1) {
-    throw new Error(`Expected one rolled ${biteAttackName} attack act.`);
+    const attackSubjects = discoverBattleActCandidates(state).flatMap(
+      (candidate) =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "attack"
+          ? [candidate.subject]
+          : [],
+    );
+    throw new Error(
+      `Expected one rolled ${biteAttackName} attack act; discovered ${JSON.stringify(attackSubjects)}.`,
+    );
   }
   const subject = matchingActs[0]?.subject;
   if (subject?.tag !== "action" || subject.action !== "attack") {
@@ -456,13 +488,13 @@ function sizeGatedConditionRiderBattle(
     combatants: [
       statBlockCreatureInit({
         combatantId: actorId,
-        displayName: "Stat Block Size-Gated Condition Attacker",
+        statBlockName: "Stat Block Size-Gated Condition Attacker",
         initiative: 20,
         statBlock: sizeGatedConditionRiderAttackerStatBlock(),
       }),
       statBlockCreatureInit({
         combatantId: targetId,
-        displayName: sizeGatedConditionRiderTargetDisplayName(targetSizeGate),
+        statBlockName: sizeGatedConditionRiderTargetDisplayName(targetSizeGate),
         initiative: 10,
         statBlock: sizeGatedConditionRiderTargetStatBlock(targetSizeGate),
       }),
@@ -471,21 +503,39 @@ function sizeGatedConditionRiderBattle(
 }
 
 function sizeGatedConditionRiderAttackerStatBlock(): StatBlockRecord {
-  const base = statBlockRecord();
   return {
-    ...base,
     id: parseSharedStatBlockId(
       "stat_block_size_gated_condition_rider_mbt_attacker",
     ),
+    kind: "statBlock",
     name: "Stat Block Size-Gated Condition Attacker",
+    challengeRating: 0.25,
     provenance: {
-      kind: "srd-5.2.1",
-      section: "Stat Block size-gated condition rider MBT fixture",
+      kind: "synthetic-test",
+      section: "size-gated condition rider attacker fixture",
     },
     statBlock: {
-      ...base.statBlock,
-      displayName: "Stat Block Size-Gated Condition Attacker",
-      actions: { attacks: [biteAttack()] },
+      size: "small",
+      creatureType: "fey",
+      alignment: { order: "chaotic", morality: "neutral" },
+      ac: { value: { kind: "literal", value: 15 } },
+      hp: { kind: "literal", value: 10 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      abilityScores: {
+        cha: 8,
+        con: 10,
+        dex: 15,
+        int: 10,
+        str: 8,
+        wis: 8,
+      },
+      initiative: { modifier: 2, score: 12 },
+      passivePerception: 9,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Common", "Goblin"] },
+      },
+      actions: [nonSpellExecutableProcedureEntry(1, biteAttack())],
     },
   };
 }
@@ -493,23 +543,43 @@ function sizeGatedConditionRiderAttackerStatBlock(): StatBlockRecord {
 function sizeGatedConditionRiderTargetStatBlock(
   targetSizeGate: TargetSizeGate,
 ): StatBlockRecord {
-  const base = statBlockRecord();
   return {
-    ...base,
     id: sizeGatedConditionRiderTargetStatBlockId(targetSizeGate),
+    kind: "statBlock",
     name: sizeGatedConditionRiderTargetDisplayName(targetSizeGate),
+    challengeRating: 0.25,
     provenance: {
-      kind: "srd-5.2.1",
-      section: "Stat Block size-gated condition rider MBT fixture",
+      kind: "synthetic-test",
+      section: "size-gated condition rider target fixture",
     },
     statBlock: {
-      ...base.statBlock,
-      displayName: sizeGatedConditionRiderTargetDisplayName(targetSizeGate),
-      hp: { kind: "literal", value: 20 },
-      ...(targetSizeGate === "mediumOrSmallerProneImmune"
-        ? { immunities: { conditions: ["prone"] } }
-        : {}),
       size: targetSizeGate === "larger" ? "large" : "medium",
+      creatureType: "fey",
+      alignment: { order: "chaotic", morality: "neutral" },
+      ac: { value: { kind: "literal", value: 15 } },
+      hp: { kind: "literal", value: 20 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      abilityScores: {
+        cha: 8,
+        con: 10,
+        dex: 15,
+        int: 10,
+        str: 8,
+        wis: 8,
+      },
+      initiative: { modifier: 2, score: 12 },
+      passivePerception: 9,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Common", "Goblin"] },
+      },
+      ...(targetSizeGate === "mediumOrSmallerProneImmune"
+        ? {
+            immunities: decodeCreatureImmunityDeclarationSync({
+              conditions: ["prone"],
+            }),
+          }
+        : {}),
     },
   };
 }
@@ -546,6 +616,7 @@ function sizeGatedConditionRiderTargetStatBlockId(
 
 function biteAttack(): StatBlockAttack {
   return {
+    kind: "attack_roll",
     attackAbility: "str",
     attackBonus: { kind: "literal", value: 4 },
     attackType: "melee",

@@ -1,4 +1,6 @@
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import { battleActSpellPresentation } from "../battle-act-composition.ts";
 import {
@@ -15,6 +17,7 @@ import {
   recklessAttackFeature,
   requireCharacterUnitProcedureRefForTest,
   skeletonCreatureInit,
+  singleBaseStatBlockAttackDamageSelectionForTest,
   spellRecord,
   startBattleRight,
   startBattleSessionRight,
@@ -69,7 +72,10 @@ function familiarEligibilityBattle(): {
       statBlockCreatureInit({
         combatantId: familiarId,
         initiative: 5,
-        statBlock: statBlockCatalog.requireStatBlock("stat_block_bat"),
+        statBlock: assertStatBlockForTest(
+          statBlockCatalog,
+          statBlockId("stat_block_bat"),
+        ),
       }),
     ],
   });
@@ -290,6 +296,8 @@ describe("battle subject action eligibility", () => {
         actorId: fighterId,
         familiarId,
         procedureRef: statBlockProcedureRef,
+        statBlockDamageSelection:
+          singleBaseStatBlockAttackDamageSelectionForTest("rolled"),
       },
       {
         tag: "actionSpell",
@@ -431,6 +439,8 @@ describe("battle subject action eligibility", () => {
       procedureRef: BattleStatBlockProcedureExecutionRef.make(
         bitePresentation.procedureRef,
       ),
+      statBlockDamageSelection:
+        singleBaseStatBlockAttackDamageSelectionForTest("rolled"),
     } satisfies Extract<
       BattleSubject,
       { readonly tag: "action"; readonly action: "attack" }
@@ -438,7 +448,8 @@ describe("battle subject action eligibility", () => {
     const subjects = [
       {
         subject: biteAttack,
-        expectedIssue: "Find Familiar familiars can't attack.",
+        expectedIssue:
+          "Spawned companions without an admitted attack procedure can't attack.",
       },
       {
         subject: {
@@ -446,7 +457,8 @@ describe("battle subject action eligibility", () => {
           actorId: familiarId,
           action: "grapple" as const,
         },
-        expectedIssue: "Find Familiar familiars can't attack.",
+        expectedIssue:
+          "Spawned companions without an admitted attack procedure can't attack.",
       },
       {
         subject: {
@@ -454,7 +466,8 @@ describe("battle subject action eligibility", () => {
           actorId: familiarId,
           action: "shove" as const,
         },
-        expectedIssue: "Find Familiar familiars can't attack.",
+        expectedIssue:
+          "Spawned companions without an admitted attack procedure can't attack.",
       },
       {
         subject: {

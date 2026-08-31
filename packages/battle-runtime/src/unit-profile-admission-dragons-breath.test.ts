@@ -11,6 +11,7 @@ import { Schema } from "effect";
 import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import { Hp } from "@dnd/shared/types";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import {
   holeId,
   holeInstanceKey,
@@ -1260,7 +1261,9 @@ function fireImmuneHumanoidStatBlock() {
     ...base,
     statBlock: {
       ...base.statBlock,
-      immunities: { damageTypes: ["fire"] as const },
+      immunities: decodeCreatureImmunityDeclarationSync({
+        damageTypes: ["fire"],
+      }),
     },
   };
 }

@@ -1,5 +1,6 @@
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import * as path from "node:path";
 
 import {
@@ -20,6 +21,7 @@ import {
   spellSlotInvocationRef,
   startBattle,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   classUnitId,
@@ -1042,7 +1044,10 @@ function metamagicBridgeUsesSharedPointPoolRoute(
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: targetCombatantId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
         }),
       ],
@@ -1089,10 +1094,12 @@ function metamagicBridgeUsesSharedPointPoolRoute(
   }
   const result = settleCharacterSheetFromBattle({
     sheet,
-    state: resolved.state,
-    context: battle.context,
+    battleSession: battleRuntimeSessionForTest({
+      state: resolved.state,
+      context: battle.context,
+    }),
+    combatantId: settledCombatant.combatantId,
     unitLibrary,
-    combatant: settledCombatant,
   });
   expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
@@ -1533,7 +1540,10 @@ function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly Character
           kind: "available",
           input: {
             combatantId: combatantId("combatant:route-origin-feat-skeleton"),
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
             ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
             conditions: [],

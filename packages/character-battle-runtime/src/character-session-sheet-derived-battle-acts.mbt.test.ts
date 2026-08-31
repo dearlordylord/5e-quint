@@ -1,5 +1,6 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // KERNEL-COVERAGE: parity-witness CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION CHARACTER.BATTLE.HANDOFF.SETTLEMENT
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { statBlockId, unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -21,6 +22,7 @@ import {
   type BattleState,
   type BattleSubject,
 } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import {
   abilityScoreAssignment,
   characterEquipmentItemId,
@@ -513,11 +515,13 @@ function createSheetDerivedBattleActsDriver(input: {
         const character = requireCharacterCombatant(state);
         const settled = expectSuccess(
           settleCharacterSheetFromBattle({
-            state,
-            context: currentSession.battle.context,
+            battleSession: battleRuntimeSessionForTest({
+              state,
+              context: currentSession.battle.context,
+            }),
+            combatantId: character.combatantId,
             sheet: currentSession.sheet,
             unitLibrary,
-            combatant: character,
           }),
         );
         settledSheet = settled;
@@ -660,7 +664,10 @@ function startSheetDerivedSession(
 function battleCreatureInitFromRidingHorse() {
   return battleCreatureInitFromStatBlock({
     combatantId: targetCombatantId,
-    statBlock: statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
+    statBlock: assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_riding_horse"),
+    ),
     initiative: initiativeScore(10),
   });
 }

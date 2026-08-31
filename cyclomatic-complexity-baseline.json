@@ -23,8 +23,10 @@
       "module/binding:characterProcedurePresentationJoin": 25,
       "module/binding:intrinsicActPresentation": 13,
       "module/binding:intrinsicActPresentationText": 14,
-      "module/binding:intrinsicSubjectPresentation": 14,
       "module/binding:spellProcedurePresentationText": 12
+    },
+    "packages/battle-runtime/src/battle-reducer/action-eligibility.ts": {
+      "module/binding:actionSubjectEligibilityFacts": 9
     },
     "packages/battle-runtime/src/battle-reducer/action-spell-slot-expenditure.ts": {
       "module/binding:expendActionSpellSlot": 11
@@ -39,7 +41,8 @@
     },
     "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts": {
       "module/binding:admitBattleCombatant": 11,
-      "module/binding:applyInitiativeSwap": 12
+      "module/binding:applyInitiativeSwap": 12,
+      "module/binding:battleInitializationLeafIssueFromStateIssue": 10
     },
     "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts": {
       "module/binding:attackActionOptionsForActor": 9,
@@ -77,6 +80,7 @@
       "module/binding:resolveSearch": 11,
       "module/binding:resolveShove": 14,
       "module/binding:spendAttackAction": 11,
+      "module/binding:spendAttackTurnResources": 10,
       "module/binding:validateAttackDamageFill": 17,
       "module/binding:validateRolledDiceForWeaponAttack": 11
     },
@@ -94,14 +98,13 @@
       "module/binding:weaponHostedAttackCompositionRouteForResolution": 23
     },
     "packages/battle-runtime/src/battle-reducer/battle-codecs.ts": {
-      "module/binding:battleCreatureSnapshotInvariantsHold": 13,
-      "module/binding:statBlockExecutionSnapshotGraphIsValid": 12,
-      "module/binding:statBlockExecutionSnapshotGraphIsValid/call:snapshot.procedureBindings.every:argument-0": 13
+      "module/binding:characterBattleCreatureSnapshotInvariantsHold": 10
     },
     "packages/battle-runtime/src/battle-reducer/battle-discovery.ts": {
       "module/binding:companionAttackActs": 9,
       "module/binding:companionProtocolActs": 13,
-      "module/binding:discoverBattleActsWithoutRouteEvents": 69
+      "module/binding:discoverBattleActsWithoutRouteEvents": 69,
+      "module/binding:subjectAllowedDuringStatBlockMultiattackDispatch": 11
     },
     "packages/battle-runtime/src/battle-reducer/battle-movement.ts": {
       "module/binding:applyBattleMovement": 11
@@ -140,7 +143,7 @@
       "module/binding:combatantHandUses": 18
     },
     "packages/battle-runtime/src/battle-reducer/creature-state.ts": {
-      "module/binding:battleCreatureStateAdmissionFromInit": 33
+      "module/binding:battleCreatureStateAdmissionFromInit": 31
     },
     "packages/battle-runtime/src/battle-reducer/cunning-strike.ts": {
       "module/binding:eligibleCunningStrikeContexts/call:execution.procedureBindings.flatMap:argument-0": 10,
@@ -777,7 +780,6 @@
       "module/binding:withSpawnedCompanionCombatant": 11
     },
     "packages/battle-runtime/src/companion-lifecycle.ts": {
-      "module/binding:castResolvedSpawnedCompanion": 13,
       "module/binding:castWildCompanion": 14,
       "module/binding:selectedStoredFormStatBlockId": 9,
       "module/binding:spendWildCompanionCost": 10
@@ -794,23 +796,17 @@
     "packages/battle-runtime/src/procedure-execution/weapon-attack-override.ts": {
       "module/binding:weaponAttackOverrideExecutor/binding:resolveWeaponAttackOverride": 9
     },
-    "packages/battle-runtime/src/stat-block-combatant-admission.ts": {
-      "module/binding:admitBattleStatBlockCombatantSource": 15
-    },
     "packages/battle-runtime/src/stat-block-execution.ts": {
-      "module/binding:admitStatBlock": 19,
+      "module/binding:admitStatBlock": 17,
       "module/binding:allocateStatBlockExecution": 12,
       "module/binding:persistedValuesEqual": 12
     },
-    "packages/battle-runtime/src/stat-block-presentation.ts": {
-      "module/binding:attackActionOptionPresentationName": 21
+    "packages/battle-runtime/src/stat-block-procedure-pressure.ts": {
+      "module/binding:classifyUnrestrictedStatBlockSpellReferences/call:records.flatMap:argument-0/call:statBlockProcedurePressureOccurrences( record, recordOrdinal, sourceAuthority, ) .filter( ( occurrence, ): occurrence is StatBlockProcedurePressureOccurrence & { readonly kind: \"spellReference\"; readonly witness: StatBlockProcedurePressureWitness & { readonly location: Extract< StatBlockProcedurePressureLocation, { readonly kind: \"spellReference\" } >; }; } => occurrence.kind === \"spellReference\" && occurrence.witness.location.kind === \"spellReference\", ) .flatMap:argument-0": 9,
+      "module/binding:countUnrestrictedStatBlockSpellReferenceDefinitions": 9
     },
-    "packages/battle-runtime/src/statblock-action-support.ts": {
-      "module/binding:attackHitEffectRiderCategory": 11,
-      "module/binding:wildShapeFormActionSurfaceCategories": 18
-    },
-    "packages/battle-runtime/src/statblock-attack-damage-support.ts": {
-      "module/binding:supportedStatBlockAttackDamage": 10
+    "packages/battle-runtime/src/statblock-attack-execution-mechanics.ts": {
+      "module/binding:statBlockAttackMechanicsSupport": 12
     },
     "packages/battle-runtime/src/unit-feature-support.ts": {
       "module/binding:acrobaticMovementProfileForUnit": 11,
@@ -1155,9 +1151,6 @@
     },
     "packages/surface/src/interpreter/tracer-attachments.ts": {
       "module/binding:traceAttachment": 13
-    },
-    "packages/surface/src/interpreter/tracer-creature-actions.ts": {
-      "module/binding:traceCreatureActions": 10
     },
     "packages/surface/src/interpreter/tracer-duration.ts": {
       "module/binding:traceDuration": 9

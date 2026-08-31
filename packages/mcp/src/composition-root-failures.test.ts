@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, test, vi } from "vitest";
+import { Option } from "effect";
 import type {
   SrdStatBlockCollection,
   StatBlockCatalog,
@@ -42,15 +43,8 @@ vi.mock("@dnd/surface/surface/unit-catalog", () => {
 
 vi.mock("@dnd/surface/surface/stat-block-catalog", () => {
   const emptyStatBlockCatalog = {
-    getStatBlock: () => {
-      throw new Error("Synthetic empty Stat Block catalog has no Stat Blocks");
-    },
+    getStatBlock: () => Option.none(),
     listStatBlocks: () => [],
-    requireStatBlock: (id) => {
-      throw new Error(
-        `Synthetic empty Stat Block catalog has no Stat Block ${id}`,
-      );
-    },
   } satisfies StatBlockCatalog;
   const emptySrdStatBlockCollection = {
     kind: "srdStatBlockCollection",

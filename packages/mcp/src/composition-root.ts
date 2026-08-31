@@ -1,7 +1,7 @@
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
-  type StatBlockCatalog,
+  type SrdStatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
@@ -37,7 +37,7 @@ import {
 
 export type McpApplicationServices = {
   readonly unitLibrary: UnitCatalog;
-  readonly statBlockCatalog: StatBlockCatalog;
+  readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly createAdminMirrorPublication: (
     mirrorSessionId: AdminMirrorSessionId,
   ) => AdminMirrorPublication;

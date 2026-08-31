@@ -331,6 +331,14 @@ export function battleRuntimeIssuePayload(
         issueTag: matched.tag,
         slot: matched.slot,
       })),
+      Match.when({ tag: "statBlockResourceGraphIssue" }, (matched) => ({
+        kind: "battleInitialization",
+        code: "BATTLE_INITIALIZATION_INVALID",
+        ownerPath: matched.ownerPath,
+        issueTag: matched.tag,
+        combatantId: matched.combatantId,
+        issues: matched.issues,
+      })),
       Match.exhaustive,
     ),
   );

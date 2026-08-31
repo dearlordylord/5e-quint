@@ -4,7 +4,10 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 import { Result } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { describe, expect, test } from "vitest";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import {
   battleId,
   battleAmmunitionStock,
@@ -1162,7 +1165,6 @@ function chromaticOrbSession(input: {
       input.secondTargetKind === "poisonImmuneSkeleton"
         ? poisonImmuneSkeletonCreature({
             combatantId: secondTargetId,
-            displayName: "Second target",
             initiative: 9,
           })
         : characterCreature({
@@ -1788,24 +1790,29 @@ function savingThrowOutcomeFill(
 
 function poisonImmuneSkeletonCreature(input: {
   readonly combatantId: CombatantId;
-  readonly displayName: string;
   readonly initiative: number;
 }): BattleCreatureInit {
+  const projected = Result.getOrThrow(
+    projectAuthoredStatBlock(
+      assertStatBlockForTest(
+        statBlockCatalog,
+        statBlockId("stat_block_skeleton"),
+      ),
+    ),
+  );
   return {
     combatantId: input.combatantId,
-    displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
       source: Result.getOrThrow(
-        battleStatBlockCombatantSource(
-          statBlockCatalog.requireStatBlock("stat_block_skeleton"),
-        ),
+        battleStatBlockCombatantSource(projected.runtime),
       ),
       currentHp: Hp(13),
       tempHp: Hp(0),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
+      presentation: projected.presentation,
     },
   };
 }

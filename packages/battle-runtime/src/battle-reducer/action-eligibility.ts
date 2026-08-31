@@ -1,3 +1,6 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK
 import {
   canSpendAction,
   canSpendBonusAction,
@@ -13,7 +16,10 @@ import type {
   BattleTurnResources,
 } from "../battle-state-execution.ts";
 import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
-import { canSpendEscapeGrappleActionResource } from "./action-resource-kinds.ts";
+import {
+  canSpendEscapeGrappleActionResource,
+  statBlockMultiattackActionResourceMatchesProcedure,
+} from "./action-resource-kinds.ts";
 import {
   combatantCanTakeActions,
   isLegendaryAttackSubject,
@@ -291,6 +297,24 @@ function actionSubjectEligibilityFacts(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "action" }>,
 ): Exclude<ActionEligibilityFacts, { readonly tag: "notApplicable" }> {
+  const actor = state.combatants.get(subject.actorId);
+  const statBlockExecution =
+    actor?.origin.kind === "statBlock" ? actor.origin.execution : null;
+  if (
+    subject.action === "attack" &&
+    subject.procedureRef !== undefined &&
+    statBlockExecution !== null &&
+    state.currentTurnResources.actionResources.some((resource) =>
+      statBlockMultiattackActionResourceMatchesProcedure(
+        resource,
+        subject.actorId,
+        statBlockExecution,
+        subject.procedureRef,
+      ),
+    )
+  ) {
+    return { tag: "familiarForbiddenActorEligibilityOnly" };
+  }
   const standard = (action: StandardActionKind) =>
     ({ tag: "standardAction", action }) as const;
   const facts = Match.value(subject.action).pipe(

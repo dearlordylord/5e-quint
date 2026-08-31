@@ -1,5 +1,11 @@
 import { Match, Result, Schema } from "effect";
-import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
+import {
+  StatBlockProcedureOrdinalSchema,
+  StatBlockProcedureResourceRefsSchema,
+  StatBlockSpellReferenceSchema,
+  StatBlockTextOnlyReasonSchema,
+} from "@dnd/surface/surface/schema";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 
 import type { McpApplicationServices } from "./composition-root.ts";
 import {
@@ -9,6 +15,8 @@ import {
   InspectCatalogUnitInputSchema,
   type InspectCatalogUnitArgs,
 } from "./catalog-unit-tool.ts";
+import { statBlockSummary } from "./stat-block-content-projection.ts";
+export { statBlockSummary } from "./stat-block-content-projection.ts";
 import {
   decodeToolArgs,
   mcpObjectJsonSchema,
@@ -43,20 +51,64 @@ const ListCatalogUnitsOutputSchema = Schema.Struct({
 const StatBlockAttackSummarySchema = Schema.Struct({
   attackName: Schema.String,
   attackType: Schema.String,
-  attackBonus: Schema.Union([Schema.Number, Schema.Null]),
+  attackBonus: Schema.Number,
   reachFeet: Schema.optionalKey(Schema.Number),
   normalRangeFeet: Schema.optionalKey(Schema.Number),
   longRangeFeet: Schema.optionalKey(Schema.Number),
   onHit: StringArraySchema,
 });
+const StatBlockProcedureSectionOutputSchema = Schema.Literals([
+  "action",
+  "bonus_action",
+  "reaction",
+  "legendary_action",
+]);
+const StatBlockProcedureKindOutputSchema = Schema.Literals([
+  "attack_roll",
+  "multiattack",
+  "save",
+  "support",
+  "action_option",
+  "spellcasting",
+]);
+const StatBlockSpellcastingGroupSummarySchema = Schema.Struct({
+  kind: Schema.Literals(["at_will", "limited"]),
+  resourceRefs: StatBlockProcedureResourceRefsSchema,
+  spells: Schema.NonEmptyArray(StatBlockSpellReferenceSchema),
+});
+const StatBlockExecutableProcedureSummarySchema = Schema.Struct({
+  section: StatBlockProcedureSectionOutputSchema,
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  kind: Schema.Literal("executable"),
+  procedureKind: StatBlockProcedureKindOutputSchema,
+  name: Schema.String,
+  resourceRefs: StatBlockProcedureResourceRefsSchema,
+  spellcastingGroups: Schema.optionalKey(
+    Schema.Array(StatBlockSpellcastingGroupSummarySchema),
+  ),
+});
+const StatBlockTextOnlyProcedureSummarySchema = Schema.Struct({
+  section: StatBlockProcedureSectionOutputSchema,
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  kind: Schema.Literal("textOnly"),
+  name: Schema.String,
+  description: Schema.String,
+  reason: StatBlockTextOnlyReasonSchema,
+  resourceRefs: StatBlockProcedureResourceRefsSchema,
+});
+const StatBlockProcedureSummarySchema = Schema.Union([
+  StatBlockExecutableProcedureSummarySchema,
+  StatBlockTextOnlyProcedureSummarySchema,
+]);
 const StatBlockSummarySchema = Schema.Struct({
   statBlockId: Schema.String,
-  displayName: Schema.String,
+  name: Schema.String,
   creatureType: Schema.String,
-  armorClass: Schema.Union([Schema.Number, Schema.Null]),
-  hitPoints: Schema.Union([Schema.Number, Schema.Null]),
-  initiativeModifier: Schema.optionalKey(Schema.Number),
+  armorClass: Schema.Number,
+  hitPoints: Schema.Number,
+  initiativeModifier: Schema.Number,
   attacks: Schema.Array(StatBlockAttackSummarySchema),
+  orderedProcedures: Schema.Array(StatBlockProcedureSummarySchema),
   damageVulnerabilities: StringArraySchema,
   damageResistances: StringArraySchema,
   damageResistanceChoices: StringArraySchema,
@@ -121,7 +173,7 @@ export const contentToolDefinitions = [
     name: contentToolNames.listStatBlocks,
     title: "List Stat Blocks",
     description:
-      "List every installed redistributable SRD Stat Block with ids, display names, attacks, defenses, and damage modifiers. Catalog presence does not imply that every source is executable in every workflow.",
+      "List every installed redistributable SRD Stat Block with ids, authored names, ordered procedure summaries (including retained text-only entries), attacks, defenses, and damage modifiers. Catalog presence does not imply that every source is executable in every workflow.",
     inputSchema: emptyInputSchema,
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: listStatBlocksOutputSchema,
@@ -137,10 +189,6 @@ export const contentToolDefinitions = [
   },
   inspectCatalogUnitToolDefinition,
 ] as const satisfies readonly ProtocolToolDefinition[];
-
-type StatBlockAttack = NonNullable<
-  NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
->[number];
 
 export type ContentToolResult =
   | ReturnType<typeof schemaJsonContent>
@@ -331,97 +379,4 @@ function groupUnitsByKind(units: readonly UnitRecord[]) {
       ),
     ]),
   );
-}
-
-export function statBlockSummary(record: StatBlockRecord) {
-  const statBlock = record.statBlock;
-  return {
-    statBlockId: record.id,
-    displayName: statBlock.displayName,
-    creatureType: stringCreatureType(record),
-    armorClass: literalNumber(statBlock.ac),
-    hitPoints: literalNumber(statBlock.hp),
-    ...(statBlock.initiativeModifier === undefined
-      ? {}
-      : { initiativeModifier: statBlock.initiativeModifier }),
-    attacks: (statBlock.actions?.attacks ?? []).map(attackSummary),
-    damageVulnerabilities: damageModifierTypes(statBlock.vulnerabilities),
-    damageResistances: damageModifierTypes(statBlock.resistances),
-    damageResistanceChoices: damageResistanceChoices(statBlock.resistances),
-    damageImmunities: damageModifierTypes(statBlock.immunities),
-    conditionImmunities: conditionModifierTypes(statBlock.immunities),
-    provenanceKind: record.provenance.kind,
-    provenanceSection: record.provenance.section,
-  };
-}
-
-function attackSummary(attack: StatBlockAttack) {
-  return {
-    attackName: attack.name,
-    attackType: attack.attackType,
-    attackBonus: literalNumber(attack.attackBonus),
-    ...(typeof attack.reachFeet === "number"
-      ? { reachFeet: attack.reachFeet }
-      : {}),
-    ...(attack.rangeFeet === undefined
-      ? {}
-      : { normalRangeFeet: attack.rangeFeet.normal }),
-    ...(attack.rangeFeet === undefined
-      ? {}
-      : { longRangeFeet: attack.rangeFeet.long }),
-    onHit: attack.onHit.map((effect) => JSON.stringify(effect)),
-  };
-}
-
-function stringCreatureType(record: StatBlockRecord): string {
-  const { creatureType } = record.statBlock;
-  if (typeof creatureType === "string") {
-    return creatureType;
-  }
-  return JSON.stringify(creatureType);
-}
-
-function literalNumber(
-  value:
-    | StatBlockRecord["statBlock"]["ac"]
-    | StatBlockRecord["statBlock"]["hp"]
-    | NonNullable<
-        NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
-      >[number]["attackBonus"],
-): number | null {
-  if (value.kind === "literal") {
-    return value.value;
-  }
-  return null;
-}
-
-function damageModifierTypes(
-  value:
-    | StatBlockRecord["statBlock"]["vulnerabilities"]
-    | StatBlockRecord["statBlock"]["resistances"]
-    | Pick<
-        NonNullable<StatBlockRecord["statBlock"]["immunities"]>,
-        "damageTypes"
-      >
-    | undefined,
-): string[] {
-  if (value === undefined) {
-    return [];
-  }
-  if ("kind" in value && value.kind === "choose_one_from") {
-    return [];
-  }
-  return value.damageTypes === undefined ? [] : [...value.damageTypes];
-}
-
-function damageResistanceChoices(
-  value: StatBlockRecord["statBlock"]["resistances"] | undefined,
-): string[] {
-  return value?.kind === "choose_one_from" ? [...value.options] : [];
-}
-
-function conditionModifierTypes(
-  value: StatBlockRecord["statBlock"]["immunities"],
-): string[] {
-  return value?.conditions === undefined ? [] : [...value.conditions];
 }

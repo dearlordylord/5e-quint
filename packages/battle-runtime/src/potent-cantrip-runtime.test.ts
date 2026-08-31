@@ -2,6 +2,7 @@ import { characterUnitProcedureBindings } from "./character-execution-admission.
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.potent-cantrip
 import { describe, expect, test } from "vitest";
 import { classLevel } from "@dnd/shared/types";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 
 import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
@@ -564,7 +565,9 @@ function coldImmuneUndeadStatBlock() {
     ...base,
     statBlock: {
       ...base.statBlock,
-      immunities: { damageTypes: ["cold"] as const },
+      immunities: decodeCreatureImmunityDeclarationSync({
+        damageTypes: ["cold"],
+      }),
     },
   };
 }

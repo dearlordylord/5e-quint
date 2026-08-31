@@ -78,9 +78,8 @@ export function settleCharacterSessionsFromBattle(
       });
     }
     const settledSession = settleCharacterSheetFromBattle({
-      combatant,
-      state,
-      context: battleSession.context,
+      battleSession,
+      combatantId: combatant.combatantId,
       sheet: session.sheet,
       unitLibrary: root.unitLibrary,
       statBlockCatalog: root.statBlockCatalog,

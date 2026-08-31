@@ -1,0 +1,214 @@
+{
+  "challengeRating": 2,
+  "id": "stat_block_centaur_trooper",
+  "kind": "statBlock",
+  "name": "Centaur Trooper",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:7-36"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 11,
+      "con": 14,
+      "dex": 14,
+      "int": 9,
+      "str": 18,
+      "wis": 13
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 16
+      }
+    },
+    "actions": [
+      {
+        "description": "The centaur makes two attacks, using Pike or Longbow in any combination.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 6
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Pike",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 10,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 9
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ammunition": "arrow",
+          "attackAbility": "dex",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "attackType": "ranged",
+          "kind": "attack_roll",
+          "name": "Longbow",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 8,
+                  "flat": 2
+                },
+                "kind": "fixed",
+                "static": 6
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "rangeFeet": {
+            "long": 600,
+            "normal": 150
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "good",
+      "order": "neutral"
+    },
+    "bonusActions": [
+      {
+        "description": "The centaur moves up to its Speed without provoking Opportunity Attacks and can move through the spaces of Medium or smaller creatures. Each creature whose space the centaur enters is targeted once by the following effect. Strength Saving Throw: DC 14. Failure: 7 (1d6 + 4) Bludgeoning damage, and the target has the Prone condition.",
+        "kind": "textOnly",
+        "name": "Trampling Charge",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Elvish",
+          "Sylvan"
+        ]
+      }
+    },
+    "creatureType": "fey",
+    "gear": [
+      {
+        "item": "Breastplate"
+      },
+      {
+        "item": "Longbow"
+      },
+      {
+        "item": "Pike"
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 45
+    },
+    "initiative": {
+      "modifier": 2,
+      "score": 12
+    },
+    "passivePerception": 13,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
+        "ability": "dex",
+        "modifier": 2
+      },
+      {
+        "ability": "con",
+        "modifier": 2
+      },
+      {
+        "ability": "int",
+        "modifier": -1
+      },
+      {
+        "ability": "wis",
+        "modifier": 1
+      },
+      {
+        "ability": "cha",
+        "modifier": 0
+      }
+    ],
+    "size": "large",
+    "skillModifiers": [
+      {
+        "modifier": 6,
+        "skill": "athletics"
+      },
+      {
+        "modifier": 3,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 50
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}

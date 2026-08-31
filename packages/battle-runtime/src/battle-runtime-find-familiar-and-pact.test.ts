@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { Result } from "effect";
 import {
@@ -110,7 +111,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
       ).toEqual({
         tag: "resolved",
         form: {
-          statBlock: statBlockCatalog.requireStatBlock(form.statBlockId),
+          statBlock: assertStatBlockForTest(statBlockCatalog, form.statBlockId),
           creatureTypeOverride: "fey",
         },
       });
@@ -286,7 +287,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
       ).toEqual({
         tag: "resolved",
         form: {
-          statBlock: statBlockCatalog.requireStatBlock(form.statBlockId),
+          statBlock: assertStatBlockForTest(statBlockCatalog, form.statBlockId),
           creatureTypeOverride: "celestial",
         },
       });
