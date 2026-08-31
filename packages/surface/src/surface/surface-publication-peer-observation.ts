@@ -1,7 +1,10 @@
+const STAT_BLOCK_PUBLICATION_RECORD_KIND = "statBlock" as const;
+const OTHER_PUBLICATION_RECORD_KIND = "other" as const;
+const UNKNOWN_PUBLICATION_RECORD_KIND = "unknown" as const;
 const SURFACE_PUBLICATION_RECORD_KINDS = [
-  "statBlock",
-  "other",
-  "unknown",
+  STAT_BLOCK_PUBLICATION_RECORD_KIND,
+  OTHER_PUBLICATION_RECORD_KIND,
+  UNKNOWN_PUBLICATION_RECORD_KIND,
 ] as const;
 
 export type SurfacePublicationRecordKind =
@@ -92,15 +95,12 @@ export function projectSrdStatBlockPeerObservation(
 ): SrdStatBlockPeerObservation | undefined {
   return Match.value(observation).pipe(
     Match.when(
-      { recordKind: SURFACE_PUBLICATION_RECORD_KINDS[0] },
+      { recordKind: STAT_BLOCK_PUBLICATION_RECORD_KIND },
       (statBlock) => statBlock,
     ),
+    Match.when({ recordKind: OTHER_PUBLICATION_RECORD_KIND }, () => undefined),
     Match.when(
-      { recordKind: SURFACE_PUBLICATION_RECORD_KINDS[1] },
-      () => undefined,
-    ),
-    Match.when(
-      { recordKind: SURFACE_PUBLICATION_RECORD_KINDS[2] },
+      { recordKind: UNKNOWN_PUBLICATION_RECORD_KIND },
       () => undefined,
     ),
     Match.exhaustive,

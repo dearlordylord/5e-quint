@@ -5,7 +5,6 @@ import { describe, expect, test } from "vitest";
 import { statBlockId } from "../packages/shared/src/game-facts.ts";
 
 import { srdStatBlockCollection } from "../packages/surface/src/surface/installed-srd-stat-block-catalog.ts";
-import { normalizeStatBlockIdentity } from "../packages/surface/src/surface/stat-block-identity.ts";
 import {
   SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
   SRD_STAT_BLOCK_SOURCE_PATHS,
@@ -216,7 +215,6 @@ describe("SRD Stat Block source parity operation", () => {
     expect(report.issues).toContainEqual({
       kind: "duplicate-identity",
       name: "Bat",
-      normalizedIdentity: normalizeStatBlockIdentity("Bat"),
       statBlockIds: [bat.id, duplicateBat.id],
     });
     expect(
@@ -279,7 +277,6 @@ describe("SRD Stat Block source parity operation", () => {
     expect(report.issues).toContainEqual({
       kind: "duplicate-identity",
       name: "Alpha",
-      normalizedIdentity: normalizeStatBlockIdentity("Alpha"),
       statBlockIds: [alpha.id, duplicateAlpha.id],
     });
     expect(report.issues).toContainEqual({

@@ -759,9 +759,6 @@ function scenarioMutationFixture(
         expectedParityIssues.push({
           kind: "duplicate-identity",
           name: target.authored.evidence.name,
-          normalizedIdentity: normalizedEvidenceIdentity(
-            target.authored.evidence,
-          ),
           statBlockIds: [
             target.authored.evidence.statBlockId,
             secondRecord.evidence.statBlockId,
@@ -905,9 +902,15 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       "id" extends keyof typeof mechanics ? false : true,
       "name" extends keyof typeof mechanics ? false : true,
       "sourceSection" extends keyof typeof mechanics ? false : true,
-    ] = [true, true, true, true, true];
+      "normalizedIdentity" extends keyof Extract<
+        SrdStatBlockParityIssue,
+        { readonly kind: "duplicate-identity" }
+      >
+        ? false
+        : true,
+    ] = [true, true, true, true, true, true];
 
-    expect(shapeProof).toEqual([true, true, true, true, true]);
+    expect(shapeProof).toEqual([true, true, true, true, true, true]);
     expect(raw.evidence).not.toHaveProperty("normalizedIdentity");
     expect(authored.evidence).not.toHaveProperty("normalizedIdentity");
     expect(mechanics).not.toHaveProperty("id");
