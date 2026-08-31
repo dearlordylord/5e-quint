@@ -91,12 +91,12 @@ function contextText(delivery: ContextDelivery): string {
 const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
 /** The emitted declaration graph is compilation support, not an unbounded SDK. */
 export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE = {
-  files: 529,
-  bytes: 4_094_773,
+  files: 530,
+  bytes: 4_667_450,
 } as const;
 /**
  * Effect 4's reviewed declaration graph uses every admitted file and leaves a
- * 6,390,987-byte margin below its reviewed 10 MiB cap. Any graph growth must
+ * 5,818,310-byte margin below its reviewed 10 MiB cap. Any graph growth must
  * update the reviewed measure explicitly.
  */
 export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES =
