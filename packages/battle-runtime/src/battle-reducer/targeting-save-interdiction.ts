@@ -62,6 +62,13 @@ type AttackRollInterdictionReplacementTarget = Extract<
   AttackRollTargetingSaveInterdictionCheck,
   { readonly tag: "newTarget" }
 >;
+type AttackRollInterdictionNewTargetOutcome = Extract<
+  Exclude<
+    BattleTargetingSaveInterdictionOutcome,
+    { readonly saveSucceeded: true }
+  >["outcome"],
+  { readonly kind: "newTarget"; readonly replacementTargetKind: "attackRoll" }
+>;
 
 export function targetChoiceFillAfterAttackRedirectionWardAttackRollReplacement(input: {
   readonly fill: Extract<BattleFill, { readonly kind: "targetChoice" }>;
@@ -135,15 +142,11 @@ export function targetingSaveInterdictionCheck(
 ):
   | AttackRollTargetingSaveInterdictionCheck
   | NonAttackTargetingSaveInterdictionCheck {
-  const warded = input.state.combatants.get(input.wardedCombatantId);
-  const durableEffect = warded?.activeEffects.find(
-    (candidate) => candidate.kind === "targetingSaveInterdiction",
+  const effect = activeTargetingSaveInterdictionEffect(
+    input.state,
+    input.wardedCombatantId,
   );
-  const effect =
-    durableEffect?.kind === "targetingSaveInterdiction"
-      ? boundTargetingSaveInterdictionEffect(input.state, durableEffect)
-      : undefined;
-  if (warded === undefined || effect === undefined) {
+  if (effect === undefined) {
     return { tag: "notWarded" };
   }
   const hole = targetingSaveInterdictionOutcomeHole({
@@ -178,7 +181,34 @@ export function targetingSaveInterdictionCheck(
     };
   }
   /* v8 ignore stop -- @preserve */
-  const value = matchingFills[0]!.value;
+  return targetingSaveInterdictionOutcomeCheck(input, matchingFills[0]!.value);
+}
+
+function activeTargetingSaveInterdictionEffect(
+  state: BattleState,
+  wardedCombatantId: CombatantId,
+): BoundTargetingSaveInterdictionEffect | undefined {
+  const durableEffect = state.combatants
+    .get(wardedCombatantId)
+    ?.activeEffects.find(
+      (candidate) => candidate.kind === "targetingSaveInterdiction",
+    );
+  return durableEffect?.kind === "targetingSaveInterdiction"
+    ? boundTargetingSaveInterdictionEffect(state, durableEffect)
+    : undefined;
+}
+
+function targetingSaveInterdictionOutcomeCheck(
+  input: TargetingSaveInterdictionInput & {
+    readonly replacementTargetKind: "attackRoll" | "nonAttack";
+  },
+  value: Extract<
+    BattleFill,
+    { readonly kind: "targetingSaveInterdictionOutcome" }
+  >["value"],
+):
+  | AttackRollTargetingSaveInterdictionCheck
+  | NonAttackTargetingSaveInterdictionCheck {
   if (value.saveSucceeded) {
     return { tag: "saveSucceeded" };
   }
@@ -219,10 +249,17 @@ export function targetingSaveInterdictionCheck(
       spatialFacts: value.outcome.spatialFacts,
     };
   }
+  return attackRollTargetingSaveInterdictionOutcomeCheck(input, value.outcome);
+}
+
+function attackRollTargetingSaveInterdictionOutcomeCheck(
+  input: TargetingSaveInterdictionInput,
+  outcome: AttackRollInterdictionNewTargetOutcome,
+): AttackRollTargetingSaveInterdictionCheck {
   const relationshipFacts = parseAttackRollRelationshipFacts(
-    value.outcome.relationshipFacts ?? [],
+    outcome.relationshipFacts ?? [],
     input.triggeringCombatantId,
-    value.outcome.targetId,
+    outcome.targetId,
     ongoingFeatureEnemyRelationshipDecisionRequired(
       input.state,
       input.triggeringCombatantId,
@@ -240,8 +277,8 @@ export function targetingSaveInterdictionCheck(
   /* v8 ignore stop -- @preserve */
   return {
     tag: "newTarget",
-    targetId: value.outcome.targetId,
-    spatialFacts: value.outcome.spatialFacts,
+    targetId: outcome.targetId,
+    spatialFacts: outcome.spatialFacts,
     relationshipFacts,
   };
 }
