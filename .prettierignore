@@ -31,6 +31,11 @@ plans/unit-profile-coverage/level1-*-full-support.json
 plans/unit-profile-coverage/LEVEL1_*_FULL_SUPPORT.md
 plans/unit-profile-coverage/level1-*-mining-audit.json
 plans/unit-profile-coverage/LEVEL1_*_MINING_AUDIT.md
+
+# Generated RAW coverage bytes are owned by raw-coverage-check.cjs; its drift
+# gate compares their exact bytes and owns their formatting.
+plans/raw-coverage/matrix.json
+plans/raw-coverage/REPORT.md
 plans/unit-profile-coverage/level1-2-qnt-mbt-join.json
 plans/unit-profile-coverage/LEVEL1_2_QNT_MBT_JOIN.md
 plans/unit-profile-coverage/LEVEL1_2_ULTRA_GOLDEN_SUMMARY.md
