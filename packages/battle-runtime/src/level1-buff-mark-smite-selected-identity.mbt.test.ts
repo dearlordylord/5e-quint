@@ -31,8 +31,6 @@ import {
 // UNIT-IDENTITY-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Result } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { describe, expect, it } from "vitest";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
@@ -2777,21 +2775,12 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
     statBlockLibrary,
     statBlockId("stat_block_goblin_warrior"),
   );
-  const projected = Result.getOrThrow(projectAuthoredStatBlock(statBlock));
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: Result.getOrThrow(
-        battleStatBlockCombatantSource(projected.runtime),
-      ),
-      currentHp: Hp(projected.runtime.statBlock.hp.value),
-      tempHp: Hp(0),
-      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
-      conditions: [],
-      presentation: projected.presentation,
-    },
+    statBlock,
+    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+    conditions: [],
   };
 }
 

@@ -47,7 +47,6 @@ import {
   requiredAmmunitionKinds,
 } from "./battle-ammunition.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import {
   spellCasterId,
@@ -319,19 +318,11 @@ export function statBlockCreature(input: {
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: Result.getOrThrow(
-        battleStatBlockCombatantSource(projected.runtime),
-      ),
-      currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
-      tempHp: Hp(0),
-      ammunitionStocks: requiredAmmunitionKinds(attacks).map((ammunition) =>
-        battleAmmunitionStock(ammunition, 20),
-      ),
-      conditions: [],
-      presentation: projected.presentation,
-    },
+    statBlock: input.statBlock,
+    ammunitionStocks: requiredAmmunitionKinds(attacks).map((ammunition) =>
+      battleAmmunitionStock(ammunition, 20),
+    ),
+    conditions: [],
   };
 }
 

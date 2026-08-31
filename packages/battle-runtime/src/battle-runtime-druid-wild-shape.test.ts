@@ -149,7 +149,7 @@ import { canonicalHeldObjectIdsForActor } from "./battle-reducer/compelled-behav
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
-import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { shillelaghUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 import { bonusSpellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
 

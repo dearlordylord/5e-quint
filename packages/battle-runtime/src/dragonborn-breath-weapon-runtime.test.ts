@@ -49,6 +49,7 @@ import {
   startBattle,
 } from "./unit-profile-admission.test-support.ts";
 import { extraAttackBattleUnitRef } from "./unit-profile-admission-feature-fixture.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 const breathWeaponUnit = unitLibrary.requireUnit(
