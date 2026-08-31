@@ -2790,31 +2790,61 @@ function listPreparedSpellEligibleSpellLists(input: {
   readonly classUnitId: ClassUnitId;
   readonly nextClassLevel: number;
 }): readonly ClassSpellListName[] {
-  const additionalSpellLists = input.build.features.flatMap((feature) => {
-    if (
-      feature.kind !== "selectedClassChoice" ||
-      feature.selectedFromUnitId !== input.classUnitId
-    ) {
-      return [];
-    }
-    const unit = input.unitLibrary.getUnit(feature.unitId);
-    if (Option.isNone(unit)) {
-      return [];
-    }
-    const projection = projectCharacterCreationFeature(unit.value);
-    if (
-      projection.tag !== "readable" ||
-      projection.value.kind !== "class_feature" ||
-      projection.value.facts.className !== input.className ||
-      projection.value.facts.acquiredAtLevel > input.nextClassLevel ||
-      projection.value.facts.mechanics.family !==
-        "prepared_spell_list_expansion" ||
-      projection.value.facts.mechanics.baseSpellList !== input.className
-    )
-      return [];
-    return projection.value.facts.mechanics.additionalEligibleSpellLists;
-  });
+  const additionalSpellLists = input.build.features.flatMap((feature) =>
+    additionalPreparedSpellListsForSelectedFeature(feature, input),
+  );
   return [...new Set([input.className, ...additionalSpellLists])];
+}
+
+function additionalPreparedSpellListsForSelectedFeature(
+  feature: CharacterBuildFeature,
+  input: {
+    readonly unitLibrary: UnitCatalog;
+    readonly className: ClassSpellListName;
+    readonly classUnitId: ClassUnitId;
+    readonly nextClassLevel: number;
+  },
+): readonly ClassSpellListName[] {
+  if (
+    feature.kind !== "selectedClassChoice" ||
+    feature.selectedFromUnitId !== input.classUnitId
+  ) {
+    return [];
+  }
+  const unit = input.unitLibrary.getUnit(feature.unitId);
+  if (Option.isNone(unit)) return [];
+  const projection = projectCharacterCreationFeature(unit.value);
+  if (
+    projection.tag !== "readable" ||
+    projection.value.kind !== "class_feature"
+  ) {
+    return [];
+  }
+  const facts = projection.value.facts;
+  if (!selectedFeatureExpandsPreparedSpellLists(facts, input)) {
+    return [];
+  }
+  return facts.mechanics.additionalEligibleSpellLists;
+}
+
+function selectedFeatureExpandsPreparedSpellLists(
+  facts: CharacterCreationClassFeatureFacts,
+  input: Pick<
+    Parameters<typeof additionalPreparedSpellListsForSelectedFeature>[1],
+    "className" | "nextClassLevel"
+  >,
+): facts is CharacterCreationClassFeatureFacts & {
+  readonly mechanics: Extract<
+    CharacterCreationClassFeatureFacts["mechanics"],
+    { readonly family: "prepared_spell_list_expansion" }
+  >;
+} {
+  return (
+    facts.className === input.className &&
+    facts.acquiredAtLevel <= input.nextClassLevel &&
+    facts.mechanics.family === "prepared_spell_list_expansion" &&
+    facts.mechanics.baseSpellList === input.className
+  );
 }
 
 function preparedSpellLevelFromEligibleLists(

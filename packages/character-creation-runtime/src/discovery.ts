@@ -774,132 +774,155 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
   readonly classLevel: number;
   readonly unitLibrary: UnitCatalog;
 }): readonly ChoiceCreationHole[] {
-  return input.choices.flatMap((selection) => {
-    if (selection.kind !== "unitChoice") {
-      return [];
-    }
+  const primaryCantrips = selectedPrimaryCantripOptionIds(input);
+  return input.choices.flatMap((selection) =>
+    selectedClassFeatureGrantChoiceHoles(selection, input, primaryCantrips),
+  );
+}
 
-    const feature = input.unitLibrary.getUnit(selection.source.unitId);
-    if (Option.isNone(feature)) {
-      return [];
-    }
-    const projection = projectCharacterCreationFeature(feature.value);
-    if (
-      projection.tag !== "readable" ||
-      projection.value.kind !== "class_feature" ||
-      projection.value.facts.className !== input.classFacts.className ||
-      projection.value.facts.mechanics.family !==
-        "class_feature_acquisition_choice"
-    )
-      return [];
-    const mechanics = projection.value.facts.mechanics;
-    const featureChoiceKey = unitChoiceKey(mechanics.choiceKey);
-    if (
-      Result.isFailure(featureChoiceKey) ||
-      featureChoiceKey.success !== selection.source.choiceKey
-    ) {
-      return [];
-    }
+function selectedPrimaryCantripOptionIds(
+  input: Parameters<typeof selectedClassFeatureAcquisitionGrantChoiceHoles>[0],
+): ReadonlySet<CreationChoiceOptionId> {
+  return new Set(
+    input.choices.flatMap((choice) =>
+      choice.kind === "unitChoice" &&
+      choice.source.unitId === input.classUnitId &&
+      choice.source.choiceKey === CLASS_CANTRIP_CHOICE_KEY
+        ? choiceSelectionOptionIds(choice)
+        : [],
+    ),
+  );
+}
 
-    const primaryCantrips = new Set(
-      input.choices.flatMap((choice) =>
-        choice.kind === "unitChoice" &&
-        choice.source.unitId === input.classUnitId &&
-        choice.source.choiceKey === CLASS_CANTRIP_CHOICE_KEY
-          ? choiceSelectionOptionIds(choice)
-          : [],
+function selectedClassFeatureGrantChoiceHoles(
+  selection: CharacterChoiceSelection,
+  input: Parameters<typeof selectedClassFeatureAcquisitionGrantChoiceHoles>[0],
+  primaryCantrips: ReadonlySet<CreationChoiceOptionId>,
+): readonly ChoiceCreationHole[] {
+  if (selection.kind !== "unitChoice") return [];
+  const mechanics = selectedClassFeatureAcquisitionMechanics(selection, input);
+  if (mechanics === undefined) return [];
+  const featureChoiceKey = unitChoiceKey(mechanics.choiceKey);
+  if (
+    Result.isFailure(featureChoiceKey) ||
+    featureChoiceKey.success !== selection.source.choiceKey
+  )
+    return [];
+  const optionIds = new Set(choiceSelectionOptionIds(selection));
+  return mechanics.options
+    .filter((option) => optionIds.has(creationChoiceOptionId(option.id)))
+    .flatMap((option) =>
+      option.mechanics.grants.flatMap((grant) =>
+        selectedClassFeatureGrantHole(grant, selection, input, primaryCantrips),
       ),
     );
-    const optionIds = new Set(choiceSelectionOptionIds(selection));
-    return mechanics.options
-      .filter((option) => optionIds.has(creationChoiceOptionId(option.id)))
-      .flatMap((option) =>
-        option.mechanics.grants.flatMap((grant) => {
-          if (grant.kind === "grant_feat") {
-            const hole = featGrantFeatureHoleSource(
-              selection.source.unitId,
-              grant,
-              input.unitLibrary,
-              CLASS_FEATURE_FEAT_CHOICE_KEY,
-              [],
-            );
-            /* v8 ignore start -- @preserve -- The admitted acquisition feat grant produces a well-formed feat choice hole. */
-            return hole === undefined ? [] : [hole];
-            /* v8 ignore stop -- @preserve */
-          }
-          if (
-            grant.kind !== "grant_spell_access_choice" ||
-            grant.mode !== "known" ||
-            grant.spellLevel !== 0
-          ) {
-            return [];
-          }
-          const spellcasting = classSpellcastingCreation(
-            input.classFacts,
-            input.classLevel,
-          );
-          /* v8 ignore start -- @preserve -- Supported acquisition cantrip grants have list-prepared class spellcasting, a positive feasible count, and an installed class spell list. */
-          if (
-            spellcasting === undefined ||
-            !isListPreparedSpellcastingCreation(spellcasting)
-          ) {
-            return [];
-          }
+}
 
-          const cardinality = exactChoiceCardinality(grant.count);
-          if (cardinality === undefined) {
-            return [];
-          }
-          const grantedSpellList = classFeatureAcquisitionCantripGrantSpellList(
-            input.unitLibrary,
-            grant.spellList,
-          );
-          if (grantedSpellList === undefined) {
-            return [];
-          }
+function selectedClassFeatureAcquisitionMechanics(
+  selection: Extract<CharacterChoiceSelection, { readonly kind: "unitChoice" }>,
+  input: Parameters<typeof selectedClassFeatureAcquisitionGrantChoiceHoles>[0],
+):
+  | Extract<
+      CharacterCreationClassFeatureFacts["mechanics"],
+      { readonly family: "class_feature_acquisition_choice" }
+    >
+  | undefined {
+  const feature = input.unitLibrary.getUnit(selection.source.unitId);
+  if (Option.isNone(feature)) return undefined;
+  const projection = projectCharacterCreationFeature(feature.value);
+  if (
+    projection.tag !== "readable" ||
+    projection.value.kind !== "class_feature"
+  )
+    return undefined;
+  const { facts } = projection.value;
+  return facts.className === input.classFacts.className &&
+    facts.mechanics.family === "class_feature_acquisition_choice"
+    ? facts.mechanics
+    : undefined;
+}
 
-          const options = input.unitLibrary
-            .listUnits()
-            .filter(
-              (unit) =>
-                unit.kind === "spell" &&
-                unit.mechanics.level === 0 &&
-                allCantripsFromClassSpellList({
-                  className: grantedSpellList,
-                  spellIds: [unit.id],
-                  unitLibrary: input.unitLibrary,
-                }) &&
-                !primaryCantrips.has(creationChoiceOptionId(unit.id)),
-            )
-            .sort((left, right) =>
-              left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
-            )
-            .map((unit) => ({
-              optionId: creationChoiceOptionId(unit.id),
-              label: unit.id,
-              unitRef: { unitId: unit.id },
-            }));
-          if (choiceCardinalityMax(cardinality) > options.length) {
-            return [];
-          }
-          /* v8 ignore stop -- @preserve */
+function selectedClassFeatureGrantHole(
+  grant: EffectAtom,
+  selection: Extract<CharacterChoiceSelection, { readonly kind: "unitChoice" }>,
+  input: Parameters<typeof selectedClassFeatureAcquisitionGrantChoiceHoles>[0],
+  primaryCantrips: ReadonlySet<CreationChoiceOptionId>,
+): readonly ChoiceCreationHole[] {
+  if (grant.kind === "grant_feat") {
+    const hole = featGrantFeatureHoleSource(
+      selection.source.unitId,
+      grant,
+      input.unitLibrary,
+      CLASS_FEATURE_FEAT_CHOICE_KEY,
+      [],
+    );
+    return hole === undefined ? [] : [hole];
+  }
+  if (
+    grant.kind !== "grant_spell_access_choice" ||
+    grant.mode !== "known" ||
+    grant.spellLevel !== 0
+  )
+    return [];
+  return selectedClassFeatureCantripGrantHole(
+    grant,
+    selection.source.unitId,
+    input,
+    primaryCantrips,
+  );
+}
 
-          const hole = requireChoiceCreationHole(
-            choiceHole({
-              source: unitSource(
-                selection.source.unitId,
-                CLASS_CANTRIP_CHOICE_KEY,
-              ),
-              cardinality,
-              options,
-            }),
-          );
-          /* v8 ignore start -- @preserve -- The admitted acquisition spell grant produces a well-formed cantrip choice hole. */
-          return hole === undefined ? [] : [hole];
-          /* v8 ignore stop -- @preserve */
-        }),
-      );
-  });
+function selectedClassFeatureCantripGrantHole(
+  grant: GrantSpellAccessChoice,
+  featureUnitId: UnitRecord["id"],
+  input: Parameters<typeof selectedClassFeatureAcquisitionGrantChoiceHoles>[0],
+  primaryCantrips: ReadonlySet<CreationChoiceOptionId>,
+): readonly ChoiceCreationHole[] {
+  const spellcasting = classSpellcastingCreation(
+    input.classFacts,
+    input.classLevel,
+  );
+  if (
+    spellcasting === undefined ||
+    !isListPreparedSpellcastingCreation(spellcasting)
+  )
+    return [];
+  const cardinality = exactChoiceCardinality(grant.count);
+  const grantedSpellList = classFeatureAcquisitionCantripGrantSpellList(
+    input.unitLibrary,
+    grant.spellList,
+  );
+  if (cardinality === undefined || grantedSpellList === undefined) return [];
+  const options = input.unitLibrary
+    .listUnits()
+    .filter(
+      (unit) =>
+        unit.kind === "spell" &&
+        unit.mechanics.level === 0 &&
+        allCantripsFromClassSpellList({
+          className: grantedSpellList,
+          spellIds: [unit.id],
+          unitLibrary: input.unitLibrary,
+        }) &&
+        !primaryCantrips.has(creationChoiceOptionId(unit.id)),
+    )
+    .sort((left, right) =>
+      left.id < right.id ? -1 : left.id > right.id ? 1 : 0,
+    )
+    .map((unit) => ({
+      optionId: creationChoiceOptionId(unit.id),
+      label: unit.id,
+      unitRef: { unitId: unit.id },
+    }));
+  if (choiceCardinalityMax(cardinality) > options.length) return [];
+  const hole = requireChoiceCreationHole(
+    choiceHole({
+      source: unitSource(featureUnitId, CLASS_CANTRIP_CHOICE_KEY),
+      cardinality,
+      options,
+    }),
+  );
+  return hole === undefined ? [] : [hole];
 }
 
 function discoverSelectedFeatAbilityScoreIncreaseHoles(input: {
@@ -1486,62 +1509,100 @@ export function hasSupportedCoinEquipmentPath(input: {
   readonly unitLibrary: UnitCatalog;
   readonly supportProfile: CharacterCreationSupportProfile;
 }): boolean {
-  const draft = input.draft;
-  const progression = draft.selections.progression;
-  const classUnitId =
-    progression == null ? undefined : startingClassUnitId(progression);
-  const backgroundUnitId = draft.selections.background;
+  const facts = supportedCoinEquipmentFacts(input);
+  if (facts === undefined) return false;
+
+  return (
+    selectedCoinGrantStartingEquipmentChoice(
+      input.draft,
+      startingEquipmentChoiceHole(
+        unitSource(facts.classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
+        facts.classFacts.startingEquipment,
+      ),
+      facts.classFacts.startingEquipment,
+      input.supportProfile,
+    ) != null &&
+    selectedCoinGrantStartingEquipmentChoice(
+      input.draft,
+      startingEquipmentChoiceHole(
+        unitSource(facts.backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
+        facts.backgroundFacts.startingEquipment,
+      ),
+      facts.backgroundFacts.startingEquipment,
+      input.supportProfile,
+    ) != null
+  );
+}
+
+function supportedCoinEquipmentFacts(
+  input: Parameters<typeof hasSupportedCoinEquipmentPath>[0],
+) {
+  const selectionIds = supportedCoinEquipmentSelectionIds(input);
+  if (selectionIds === undefined) return undefined;
+  const classFacts = supportedCoinEquipmentClassFacts(
+    selectionIds.classUnitId,
+    input.unitLibrary,
+  );
+  const backgroundFacts = supportedCoinEquipmentBackgroundFacts(
+    selectionIds.backgroundUnitId,
+    input.unitLibrary,
+  );
+  return classFacts === undefined || backgroundFacts === undefined
+    ? undefined
+    : { ...selectionIds, classFacts, backgroundFacts };
+}
+
+function supportedCoinEquipmentSelectionIds(
+  input: Parameters<typeof hasSupportedCoinEquipmentPath>[0],
+) {
+  const progression = input.draft.selections.progression;
+  const backgroundUnitId = input.draft.selections.background;
+  if (progression === undefined || backgroundUnitId === undefined)
+    return undefined;
+  if (!isSupportedProgression(progression, input.supportProfile))
+    return undefined;
   if (
-    progression == null ||
-    classUnitId == null ||
-    backgroundUnitId == null ||
-    !isSupportedProgression(progression, input.supportProfile) ||
     !isSupported(
       backgroundUnitId,
       supportedBackgroundUnitIds(input.supportProfile),
     )
   ) {
-    return false;
+    return undefined;
   }
+  return { classUnitId: startingClassUnitId(progression), backgroundUnitId };
+}
 
-  const classUnit = input.unitLibrary.getUnit(classUnitId);
-  const backgroundUnit = input.unitLibrary.getUnit(backgroundUnitId);
+function supportedCoinEquipmentClassFacts(
+  classUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+) {
+  const classUnit = unitLibrary.getUnit(classUnitId);
   /* v8 ignore start -- @preserve -- Supported coin-path admission resolves both selected Units and parses their creation facts in this catalog. */
-  if (Option.isNone(classUnit) || Option.isNone(backgroundUnit)) {
-    return false;
-  }
+  if (Option.isNone(classUnit)) return undefined;
   const classProjection = projectCharacterDefinition(classUnit.value);
-  const backgroundProjection = projectCharacterDefinition(backgroundUnit.value);
   if (
     classProjection.tag !== "readable" ||
-    classProjection.value.kind !== "class" ||
-    backgroundProjection.tag !== "readable" ||
-    backgroundProjection.value.kind !== "background"
+    classProjection.value.kind !== "class"
   ) {
-    return false;
+    return undefined;
+  }
+  return classProjection.value.facts;
+  /* v8 ignore stop -- @preserve */
+}
+
+function supportedCoinEquipmentBackgroundFacts(
+  backgroundUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+) {
+  const backgroundUnit = unitLibrary.getUnit(backgroundUnitId);
+  /* v8 ignore start -- @preserve -- Supported coin-path admission resolves both selected Units and parses their creation facts in this catalog. */
+  if (Option.isNone(backgroundUnit)) return undefined;
+  const projection = projectCharacterDefinition(backgroundUnit.value);
+  if (projection.tag !== "readable" || projection.value.kind !== "background") {
+    return undefined;
   }
   /* v8 ignore stop -- @preserve */
-
-  return (
-    selectedCoinGrantStartingEquipmentChoice(
-      draft,
-      startingEquipmentChoiceHole(
-        unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
-        classProjection.value.facts.startingEquipment,
-      ),
-      classProjection.value.facts.startingEquipment,
-      input.supportProfile,
-    ) != null &&
-    selectedCoinGrantStartingEquipmentChoice(
-      draft,
-      startingEquipmentChoiceHole(
-        unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
-        backgroundProjection.value.facts.startingEquipment,
-      ),
-      backgroundProjection.value.facts.startingEquipment,
-      input.supportProfile,
-    ) != null
-  );
+  return projection.value.facts;
 }
 
 export function selectedCoinGrantStartingEquipmentChoice(
@@ -3118,126 +3179,129 @@ export function draftHole(
   _draft?: CharacterDraft,
   supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): CreationHole | undefined {
-  if (path === "draft.progression.initial") {
-    return choiceHole({
-      source: draftSource(path),
-      cardinality: EXACTLY_ONE_CHOICE,
-      options: unitLibrary
-        .listUnits()
-        .filter((unit) => unit.kind === "class")
-        .flatMap((unit) =>
-          progressionOptionsForClassUnit(unit, supportProfile),
-        ),
-    });
+  return Match.value(path).pipe(
+    Match.when("draft.progression.initial", () =>
+      choiceHole({
+        source: draftSource("draft.progression.initial"),
+        cardinality: EXACTLY_ONE_CHOICE,
+        options: unitLibrary
+          .listUnits()
+          .filter((unit) => unit.kind === "class")
+          .flatMap((unit) =>
+            progressionOptionsForClassUnit(unit, supportProfile),
+          ),
+      }),
+    ),
+    Match.when("draft.background", () =>
+      choiceHole({
+        source: draftSource("draft.background"),
+        cardinality: EXACTLY_ONE_CHOICE,
+        options: unitLibrary
+          .listUnits()
+          .filter((unit) => unit.kind === "background")
+          .map(unitOption),
+      }),
+    ),
+    Match.when("draft.species", () =>
+      choiceHole({
+        source: draftSource("draft.species"),
+        cardinality: EXACTLY_ONE_CHOICE,
+        options: unitLibrary
+          .listUnits()
+          .filter((unit) => unit.kind === "species")
+          .map(unitOption),
+      }),
+    ),
+    Match.when("draft.speciesSize", () =>
+      speciesSizeDraftHole("draft.speciesSize", unitLibrary, _draft),
+    ),
+    Match.when("draft.draconicAncestry", () =>
+      draconicAncestryDraftHole("draft.draconicAncestry", unitLibrary, _draft),
+    ),
+    Match.when("draft.abilityScoreGeneration", abilityScoreGenerationDraftHole),
+    Match.when("draft.languages", () =>
+      choiceHole({
+        source: draftSource("draft.languages"),
+        cardinality: exactChoiceCardinality(2),
+        options: STANDARD_LANGUAGES.filter(
+          (language): language is SelectableStandardLanguage =>
+            language !== "Common",
+        ).map((language) => ({
+          optionId: creationChoiceOptionId(language),
+          label: language,
+        })),
+      }),
+    ),
+    Match.when("draft.alignment", () =>
+      choiceHole({
+        source: draftSource("draft.alignment"),
+        cardinality: EXACTLY_ONE_CHOICE,
+        options: ALIGNMENT_CHOICES.map((alignment) => ({
+          optionId: creationChoiceOptionId(alignmentOptionId(alignment)),
+          label: alignmentLabel(alignment),
+        })),
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function abilityScoreGenerationDraftHole(): Extract<
+  CreationHole,
+  { readonly kind: "abilityScores" }
+> {
+  return {
+    kind: "abilityScores",
+    holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+    source: draftSource("draft.abilityScoreGeneration"),
+    methods: SUPPORTED_ABILITY_SCORE_METHODS,
+  };
+}
+
+function speciesSizeDraftHole(
+  path: "draft.speciesSize",
+  unitLibrary: UnitCatalog,
+  draft: CharacterDraft | undefined,
+): CreationHole | undefined {
+  const speciesId = draft?.selections.species;
+  if (speciesId === undefined) return undefined;
+  const unit = unitLibrary.getUnit(speciesId);
+  /* v8 ignore start -- @preserve -- A retained species id was selected from this catalog before dependent size-hole discovery. */
+  if (Option.isNone(unit)) return undefined;
+  /* v8 ignore stop -- @preserve */
+  const projection = projectCharacterDefinition(unit.value);
+  if (projection.tag !== "readable" || projection.value.kind !== "species") {
+    return undefined;
   }
-
-  if (path === "draft.background") {
-    return choiceHole({
-      source: draftSource(path),
-      cardinality: EXACTLY_ONE_CHOICE,
-      options: unitLibrary
-        .listUnits()
-        .filter((unit) => unit.kind === "background")
-        .map(unitOption),
-    });
-  }
-
-  if (path === "draft.species") {
-    return choiceHole({
-      source: draftSource(path),
-      cardinality: EXACTLY_ONE_CHOICE,
-      options: unitLibrary
-        .listUnits()
-        .filter((unit) => unit.kind === "species")
-        .map(unitOption),
-    });
-  }
-
-  if (path === "draft.speciesSize") {
-    const speciesId = _draft?.selections.species;
-    if (speciesId === undefined) {
-      return undefined;
-    }
-    const unit = unitLibrary.getUnit(speciesId);
-    /* v8 ignore start -- @preserve -- A retained species id was selected from this catalog before dependent size-hole discovery. */
-    if (Option.isNone(unit)) {
-      return undefined;
-    }
-    /* v8 ignore stop -- @preserve */
-    const projection = projectCharacterDefinition(unit.value);
-    if (
-      projection.tag !== "readable" ||
-      projection.value.kind !== "species" ||
-      projection.value.facts.size.kind !== "choice"
-    ) {
-      return undefined;
-    }
-
-    return choiceHole({
-      source: draftSource(path),
-      cardinality: EXACTLY_ONE_CHOICE,
-      options: projection.value.facts.size.options.map(speciesSizeOption),
-    });
-  }
-
-  if (path === "draft.draconicAncestry") {
-    const speciesId = _draft?.selections.species;
-    if (speciesId === undefined) {
-      return undefined;
-    }
-    const unit = unitLibrary.getUnit(speciesId);
-    /* v8 ignore start -- @preserve -- A retained species id was selected from this catalog before ancestry-hole discovery. */
-    if (Option.isNone(unit)) {
-      return undefined;
-    }
-    /* v8 ignore stop -- @preserve */
-    const projection = projectCharacterDefinition(unit.value);
-    if (projection.tag !== "readable" || projection.value.kind !== "species") {
-      return undefined;
-    }
-    const source = draconicAncestryDamageTypeSource(projection.value.facts);
-    if (source === undefined) {
-      return undefined;
-    }
-
-    return choiceHole({
-      source: draftSource(path),
-      cardinality: EXACTLY_ONE_CHOICE,
-      options: source.options.map(draconicAncestryOption),
-    });
-  }
-
-  if (path === "draft.abilityScoreGeneration") {
-    return {
-      kind: "abilityScores",
-      holeId: creationHoleId(`cc:draft:${path}`),
-      source: draftSource(path),
-      methods: SUPPORTED_ABILITY_SCORE_METHODS,
-    };
-  }
-
-  if (path === "draft.languages") {
-    return choiceHole({
-      source: draftSource(path),
-      cardinality: exactChoiceCardinality(2),
-      options: STANDARD_LANGUAGES.filter(
-        (language): language is SelectableStandardLanguage =>
-          language !== "Common",
-      ).map((language) => ({
-        optionId: creationChoiceOptionId(language),
-        label: language,
-      })),
-    });
-  }
-
-  const alignmentPath: "draft.alignment" = path;
+  if (projection.value.facts.size.kind !== "choice") return undefined;
   return choiceHole({
-    source: draftSource(alignmentPath),
+    source: draftSource(path),
     cardinality: EXACTLY_ONE_CHOICE,
-    options: ALIGNMENT_CHOICES.map((alignment) => ({
-      optionId: creationChoiceOptionId(alignmentOptionId(alignment)),
-      label: alignmentLabel(alignment),
-    })),
+    options: projection.value.facts.size.options.map(speciesSizeOption),
+  });
+}
+
+function draconicAncestryDraftHole(
+  path: "draft.draconicAncestry",
+  unitLibrary: UnitCatalog,
+  draft: CharacterDraft | undefined,
+): CreationHole | undefined {
+  const speciesId = draft?.selections.species;
+  if (speciesId === undefined) return undefined;
+  const unit = unitLibrary.getUnit(speciesId);
+  /* v8 ignore start -- @preserve -- A retained species id was selected from this catalog before ancestry-hole discovery. */
+  if (Option.isNone(unit)) return undefined;
+  /* v8 ignore stop -- @preserve */
+  const projection = projectCharacterDefinition(unit.value);
+  if (projection.tag !== "readable" || projection.value.kind !== "species") {
+    return undefined;
+  }
+  const source = draconicAncestryDamageTypeSource(projection.value.facts);
+  if (source === undefined) return undefined;
+  return choiceHole({
+    source: draftSource(path),
+    cardinality: EXACTLY_ONE_CHOICE,
+    options: source.options.map(draconicAncestryOption),
   });
 }
 

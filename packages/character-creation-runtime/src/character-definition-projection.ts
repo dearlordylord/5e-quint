@@ -322,18 +322,11 @@ function inspectCharacterDefinitionUnitLink(input: {
 
   const target = input.unitIds.get(input.link.targetRecordId);
   if (target === undefined) {
-    if (input.link.relationKind === "dependency") {
-      addAdmissionIssue(
-        input.issues,
-        "incomplete_graph",
-        input.linkPath,
-        `The Character Definition ${input.link.relation} authored ${input.link.relationKind} does not resolve to an installed ${input.link.targetKind}.`,
-      );
-    }
+    inspectMissingCharacterDefinitionUnitLink(input);
     return;
   }
 
-  if (!expectation.targetKinds.includes(target.kind)) {
+  if (!characterDefinitionTargetMatchesExpectation(target, expectation)) {
     addAdmissionIssue(
       input.issues,
       "ambiguous_mechanics",
@@ -343,10 +336,7 @@ function inspectCharacterDefinitionUnitLink(input: {
     return;
   }
   if (
-    expectation.requiresOwningClassName &&
-    (input.owningClassName === undefined ||
-      target.kind !== "subclass" ||
-      target.className !== input.owningClassName)
+    !characterDefinitionTargetBelongsToOwningClass(input, target, expectation)
   ) {
     addAdmissionIssue(
       input.issues,
@@ -355,6 +345,47 @@ function inspectCharacterDefinitionUnitLink(input: {
       `The Character Definition subclass-choice target must belong to ${input.owningClassName ?? "the owning class"}.`,
     );
   }
+}
+
+function inspectMissingCharacterDefinitionUnitLink(
+  input: Parameters<typeof inspectCharacterDefinitionUnitLink>[0],
+): void {
+  if (input.link.relationKind !== "dependency") return;
+  addAdmissionIssue(
+    input.issues,
+    "incomplete_graph",
+    input.linkPath,
+    `The Character Definition ${input.link.relation} authored ${input.link.relationKind} does not resolve to an installed ${input.link.targetKind}.`,
+  );
+}
+
+function characterDefinitionTargetMatchesExpectation(
+  target: UnitRecord,
+  expectation: Exclude<
+    ReturnType<typeof expectedCharacterDefinitionTarget>,
+    { readonly tag: "unowned" }
+  >,
+): boolean {
+  return expectation.targetKinds.includes(target.kind);
+}
+
+function characterDefinitionTargetBelongsToOwningClass(
+  input: Pick<
+    Parameters<typeof inspectCharacterDefinitionUnitLink>[0],
+    "owningClassName"
+  >,
+  target: UnitRecord,
+  expectation: Exclude<
+    ReturnType<typeof expectedCharacterDefinitionTarget>,
+    { readonly tag: "unowned" }
+  >,
+): boolean {
+  if (!expectation.requiresOwningClassName) return true;
+  return (
+    input.owningClassName !== undefined &&
+    target.kind === "subclass" &&
+    target.className === input.owningClassName
+  );
 }
 
 const CHARACTER_DEFINITION_CLASS_FEATURE_KINDS = [

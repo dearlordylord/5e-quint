@@ -88,25 +88,7 @@ export function characterBuildSorcererMetamagicFacts(input: {
   }
   const featureUnit = featureUnits[0];
   if (featureUnit === undefined) {
-    const hasSelections = input.build.features.some(
-      (feature) => feature.kind === "selectedSorcererMetamagicOption",
-    );
-    if (featureUnitIds.includes(SORCERER_METAMAGIC_UNIT_ID)) {
-      const installed = input.unitLibrary.getUnit(SORCERER_METAMAGIC_UNIT_ID);
-      if (Option.isNone(installed)) {
-        return sorcererMetamagicFactsIssue(
-          "Metamagic requires an installed Unit.",
-        );
-      }
-      return sorcererMetamagicFactsIssue(
-        "Metamagic requires the installed Surface feature record.",
-      );
-    }
-    return hasSelections
-      ? sorcererMetamagicFactsIssue(
-          "Metamagic option selections require the retained Metamagic feature.",
-        )
-      : Result.succeed(undefined);
+    return missingSorcererMetamagicFacts(input, featureUnitIds);
   }
   const selectedOptionIds = characterBuildSorcererMetamagicOptionIds(
     input.build,
@@ -126,28 +108,13 @@ export function characterBuildSorcererMetamagicFacts(input: {
     featureUnit.facts.mechanics.choiceCount,
     ownerClassLevel.success,
   );
-  if (selectedOptionIds.length !== choiceCount) {
-    return sorcererMetamagicFactsIssue(
-      "Metamagic known option count must match the Sorcerer level.",
-    );
-  }
-  if (new Set(selectedOptionIds).size !== selectedOptionIds.length) {
-    return sorcererMetamagicFactsIssue(
-      "Metamagic known options must be unique.",
-    );
-  }
-
-  const knownOptions: CharacterBuildSorcererMetamagicOptionFact[] = [];
-  for (const optionId of selectedOptionIds) {
-    const optionFact = metamagicOptionFact(featureUnit.facts, optionId);
-    /* v8 ignore start -- @preserve -- Finalization admitted each selected id from this installed Metamagic roster. */
-    if (optionFact === null) {
-      return sorcererMetamagicFactsIssue(
-        "Metamagic known options must come from the installed Surface option roster.",
-      );
-    }
-    /* v8 ignore stop -- @preserve */
-    knownOptions.push(optionFact);
+  const knownOptions = sorcererMetamagicKnownOptions(
+    featureUnit.facts,
+    selectedOptionIds,
+    choiceCount,
+  );
+  if (Result.isFailure(knownOptions)) {
+    return Result.fail(knownOptions.failure);
   }
 
   const fontOfMagicFacts = characterBuildSorcererFontOfMagicFacts(input);
@@ -164,7 +131,7 @@ export function characterBuildSorcererMetamagicFacts(input: {
     unitId: featureUnit.unitId,
     ownerClassLevel: ownerClassLevel.success,
     choiceCount,
-    knownOptions,
+    knownOptions: knownOptions.success,
     selectionRepeatability:
       featureUnit.facts.mechanics.selectionRepeatability.kind,
     sorceryPointResource: {
@@ -175,6 +142,55 @@ export function characterBuildSorcererMetamagicFacts(input: {
     },
     spellUseLimit: featureUnit.facts.mechanics.spellUseLimit.kind,
   });
+}
+
+function missingSorcererMetamagicFacts(
+  input: Parameters<typeof characterBuildSorcererMetamagicFacts>[0],
+  featureUnitIds: readonly UnitRecord["id"][],
+): ReturnType<typeof characterBuildSorcererMetamagicFacts> {
+  const hasSelections = input.build.features.some(
+    (feature) => feature.kind === "selectedSorcererMetamagicOption",
+  );
+  if (!featureUnitIds.includes(SORCERER_METAMAGIC_UNIT_ID)) {
+    return hasSelections
+      ? sorcererMetamagicFactsIssue(
+          "Metamagic option selections require the retained Metamagic feature.",
+        )
+      : Result.succeed(undefined);
+  }
+  return Option.isNone(input.unitLibrary.getUnit(SORCERER_METAMAGIC_UNIT_ID))
+    ? sorcererMetamagicFactsIssue("Metamagic requires an installed Unit.")
+    : sorcererMetamagicFactsIssue(
+        "Metamagic requires the installed Surface feature record.",
+      );
+}
+
+function sorcererMetamagicKnownOptions(
+  feature: SorcererMetamagicFeature,
+  selectedOptionIds: readonly SorcererMetamagicOptionId[],
+  choiceCount: number,
+): Result.Result<
+  readonly CharacterBuildSorcererMetamagicOptionFact[],
+  CharacterBuildSorcererMetamagicFactsIssue
+> {
+  if (selectedOptionIds.length !== choiceCount)
+    return sorcererMetamagicFactsIssue(
+      "Metamagic known option count must match the Sorcerer level.",
+    );
+  if (new Set(selectedOptionIds).size !== selectedOptionIds.length)
+    return sorcererMetamagicFactsIssue(
+      "Metamagic known options must be unique.",
+    );
+  const knownOptions: CharacterBuildSorcererMetamagicOptionFact[] = [];
+  for (const optionId of selectedOptionIds) {
+    const optionFact = metamagicOptionFact(feature, optionId);
+    if (optionFact === null)
+      return sorcererMetamagicFactsIssue(
+        "Metamagic known options must come from the installed Surface option roster.",
+      );
+    knownOptions.push(optionFact);
+  }
+  return Result.succeed(knownOptions);
 }
 
 function characterBuildSorcererMetamagicOptionIds(

@@ -236,157 +236,248 @@ export function projectPartialCharacterCreationFeature(
 function partialFamilyCandidate(
   projection: CharacterCreationFeatureProjection,
 ): boolean {
-  if (projection.kind === "species_trait") {
-    return projection.facts.mechanics.family === "species_lineage_choice";
-  }
-  if (projection.kind !== "class_feature") return false;
-  const mechanics = projection.facts.mechanics;
+  return Match.value(projection).pipe(
+    Match.when(
+      { kind: "species_trait" },
+      ({ facts }) => facts.mechanics.family === "species_lineage_choice",
+    ),
+    Match.when({ kind: "feat" }, () => false),
+    Match.when({ kind: "class_feature" }, ({ facts }) =>
+      partialClassFeatureFamilyCandidate(facts),
+    ),
+    Match.exhaustive,
+  );
+}
+
+const PARTIAL_CLASS_FEATURE_FAMILIES: Readonly<
+  Record<
+    "druid" | "monk" | "sorcerer",
+    readonly CharacterCreationClassFeatureFacts["mechanics"]["family"][]
+  >
+> = {
+  druid: ["activation", "druid_wild_companion_spell_cast"],
+  monk: ["resource_container"],
+  sorcerer: ["resource_pool", "metamagic_options"],
+};
+
+function partialClassFeatureFamilyCandidate(
+  facts: CharacterCreationClassFeatureFacts,
+): boolean {
+  const classFamilies =
+    facts.className === "druid" ||
+    facts.className === "monk" ||
+    facts.className === "sorcerer"
+      ? PARTIAL_CLASS_FEATURE_FAMILIES[facts.className]
+      : [];
   return (
-    (projection.facts.className === "druid" &&
-      (mechanics.family === "activation" ||
-        mechanics.family === "druid_wild_companion_spell_cast")) ||
-    (projection.facts.className === "monk" &&
-      mechanics.family === "resource_container") ||
-    (projection.facts.className === "sorcerer" &&
-      (mechanics.family === "resource_pool" ||
-        mechanics.family === "metamagic_options")) ||
-    mechanics.family === "wizard_spellbook_learning"
+    classFamilies.some((family) => family === facts.mechanics.family) ||
+    facts.mechanics.family === "wizard_spellbook_learning"
   );
 }
 
 function partialFeatureEvidence(
   projection: CharacterCreationFeatureProjection,
 ): PartialCharacterCreationFeatureProjection["evidence"] | undefined {
-  const mechanics = projection.facts.mechanics;
-  if (
-    projection.kind === "class_feature" &&
-    projection.facts.className === "druid" &&
+  return Match.value(projection).pipe(
+    Match.when({ kind: "feat" }, () => undefined),
+    Match.when({ kind: "class_feature" }, ({ facts }) =>
+      partialClassFeatureEvidence(facts),
+    ),
+    Match.when({ kind: "species_trait" }, ({ facts }) =>
+      partialSpeciesTraitEvidence(facts),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function partialClassFeatureEvidence(
+  facts: CharacterCreationClassFeatureFacts,
+): PartialCharacterCreationFeatureProjection["evidence"] | undefined {
+  return (
+    druidWildShapeEvidence(facts) ??
+    druidWildCompanionEvidence(facts) ??
+    monkResourceContainerEvidence(facts) ??
+    sorcererResourcePoolEvidence(facts) ??
+    metamagicOptionsEvidence(facts) ??
+    wizardSpellbookLearningEvidence(facts)
+  );
+}
+
+function druidWildShapeEvidence(
+  facts: CharacterCreationClassFeatureFacts,
+): PartialCharacterCreationFeatureProjection["evidence"] | undefined {
+  if (!isDruidWildShapeEvidenceSource(facts)) return undefined;
+  return [
+    evidence("consumed", "resource", undefined, "use-count resource"),
+    evidence("unowned", "bonusAction", undefined, "activation execution"),
+    evidence("consumed", "generalFact", 1, "duration projection"),
+    evidence("consumed", "effect", 1, "known-form projection"),
+    nestedEvidence(
+      "unowned",
+      "effect",
+      1,
+      "generalFact",
+      1,
+      "form execution and reversion",
+    ),
+    evidence("unowned", "effect", 2, "temporary-hit-point execution"),
+  ];
+}
+
+function isDruidWildShapeEvidenceSource(
+  facts: CharacterCreationClassFeatureFacts,
+): boolean {
+  const mechanics = facts.mechanics;
+  return (
+    facts.className === "druid" &&
     mechanics.family === "activation" &&
     mechanics.resource?.kind === "use_count" &&
     mechanics.resetCadence?.kind === "partial_short_full_long" &&
-    mechanics.duration?.kind === "timed" &&
-    "kind" in mechanics.duration.value &&
-    mechanics.duration.value.kind === "half_class_level_rounded_down_hours" &&
+    hasDruidWildShapeDurationEvidence(mechanics) &&
+    hasDruidWildShapeKnownFormEvidence(mechanics)
+  );
+}
+
+function hasDruidWildShapeKnownFormEvidence(
+  mechanics: Extract<
+    CharacterCreationClassFeatureFacts["mechanics"],
+    { readonly family: "activation" }
+  >,
+): boolean {
+  return (
     mechanics.phases.length === 1 &&
     druidWildShapeKnownFormRosterFromPhase(mechanics.phases[0]) !== undefined
-  ) {
-    return [
-      evidence("consumed", "resource", undefined, "use-count resource"),
-      evidence("unowned", "bonusAction", undefined, "activation execution"),
-      evidence("consumed", "generalFact", 1, "duration projection"),
-      evidence("consumed", "effect", 1, "known-form projection"),
-      nestedEvidence(
-        "unowned",
-        "effect",
-        1,
-        "generalFact",
-        1,
-        "form execution and reversion",
-      ),
-      evidence("unowned", "effect", 2, "temporary-hit-point execution"),
-    ];
+  );
+}
+
+function hasDruidWildShapeDurationEvidence(
+  mechanics: CharacterCreationClassFeatureFacts["mechanics"],
+): boolean {
+  return (
+    mechanics.family === "activation" &&
+    mechanics.duration?.kind === "timed" &&
+    "kind" in mechanics.duration.value &&
+    mechanics.duration.value.kind === "half_class_level_rounded_down_hours"
+  );
+}
+
+function druidWildCompanionEvidence(
+  facts: CharacterCreationClassFeatureFacts,
+): PartialCharacterCreationFeatureProjection["evidence"] | undefined {
+  if (facts.mechanics.family !== "druid_wild_companion_spell_cast") {
+    return undefined;
   }
+  return [
+    evidence(
+      "unowned",
+      "procedure",
+      undefined,
+      "familiar spell-cast procedure",
+    ),
+    evidence("unowned", "generalFact", 1, "familiar cast activation"),
+    evidence("unowned", "generalFact", 2, "familiar component override"),
+    evidence("unowned", "generalFact", 3, "familiar dismissal"),
+    evidence("unowned", "generalFact", 4, "familiar mode override"),
+    evidence("unowned", "dependency", 1, "spell dependency"),
+    evidence("unowned", "dependency", 2, "feature-resource dependency"),
+  ];
+}
+
+function monkResourceContainerEvidence(
+  facts: CharacterCreationClassFeatureFacts,
+): PartialCharacterCreationFeatureProjection["evidence"] | undefined {
+  const mechanics = facts.mechanics;
   if (
-    projection.kind === "class_feature" &&
-    mechanics.family === "druid_wild_companion_spell_cast"
+    facts.className !== "monk" ||
+    mechanics.family !== "resource_container" ||
+    mechanics.resource.kind !== "use_count" ||
+    mechanics.resetCadence.kind !== "short_or_long_rest" ||
+    mechanics.effectSaveDc?.kind !== "class_feature_ability_save_dc" ||
+    mechanics.effectSaveDc.ability !== "wis"
   ) {
-    return [
+    return undefined;
+  }
+  return [
+    evidence("consumed", "resource", undefined, "point resource"),
+    evidence("consumed", "generalFact", 1, "save DC projection"),
+    ...mechanics.optionSet.initialOptions.flatMap((_, index) => [
+      evidence("consumed", "generalFact", index + 2, "selectable option"),
+      evidence("unowned", "effect", index + 1, "option battle execution"),
+    ]),
+  ];
+}
+
+function sorcererResourcePoolEvidence(
+  facts: CharacterCreationClassFeatureFacts,
+): PartialCharacterCreationFeatureProjection["evidence"] | undefined {
+  const mechanics = facts.mechanics;
+  if (
+    facts.className !== "sorcerer" ||
+    mechanics.family !== "resource_pool" ||
+    mechanics.resource.kind !== "point_pool"
+  ) {
+    return undefined;
+  }
+  return [
+    evidence("consumed", "resource", undefined, "point-pool resource"),
+    ...mechanics.operations.map((operation, index) =>
       evidence(
-        "unowned",
+        operation.kind === "point_pool_to_spell_slot" ? "consumed" : "unowned",
         "procedure",
-        undefined,
-        "familiar spell-cast procedure",
+        index + 1,
+        operation.kind === "point_pool_to_spell_slot"
+          ? "spell-slot creation projection"
+          : "spell-slot conversion execution",
       ),
-      evidence("unowned", "generalFact", 1, "familiar cast activation"),
-      evidence("unowned", "generalFact", 2, "familiar component override"),
-      evidence("unowned", "generalFact", 3, "familiar dismissal"),
-      evidence("unowned", "generalFact", 4, "familiar mode override"),
-      evidence("unowned", "dependency", 1, "spell dependency"),
-      evidence("unowned", "dependency", 2, "feature-resource dependency"),
-    ];
-  }
-  if (
-    projection.kind === "class_feature" &&
-    projection.facts.className === "monk" &&
-    mechanics.family === "resource_container" &&
-    mechanics.resource.kind === "use_count" &&
-    mechanics.resetCadence.kind === "short_or_long_rest" &&
-    mechanics.effectSaveDc?.kind === "class_feature_ability_save_dc" &&
-    mechanics.effectSaveDc.ability === "wis"
-  ) {
-    return [
-      evidence("consumed", "resource", undefined, "point resource"),
-      evidence("consumed", "generalFact", 1, "save DC projection"),
-      ...mechanics.optionSet.initialOptions.flatMap((_, index) => [
-        evidence("consumed", "generalFact", index + 2, "selectable option"),
-        evidence("unowned", "effect", index + 1, "option battle execution"),
-      ]),
-    ];
-  }
-  if (
-    projection.kind === "class_feature" &&
-    projection.facts.className === "sorcerer" &&
-    mechanics.family === "resource_pool" &&
-    mechanics.resource.kind === "point_pool"
-  ) {
-    return [
-      evidence("consumed", "resource", undefined, "point-pool resource"),
-      ...mechanics.operations.map((operation, index) =>
-        evidence(
-          operation.kind === "point_pool_to_spell_slot"
-            ? "consumed"
-            : "unowned",
-          "procedure",
-          index + 1,
-          operation.kind === "point_pool_to_spell_slot"
-            ? "spell-slot creation projection"
-            : "spell-slot conversion execution",
-        ),
+    ),
+  ];
+}
+
+function metamagicOptionsEvidence(
+  facts: CharacterCreationClassFeatureFacts,
+): PartialCharacterCreationFeatureProjection["evidence"] | undefined {
+  const mechanics = facts.mechanics;
+  if (mechanics.family !== "metamagic_options") return undefined;
+  return [
+    evidence("consumed", "generalFact", 1, "selection lifecycle"),
+    ...mechanics.options.flatMap((_, index) => [
+      evidence("consumed", "generalFact", index + 2, "option selection facts"),
+      evidence("unowned", "effect", index + 1, "option spell execution"),
+    ]),
+    evidence("consumed", "dependency", 1, "point-pool composition reference"),
+  ];
+}
+
+function wizardSpellbookLearningEvidence(
+  facts: CharacterCreationClassFeatureFacts,
+): PartialCharacterCreationFeatureProjection["evidence"] | undefined {
+  const mechanics = facts.mechanics;
+  if (mechanics.family !== "wizard_spellbook_learning") return undefined;
+  return [
+    evidence("consumed", "reference", 1, "spellbook composition source"),
+    ...mechanics.grants.map((grant, index) =>
+      evidence(
+        grant.timing.kind === "class_feature_acquisition"
+          ? "consumed"
+          : "unowned",
+        "generalFact",
+        index + 1,
+        grant.timing.kind === "class_feature_acquisition"
+          ? "acquisition spellbook choice"
+          : "later slot-level spellbook choice",
       ),
-    ];
-  }
-  if (
-    projection.kind === "class_feature" &&
-    mechanics.family === "metamagic_options"
-  ) {
-    return [
-      evidence("consumed", "generalFact", 1, "selection lifecycle"),
-      ...mechanics.options.flatMap((_, index) => [
-        evidence(
-          "consumed",
-          "generalFact",
-          index + 2,
-          "option selection facts",
-        ),
-        evidence("unowned", "effect", index + 1, "option spell execution"),
-      ]),
-      evidence("consumed", "dependency", 1, "point-pool composition reference"),
-    ];
-  }
-  if (
-    projection.kind === "class_feature" &&
-    mechanics.family === "wizard_spellbook_learning"
-  ) {
-    return [
-      evidence("consumed", "reference", 1, "spellbook composition source"),
-      ...mechanics.grants.map((grant, index) =>
-        evidence(
-          grant.timing.kind === "class_feature_acquisition"
-            ? "consumed"
-            : "unowned",
-          "generalFact",
-          index + 1,
-          grant.timing.kind === "class_feature_acquisition"
-            ? "acquisition spellbook choice"
-            : "later slot-level spellbook choice",
-        ),
-      ),
-    ];
-  }
-  if (
-    projection.kind === "species_trait" &&
-    mechanics.family === "species_lineage_choice"
-  ) {
+    ),
+  ];
+}
+
+function partialSpeciesTraitEvidence(
+  facts: Extract<
+    CharacterCreationFeatureProjection,
+    { readonly kind: "species_trait" }
+  >["facts"],
+): PartialCharacterCreationFeatureProjection["evidence"] | undefined {
+  const mechanics = facts.mechanics;
+  if (mechanics.family === "species_lineage_choice") {
     return [
       evidence("consumed", "generalFact", 1, "lineage and ability selection"),
       ...mechanics.options.flatMap((option, index) => [
