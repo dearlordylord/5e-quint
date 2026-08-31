@@ -1324,8 +1324,17 @@ export function zeroHitPointReplacementCapabilities(
   for (const binding of origin.execution.procedureBindings) {
     const procedure = binding.procedure;
     if (
-      procedure.kind !== "unitFeature" ||
-      procedure.execution.kind !== "zeroHitPointReplacement" ||
+      procedure.kind !== "unitFeature" &&
+      procedure.kind !== "unitSupportProfile"
+    ) {
+      continue;
+    }
+    const executionKind =
+      typeof procedure.execution === "string"
+        ? procedure.execution
+        : procedure.execution.kind;
+    if (
+      executionKind !== "zeroHitPointReplacement" ||
       procedure.source.kind !== "resourcePool"
     ) {
       continue;
