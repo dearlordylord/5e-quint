@@ -710,14 +710,7 @@ export function battleCreatureStateAdmissionFromInit(
     tag: "admitted",
     creature: admittedCreature,
     nextScopeOrdinal: admission.success.cursorTransition.to,
-    statBlockPresentation: {
-      displayName: input.displayName,
-      languages: statBlockLanguagePresentation(creatureInit.source),
-      procedures: statBlockProcedurePresentations({
-        statBlock: creatureInit.source,
-        execution: admission.success.origin.execution,
-      }),
-    },
+    statBlockPresentation: statBlockCreatureInit.presentation,
   };
 }
 

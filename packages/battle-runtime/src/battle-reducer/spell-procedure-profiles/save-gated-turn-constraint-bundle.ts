@@ -65,6 +65,7 @@ import {
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { failedSavingThrowTargetIds } from "../saving-throw-outcomes.ts";
+import { currentActorId } from "../creature-state-leaves.ts";
 import { saveGatedTurnConstraintActionOrBonusActionTurnResources } from "../save-gated-turn-constraint-runtime.ts";
 import type {
   SpellAdmissionContext,
@@ -466,10 +467,7 @@ function applyTurnHinderingActivePenaltyEffects(
       )
     : state.currentTurnResources;
   return {
-    state:
-      battleStateWithReconciledCurrentActorSlowTurnRestriction(
-        stateWithEffects,
-      ),
+    state: { ...state, combatants, currentTurnResources },
     appliedTargetIds,
   };
 }

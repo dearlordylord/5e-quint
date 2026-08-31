@@ -132,7 +132,7 @@ import {
   spellEndTargetStatePromotesIncapacitated,
 } from "./spell-end-target-state.ts";
 import { battleStateWithoutCurrentActorSpellGrantedActionResourcesForEffects } from "./spell-granted-action-resource.ts";
-import { battleStateWithReconciledCurrentActorSlowTurnRestriction } from "./slow-active-penalties-turn-restriction.ts";
+import { battleStateWithReconciledCurrentActorTurnConstraint } from "./save-gated-turn-constraint-runtime.ts";
 import { enemyZeroHitPointTemporaryHitPointsAwards } from "./enemy-zero-hit-point-temporary-hit-points.ts";
 import {
   d20TestNaturalOneRerollOutcomeIssue,
@@ -204,9 +204,7 @@ export function breakBattleConcentration(
       cleanedState,
       broken.spellEndTargetStatePromotionIds,
     );
-  return battleStateWithReconciledCurrentActorSlowTurnRestriction(
-    promotedState,
-  );
+  return battleStateWithReconciledCurrentActorTurnConstraint(promotedState);
 }
 
 export function breakBattleConcentrationAfterDamage(input: {
@@ -301,7 +299,7 @@ function battleStateAfterCombatantConcentrationBreak(input: {
       brokenState,
       currentActorExpiringEffects,
     );
-  return battleStateWithReconciledCurrentActorSlowTurnRestriction(
+  return battleStateWithReconciledCurrentActorTurnConstraint(
     battleStateAfterSpellEndTargetStatePromotionConcentrationBreaks(
       cleanedState,
       broken.spellEndTargetStatePromotionIds,

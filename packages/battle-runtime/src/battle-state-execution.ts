@@ -196,7 +196,6 @@ import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
   BoundAttackExecutionSelection,
-  CharacterAttackExecutionSelection,
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 
@@ -1667,7 +1666,7 @@ export type BattleTargetSpatialFact =
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
       readonly disposition: BattleShovePushDisposition;
-    } & CharacterAttackExecutionSelection)
+    } & BattleAttackExecutionSelection)
   | ({
       readonly kind: "attackTargetDistance";
       readonly actorId: CombatantId;

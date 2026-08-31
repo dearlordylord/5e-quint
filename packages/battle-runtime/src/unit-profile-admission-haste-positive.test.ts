@@ -2,10 +2,11 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
+  monsterMultiattackStatBlock,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { BattleSnapshotSchema } from "./index.ts";
-import { battleActiveEffectExecutionRef } from "./identity.ts";
+import { battleEffectExecutionRef } from "./identity.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C17-HASTE-POSITIVE-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C18-HASTE-LETHARGY-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-C17-HASTE-POSITIVE-RUNTIME haste
@@ -266,9 +267,9 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(foreignOwner?.origin.kind).toBe("character");
     if (foreignOwner?.origin.kind !== "character") return;
     const foreignEffectOrdinal = 999;
-    const foreignEffectRef = battleActiveEffectExecutionRef(
+    const foreignEffectRef = battleEffectExecutionRef(
       JSON.stringify({
-        kind: "activeEffectOccurrence",
+        kind: "effectOccurrence",
         ownerScopeRef: foreignOwner.origin.execution.scopeRef,
         ordinal: foreignEffectOrdinal,
       }),

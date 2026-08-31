@@ -24,7 +24,11 @@ import {
   resolvePactOfTheChainSpawnedCompanionForm,
 } from "@dnd/surface/surface/find-familiar-forms";
 import { Match, Result, Schema, SchemaIssue } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { expect } from "vitest";
+import {
+  battleStatBlockCombatantSource,
+  type BattleStatBlockCombatantSource,
+} from "./stat-block-combatant-admission.ts";
 import {
   battleAmmunitionStock,
   requiredAmmunitionKinds,
@@ -33,7 +37,11 @@ import * as Option from "effect/Option";
 import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
-import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
+import {
+  statBlockProcedurePresentations,
+  type StatBlockProcedurePresentation,
+} from "./stat-block-presentation.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { admitSpawnedCompanionReappearance } from "./companion-admission.ts";
 import { resolveAdmittedCompanionReappearanceSubject } from "./battle-reducer/companion-lifecycle-procedures.ts";
 
@@ -4178,7 +4186,7 @@ export function statBlockCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: requireBattleStatBlockCombatantSource(statBlock),
+      source: requireBattleStatBlockCombatantSource(projected.runtime),
       currentHp: Hp(input.currentHp ?? maxHp),
       tempHp: Hp(input.tempHp ?? 0),
       ammunitionStocks,
@@ -4613,18 +4621,14 @@ export function skeletonCreatureInit(input: {
 }): StatBlockBattleCombatantInit {
   return statBlockCreatureInit({
     combatantId: skeletonId,
-    displayName: "Skeleton",
+    statBlockName: "Skeleton",
+    statBlock: assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_skeleton"),
+    ),
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: requireBattleStatBlockCombatantSource(
-        statBlockCatalog.requireStatBlock("stat_block_skeleton"),
-      ),
-      currentHp: Hp(13),
-      tempHp: Hp(0),
-      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
-      conditions: [],
-    },
+    currentHp: 13,
+    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
   });
 }
 
@@ -4642,24 +4646,23 @@ export function resistantSkeletonCreatureInit(input: {
   } = skeleton.statBlock;
   return statBlockCreatureInit({
     combatantId: skeletonId,
-    displayName: "Slashing Resistant Skeleton",
+    statBlockName: "Slashing Resistant Skeleton",
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: requireBattleStatBlockCombatantSource({
-        id: statBlockId("stat_block_slashing_resistant_skeleton"),
-        challengeRating: skeleton.challengeRating,
-        statBlock: {
-          ...statBlockWithoutDamageModifiers,
-          displayName: "Slashing Resistant Skeleton",
-          resistances: { kind: "fixed", damageTypes: ["slashing"] },
-        },
-      }),
-      currentHp: Hp(13),
-      tempHp: Hp(0),
-      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
-      conditions: [],
+    statBlock: {
+      ...skeleton,
+      id: statBlockId("stat_block_slashing_resistant_skeleton"),
+      name: "Slashing Resistant Skeleton",
+      provenance: {
+        kind: "synthetic-test",
+        section: "slashing resistance fixture",
+      },
+      statBlock: {
+        ...statBlockWithoutDamageModifiers,
+        resistances: { kind: "fixed", damageTypes: ["slashing"] },
+      },
     },
+    currentHp: 13,
+    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
   });
 }
 

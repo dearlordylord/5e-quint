@@ -63,6 +63,7 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   battleStateWithAllocatedEffectForTest,
   characterBattleFeatureInitForTest,
   characterSpellInvocationRefForProcedureRefForTest,
@@ -17884,24 +17885,20 @@ function baseUnarmedStrike(): Extract<
 function skeletonCreatureInit(input: {
   readonly initiative: number;
 }): BattleCreatureInit {
+  const projected = Result.getOrThrow(
+    projectAuthoredStatBlock(skeletonMultiattackStatBlock()),
+  );
   return {
     combatantId: skeletonId,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: requireBattleStatBlockCombatantSource(
-        skeletonMultiattackStatBlock(),
-      ),
+      source: requireBattleStatBlockCombatantSource(projected.runtime),
       currentHp: Hp(13),
       tempHp: Hp(0),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
-      presentation: {
-        displayName: "Skeleton",
-        communication: { kind: "none" },
-        traits: [],
-        orderedProcedures: [],
-      },
+      presentation: projected.presentation,
     },
   };
 }

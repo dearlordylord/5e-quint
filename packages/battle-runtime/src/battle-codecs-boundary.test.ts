@@ -19,6 +19,7 @@ import {
   characterSeed,
   combatantId,
   criticalRange19UnitRefs,
+  discoverBattleActCandidates,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
@@ -43,6 +44,7 @@ import {
   attackRollFill,
   battleStateWithAllocatedEffectOccurrencesForTest,
   battleProcedureExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleCheckpointFrontierEnvelope,
   battleFrontierInterruptDecisionForState,
   skeletonId,
@@ -78,7 +80,6 @@ type EncodedOccurrenceLocation =
 type EncodedEnvelope = Schema.Codec.Encoded<
   typeof BattleCheckpointFrontierEnvelopeSchema
 >;
-type EncodedSnapshot = EncodedEnvelope["checkpoint"];
 type EncodedActsFrontier = Extract<
   EncodedEnvelope["frontier"],
   { readonly kind: "acts" }
@@ -3174,7 +3175,7 @@ describe("battle codec act ownership boundaries", () => {
           {
             kind: "action",
             source: "spellEffect",
-            sourceEffectRef: battleActiveEffectExecutionRefForTest(
+            sourceEffectRef: battleEffectExecutionRefForTest(
               "forged-multiattack-continuation",
             ),
             restriction: HASTE_ACTION_RESOURCE_RESTRICTION,

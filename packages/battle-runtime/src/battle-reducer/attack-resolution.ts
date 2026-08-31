@@ -1014,6 +1014,7 @@ export function resolveMultiattack(
   const multiattackBinding = input.multiattackBinding;
   const dispatchResourceDemand =
     statBlockMultiattackDispatchResourceDemandForActor(
+      input.state,
       actor,
       multiattackBinding,
     );
@@ -1038,30 +1039,42 @@ export function resolveMultiattack(
       "Attack is no longer available for the current actor.",
     );
   }
-  const [consumedDispatch, ...pendingDispatches] =
-    multiattackBinding.procedure.dispatchProcedureRefs;
-  const grantedPendingDispatches = combatantHasSaveGatedTurnConstraintBundle(
-    input.state,
-    actor,
-  )
-    ? []
-    : pendingDispatches;
+  const multiattackDispatchResources = Match.value(dispatchResourceDemand).pipe(
+    Match.when({ kind: "allListedDispatches" }, ({ procedureRefs }) =>
+      procedureRefs.map(
+        (attackProcedureRef): StatBlockMultiattackActionResource => ({
+          kind: "action",
+          source: "statBlockMultiattack",
+          sourceOwnerId: input.subject.actorId,
+          sourceProcedureRef: multiattackBinding.procedureRef,
+          dispatch: { kind: "listedOccurrence", attackProcedureRef },
+        }),
+      ),
+    ),
+    Match.when(
+      { kind: "oneListedDispatch" },
+      ({ procedureRefs }): readonly StatBlockMultiattackActionResource[] => [
+        {
+          kind: "action",
+          source: "statBlockMultiattack",
+          sourceOwnerId: input.subject.actorId,
+          sourceProcedureRef: multiattackBinding.procedureRef,
+          dispatch: {
+            kind: "oneListedChoice",
+            attackProcedureRefs: procedureRefs,
+          },
+        },
+      ],
+    ),
+    Match.exhaustive,
+  );
   const nextStateWithPendingDispatches = {
     ...input.state,
     currentTurnResources: {
       ...spent.success,
       actionResources: [
         ...spent.success.actionResources,
-        ...grantedPendingDispatches.map((dispatch) => ({
-          kind: "action" as const,
-          source: "statBlockMultiattack" as const,
-          sourceOwnerId: input.subject.actorId,
-          attackProcedureRef: dispatch,
-          restriction: {
-            kind: "exclude" as const,
-            actions: ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
-          },
-        })),
+        ...multiattackDispatchResources,
       ],
     },
   };

@@ -9,7 +9,7 @@ import {
 } from "./battle-act-composition.ts";
 import {
   battleId,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   characterSeed,
   fighterId,
@@ -251,7 +251,7 @@ describe("Stat Block extracted composition coverage", () => {
         ],
       },
     } as const satisfies RuntimeActionResource;
-    const effectRef = battleActiveEffectExecutionRefForTest(
+    const effectRef = battleEffectExecutionRefForTest(
       "multiattack-resource-coverage",
     );
     const otherResources = {

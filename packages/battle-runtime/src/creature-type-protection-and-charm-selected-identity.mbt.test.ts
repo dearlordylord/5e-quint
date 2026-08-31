@@ -83,6 +83,7 @@ import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-re
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   resolveBattleSubject,
   statBlockProcedurePresentationsForStateForTest,
 } from "./battle-runtime.test-support.ts";

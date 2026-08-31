@@ -16,7 +16,10 @@ import type {
   BattleTurnResources,
 } from "../battle-state-execution.ts";
 import { isPresentSpawnedCompanionCombatant } from "../spawned-companion-state.ts";
-import { canSpendEscapeGrappleActionResource } from "./action-resource-kinds.ts";
+import {
+  canSpendEscapeGrappleActionResource,
+  statBlockMultiattackActionResourceMatchesProcedure,
+} from "./action-resource-kinds.ts";
 import {
   combatantCanTakeActions,
   isLegendaryAttackSubject,

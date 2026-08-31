@@ -27,6 +27,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { ArmorClassSchema as BattleArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
+import { HasteActionResourceRestrictionSchema } from "@dnd/shared-algebras/action-economy-algebra";
 import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion-protocol-algebra";
 import {
   AmmunitionKindSchema,
@@ -39,6 +40,7 @@ import {
   COVER_TYPES,
   CreatureId,
   ResourceCount,
+  SIZES,
 } from "@dnd/shared/types";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
@@ -140,6 +142,7 @@ import {
 } from "../identity.ts";
 import type { BattleExecutionScopeRef } from "../identity.ts";
 import { creatureAttackRollMechanicsAreSupported } from "../statblock-action-support.ts";
+import { StatBlockAttackDamageSelection } from "../stat-block-attack-damage-selection.ts";
 import { ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS } from "./attack-damage-ability-modifier-choice.ts";
 import { ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS } from "./attack-damage-die-floor-choice.ts";
 import {
@@ -181,7 +184,13 @@ import {
   BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
 } from "../unit-feature-support.ts";
-import type { BattleFill, BattleHole } from "../battle-state-execution.ts";
+import type {
+  BattleCreatureOriginSnapshot,
+  BattleFill,
+  BattleHole,
+  BattlePresentedSnapshot,
+  BattleSnapshot,
+} from "../battle-state-execution.ts";
 import {
   BATTLE_START_TURN_OCCURRENCE_KINDS,
   BATTLE_TEMPORARY_HIT_POINT_CHOICES,
@@ -190,7 +199,7 @@ import { ATTACK_PRESENTATION_JOIN_ISSUE_REASONS } from "../attack-presentation-c
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
 );
-const BattleCompanionResolvedStatBlockIdSchema = NonEmptyTrimmedStringSchema;
+const BattleCompanionResolvedStatBlockIdSchema = StatBlockId;
 const BattleCompanionDurableIdSchema = NonEmptyTrimmedStringSchema;
 const BattleCompanionIdentitySchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("battleOnly") }),
@@ -712,6 +721,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
       attackName: Schema.optionalKey(Schema.Never),
+      statBlockDamageSelection: Schema.optionalKey(Schema.Never),
       disposition: BattleImmediateAreaPushDispositionSchema,
     }),
     Schema.Struct({
@@ -722,6 +732,7 @@ const BattleTargetSpatialFactSchema = Schema.Union([
       attackAbility: Schema.optionalKey(Schema.Never),
       attackDamageType: Schema.optionalKey(Schema.Never),
       attackName: Schema.optionalKey(Schema.Never),
+      statBlockDamageSelection: StatBlockAttackDamageSelection,
       disposition: BattleImmediateAreaPushDispositionSchema,
     }),
   ]),
@@ -734,32 +745,20 @@ const BattleTargetSpatialFactSchema = Schema.Union([
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
       attackName: Schema.optionalKey(Schema.Never),
+      statBlockDamageSelection: Schema.optionalKey(Schema.Never),
       distanceFeet: MovementFeet,
     }),
-    Schema.Union([
-      Schema.Struct({
-        kind: Schema.Literal("attackTargetDistance"),
-        actorId: CombatantId,
-        targetId: CombatantId,
-        procedureRef: BattleStatBlockProcedureExecutionRef,
-        attackAbility: Schema.optionalKey(Schema.Never),
-        attackDamageType: Schema.optionalKey(Schema.Never),
-        attackName: Schema.optionalKey(Schema.Never),
-        statBlockDamageNotation: Schema.optionalKey(Schema.Never),
-        distanceFeet: MovementFeet,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("attackTargetDistance"),
-        actorId: CombatantId,
-        targetId: CombatantId,
-        procedureRef: BattleStatBlockProcedureExecutionRef,
-        attackAbility: Schema.optionalKey(Schema.Never),
-        attackDamageType: Schema.optionalKey(Schema.Never),
-        attackName: Schema.optionalKey(Schema.Never),
-        statBlockDamageNotation: Schema.Literal("static"),
-        distanceFeet: MovementFeet,
-      }),
-    ]),
+    Schema.Struct({
+      kind: Schema.Literal("attackTargetDistance"),
+      actorId: CombatantId,
+      targetId: CombatantId,
+      procedureRef: BattleStatBlockProcedureExecutionRef,
+      attackAbility: Schema.optionalKey(Schema.Never),
+      attackDamageType: Schema.optionalKey(Schema.Never),
+      attackName: Schema.optionalKey(Schema.Never),
+      statBlockDamageSelection: StatBlockAttackDamageSelection,
+      distanceFeet: MovementFeet,
+    }),
   ]),
   Schema.Struct({
     kind: Schema.Literal("attackAttackerCannotSeeTarget"),
@@ -1454,22 +1453,11 @@ const SpellConditionRepeatSaveSchema = Schema.Struct({
 
 const EmptySpellAreaChoicesSchema = Schema.Tuple([]);
 
-function exhaustiveBattleHoleSchema<S extends Schema.Top>(
-  schema: S &
-    ([BattleHole] extends [S["Type"]]
-      ? unknown
-      : {
-          readonly missingBattleHoleVariants: Exclude<BattleHole, S["Type"]>;
-        }) &
-    ([S["Type"]] extends [BattleHole]
-      ? unknown
-      : {
-          readonly unsupportedBattleHoleVariants: Exclude<
-            S["Type"],
-            BattleHole
-          >;
-        }),
+function exhaustiveBattleHoleSchema<S extends Schema.Schema<BattleHole>>(
+  schema: S,
+  allBattleHolesAreRepresented: (hole: BattleHole) => S["Type"],
 ): S {
+  void allBattleHolesAreRepresented;
   return schema;
 }
 
@@ -3292,6 +3280,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
 
 const BattleHolePayloadSchema = exhaustiveBattleHoleSchema(
   BattleHolePayloadUnionSchema,
+  (hole) => hole,
 );
 
 export const BattleHoleSchema = BattleHolePayloadSchema.pipe(
@@ -5931,10 +5920,10 @@ export const RuntimeActionResourceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("action"),
     source: Schema.Literal("spellEffect"),
-    sourceOwnerId: Schema.String,
+    sourceOwnerId: Schema.optionalKey(Schema.Never),
     sourceEffectRef: BattleEffectExecutionRef,
     sourceProcedureRef: Schema.optionalKey(Schema.Never),
-    restriction: BattleActionRestrictionSchema,
+    restriction: HasteActionResourceRestrictionSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("action"),
@@ -6097,12 +6086,11 @@ const StatBlockResourcePoolStateSchema = Schema.Union([
 const StatBlockAttackProcedureSchema = Schema.Struct({
   kind: Schema.Literal("attack"),
   section: Schema.Literals(["actions", "legendaryActions"]),
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
   attack: CreatureAttackRollMechanicsSchema.pipe(
-    Schema.check(
-      Schema.makeFilter(creatureAttackRollMechanicsAreSupported, {
-        message: "Unsupported Stat Block attack procedure mechanics.",
-      }),
-    ),
+    Schema.refine(creatureAttackRollMechanicsAreSupported, {
+      message: "Unsupported Stat Block attack procedure mechanics.",
+    }),
   ),
   traitAttackRollModes: Schema.optionalKey(
     Schema.NonEmptyArray(
@@ -6118,11 +6106,9 @@ const StatBlockUnarmedStrikeProcedureSchema = Schema.Struct({
   kind: Schema.Literal("unarmedStrike"),
   section: Schema.Literal("actions"),
   attack: CreatureAttackRollMechanicsSchema.pipe(
-    Schema.check(
-      Schema.makeFilter(creatureAttackRollMechanicsAreSupported, {
-        message: "Unsupported Stat Block Unarmed Strike mechanics.",
-      }),
-    ),
+    Schema.refine(creatureAttackRollMechanicsAreSupported, {
+      message: "Unsupported Stat Block Unarmed Strike mechanics.",
+    }),
   ),
 });
 
@@ -6157,27 +6143,11 @@ const StatBlockSpellcastingGroupSchema = Schema.Union([
   }),
 ]);
 
-const StatBlockProcedureSchema = Schema.Union([
-  StatBlockAttackProcedureSchema,
-  Schema.Struct({
-    kind: Schema.Literal("at_will"),
-    resourcePoolRefs: Schema.Tuple([]),
-    invocations: Schema.NonEmptyArray(
-      StatBlockSpellcastingInvocationOutcomeSchema,
-    ),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("bonusActionOption"),
-    standardActions: Schema.NonEmptyArray(
-      Schema.Literals(SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS),
-    ),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("effectOccurrenceSource"),
-    effectRef: BattleEffectExecutionRef,
-    effectKind: Schema.Literals(EFFECT_OCCURRENCE_SOURCE_KINDS),
-  }),
-]);
+const EffectOccurrenceSourceProcedureSchema = Schema.Struct({
+  kind: Schema.Literal("effectOccurrenceSource"),
+  effectRef: BattleEffectExecutionRef,
+  effectKind: Schema.Literals(EFFECT_OCCURRENCE_SOURCE_KINDS),
+});
 
 const StatBlockSpellcastingProcedureSchema = Schema.Struct({
   kind: Schema.Literal("spellcasting"),
@@ -6239,6 +6209,11 @@ const StatBlockProcedureBindingSnapshotSchema = Schema.Union([
     procedureRef: BattleStatBlockProcedureExecutionRef,
     procedure: StatBlockSpellcastingProcedureSchema,
     resourcePoolRefs: Schema.Tuple([]),
+  }),
+  Schema.Struct({
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    procedure: EffectOccurrenceSourceProcedureSchema,
+    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
   }),
 ]);
 
@@ -6331,52 +6306,12 @@ function statBlockExecutionSnapshotGraphIsValid(
   );
   const legendaryPool = legendaryPools[0];
   return (
-    battleStatBlockExecutionScopeRefIsWellFormed(snapshot.scopeRef) &&
-    procedureRefs.every((ref) =>
-      battleProcedureExecutionRefBelongsToScope(ref, snapshot.scopeRef),
-    ) &&
-    resourcePoolRefs.every((ref) =>
-      battleResourcePoolExecutionRefBelongsToScope(ref, snapshot.scopeRef),
-    ) &&
-    new Set(procedureRefs).size === procedureRefs.length &&
-    resourcePoolRefSet.size === resourcePoolRefs.length &&
-    snapshot.resourcePools.every(
-      (pool) =>
-        ((pool.kind !== "daily" && pool.kind !== "legendaryActions") ||
-          (Number(pool.usesMax) >= 1 &&
-            Number(pool.usesRemaining) >= 0 &&
-            Number(pool.usesRemaining) <= Number(pool.usesMax))) &&
-        (pool.kind === "legendaryActions" ||
-          bindingCountByPoolRef.get(pool.resourcePoolRef) === 1),
-    ) &&
-    snapshot.procedureBindings.every((binding) => {
-      const pools = binding.resourcePoolRefs.flatMap((ref) => {
-        const pool = resourcePoolsByRef.get(ref);
-        return pool === undefined ? [] : [pool];
-      });
-      const legendaryPoolOwnershipIsValid =
-        binding.procedure.kind !== "attack" ||
-        binding.procedure.section !== "legendaryActions" ||
-        (legendaryPool !== undefined &&
-          binding.resourcePoolRefs.includes(legendaryPool.resourcePoolRef));
-      return (
-        new Set(binding.resourcePoolRefs).size ===
-          binding.resourcePoolRefs.length &&
-        pools.length === binding.resourcePoolRefs.length &&
-        statBlockProcedureResourcePoolShapeIsValid(binding.procedure, pools) &&
-        legendaryPoolOwnershipIsValid &&
-        (binding.procedure.kind !== "multiattack" ||
-          (binding.procedure.dispatchProcedureRefs.length > 0 &&
-            binding.procedure.dispatchProcedureRefs.every((ref) =>
-              actionAttackRefs.has(ref),
-            ) &&
-            multiattackDispatchesRespectLimitedUse(
-              binding.procedure.dispatchProcedureRefs,
-              limitedUseActionAttackRefs,
-            ))) &&
-        (binding.procedure.kind !== "bonusActionOption" ||
-          binding.procedure.standardActions.length > 0)
-      );
+    statBlockExecutionSnapshotRefsAreValid({
+      snapshot,
+      procedureRefs,
+      procedureOrdinalKeys,
+      resourcePoolRefs,
+      resourcePoolRefSet,
     }) &&
     snapshot.resourcePools.every((pool) =>
       resourcePoolStateGraphIsValid(pool, bindingCountByPoolRef),
@@ -6463,6 +6398,9 @@ function statBlockProcedurePoolShapeIsValid(
   ).length;
   const limitedUsePoolCount = pools.length - legendaryPoolCount;
   if (binding.procedure.kind === "unarmedStrike") {
+    return pools.length === 0;
+  }
+  if (binding.procedure.kind === "effectOccurrenceSource") {
     return pools.length === 0;
   }
   if (binding.procedure.kind === "multiattack") {
@@ -6569,6 +6507,9 @@ function runtimeProcedureOrdinalKey(
   procedure: EncodedStatBlockProcedureBinding["procedure"],
 ): string {
   if (procedure.kind === "unarmedStrike") return "actions:unarmedStrike";
+  if (procedure.kind === "effectOccurrenceSource") {
+    return `effectOccurrenceSource:${procedure.effectRef}`;
+  }
   const section =
     procedure.kind === "attack"
       ? procedure.section
@@ -6598,34 +6539,6 @@ function resourcePoolUsageBoundsAreValid(
     Number(pool.usesMax) >= 1 &&
     Number(pool.usesRemaining) >= 0 &&
     Number(pool.usesRemaining) <= Number(pool.usesMax)
-  );
-}
-
-function statBlockProcedureResourcePoolShapeIsValid(
-  procedure: Schema.Schema.Type<typeof StatBlockProcedureSchema>,
-  pools: readonly Schema.Schema.Type<typeof StatBlockResourcePoolStateSchema>[],
-): boolean {
-  const legendaryPoolCount = pools.filter(
-    (pool) => pool.kind === "legendaryActions",
-  ).length;
-  const limitedUsePoolCount = pools.length - legendaryPoolCount;
-  const actionPoolShapeIsValid = () =>
-    pools.length <= 1 && legendaryPoolCount === 0;
-  return Match.value(procedure).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      effectOccurrenceSource: () => pools.length === 0,
-      multiattack: () => pools.length === 0,
-      bonusActionOption: actionPoolShapeIsValid,
-      attack: ({ section }) =>
-        Match.value(section).pipe(
-          Match.when("actions", actionPoolShapeIsValid),
-          Match.when(
-            "legendaryActions",
-            () => legendaryPoolCount <= 1 && limitedUsePoolCount <= 1,
-          ),
-          Match.exhaustive,
-        ),
-    }),
   );
 }
 
@@ -6679,6 +6592,10 @@ const CharacterProcedureBindingSnapshotSchema = Schema.Union([
       kind: Schema.Literal("unavailableSpellInvocation"),
     }),
   }),
+  Schema.Struct({
+    procedureRef: BattleProcedureExecutionRef,
+    procedure: EffectOccurrenceSourceProcedureSchema,
+  }),
 ]);
 
 const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
@@ -6690,47 +6607,7 @@ const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
     // checkpoint. The exact optional field rejects legacy cursor payloads
     // instead of silently accepting a second snapshot shape.
     nextProcedureOrdinal: Schema.optionalKey(Schema.Never),
-    procedureBindings: Schema.Array(
-      Schema.Struct({
-        procedureRef: BattleProcedureExecutionRef,
-        procedure: Schema.Union([
-          Schema.Struct({
-            kind: Schema.Literal("unitFeature"),
-            source: Schema.Union([
-              Schema.Struct({ kind: Schema.Literal("intrinsic") }),
-              Schema.Struct({
-                kind: Schema.Literal("resourcePool"),
-                resourcePoolRef: BattleResourcePoolExecutionRef,
-              }),
-            ]),
-            execution: UnitFeatureProcedureExecutionSchema,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("unitSupportProfile"),
-            source: Schema.Union([
-              Schema.Struct({ kind: Schema.Literal("intrinsic") }),
-              Schema.Struct({
-                kind: Schema.Literal("resourcePool"),
-                resourcePoolRef: BattleResourcePoolExecutionRef,
-              }),
-            ]),
-            execution: UnitSupportProcedureExecutionSchema,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("spellInvocation"),
-            executionFacts: SpellExecutionFactsSchema,
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("unavailableSpellInvocation"),
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("effectOccurrenceSource"),
-            effectRef: BattleEffectExecutionRef,
-            effectKind: Schema.Literals(EFFECT_OCCURRENCE_SOURCE_KINDS),
-          }),
-        ]),
-      }),
-    ),
+    procedureBindings: Schema.Array(CharacterProcedureBindingSnapshotSchema),
   }),
   attackExecution: Schema.Struct({
     scopeRef: BattleAttackExecutionScopeRef,
@@ -6791,10 +6668,10 @@ const BattleActiveEffectOccurrenceLocationSchema = Schema.Union([
 
 const BattleCreatureSnapshotCommonFields = {
   combatantId: CombatantId,
-  initiative: Schema.Number,
-  hp: Schema.Number,
-  maxHp: Schema.Number,
-  tempHp: Schema.Number,
+  initiative: InitiativeScoreSchema,
+  hp: HpSchema,
+  maxHp: HpSchema,
+  tempHp: HpSchema,
   nextEffectOrdinal: BattleEffectExecutionOrdinal,
   activeEffectOccurrences: Schema.Array(
     Schema.Struct({
@@ -6804,8 +6681,8 @@ const BattleCreatureSnapshotCommonFields = {
       location: BattleActiveEffectOccurrenceLocationSchema,
     }),
   ),
-  armorClass: Schema.Number,
-  size: Schema.String,
+  armorClass: BattleArmorClassSchema,
+  size: Schema.Literals(SIZES),
   zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshotSchema,
   conditions: Schema.Array(Schema.Literals(ALL_CONDITIONS)),
   concentrating: Schema.Boolean,
@@ -6819,8 +6696,8 @@ const BattleCreatureSnapshotCommonFields = {
     speedKinds: Schema.Array(
       Schema.Struct({
         kind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
-        speedFeet: Schema.Number,
-        remainingFeet: Schema.Number,
+        speedFeet: MovementFeet,
+        remainingFeet: MovementFeet,
       }),
     ),
   }),
@@ -6836,6 +6713,14 @@ const BattleCreatureSnapshotInvariantShapeSchema = Schema.Struct({
 
 type BattleCreatureSnapshotInvariantInput = Schema.Schema.Type<
   typeof BattleCreatureSnapshotInvariantShapeSchema
+>;
+type AssignableTo<Expected, Actual extends Expected> = Actual;
+type EncodedCharacterBattleCreatureOrigin = AssignableTo<
+  Extract<BattleCreatureOriginSnapshot, { readonly kind: "character" }>,
+  Extract<
+    BattleCreatureSnapshotInvariantInput["origin"],
+    { readonly kind: "character" }
+  >
 >;
 
 function battleCreatureSnapshotInvariantsHold(
@@ -7399,7 +7284,7 @@ const BattleCompanionSnapshotSchema = Schema.Union([
     formAccess: Schema.Literal("spawnedCompanion"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: SpawnedCompanionCreatureTypeOverrideSchema,
-    initiative: Schema.Number,
+    initiative: InitiativeScoreSchema,
     placement: BattleCompanionPlacementSchema,
   }),
   Schema.Struct({
@@ -7411,7 +7296,7 @@ const BattleCompanionSnapshotSchema = Schema.Union([
     formAccess: Schema.Literal("pactOfTheChain"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: SpawnedCompanionCreatureTypeOverrideSchema,
-    initiative: Schema.Number,
+    initiative: InitiativeScoreSchema,
     placement: BattleCompanionPlacementSchema,
   }),
   Schema.Struct({
@@ -9544,6 +9429,7 @@ function battleSnapshotInvariantsHold(
   );
   return (
     battleSnapshotLiveCombatantIdsAreUnique(snapshot, liveCombatantIds) &&
+    battleSnapshotActionResourcesAreValid(snapshot) &&
     serializedBattleExecutionIdentityGraphIsValid(snapshot) &&
     snapshot.readiedResponses.spells.every((readied) =>
       serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),
@@ -9573,6 +9459,9 @@ function battleSnapshotInvariantsHold(
     ) &&
     snapshot.obscurementZones.every((zone) =>
       serializedObscurementZoneOwnsSource(zone, snapshot.combatants),
+    ) &&
+    snapshot.combatants.every((combatant) =>
+      battleSnapshotExecutionScopesBelongToBattle(snapshot.battleId, combatant),
     )
   );
 }
@@ -9588,7 +9477,7 @@ function battleSnapshotActionResourcesAreValid(
     !actionResourceCollectionOwnershipActivityAndUniquenessAreValid(
       snapshot.turn.actionResources,
       snapshot.currentActorId,
-      actor.activeEffectRefs,
+      actor.activeEffectOccurrences.map(({ effectRef }) => effectRef),
     )
   ) {
     return false;
@@ -9720,24 +9609,22 @@ const battleSnapshotInvariantAnnotations = {
     "Battle combatants, execution scopes, and scope cursors must be unique, battle-owned, and monotonic.",
 };
 
-type BattlePresentedSnapshotShapeSchema = Schema.Struct<
-  typeof BattleSnapshotCommonFields &
-    typeof BattleSnapshotExcludedFields & {
-      combatants: Schema.Array$<typeof BattlePresentedCreatureSnapshotSchema>;
-    }
->;
-
-export const BattlePresentedSnapshotSchema: Schema.Schema<
-  BattlePresentedSnapshot,
-  Schema.Codec.Encoded<BattlePresentedSnapshotShapeSchema>,
-  never
-> = Schema.Struct({
+const BattlePresentedSnapshotShapeSchema = Schema.Struct({
   ...BattleSnapshotCommonFields,
   ...BattleSnapshotExcludedFields,
   combatants: Schema.Array(BattlePresentedCreatureSnapshotSchema),
-}).pipe(
+});
+
+export const BattlePresentedSnapshotSchema: Schema.Codec<
+  BattlePresentedSnapshot,
+  Schema.Codec.Encoded<typeof BattlePresentedSnapshotShapeSchema>,
+  never,
+  never
+> = BattlePresentedSnapshotShapeSchema.pipe(
   Schema.check(
-    Schema.makeFilter(
+    Schema.makeFilter<
+      Schema.Schema.Type<typeof BattlePresentedSnapshotShapeSchema>
+    >(
       (snapshot) =>
         Schema.is(BattleSnapshotInvariantShapeSchema)(snapshot) &&
         battleSnapshotInvariantsHold(snapshot),
@@ -9747,24 +9634,20 @@ export const BattlePresentedSnapshotSchema: Schema.Schema<
   Schema.annotate({ identifier: "BattlePresentedSnapshot" }),
 );
 
-type BattleSnapshotShapeSchema = Schema.Struct<
-  typeof BattleSnapshotCommonFields &
-    typeof BattleSnapshotExcludedFields & {
-      combatants: Schema.Array$<typeof BattleCreatureSnapshotSchema>;
-    }
->;
-
-export const BattleSnapshotSchema: Schema.Schema<
-  BattleSnapshot,
-  Schema.Codec.Encoded<BattleSnapshotShapeSchema>,
-  never
-> = Schema.Struct({
+const BattleSnapshotShapeSchema = Schema.Struct({
   ...BattleSnapshotCommonFields,
   ...BattleSnapshotExcludedFields,
   combatants: Schema.Array(BattleCreatureSnapshotSchema),
-}).pipe(
+});
+
+export const BattleSnapshotSchema: Schema.Codec<
+  BattleSnapshot,
+  Schema.Codec.Encoded<typeof BattleSnapshotShapeSchema>,
+  never,
+  never
+> = BattleSnapshotShapeSchema.pipe(
   Schema.check(
-    Schema.makeFilter(
+    Schema.makeFilter<Schema.Schema.Type<typeof BattleSnapshotShapeSchema>>(
       (snapshot) =>
         Schema.is(BattleSnapshotInvariantShapeSchema)(snapshot) &&
         battleSnapshotInvariantsHold(snapshot),
@@ -10062,9 +9945,10 @@ function battleCheckpointFrontierInvariantsHold(
   );
 }
 
-export const BattleCheckpointFrontierEnvelopeSchema: Schema.Schema<
+export const BattleCheckpointFrontierEnvelopeSchema: Schema.Codec<
   Schema.Schema.Type<BattleCheckpointFrontierEnvelopeShapeSchema>,
   Schema.Codec.Encoded<BattleCheckpointFrontierEnvelopeShapeSchema>,
+  never,
   never
 > = Schema.Struct({
   checkpoint: BattleSnapshotSchema,

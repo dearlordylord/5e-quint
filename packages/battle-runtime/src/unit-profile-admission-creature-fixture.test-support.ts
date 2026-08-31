@@ -17,7 +17,6 @@ import type {
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
-import { Result } from "effect";
 import { statBlockId, unitId as parseUnitId } from "@dnd/shared/game-facts";
 import weaponClubInput from "../../surface/content/weapon_club.json";
 import weaponGreatswordInput from "../../surface/content/weapon_greatsword.json";
@@ -43,12 +42,12 @@ import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-ex
 import { battleObjectId } from "./identity.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import {
   battleAmmunitionStock,
   requiredAmmunitionKinds,
 } from "./battle-ammunition.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import {
   spellCasterId,
   spellTargetId,
@@ -322,7 +321,7 @@ export function statBlockCreature(input: {
     creatureInit: {
       kind: "statBlock",
       source: Result.getOrThrow(
-        battleStatBlockCombatantSource(input.statBlock),
+        battleStatBlockCombatantSource(projected.runtime),
       ),
       currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
       tempHp: Hp(0),

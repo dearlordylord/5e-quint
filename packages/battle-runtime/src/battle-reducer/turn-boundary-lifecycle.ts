@@ -164,7 +164,10 @@ import {
   type ReplayParentContinuation,
 } from "./replay-continuation.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { saveGatedTurnConstraintActionOrBonusActionTurnResources } from "./save-gated-turn-constraint-runtime.ts";
+import {
+  battleStateWithReconciledCurrentActorTurnConstraint,
+  saveGatedTurnConstraintActionOrBonusActionTurnResources,
+} from "./save-gated-turn-constraint-runtime.ts";
 import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,
@@ -1289,7 +1292,7 @@ function resolveEndTurn({
   const combatantsAfterDamageReductionReset =
     resetSpellDamageReductionsForNewTurn(combatantsAfterRecharge);
   const resetTurnResources = spellGrantedActionResourceTurnResources(
-    resetBattleTurnResources(durationTick.value.currentTurnResources),
+    resetBattleTurnResources(state.currentTurnResources),
     combatantsAfterDamageReductionReset.get(nextActorId),
   );
   const stateAfterCompelledHalt = applyCompelledHaltAtTurnStart({
@@ -4489,11 +4492,11 @@ export function tickBattleStateDurationEffects(
         },
   );
   return {
-    value: battleStateWithReconciledCurrentActorSlowTurnRestriction({
+    value: battleStateWithReconciledCurrentActorTurnConstraint({
       ...state,
       combatants: ticked.value,
     }),
-    flySpeedGrantEndFallCleanupFrames: ticked.flySpeedGrantEndFallCleanupFrames,
+    flySpeedGrantEndFallCleanupFrames: ticked.grantedFlightEndFallCleanupFrames,
     spellEndTargetStatePromotionIds: ticked.spellEndTargetStatePromotionIds,
   };
 }

@@ -245,21 +245,19 @@ export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   damageBonus: Schema.optionalKey(Schema.Number),
   damageTypeChoices: Schema.optionalKey(
     Schema.NonEmptyArray(DamageTypeSchema).pipe(
-      Schema.check(
-        Schema.makeFilter(
-          (
-            choices,
-          ): choices is readonly [
-            typeof DamageTypeSchema.Type,
-            typeof DamageTypeSchema.Type,
-            ...(typeof DamageTypeSchema.Type)[],
-          ] => choices.length >= 2,
-          {
-            /* v8 ignore next -- @preserve -- Only malformed authored weapon data requests this diagnostic; valid choices are parsed through the two-or-more predicate above. */
-            message:
-              "Weapon attack damage type choices must contain at least two choices.",
-          },
-        ),
+      Schema.refine(
+        (
+          choices,
+        ): choices is readonly [
+          typeof DamageTypeSchema.Type,
+          typeof DamageTypeSchema.Type,
+          ...(typeof DamageTypeSchema.Type)[],
+        ] => choices.length >= 2,
+        {
+          /* v8 ignore next -- @preserve -- Only malformed authored weapon data requests this diagnostic; valid choices are parsed through the two-or-more predicate above. */
+          message:
+            "Weapon attack damage type choices must contain at least two choices.",
+        },
       ),
     ),
   ),
@@ -412,7 +410,6 @@ export const SupportedAttackActionOptionSchema = Schema.Union([
   }),
   StatBlockAttackActionOptionSchema,
 ]);
-
 const MechanicalStatBlockAttackActionOptionSchema =
   StatBlockAttackActionOptionSchema;
 const MechanicalCharacterWeaponAttackActionOptionSchema = Schema.Struct({

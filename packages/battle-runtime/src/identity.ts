@@ -113,7 +113,7 @@ export const battleId: (value: string) => BattleId = BattleId.make;
 
 export type CharacterId = string & Brand.Brand<"CharacterId">;
 const CharacterId = Brand.nominal<CharacterId>();
-export const CharacterIdSchema: Schema.Schema<CharacterId> = Schema.String.pipe(
+export const CharacterIdSchema = Schema.String.pipe(
   Schema.brand("CharacterId"),
 );
 export const characterId: (value: string) => CharacterId = CharacterId;

@@ -1934,7 +1934,7 @@ export function statBlockMultiattackActs(
   const origin = actor.origin;
   return statBlockMultiattackBindings(origin.execution).flatMap((binding) => {
     const dispatchResourceDemand =
-      statBlockMultiattackDispatchResourceDemandForActor(actor, binding);
+      statBlockMultiattackDispatchResourceDemandForActor(state, actor, binding);
     if (
       !statBlockMultiattackResourcesAvailable(
         origin.execution,

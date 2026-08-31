@@ -33,17 +33,17 @@ import {
   activeDruidWildShape,
   spendActiveDruidWildShapeProcedureResources,
 } from "./druid-wild-shape.ts";
-import { slowActivePenaltiesEffects } from "./slow-active-penalties-effects.ts";
+import { combatantHasSaveGatedTurnConstraintBundle } from "./save-gated-turn-constraint-runtime.ts";
 
 export function statBlockMultiattackDispatchResourceDemandForActor(
+  state: BattleState,
   actor: StatBlockBattleCreatureState,
   binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
 ): StatBlockMultiattackDispatchResourceDemand {
   return {
-    kind:
-      slowActivePenaltiesEffects(actor).length > 0
-        ? "oneListedDispatch"
-        : "allListedDispatches",
+    kind: combatantHasSaveGatedTurnConstraintBundle(state, actor)
+      ? "oneListedDispatch"
+      : "allListedDispatches",
     procedureRefs: binding.procedure.dispatchProcedureRefs,
   };
 }
