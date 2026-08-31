@@ -5,15 +5,19 @@ import {
   cpSync,
   existsSync,
   lstatSync,
+  mkdtempSync,
   mkdirSync,
   readFileSync,
   readdirSync,
   realpathSync,
+  rmSync,
   writeFileSync,
 } from "node:fs";
-import { relative, resolve, sep } from "node:path";
-import { buildSync } from "esbuild";
+import { tmpdir } from "node:os";
+import { join, relative, resolve, sep } from "node:path";
+import { buildSync, type BuildOptions, type BuildResult } from "esbuild";
 
+import { validatedPackageEffectRuntimeEntries } from "#dnd-package-effect-runtime";
 import { CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS } from "../lane-classification.cjs";
 import {
   benchmarkContextForRole,
@@ -583,6 +587,74 @@ function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
   )}\n`;
 }
 
+const CONSUMER_DISTRIBUTION_EFFECT_RUNTIME_OWNERS = [
+  "surface",
+  "battle-runtime",
+] as const satisfies Parameters<typeof validatedPackageEffectRuntimeEntries>[0];
+
+type ConsumerDistributionBundleOptions = Pick<
+  BuildOptions,
+  "entryPoints" | "stdin" | "sourcemap" | "logLevel"
+> & {
+  readonly outfile: string;
+  readonly bundle: true;
+  readonly platform: "node";
+  readonly format: "esm";
+  readonly target: "node24";
+};
+
+const PACKAGE_EFFECT_RUNTIME_MODULE_SPECIFIER = "#dnd-package-effect-runtime";
+
+export function buildConsumerDistributionBundle(
+  options: ConsumerDistributionBundleOptions,
+): BuildResult {
+  const runtimeEntries = validatedPackageEffectRuntimeEntries(
+    CONSUMER_DISTRIBUTION_EFFECT_RUNTIME_OWNERS,
+  );
+  const runtimeModuleContents = `import * as effect from ${JSON.stringify(runtimeEntries.effectEntry)};
+import * as schemaAst from ${JSON.stringify(runtimeEntries.schemaAstEntry)};
+const validatedPackageEffectOwners = new Set(${JSON.stringify(CONSUMER_DISTRIBUTION_EFFECT_RUNTIME_OWNERS)});
+export const effectRuntimeForPackageOwners = (packageOwners) => {
+  if (!Array.isArray(packageOwners) || packageOwners.length === 0) {
+    throw new Error("Package Effect runtime owners must be a non-empty array.");
+  }
+  for (const owner of packageOwners) {
+    if (!validatedPackageEffectOwners.has(owner)) {
+      throw new Error(\`Unknown package Effect runtime owner: \${String(owner)}.\`);
+    }
+  }
+  return { effect, schemaAst };
+};
+`;
+  const substitutionDirectory = mkdtempSync(
+    join(tmpdir(), "dnd-package-effect-runtime-bundle-"),
+  );
+  const substitutionPath = join(substitutionDirectory, "runtime.js");
+  try {
+    writeFileSync(substitutionPath, runtimeModuleContents, "utf8");
+    return buildSync({
+      ...(options.entryPoints === undefined
+        ? {}
+        : { entryPoints: options.entryPoints }),
+      ...(options.stdin === undefined ? {} : { stdin: options.stdin }),
+      ...(options.sourcemap === undefined
+        ? {}
+        : { sourcemap: options.sourcemap }),
+      ...(options.logLevel === undefined ? {} : { logLevel: options.logLevel }),
+      outfile: options.outfile,
+      bundle: true,
+      platform: "node",
+      format: "esm",
+      target: "node24",
+      packages: "bundle",
+      external: [],
+      alias: { [PACKAGE_EFFECT_RUNTIME_MODULE_SPECIFIER]: substitutionPath },
+    });
+  } finally {
+    rmSync(substitutionDirectory, { recursive: true, force: true });
+  }
+}
+
 export function buildConsumerDistribution(
   input: ConsumerDistributionInput,
 ): void {
@@ -647,7 +719,7 @@ export function buildConsumerDistribution(
     resolve(input.trustedDestination, "tooling/typescript"),
     { recursive: true, dereference: true },
   );
-  buildSync({
+  buildConsumerDistributionBundle({
     entryPoints: [
       resolve(repoRoot, CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS.supervisor),
     ],
@@ -659,7 +731,7 @@ export function buildConsumerDistribution(
     sourcemap: false,
     logLevel: "silent",
   });
-  buildSync({
+  buildConsumerDistributionBundle({
     entryPoints: [
       resolve(repoRoot, CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS.playerClient),
     ],

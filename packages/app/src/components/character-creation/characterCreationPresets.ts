@@ -30,8 +30,9 @@ import {
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
   PHASE1_SHIELD_UNIT_ID,
   PHASE1_SPECIES_ORC_UNIT_ID,
+  PHASE1_WEAPON_FLAIL_UNIT_ID,
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
-  PHASE1_WEAPON_MASTERY_UNIT_IDS,
+  PHASE1_WEAPON_SPEAR_UNIT_ID,
   progressionOptionId,
   SUPPORTED_FIGHTER_SKILL_OPTION_IDS,
   SUPPORTED_LANGUAGE_OPTION_IDS,
@@ -54,11 +55,11 @@ type CharacterCreationPreset = {
   readonly draft: CharacterDraft
 }
 
-const FIGHTER_WEAPON_MASTERY_CHOICE_COUNT = 3
-const FIGHTER_PRESET_WEAPON_MASTERY_OPTION_IDS = PHASE1_WEAPON_MASTERY_UNIT_IDS.slice(
-  0,
-  FIGHTER_WEAPON_MASTERY_CHOICE_COUNT
-).map(creationChoiceOptionId)
+const FIGHTER_PRESET_WEAPON_MASTERY_OPTION_IDS = [
+  creationChoiceOptionId(PHASE1_WEAPON_LONGSWORD_UNIT_ID),
+  creationChoiceOptionId(PHASE1_WEAPON_SPEAR_UNIT_ID),
+  creationChoiceOptionId(PHASE1_WEAPON_FLAIL_UNIT_ID)
+] as const satisfies ReadonlyArray<CreationChoiceOptionId>
 
 function presetChoiceFill(
   holeId: ReturnType<typeof draftHoleId>,

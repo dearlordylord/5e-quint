@@ -59,11 +59,7 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
                     : key === "class_feature_feat_choice"
                       ? ["defense"]
                       : key === "weapon_mastery_options"
-                        ? [
-                            "weapon_longsword",
-                            "weapon_dagger",
-                            "weapon_shortsword",
-                          ]
+                        ? ["weapon_longsword", "weapon_spear", "weapon_flail"]
                         : key === "class_equipment_choice"
                           ? ["option_c"]
                           : key === "background_ability_score_increase"
