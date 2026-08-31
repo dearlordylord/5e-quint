@@ -593,14 +593,7 @@ function battleSubjectObligationAdmissionResult(
   if (compelledHaltIssue !== null) {
     return invalidResult(input.state, "staleSubject", compelledHaltIssue);
   }
-  if (
-    options.readiedActionActorId === undefined &&
-    currentActorHasOpenStatBlockMultiattackDispatch(input.state) &&
-    !subjectAllowedDuringStatBlockMultiattackDispatch(
-      input.state,
-      input.subject,
-    )
-  ) {
+  if (statBlockMultiattackObligationBlocksSubject(input, options)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -633,26 +626,58 @@ function battleSubjectObligationAdmissionResult(
     : invalidResult(input.state, "staleSubject", actionEligibilityIssue);
 }
 
+function statBlockMultiattackObligationBlocksSubject(
+  input: AdmittedBattleResolutionInput,
+  options: ResolveBattleSubjectInternalOptions,
+): boolean {
+  return (
+    options.readiedActionActorId === undefined &&
+    currentActorHasOpenStatBlockMultiattackDispatch(input.state) &&
+    !subjectAllowedDuringStatBlockMultiattackDispatch(
+      input.state,
+      input.subject,
+    )
+  );
+}
+
 function spatialMeleeSpellAttackProxyCommitCheckpointMatchesSubject(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
 ): boolean {
-  const checkpoint =
-    options.interruptRouteOptions
-      .spatialMeleeSpellAttackProxyCommitCheckpoint ??
-    (options.interruptRouteOptions.replayingInterruptedProcedure === true &&
-    options.interruptRouteOptions.handledInterruptOccurrence?.trigger ===
-      "attackHit"
-      ? options.interruptRouteOptions.handledInterruptOccurrence
-          .spatialMeleeSpellAttackProxyCommitCheckpoint
-      : undefined);
+  const checkpoint = spatialMeleeSpellAttackProxyCommitCheckpoint(options);
+  if (checkpoint?.kind !== "spatialMeleeSpellAttackProxyCommitApplied") {
+    return false;
+  }
   const subject = input.subject;
+  if (!isSpatialMeleeSpellAttackProxySubject(subject)) return false;
   return (
-    checkpoint?.kind === "spatialMeleeSpellAttackProxyCommitApplied" &&
-    (subject.tag === "actionSpell" || subject.tag === "bonusActionSpell") &&
     checkpoint.actorId === subject.actorId &&
     checkpoint.sourceProcedureRef === subject.procedureRef
   );
+}
+
+function spatialMeleeSpellAttackProxyCommitCheckpoint(
+  options: ResolveBattleSubjectInternalOptions,
+) {
+  const routeOptions = options.interruptRouteOptions;
+  if (routeOptions.spatialMeleeSpellAttackProxyCommitCheckpoint !== undefined) {
+    return routeOptions.spatialMeleeSpellAttackProxyCommitCheckpoint;
+  }
+  if (routeOptions.replayingInterruptedProcedure !== true) return undefined;
+  if (routeOptions.handledInterruptOccurrence?.trigger !== "attackHit") {
+    return undefined;
+  }
+  return routeOptions.handledInterruptOccurrence
+    .spatialMeleeSpellAttackProxyCommitCheckpoint;
+}
+
+function isSpatialMeleeSpellAttackProxySubject(
+  subject: BattleSubject,
+): subject is Extract<
+  BattleSubject,
+  { readonly tag: "actionSpell" | "bonusActionSpell" }
+> {
+  return subject.tag === "actionSpell" || subject.tag === "bonusActionSpell";
 }
 
 function resolveBattleSubjectAfterD20TestNaturalOneReroll(
