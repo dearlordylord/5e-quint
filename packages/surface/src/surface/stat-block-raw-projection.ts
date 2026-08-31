@@ -748,12 +748,13 @@ const sortedNonEmptyStrings = <Value extends string>(
   issueContext: ProjectionIssueContext,
   values: readonly Value[],
   field: string,
+  dependencyFallback: Value,
 ): ReadonlyNonEmptyArray<Value> => {
   const sorted = sortedStrings(values);
   const [first, ...rest] = sorted;
   if (first === undefined || first.length === 0) {
     return missingEvidence(issueContext, field, "at least one nonempty value", [
-      "invalid" as Value,
+      dependencyFallback,
     ]);
   }
   if (rest.some((value) => value.length === 0)) {
@@ -1038,6 +1039,7 @@ const parseSpeeds = (
                     .split(" or ")
                     .map((form) => form.toLowerCase()),
                   "speeds.forms",
+                  "base",
                 ),
               },
             };
@@ -1541,6 +1543,7 @@ const parseVulnerabilities = (
               ),
             ),
           "vulnerabilities.damageTypes",
+          "acid",
         ),
       }
     : {
@@ -1556,6 +1559,7 @@ const parseVulnerabilities = (
             ),
           ],
           "vulnerabilities.damageTypes",
+          "acid",
         ),
         qualifier: qualified[2] ?? "",
       };
@@ -1605,6 +1609,7 @@ const parseResistances = (
               ),
             ),
           "resistances.damageTypes",
+          "acid",
         ),
       }
     : {
@@ -1613,6 +1618,7 @@ const parseResistances = (
           issueContext,
           chosenOptions,
           "resistances.options",
+          "acid",
         ),
       };
 };
@@ -1811,7 +1817,7 @@ const parseGear = (
     })
     .sort((left, right) => left.item.localeCompare(right.item));
   return nonEmptyValues(issueContext, gearEntries, "gear", {
-    item: "invalid",
+    item: "Gear",
     quantity: 1,
   });
 };
@@ -1838,7 +1844,7 @@ const parseLanguageSet = (
       .split(/, (?![^()]*\))| and /)
       .map((language) => language.replace(/^and /, "")),
     "communication.languages",
-    "invalid",
+    "Common",
   );
   if (additional === null) return { kind: "named", languages };
   const additionalLanguageCount = NUMBER_WORDS.find(
@@ -1939,7 +1945,7 @@ const parseCommunicationCandidate = (
           issueContext,
           (understood[1] ?? "").split(/, (?:and )?| and /),
           "communication.understoodLanguages",
-          "invalid",
+          "Common",
         ),
       },
     };
@@ -2202,7 +2208,7 @@ const rawTraitEvidence = (
             ...(effect === undefined ? {} : { effect }),
           },
           `traits.${entry.name}`,
-          { name: "invalid", description: "invalid" },
+          { name: entry.name, description: entry.description },
         ),
       ];
     }),
@@ -2751,7 +2757,7 @@ const parseSpellcasting = (
         issueContext,
         splitOutsideParentheses(group[3] ?? "").map(parseSpell),
         `procedures.${entry.name}.spells`,
-        { spellId: "invalid" },
+        { spellId: normalizedIdentifier(entry.name) },
       );
       return uses === undefined
         ? { kind: "at_will", spells, resourceLimits: [] }
@@ -2804,7 +2810,11 @@ const parseSpellcasting = (
       issueContext,
       groups,
       `procedures.${entry.name}.groups`,
-      { kind: "at_will", spells: [{ spellId: "invalid" }], resourceLimits: [] },
+      {
+        kind: "at_will",
+        spells: [{ spellId: normalizedIdentifier(entry.name) }],
+        resourceLimits: [],
+      },
     ),
     resourceLimits: parseRawResourceLimits(entry.name),
   };
@@ -2869,7 +2879,7 @@ const parseDirectSpellcasting = (
     issueContext,
     projectedSpells,
     `procedures.${entry.name}.spells`,
-    { spellId: "invalid" },
+    { spellId: normalizedIdentifier(entry.name) },
   );
   const group: SpellcastingGroupProjection =
     limits.length === 0
@@ -2940,7 +2950,7 @@ const parseActionOption = (
           issueContext,
           sortedStrings(options.map(normalizedIdentifier)),
           `procedures.${entry.name}.options`,
-          "invalid",
+          normalizedProcedureName(entry.name),
         ),
         resourceLimits: parseRawResourceLimits(entry.name),
       };
@@ -3684,7 +3694,10 @@ const projectExecutableProcedure = (
               issueContext,
               `procedures.${multiattack.name}.dispatches`,
               `procedure ordinal ${dispatch.procedureOrdinal}`,
-              { procedureName: "invalid", count: 1 },
+              {
+                procedureName: normalizedProcedureName(multiattack.name),
+                count: 1,
+              },
             );
           }
           return {
@@ -3693,7 +3706,10 @@ const projectExecutableProcedure = (
           };
         }),
         `procedures.${multiattack.name}.dispatches`,
-        { procedureName: "invalid", count: 1 },
+        {
+          procedureName: normalizedProcedureName(multiattack.name),
+          count: 1,
+        },
       ),
       resourceLimits,
     })),
@@ -3705,7 +3721,7 @@ const projectExecutableProcedure = (
         issueContext,
         sortedStrings(option.options),
         `procedures.${option.name}.options`,
-        "invalid",
+        normalizedProcedureName(option.name),
       ),
       resourceLimits,
     })),
@@ -3732,7 +3748,11 @@ const projectExecutableProcedure = (
         `procedures.${spellcasting.name}.groups`,
         {
           kind: "at_will",
-          spells: [{ spellId: "invalid" }],
+          spells: [
+            {
+              spellId: spellcasting.groups[0].spells[0].spellId,
+            },
+          ],
           resourceLimits: [],
         },
       ),
@@ -4067,6 +4087,7 @@ const projectVulnerabilities = (
         issueContext,
         qualified.damageTypes,
         "vulnerabilities.damageTypes",
+        "acid",
       ),
       qualifier: qualified.qualifier,
     })),
@@ -4076,6 +4097,7 @@ const projectVulnerabilities = (
         issueContext,
         fixed.damageTypes,
         "vulnerabilities.damageTypes",
+        "acid",
       ),
     })),
     Match.exhaustive,
@@ -4117,6 +4139,7 @@ const projectImmunities = (
                 issueContext,
                 immunities.damageTypes,
                 "immunities.damageTypes",
+                "acid",
               ),
             }
           : {}),
@@ -4126,6 +4149,7 @@ const projectImmunities = (
                 issueContext,
                 immunities.conditions,
                 "immunities.conditions",
+                "blinded",
               ),
             }
           : {}),
@@ -4178,6 +4202,7 @@ const projectAuthoredStatBlockUnsafe = (
               issueContext,
               record.statBlock.creatureTypeTags,
               "creatureTypeTags",
+              record.name.toLowerCase(),
             ),
       alignment: record.statBlock.alignment,
       ac: record.statBlock.ac,
@@ -4207,6 +4232,7 @@ const projectAuthoredStatBlockUnsafe = (
                   issueContext,
                   fixed.damageTypes,
                   "resistances.damageTypes",
+                  "acid",
                 ),
               })),
               Match.when({ kind: "choose_one_from" }, (chosen) => ({
@@ -4215,6 +4241,7 @@ const projectAuthoredStatBlockUnsafe = (
                   issueContext,
                   chosen.options,
                   "resistances.options",
+                  "acid",
                 ),
               })),
               Match.exhaustive,
@@ -4257,7 +4284,7 @@ const projectAuthoredStatBlockUnsafe = (
           description: normalizedProse(trait.description),
         },
         `traits.${trait.name}`,
-        { name: "invalid", description: "invalid" },
+        { name: trait.name, description: normalizedProse(trait.description) },
       ),
     ),
     textOnlyProcedures: procedures.flatMap(({ section, entry }) =>
