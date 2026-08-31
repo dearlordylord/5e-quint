@@ -99,7 +99,6 @@ const SHARED_EMPTY_CONTEXT_PROJECTION_FAILURES = [
     unitId: unitId("fighter_tactical_mind"),
     kind: "failedAbilityCheckResourceBoost",
   },
-  { unitId: unitId("fighter_indomitable"), kind: "failedSavingThrowReroll" },
   { unitId: unitId("cleric_preserve_life"), kind: "magicActionHealingPool" },
   {
     unitId: unitId("druid_lands_aid"),
@@ -118,6 +117,7 @@ const SHARED_EMPTY_CONTEXT_PROJECTION_FAILURES = [
   UnitFeatureProjectionFailure & UnitSupportProjectionFailure
 >;
 const UNIT_FEATURE_EMPTY_CONTEXT_ADDITIONAL_FAILURES = [
+  { unitId: unitId("fighter_indomitable"), kind: "failedSavingThrowReroll" },
   { unitId: unitId("bard_bardic_inspiration"), kind: "bardicInspirationGrant" },
   {
     unitId: unitId("bard_cutting_words"),
@@ -294,6 +294,7 @@ describe("character execution profile projection", () => {
       battleId: battleId("missing-feature-resource"),
       combatantId: combatantId("missing-feature-resource-character"),
       scopeOrdinal: battleExecutionScopeOrdinal(0),
+      resourceFeatureProcedures: [],
       unitFeatureProcedures: [
         boundUnitFeatureProcedureFactsFromProfile(profile),
       ],
@@ -321,22 +322,17 @@ describe("character execution profile projection", () => {
     if (profile?.kind !== "failedSavingThrowReroll") {
       throw new Error("Expected failed Saving Throw reroll profile.");
     }
-    const supportProfile = requireSupportProfile(
-      unit,
-      "failedSavingThrowReroll",
-      fighterLevels,
-    );
-
     const admission = characterExecutionFromUnits({
       battleId: battleId("bound-failed-save-reroll"),
       combatantId: combatantId("bound-failed-save-reroll-character"),
       scopeOrdinal: battleExecutionScopeOrdinal(0),
+      resourceFeatureProcedures: [],
       unitFeatureProcedures: [
         boundUnitFeatureProcedureFactsFromProfile(profile),
       ],
       resourceUnits: [unit],
       units: [unit],
-      unitRefs: [{ unit, supportProfiles: [supportProfile] }],
+      unitRefs: [],
       classLevels: fighterLevels,
     });
     if (Result.isFailure(admission)) {
@@ -382,6 +378,7 @@ describe("character execution profile projection", () => {
       battleId: battleId("missing-primary-support-resource"),
       combatantId: combatantId("missing-primary-support-resource-character"),
       scopeOrdinal: battleExecutionScopeOrdinal(0),
+      resourceFeatureProcedures: [],
       unitFeatureProcedures: [],
       resourceUnits: [],
       units: [unit],
@@ -412,6 +409,7 @@ describe("character execution profile projection", () => {
       battleId: battleId("missing-option-grant-procedure"),
       combatantId: combatantId("missing-option-grant-procedure-character"),
       scopeOrdinal: battleExecutionScopeOrdinal(0),
+      resourceFeatureProcedures: [],
       unitFeatureProcedures: [],
       resourceUnits: [],
       units: [unit],

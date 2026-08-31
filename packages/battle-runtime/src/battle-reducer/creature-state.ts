@@ -65,6 +65,7 @@ import {
   characterBattleMetamagicInitIssue,
   characterBattleMetamagicState,
   admitCharacterBattleResources,
+  characterBattleResourceInitFromAdmissionInput,
   characterBattleSpellbookRitualSpellAccessInitIssue,
   characterBattleResourceInitIssue,
   characterSpellcastingStateInitIssue,
@@ -74,6 +75,7 @@ import {
   parseCharacterBattleClassLevels,
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
+  type CharacterBattleResourceAdmissionInput,
   type CharacterBattleResourceOwnership,
   type CharacterBattleSpellcastingStateInit,
 } from "../character-battle-resources.ts";
@@ -86,12 +88,13 @@ import type { BattleDruidWildShapeKnownFormRuntime } from "../druid-wild-shape-k
 import {
   boundUnitFeatureProcedureFactsFromProfile,
   characterExecutionFromUnits,
-  type BoundUnitFeatureProcedureFacts,
+  type CharacterProcedureBinding,
 } from "../character-execution-admission.ts";
+import type { BattleUnitSupportProfileIssue } from "../unit-feature-support.ts";
 import {
-  parseSupportedUnitFeatureProfile,
-  type BattleUnitSupportProfileIssue,
-} from "../unit-feature-support.ts";
+  admitResourceFeature,
+  type AdmittedResourceFeature,
+} from "../procedure-admission/resource-feature-admission.ts";
 import {
   type BattleCreatureKnockOutLifecycle,
   type BattleCreatureState,
@@ -517,13 +520,23 @@ export function battleCreatureStateAdmissionFromInit(
       };
     }
     const classLevels = parsedClassLevels.success;
-    const resourceUnitFeatureProcedures =
-      projectCharacterResourceUnitFeatureProcedures(
-        creatureInit.resources ?? [],
-        classLevels,
-      );
+    const projectedResourceAdmissionInputs =
+      projectCharacterResourceAdmissionInputs(creatureInit.resources ?? []);
+    if (Result.isFailure(projectedResourceAdmissionInputs)) {
+      return {
+        tag: "invalid",
+        issues: projectedResourceAdmissionInputs.failure,
+      };
+    }
+    const resourceAdmissionInputs = projectedResourceAdmissionInputs.success;
+    const resourceInits = resourceAdmissionInputs.map(
+      characterBattleResourceInitFromAdmissionInput,
+    );
+    const resourceFeatureProcedures = characterResourceFeatureProcedures(
+      resourceAdmissionInputs,
+    );
     const spellAccessUnits = [
-      ...(creatureInit.resources ?? []),
+      ...resourceInits,
       ...(creatureInit.unitFeatures ?? []),
     ];
     const characterUnits = spellAccessUnits.map(({ unit }) => unit);
@@ -533,10 +546,10 @@ export function battleCreatureStateAdmissionFromInit(
       spellAccessUnits,
     );
     const initIssues = [
-      characterResourceInitIssue(creatureInit, classLevels),
-      characterDruidWildShapeAvailableFormsInitIssue(
+      characterResourceInitIssue(
         creatureInit,
-        resourceUnitFeatureProcedures,
+        resourceAdmissionInputs,
+        classLevels,
       ),
     ].flatMap((issue) =>
       issue !== null && Result.isFailure(issue) ? [issue.failure] : [],
@@ -573,22 +586,16 @@ export function battleCreatureStateAdmissionFromInit(
     const explicitUnitFeatureProcedures = (creatureInit.unitFeatures ?? []).map(
       boundUnitFeatureProcedureFactsFromProfile,
     );
-    const explicitFeatureUnitIds = new Set(
-      explicitUnitFeatureProcedures.map(({ sourceUnitId }) => sourceUnitId),
-    );
     const execution = characterExecutionFromUnits({
       battleId,
       combatantId: input.combatantId,
       scopeOrdinal: characterScopeOrdinal,
-      resourceUnits: (creatureInit.resources ?? []).map(
-        (resource) => resource.unit,
+      resourceUnits: resourceAdmissionInputs.map(
+        (resource) =>
+          characterBattleResourceInitFromAdmissionInput(resource).unit,
       ),
-      unitFeatureProcedures: [
-        ...resourceUnitFeatureProcedures.flatMap((procedure) =>
-          explicitFeatureUnitIds.has(procedure.sourceUnitId) ? [] : [procedure],
-        ),
-        ...explicitUnitFeatureProcedures,
-      ],
+      resourceFeatureProcedures,
+      unitFeatureProcedures: explicitUnitFeatureProcedures,
       units: characterUnits,
       unitRefs: creatureInit.characterUnitRefs,
       classLevels,
@@ -596,8 +603,29 @@ export function battleCreatureStateAdmissionFromInit(
     if (Result.isFailure(execution)) {
       return { tag: "invalid", issues: execution.failure };
     }
+    const wildShapeAvailableFormsIssue =
+      characterDruidWildShapeAvailableFormsInitIssue(
+        creatureInit,
+        execution.success.execution.procedureBindings,
+      );
+    if (
+      wildShapeAvailableFormsIssue !== null &&
+      Result.isFailure(wildShapeAvailableFormsIssue)
+    ) {
+      return {
+        tag: "invalid",
+        issues: [
+          {
+            tag: "battleUnitSupportProfileIssue",
+            message: battleStateInitIssueMessage(
+              wildShapeAvailableFormsIssue.failure,
+            ),
+          },
+        ],
+      };
+    }
     const resourceAdmission = admitCharacterBattleResources(
-      creatureInit.resources ?? [],
+      resourceAdmissionInputs,
       classLevels,
       execution.success.execution.scopeRef,
     );
@@ -864,11 +892,13 @@ function characterBattleInitInvariantIssues(
 
 function duplicateCharacterBattleResourceUnitIssues(
   combatantId: CombatantId,
-  resources: readonly CharacterBattleResourceInit[],
+  resources: readonly CharacterBattleResourceAdmissionInput[],
 ): BattleStateInitLeafIssue[] {
   const seen = new Set<UnitRecord["id"]>();
   const issues: BattleStateInitLeafIssue[] = [];
-  for (const [issueIndex, resource] of resources.entries()) {
+  for (const [issueIndex, admissionInput] of resources.entries()) {
+    const resource =
+      characterBattleResourceInitFromAdmissionInput(admissionInput);
     if (seen.has(resource.unit.id)) {
       issues.push({
         tag: "battleStateInitIssue",
@@ -1107,9 +1137,10 @@ export function positiveHpUnconsciousInitIssue(
 
 export function characterResourceInitIssue(
   creatureInit: CharacterBattleCreatureInit,
+  resources: readonly CharacterBattleResourceAdmissionInput[],
   classLevels: CharacterBattleClassLevels,
 ): Result.Result<never, BattleStateInitLeafIssue> | null {
-  for (const resource of creatureInit.resources ?? []) {
+  for (const resource of resources) {
     const issue = characterBattleResourceInitIssue(resource, classLevels);
     if (issue !== null) {
       return battleStateInitIssue(issue);
@@ -1117,7 +1148,7 @@ export function characterResourceInitIssue(
   }
   const metamagicIssue = characterBattleMetamagicInitIssue({
     metamagic: creatureInit.metamagic,
-    resources: creatureInit.resources ?? [],
+    resources: resources.map(characterBattleResourceInitFromAdmissionInput),
   });
   if (metamagicIssue !== null) {
     return battleStateInitIssue(metamagicIssue);
@@ -1125,28 +1156,64 @@ export function characterResourceInitIssue(
   return null;
 }
 
-function projectCharacterResourceUnitFeatureProcedures(
-  resources: readonly CharacterBattleResourceInit[],
-  classLevels: CharacterBattleClassLevels,
-): readonly BoundUnitFeatureProcedureFacts[] {
-  return resources.flatMap((resource) => {
-    const profile = parseSupportedUnitFeatureProfile(
-      resource.unit,
-      classLevels,
+function projectCharacterResourceAdmissionInputs(
+  inputs: readonly CharacterBattleResourceAdmissionInput[],
+): Result.Result<
+  readonly CharacterBattleResourceAdmissionInput[],
+  readonly [BattleUnitSupportProfileIssue, ...BattleUnitSupportProfileIssue[]]
+> {
+  const projected: CharacterBattleResourceAdmissionInput[] = [];
+  const issues: BattleUnitSupportProfileIssue[] = [];
+  for (const input of inputs) {
+    if ("tag" in input || input.spellAccessFreeCast !== undefined) {
+      projected.push(input);
+      continue;
+    }
+    Match.value(admitResourceFeature(input.unit)).pipe(
+      Match.discriminatorsExhaustive("tag")({
+        notBattleOwned: () => projected.push(input),
+        admitted: (feature) =>
+          projected.push({
+            tag: "projectedCharacterBattleResource",
+            init: input,
+            projection: { tag: "resourceFeature", feature },
+          }),
+        rejected: ({ issues: admissionIssues }) =>
+          issues.push(
+            ...admissionIssues.map(({ message }) => ({
+              tag: "battleUnitSupportProfileIssue" as const,
+              message,
+            })),
+          ),
+      }),
     );
-    return profile === null
-      ? []
-      : [boundUnitFeatureProcedureFactsFromProfile(profile)];
-  });
+  }
+  const [firstIssue, ...remainingIssues] = issues;
+  return firstIssue === undefined
+    ? Result.succeed(projected)
+    : Result.fail([firstIssue, ...remainingIssues]);
+}
+
+function characterResourceFeatureProcedures(
+  resources: readonly CharacterBattleResourceAdmissionInput[],
+): readonly AdmittedResourceFeature[] {
+  return resources.flatMap((resource) =>
+    "tag" in resource && resource.projection.tag === "resourceFeature"
+      ? [resource.projection.feature]
+      : [],
+  );
 }
 
 /* v8 ignore start -- @preserve -- Malformed character initialization: admitted Druid Wild Shape state has at most one owning resource and threads only forms accepted by that resource profile. */
 function characterDruidWildShapeAvailableFormsInitIssue(
   creatureInit: CharacterBattleCreatureInit,
-  resourceUnitFeatureProcedures: readonly BoundUnitFeatureProcedureFacts[],
+  procedureBindings: readonly CharacterProcedureBinding[],
 ): Result.Result<never, BattleStateInitLeafIssue> | null {
-  const wildShapeProfiles = resourceUnitFeatureProcedures.flatMap(
-    ({ facts }) => (facts.kind === "druidWildShapeKnownForm" ? [facts] : []),
+  const wildShapeProfiles = procedureBindings.flatMap(({ procedure }) =>
+    procedure.kind === "unitFeature" &&
+    procedure.execution.kind === "druidWildShapeKnownForm"
+      ? [procedure.execution]
+      : [],
   );
   if (wildShapeProfiles.length > 1) {
     return battleStateInitIssue(

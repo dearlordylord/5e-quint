@@ -2432,6 +2432,7 @@ describe("battle boundary admission owners", () => {
         battleId: battleId("boundary-character-execution"),
         combatantId: combatantId("boundary-character-execution"),
         scopeOrdinal: battleExecutionScopeOrdinal(0),
+        resourceFeatureProcedures: [],
         unitFeatureProcedures: [],
         resourceUnits: [],
         units: [],
@@ -2456,6 +2457,7 @@ describe("battle boundary admission owners", () => {
         battleId: battleId("boundary-character-missing-resource"),
         combatantId: combatantId("boundary-character-missing-resource"),
         scopeOrdinal: battleExecutionScopeOrdinal(0),
+        resourceFeatureProcedures: [],
         unitFeatureProcedures: [
           boundUnitFeatureProcedureFactsFromProfile(tacticalProfile),
         ],

@@ -76,6 +76,9 @@ import type {
   UnitFeatureProcedureExecution,
 } from "./character-execution-vocabulary.ts";
 import { bindFailedSavingThrowRerollProcedure } from "./procedure-admission/failed-saving-throw-reroll.ts";
+import { bindDruidWildShapeProcedure } from "./procedure-admission/druid-wild-shape.ts";
+import { bindMonkFocusProcedure } from "./procedure-admission/monk-focus.ts";
+import type { AdmittedResourceFeature } from "./procedure-admission/resource-feature-admission.ts";
 export type {
   CharacterExecutionState,
   CharacterProcedureBinding,
@@ -186,6 +189,97 @@ type UnitFeatureProcedureCandidate = {
   readonly execution: UnitFeatureProcedureExecution;
 };
 
+type ResourceFeatureProcedureBinding =
+  | {
+      readonly tag: "bound";
+      readonly candidate: UnitFeatureProcedureCandidate;
+    }
+  | { readonly tag: "notAvailable" }
+  | { readonly tag: "rejected"; readonly messages: readonly string[] };
+
+function bindResourceFeatureProcedure(
+  feature: AdmittedResourceFeature,
+  input: {
+    readonly resourcePoolRefsByUnitId: ReadonlyMap<
+      AuthoredUnitSource["id"],
+      BattleResourcePoolExecutionRef
+    >;
+    readonly classLevels: CharacterBattleClassLevels;
+  },
+): ResourceFeatureProcedureBinding {
+  return Match.value(feature.procedure).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      failedSavingThrowReroll: ({ admitted }) => {
+        const binding = bindFailedSavingThrowRerollProcedure(
+          { sourceUnitId: feature.sourceUnitId, facts: admitted.facts },
+          input,
+        );
+        return binding.tag === "rejected"
+          ? {
+              tag: "rejected" as const,
+              messages: binding.issues.map(({ message }) => message),
+            }
+          : {
+              tag: "bound" as const,
+              candidate: {
+                unitId: feature.sourceUnitId,
+                execution: binding.procedure.execution,
+              },
+            };
+      },
+      druidWildShape: ({ admitted }) => {
+        const binding = bindDruidWildShapeProcedure(
+          { sourceUnitId: feature.sourceUnitId, projection: admitted },
+          input,
+        );
+        return Match.value(binding).pipe(
+          Match.discriminatorsExhaustive("tag")({
+            bound: ({ procedure }) => ({
+              tag: "bound" as const,
+              candidate: {
+                unitId: feature.sourceUnitId,
+                execution: procedure.execution,
+              },
+            }),
+            notAvailable: () => ({ tag: "notAvailable" as const }),
+            rejected: ({ issues }) => ({
+              tag: "rejected" as const,
+              messages: issues.map(({ message }) => message),
+            }),
+          }),
+        );
+      },
+      monkFocus: ({ admitted }) => {
+        const binding = bindMonkFocusProcedure(
+          { sourceUnitId: feature.sourceUnitId, procedure: admitted },
+          input,
+        );
+        if (binding.tag === "rejected") {
+          return {
+            tag: "rejected" as const,
+            messages: binding.issues.map(({ message }) => message),
+          };
+        }
+        const execution = unitFeatureProcedureExecution(
+          binding.procedure.facts,
+          input,
+        );
+        return execution === undefined
+          ? {
+              tag: "rejected" as const,
+              messages: [
+                "Bound Monk Focus facts must project a Battle execution.",
+              ],
+            }
+          : {
+              tag: "bound" as const,
+              candidate: { unitId: feature.sourceUnitId, execution },
+            };
+      },
+    }),
+  );
+}
+
 function resourceSelectedAreaDamageReplacementProcedures(input: {
   readonly resourceUnits: readonly AuthoredUnitSource[];
   readonly unitRefs: readonly {
@@ -244,6 +338,7 @@ export function characterExecutionFromUnits(input: {
   readonly combatantId: CombatantId;
   readonly scopeOrdinal: BattleExecutionScopeOrdinal;
   readonly unitFeatureProcedures: readonly BoundUnitFeatureProcedureFacts[];
+  readonly resourceFeatureProcedures: readonly AdmittedResourceFeature[];
   readonly resourceUnits: readonly AuthoredUnitSource[];
   readonly units: readonly AuthoredUnitSource[];
   readonly unitRefs: readonly {
@@ -283,7 +378,36 @@ export function characterExecutionFromUnits(input: {
         ),
     ),
   ];
-  const unitProcedures = unitFeatureProcedures.flatMap((procedure) => {
+  const resourceFeatureUnitProcedures = input.resourceFeatureProcedures.flatMap(
+    (feature) => {
+      const binding = bindResourceFeatureProcedure(feature, {
+        resourcePoolRefsByUnitId,
+        classLevels: input.classLevels,
+      });
+      if (binding.tag === "rejected") {
+        supportProfileIssues.push(
+          ...binding.messages.map((message) => ({
+            tag: "battleUnitSupportProfileIssue" as const,
+            message,
+          })),
+        );
+        return [];
+      }
+      return binding.tag === "notAvailable"
+        ? []
+        : [
+            {
+              ...binding.candidate,
+              source: characterUnitProcedureSourceForAdmission(
+                scopeRef,
+                input.resourceUnits,
+                binding.candidate.unitId,
+              ),
+            },
+          ];
+    },
+  );
+  const legacyUnitProcedures = unitFeatureProcedures.flatMap((procedure) => {
     const failedSavingThrowBinding =
       procedure.facts.kind === "failedSavingThrowReroll"
         ? bindFailedSavingThrowRerollProcedure(
@@ -336,6 +460,18 @@ export function characterExecutionFromUnits(input: {
           },
         ];
   });
+  const resourceFeatureProcedureKeys = new Set(
+    resourceFeatureUnitProcedures.map(
+      ({ unitId, execution }) => `${unitId}\u0000${execution.kind}`,
+    ),
+  );
+  const unitProcedures = [
+    ...resourceFeatureUnitProcedures,
+    ...legacyUnitProcedures.filter(
+      ({ unitId, execution }) =>
+        !resourceFeatureProcedureKeys.has(`${unitId}\u0000${execution.kind}`),
+    ),
+  ];
   if (supportProfileIssues.length > 0) {
     const [firstIssue, ...remainingIssues] = supportProfileIssues;
     return Result.fail([firstIssue, ...remainingIssues]);
@@ -1119,6 +1255,25 @@ export function unitFeatureProcedureExecution(
       bonusActionDelegatedStandardActions: (value) => ({
         kind: value.kind,
         actionEconomy: value.actionEconomy,
+      }),
+      monkFocusBattleOptions: (value) => ({
+        kind: value.kind,
+        effectSaveDc: value.effectSaveDc,
+        flurryOfBlows: {
+          focusPointCost: value.flurryOfBlows.focusPointCost,
+          strikeCount: value.flurryOfBlows.strikeCount,
+        },
+        patientDefense: {
+          freeAction: value.patientDefense.freeAction,
+          focusPointCost: value.patientDefense.focusPointCost,
+          focusActions: value.patientDefense.focusActions,
+        },
+        stepOfTheWind: {
+          freeAction: value.stepOfTheWind.freeAction,
+          focusPointCost: value.stepOfTheWind.focusPointCost,
+          focusActions: value.stepOfTheWind.focusActions,
+          jumpDistanceMultiplier: value.stepOfTheWind.jumpDistanceMultiplier,
+        },
       }),
       remarkableAthlete: (value) => ({
         kind: value.kind,

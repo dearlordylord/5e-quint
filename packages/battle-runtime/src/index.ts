@@ -236,10 +236,14 @@ export {
   CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   characterBattleResourceSupportedForUnit,
+  characterBattleResourceExecutionFacts,
   characterBattleResourceUsage,
   characterBattleResourceForUnit,
   characterBattleResourceMaxUses,
+  characterBattleResourceMaxUsesForExecutionFacts,
   characterBattleResourceMaxPoints,
+  characterBattleResourceMaxPointsForExecutionFacts,
+  characterBattleResourceInitFromAdmissionInput,
   characterBattleResourceIsPointPool,
   characterBattleResourceIsUseCount,
   classFeatureSpellFreeCastProfileForResource,
@@ -263,6 +267,9 @@ export {
   type CharacterBattlePointPoolResourceState,
   type CharacterBattlePointPoolSpendIssue,
   type CharacterBattleResourceInit,
+  type CharacterBattleResourceAdmissionInput,
+  type CharacterBattleResourceProjection,
+  type ProjectedCharacterBattleResourceInit,
   type CharacterBattleResourceExecutionFacts,
   type CharacterBattleResourceOwnership,
   type CharacterBattleResourceState,
@@ -278,6 +285,19 @@ export {
   type CharacterBattleSpellcastingState,
   type CompanionReactionInvocationMode,
 } from "./character-battle-resources.ts";
+
+export {
+  admitResourceFeature,
+  type AdmittedResourceFeature,
+  type ResourceFeatureAdmission,
+  type ResourceFeatureAdmissionIssue,
+  type UnboundResourceFeatureProcedure,
+} from "./procedure-admission/resource-feature-admission.ts";
+
+export {
+  projectDruidWildShapeAtClassLevels,
+  type DruidWildShapeClassLevelProjection,
+} from "./procedure-admission/druid-wild-shape.ts";
 
 export {
   admitCompanionToBattle,

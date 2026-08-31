@@ -253,7 +253,19 @@ describe("character battle resource projections", () => {
       characterBattleMetamagicState(
         metamagic,
         [resource],
-        [{ resourcePoolRef, unit, purpose: { tag: "unitResource" } }],
+        [
+          {
+            resourcePoolRef,
+            unit,
+            purpose: {
+              tag: "unitResource",
+              projection: {
+                tag: "resource",
+                resource: characterBattleResourceForUnit(unit),
+              },
+            },
+          },
+        ],
       ),
     ).toEqual({
       sorceryPointResourcePoolRef: resourcePoolRef,

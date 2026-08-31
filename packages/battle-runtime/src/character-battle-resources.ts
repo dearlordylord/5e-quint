@@ -10,6 +10,7 @@ import {
   spellSlotLevel,
   type ProficiencyBonus,
 } from "@dnd/shared/types";
+import { Match } from "effect";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
 // UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
@@ -61,7 +62,10 @@ import {
   admitPersistentArmorEffectSpell,
   type PersistentArmorEffectAdmission,
 } from "./procedure-admission/persistent-armor-effect-facts.ts";
-import { admitFailedSavingThrowRerollProcedure } from "./procedure-admission/failed-saving-throw-reroll.ts";
+import {
+  admitResourceFeature,
+  type AdmittedResourceFeature,
+} from "./procedure-admission/resource-feature-admission.ts";
 import {
   type CharacterBattleActivationResource,
   type CharacterBattleMetamagicOptionFact,
@@ -129,6 +133,49 @@ export type CharacterBattleResourceInit =
   | CharacterBattlePointPoolResourceInit
   | CharacterBattleSpellAccessFreeCastResourceInit;
 
+export type CharacterBattleResourceProjection =
+  | {
+      readonly tag: "resource";
+      readonly resource: CharacterBattleResourceExecutionFacts;
+    }
+  | {
+      readonly tag: "resourceFeature";
+      readonly feature: AdmittedResourceFeature;
+    };
+
+export type ProjectedCharacterBattleResourceInit = {
+  readonly tag: "projectedCharacterBattleResource";
+  readonly init: Exclude<
+    CharacterBattleResourceInit,
+    CharacterBattleSpellAccessFreeCastResourceInit
+  >;
+  readonly projection: CharacterBattleResourceProjection;
+};
+
+export type CharacterBattleResourceAdmissionInput =
+  | CharacterBattleResourceInit
+  | ProjectedCharacterBattleResourceInit;
+
+export function characterBattleResourceExecutionFacts(
+  input: CharacterBattleResourceAdmissionInput,
+): CharacterBattleResourceExecutionFacts {
+  if ("tag" in input) {
+    return Match.value(input.projection).pipe(
+      Match.discriminatorsExhaustive("tag")({
+        resource: ({ resource }) => resource,
+        resourceFeature: ({ feature }) => feature.resource,
+      }),
+    );
+  }
+  if (input.spellAccessFreeCast !== undefined) {
+    return {
+      kind: "use_count",
+      cap: { kind: "fixed", uses: input.spellAccessFreeCast.count },
+    };
+  }
+  return characterBattleResourceForUnit(input.unit);
+}
+
 export type CharacterBattleFeatureInit = SupportedUnitFeatureFacts & {
   readonly unit: UnitRecord;
 };
@@ -184,7 +231,10 @@ export type CharacterBattleResourceOwnership = {
   readonly resourcePoolRef: BattleResourcePoolExecutionRef;
   readonly unit: UnitRecord;
   readonly purpose:
-    | { readonly tag: "unitResource" }
+    | {
+        readonly tag: "unitResource";
+        readonly projection: CharacterBattleResourceProjection;
+      }
     | {
         readonly tag: "spellAccessFreeCast";
         readonly spellId: SpellRecord["id"];
@@ -197,23 +247,33 @@ export type CharacterBattleResourceAdmission = {
 };
 
 export function admitCharacterBattleResources(
-  inits: readonly CharacterBattleResourceInit[],
+  inits: readonly CharacterBattleResourceAdmissionInput[],
   classLevels: CharacterBattleClassLevels,
   scopeRef: BattleCharacterExecutionScopeRef,
 ): CharacterBattleResourceAdmission {
-  const admitted = inits.map((init, ordinal) => {
+  const admitted = inits.map((input, ordinal) => {
+    const init = characterBattleResourceInitFromAdmissionInput(input);
     const resourcePoolRef = battleResourcePoolExecutionRef(
       scopeRef,
       NonNegativeInteger(ordinal),
     );
     return {
-      state: characterResourceState(init, classLevels, resourcePoolRef),
+      state: characterResourceState(input, classLevels, resourcePoolRef),
       ownership: {
         resourcePoolRef,
         unit: init.unit,
         purpose:
           init.spellAccessFreeCast === undefined
-            ? { tag: "unitResource" as const }
+            ? {
+                tag: "unitResource" as const,
+                projection:
+                  "tag" in input
+                    ? input.projection
+                    : {
+                        tag: "resource" as const,
+                        resource: characterBattleResourceExecutionFacts(input),
+                      },
+              }
             : {
                 tag: "spellAccessFreeCast" as const,
                 spellId: init.spellAccessFreeCast.spellId,
@@ -225,6 +285,12 @@ export function admitCharacterBattleResources(
     states: admitted.map(({ state }) => state),
     ownership: admitted.map(({ ownership }) => ownership),
   };
+}
+
+export function characterBattleResourceInitFromAdmissionInput(
+  input: CharacterBattleResourceAdmissionInput,
+): CharacterBattleResourceInit {
+  return "tag" in input ? input.init : input;
 }
 
 export type CharacterBattleSpellSlotInit = {
@@ -596,26 +662,21 @@ export function parseCharacterBattleInvocationSpellAccesses(
 }
 
 export function characterResourceState(
-  input: CharacterBattleResourceInit,
+  admissionInput: CharacterBattleResourceAdmissionInput,
   classLevels: CharacterBattleClassLevels,
   resourcePoolRef: BattleResourcePoolExecutionRef,
 ): CharacterBattleResourceState {
-  const initIssue = characterBattleResourceInitIssue(input, classLevels);
+  const initIssue = characterBattleResourceInitIssue(
+    admissionInput,
+    classLevels,
+  );
   /* v8 ignore start -- @preserve -- Resource admission runs this constructor only after the same initialization issue check at the battle boundary. */
   if (initIssue !== null) {
     throw new Error(initIssue);
   }
   /* v8 ignore stop -- @preserve */
-  const resource =
-    input.spellAccessFreeCast === undefined
-      ? characterBattleResourceForUnit(input.unit)
-      : {
-          kind: "use_count" as const,
-          cap: {
-            kind: "fixed" as const,
-            uses: input.spellAccessFreeCast.count,
-          },
-        };
+  const input = characterBattleResourceInitFromAdmissionInput(admissionInput);
+  const resource = characterBattleResourceExecutionFacts(admissionInput);
   const base = { resourcePoolRef };
   if (resource.kind === "point_pool") {
     const defaultPointsRemaining = supportedResourceCapForLevel(
@@ -663,7 +724,19 @@ export function characterBattleResourceMaxUses(input: {
   readonly classLevels: CharacterBattleClassLevels;
   readonly capAbilityModifier?: AbilityModifier;
 }): ResourceCount | undefined {
-  const resource = characterBattleResourceForUnit(input.unit);
+  return characterBattleResourceMaxUsesForExecutionFacts({
+    ...input,
+    resource: characterBattleResourceForUnit(input.unit),
+  });
+}
+
+export function characterBattleResourceMaxUsesForExecutionFacts(input: {
+  readonly unit: UnitRecord;
+  readonly resource: CharacterBattleResourceExecutionFacts;
+  readonly classLevels: CharacterBattleClassLevels;
+  readonly capAbilityModifier?: AbilityModifier;
+}): ResourceCount | undefined {
+  const resource = input.resource;
   if (resource.kind === "point_pool") {
     return undefined;
   }
@@ -682,7 +755,19 @@ export function characterBattleResourceMaxPoints(input: {
   readonly classLevels: CharacterBattleClassLevels;
   readonly capAbilityModifier?: AbilityModifier;
 }): ResourceCount | undefined {
-  const resource = characterBattleResourceForUnit(input.unit);
+  return characterBattleResourceMaxPointsForExecutionFacts({
+    ...input,
+    resource: characterBattleResourceForUnit(input.unit),
+  });
+}
+
+export function characterBattleResourceMaxPointsForExecutionFacts(input: {
+  readonly unit: UnitRecord;
+  readonly resource: CharacterBattleResourceExecutionFacts;
+  readonly classLevels: CharacterBattleClassLevels;
+  readonly capAbilityModifier?: AbilityModifier;
+}): ResourceCount | undefined {
+  const resource = input.resource;
   if (resource.kind !== "point_pool") {
     return undefined;
   }
@@ -706,16 +791,14 @@ function characterBattleResourceLevel(
 
 /* v8 ignore start -- @preserve -- Malformed resource initialization: admitted character resources match their Unit-defined pool kind, cap, and nonnegative bounded remaining amount. */
 export function characterBattleResourceInitIssue(
-  input: CharacterBattleResourceInit,
+  admissionInput: CharacterBattleResourceAdmissionInput,
   classLevels: CharacterBattleClassLevels,
 ): string | null {
+  const input = characterBattleResourceInitFromAdmissionInput(admissionInput);
   if (input.spellAccessFreeCast !== undefined) {
     return spellAccessFreeCastResourceInitIssue(input);
   }
-  const resource = characterBattleResourceForUnitOrNull(input.unit);
-  if (resource === null) {
-    return "Character battle resources must be supported resource Units.";
-  }
+  const resource = characterBattleResourceExecutionFacts(admissionInput);
   return characterBattleResourceStateInitIssue(input, classLevels, resource);
 }
 
@@ -883,13 +966,9 @@ export function unitIsSupportedClassFeatureSpellFreeCastResource(
 function characterBattleResourceForUnitOrNull(
   unit: UnitRecord,
 ): CharacterBattleResourceExecutionFacts | null {
-  const failedSavingThrowReroll = admitFailedSavingThrowRerollProcedure(unit);
-  if (failedSavingThrowReroll.tag === "rejected") return null;
-  if (failedSavingThrowReroll.tag === "admitted") {
-    const { resetCadence: _resetCadence, ...resource } =
-      failedSavingThrowReroll.procedure.resource;
-    return resource;
-  }
+  const resourceFeature = admitResourceFeature(unit);
+  if (resourceFeature.tag === "rejected") return null;
+  if (resourceFeature.tag === "admitted") return resourceFeature.resource;
   const freeCastResource = classFeatureSpellFreeCastResource(unit);
   if (freeCastResource !== null) {
     return freeCastResource;

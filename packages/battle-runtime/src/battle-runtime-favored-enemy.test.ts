@@ -7,7 +7,10 @@ import { describe, expect, test } from "vitest";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import { spellProcedureExecutionFor } from "./battle-reducer/spell-procedure-profiles/execution-registry.ts";
 import { characterSpellProcedure } from "./character-execution-admission.ts";
-import { unitIsSupportedClassFeatureSpellFreeCastResource } from "./character-battle-resources.ts";
+import {
+  characterBattleResourceInitFromAdmissionInput,
+  unitIsSupportedClassFeatureSpellFreeCastResource,
+} from "./character-battle-resources.ts";
 import type {
   BattleRuntimeSession,
   BattleState,
@@ -70,7 +73,9 @@ describe("battle runtime: Favored Enemy", () => {
             }),
             featurePreparedSpells: [
               {
-                sourceUnitId: favoredEnemy.unit.id,
+                sourceUnitId:
+                  characterBattleResourceInitFromAdmissionInput(favoredEnemy)
+                    .unit.id,
                 spell: spellRecord("hunters_mark"),
               },
             ],
@@ -184,7 +189,9 @@ describe("battle runtime: Favored Enemy", () => {
             }),
             featurePreparedSpells: [
               {
-                sourceUnitId: favoredEnemy.unit.id,
+                sourceUnitId:
+                  characterBattleResourceInitFromAdmissionInput(favoredEnemy)
+                    .unit.id,
                 spell: spellRecord("hunters_mark"),
               },
             ],
@@ -386,7 +393,9 @@ describe("battle runtime: Favored Enemy", () => {
             }),
             featurePreparedSpells: [
               {
-                sourceUnitId: favoredEnemy.unit.id,
+                sourceUnitId:
+                  characterBattleResourceInitFromAdmissionInput(favoredEnemy)
+                    .unit.id,
                 spell: spellRecord("hunters_mark"),
               },
             ],
@@ -846,7 +855,8 @@ function paladinsSmiteBattleSession(
           }),
           featurePreparedSpells: [
             {
-              sourceUnitId: resource.unit.id,
+              sourceUnitId:
+                characterBattleResourceInitFromAdmissionInput(resource).unit.id,
               spell: spellRecord("divine_smite"),
             },
           ],

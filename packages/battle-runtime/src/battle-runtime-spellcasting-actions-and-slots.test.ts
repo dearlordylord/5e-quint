@@ -22,6 +22,7 @@ import {
 } from "./battle-reducer/spells-resolve-resources.ts";
 import { spellActTurnResourceAvailable } from "./battle-reducer/spell-turn-resources.ts";
 import { characterExecutionWithSpellInvocations } from "./character-execution-admission.ts";
+import { characterBattleResourceInitFromAdmissionInput } from "./character-battle-resources.ts";
 import { characterSpellProcedure } from "./character-execution-queries.ts";
 import type {
   BattleCreatureState,
@@ -542,7 +543,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
             ...wizardSpellcasting({ preparedSpells: [] }),
             featurePreparedSpells: [
               {
-                sourceUnitId: favoredEnemy.unit.id,
+                sourceUnitId:
+                  characterBattleResourceInitFromAdmissionInput(favoredEnemy)
+                    .unit.id,
                 spell: spellRecord("hunters_mark"),
               },
             ],

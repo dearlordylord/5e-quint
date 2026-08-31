@@ -456,6 +456,7 @@ export const MonkFocusBattleOptionsProcedureExecutionSchema = Schema.Struct({
     kind: Schema.Literal("classFeatureAbilitySaveDc"),
     base: Schema.Literal(8),
     ability: Schema.Literal("wis"),
+    includesProficiencyBonus: Schema.Literal(true),
   }),
   flurryOfBlows: Schema.Struct({
     focusPointCost: Schema.Literal(1),
@@ -478,7 +479,10 @@ export const MonkFocusBattleOptionsProcedureExecutionSchema = Schema.Struct({
       Schema.Literal("disengage"),
       Schema.Literal("dash"),
     ]),
-    jumpDistanceMultiplier: Schema.Struct({ multiplier: Schema.Literal(2) }),
+    jumpDistanceMultiplier: Schema.Struct({
+      multiplier: Schema.Literal(2),
+      expires: Schema.Literal("endOfTurn"),
+    }),
     displayName: Schema.optionalKey(Schema.Never),
   }),
 });
@@ -1345,6 +1349,7 @@ export const UnitFeatureProcedureExecutionSchema = Schema.Union([
   UnitFeaturePassiveSpeedBonusProcedureExecutionSchema,
   UnitFeaturePassiveSpeedKindGrantsProcedureExecutionSchema,
   AcrobaticMovementProcedureExecutionSchema,
+  MonkFocusBattleOptionsProcedureExecutionSchema,
   CreatureSpaceMovementPermissionProcedureExecutionSchema,
   HideActionObscurementPermissionProcedureExecutionSchema,
   WeaponDamageDiceRollChoiceProcedureExecutionSchema,

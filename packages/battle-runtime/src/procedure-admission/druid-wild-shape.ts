@@ -650,6 +650,75 @@ export type DruidWildShapeProcedureBinding =
       readonly issues: ReadonlyNonEmptyArray<DruidWildShapeProcedureBindingIssue>;
     };
 
+export type DruidWildShapeClassLevelProjection =
+  | {
+      readonly tag: "projected";
+      readonly execution: DruidWildShapeProcedureExecution;
+    }
+  | {
+      readonly tag: "notAvailable";
+      readonly reason: "belowAcquisitionLevel";
+      readonly className: "druid";
+      readonly minimumLevel: 2;
+      readonly actualLevel: ClassLevel;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly issue: DruidWildShapeProcedureBindingIssue;
+    };
+
+export function projectDruidWildShapeAtClassLevels(
+  admitted: AdmittedDruidWildShapeProcedure,
+  classLevels: CharacterBattleClassLevels,
+): DruidWildShapeClassLevelProjection {
+  const classLevelRequirement =
+    admitted.procedure.binding.requirements.classLevel;
+  const druidLevel = classLevels.find(
+    (entry) => entry.className === classLevelRequirement.className,
+  )?.level;
+  if (druidLevel === undefined) {
+    return {
+      tag: "rejected",
+      issue: druidWildShapeBindingIssue(
+        "canonicalClassLevelMissing",
+        "Wild Shape binding requires the canonical Druid class level.",
+      ),
+    };
+  }
+  if (Number(druidLevel) < classLevelRequirement.minimumLevel) {
+    return {
+      tag: "notAvailable",
+      reason: "belowAcquisitionLevel",
+      className: classLevelRequirement.className,
+      minimumLevel: classLevelRequirement.minimumLevel,
+      actualLevel: druidLevel,
+    };
+  }
+  return {
+    tag: "projected",
+    execution: {
+      kind: admitted.procedure.kind,
+      classLevel: druidLevel,
+      knownFormRoster: {
+        creatureType: admitted.procedure.knownFormRoster.creatureType,
+        count: classLevelTotalChoices(
+          admitted.procedure.knownFormRoster.count.levels,
+          druidLevel,
+        ),
+        maxChallengeRating: classLevelThresholdValue(
+          admitted.procedure.knownFormRoster.maxChallengeRating,
+          druidLevel,
+        ),
+        flySpeed:
+          Number(druidLevel) >=
+          admitted.procedure.knownFormRoster.flySpeed.atLevel
+            ? "allowed"
+            : "forbidden",
+      },
+    },
+  };
+}
+
 export function bindDruidWildShapeProcedure(
   admitted: {
     readonly sourceUnitId: AuthoredUnitSource["id"];
@@ -660,12 +729,14 @@ export function bindDruidWildShapeProcedure(
   const resourcePoolRef = input.resourcePoolRefsByUnitId.get(
     admitted.sourceUnitId,
   );
-  const classLevelRequirement =
-    admitted.projection.procedure.binding.requirements.classLevel;
-  const druidLevel = input.classLevels.find(
-    (entry) => entry.className === classLevelRequirement.className,
-  )?.level;
-  if (resourcePoolRef === undefined && druidLevel === undefined) {
+  const classLevelProjection = projectDruidWildShapeAtClassLevels(
+    admitted.projection,
+    input.classLevels,
+  );
+  if (
+    resourcePoolRef === undefined &&
+    classLevelProjection.tag === "rejected"
+  ) {
     return {
       tag: "rejected",
       issues: [
@@ -673,10 +744,7 @@ export function bindDruidWildShapeProcedure(
           "sameSourceResourceMissing",
           "Wild Shape binding requires its same-source use-count resource.",
         ),
-        druidWildShapeBindingIssue(
-          "canonicalClassLevelMissing",
-          "Wild Shape binding requires the canonical Druid class level.",
-        ),
+        classLevelProjection.issue,
       ],
     };
   }
@@ -691,52 +759,16 @@ export function bindDruidWildShapeProcedure(
       ],
     };
   }
-  if (druidLevel === undefined) {
-    return {
-      tag: "rejected",
-      issues: [
-        druidWildShapeBindingIssue(
-          "canonicalClassLevelMissing",
-          "Wild Shape binding requires the canonical Druid class level.",
-        ),
-      ],
-    };
+  if (classLevelProjection.tag === "rejected") {
+    return { tag: "rejected", issues: [classLevelProjection.issue] };
   }
-  if (Number(druidLevel) < classLevelRequirement.minimumLevel) {
-    return {
-      tag: "notAvailable",
-      reason: "belowAcquisitionLevel",
-      className: classLevelRequirement.className,
-      minimumLevel: classLevelRequirement.minimumLevel,
-      actualLevel: druidLevel,
-    };
-  }
+  if (classLevelProjection.tag === "notAvailable") return classLevelProjection;
   return {
     tag: "bound",
     procedure: {
       binding: "ready",
       source: { kind: "sameSourceResource", resourcePoolRef },
-      execution: {
-        kind: admitted.projection.procedure.kind,
-        classLevel: druidLevel,
-        knownFormRoster: {
-          creatureType:
-            admitted.projection.procedure.knownFormRoster.creatureType,
-          count: classLevelTotalChoices(
-            admitted.projection.procedure.knownFormRoster.count.levels,
-            druidLevel,
-          ),
-          maxChallengeRating: classLevelThresholdValue(
-            admitted.projection.procedure.knownFormRoster.maxChallengeRating,
-            druidLevel,
-          ),
-          flySpeed:
-            Number(druidLevel) >=
-            admitted.projection.procedure.knownFormRoster.flySpeed.atLevel
-              ? "allowed"
-              : "forbidden",
-        },
-      },
+      execution: classLevelProjection.execution,
     },
   };
 }

@@ -168,15 +168,15 @@ test("keeps resource feature projection parse-once across Wild Shape and executi
 
   expect([
     ...source.matchAll(/parseSupportedUnitFeatureProfile\s*\(/g),
-  ]).toHaveLength(1);
+  ]).toHaveLength(0);
   expect(source).toMatch(
-    /const resourceUnitFeatureProcedures =\s*projectCharacterResourceUnitFeatureProcedures\([\s\S]*?characterDruidWildShapeAvailableFormsInitIssue\(\s*creatureInit,\s*resourceUnitFeatureProcedures,\s*\)/,
+    /projectCharacterResourceAdmissionInputs\(creatureInit\.resources \?\? \[\]\)/,
   );
   expect(source).toMatch(
-    /unitFeatureProcedures:\s*\[\s*\.\.\.resourceUnitFeatureProcedures\.flatMap\(/,
+    /resourceFeatureProcedures,\s*unitFeatureProcedures: explicitUnitFeatureProcedures/,
   );
   expect(source).toMatch(
-    /resourceUnitFeatureProcedures\.flatMap\(\s*\(\{ facts \}\) =>\s*\(facts\.kind === "druidWildShapeKnownForm"/,
+    /characterDruidWildShapeAvailableFormsInitIssue\(\s*creatureInit,\s*execution\.success\.execution\.procedureBindings/,
   );
 });
 
@@ -2585,7 +2585,7 @@ test("rejects duplicate Wild Shape resources through the shared resource admissi
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
     expect(battleStateInitIssueMessage(result.failure)).toBe(
-      "Druid Wild Shape battle initialization supports exactly one Druid Wild Shape resource.; Duplicate character battle resource unit: druid_wild_shape",
+      "Duplicate character battle resource unit: druid_wild_shape",
     );
   }
 });
@@ -2679,7 +2679,7 @@ test("projects canonical level-2 Wild Shape access and rejects a transform-free 
   expect(Result.isFailure(battle)).toBe(true);
   if (Result.isFailure(battle)) {
     expect(battleStateInitIssueMessage(battle.failure)).toBe(
-      "Druid Wild Shape available forms require the Druid Wild Shape feature.",
+      "Unsupported Wild Shape mechanics fact: activationPhase.; Unsupported Wild Shape mechanics fact: transformation.; Unsupported Wild Shape mechanics fact: knownFormRoster.; Unsupported Wild Shape mechanics fact: reversion.; Unsupported Wild Shape mechanics fact: temporaryHitPoints.",
     );
   }
 });
