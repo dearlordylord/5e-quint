@@ -15,6 +15,7 @@ import type { StatBlockProcedureResourceOrdinal } from "@dnd/surface/surface/typ
 import { type SupportedStatBlockBonusActionStandardAction } from "./battle-reducer/battle-runtime-protocol.ts";
 import type { BattleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-known-form-runtime.ts";
+import { mapReadonlyNonEmptyArray } from "./readonly-non-empty-array.ts";
 import {
   type BattleEffectExecutionRef,
   type BattleStatBlockProcedureExecutionRef,
@@ -601,7 +602,7 @@ function allocateStatBlockExecution(
   }
 
   for (const spellcasting of admitted.spellcastings) {
-    const groups = spellcasting.groups.map((group) =>
+    const groups = mapReadonlyNonEmptyArray(spellcasting.groups, (group) =>
       runtimeSpellcastingGroupBinding(
         allocator,
         admitted.resources,
@@ -628,7 +629,7 @@ function allocateStatBlockExecution(
         ...(spellcasting.components === undefined
           ? {}
           : { components: spellcasting.components }),
-        groups: nonEmptyRuntimeValues(groups),
+        groups,
       },
       // Group resource pools are selected by a child spell invocation. They
       // must not all be spent merely by admitting the generic procedure.
@@ -656,22 +657,21 @@ function runtimeSpellcastingGroupBinding(
   >,
   resourcePools: StatBlockResourcePoolState[],
 ): StatBlockSpellcastingGroup {
-  const resourcePoolRefs = allocateProcedureResourcePools(
-    allocator,
-    resources,
-    group.resourceRefs,
-    sharedResourcePools,
-    resourcePools,
-  );
   return Match.value(group).pipe(
     Match.when({ kind: "at_will" }, ({ invocations }) => ({
       kind: "at_will" as const,
       resourcePoolRefs: [] as const,
       invocations,
     })),
-    Match.when({ kind: "limited" }, ({ invocations }) => ({
+    Match.when({ kind: "limited" }, ({ invocations, resourceRefs }) => ({
       kind: "limited" as const,
-      resourcePoolRefs: nonEmptyRuntimeValues(resourcePoolRefs),
+      resourcePoolRefs: allocateProcedureResourcePools(
+        allocator,
+        resources,
+        resourceRefs,
+        sharedResourcePools,
+        resourcePools,
+      ),
       invocations,
     })),
     Match.exhaustive,
@@ -1200,6 +1200,26 @@ function sameMembers<T>(actual: readonly T[], expected: readonly T[]): boolean {
 function allocateProcedureResourcePools(
   allocator: ExecutionReferenceAllocator,
   resources: readonly BattleStatBlockRuntimeResource[],
+  resourceRefs: ReadonlyNonEmptyArray<StatBlockProcedureResourceOrdinal>,
+  sharedResourcePools: Map<
+    StatBlockProcedureResourceOrdinal,
+    StatBlockResourcePoolState
+  >,
+  resourcePools: StatBlockResourcePoolState[],
+): ReadonlyNonEmptyArray<BattleResourcePoolExecutionRef>;
+function allocateProcedureResourcePools(
+  allocator: ExecutionReferenceAllocator,
+  resources: readonly BattleStatBlockRuntimeResource[],
+  resourceRefs: readonly StatBlockProcedureResourceOrdinal[],
+  sharedResourcePools: Map<
+    StatBlockProcedureResourceOrdinal,
+    StatBlockResourcePoolState
+  >,
+  resourcePools: StatBlockResourcePoolState[],
+): readonly BattleResourcePoolExecutionRef[];
+function allocateProcedureResourcePools(
+  allocator: ExecutionReferenceAllocator,
+  resources: readonly BattleStatBlockRuntimeResource[],
   resourceRefs: readonly StatBlockProcedureResourceOrdinal[],
   sharedResourcePools: Map<
     StatBlockProcedureResourceOrdinal,
@@ -1272,18 +1292,6 @@ function allocateProcedureRef(
   const ordinal = allocator.procedureOrdinal;
   allocator.procedureOrdinal = NonNegativeInteger(ordinal + 1);
   return battleStatBlockProcedureExecutionRef(allocator.scopeRef, ordinal);
-}
-
-function nonEmptyRuntimeValues<T>(
-  values: readonly T[],
-): ReadonlyNonEmptyArray<T> {
-  const [first, ...rest] = values;
-  if (first === undefined) {
-    throw new Error(
-      "Stat Block spellcasting admission invariant violated: expected a non-empty value collection.",
-    );
-  }
-  return [first, ...rest];
 }
 
 function allocateResourcePoolRef(
