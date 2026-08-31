@@ -9,6 +9,8 @@ import {
 } from "../effect-execution-ref.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
+  BattleActiveEffect,
+  BattleFill,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
 } from "../battle-state-execution.ts";
@@ -24,129 +26,222 @@ import { invalidResult } from "./result-helpers.ts";
 import { applySelfTransformationModeEffect } from "./spells-active-effects.ts";
 import { spellProcedureBoundToActiveEffect } from "./spell-active-effect-binding.ts";
 
-export function resolveControlledVerticalSuspensionAltitudeControlCommand(
-  input: BattleResolutionInputForSubject<
-    Extract<
-      BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "controlledVerticalSuspensionAltitudeControl";
-      }
-    >
-  >,
-): BattleResolutionResult {
+type ControlledVerticalSuspensionSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "controlledVerticalSuspensionAltitudeControl";
+  }
+>;
+
+type ControlledVerticalSuspensionInput =
+  BattleResolutionInputForSubject<ControlledVerticalSuspensionSubject>;
+
+type ControlledVerticalSuspensionEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "controlledVerticalSuspension" }
+>;
+
+type ControlledVerticalSuspensionProcedure = Extract<
+  NonNullable<ReturnType<typeof spellProcedureBoundToActiveEffect>>,
+  { readonly procedure: "controlledVerticalSuspension" }
+>;
+
+type ControlledVerticalSuspensionContext = {
+  readonly effect: ControlledVerticalSuspensionEffect;
+  readonly sourceProcedure: ControlledVerticalSuspensionProcedure;
+};
+
+type ControlledVerticalSuspensionContextResult =
+  | {
+      readonly tag: "ok";
+      readonly context: ControlledVerticalSuspensionContext;
+    }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function controlledVerticalSuspensionContext(
+  input: ControlledVerticalSuspensionInput,
+): ControlledVerticalSuspensionContextResult {
   const actor = input.state.combatants.get(input.subject.actorId);
   if (
-    !combatantCanTakeActions(actor) ||
-    !canSpendAction(input.state.currentTurnResources, "magic")
+    !controlledVerticalSuspensionActionIsAvailable(
+      actor,
+      input.state.currentTurnResources,
+    )
   ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Magic action is no longer available for ControlledVerticalSuspension altitude control.",
-    );
+    return {
+      tag: "invalid",
+      message:
+        "Magic action is no longer available for ControlledVerticalSuspension altitude control.",
+    };
   }
   const target = input.state.combatants.get(input.subject.targetId);
-  const selectedEffect =
-    target === undefined
-      ? undefined
-      : spellActiveEffectForExecutionRef(
-          target.activeEffects,
-          input.subject.effectRef,
-        );
-  const effect =
-    selectedEffect?.kind === "controlledVerticalSuspension"
-      ? selectedEffect
-      : undefined;
-  if (
-    target === undefined ||
-    effect === undefined ||
-    effect.sourceCombatantId !== input.subject.actorId
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "ControlledVerticalSuspension altitude control is no longer active for the target.",
-    );
+  if (target === undefined) {
+    return {
+      tag: "invalid",
+      message:
+        "ControlledVerticalSuspension altitude control is no longer active for the target.",
+    };
+  }
+  const selectedEffect = spellActiveEffectForExecutionRef(
+    target.activeEffects,
+    input.subject.effectRef,
+  );
+  if (selectedEffect?.kind !== "controlledVerticalSuspension") {
+    return {
+      tag: "invalid",
+      message:
+        "ControlledVerticalSuspension altitude control is no longer active for the target.",
+    };
+  }
+  if (selectedEffect.sourceCombatantId !== input.subject.actorId) {
+    return {
+      tag: "invalid",
+      message:
+        "ControlledVerticalSuspension altitude control is no longer active for the target.",
+    };
   }
   const sourceProcedure = spellProcedureBoundToActiveEffect(
     input.state,
-    effect,
+    selectedEffect,
   );
   if (sourceProcedure?.procedure !== "controlledVerticalSuspension") {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "ControlledVerticalSuspension source procedure is no longer available.",
-    );
+    return {
+      tag: "invalid",
+      message:
+        "ControlledVerticalSuspension source procedure is no longer available.",
+    };
   }
+  return {
+    tag: "ok",
+    context: { effect: selectedEffect, sourceProcedure },
+  };
+}
+
+function controlledVerticalSuspensionActionIsAvailable(
+  actor: Parameters<typeof combatantCanTakeActions>[0],
+  resources: Parameters<typeof canSpendAction>[0],
+): boolean {
+  return combatantCanTakeActions(actor) && canSpendAction(resources, "magic");
+}
+
+type ControlledVerticalSuspensionAltitudeChangeFill = Extract<
+  BattleFill,
+  { readonly kind: "controlledVerticalSuspensionAltitudeChange" }
+>;
+
+type ControlledVerticalSuspensionAltitudeChangeHole = ReturnType<
+  typeof controlledVerticalSuspensionAltitudeChangeHole
+>;
+
+type ControlledVerticalSuspensionFillAdmission =
+  | {
+      readonly tag: "ok";
+      readonly fill: ControlledVerticalSuspensionAltitudeChangeFill;
+    }
+  | { readonly tag: "needsHole" }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function admitControlledVerticalSuspensionFill(
+  input: ControlledVerticalSuspensionInput,
+  context: ControlledVerticalSuspensionContext,
+  hole: ControlledVerticalSuspensionAltitudeChangeHole,
+): ControlledVerticalSuspensionFillAdmission {
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject fills that contradict the admitted subject's discovered hole contract. */
+  if (input.fills.length > 1) {
+    return {
+      tag: "invalid",
+      message:
+        "ControlledVerticalSuspension altitude control uses one altitude-change fill.",
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  const fill = input.fills[0];
+  if (fill === undefined) return { tag: "needsHole" };
+  /* v8 ignore start -- @preserve -- Malformed resolution input: these guards reject fills that contradict the admitted subject's discovered hole contract. */
+  if (fill.kind !== "controlledVerticalSuspensionAltitudeChange") {
+    return {
+      tag: "invalid",
+      message:
+        "ControlledVerticalSuspension altitude control requires the selected altitude-change fill.",
+    };
+  }
+  if (fill.holeId !== hole.holeId) {
+    return {
+      tag: "invalid",
+      message:
+        "ControlledVerticalSuspension altitude control requires the selected altitude-change fill.",
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard rejects an altitude change outside the discovered hole's typed constraints. */
+  if (!controlledVerticalSuspensionAltitudeChangeIsValid(fill, hole)) {
+    return {
+      tag: "invalid",
+      message:
+        "ControlledVerticalSuspension altitude change must be a positive whole number no greater than the spell limit.",
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard rejects a fill without the table fact required by the discovered hole. */
+  if (
+    !controlledVerticalSuspensionTargetWithinRangeFactPresent({
+      facts: fill.spatialFacts,
+      effectRef: context.effect.effectRef,
+      sourceCombatantId: context.effect.sourceCombatantId,
+      sourceProcedureRef: context.effect.sourceProcedureRef,
+      targetId: input.subject.targetId,
+      rangeFeet: context.sourceProcedure.rangeFeet,
+    })
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "ControlledVerticalSuspension altitude control requires a table fact that the target remains within the spell's range.",
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  return { tag: "ok", fill };
+}
+
+function controlledVerticalSuspensionAltitudeChangeIsValid(
+  fill: ControlledVerticalSuspensionAltitudeChangeFill,
+  hole: ControlledVerticalSuspensionAltitudeChangeHole,
+): boolean {
+  return (
+    hole.directions.includes(fill.value.direction) &&
+    fill.value.distanceFeet > 0 &&
+    fill.value.distanceFeet <= hole.maxDistanceFeet &&
+    Number.isInteger(fill.value.distanceFeet)
+  );
+}
+
+export function resolveControlledVerticalSuspensionAltitudeControlCommand(
+  input: ControlledVerticalSuspensionInput,
+): BattleResolutionResult {
+  const contextResult = controlledVerticalSuspensionContext(input);
+  if (contextResult.tag === "invalid") {
+    return invalidResult(input.state, "staleSubject", contextResult.message);
+  }
+  const { effect, sourceProcedure } = contextResult.context;
   const hole = controlledVerticalSuspensionAltitudeChangeHole({
     actorId: input.subject.actorId,
     targetId: input.subject.targetId,
     effectRef: effect.effectRef,
     maxDistanceFeet: sourceProcedure.maxAltitudeChangeFeet,
   });
-  const fill = input.fills[0];
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (input.fills.length > 1) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "ControlledVerticalSuspension altitude control uses one altitude-change fill.",
-    );
+  const fillAdmission = admitControlledVerticalSuspensionFill(
+    input,
+    contextResult.context,
+    hole,
+  );
+  if (fillAdmission.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillAdmission.message);
   }
-  /* v8 ignore stop -- @preserve */
-  if (fill === undefined) {
+  if (fillAdmission.tag === "needsHole") {
     return needsHolesResult(input.state, input.subject, [hole]);
   }
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    fill.kind !== "controlledVerticalSuspensionAltitudeChange" ||
-    fill.holeId !== hole.holeId
-  ) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "ControlledVerticalSuspension altitude control requires the selected altitude-change fill.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !hole.directions.includes(fill.value.direction) ||
-    fill.value.distanceFeet <= 0 ||
-    fill.value.distanceFeet > hole.maxDistanceFeet ||
-    !Number.isInteger(fill.value.distanceFeet)
-  ) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "ControlledVerticalSuspension altitude change must be a positive whole number no greater than the spell limit.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !controlledVerticalSuspensionTargetWithinRangeFactPresent({
-      facts: fill.spatialFacts,
-      effectRef: effect.effectRef,
-      sourceCombatantId: effect.sourceCombatantId,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      targetId: input.subject.targetId,
-      rangeFeet: sourceProcedure.rangeFeet,
-    })
-  ) {
-    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "ControlledVerticalSuspension altitude control requires a table fact that the target remains within the spell's range.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
+  const fill = fillAdmission.fill;
   const spentState = {
     ...input.state,
     currentTurnResources: Result.getOrThrow(
