@@ -847,6 +847,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       expect(movementHole).toBeDefined();
       if (movementHole?.kind !== "movement") return;
 
+      const opportunityAttackSelection = statBlockAttackExecutionSelection();
       const movement = {
         kind: "movement" as const,
         holeId: movementHole.holeId,
@@ -857,7 +858,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
             {
               reactorId: combatantId("oracle:skeleton-b"),
               distanceFeet: movementFeet(5),
-              ...statBlockAttackExecutionSelection(),
+              ...opportunityAttackSelection,
             },
           ],
         },
@@ -916,9 +917,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           responderId: opportunityAttack.subject.reactorId,
           choice: {
             kind: "opportunityAttack",
-            selection: {
-              procedureRef: opportunityAttack.subject.procedureRef,
-            },
+            selection: opportunityAttackSelection,
             fills: [],
           },
         },

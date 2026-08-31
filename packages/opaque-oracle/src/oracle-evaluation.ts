@@ -14,6 +14,7 @@ import {
   composeBattleRoster,
   type BattleRosterComposition,
   type BattleRosterEntry,
+  type BattleRosterAdmission,
   type BattleRosterIssue,
 } from "@dnd/character-battle-runtime";
 import {
@@ -64,7 +65,6 @@ import {
   type OracleBattleCharacterSheetRosterEntry,
   type OracleAmmunitionStocks,
   type OracleBattleStateInitLeafIssue,
-  type OracleBattleStateInitIssue,
   type OracleCase,
   type OracleEvaluationBatch,
   type OracleSheetOutcome,
@@ -282,7 +282,7 @@ function appendFreshSheetAndBattle(
     return {
       tag: "constructed",
       sheet,
-      battle: battleEntryRejection(entry.failure),
+      battle: battleEntryRejection(entry.failure, composition.admissions),
     };
   }
 
@@ -778,37 +778,102 @@ function battleRosterEntryCombatantId(
 
 function battleEntryRejection(
   issue: BattleInitializationIssue,
+  admissions: readonly BattleRosterAdmission[],
 ): OracleBattleEntryRejection {
-  return {
-    tag: "rejected",
-    issues: [
-      {
-        tag: "battleStateInitRejected",
-        issue: stripBattleStateInitIssue(issue),
-      },
-    ],
-  };
+  const leaves = battleInitializationIssueLeaves(issue);
+  const [firstLeaf, ...remainingLeaves] = leaves;
+  const classified = [
+    classifyBattleInitializationIssue(firstLeaf, admissions),
+    ...remainingLeaves.map((leaf) =>
+      classifyBattleInitializationIssue(leaf, admissions),
+    ),
+  ];
+  const firstProjectionIndex = classified.findIndex(
+    ({ kind }) => kind === "statBlockProjection",
+  );
+  const projectionIssues = classified.flatMap((classifiedIssue) =>
+    classifiedIssue.kind === "statBlockProjection"
+      ? [classifiedIssue.issue]
+      : [],
+  );
+  const [firstProjectionIssue, ...remainingProjectionIssues] = projectionIssues;
+  const projectionGroup =
+    firstProjectionIssue === undefined
+      ? undefined
+      : ({
+          tag: "characterBattleEncounterProjectionIssues",
+          issues: [firstProjectionIssue, ...remainingProjectionIssues],
+        } satisfies OracleBattleEntryIssue);
+  const orderedIssues = classified.flatMap((classifiedIssue, index) => {
+    if (classifiedIssue.kind === "entry") return [classifiedIssue.issue];
+    return index === firstProjectionIndex && projectionGroup !== undefined
+      ? [projectionGroup]
+      : [];
+  });
+  const [firstIssue, ...remainingIssues] = orderedIssues;
+  if (firstIssue === undefined) {
+    return defect("Battle initialization issue projection was empty");
+  }
+  return { tag: "rejected", issues: [firstIssue, ...remainingIssues] };
 }
 
-function stripBattleStateInitIssue(
+type ClassifiedBattleInitializationIssue =
+  | {
+      readonly kind: "entry";
+      readonly issue: OracleBattleEntryIssue;
+    }
+  | {
+      readonly kind: "statBlockProjection";
+      readonly issue: OracleBattleProjectionIssue;
+    };
+
+function classifyBattleInitializationIssue(
+  issue: BattleInitializationLeafIssue,
+  admissions: readonly BattleRosterAdmission[],
+): ClassifiedBattleInitializationIssue {
+  const admission = battleInitializationIssueAdmission(issue, admissions);
+  return admission?.kind === "statBlock"
+    ? {
+        kind: "statBlockProjection",
+        issue: {
+          tag: "characterBattleEncounterProjectionIssue",
+          origin: "statBlock",
+          combatantId: admission.combatant.combatantId,
+          issue: stripBattleStateInitLeafIssue(issue),
+        },
+      }
+    : {
+        kind: "entry",
+        issue: {
+          tag: "battleStateInitRejected",
+          issue: stripBattleStateInitLeafIssue(issue),
+        },
+      };
+}
+
+function battleInitializationIssueLeaves(
   issue: BattleInitializationIssue,
-): OracleBattleStateInitIssue {
-  return Match.value(issue).pipe(
-    Match.discriminatorsExhaustive("tag")({
-      battleStateInitIssues: ({ issues }) => ({
-        tag: "battleStateInitIssues" as const,
-        issues: issues.map(stripBattleStateInitLeafIssue),
-      }),
-      battleStateInitIssue: () => ({ tag: "battleStateInitIssue" as const }),
-      statBlockProjectionFailure: () => ({
-        tag: "battleStateInitIssue" as const,
-      }),
-      statBlockResourceGraphIssue: () => ({
-        tag: "battleStateInitIssue" as const,
-      }),
-      weaponLoadoutMismatch: (matched) => matched,
-    }),
-  );
+): readonly [
+  BattleInitializationLeafIssue,
+  ...BattleInitializationLeafIssue[],
+] {
+  return issue.tag === "battleStateInitIssues" ? issue.issues : [issue];
+}
+
+function battleInitializationIssueAdmission(
+  issue: BattleInitializationLeafIssue,
+  admissions: readonly BattleRosterAdmission[],
+): BattleRosterAdmission | undefined {
+  const [owner, index, ...remainder] = issue.ownerPath ?? [];
+  if (
+    owner !== "initialCombatants" ||
+    typeof index !== "number" ||
+    remainder.length !== 0
+  ) {
+    return undefined;
+  }
+  const admission = admissions[index];
+  return admission?.index === index ? admission : undefined;
 }
 
 function stripBattleStateInitLeafIssue(
