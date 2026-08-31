@@ -150,6 +150,7 @@ explicitly abandoned.
 | `SR-04G-A`      | #474 attack/direct/reaction profile migration   | McClintock         | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-profile-attack`; `work/cleanroom-sr04g-profile-attack`   | `85877a5b8` | Migrate the 25 attack, direct, and reaction authored declarations to bound parse-once mechanics admission                                   | Active |
 | `SR-04G-B`      | #474 save/activation profile migration          | Popper             | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-profile-save`; `work/cleanroom-sr04g-profile-save`       | `85877a5b8` | Migrate the 17 save and activation authored declarations plus the exclusively leased save-gate helper                                       | Active |
 | `SR-04G-C`      | #474 ongoing/persistent/spawn/glyph migration   | Turing             | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-profile-ongoing`; `work/cleanroom-sr04g-profile-ongoing` | `85877a5b8` | Migrate the 33 ongoing, persistent, spawned-object, and glyph-related authored declarations                                                 | Active |
+| `SR-04G-D`      | #474 canonical spell path vocabulary            | Curie              | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-path-vocabulary`; `work/cleanroom-sr04g-path-vocabulary` | `11c41da97` | Promote spell mechanics graph coordinates to Surface and migrate Character Sheet/Battle consumers away from duplicated ordinal tables       | Active |
 
 ## Landing discipline
 
