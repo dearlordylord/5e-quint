@@ -487,77 +487,35 @@ export function describeAreaExclusions(
 }
 
 export function describeAreaShape(s: AreaShapeSpec): string {
-  switch (s.kind) {
-    case "sphere":
-      return `sphere r=${describeAreaDimension(s.radiusFeet)} ft`;
-    case "circle":
-      return `circle r=${describeAreaDimension(s.radiusFeet)} ft`;
-    case "sphere_cluster":
-      return `${s.count} spheres r=${describeAreaDimension(s.radiusFeet)} ft (${s.overlapResolution})`;
-    case "cone":
-      return `cone ${s.lengthFeet} ft`;
-    case "cube":
-      return `cube ${s.sideFeet} ft side`;
-    case "ground_square":
-      return `ground square ${s.sideFeet} ft side`;
-    case "cube_cluster": {
-      const contig = s.contiguous === true ? ", contiguous" : "";
-      return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
-    }
-    case "cylinder":
-      return `cylinder r=${describeAreaDimension(s.radiusFeet)} ft h=${s.heightFeet} ft`;
-    case "emanation":
-      return `emanation r=${describeAreaDimension(s.radiusFeet)} ft`;
-    case "line":
-      return `line ${s.lengthFeet} ft × ${s.widthFeet} ft`;
-    case "wall_volume":
-      return `wall ${s.maxLengthFeet} ft × ${s.maxHeightFeet} ft × ${s.thicknessFeet} ft`;
-    case "choice":
-      return `choice of:\n  ${s.options
-        .map(describeAreaShapeFixed)
-        .join("\n  ")}`;
-    /* v8 ignore start -- @preserve -- AreaShapeSpec is decoder-narrowed to the shape tags handled above */
-    default: {
-      const _: never = s;
-      throw new Error(`unhandled area shape: ${String(_)}`);
-    }
-    /* v8 ignore stop -- @preserve */
-  }
+  if (s.kind !== "choice") return describeAreaShapeFixed(s);
+  return `choice of:\n  ${s.options.map(describeAreaShapeFixed).join("\n  ")}`;
 }
 
 export function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
-  switch (s.kind) {
-    case "sphere":
-      return `sphere r=${describeAreaDimension(s.radiusFeet)} ft`;
-    case "circle":
-      return `circle r=${describeAreaDimension(s.radiusFeet)} ft`;
-    case "sphere_cluster":
-      return `${s.count} spheres r=${describeAreaDimension(s.radiusFeet)} ft (${s.overlapResolution})`;
-    case "cone":
-      return `cone ${s.lengthFeet} ft`;
-    case "cube":
-      return `cube ${s.sideFeet} ft side`;
-    case "ground_square":
-      return `ground square ${s.sideFeet} ft side`;
-    case "cube_cluster": {
-      const contig = s.contiguous === true ? ", contiguous" : "";
-      return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
-    }
-    case "cylinder":
-      return `cylinder r=${describeAreaDimension(s.radiusFeet)} ft h=${s.heightFeet} ft`;
-    case "emanation":
-      return `emanation r=${describeAreaDimension(s.radiusFeet)} ft`;
-    case "line":
-      return `line ${s.lengthFeet} ft × ${s.widthFeet} ft`;
-    case "wall_volume":
-      return `wall ${s.maxLengthFeet} ft × ${s.maxHeightFeet} ft × ${s.thicknessFeet} ft`;
-    /* v8 ignore start -- @preserve -- AreaShapeDescriptor is decoder-narrowed to the fixed shape tags handled above */
-    default: {
-      const _: never = s;
-      throw new Error(`unhandled area shape: ${String(_)}`);
-    }
-    /* v8 ignore stop -- @preserve */
-  }
+  return Match.value(s).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      sphere: (shape) =>
+        `sphere r=${describeAreaDimension(shape.radiusFeet)} ft`,
+      circle: (shape) =>
+        `circle r=${describeAreaDimension(shape.radiusFeet)} ft`,
+      sphere_cluster: (shape) =>
+        `${shape.count} spheres r=${describeAreaDimension(shape.radiusFeet)} ft (${shape.overlapResolution})`,
+      cone: (shape) => `cone ${shape.lengthFeet} ft`,
+      cube: (shape) => `cube ${shape.sideFeet} ft side`,
+      ground_square: (shape) => `ground square ${shape.sideFeet} ft side`,
+      cube_cluster: (shape) => {
+        const contiguity = shape.contiguous === true ? ", contiguous" : "";
+        return `up to ${shape.maxCubes} cubes (${shape.sideFeet} ft side${contiguity})`;
+      },
+      cylinder: (shape) =>
+        `cylinder r=${describeAreaDimension(shape.radiusFeet)} ft h=${shape.heightFeet} ft`,
+      emanation: (shape) =>
+        `emanation r=${describeAreaDimension(shape.radiusFeet)} ft`,
+      line: (shape) => `line ${shape.lengthFeet} ft × ${shape.widthFeet} ft`,
+      wall_volume: (shape) =>
+        `wall ${shape.maxLengthFeet} ft × ${shape.maxHeightFeet} ft × ${shape.thicknessFeet} ft`,
+    }),
+  );
 }
 
 export type AreaDimension = Extract<
