@@ -91,6 +91,9 @@ type TranslatingPersistentAreaProfileShape = {
     { readonly kind: "damage" }
   >["amount"];
 };
+type OngoingTranslatingPersistentAreaFacts = NonNullable<
+  ReturnType<typeof ongoingConcentrationAreaSpellFacts>
+>;
 
 const TRANSLATING_PERSISTENT_AREA_LEVEL = 5;
 const TRANSLATING_PERSISTENT_AREA_RANGE_FEET = 120;
@@ -100,6 +103,182 @@ const TRANSLATING_PERSISTENT_AREA_OPERATION_COUNT = 5;
 const TRANSLATING_PERSISTENT_AREA_BASE_DAMAGE_DICE = 5;
 const TRANSLATING_PERSISTENT_AREA_DAMAGE_DIE_SIZE = 8;
 const TRANSLATING_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
+
+function translatingPersistentAreaOperations(
+  mechanics: TranslatingPersistentAreaMechanics,
+) {
+  return {
+    passive: mechanics.operations.find(
+      (operation) => operation.trigger.kind === "passive",
+    ),
+    move: mechanics.operations.find(
+      (operation) => operation.trigger.kind === "on_caster_turn_start",
+    ),
+    movedArea: mechanics.operations.find(
+      (operation) =>
+        operation.trigger.kind === "on_area_moves_into_creature_space",
+    ),
+    enter: mechanics.operations.find(
+      (operation) => operation.trigger.kind === "on_creature_enters_area",
+    ),
+    endTurn: mechanics.operations.find(
+      (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
+    ),
+  };
+}
+
+type TranslatingPersistentAreaOperations = ReturnType<
+  typeof translatingPersistentAreaOperations
+>;
+
+function translatingPersistentAreaBasicFactsAreSupported(
+  mechanics: TranslatingPersistentAreaMechanics,
+): boolean {
+  return (
+    mechanics.level === TRANSLATING_PERSISTENT_AREA_LEVEL &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === TRANSLATING_PERSISTENT_AREA_RANGE_FEET &&
+    mechanics.operations.length === TRANSLATING_PERSISTENT_AREA_OPERATION_COUNT
+  );
+}
+
+function translatingPersistentAreaDurationIsSupported(
+  duration: OngoingTranslatingPersistentAreaFacts["duration"],
+): boolean {
+  return (
+    duration.upTo.unit === "minute" &&
+    duration.upTo.amount === TRANSLATING_PERSISTENT_AREA_DURATION_MINUTES &&
+    duration.earlyEnd?.some(
+      (earlyEnd) => earlyEnd.kind === "area_dispersed_by_strong_wind",
+    ) === true
+  );
+}
+
+function translatingPersistentAreaRadiusFeet(
+  area: OngoingTranslatingPersistentAreaFacts["area"],
+): number | null {
+  return area?.kind === "area" &&
+    area.origin.kind === "point_within_range" &&
+    area.shape.kind === "sphere" &&
+    area.shape.radiusFeet === TRANSLATING_PERSISTENT_AREA_RADIUS_FEET
+    ? area.shape.radiusFeet
+    : null;
+}
+
+function translatingPersistentAreaTranslationDistanceFeet(
+  operation: TranslatingPersistentAreaOperations["move"],
+): number | null {
+  return operation?.effect.kind === "move_area" &&
+    operation.effect.direction === "away_from_caster"
+    ? operation.effect.distanceFeet
+    : null;
+}
+
+function translatingPersistentAreaPassiveOperationIsSupported(
+  operation: TranslatingPersistentAreaOperations["passive"],
+): boolean {
+  return operation?.effect.kind === "area_is_heavily_obscured";
+}
+
+type TranslatingPersistentAreaDamageAmounts = {
+  readonly initial:
+    | TranslatingPersistentAreaProfileShape["damageAmount"]
+    | null;
+  readonly movedArea:
+    | TranslatingPersistentAreaProfileShape["damageAmount"]
+    | null;
+  readonly enter: TranslatingPersistentAreaProfileShape["damageAmount"] | null;
+  readonly endTurn:
+    | TranslatingPersistentAreaProfileShape["damageAmount"]
+    | null;
+};
+
+function translatingPersistentAreaDamageAmounts(
+  mechanics: TranslatingPersistentAreaMechanics,
+  operations: TranslatingPersistentAreaOperations,
+): TranslatingPersistentAreaDamageAmounts {
+  return {
+    initial: translatingPersistentAreaSaveGateDamageAmount(
+      mechanics.initialPhase,
+    ),
+    movedArea: translatingPersistentAreaSaveGateDamageAmount(
+      operations.movedArea?.effect,
+    ),
+    enter: translatingPersistentAreaSaveGateDamageAmount(
+      operations.enter?.effect,
+    ),
+    endTurn: translatingPersistentAreaSaveGateDamageAmount(
+      operations.endTurn?.effect,
+    ),
+  };
+}
+
+function translatingPersistentAreaSaveLimitIsSupported(
+  mechanics: TranslatingPersistentAreaMechanics,
+  operations: TranslatingPersistentAreaOperations,
+): boolean {
+  const initialUsageLimit =
+    mechanics.initialPhase?.kind === "save_gate"
+      ? mechanics.initialPhase.usageLimit
+      : undefined;
+  const saveLimitGroup = sharedOncePerTurnLimitGroup([
+    initialUsageLimit,
+    operations.movedArea?.usageLimit,
+    operations.enter?.usageLimit,
+    operations.endTurn?.usageLimit,
+  ]);
+  return saveLimitGroup !== null && saveLimitGroup.length > 0;
+}
+
+function translatingPersistentAreaDamageFacts(
+  mechanics: TranslatingPersistentAreaMechanics,
+  operations: TranslatingPersistentAreaOperations,
+): Pick<TranslatingPersistentAreaProfileShape, "damageAmount"> | null {
+  const amounts = translatingPersistentAreaDamageAmounts(mechanics, operations);
+  if (
+    amounts.initial === null ||
+    amounts.movedArea === null ||
+    amounts.enter === null ||
+    amounts.endTurn === null ||
+    !translatingPersistentAreaSaveLimitIsSupported(mechanics, operations)
+  ) {
+    return null;
+  }
+  return { damageAmount: amounts.initial };
+}
+
+function translatingPersistentAreaProfileShape(
+  ongoing: OngoingTranslatingPersistentAreaFacts,
+): TranslatingPersistentAreaProfileShape | null {
+  const { mechanics, duration, durationTicks, area } = ongoing;
+  const operations = translatingPersistentAreaOperations(mechanics);
+  const radiusFeet = translatingPersistentAreaRadiusFeet(area);
+  const translationDistanceFeet =
+    translatingPersistentAreaTranslationDistanceFeet(operations.move);
+  const damageFacts = translatingPersistentAreaDamageFacts(
+    mechanics,
+    operations,
+  );
+  if (!translatingPersistentAreaBasicFactsAreSupported(mechanics)) return null;
+  if (!translatingPersistentAreaDurationIsSupported(duration)) return null;
+  if (Result.isFailure(durationTicks)) return null;
+  if (radiusFeet === null) return null;
+  if (translationDistanceFeet === null) return null;
+  if (
+    !translatingPersistentAreaPassiveOperationIsSupported(operations.passive)
+  ) {
+    return null;
+  }
+  if (damageFacts === null) return null;
+  return {
+    durationTicks: durationTicks.success,
+    rangeFeet: TRANSLATING_PERSISTENT_AREA_RANGE_FEET,
+    radiusFeet,
+    translationDistanceFeet,
+    damageAmount: damageFacts.damageAmount,
+  };
+}
 
 function admitTranslatingPersistentAreaAreaHazard(
   spell: BattleSpellAdmissionSource,
@@ -160,76 +339,7 @@ function persistentAreaSaveDamageSpell(
   if (ongoing === null) {
     return null;
   }
-  const { mechanics, duration, durationTicks, area } = ongoing;
-  const passiveOperation = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "passive",
-  );
-  const moveOperation = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_caster_turn_start",
-  );
-  const movedAreaOperation = mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "on_area_moves_into_creature_space",
-  );
-  const enterOperation = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_enters_area",
-  );
-  const endTurnOperation = mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
-  );
-  const initialPhase = mechanics.initialPhase;
-  const initialDamageAmount =
-    translatingPersistentAreaSaveGateDamageAmount(initialPhase);
-  const initialUsageLimit =
-    initialPhase?.kind === "save_gate" ? initialPhase.usageLimit : undefined;
-  const saveLimitGroup = sharedOncePerTurnLimitGroup([
-    initialUsageLimit,
-    movedAreaOperation?.usageLimit,
-    enterOperation?.usageLimit,
-    endTurnOperation?.usageLimit,
-  ]);
-
-  if (
-    mechanics.level !== TRANSLATING_PERSISTENT_AREA_LEVEL ||
-    mechanics.castingTime.kind !== "action" ||
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== TRANSLATING_PERSISTENT_AREA_RANGE_FEET ||
-    duration.upTo.unit !== "minute" ||
-    duration.upTo.amount !== TRANSLATING_PERSISTENT_AREA_DURATION_MINUTES ||
-    duration.earlyEnd?.some(
-      (earlyEnd) => earlyEnd.kind === "area_dispersed_by_strong_wind",
-    ) !== true ||
-    mechanics.operations.length !==
-      TRANSLATING_PERSISTENT_AREA_OPERATION_COUNT ||
-    Result.isFailure(durationTicks) ||
-    area?.kind !== "area" ||
-    area.origin.kind !== "point_within_range" ||
-    area.shape.kind !== "sphere" ||
-    area.shape.radiusFeet !== TRANSLATING_PERSISTENT_AREA_RADIUS_FEET ||
-    passiveOperation?.effect.kind !== "area_is_heavily_obscured" ||
-    moveOperation?.effect.kind !== "move_area" ||
-    moveOperation.effect.direction !== "away_from_caster" ||
-    initialDamageAmount === null ||
-    translatingPersistentAreaSaveGateDamageAmount(
-      movedAreaOperation?.effect,
-    ) === null ||
-    translatingPersistentAreaSaveGateDamageAmount(enterOperation?.effect) ===
-      null ||
-    translatingPersistentAreaSaveGateDamageAmount(endTurnOperation?.effect) ===
-      null ||
-    saveLimitGroup === null ||
-    saveLimitGroup.length === 0
-  ) {
-    return null;
-  }
-
-  return {
-    durationTicks: durationTicks.success,
-    rangeFeet: mechanics.range.feet,
-    radiusFeet: area.shape.radiusFeet,
-    translationDistanceFeet: moveOperation.effect.distanceFeet,
-    damageAmount: initialDamageAmount,
-  };
+  return translatingPersistentAreaProfileShape(ongoing);
 }
 
 function translatingPersistentAreaSaveGateDamageAmount(
