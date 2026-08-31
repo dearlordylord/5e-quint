@@ -344,12 +344,11 @@ export function resolveUnitFeatureHeldWeaponActivation(
       "Sacred Weapon requires a selected held Melee weapon.",
     );
   }
-  const resource = actor.origin.resources.find(
-    (candidate) =>
-      candidate.resourcePoolRef ===
-      unitFeature.sacredWeapon.spends.resourcePoolRef,
+  const resource = availableSacredWeaponResource(
+    actor,
+    unitFeature.sacredWeapon.spends.resourcePoolRef,
   );
-  if (resource === undefined || !resourceHasUsesRemaining(resource)) {
+  if (resource === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -432,6 +431,18 @@ export function resolveUnitFeatureHeldWeaponActivation(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function availableSacredWeaponResource(
+  actor: CharacterBattleCreatureState,
+  resourcePoolRef: CharacterBattleResourceState["resourcePoolRef"],
+): CharacterBattleResourceState | undefined {
+  const resource = actor.origin.resources.find(
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
+  );
+  return resource !== undefined && resourceHasUsesRemaining(resource)
+    ? resource
+    : undefined;
 }
 
 function resolvePaladinSacredWeaponDismissUnitFeature(

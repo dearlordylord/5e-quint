@@ -512,50 +512,77 @@ function executableSpellProcedureFromLiveEffects(
         }
       : undefined;
   }
-  if (
-    stored.procedure === "spatialMeleeSpellAttackProxy" &&
-    stored.operation === "repositionAndAttack"
-  ) {
-    if (liveActor === undefined) return undefined;
-    const source = characterRetainedSpellProcedureExecution(
+  if (isSpatialMeleeSpellAttackProxyReposition(stored)) {
+    return executableSpatialMeleeSpellAttackProxyReposition(
       execution,
-      stored.activeEffectSourceProcedureRef,
+      stored,
+      liveActor,
     );
-    const activeEffect = liveActor.activeEffects.find(
-      (
-        effect,
-      ): effect is Extract<
-        BattleActiveEffect,
-        { readonly kind: "spatialMeleeSpellAttackProxy" }
-      > =>
-        effect.kind === "spatialMeleeSpellAttackProxy" &&
-        effect.effectRef === stored.activeEffectRef &&
-        effect.sourceProcedureRef === stored.activeEffectSourceProcedureRef &&
-        effect.sourceCombatantId === liveActor.combatantId,
-    );
-    return activeEffect !== undefined &&
-      source?.procedure === "spatialMeleeSpellAttackProxy" &&
-      source.operation === "createAndAttack"
-      ? {
-          spellRuleFacts: source.spellRuleFacts,
-          access: {
-            tag: "spellEffect",
-            sourceCombatantId: liveActor.combatantId,
-          },
-          resource: { tag: "none" },
-          procedure: stored.procedure,
-          operation: "repositionAndAttack",
-          actionCost: "bonusAction",
-          activeEffect,
-          targeting: { kind: "singleCombatant" },
-          repeatTargeting: stored.repeatTargeting,
-          damage: source.damage,
-          attackKind: source.attackKind,
-          attackBonus: source.attackBonus,
-          forceReachFeet: source.forceReachFeet,
-          repeatMoveMaxFeet: source.repeatMoveMaxFeet,
-        }
-      : undefined;
   }
   return stored;
+}
+
+type SpatialMeleeSpellAttackProxyReposition = Extract<
+  BattleStoredSpellProcedureExecution,
+  { readonly procedure: "spatialMeleeSpellAttackProxy" }
+> & { readonly operation: "repositionAndAttack" };
+
+function isSpatialMeleeSpellAttackProxyReposition(
+  stored: BattleStoredSpellProcedureExecution,
+): stored is SpatialMeleeSpellAttackProxyReposition {
+  return (
+    stored.procedure === "spatialMeleeSpellAttackProxy" &&
+    stored.operation === "repositionAndAttack"
+  );
+}
+
+function executableSpatialMeleeSpellAttackProxyReposition(
+  execution: CharacterExecutionState,
+  stored: SpatialMeleeSpellAttackProxyReposition,
+  liveActor:
+    | {
+        readonly combatantId: CombatantId;
+        readonly activeEffects: readonly BattleActiveEffect[];
+      }
+    | undefined,
+): SpellExecutableExecutionOf<RuntimeSpellProcedureExecution> | undefined {
+  if (liveActor === undefined) return undefined;
+  const source = characterRetainedSpellProcedureExecution(
+    execution,
+    stored.activeEffectSourceProcedureRef,
+  );
+  if (source?.procedure !== "spatialMeleeSpellAttackProxy") return undefined;
+  if (source.operation !== "createAndAttack") return undefined;
+  const activeEffect = liveActor.activeEffects.find(
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "spatialMeleeSpellAttackProxy" }
+    > =>
+      effect.kind === "spatialMeleeSpellAttackProxy" &&
+      effect.effectRef === stored.activeEffectRef &&
+      effect.sourceProcedureRef === stored.activeEffectSourceProcedureRef &&
+      effect.sourceCombatantId === liveActor.combatantId,
+  );
+  if (activeEffect === undefined) return undefined;
+  return {
+    spellRuleFacts: source.spellRuleFacts,
+    access: {
+      tag: "spellEffect",
+      sourceCombatantId: liveActor.combatantId,
+    },
+    resource: { tag: "none" },
+    procedure: stored.procedure,
+    operation: "repositionAndAttack",
+    actionCost: "bonusAction",
+    activeEffect,
+    targeting: { kind: "singleCombatant" },
+    repeatTargeting: stored.repeatTargeting,
+    damage: source.damage,
+    attackKind: source.attackKind,
+    attackBonus: source.attackBonus,
+    forceReachFeet: source.forceReachFeet,
+    repeatMoveMaxFeet: source.repeatMoveMaxFeet,
+  };
 }
