@@ -48,7 +48,7 @@ module battleRuntimeCommandOrderingRouteMbt {
   pure def orderingErrorLabel(error: CommandFillOrderingError): str =
     match error {
       | CommandTargetListRequired => "commandTargetListRequired"
-      | CommandOptionChoiceRequired => "commandOptionChoiceRequired"
+      | CommandOptionChoiceRequired => "compelledBehaviorOptionChoiceRequired"
       | CommandSavingThrowRequired => "commandSavingThrowRequired"
       | CommandHeldObjectFactsRequired => "commandHeldObjectFactsRequired"
       | CommandMovementRequired => "commandMovementRequired"
@@ -201,7 +201,7 @@ module battleRuntimeCommandOrderingRouteMbt {
     qStage == CommandTargetListAndOptionChoiceStage,
     val result = commandFillOrderResult(
       qStage,
-      CommandOptionChoiceFillKind,
+      CompelledBehaviorOptionChoiceFillKind,
       CommandGrovelOption,
       true,
       false,
@@ -221,7 +221,11 @@ module battleRuntimeCommandOrderingRouteMbt {
       0,
       "Caster",
       false,
-      qRoute.append(resolveRoute(CommandOptionChoiceFillKind, stage, BattleHoleFrontierOwner)),
+      qRoute.append(resolveRoute(
+        CompelledBehaviorOptionChoiceFillKind,
+        stage,
+        BattleHoleFrontierOwner,
+      )),
     ),
   }
 
@@ -285,7 +289,7 @@ module battleRuntimeCommandOrderingRouteMbt {
     qStage == CommandOptionChoiceStage,
     val result = commandFillOrderResult(
       qStage,
-      CommandOptionChoiceFillKind,
+      CompelledBehaviorOptionChoiceFillKind,
       CommandGrovelOption,
       true,
       false,
@@ -305,7 +309,11 @@ module battleRuntimeCommandOrderingRouteMbt {
       0,
       "Caster",
       false,
-      qRoute.append(resolveRoute(CommandOptionChoiceFillKind, stage, BattleHoleFrontierOwner)),
+      qRoute.append(resolveRoute(
+        CompelledBehaviorOptionChoiceFillKind,
+        stage,
+        BattleHoleFrontierOwner,
+      )),
     ),
   }
 
