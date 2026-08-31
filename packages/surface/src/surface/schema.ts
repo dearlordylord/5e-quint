@@ -87,6 +87,7 @@ export {
   StatBlockTextOnlyReasonSchema,
   StandaloneCreatureSenseSchema,
   StandaloneCreatureSpeedSchema,
+  StandaloneStatBlockAbilityScoreSchema,
   StandaloneStatBlockAbilityScoresSchema,
   StandaloneStatBlockCreatureTypeTagsSchema,
   StandaloneStatBlockSpeedEntrySchema,

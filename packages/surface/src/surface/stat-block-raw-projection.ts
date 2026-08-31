@@ -27,6 +27,7 @@ import {
   StandaloneStatBlockSpeedEntrySchema,
   StandaloneStatBlockSizeAndSwarmSchema,
   StandaloneCreatureSenseSchema,
+  StandaloneStatBlockAbilityScoreSchema,
   StandaloneStatBlockAbilityScoresSchema,
   StandaloneStatBlockCreatureTypeTagsSchema,
   StandaloneStatBlockValueSchema,
@@ -305,6 +306,21 @@ const decodeProjectionValue = <Value, Encoded>(
         "canonical Surface domain value",
         dependencyFallback,
       );
+};
+
+const decodeEvidenceValue = <Value, Encoded>(
+  context: ProjectionIssueContext,
+  schema: Schema.Schema<Value, Encoded, never>,
+  candidate: unknown,
+  evidence: string,
+  field: string,
+  expected: string,
+  dependencyFallback: Value,
+): Value => {
+  const decoded = Schema.decodeUnknownEither(schema)(candidate);
+  return Either.isRight(decoded)
+    ? decoded.right
+    : malformedEvidence(context, field, evidence, expected, dependencyFallback);
 };
 
 const PositiveIntegerSchema = Schema.Number.pipe(
@@ -1137,12 +1153,14 @@ const parseAbilityRow = (
     );
   }
   return cells.map((cell, index) =>
-    parseAbilityMatrixNumber(
-      issueContext,
-      cell,
-      label === "Score" ? /^\d+$/ : /^[+−-]?\d+$/,
-      `${field}.${index}`,
-    ),
+    label === "Score"
+      ? parseAbilityScore(issueContext, cell, `${field}.${index}`)
+      : parseAbilityMatrixNumber(
+          issueContext,
+          cell,
+          /^[+−-]?\d+$/,
+          `${field}.${index}`,
+        ),
   );
 };
 
@@ -1188,6 +1206,27 @@ const parseAbilityMatrixNumber = (
   return signedNumber(value);
 };
 
+const parseAbilityScore = (
+  issueContext: ProjectionIssueContext,
+  value: string,
+  field: string,
+): number => {
+  const syntacticValue = assess(issueContext, () =>
+    parseAbilityMatrixNumber(issueContext, value, /^\d+$/, field),
+  );
+  return syntacticValue === undefined
+    ? 10
+    : decodeEvidenceValue(
+        issueContext,
+        StandaloneStatBlockAbilityScoreSchema,
+        syntacticValue,
+        value,
+        field,
+        "an integral ability score from 1 through 30",
+        10,
+      );
+};
+
 const parseAbilityMatrixGroup = (
   issueContext: ProjectionIssueContext,
   cells: readonly [string, string, string, string],
@@ -1207,12 +1246,7 @@ const parseAbilityMatrixGroup = (
       );
   return {
     ability,
-    score: parseAbilityMatrixNumber(
-      issueContext,
-      rawScore,
-      /^\d+$/,
-      `${field}.score`,
-    ),
+    score: parseAbilityScore(issueContext, rawScore, `${field}.score`),
     modifier: parseAbilityMatrixNumber(
       issueContext,
       rawModifier,
@@ -1233,23 +1267,31 @@ const parseAbilityMatrix = (
   lines: readonly string[],
   contextLabel: string,
 ): AbilityMatrix | undefined => {
-  const rows = lines
-    .map((line) =>
-      line
-        .split("|")
-        .slice(1, -1)
-        .map((cell) => cell.trim()),
-    )
-    .filter((cells) => {
-      const [firstCell, secondCell] = cells;
-      return (
-        ((firstCell === "STR" || firstCell === "INT") &&
-          secondCell !== undefined &&
-          /^\d+$/.test(secondCell)) ||
-        /^(?:STR|INT) \d+$/.test(firstCell ?? "")
-      );
-    });
-  if (rows.length === 0) return undefined;
+  const matrixHeaderIndex = lines.findIndex((line) => {
+    const cells = line
+      .split("|")
+      .slice(1, -1)
+      .map((cell) => cell.trim());
+    return (
+      cells.length === 9 &&
+      cells.filter((cell) => cell === "MOD").length === 3 &&
+      cells.filter((cell) => cell === "SAVE").length === 3
+    );
+  });
+  if (matrixHeaderIndex === -1) return undefined;
+  const rows: string[][] = [];
+  for (const line of lines.slice(matrixHeaderIndex + 1)) {
+    if (!line.startsWith("|")) {
+      if (rows.length > 0) break;
+      continue;
+    }
+    const cells = line
+      .split("|")
+      .slice(1, -1)
+      .map((cell) => cell.trim());
+    if (cells.every((cell) => /^[-:]+$/.test(cell))) continue;
+    rows.push(cells);
+  }
   if (rows.length !== 2) {
     return malformedEvidence(
       issueContext,
@@ -1424,11 +1466,17 @@ const parseAbilityScores = (
         requireMatch(
           issueContext,
           cell,
-          /^(\d+) \([+−-]?\d+\)(?: Save [ +−-]?\d+)?$/,
+          /^(\d+) \([+−-]?\d+\)(?: Save .+)?$/,
           `abilityScores.${index}`,
         ),
       );
-      return Number(score?.[1] ?? 0);
+      return score === undefined
+        ? 10
+        : parseAbilityScore(
+            issueContext,
+            score[1] ?? "",
+            `abilityScores.${index}`,
+          );
     }),
     "abilityScores",
   );
@@ -1463,36 +1511,50 @@ const parseSavingThrowModifiers = (
       ({ ability }) => ability,
     );
   }
-  const combinedCells = lines
-    .map((line) =>
-      line
-        .split("|")
-        .slice(1, -1)
-        .map((cell) => cell.trim()),
-    )
-    .find(
-      (cells) =>
-        cells.length === ABILITY_NAMES.length &&
-        cells.every((cell) => /^\d+ \([+−-]?\d+\) Save [ +−-]?\d+$/.test(cell)),
+  const abilityHeaderIndex = lines.findIndex((line) => {
+    const cells = line
+      .split("|")
+      .slice(1, -1)
+      .map((cell) => cell.trim().toLowerCase());
+    return (
+      cells.length === ABILITY_NAMES.length &&
+      cells.every((cell, index) => cell === ABILITY_NAMES[index])
     );
-  if (combinedCells !== undefined) {
+  });
+  const combinedCells =
+    abilityHeaderIndex === -1
+      ? undefined
+      : lines
+          .slice(abilityHeaderIndex + 1)
+          .map((line) =>
+            line
+              .split("|")
+              .slice(1, -1)
+              .map((cell) => cell.trim()),
+          )
+          .find(
+            (cells) =>
+              cells.length === ABILITY_NAMES.length &&
+              !cells.every((cell) => /^[-:]+$/.test(cell)),
+          );
+  if (
+    combinedCells !== undefined &&
+    combinedCells.some((cell) => cell.includes(" Save "))
+  ) {
     const saveValues = abilityRecord(
       issueContext,
-      combinedCells.map((cell) => {
-        const match = requireMatch(
-          issueContext,
-          cell,
-          / Save ([+−-]?\d+)$/,
-          "savingThrowModifiers",
-        );
-        const value = match[1];
-        if (value === undefined) {
-          return missingEvidence(
+      combinedCells.map((cell, index) => {
+        const match = assess(issueContext, () =>
+          requireMatch(
             issueContext,
-            "savingThrowModifiers",
-            `${contextLabel} Save modifier`,
-            0,
-          );
+            cell,
+            / Save ([+−-]?\d+)$/,
+            `savingThrowModifiers.${index}`,
+          ),
+        );
+        const value = match?.[1];
+        if (value === undefined) {
+          return 0;
         }
         return signedNumber(value);
       }),
@@ -1753,12 +1815,31 @@ const parseImmunities = (
     };
   };
   const conditionNames = new Set<string>(CONDITIONS);
+  const damageTypeNames = new Set<string>(DAMAGE_TYPES);
+  const firstGroupNames = firstGroup
+    .split(", ")
+    .map((item) => item.match(/^([A-Za-z]+)/)?.[1]?.toLowerCase() ?? "");
+  const recognizedConditionCount = firstGroupNames.filter((value) =>
+    conditionNames.has(value),
+  ).length;
+  const recognizedDamageTypeCount = firstGroupNames.filter((value) =>
+    damageTypeNames.has(value),
+  ).length;
+  if (
+    explicitConditions === undefined &&
+    recognizedConditionCount === recognizedDamageTypeCount
+  ) {
+    return unsupportedEvidence(
+      issueContext,
+      "immunities.group",
+      firstGroup,
+      "an unambiguous damage-type or condition immunity list",
+      { kind: "some", value: DEPENDENCY_FALLBACK_IMMUNITY },
+    );
+  }
   const firstGroupIsConditions =
     explicitConditions === undefined &&
-    firstGroup
-      .split(", ")
-      .map((item) => item.match(/^([A-Za-z]+)/)?.[1]?.toLowerCase() ?? "")
-      .every((value) => conditionNames.has(value));
+    recognizedConditionCount > recognizedDamageTypeCount;
   const firstConditionValues = parseConditions(
     firstGroupIsConditions ? firstGroup : "",
   );
@@ -2087,20 +2168,45 @@ const parseRawGeneralFacts = (
   const metadata = assess(issueContext, () =>
     parseMetadata(issueContext, lines, name),
   );
-  const ac = requireLineMatch(
-    issueContext,
-    lines,
-    "**AC**",
-    /\*\*AC\*\* (\d+)(?: \(([^)]+)\))?/,
-    "ac",
+  const ac = assess(issueContext, () =>
+    requireLineMatch(
+      issueContext,
+      lines,
+      "**AC**",
+      /\*\*AC\*\* (\d+)(?: \(([^)]+)\))?/,
+      "ac",
+    ),
   );
-  const hp = requireLineMatch(
-    issueContext,
-    lines,
-    "**HP**",
-    /\*\*HP\*\* (\d+)/,
-    "hp",
+  const acValue =
+    ac === undefined
+      ? { value: { kind: "literal" as const, value: 1 } }
+      : decodeEvidenceValue(
+          issueContext,
+          StatBlockArmorClassSchema,
+          {
+            value: { kind: "literal" as const, value: Number(ac[1]) },
+            ...(ac[2] === undefined ? {} : { annotations: [ac[2]] }),
+          },
+          ac[1] ?? "",
+          "ac",
+          "a canonical positive Armor Class",
+          { value: { kind: "literal" as const, value: 1 } },
+        );
+  const hp = assess(issueContext, () =>
+    requireLineMatch(issueContext, lines, "**HP**", /\*\*HP\*\* (\d+)/, "hp"),
   );
+  const hpValue =
+    hp === undefined
+      ? { kind: "literal" as const, value: 1 }
+      : decodeEvidenceValue(
+          issueContext,
+          StandaloneStatBlockValueSchema,
+          { kind: "literal" as const, value: Number(hp[1]) },
+          hp[1] ?? "",
+          "hp",
+          "a canonical positive Hit Point value",
+          { kind: "literal" as const, value: 1 },
+        );
   const initiativeLine = lines.find((line) => line.includes("**Initiative**"));
   const initiative =
     initiativeLine === undefined
@@ -2146,11 +2252,13 @@ const parseRawGeneralFacts = (
   const abilityScores = assess(issueContext, () =>
     parseAbilityScores(issueContext, lines, name),
   );
-  const usesSeparateAbilityRows = lines.some((line) =>
-    line.startsWith("| **Save**"),
+  const hasIndependentSavingThrowEvidence = lines.some(
+    (line) =>
+      line.startsWith("| **Save**") ||
+      (line.startsWith("|") && line.includes(" Save ")),
   );
   const savingThrowModifiers =
-    abilityScores === undefined && !usesSeparateAbilityRows
+    abilityScores === undefined && !hasIndependentSavingThrowEvidence
       ? undefined
       : assess(issueContext, () =>
           parseSavingThrowModifiers(issueContext, lines, name),
@@ -2180,11 +2288,8 @@ const parseRawGeneralFacts = (
       creatureTypeTags: [],
       alignment: "unaligned",
     }),
-    ac: {
-      value: { kind: "literal", value: Number(ac[1]) },
-      ...(ac[2] === undefined ? {} : { annotations: [ac[2]] }),
-    },
-    hp: { kind: "literal", value: Number(hp[1]) },
+    ac: acValue,
+    hp: hpValue,
     speeds: speeds ?? [{ kind: "walk", feet: { kind: "literal", value: 1 } }],
     abilityScores: abilityScores ?? {
       str: 10,
@@ -2389,7 +2494,15 @@ const parseDamage = (
       undefined,
     );
   }
-  const staticDamage = Number(match[1]);
+  const staticDamage = decodeEvidenceValue(
+    issueContext,
+    PositiveIntegerSchema,
+    Number(match[1]),
+    match[1] ?? "",
+    `${field}.static`,
+    "a positive integer static damage value",
+    1,
+  );
   const amount: DamageAmountProjection =
     match[2] === undefined || match[3] === undefined
       ? { kind: "static", static: staticDamage }
@@ -2397,12 +2510,22 @@ const parseDamage = (
           kind: "dice_expression",
           static: staticDamage,
           expr: {
-            dice: Number(match[2]),
-            dieSize: decodeProjectionValue(
+            dice: decodeEvidenceValue(
+              issueContext,
+              PositiveIntegerSchema,
+              Number(match[2]),
+              match[2],
+              `${field}.dice`,
+              "a positive integer damage die count",
+              1,
+            ),
+            dieSize: decodeEvidenceValue(
               issueContext,
               DamageDieSizeSchema,
               Number(match[3]),
+              match[3],
               `${field}.dieSize`,
+              "a canonical damage die size",
               4,
             ),
             ...flat,
@@ -3114,11 +3237,18 @@ const parseRawProcedure = (
   ammunitionByWeapon: ReadonlyMap<string, string>,
   spellcastingAbility: Ability | undefined,
   spellAttackBonus: number | undefined,
+  preparsedSpellcasting?: {
+    readonly value: ProcedureProjection | undefined;
+  },
 ): ProcedureProjection | undefined => {
   const section = procedureSection(entry.section);
   if (section === undefined) return undefined;
+  const spellcasting =
+    preparsedSpellcasting === undefined
+      ? parseSpellcasting(issueContext, entry)
+      : preparsedSpellcasting.value;
   return (
-    parseSpellcasting(issueContext, entry) ??
+    spellcasting ??
     parseDirectSpellcasting(
       issueContext,
       entry,
@@ -3204,15 +3334,14 @@ const rawRecordLines = (
 
 const uniqueSpellcastingFacts = (
   issueContext: ProjectionIssueContext,
-  entries: readonly RawEntry[],
+  parsedEntries: readonly (ProcedureProjection | undefined)[],
 ):
   | {
       readonly ability: Ability;
       readonly spellAttackBonus: number | undefined;
     }
   | undefined => {
-  const spellcasting = entries.flatMap((entry) => {
-    const procedure = parseSpellcasting(issueContext, entry);
+  const spellcasting = parsedEntries.flatMap((procedure) => {
     return Match.value(procedure).pipe(
       Match.when(undefined, () => []),
       Match.when({ kind: "spellcasting" }, (spellcastingProcedure) => [
@@ -3259,8 +3388,14 @@ const projectRawStatBlockUnsafe = (
     occurrence.name,
     lines,
   );
-  const spellcasting = uniqueSpellcastingFacts(issueContext, entries);
-  const parsedProcedures = entries.flatMap((entry) => {
+  const parsedSpellcasting = entries.map((entry) =>
+    parseSpellcasting(issueContext, entry),
+  );
+  const spellcasting = uniqueSpellcastingFacts(
+    issueContext,
+    parsedSpellcasting,
+  );
+  const parsedProcedures = entries.flatMap((entry, index) => {
     const procedure = assess(issueContext, () =>
       parseRawProcedure(
         issueContext,
@@ -3269,6 +3404,7 @@ const projectRawStatBlockUnsafe = (
         ammunitionByWeapon,
         spellcasting?.ability,
         spellcasting?.spellAttackBonus,
+        { value: parsedSpellcasting[index] },
       ),
     );
     return procedure === undefined ? [] : [procedure];
@@ -3964,6 +4100,10 @@ const projectAuthoredProcedures = (
   ammunitionByWeapon: ReadonlyMap<string, string>,
 ): readonly ProcedureProjection[] => {
   const entries = authoredProcedures(record);
+  const parsedTextOnlySpellcasting = new Map<
+    StatBlockProcedureEntry,
+    { readonly value: ProcedureProjection | undefined }
+  >();
   const inheritedSpellcastingFacts = entries.flatMap(({ section, entry }) => {
     return Match.value(entry).pipe(
       Match.when({ kind: "executable" }, (executable) =>
@@ -3995,6 +4135,7 @@ const projectAuthoredProcedures = (
           name: textOnly.name,
           description: normalizedProse(textOnly.description),
         });
+        parsedTextOnlySpellcasting.set(entry, { value: parsed });
         return Match.value(parsed).pipe(
           Match.when(undefined, () => []),
           Match.when({ kind: "spellcasting" }, (spellcasting) => [
@@ -4071,6 +4212,7 @@ const projectAuthoredProcedures = (
             ammunitionByWeapon,
             inheritedSpellcasting?.ability,
             inheritedSpellcasting?.spellAttackBonus,
+            parsedTextOnlySpellcasting.get(entry),
           );
           return Match.value(structuralProcedure).pipe(
             Match.when(undefined, fallback),

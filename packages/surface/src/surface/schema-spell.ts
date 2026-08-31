@@ -6460,7 +6460,7 @@ export const StandaloneStatBlockValueSchema =
  * values from 1 through 30. Runtime projections intentionally remain broad
  * because their values can be supplied by another rules source.
  */
-const StandaloneStatBlockAbilityScoreSchema = Schema.Number.pipe(
+export const StandaloneStatBlockAbilityScoreSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.between(1, 30),
 );
