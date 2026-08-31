@@ -50,16 +50,16 @@ remains byte-identical: 12,997,527 bytes with SHA-256
 `dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
 No public mutation command remains. The final Effect 4 capture is 50,667,014
 bytes with SHA-256
-`d841b7e377277b37a1774649f4e69c35323aab267d9c5616bb7db4311f97292f`.
+`bc95144d489f310abe399cf15524ad09a49cd69dc2d2752a9ecb55ac9c37e077`.
 
 The reviewed [finite delta certificate](./effect4-oracle-delta-certificate.json)
 classifies and lists 8,811 recursive JSON-pointer leaf identities, including
 the owning classification, operation, path, and SHA-256 digest or explicit
 missing tag for both sides. Its overall identity
 SHA-256 is
-`2b90424e06d2a6f63225c4bdfe9cc3a5aa160b609f6f0cde715a4fe258549e7a`,
+`ba67544243e10d3d719604d27e2a125d6e6b368f5e490085b2d36e33411bd05e`,
 and the certificate artifact SHA-256 is
-`4839c6c4d911328c092827b3feb73aeb6b461cbee4e8b80362a2dae97ce81a5d`.
+`a6cf7ef35595314566c0e56ab568e4714b2bd5358c41b60912e66c635239f81e`.
 
 | Classification                | Identities | Added | Removed | Changed |
 | ----------------------------- | ---------: | ----: | ------: | ------: |
@@ -70,6 +70,16 @@ and the certificate artifact SHA-256 is
 | Surface authored authority    |        773 |   651 |       0 |     122 |
 | Persisted session codecs      |         22 |     6 |      12 |       4 |
 | Raw Swarm artifact authority  |         63 |    43 |       0 |      20 |
+
+Two consecutive unchanged captures before recertification were byte-identical;
+each canonical evidence document was 4,420,311 bytes with SHA-256
+`5dc6403c741440ac660a37ebcb53e69cc4049727c1c085bcccb4e6942a128e60`.
+The prior certificate drift was confined to the byte-length and SHA-256 leaves
+for tracked artifact `scripts/raw-swarm/OPERATIONS.md`, which had been edited
+after the prior capture. The declaration-authority text in that tracked
+artifact was finalized before this capture; the immutable baseline, identity
+site membership, classification totals, collection authorities, and array
+comparison authorities are unchanged.
 
 The restored canonical Surface corpus changes the tracked authored-artifact
 authority from 1,215 to 1,866 members. Its candidate membership and order
@@ -125,8 +135,13 @@ is `fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e`;
 the SHA-256 of the sorted ledger that binds each relative path to its file
 SHA-256 is
 `b196b26a3dd9aa80064b55d867f41344f133738325c10895cc7290f406420809`.
-Relative to the prior 523-file reconciliation certificate, the current graph
-adds these ten declarations:
+The comparison baseline is commit `38e79b814`, whose independently reproduced
+distribution contains 523 files and 3,962,445 bytes. Its sorted POSIX
+relative-path ledger (one path per line, including the final newline) has
+SHA-256
+`05479f0c8ae9b75bb263ca7dc10cb61ed68fef4da3ba57cd54f4603d41a55cb8`.
+Relative to that pinned baseline, the current graph adds these ten
+declarations:
 
 - `packages/battle-runtime/src/battle-reducer/codec-building-blocks.d.ts`
 - `packages/battle-runtime/src/druid-wild-shape-known-form-runtime.d.ts`
