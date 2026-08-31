@@ -159,7 +159,6 @@ const STATIONARY_PERSISTENT_AREA_LEVEL = 5;
 const STATIONARY_PERSISTENT_AREA_RANGE_FEET = 300;
 const STATIONARY_PERSISTENT_AREA_DURATION_MINUTES = 10;
 const STATIONARY_PERSISTENT_AREA_RADIUS_FEET = 20;
-const STATIONARY_PERSISTENT_AREA_OPERATION_COUNT = 3;
 const STATIONARY_PERSISTENT_AREA_BASE_DAMAGE_DICE = 4;
 const STATIONARY_PERSISTENT_AREA_DAMAGE_DIE_SIZE = 10;
 const STATIONARY_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
@@ -333,24 +332,28 @@ function isStationaryPersistentAreaRepresentation(
   const hasEndTurnTrigger = mechanics.operations.some(
     (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
   );
-  return (
-    hasEnterTrigger &&
-    hasEndTurnTrigger &&
-    mechanics.operations.every(
-      (operation) =>
-        operation.trigger.kind === "passive" ||
-        operation.trigger.kind === "on_creature_enters_area" ||
-        operation.trigger.kind === "on_creature_ends_turn_in_area",
-    )
+  const hasCasterTurnStartTrigger = mechanics.operations.some(
+    (operation) => operation.trigger.kind === "on_caster_turn_start",
   );
+  const hasAreaMovesIntoCreatureSpaceTrigger = mechanics.operations.some(
+    (operation) =>
+      operation.trigger.kind === "on_area_moves_into_creature_space",
+  );
+  const hasTranslatingAreaLifecycle =
+    hasCasterTurnStartTrigger && hasAreaMovesIntoCreatureSpaceTrigger;
+  return hasEnterTrigger && hasEndTurnTrigger && !hasTranslatingAreaLifecycle;
 }
 
 function stationaryPersistentAreaFailures(
   ongoing: NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>,
 ): readonly StationaryPersistentAreaFailure[] {
   const { mechanics, duration, durationTicks, area } = ongoing;
-  const { operations, passiveOperation, enterOperation, endTurnOperation } =
-    stationaryPersistentAreaOperations(mechanics);
+  const {
+    passiveOperation,
+    enterOperation,
+    endTurnOperation,
+    extraOperations,
+  } = stationaryPersistentAreaOperations(mechanics);
   const initialDamageAmount = stationaryPersistentAreaSaveGateDamageAmount(
     mechanics.initialPhase,
   );
@@ -442,15 +445,10 @@ function stationaryPersistentAreaFailures(
       ),
     });
   }
-  if (operations.length !== STATIONARY_PERSISTENT_AREA_OPERATION_COUNT) {
-    const extraOperation =
-      operations[STATIONARY_PERSISTENT_AREA_OPERATION_COUNT];
+  for (const extraOperation of extraOperations) {
     failures.push({
       failedFact: "operationCount",
-      mechanicsPath: spellOngoingOperationPath(
-        extraOperation?.ordinal ??
-          PositiveInteger(STATIONARY_PERSISTENT_AREA_OPERATION_COUNT),
-      ),
+      mechanicsPath: spellOngoingOperationPath(extraOperation.ordinal),
     });
   }
   failures.push(
@@ -483,9 +481,12 @@ function stationaryPersistentAreaInitialUsageLimit(
     : undefined;
 }
 
+type StationaryPersistentAreaOperationRole = "passive" | "enter" | "endTurn";
+
 type StationaryPersistentAreaOperationOccurrence = {
   readonly operation: StationaryPersistentAreaMechanics["operations"][number];
   readonly ordinal: PositiveInteger;
+  readonly role: StationaryPersistentAreaOperationRole | null;
 };
 
 function stationaryPersistentAreaOperationPath(
@@ -568,20 +569,34 @@ function stationaryPersistentAreaOperations(
   const operations = mechanics.operations.map((operation, index) => ({
     operation,
     ordinal: PositiveInteger(index + 1),
+    role: stationaryPersistentAreaOperationRole(operation),
   }));
   return {
     operations,
-    passiveOperation: operations.find(
-      ({ operation }) => operation.trigger.kind === "passive",
-    ),
-    enterOperation: operations.find(
-      ({ operation }) => operation.trigger.kind === "on_creature_enters_area",
-    ),
-    endTurnOperation: operations.find(
-      ({ operation }) =>
-        operation.trigger.kind === "on_creature_ends_turn_in_area",
+    passiveOperation: operations.find(({ role }) => role === "passive"),
+    enterOperation: operations.find(({ role }) => role === "enter"),
+    endTurnOperation: operations.find(({ role }) => role === "endTurn"),
+    extraOperations: operations.filter(
+      (occurrence, index) =>
+        occurrence.role === null ||
+        operations.findIndex(({ role }) => role === occurrence.role) !== index,
     ),
   };
+}
+
+function stationaryPersistentAreaOperationRole(
+  operation: StationaryPersistentAreaMechanics["operations"][number],
+): StationaryPersistentAreaOperationRole | null {
+  if (operation.trigger.kind === "passive") {
+    return "passive";
+  }
+  if (operation.trigger.kind === "on_creature_enters_area") {
+    return "enter";
+  }
+  if (operation.trigger.kind === "on_creature_ends_turn_in_area") {
+    return "endTurn";
+  }
+  return null;
 }
 
 function isStationaryPersistentAreaSpellHeader(

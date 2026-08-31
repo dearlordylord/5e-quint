@@ -374,6 +374,92 @@ describe("stationary persistent-area static admission", () => {
     ]);
   });
 
+  test("points every duplicate and unrecognized extra at its own occurrence", () => {
+    const source = spellAdmissionSource(spellRecord("insect_plague"));
+    if (source.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected Insect Plague ongoing mechanics.");
+    }
+    const [passiveOperation, enterOperation, endTurnOperation] =
+      source.mechanics.operations;
+    if (
+      passiveOperation === undefined ||
+      enterOperation === undefined ||
+      endTurnOperation === undefined
+    ) {
+      throw new Error("Expected Insect Plague operations.");
+    }
+    const unrecognizedOperation = {
+      ...passiveOperation,
+      trigger: { kind: "on_creature_starts_turn_in_area" as const },
+    } satisfies OngoingSpellMechanics["operations"][number];
+    const unsupportedMechanics = {
+      ...source.mechanics,
+      operations: [
+        passiveOperation,
+        enterOperation,
+        endTurnOperation,
+        passiveOperation,
+        unrecognizedOperation,
+      ] as const,
+    } satisfies OngoingSpellMechanics;
+    const result = stationaryPersistentAreaSaveDamageProfile.admitMechanics({
+      mechanics: unsupportedMechanics,
+      spellDefinitionRuleFacts:
+        projectSpellDefinitionRuleFacts(unsupportedMechanics),
+    });
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toHaveLength(2);
+    expect(
+      result.issues
+        .filter((issue) => issue.failedFact === "operationCount")
+        .map((issue) => coordinate(issue.mechanicsPath)),
+    ).toEqual([
+      coordinate(spellOngoingOperationPath(PositiveInteger(4))),
+      coordinate(spellOngoingOperationPath(PositiveInteger(5))),
+    ]);
+  });
+
+  test("points a reordered duplicate at its duplicate occurrence", () => {
+    const source = spellAdmissionSource(spellRecord("insect_plague"));
+    if (source.mechanics.family !== "ongoing_effect") {
+      throw new Error("Expected Insect Plague ongoing mechanics.");
+    }
+    const [passiveOperation, enterOperation, endTurnOperation] =
+      source.mechanics.operations;
+    if (
+      passiveOperation === undefined ||
+      enterOperation === undefined ||
+      endTurnOperation === undefined
+    ) {
+      throw new Error("Expected Insect Plague operations.");
+    }
+    const unsupportedMechanics = {
+      ...source.mechanics,
+      operations: [
+        passiveOperation,
+        enterOperation,
+        enterOperation,
+        endTurnOperation,
+      ] as const,
+    } satisfies OngoingSpellMechanics;
+    const result = stationaryPersistentAreaSaveDamageProfile.admitMechanics({
+      mechanics: unsupportedMechanics,
+      spellDefinitionRuleFacts:
+        projectSpellDefinitionRuleFacts(unsupportedMechanics),
+    });
+
+    expect(result.tag).toBe("unsupported");
+    if (result.tag !== "unsupported") return;
+    expect(result.issues).toEqual([
+      expect.objectContaining({
+        failedFact: "operationCount",
+        mechanicsPath: spellOngoingOperationPath(PositiveInteger(3)),
+      }),
+    ]);
+  });
+
   test("points shared usage-limit failures at each offending operation branch", () => {
     const source = spellAdmissionSource(spellRecord("insect_plague"));
     if (source.mechanics.family !== "ongoing_effect") {
