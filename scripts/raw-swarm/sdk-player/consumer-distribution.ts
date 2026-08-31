@@ -91,9 +91,8 @@ export const PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE = {
   bytes: 3_969_709,
 } as const;
 /**
- * Effect 4's reviewed declaration graph uses every admitted file and leaves a
- * 6,516,051-byte margin below its reviewed 10 MiB cap. Any graph growth must
- * update the reviewed measure explicitly.
+ * Effect 4's reviewed declaration graph uses every admitted file. Any graph
+ * growth must update the reviewed measure explicitly.
  */
 export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES =
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.files;
