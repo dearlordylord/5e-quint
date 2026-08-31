@@ -166,24 +166,23 @@ const exactRoleKeys = (
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const SURFACE_SCHEMA_ROLE_CATEGORIES = [
-  "identity",
-  "prose",
-  "protocol",
-  "vocabulary",
-  "provenance",
-  "reference",
-  "dependency",
-  "projection",
-] as const satisfies readonly SurfaceSchemaFieldRole["category"][];
+type SurfaceSchemaRoleCategory = SurfaceSchemaFieldRole["category"];
 
-type SurfaceSchemaRoleCategory =
-  (typeof SURFACE_SCHEMA_ROLE_CATEGORIES)[number];
+const SURFACE_SCHEMA_ROLE_CATEGORIES = {
+  dependency: true,
+  identity: true,
+  projection: true,
+  prose: true,
+  protocol: true,
+  provenance: true,
+  reference: true,
+  vocabulary: true,
+} as const satisfies Record<SurfaceSchemaRoleCategory, true>;
 
 function isSurfaceSchemaRoleCategory(
   value: string,
 ): value is SurfaceSchemaRoleCategory {
-  return SURFACE_SCHEMA_ROLE_CATEGORIES.some((category) => category === value);
+  return Object.hasOwn(SURFACE_SCHEMA_ROLE_CATEGORIES, value);
 }
 
 function isAllowedString(value: unknown, allowed: readonly string[]): boolean {
