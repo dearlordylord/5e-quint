@@ -9678,7 +9678,14 @@ const battleSnapshotInvariantAnnotations = {
     "Battle combatants, execution scopes, and scope cursors must be unique, battle-owned, and monotonic.",
 };
 
-const BattlePresentedSnapshotShapeSchema = Schema.Struct({
+const BattlePresentedSnapshotShapeSchema: Schema.Struct<
+  typeof BattleSnapshotCommonFields &
+    typeof BattleSnapshotExcludedFields & {
+      readonly combatants: Schema.$Array<
+        typeof BattlePresentedCreatureSnapshotSchema
+      >;
+    }
+> = Schema.Struct({
   ...BattleSnapshotCommonFields,
   ...BattleSnapshotExcludedFields,
   combatants: Schema.Array(BattlePresentedCreatureSnapshotSchema),
@@ -9703,7 +9710,12 @@ export const BattlePresentedSnapshotSchema: Schema.Codec<
   Schema.annotate({ identifier: "BattlePresentedSnapshot" }),
 );
 
-const BattleSnapshotShapeSchema = Schema.Struct({
+const BattleSnapshotShapeSchema: Schema.Struct<
+  typeof BattleSnapshotCommonFields &
+    typeof BattleSnapshotExcludedFields & {
+      readonly combatants: Schema.$Array<typeof BattleCreatureSnapshotSchema>;
+    }
+> = Schema.Struct({
   ...BattleSnapshotCommonFields,
   ...BattleSnapshotExcludedFields,
   combatants: Schema.Array(BattleCreatureSnapshotSchema),
