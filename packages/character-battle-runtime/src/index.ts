@@ -6,10 +6,9 @@ import {
   combatantHasActiveDruidWildShape,
   classFeatureSpellFreeCastProfileForResource,
   characterBattleResourceIsPointPool,
-  characterBattleResourceMaxPoints,
-  characterBattleResourceMaxUses,
+  characterBattleResourceMaxPointsForExecutionFacts,
+  characterBattleResourceMaxUsesForExecutionFacts,
   KNOCKED_OUT_UNCONSCIOUS,
-  parseSupportedUnitFeatureProfile,
   battleCreatureInitFromStatBlock,
   authoredStatBlockBattleInitIssueMessage,
   battleInitializationIssueFactFields,
@@ -1585,10 +1584,8 @@ function characterResourceExpendituresFromBattle(input: {
     return Result.fail(ownedBattleResources.failure);
   }
   const battleResources = ownedBattleResources.success;
-  const wildShapeResource = druidWildShapeBattleResourceProjection(
-    battleResources,
-    origin.classLevels,
-  );
+  const wildShapeResource =
+    druidWildShapeBattleResourceProjection(battleResources);
   if (Result.isFailure(wildShapeResource)) {
     return Result.fail(wildShapeResource.failure);
   }
@@ -1713,12 +1710,7 @@ function characterResourceExpendituresFromBattle(input: {
       }
       continue;
     }
-    if (
-      parseSupportedUnitFeatureProfile(
-        resource.ownership.unit,
-        origin.classLevels,
-      )?.kind === "druidWildShapeKnownForm"
-    ) {
+    if (ownedResourceIsDruidWildShape(resource)) {
       continue;
     }
     const useCountUnitId =
@@ -1727,9 +1719,10 @@ function characterResourceExpendituresFromBattle(input: {
       useCountUnitId !== null &&
       !characterBattleResourceIsPointPool(resource.state)
     ) {
-      const maxUses = characterBattleResourceMaxUses({
+      const maxUses = characterBattleResourceMaxUsesForExecutionFacts({
         unit: resourceUnit,
         classLevels: input.combatant.origin.classLevels,
+        resource: resource.state.resource,
       });
       if (maxUses === undefined || resource.state.usesRemaining === undefined) {
         return characterBattleHandoffValidationIssue(
@@ -1794,9 +1787,10 @@ function characterSheetPointPoolExpenditureFromBattle(input: {
   ) {
     return Result.succeed(null);
   }
-  const maxPoints = characterBattleResourceMaxPoints({
+  const maxPoints = characterBattleResourceMaxPointsForExecutionFacts({
     unit: input.resource.ownership.unit,
     classLevels: input.classLevels,
+    resource: input.resource.state.resource,
   });
   if (maxPoints === undefined) {
     return characterBattleHandoffValidationIssue(
@@ -2045,16 +2039,11 @@ type DruidWildShapeBattleResourceProjection =
 
 function druidWildShapeBattleResourceProjection(
   battleResources: readonly OwnedCharacterBattleResource[],
-  classLevels: CharacterBattleClassLevels,
 ): Result.Result<
   DruidWildShapeBattleResourceProjection,
   CharacterSheetBattleHandoffIssue
 > {
-  const resources = battleResources.filter(
-    (resource) =>
-      parseSupportedUnitFeatureProfile(resource.ownership.unit, classLevels)
-        ?.kind === "druidWildShapeKnownForm",
-  );
+  const resources = battleResources.filter(ownedResourceIsDruidWildShape);
   if (resources.length > 1) {
     return characterBattleHandoffValidationIssue(
       "wildShapeResourceDuplicate",
@@ -2071,6 +2060,17 @@ function druidWildShapeBattleResourceProjection(
     );
   }
   return Result.succeed({ tag: "present", resource, unitId });
+}
+
+function ownedResourceIsDruidWildShape(
+  resource: OwnedCharacterBattleResource,
+): boolean {
+  const purpose = resource.ownership.purpose;
+  return (
+    purpose.tag === "unitResource" &&
+    purpose.projection.tag === "resourceFeature" &&
+    purpose.projection.feature.procedure.kind === "druidWildShape"
+  );
 }
 
 function battleDruidWildShapeAvailableFormsFromSheet(input: {
@@ -2106,9 +2106,10 @@ function druidWildShapeResourceExpenditureFromBattle(input: {
       "Druid Wild Shape must carry remaining uses during battle handoff.",
     );
   }
-  const maxUses = characterBattleResourceMaxUses({
+  const maxUses = characterBattleResourceMaxUsesForExecutionFacts({
     unit: resource.ownership.unit,
     classLevels: input.combatant.origin.classLevels,
+    resource: resource.state.resource,
   });
   const sheetCount = sheetUseCountResourceCapacity({
     sheetResources: input.sheetResources,
