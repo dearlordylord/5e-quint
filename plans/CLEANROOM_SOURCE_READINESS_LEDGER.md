@@ -13,17 +13,18 @@ This section is the sole mutable handoff for a new session.
 
 - Ledger state observed: 2026-08-31
 - Current frontier: `SR-04`
-- Active work: none; #477 armor and shield sheet projection is next in the
-  serialized local train
-- Active owner: none
+- Active work: #477 armor and shield sheet projection
+- Active owner: Codex orchestrator
 - Last completed landing unit: `SR-04B` Character Creation feature and trait
   mechanics projection, #469
 - Last accepted milestone SHA: `4314430dd`
 - Coordination base before `SR-00`: `51beff526`
 - `SR-00` integration base: `301229532`
-- Active landing unit: none
-- Next action: claim #477 from the latest ledger-accepted `master`, then audit
-  the four armor/shield roots and current Character Sheet consumers
+- Active landing unit: `integration/cleanroom-sr-04c` at
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04c`
+- Next action: audit the four armor/shield roots, current Character Sheet
+  consumers, local RAW, and any prior #477 implementation from lease base
+  `0a12f771e`
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded
@@ -139,8 +140,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice | Owner | Worktree/branch | Base SHA | Write lease | State |
-| --------------- | ------------ | ----- | --------------- | -------- | ----------- | ----- |
+| Checkpoint/unit | Ticket/slice                           | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                           | State  |
+| --------------- | -------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04C`        | #477 armor and shield sheet projection | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04c`; `integration/cleanroom-sr-04c` | `0a12f771e` | Character Sheet armor/shield projection, rooted rejection, production Armor Class/equipment consumers, focused verification, and reviewer convergence | Active |
 
 ## Landing discipline
 
