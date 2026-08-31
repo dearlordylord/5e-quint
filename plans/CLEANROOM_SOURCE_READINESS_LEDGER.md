@@ -11,23 +11,20 @@
 
 This section is the sole mutable handoff for a new session.
 
-- Ledger state observed: 2026-08-30
-- Current frontier: `SR-02`
-- Active work: establish the exact common-base convergence receipt from the
-  landed `SR-00` and #479 / PR #480 line
-- Active owner: Codex orchestrator
-- Last completed checkpoint: `SR-01` local master convergence, with the
-  operator-waived interrupted broad/full run recorded as an exception
-- Last accepted milestone SHA: `aceda1aa5`
+- Ledger state observed: 2026-08-31
+- Current frontier: `SR-03`
+- Active work: claim the typed weapon-mastery reference landing for #476
+- Active owner: unclaimed
+- Last completed checkpoint: `SR-02` exact common-base convergence, with the
+  operator-waived broad/full run and separate #481 parity diagnostic recorded
+- Last accepted milestone SHA: `22aa1a6f8`
 - Coordination base before `SR-00`: `51beff526`
 - `SR-00` integration base: `301229532`
-- Active landing unit: `integration/cleanroom-sr-02` at
-  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-02`
-- Next action: establish the exact common-base receipt for local `master` at
-  accepted SR-01 revision `aceda1aa5`, then audit #102/#103/#105/#56/#119 as
-  directed by the SR-02 execution note
-- Parallel work allowed now: read-only topology/spec review and disjoint
-  reconciliation research; only the landing worktree owns integration writes
+- Active landing unit: none
+- Next action: claim `SR-03` from accepted revision `22aa1a6f8`, audit live #476
+  dependencies, and create its short-lived integration worktree
+- Parallel work allowed now: `SR-12` read-only topology/spec review; shared
+  Surface writes remain serialized through the next claimed landing unit
 - Cleanroom Acceptance Run #39: excluded
 
 Before acting, compare this section with current `master`, live native GitHub
@@ -100,8 +97,8 @@ results are on one coherent `master` line.
 | ------- | -------- | ---------------------------------------------------------- | ---------------------------- | ---------------------------------- |
 | `SR-00` | Complete | Land and certify the user-owned #368–#386 line             | current user session         | #386 receipt                       |
 | `SR-01` | Complete | Reconcile and land #479 / PR #480                          | `SR-00`                      | #479 receipt                       |
-| `SR-02` | Active   | Establish the exact common-base convergence receipt        | `SR-01`                      | stable common-base gate            |
-| `SR-03` | Waiting  | Land typed weapon-mastery references, #476                 | `SR-02`                      | #476 receipt                       |
+| `SR-02` | Complete | Establish the exact common-base convergence receipt        | `SR-01`                      | stable common-base gate            |
+| `SR-03` | Active   | Land typed weapon-mastery references, #476                 | `SR-02`                      | #476 receipt                       |
 | `SR-04` | Waiting  | Land owner projections, #464/#469/#477/#470/#473/#471/#474 | `SR-03`                      | every named ticket receipt         |
 | `SR-05` | Waiting  | Land joins/composition and close #465–#468/#52             | `SR-04`                      | #52 receipt                        |
 | `SR-06` | Waiting  | Bind admitted mechanics, #117                              | `SR-05`                      | #117 receipt                       |
@@ -126,10 +123,11 @@ coordination checkpoint. Ticket/slice landings inside a checkpoint first append
 rows such as `SR-04A`; the final checkpoint row consolidates them after every
 required unit has landed.
 
-| Checkpoint/unit | Base SHA    | Accepted SHA | Result                                                                                                                        | Verification                                                                                                                                                                                                                                                                                                                                                                                | Ticket evidence                                                                                                                                                                                        | Unlocked |
-| --------------- | ----------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| `SR-00`         | `f566a5dca` | `ec966d06e`  | Operational landing complete; #386 certification remains open with an operator-accepted proof/quality exception               | Final reviews converged; five public Battle MBTs passed; Oracle self-tests 15/15 and 7,246-identity verifier passed; complexity regressions zero; no terminal proof or milestone-quality pass claimed                                                                                                                                                                                       | [#381 closed receipt](https://github.com/dearlordylord/5e-quint/issues/381#issuecomment-5472588960); [#386 open receipt](https://github.com/dearlordylord/5e-quint/issues/386#issuecomment-5472589098) | `SR-01`  |
-| `SR-01`         | `b2457bb42` | `aceda1aa5`  | Local master now contains the reviewed SR-00 line and merged #479 / PR #480 cohort without importing the four excluded deltas | Standards and Spec/RAW reviews converged with no findings; Battle Runtime typecheck passed; focused transaction 19/19, projection 27/27, spellcasting allocation 40/40, Surface 27/27 plus encoded-reference 1/1; rules-kernel 162 obligations and unit-profile 435 Units/272 profiles passed; the operator-waived interrupted broad/full run was not replayed and is not claimed as passed | [#479 final merge and preservation receipt](https://github.com/dearlordylord/5e-quint/issues/479#issuecomment-5470608738); [PR #480](https://github.com/dearlordylord/5e-quint/pull/480)               | `SR-02`  |
+| Checkpoint/unit | Base SHA    | Accepted SHA | Result                                                                                                                        | Verification                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Ticket evidence                                                                                                                                                                                        | Unlocked         |
+| --------------- | ----------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- |
+| `SR-00`         | `f566a5dca` | `ec966d06e`  | Operational landing complete; #386 certification remains open with an operator-accepted proof/quality exception               | Final reviews converged; five public Battle MBTs passed; Oracle self-tests 15/15 and 7,246-identity verifier passed; complexity regressions zero; no terminal proof or milestone-quality pass claimed                                                                                                                                                                                                                                                                                         | [#381 closed receipt](https://github.com/dearlordylord/5e-quint/issues/381#issuecomment-5472588960); [#386 open receipt](https://github.com/dearlordylord/5e-quint/issues/386#issuecomment-5472589098) | `SR-01`          |
+| `SR-01`         | `b2457bb42` | `aceda1aa5`  | Local master now contains the reviewed SR-00 line and merged #479 / PR #480 cohort without importing the four excluded deltas | Standards and Spec/RAW reviews converged with no findings; Battle Runtime typecheck passed; focused transaction 19/19, projection 27/27, spellcasting allocation 40/40, Surface 27/27 plus encoded-reference 1/1; rules-kernel 162 obligations and unit-profile 435 Units/272 profiles passed; the operator-waived interrupted broad/full run was not replayed and is not claimed as passed                                                                                                   | [#479 final merge and preservation receipt](https://github.com/dearlordylord/5e-quint/issues/479#issuecomment-5470608738); [PR #480](https://github.com/dearlordylord/5e-quint/pull/480)               | `SR-02`          |
+| `SR-02`         | `94e28943d` | `22aa1a6f8`  | Exact common-base Surface, RAW-coverage, rules-kernel, QNT, and Static Mechanics Admission evidence converged on local master | Standards and Spec/RAW reviews converged with no findings; Surface/Battle/publication typechecks passed; Surface 30/30 and admission/projection 29/29 focused tests passed; publication synchronized 932 Dhall/JSON peers and verified its 39 changed/344 added delta; RAW 23,966/23,966, rules-kernel 162, Unit profiles 435/272, and QNT inventory 833/833 passed; the operator-waived broad/full run was not replayed or claimed, and #481 owns the separate Stone Giant parity diagnostic | #102/#103/#105/#56/#119 audited as partial and retained open; #407/#408 behavior accepted but retained open behind #389; SR-02 local receipt at `22aa1a6f8`                                            | `SR-03`, `SR-12` |
 
 ## Active landing table
 
@@ -137,9 +135,8 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice                                       | Owner              | Worktree/branch                                                                             | Base SHA    | Write lease                                                                                                                                                                                              | State  |
-| --------------- | -------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `SR-02`         | convergence gate and #102/#103/#105/#56/#119 audit | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-02`; `integration/cleanroom-sr-02` | `9a6d0f3af` | exact-base Surface/report regeneration, Static Mechanics Admission diagnostics, rules-kernel/QNT inventory, ticket audit, and reviewer convergence; the operator-waived broad/full run is not authorized | Active |
+| Checkpoint/unit | Ticket/slice | Owner | Worktree/branch | Base SHA | Write lease | State |
+| --------------- | ------------ | ----- | --------------- | -------- | ----------- | ----- |
 
 ## Landing discipline
 
