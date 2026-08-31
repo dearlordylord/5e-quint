@@ -967,7 +967,6 @@
     },
     "packages/character-sheet-runtime/src/companions.ts": {
       "module/binding:createRetainedFamiliarLikeCompanion": 9,
-      "module/binding:isSupportedRetainedCompanionSpellCastFeature": 9,
       "module/binding:parseStoredCharacterSheetCompanion": 9,
       "module/binding:parseStoredRetainedCompanionFormSelection": 10,
       "module/binding:parseStoredRetainedCompanionManifestation": 10,
@@ -981,7 +980,7 @@
       "module/binding:isCreationCreateObjectEffect": 11
     },
     "packages/character-sheet-runtime/src/divine-intervention.ts": {
-      "module/binding:isDivineInterventionFeature": 15
+      "module/binding:isDivineInterventionFeature": 14
     },
     "packages/character-sheet-runtime/src/dominate-person.ts": {
       "module/binding:dominatePersonInvocationFromSpell": 15,
@@ -1021,7 +1020,7 @@
     },
     "packages/character-sheet-runtime/src/passive-defenses.ts": {
       "module/binding:characterSheetPassiveDefenseProjection": 15,
-      "module/binding:empoweredEvocationDamageRollModifier": 14
+      "module/binding:empoweredEvocationDamageRollModifier": 13
     },
     "packages/character-sheet-runtime/src/passwall.ts": {
       "module/binding:passwallInvocationFromSpell": 11

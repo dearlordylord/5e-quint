@@ -13,6 +13,22 @@ const indexFile = path.join(repoRoot, indexPath);
 const baseRef = process.argv[2] ?? null;
 
 const EXPECTED_EXPORTS = [
+  "CHARACTER_SHEET_FEATURE_EVIDENCE_BRANCHES",
+  "CHARACTER_SHEET_FEATURE_PATH_DISPOSITIONS",
+  "PARTIAL_CHARACTER_SHEET_FEATURE_PROJECTION_ISSUE_CODES",
+  "CharacterSheetClassFeatureFacts",
+  "CharacterSheetFeatFacts",
+  "CharacterSheetFeatureEvidenceBranch",
+  "CharacterSheetFeaturePathDisposition",
+  "CharacterSheetFeaturePathEvidence",
+  "CharacterSheetFeatureProjection",
+  "CharacterSheetSpeciesTraitFacts",
+  "PartialCharacterSheetFeatureProjection",
+  "PartialCharacterSheetFeatureProjectionIssue",
+  "PartialCharacterSheetFeatureProjectionIssueCode",
+  "PartialCharacterSheetFeatureProjectionResult",
+  "projectCharacterSheetFeature",
+  "projectPartialCharacterSheetFeature",
   "CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE",
   "CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS",
   "CHARACTER_SHEET_LONG_REST_BASE_TICKS",
@@ -258,6 +274,86 @@ const EXPECTED_MOVED_FUNCTIONS = [
   },
 ];
 const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
+  {
+    name: "projectCharacterSheetFeature",
+    reason:
+      "Character Sheet owns the production-consumed source-free feature boundary; terminal Cleanroom composition must reuse it instead of parsing Surface feature roles again.",
+  },
+  {
+    name: "projectPartialCharacterSheetFeature",
+    reason:
+      "Character Sheet owns partial-root mechanics-path disposition and accumulated typed rejection for terminal Cleanroom composition.",
+  },
+  {
+    name: "CHARACTER_SHEET_FEATURE_PATH_DISPOSITIONS",
+    reason:
+      "Character Sheet owns the fixed consumed/unowned path-disposition vocabulary used by its feature evidence.",
+  },
+  {
+    name: "CHARACTER_SHEET_FEATURE_EVIDENCE_BRANCHES",
+    reason:
+      "Character Sheet owns the named feature branches correlated with its mechanics-path evidence.",
+  },
+  {
+    name: "PARTIAL_CHARACTER_SHEET_FEATURE_PROJECTION_ISSUE_CODES",
+    reason:
+      "Character Sheet owns the fixed rejection-code vocabulary for partial feature projection.",
+  },
+  {
+    name: "CharacterSheetClassFeatureFacts",
+    reason:
+      "Character Sheet owns source-free class-feature facts consumed by its production derivations.",
+  },
+  {
+    name: "CharacterSheetFeatFacts",
+    reason:
+      "Character Sheet owns source-free feat facts at its feature projection boundary.",
+  },
+  {
+    name: "CharacterSheetSpeciesTraitFacts",
+    reason:
+      "Character Sheet owns source-free species-trait facts consumed by rest and selected-trait projections.",
+  },
+  {
+    name: "CharacterSheetFeatureProjection",
+    reason:
+      "Character Sheet owns the correlated source-free feature-role union consumed by production and terminal composition.",
+  },
+  {
+    name: "CharacterSheetFeaturePathDisposition",
+    reason:
+      "Character Sheet owns the typed consumed/unowned disposition carried by feature path evidence.",
+  },
+  {
+    name: "CharacterSheetFeatureEvidenceBranch",
+    reason:
+      "Character Sheet owns the typed branch vocabulary carried beside mechanics paths.",
+  },
+  {
+    name: "CharacterSheetFeaturePathEvidence",
+    reason:
+      "Character Sheet owns the exact mechanics-path evidence contract for partial feature roots.",
+  },
+  {
+    name: "PartialCharacterSheetFeatureProjection",
+    reason:
+      "Character Sheet owns the non-empty evidence correlation for a structurally partial feature projection.",
+  },
+  {
+    name: "PartialCharacterSheetFeatureProjectionIssue",
+    reason:
+      "Character Sheet owns precise feature-projection failures with Unit mechanics paths.",
+  },
+  {
+    name: "PartialCharacterSheetFeatureProjectionIssueCode",
+    reason:
+      "Character Sheet owns the typed code union for partial feature projection rejection.",
+  },
+  {
+    name: "PartialCharacterSheetFeatureProjectionResult",
+    reason:
+      "Character Sheet owns readable feature evidence or a non-empty accumulated rejection as one closed result.",
+  },
   {
     name: "CharacterSheetIdSchema",
     reason:

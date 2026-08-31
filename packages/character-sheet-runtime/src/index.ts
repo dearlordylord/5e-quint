@@ -55,6 +55,24 @@ export type {
   CharacterSheetShieldDefinitionFacts,
 } from "./equipment-definition-projection.ts";
 export {
+  CHARACTER_SHEET_FEATURE_EVIDENCE_BRANCHES,
+  CHARACTER_SHEET_FEATURE_PATH_DISPOSITIONS,
+  PARTIAL_CHARACTER_SHEET_FEATURE_PROJECTION_ISSUE_CODES,
+  projectCharacterSheetFeature,
+  projectPartialCharacterSheetFeature,
+  type CharacterSheetClassFeatureFacts,
+  type CharacterSheetFeatFacts,
+  type CharacterSheetFeatureEvidenceBranch,
+  type CharacterSheetFeaturePathDisposition,
+  type CharacterSheetFeaturePathEvidence,
+  type CharacterSheetFeatureProjection,
+  type CharacterSheetSpeciesTraitFacts,
+  type PartialCharacterSheetFeatureProjection,
+  type PartialCharacterSheetFeatureProjectionIssue,
+  type PartialCharacterSheetFeatureProjectionIssueCode,
+  type PartialCharacterSheetFeatureProjectionResult,
+} from "./character-feature-projection.ts";
+export {
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
   characterSheetClassFeatureSelectedReferenceProjection,
   characterSheetSpellAccessesForBuild,

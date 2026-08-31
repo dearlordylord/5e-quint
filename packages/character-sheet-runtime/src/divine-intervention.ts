@@ -15,6 +15,10 @@ import {
 } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
 
+import {
+  projectCharacterSheetClassFeature,
+  type CharacterSheetClassFeatureFacts,
+} from "./character-feature-projection.ts";
 import { characterSheetResources } from "./resources.ts";
 import {
   characterSheetIssue,
@@ -27,10 +31,8 @@ import {
   type CharacterSheetResourceExpenditure,
 } from "./sheet-types.ts";
 
-type DivineInterventionFeature = Extract<
-  UnitRecord,
-  { readonly kind: "class_feature" }
-> & {
+type DivineInterventionFeature = CharacterSheetClassFeatureFacts & {
+  readonly unitId: UnitRecord["id"];
   readonly className: "cleric";
   readonly acquiredAtLevel: 10;
   readonly mechanics: {
@@ -65,7 +67,7 @@ export function castDivineIntervention(input: {
   const resource = divineInterventionResource({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
-    featureUnitId: feature.success.id,
+    featureUnitId: feature.success.unitId,
   });
   /* v8 ignore next -- @preserve -- Malformed retained support state: Divine Intervention admission correlates its feature with one projected use-count resource. */
   if (Result.isFailure(resource)) return Result.fail(resource.failure);
@@ -86,7 +88,7 @@ export function castDivineIntervention(input: {
 
   const invocation = divineInterventionInvocationFromSpell({
     spell: spell.success,
-    featureUnitId: feature.success.id,
+    featureUnitId: feature.success.unitId,
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore next -- @preserve -- Unsupported authored data: Divine Intervention selection narrows to the supported Cleric spell invocation profile before projection. */
@@ -97,7 +99,7 @@ export function castDivineIntervention(input: {
       ...input.sheet,
       resourceExpenditures: replaceDivineInterventionExpenditure({
         expenditures: input.sheet.resourceExpenditures,
-        unitId: feature.success.id,
+        unitId: feature.success.unitId,
         expended: resourceCount(resource.success.expended + 1),
       }),
     },
@@ -114,8 +116,16 @@ function divineInterventionFeatureForSheet(input: {
     input.unitLibrary,
   )) {
     const unit = input.unitLibrary.getUnit(featureUnitId);
-    if (Option.isSome(unit) && isDivineInterventionFeature(unit.value)) {
-      return Result.succeed(unit.value);
+    if (Option.isNone(unit)) continue;
+    const projection = projectCharacterSheetClassFeature(unit.value);
+    if (
+      Option.isSome(projection) &&
+      isDivineInterventionFeature(projection.value)
+    ) {
+      return Result.succeed({
+        unitId: unit.value.id,
+        ...projection.value,
+      });
     }
   }
   return characterSheetIssue(
@@ -223,16 +233,12 @@ function isClericSpellAtSupportedDivineInterventionLevel(
 }
 
 function isDivineInterventionFeature(
-  unit: UnitRecord,
-): unit is DivineInterventionFeature {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "cleric" ||
-    unit.acquiredAtLevel !== 10
-  ) {
+  facts: CharacterSheetClassFeatureFacts,
+): facts is Omit<DivineInterventionFeature, "unitId"> {
+  if (facts.className !== "cleric" || facts.acquiredAtLevel !== 10) {
     return false;
   }
-  const mechanics = unit.mechanics;
+  const mechanics = facts.mechanics;
   return (
     mechanics.family === "activation" &&
     "activationCost" in mechanics &&

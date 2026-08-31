@@ -43,6 +43,10 @@ import {
 import { Result, Match, Option } from "effect";
 
 import { characterSheetProficiencyBonusForCharacterLevel } from "./ability-checks.ts";
+import {
+  projectCharacterSheetClassFeature,
+  type CharacterSheetClassFeatureFacts,
+} from "./character-feature-projection.ts";
 import { recoverCharacterSheetHitPoints } from "./hit-points.ts";
 import {
   SORCEROUS_RESTORATION_REST_FEATURE_TAG,
@@ -386,14 +390,15 @@ function tirelessTemporaryHitPointsProfile(
     /* v8 ignore next -- @preserve -- An admitted Lay On Hands resource id must resolve in the same Unit catalog. */
     if (Result.isFailure(unit)) return Result.fail(unit.failure);
     /* v8 ignore start -- @preserve -- Nonmatching use-count resources are outside the exact Tireless temporary-HP feature profile, not alternate Tireless outcomes. */
+    const projection = projectCharacterSheetClassFeature(unit.success);
     if (
-      unit.success.kind !== "class_feature" ||
-      unit.success.mechanics.family !== "activation"
+      Option.isNone(projection) ||
+      projection.value.mechanics.family !== "activation"
     ) {
       continue;
     }
     /* v8 ignore stop -- @preserve */
-    const mechanics = unit.success.mechanics;
+    const mechanics = projection.value.mechanics;
     const [phase, ...extraPhases] = mechanics.phases;
     /* v8 ignore start -- @preserve -- Unsupported authored Tireless data: admission requires the exact action, Wisdom-capacity, Long-Rest, single-self-phase shell. */
     if (
@@ -575,12 +580,8 @@ export function replacePointPoolResourceExpenditure(input: {
   return next;
 }
 
-type CharacterSheetClassFeatureRecord = Extract<
-  UnitRecord,
-  { readonly kind: "class_feature" }
->;
 type CharacterSheetSorcerousRestorationFeature =
-  CharacterSheetClassFeatureRecord & {
+  CharacterSheetClassFeatureFacts & {
     readonly className: "sorcerer";
     readonly mechanics: SorcererSorcerousRestorationMechanics;
   };
@@ -764,10 +765,11 @@ function layOnHandsResourceForBuild(
 function layOnHandsHealingPoolResourceForUnit(
   unit: UnitRecord,
 ): ChargePoolResource | null {
-  if (unit.kind !== "class_feature" || unit.className !== "paladin") {
+  const projection = projectCharacterSheetClassFeature(unit);
+  if (Option.isNone(projection) || projection.value.className !== "paladin") {
     return null;
   }
-  const mechanics = unit.mechanics;
+  const mechanics = projection.value.mechanics;
   /* v8 ignore start -- @preserve -- Unsupported authored Lay On Hands data: the admitted Paladin feature must retain its exact bonus-action Long-Rest charge-pool profile. */
   if (
     mechanics.family !== "activation" ||
@@ -845,17 +847,22 @@ function classFeatureSpellFreeCastResourcesForUnit(
   CharacterSheetSpellAccessFreeCastResource,
   "tag" | "spellId" | "count"
 >[] {
-  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+  const projection = projectCharacterSheetClassFeature(unit);
+  if (
+    Option.isNone(projection) ||
+    projection.value.mechanics.family !== "passive"
+  ) {
     return [];
   }
+  const mechanics = projection.value.mechanics;
   const preparedSpellIds = new Set(
-    unit.mechanics.grants.flatMap((grant) =>
+    mechanics.grants.flatMap((grant) =>
       grant.kind === "grant_spell_access" && grant.mode === "prepared"
         ? [grant.spellId]
         : [],
     ),
   );
-  return unit.mechanics.grants.flatMap(
+  return mechanics.grants.flatMap(
     (
       grant,
     ): readonly Pick<
@@ -1078,17 +1085,18 @@ export function sorcerousRestorationProfileForBuild(
     const unit = getRequiredUnit(unitLibrary, unitId);
     /* v8 ignore next -- @preserve -- A build-owned Sorcerous Restoration feature id must resolve in the same Unit catalog. */
     if (Result.isFailure(unit)) return Result.fail(unit.failure);
-    if (!isSorcerousRestorationFeature(unit.success)) continue;
+    const projection = projectCharacterSheetClassFeature(unit.success);
+    if (!isSorcerousRestorationFeatureOption(projection)) continue;
     const ownerClassLevel = classFeatureOwnerLevel(
       { build, unitLibrary },
-      unit.success,
+      projection.value,
     );
     /* v8 ignore start -- @preserve -- Malformed admitted build: Sorcerous Restoration feature ownership requires its correlated Sorcerer class in progression. */
     if (Result.isFailure(ownerClassLevel))
       return Result.fail(ownerClassLevel.failure);
     /* v8 ignore stop -- @preserve */
     profiles.push({
-      feature: unit.success,
+      feature: projection.value,
       ownerClassLevel: ownerClassLevel.success,
     });
   }
@@ -1116,18 +1124,24 @@ export function sorcerousRestorationProfileForBuild(
 }
 
 function isSorcerousRestorationFeature(
-  unit: UnitRecord,
-): unit is CharacterSheetSorcerousRestorationFeature {
+  facts: CharacterSheetClassFeatureFacts,
+): facts is CharacterSheetSorcerousRestorationFeature {
   return (
-    unit.kind === "class_feature" &&
-    unit.className === "sorcerer" &&
-    unit.mechanics.family === "sorcery_point_short_rest_recovery" &&
-    unit.mechanics.recoveryTrigger === "short_rest" &&
-    unit.mechanics.resource.kind === "point_pool" &&
-    unit.mechanics.resource.resourceUnitId === SORCERER_FONT_OF_MAGIC_UNIT_ID &&
-    unit.mechanics.recoveryCap.kind === "half_class_level_rounded_down" &&
-    unit.mechanics.resetCadence.kind === "long_rest"
+    facts.className === "sorcerer" &&
+    facts.mechanics.family === "sorcery_point_short_rest_recovery" &&
+    facts.mechanics.recoveryTrigger === "short_rest" &&
+    facts.mechanics.resource.kind === "point_pool" &&
+    facts.mechanics.resource.resourceUnitId ===
+      SORCERER_FONT_OF_MAGIC_UNIT_ID &&
+    facts.mechanics.recoveryCap.kind === "half_class_level_rounded_down" &&
+    facts.mechanics.resetCadence.kind === "long_rest"
   );
+}
+
+function isSorcerousRestorationFeatureOption(
+  feature: Option.Option<CharacterSheetClassFeatureFacts>,
+): feature is Option.Some<CharacterSheetSorcerousRestorationFeature> {
+  return Option.isSome(feature) && isSorcerousRestorationFeature(feature.value);
 }
 
 function sorcerousRestorationRecoveryCap(
@@ -1151,8 +1165,9 @@ function restResetCadenceForClassFeatureResourceUnit(
   unit: UnitRecord,
 ): RestResetCadence | undefined {
   /* v8 ignore next -- @preserve -- Unsupported authored resource data: this projector is called only for admitted class-feature resource Units. */
-  if (unit.kind !== "class_feature") return undefined;
-  const mechanics = unit.mechanics;
+  const projection = projectCharacterSheetClassFeature(unit);
+  if (Option.isNone(projection)) return undefined;
+  const mechanics = projection.value.mechanics;
   /* v8 ignore start -- @preserve -- Malformed admitted resource Unit: its class-feature mechanics omit a reset cadence or carry a cadence outside the closed rest roster. */
   if (!("resetCadence" in mechanics) || mechanics.resetCadence === undefined) {
     return undefined;
@@ -1186,6 +1201,7 @@ function characterSheetResourceCapacity(
   const unit = getRequiredUnit(input.unitLibrary, input.resource.unitId);
   /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: every admitted build resource id must resolve in the same Unit catalog. */
   if (Result.isFailure(unit)) return Result.fail(unit.failure);
+  const projection = projectCharacterSheetClassFeature(unit.success);
   const cap = input.resource.resource.cap;
   if (cap.kind === "fixed") return Result.succeed(resourceCount(cap.uses));
   if (cap.kind === "linear_per_level") {
@@ -1195,13 +1211,13 @@ function characterSheetResourceCapacity(
         "Character Sheet resource level scaling must use class level.",
       );
     }
-    if (unit.success.kind !== "class_feature") {
+    if (Option.isNone(projection)) {
       return characterSheetIssue(
         "Class-level resource scaling requires a class feature Unit.",
       );
     }
     /* v8 ignore stop -- @preserve */
-    const level = classFeatureOwnerLevel(input, unit.success);
+    const level = classFeatureOwnerLevel(input, projection.value);
     /* v8 ignore next -- @preserve -- Malformed admitted build: a class-scaled resource feature requires its owning class in progression. */
     if (Result.isFailure(level)) return Result.fail(level.failure);
     return Result.succeed(
@@ -1215,13 +1231,13 @@ function characterSheetResourceCapacity(
         "Character Sheet resource threshold scaling must use class level.",
       );
     }
-    if (unit.success.kind !== "class_feature") {
+    if (Option.isNone(projection)) {
       return characterSheetIssue(
         "Class-level resource threshold scaling requires a class feature Unit.",
       );
     }
     /* v8 ignore stop -- @preserve */
-    const level = classFeatureOwnerLevel(input, unit.success);
+    const level = classFeatureOwnerLevel(input, projection.value);
     /* v8 ignore next -- @preserve -- Malformed admitted build: a threshold-scaled resource feature requires its owning class in progression. */
     if (Result.isFailure(level)) return Result.fail(level.failure);
     return Result.succeed(
@@ -1256,7 +1272,7 @@ function characterSheetResourceCapacity(
 
 function classFeatureOwnerLevel(
   input: Pick<CharacterSheetResourceCapacityInput, "build" | "unitLibrary">,
-  feature: CharacterSheetClassFeatureRecord,
+  feature: CharacterSheetClassFeatureFacts,
 ): Result.Result<number, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Malformed admitted build: V8 maps the exhausted-scan edge to this loop, but an admitted class-feature resource's owning class must occur in progression. */
   for (const classId of progressionClassUnitIds(input.build.progression)) {

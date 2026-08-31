@@ -86,6 +86,10 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
 
+import {
+  projectCharacterSheetClassFeature,
+  type CharacterSheetClassFeatureFacts,
+} from "./character-feature-projection.ts";
 import { featurePreparedSpellIdsForBuild } from "./class-feature-spells.ts";
 import { isDruidCircleLandChoice } from "./druid-features.ts";
 import { parseHp } from "./hit-points.ts";
@@ -1091,12 +1095,15 @@ function hasSelectedWarlockEldritchInvocation(
       return false;
     }
     const source = unitLibrary.getUnit(feature.selectedFromUnitId);
+    const projection = Option.isSome(source)
+      ? projectCharacterSheetClassFeature(source.value)
+      : Option.none();
     /* v8 ignore start -- @preserve -- Malformed stored build: a selected Pact of the Tome invocation references a missing or non-feature source Unit. */
-    if (Option.isNone(source) || source.value.kind !== "class_feature") {
+    if (Option.isNone(projection)) {
       return false;
     }
     /* v8 ignore stop -- @preserve */
-    const mechanics = source.value.mechanics;
+    const mechanics = projection.value.mechanics;
     return (
       mechanics.family === "feature_choice" &&
       mechanics.optionSource.kind === "class_feature_options" &&
@@ -1309,11 +1316,13 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
   readonly unitLibrary: UnitCatalog;
 }): Result.Result<void, CharacterSheetIssue> {
   const sourceUnit = input.unitLibrary.getUnit(input.languageFact.sourceUnitId);
+  const projection = Option.isSome(sourceUnit)
+    ? projectCharacterSheetClassFeature(sourceUnit.value)
+    : Option.none();
   /* v8 ignore start -- @preserve -- Malformed stored build: a class-feature language fact must reference its admitted passive class-feature Unit. */
   if (
-    Option.isNone(sourceUnit) ||
-    sourceUnit.value.kind !== "class_feature" ||
-    sourceUnit.value.mechanics.family !== "passive"
+    Option.isNone(projection) ||
+    projection.value.mechanics.family !== "passive"
   ) {
     return characterSheetIssue(
       `Character Build class-feature language does not match source Unit ${input.languageFact.sourceUnitId}.`,
@@ -1323,7 +1332,7 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
 
   if (input.languageFact.kind === "classFeatureLanguageChoice") {
     /* v8 ignore start -- @preserve -- Malformed stored build: a choice language fact references a source with no language-choice grant. */
-    return storedClassFeatureLanguageChoiceGrantCount(sourceUnit.value) ===
+    return storedClassFeatureLanguageChoiceGrantCount(projection.value) ===
       undefined
       ? characterSheetIssue(
           `Character Build class-feature language does not match source Unit ${input.languageFact.sourceUnitId}.`,
@@ -1332,7 +1341,7 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
     /* v8 ignore stop -- @preserve */
   }
 
-  const matches = sourceUnit.value.mechanics.grants.some((grant) => {
+  const matches = projection.value.mechanics.grants.some((grant) => {
     if (grant.kind !== "grant_language") return false;
     const language = languageFromSurfaceLanguageId(grant.languageId);
     return (
@@ -1361,20 +1370,22 @@ function storedClassFeatureLanguageProjection(input: {
   const choiceCountsBySourceUnitId = new Map<UnitRecord["id"], number>();
   for (const sourceUnitId of input.ownedClassFeatureUnitIds) {
     const sourceUnit = input.unitLibrary.getUnit(sourceUnitId);
+    const projection = Option.isSome(sourceUnit)
+      ? projectCharacterSheetClassFeature(sourceUnit.value)
+      : Option.none();
     if (
-      Option.isNone(sourceUnit) ||
-      sourceUnit.value.kind !== "class_feature" ||
-      sourceUnit.value.mechanics.family !== "passive"
+      Option.isNone(projection) ||
+      projection.value.mechanics.family !== "passive"
     ) {
       continue;
     }
     const choiceCount = storedClassFeatureLanguageChoiceGrantCount(
-      sourceUnit.value,
+      projection.value,
     );
     if (choiceCount !== undefined) {
       choiceCountsBySourceUnitId.set(sourceUnitId, choiceCount);
     }
-    for (const grant of sourceUnit.value.mechanics.grants) {
+    for (const grant of projection.value.mechanics.grants) {
       if (grant.kind !== "grant_language") continue;
       const language = languageFromSurfaceLanguageId(grant.languageId);
       /* v8 ignore start -- @preserve -- Malformed installed content: a supported fixed-language grant carries an id outside the shared language codec. */
@@ -1400,17 +1411,14 @@ function storedClassFeatureLanguageProjection(input: {
 }
 
 function storedClassFeatureLanguageChoiceGrantCount(
-  sourceUnit: UnitRecord,
+  sourceFacts: CharacterSheetClassFeatureFacts,
 ): number | undefined {
   /* v8 ignore start -- @preserve -- Unsupported stored language source: only admitted passive class-feature Units can contribute a language-choice count. */
-  if (
-    sourceUnit.kind !== "class_feature" ||
-    sourceUnit.mechanics.family !== "passive"
-  ) {
+  if (sourceFacts.mechanics.family !== "passive") {
     return undefined;
     /* v8 ignore stop -- @preserve */
   }
-  const choiceGrantCount = sourceUnit.mechanics.grants.reduce(
+  const choiceGrantCount = sourceFacts.mechanics.grants.reduce(
     (count, grant) =>
       grant.kind === "grant_language_choice" &&
       grant.source === "character_creation_language_tables"

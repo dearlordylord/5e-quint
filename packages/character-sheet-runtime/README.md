@@ -119,6 +119,13 @@ Current executable state:
   Armor Class, training, Strength, Stealth, donning, doffing, weight, and cost
   facts without authored identity; Armor Class calculation consumes this same
   projection rather than reading the Surface record again.
+- `projectCharacterSheetFeature` is the sheet-owned static boundary for
+  class-feature, feat, and species-trait mechanics. Production sheet owners
+  consume its source-free facts instead of re-recognizing Surface records.
+  `projectPartialCharacterSheetFeature` adds exact consumed/unowned mechanics
+  paths for the six structurally partial roots and accumulates independent
+  represented-branch failures; build selections, current sheet state, rests,
+  expenditures, and actors remain outside this static projection.
 - `parseCharacterSheet` is the boundary parser for serialized sheets before app
   or MCP code consumes them.
 

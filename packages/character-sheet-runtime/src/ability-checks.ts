@@ -19,8 +19,9 @@ import {
   type ProficiencyBonus,
 } from "@dnd/shared/types";
 import type { PassiveMechanics, UnitRecord } from "@dnd/surface/surface/types";
-import { Result, Match } from "effect";
+import { Result, Match, Option } from "effect";
 
+import { projectCharacterSheetClassFeature } from "./character-feature-projection.ts";
 import {
   JACK_OF_ALL_TRADES_PROFICIENCY_BONUS_DIVISOR,
   characterSheetIssue,
@@ -263,16 +264,20 @@ function* characterSheetClassFeatureComponents(
       continue;
     }
     /* v8 ignore stop -- @preserve */
-    if (unit.success.kind !== "class_feature") continue;
-    if (unit.success.mechanics.family === "composite") {
-      for (const part of unit.success.mechanics.parts) {
+    const feature = projectCharacterSheetClassFeature(unit.success);
+    if (Option.isNone(feature)) continue;
+    if (feature.value.mechanics.family === "composite") {
+      for (const part of feature.value.mechanics.parts) {
         if (part.family !== "passive") continue;
         yield Result.succeed({ unitId, mechanics: part });
       }
       continue;
     }
-    if (unit.success.mechanics.family === "passive") {
-      yield Result.succeed({ unitId, mechanics: unit.success.mechanics });
+    if (feature.value.mechanics.family === "passive") {
+      yield Result.succeed({
+        unitId,
+        mechanics: feature.value.mechanics,
+      });
     }
   }
 }
@@ -285,10 +290,11 @@ function characterBuildJackOfAllTradesFeatureUnitId(
     const unit = getRequiredUnit(unitLibrary, unitId);
     /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: Jack of All Trades lookup receives feature ids already admitted from this catalog. */
     if (Result.isFailure(unit)) return Result.fail(unit.failure);
+    const feature = projectCharacterSheetClassFeature(unit.success);
     if (
-      unit.success.kind === "class_feature" &&
-      unit.success.mechanics.family === "passive" &&
-      unit.success.mechanics.grants.some(
+      Option.isSome(feature) &&
+      feature.value.mechanics.family === "passive" &&
+      feature.value.mechanics.grants.some(
         (grant) => grant.kind === "jack_of_all_trades_ability_check_bonus",
       )
     ) {

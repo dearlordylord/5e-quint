@@ -25,8 +25,12 @@ import type {
   EquipmentPredicate,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import { Result, Option } from "effect";
 
+import {
+  projectCharacterSheetClassFeature,
+  type CharacterSheetClassFeatureFacts,
+} from "./character-feature-projection.ts";
 import {
   projectCharacterSheetEquipmentDefinition,
   type CharacterSheetArmorDefinitionFacts,
@@ -241,10 +245,6 @@ type CharacterSheetArmorClassEquipmentState = {
   readonly wearingArmor: boolean;
   readonly wieldingShield: boolean;
 };
-type CharacterSheetClassFeatureRecord = Extract<
-  UnitRecord,
-  { readonly kind: "class_feature" }
->;
 type ModifyAcSetBaseGrant = Extract<
   Extract<
     ClassFeatureComponentMechanics,
@@ -325,17 +325,18 @@ function armorClassBaseCandidatesForUnit(
   unit: UnitRecord,
   equipment: CharacterSheetArmorClassEquipmentState,
 ): readonly CharacterSheetArmorClassBaseCandidate[] {
-  if (unit.kind !== "class_feature") return [];
+  const projection = projectCharacterSheetClassFeature(unit);
+  if (Option.isNone(projection)) return [];
   return armorClassBaseCandidatesForClassFeatureMechanics(
     unit.id,
-    unit.mechanics,
+    projection.value.mechanics,
     equipment,
   );
 }
 
 function armorClassBaseCandidatesForClassFeatureMechanics(
   unitId: UnitRecord["id"],
-  mechanics: CharacterSheetClassFeatureRecord["mechanics"],
+  mechanics: CharacterSheetClassFeatureFacts["mechanics"],
   equipment: CharacterSheetArmorClassEquipmentState,
 ): readonly CharacterSheetArmorClassBaseCandidate[] {
   if (mechanics.family === "composite") {
