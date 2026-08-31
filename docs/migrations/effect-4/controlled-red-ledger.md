@@ -1142,7 +1142,7 @@ deterministic measure of 530 files and 4,667,450 bytes. The file limit is
 exactly 530. The byte limit remains 10 MiB, with a 5,818,310-byte margin. Tests
 prove acceptance exactly at both caps and fail-closed rejection at each cap
 plus one, and the real public distribution must equal the reviewed measure.
-The reviewed eleven additions and four removals from the prior 523-file graph
+The reviewed ten additions and three removals from the prior 523-file graph
 are listed with their owning reachability in
 [`final-parity-report.md`](./final-parity-report.md#master-reconciliation-declaration-certificate);
 the canonical type-only owner is

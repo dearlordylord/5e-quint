@@ -209,7 +209,7 @@ canonical measurement is owned beside the declaration emitter in
 `sdk-player/consumer-distribution.ts` and is reproduced by the clean-consumer
 distribution test. The
 [master-reconciliation declaration certificate](../../docs/migrations/effect-4/final-parity-report.md#master-reconciliation-declaration-certificate)
-records the reviewed eleven additions and four removals from the previous
+records the reviewed ten additions and three removals from the previous
 523-file reconciliation certificate and their owning reachability.
 
 The current tracer post-play review keeps this bounded context inline and is
