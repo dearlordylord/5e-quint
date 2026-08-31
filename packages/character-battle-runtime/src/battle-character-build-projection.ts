@@ -790,7 +790,7 @@ function characterMartialArtsWeaponAttack(
   baseAttack: PhysicalAbilityWeaponAttack,
   weapon: Extract<UnitRecord, { readonly kind: "weapon" }>,
   build: CharacterBuild,
-  martialArts: Parameters<typeof martialArtsWeaponAttack>[2] | null,
+  martialArts: MartialArtsAttackProjection | null,
 ): PhysicalAbilityWeaponAttack {
   return martialArts === null || !isMonkWeapon(weapon)
     ? baseAttack

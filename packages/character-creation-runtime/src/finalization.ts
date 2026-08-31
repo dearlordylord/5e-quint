@@ -1790,8 +1790,14 @@ function characterBuildAbilityScores(
   );
 }
 
+type CharacterBuildProjectionInput = {
+  readonly supportedSelections: ExecutableSupportSelections;
+  readonly unitLibrary: UnitCatalog;
+  readonly supportProfile: CharacterCreationSupportProfile;
+};
+
 function characterBuildMechanics(
-  input: Parameters<typeof buildCharacterBuild>[0],
+  input: CharacterBuildProjectionInput,
   selections: FinalizedCharacterSelections,
   progression: CharacterProgression,
   classFactsByUnitId: ClassFactsByUnitId,
@@ -1858,11 +1864,9 @@ function characterBuildMechanics(
   });
 }
 
-export function buildCharacterBuild(input: {
-  readonly supportedSelections: ExecutableSupportSelections;
-  readonly unitLibrary: UnitCatalog;
-  readonly supportProfile: CharacterCreationSupportProfile;
-}): Result.Result<CharacterBuild, FinalizationIssues> {
+export function buildCharacterBuild(
+  input: CharacterBuildProjectionInput,
+): Result.Result<CharacterBuild, FinalizationIssues> {
   const { selections } = input.supportedSelections;
   const progression = input.supportedSelections.progression;
   const origins = characterBuildOriginFacts(
@@ -2604,14 +2608,16 @@ function classUnitIdForSubclass(input: {
   );
 }
 
+type FinalizedClassFeatureLanguagesInput = Pick<
+  CharacterBuild,
+  "progression" | "originLanguages" | "features"
+> & {
+  readonly unitChoices: readonly UnitChoiceSelection[];
+  readonly unitLibrary: UnitCatalog;
+};
+
 function finalizedClassFeatureLanguages(
-  input: Pick<
-    CharacterBuild,
-    "progression" | "originLanguages" | "features"
-  > & {
-    readonly unitChoices: readonly UnitChoiceSelection[];
-    readonly unitLibrary: UnitCatalog;
-  },
+  input: FinalizedClassFeatureLanguagesInput,
 ): Result.Result<
   readonly CharacterBuildClassFeatureLanguage[],
   ProjectionIssues
@@ -2638,15 +2644,15 @@ function finalizedClassFeatureLanguages(
     : Result.fail(nonEmptyIssues);
 }
 
+type ClassFeatureLanguageCollection = FinalizedClassFeatureLanguagesInput & {
+  readonly unitId: UnitRecord["id"];
+  readonly issues: CharacterBuildProjectionIssue[];
+  readonly classFeatureLanguages: CharacterBuildClassFeatureLanguage[];
+  readonly knownLanguages: Set<CharacterBuildClassFeatureLanguage["language"]>;
+};
+
 function collectFinalizedClassFeatureLanguages(
-  input: Parameters<typeof finalizedClassFeatureLanguages>[0] & {
-    readonly unitId: UnitRecord["id"];
-    readonly issues: CharacterBuildProjectionIssue[];
-    readonly classFeatureLanguages: CharacterBuildClassFeatureLanguage[];
-    readonly knownLanguages: Set<
-      CharacterBuildClassFeatureLanguage["language"]
-    >;
-  },
+  input: ClassFeatureLanguageCollection,
 ): void {
   const unit = input.unitLibrary.getUnit(input.unitId);
   if (Option.isNone(unit)) return;
@@ -2663,7 +2669,7 @@ function collectFinalizedClassFeatureLanguages(
 }
 
 function collectFixedClassFeatureLanguage(
-  input: Parameters<typeof collectFinalizedClassFeatureLanguages>[0],
+  input: ClassFeatureLanguageCollection,
   grant: Extract<EffectAtom, { readonly kind: "grant_language" }>,
 ): void {
   const language = languageFromSurfaceLanguageId(grant.languageId);
@@ -2696,7 +2702,7 @@ function collectFixedClassFeatureLanguage(
 }
 
 function collectChosenClassFeatureLanguages(
-  input: Parameters<typeof collectFinalizedClassFeatureLanguages>[0],
+  input: ClassFeatureLanguageCollection,
   grant: Extract<EffectAtom, { readonly kind: "grant_language_choice" }>,
 ): void {
   const selection = classFeatureLanguageChoiceSelection(
@@ -2752,7 +2758,7 @@ function classFeatureLanguageChoiceCountMismatch(
 }
 
 function collectClassFeatureLanguageChoice(
-  input: Parameters<typeof collectFinalizedClassFeatureLanguages>[0],
+  input: ClassFeatureLanguageCollection,
   option: ParsedClassFeatureLanguageChoiceOption,
 ): void {
   if (Result.isFailure(option.language)) {

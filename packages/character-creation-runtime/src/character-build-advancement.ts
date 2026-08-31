@@ -2783,13 +2783,17 @@ function replaceListPreparedSpell(input: {
   );
 }
 
-function listPreparedSpellEligibleSpellLists(input: {
+type PreparedSpellListExpansionInput = {
   readonly build: Pick<CharacterBuild, "features">;
   readonly unitLibrary: UnitCatalog;
   readonly className: ClassSpellListName;
   readonly classUnitId: ClassUnitId;
   readonly nextClassLevel: number;
-}): readonly ClassSpellListName[] {
+};
+
+function listPreparedSpellEligibleSpellLists(
+  input: PreparedSpellListExpansionInput,
+): readonly ClassSpellListName[] {
   const additionalSpellLists = input.build.features.flatMap((feature) =>
     additionalPreparedSpellListsForSelectedFeature(feature, input),
   );
@@ -2798,12 +2802,7 @@ function listPreparedSpellEligibleSpellLists(input: {
 
 function additionalPreparedSpellListsForSelectedFeature(
   feature: CharacterBuildFeature,
-  input: {
-    readonly unitLibrary: UnitCatalog;
-    readonly className: ClassSpellListName;
-    readonly classUnitId: ClassUnitId;
-    readonly nextClassLevel: number;
-  },
+  input: PreparedSpellListExpansionInput,
 ): readonly ClassSpellListName[] {
   if (
     feature.kind !== "selectedClassChoice" ||
@@ -2829,10 +2828,7 @@ function additionalPreparedSpellListsForSelectedFeature(
 
 function selectedFeatureExpandsPreparedSpellLists(
   facts: CharacterCreationClassFeatureFacts,
-  input: Pick<
-    Parameters<typeof additionalPreparedSpellListsForSelectedFeature>[1],
-    "className" | "nextClassLevel"
-  >,
+  input: Pick<PreparedSpellListExpansionInput, "className" | "nextClassLevel">,
 ): facts is CharacterCreationClassFeatureFacts & {
   readonly mechanics: Extract<
     CharacterCreationClassFeatureFacts["mechanics"],
