@@ -9,10 +9,7 @@ import {
 } from "@dnd/surface/surface/schema";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
-import {
-  authoredStatBlockBattleInitIssueMessage,
-  battleCreatureInitFromStatBlock,
-} from "./battle-init.ts";
+import type { BattleCreatureInit } from "./battle-init.ts";
 import { battleAmmunitionStock } from "./battle-ammunition.ts";
 import {
   battleExecutionScopeOrdinal,
@@ -25,14 +22,17 @@ import {
   battleStatBlockCombatantSource,
 } from "./stat-block-combatant-admission.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
-import { startBattle } from "./battle-reducer/api-lifecycle.ts";
+import {
+  addBattleRuntimeCombatant,
+  battleInitializationIssueMessage,
+  startBattle,
+} from "./battle-reducer/api-lifecycle.ts";
 import {
   characterSeed,
   fighterId,
   removeBattleCombatantsRight,
   startBattleRight,
   monsterResourceStatBlock,
-  statBlockCreatureInit,
   statBlockRecord,
   expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary,
   projectedStatBlockRuntimeSource,
@@ -248,19 +248,17 @@ describe("Stat Block combatant admission capability", () => {
 
   test("retains caller-supplied initial conditions for Stat Block creatures", () => {
     const source = statBlockRecord();
-    const initialized = battleCreatureInitFromStatBlock({
-      combatantId: admittedCombatantId,
-      initiative: initiativeScore(10),
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: ["prone"],
-      statBlock: source,
-    });
-    expect(Result.isSuccess(initialized)).toBe(true);
-    if (Result.isFailure(initialized)) return;
-
     const started = startBattle({
       battleId: battleId("initial-stat-block-condition"),
-      combatants: [initialized.success],
+      combatants: [
+        {
+          combatantId: admittedCombatantId,
+          initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: ["prone"],
+          statBlock: source,
+        },
+      ],
     });
     expect(Result.isSuccess(started)).toBe(true);
     if (Result.isFailure(started)) return;
@@ -271,10 +269,11 @@ describe("Stat Block combatant admission capability", () => {
     expect(hasCondition(combatant.conditions, "prone")).toBe(true);
   });
 
-  test("startBattle rejects copied Stat Block initialization with an immune condition", () => {
+  test("addBattleRuntimeCombatant rejects an authored Stat Block with an immune initial condition", () => {
     const source = statBlockRecord();
-    const init = statBlockCreatureInit({
-      initiative: 10,
+    const directInit = {
+      combatantId: admittedCombatantId,
+      initiative: initiativeScore(10),
       statBlock: {
         ...source,
         statBlock: {
@@ -284,36 +283,37 @@ describe("Stat Block combatant admission capability", () => {
           }),
         },
       },
-    });
-    const directInit = {
-      ...init,
-      creatureInit: {
-        ...init.creatureInit,
-        conditions: ["prone"] as const,
-      },
-    };
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: ["prone"],
+    } satisfies BattleCreatureInit;
 
-    const result = startBattle({
-      battleId: battleId("direct-stat-block-condition-immunity"),
-      combatants: [directInit],
+    const initial = startBattle({
+      battleId: battleId("dynamic-stat-block-condition-immunity"),
+      combatants: [characterSeed({ initiative: 20 })],
+    });
+    expect(Result.isSuccess(initial)).toBe(true);
+    if (Result.isFailure(initial)) return;
+    const result = addBattleRuntimeCombatant({
+      session: initial.success,
+      combatant: directInit,
+      ownerPath: ["combatant"],
     });
 
     expect(
       Result.isFailure(result)
-        ? battleStateInitIssueMessage(result.failure)
+        ? battleInitializationIssueMessage(result.failure)
         : "started",
     ).toBe("Stat Block combatant is immune to initial prone condition.");
   });
 
-  test("startBattle admits copied Stat Block initialization with a valid condition", () => {
-    const init = statBlockCreatureInit({ initiative: 10 });
+  test("startBattle admits authored Stat Block initialization with a valid condition", () => {
     const directInit = {
-      ...init,
-      creatureInit: {
-        ...init.creatureInit,
-        conditions: ["prone"] as const,
-      },
-    };
+      combatantId: admittedCombatantId,
+      initiative: initiativeScore(10),
+      statBlock: statBlockRecord(),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: ["prone"],
+    } satisfies BattleCreatureInit;
 
     const result = startBattle({
       battleId: battleId("direct-stat-block-condition-valid"),
@@ -332,26 +332,31 @@ describe("Stat Block combatant admission capability", () => {
 
   test("rejects an initial condition forbidden by the Stat Block", () => {
     const source = statBlockRecord();
-    const initialized = battleCreatureInitFromStatBlock({
-      combatantId: admittedCombatantId,
-      initiative: initiativeScore(10),
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: ["prone"],
-      statBlock: {
-        ...source,
-        statBlock: {
-          ...source.statBlock,
-          immunities: decodeCreatureImmunityDeclarationSync({
-            conditions: ["prone"],
-          }),
+    const started = startBattle({
+      battleId: battleId("forbidden-initial-stat-block-condition"),
+      combatants: [
+        {
+          combatantId: admittedCombatantId,
+          initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: ["prone"],
+          statBlock: {
+            ...source,
+            statBlock: {
+              ...source.statBlock,
+              immunities: decodeCreatureImmunityDeclarationSync({
+                conditions: ["prone"],
+              }),
+            },
+          },
         },
-      },
+      ],
     });
 
     expect(
-      Result.isFailure(initialized)
-        ? authoredStatBlockBattleInitIssueMessage(initialized.failure)
-        : "initialized",
+      Result.isFailure(started)
+        ? battleInitializationIssueMessage(started.failure)
+        : "started",
     ).toBe("Stat Block combatant is immune to initial prone condition.");
   });
 

@@ -33,7 +33,6 @@ import {
   type RuleCoreComponentRoutedProjection,
   withRuleCoreComponentRoute,
 } from "./rule-core-component-route.test-support.ts";
-import { Result } from "effect";
 import { describe, it } from "vitest";
 
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
@@ -44,7 +43,6 @@ import type {
 
 import {
   battleId,
-  battleCreatureInitFromStatBlock,
   combatantId,
   discoverBattleActCandidates,
   initiativeScore,
@@ -55,7 +53,7 @@ import {
   type BattleState,
   type BattleSubject,
   type CombatantId,
-  type StatBlockBattleCombatantInit,
+  type BattleCreatureInit,
 } from "./index.ts";
 
 const ruleCoreStatBlockMultiattackMbtHoles = [
@@ -326,16 +324,14 @@ function statBlockCreature(input: {
   readonly combatantId: CombatantId;
   readonly initiative: number;
   readonly statBlock: StatBlockRecord;
-}): StatBlockBattleCombatantInit {
-  return Result.getOrThrow(
-    battleCreatureInitFromStatBlock({
-      combatantId: input.combatantId,
-      initiative: initiativeScore(input.initiative),
-      statBlock: input.statBlock,
-      ammunitionStocks: [],
-      conditions: [],
-    }),
-  );
+}): BattleCreatureInit {
+  return {
+    combatantId: input.combatantId,
+    initiative: initiativeScore(input.initiative),
+    statBlock: input.statBlock,
+    ammunitionStocks: [],
+    conditions: [],
+  };
 }
 
 function multiattackSubject(

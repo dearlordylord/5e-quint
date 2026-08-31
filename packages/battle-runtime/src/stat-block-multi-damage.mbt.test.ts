@@ -8,7 +8,6 @@ import {
 import { isDeepStrictEqual } from "node:util";
 
 import { Result } from "effect";
-import { battleCreatureInitFromStatBlock } from "./battle-init.ts";
 import { describe, it } from "vitest";
 
 import { DieRollResult, Hp } from "@dnd/shared/types";
@@ -17,7 +16,6 @@ import type {
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -44,6 +42,7 @@ import {
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   battleId,
+  battleInitializationIssueMessage,
   combatantId,
   discoverBattleActCandidates,
   initiativeScore,
@@ -432,7 +431,7 @@ function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -443,17 +442,15 @@ function statBlockCreature(input: {
   readonly initiative: number;
   readonly statBlock: StatBlockRecord;
 }): BattleCreatureInit {
-  return Result.getOrThrow(
-    battleCreatureInitFromStatBlock({
-      combatantId: input.combatantId,
-      initiative: initiativeScore(input.initiative),
-      statBlock: { ...input.statBlock, name: input.displayName },
-      currentHp: Hp(12),
-      tempHp: Hp(0),
-      ammunitionStocks: [],
-      conditions: [],
-    }),
-  );
+  return {
+    combatantId: input.combatantId,
+    initiative: initiativeScore(input.initiative),
+    statBlock: { ...input.statBlock, name: input.displayName },
+    currentHp: Hp(12),
+    tempHp: Hp(0),
+    ammunitionStocks: [],
+    conditions: [],
+  };
 }
 
 function multiDamageAttackerStatBlock(): StatBlockRecord {

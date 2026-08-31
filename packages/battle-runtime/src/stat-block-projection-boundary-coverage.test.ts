@@ -17,12 +17,13 @@ import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 
 import {
-  authoredStatBlockBattleInitIssueMessage,
   battleAvailableDruidWildShapeKnownForms,
-  battleCreatureInitFromStatBlock,
+  battleId,
+  battleInitializationIssueMessage,
   combatantId,
   initiativeScore,
   parseSupportedUnitFeatureProfile,
+  startBattle,
   wildShapeKnownFormsIssueMessage,
 } from "./index.ts";
 import {
@@ -185,38 +186,48 @@ describe("Stat Block projection boundary coverage", () => {
         reason: projectionCase.reason,
       });
 
-      const initialized = battleCreatureInitFromStatBlock({
-        combatantId: combatantId(`synthetic-projection-failure-${index}`),
-        statBlock: projectionCase.record,
-        initiative: initiativeScore(10),
-        ammunitionStocks: [],
-        conditions: [],
+      const initialized = startBattle({
+        battleId: battleId(`synthetic-projection-failure-${index}`),
+        combatants: [
+          {
+            combatantId: combatantId(`synthetic-projection-failure-${index}`),
+            statBlock: projectionCase.record,
+            initiative: initiativeScore(10),
+            ammunitionStocks: [],
+            conditions: [],
+          },
+        ],
       });
       expect(Result.isFailure(initialized)).toBe(true);
       if (Result.isSuccess(initialized)) continue;
-      expect(authoredStatBlockBattleInitIssueMessage(initialized.failure)).toBe(
+      expect(battleInitializationIssueMessage(initialized.failure)).toBe(
         projectionCase.message,
       );
     }
 
-    const battleInit = battleCreatureInitFromStatBlock({
-      combatantId: combatantId("synthetic-battle-init-issue"),
-      statBlock: {
-        ...source,
-        statBlock: {
-          ...source.statBlock,
-          immunities: decodeCreatureImmunityDeclarationSync({
-            conditions: ["prone"],
-          }),
+    const battleInit = startBattle({
+      battleId: battleId("synthetic-battle-init-issue"),
+      combatants: [
+        {
+          combatantId: combatantId("synthetic-battle-init-issue"),
+          statBlock: {
+            ...source,
+            statBlock: {
+              ...source.statBlock,
+              immunities: decodeCreatureImmunityDeclarationSync({
+                conditions: ["prone"],
+              }),
+            },
+          },
+          initiative: initiativeScore(10),
+          ammunitionStocks: [],
+          conditions: ["prone"],
         },
-      },
-      initiative: initiativeScore(10),
-      ammunitionStocks: [],
-      conditions: ["prone"],
+      ],
     });
     expect(Result.isFailure(battleInit)).toBe(true);
     if (Result.isSuccess(battleInit)) return;
-    expect(authoredStatBlockBattleInitIssueMessage(battleInit.failure)).toBe(
+    expect(battleInitializationIssueMessage(battleInit.failure)).toBe(
       "Stat Block combatant is immune to initial prone condition.",
     );
   });
@@ -570,16 +581,21 @@ describe("Stat Block projection boundary coverage", () => {
       ],
     });
 
-    const initialized = battleCreatureInitFromStatBlock({
-      combatantId: combatantId("synthetic-unsupported-procedures"),
-      statBlock: record,
-      initiative: initiativeScore(10),
-      ammunitionStocks: [],
-      conditions: [],
+    const initialized = startBattle({
+      battleId: battleId("synthetic-unsupported-procedures"),
+      combatants: [
+        {
+          combatantId: combatantId("synthetic-unsupported-procedures"),
+          statBlock: record,
+          initiative: initiativeScore(10),
+          ammunitionStocks: [],
+          conditions: [],
+        },
+      ],
     });
     expect(Result.isFailure(initialized)).toBe(true);
     if (Result.isSuccess(initialized)) return;
-    expect(authoredStatBlockBattleInitIssueMessage(initialized.failure)).toBe(
+    expect(battleInitializationIssueMessage(initialized.failure)).toBe(
       "Stat Block authored projection failed in actions procedure 1, bonusActions procedure 2, reactions procedure 3: the procedure binding is not supported by battle execution.",
     );
   });
@@ -950,16 +966,21 @@ describe("Stat Block projection boundary coverage", () => {
         ],
       }),
     );
-    const initialized = battleCreatureInitFromStatBlock({
-      combatantId: combatantId("synthetic-resource-graph-issue"),
-      statBlock: graphFailureForm,
-      initiative: initiativeScore(10),
-      ammunitionStocks: [],
-      conditions: [],
+    const initialized = startBattle({
+      battleId: battleId("synthetic-resource-graph-issue"),
+      combatants: [
+        {
+          combatantId: combatantId("synthetic-resource-graph-issue"),
+          statBlock: graphFailureForm,
+          initiative: initiativeScore(10),
+          ammunitionStocks: [],
+          conditions: [],
+        },
+      ],
     });
     expect(Result.isFailure(initialized)).toBe(true);
     if (Result.isFailure(initialized)) {
-      expect(authoredStatBlockBattleInitIssueMessage(initialized.failure)).toBe(
+      expect(battleInitializationIssueMessage(initialized.failure)).toBe(
         "Battle runtime requires Stat Block resource declaration ordinal 1 to be unique.; Battle runtime requires Stat Block procedure resource reference 99 to match a declared resource.",
       );
     }
