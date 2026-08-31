@@ -4487,6 +4487,30 @@
           "ownerPath": "packages/battle-runtime/src/find-familiar-companion-lifecycle.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/active-effect-lifecycle-routes.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+          "stepAction": "step"
         }
       ],
       "profiles": [],
@@ -4500,7 +4524,11 @@
         "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
         "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt",
         "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt",
-        "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt"
       ],
       "reason": "This is executable cleanroom architecture evidence, not a new whole-battle rule owner. The generic route vocabulary defines reducer entrypoint events, subject families, fill families, hole-family frontier facts, and battle-owned durable owner groups without authored catalog identity. Shared route fact and surface files carry typed route vocabulary for spatial-effect and weapon-hosted capability connectors without authored catalog identity. Each route connector driver composes an existing focused rule witness with qRoute, requiring the TS MBT driver and cleanroom rehearsal to prove that the same QNT-observed behavior is reachable through startBattle, discoverBattleActs, and resolveBattleSubject. Detailed spell targeting, save gating, healing, damage, and zero-Hit-Point semantics remain owned by their focused rule QNT rows.",
       "runtime": "battle",
@@ -4509,7 +4537,8 @@
         "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-reducer/companion-routes.ts"
+        "packages/battle-runtime/src/battle-reducer/companion-routes.ts",
+        "packages/battle-runtime/src/battle-reducer/effect-lifecycle-routes.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -10801,6 +10830,30 @@
       "evidence": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt is the reducer-route connector fixture for Find Familiar lifecycle, Touch delivery, and Pact familiar attacks, including terminal no-roll paths.",
       "obligationIds": ["BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"],
       "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt is the reducer-route connector fixture for the focused Sleep repeat-save lifecycle witness, including Concentration cleanup and subsequent turn-boundary route suppression.",
+      "obligationIds": ["BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt is the reducer-route connector fixture for the focused compelled next-turn behavior ordering witness, including option, save, movement, reaction, object-release, and action-frontier route events.",
+      "obligationIds": ["BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt is the reducer-route connector fixture for focused Metamagic resource-governor and spell-modification witnesses routed through shared reducer events.",
+      "obligationIds": ["BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt is the reducer-route connector fixture for focused after-hit spell damage rider sequencing, resource spend, active-effect lifecycle, and cleanup witnesses.",
+      "obligationIds": ["BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
       "role": "mbt-fixture"
     },
     {
