@@ -1315,6 +1315,75 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     });
   });
 
+  test("orders source-path and outside-denominator projection failures deterministically", () => {
+    const [rawProjection] = cachedCorpusProjections.raw;
+    const [authoredProjection] = cachedCorpusProjections.authored;
+    if (rawProjection === undefined || authoredProjection === undefined) {
+      throw new Error("The corpus does not contain projection order probes");
+    }
+    const suppliedSourcePath = SRD_STAT_BLOCK_SOURCE_PATHS.find(
+      (sourcePath) => sourcePath !== rawProjection.evidence.anchor.sourcePath,
+    );
+    if (suppliedSourcePath === undefined) {
+      throw new Error("The corpus does not contain a distinct source path");
+    }
+    const outsideEvidence = {
+      statBlockId: statBlockId("synthetic-outside-parity-denominator"),
+      name: "Synthetic Outside Parity Denominator",
+    };
+
+    const issues = inconsistentIssues(
+      reconcileSrdStatBlockScopedFidelity({
+        parity: corpusParity,
+        raw: nonemptyRawProjections(
+          cachedCorpusProjections.raw.map((projection) =>
+            projection === rawProjection
+              ? {
+                  ...projection,
+                  outcome: {
+                    tag: "failed" as const,
+                    failure: {
+                      tag: "source-path-mismatch" as const,
+                      suppliedSourcePath,
+                      occurrenceSourcePath:
+                        rawProjection.evidence.anchor.sourcePath,
+                    },
+                  },
+                }
+              : projection,
+          ),
+        ),
+        authored: nonemptyAuthoredProjections([
+          ...cachedCorpusProjections.authored,
+          { ...authoredProjection, evidence: outsideEvidence },
+        ]),
+      }),
+    );
+
+    expect(
+      issues.map((issue) =>
+        issue.kind === "mechanics-mismatch" ? issue.kind : issue.failure.tag,
+      ),
+    ).toEqual([
+      "source-path-mismatch",
+      "projection-outside-parity-denominator",
+    ]);
+    expect(issues).toContainEqual({
+      kind: "raw-projection-failed",
+      source: rawProjection.evidence,
+      failure: {
+        tag: "source-path-mismatch",
+        suppliedSourcePath,
+        occurrenceSourcePath: rawProjection.evidence.anchor.sourcePath,
+      },
+    });
+    expect(issues).toContainEqual({
+      kind: "authored-projection-failed",
+      authoredRecord: outsideEvidence,
+      failure: { tag: "projection-outside-parity-denominator" },
+    });
+  });
+
   test("accumulates exact typed RAW field issues for every nonempty subset and mutation order", () => {
     const occurrence = corpusParity.discovery.occurrences.find(
       ({ anchor }) => anchor.sourcePath === SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
