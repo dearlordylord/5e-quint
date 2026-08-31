@@ -43,12 +43,6 @@ import type {
   WeaponMasteryName,
 } from "@dnd/surface/surface/types";
 import { isEffectAtom } from "@dnd/surface/surface/types";
-import {
-  druidWildShapeKnownFormRosterFromPhase,
-  type DruidWildShapeFeatureRecord,
-  isDruidWildShapeFeatureRecord,
-  type DruidWildShapeKnownFormsRoster,
-} from "@dnd/surface/surface/druid-wild-shape-readers";
 import type { BattleUnitRef } from "./battle-init.ts";
 import type {
   CharacterBattleClassLevel,
@@ -58,9 +52,17 @@ import { type BrutalStrikeProfile } from "./procedure-execution/brutal-strike.ts
 import { admitAtomicClassFeatureProcedure } from "./procedure-admission/atomic-class-feature.ts";
 import { admitAtomicSpeciesTraitProcedure } from "./procedure-admission/atomic-species-trait-procedure.ts";
 import {
+  admitDruidWildShapeProcedure,
+  type DruidWildShapeProcedureTemplate,
+} from "./procedure-admission/druid-wild-shape.ts";
+import {
   admitFailedSavingThrowRerollProcedure,
   type FailedSavingThrowRerollProcedureFacts,
 } from "./procedure-admission/failed-saving-throw-reroll.ts";
+import {
+  admitMonkFocusProcedure,
+  type MonkFocusProcedureFacts,
+} from "./procedure-admission/monk-focus.ts";
 import { admitWeaponMasteryProcedure } from "./procedure-admission/weapon-mastery.ts";
 export {
   battleWeaponMasteryCleaveSupportForUnit,
@@ -1030,34 +1032,8 @@ export type BattleRetaliationReactionAttackSupportProfile = {
   readonly kind: typeof RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE;
   readonly retaliation: RetaliationReactionAttackProfile;
 };
-export type BattleMonkFocusBattleOptionsSupportProfile = {
-  readonly kind: typeof MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE;
-  readonly effectSaveDc: {
-    readonly kind: "classFeatureAbilitySaveDc";
-    readonly base: 8;
-    readonly ability: "wis";
-  };
-  readonly flurryOfBlows: {
-    readonly displayName: string;
-    readonly focusPointCost: 1;
-    readonly strikeCount: 2;
-  };
-  readonly patientDefense: {
-    readonly displayName: string;
-    readonly freeAction: "disengage";
-    readonly focusPointCost: 1;
-    readonly focusActions: readonly ["disengage", "dodge"];
-  };
-  readonly stepOfTheWind: {
-    readonly displayName: string;
-    readonly freeAction: "dash";
-    readonly focusPointCost: 1;
-    readonly focusActions: readonly ["disengage", "dash"];
-    readonly jumpDistanceMultiplier: {
-      readonly multiplier: 2;
-    };
-  };
-};
+export type BattleMonkFocusBattleOptionsSupportProfile =
+  MonkFocusProcedureFacts;
 export type BattleTacticalMasterReplacementSupportProfile = {
   readonly kind: typeof TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE;
   readonly replacementProperties: typeof TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES;
@@ -1591,19 +1567,6 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     supportProfiles.push(MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE);
   }
 
-  const monkFocusBattleOptionsSupport =
-    battleMonkFocusBattleOptionsSupportForUnit(input.unit);
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (monkFocusBattleOptionsSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Monk Focus options Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (monkFocusBattleOptionsSupport !== null) {
-    supportProfiles.push(monkFocusBattleOptionsSupport);
-  }
-
   const attackActionAttackCountScalingSupport =
     battleAttackActionAttackCountScalingSupportForUnit(input.unit);
   /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
@@ -1655,27 +1618,6 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   if (failedAbilityCheckResourceBoostSupport !== null) {
     supportProfiles.push(failedAbilityCheckResourceBoostSupport);
   }
-
-  const failedSavingThrowRerollProcedure = Match.value(
-    admitFailedSavingThrowRerollProcedure(input.unit),
-  ).pipe(
-    Match.when({ tag: "notBattleOwned" }, () =>
-      Result.succeed<readonly BattleUnitSupportProfile[]>([]),
-    ),
-    Match.when({ tag: "admitted" }, ({ procedure }) =>
-      Result.succeed<readonly BattleUnitSupportProfile[]>([procedure.facts]),
-    ),
-    Match.when({ tag: "rejected" }, () =>
-      battleUnitSupportProfileIssue(
-        `Unsupported battle failed Saving Throw reroll Unit hook: ${input.unit.id}.`,
-      ),
-    ),
-    Match.exhaustive,
-  );
-  if (Result.isFailure(failedSavingThrowRerollProcedure)) {
-    return Result.fail(failedSavingThrowRerollProcedure.failure);
-  }
-  supportProfiles.push(...failedSavingThrowRerollProcedure.success);
 
   const spellSlotHealingModifierSupport =
     battleSpellSlotHealingModifierSupportForUnit(input.unit);
@@ -1836,24 +1778,6 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   /* v8 ignore stop -- @preserve */
   if (bardicInspirationGrantSupport !== null) {
     supportProfiles.push(bardicInspirationGrantSupport);
-  }
-
-  const druidWildShapeKnownFormSupport =
-    input.classLevels === undefined
-      ? battleDruidWildShapeKnownFormSupportForUnit(input.unit)
-      : battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
-          input.unit,
-          input.classLevels,
-        );
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (druidWildShapeKnownFormSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Druid Wild Shape Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (druidWildShapeKnownFormSupport !== null) {
-    supportProfiles.push(druidWildShapeKnownFormSupport);
   }
 
   const druidWildCompanionSpellCastSupport =
@@ -2637,33 +2561,6 @@ export type BattleRogueSteadyAimSupport =
   BattleRogueSteadyAimSupportProfile | null;
 export type BattlePotentCantripSupport =
   BattlePotentCantripSupportProfile | null;
-type MonkFocusBattleExecution =
-  | {
-      readonly kind: "bonus_action_unarmed_strike_sequence";
-      readonly focusPointCost: 1;
-      readonly strikeCount: 2;
-    }
-  | {
-      readonly kind: "bonus_action_defensive_modes";
-      readonly freeAction: "disengage";
-      readonly focusPointCost: 1;
-      readonly focusActions: readonly ["disengage", "dodge"];
-    }
-  | {
-      readonly kind: "bonus_action_mobility_modes";
-      readonly freeAction: "dash";
-      readonly focusPointCost: 1;
-      readonly focusActions: readonly ["disengage", "dash"];
-      readonly jumpDistanceMultiplier: {
-        readonly multiplier: 2;
-        readonly expires: "end_of_turn";
-      };
-    };
-type MonkFocusBattleOption = {
-  readonly id: string;
-  readonly displayName: string;
-  readonly battleExecution: MonkFocusBattleExecution;
-};
 
 export function battleBonusActionStandardActionSupportForUnit(
   unit: BattleUnitSupportSource,
@@ -2744,170 +2641,11 @@ function alternateActionCostActions(
 export function battleMonkFocusBattleOptionsSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleMonkFocusBattleOptionsSupport {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "monk" ||
-    unit.mechanics.family !== "resource_container"
-  ) {
-    return null;
-  }
-
-  const optionSet = unit.mechanics.optionSet;
-  const initialBattleOptions = optionSet.initialOptions.map((option) => {
-    const battleExecution = monkFocusBattleExecution(option);
-    return {
-      option,
-      battleExecution,
-      hasAuthoredBattleExecution: option.battleExecution !== undefined,
-    };
-  });
-  const battleOptions = initialBattleOptions.flatMap((entry) => {
-    const { option, battleExecution } = entry;
-    return battleExecution === null
-      ? []
-      : [{ ...option, battleExecution } satisfies MonkFocusBattleOption];
-  });
-  if (battleOptions.length === 0) {
-    return initialBattleOptions.some(
-      (option) => option.hasAuthoredBattleExecution,
-    )
-      ? "unsupported"
-      : null;
-  }
-  /* v8 ignore start -- @preserve -- Malformed Monk Focus resource and option shapes are rejected here; the canonical three-option projection is covered by admission tests. */
-  if (
-    unit.mechanics.resource.kind !== "use_count" ||
-    unit.mechanics.resource.cap.kind !== "linear_per_level" ||
-    unit.mechanics.resource.cap.axis !== "class" ||
-    unit.mechanics.resource.cap.base !== 2 ||
-    unit.mechanics.resource.cap.perLevel !== 1 ||
-    unit.mechanics.resource.cap.startingAtLevel !== 2 ||
-    unit.mechanics.resetCadence.kind !== "short_or_long_rest" ||
-    unit.mechanics.effectSaveDc?.kind !== "class_feature_ability_save_dc" ||
-    unit.mechanics.effectSaveDc.base !== 8 ||
-    unit.mechanics.effectSaveDc.ability !== "wis" ||
-    optionSet.timing !== "resource_use" ||
-    initialBattleOptions.some((option) => option.battleExecution === null) ||
-    battleOptions.length !== initialBattleOptions.length ||
-    battleOptions.length !== 3
-  ) {
-    return "unsupported";
-  }
-  /* v8 ignore stop -- @preserve */
-
-  const flurryOfBlows = battleOptions.find(
-    (option) =>
-      option.battleExecution?.kind === "bonus_action_unarmed_strike_sequence",
-  );
-  const patientDefense = battleOptions.find(
-    (option) => option.battleExecution?.kind === "bonus_action_defensive_modes",
-  );
-  const stepOfTheWind = battleOptions.find(
-    (option) => option.battleExecution?.kind === "bonus_action_mobility_modes",
-  );
-  /* v8 ignore start -- @preserve -- Malformed Monk Focus option identities are rejected here after typed option parsing; canonical option projection remains covered. */
-  if (
-    flurryOfBlows?.battleExecution?.kind !==
-      "bonus_action_unarmed_strike_sequence" ||
-    patientDefense?.battleExecution?.kind !== "bonus_action_defensive_modes" ||
-    stepOfTheWind?.battleExecution?.kind !== "bonus_action_mobility_modes"
-  ) {
-    return "unsupported";
-  }
-  /* v8 ignore stop -- @preserve */
-
-  return {
-    kind: MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
-    effectSaveDc: {
-      kind: "classFeatureAbilitySaveDc",
-      base: unit.mechanics.effectSaveDc.base,
-      ability: unit.mechanics.effectSaveDc.ability,
-    },
-    flurryOfBlows: {
-      displayName: flurryOfBlows.displayName,
-      focusPointCost: flurryOfBlows.battleExecution.focusPointCost,
-      strikeCount: flurryOfBlows.battleExecution.strikeCount,
-    },
-    patientDefense: {
-      displayName: patientDefense.displayName,
-      freeAction: patientDefense.battleExecution.freeAction,
-      focusPointCost: patientDefense.battleExecution.focusPointCost,
-      focusActions: patientDefense.battleExecution.focusActions,
-    },
-    stepOfTheWind: {
-      displayName: stepOfTheWind.displayName,
-      freeAction: stepOfTheWind.battleExecution.freeAction,
-      focusPointCost: stepOfTheWind.battleExecution.focusPointCost,
-      focusActions: stepOfTheWind.battleExecution.focusActions,
-      jumpDistanceMultiplier: {
-        multiplier:
-          stepOfTheWind.battleExecution.jumpDistanceMultiplier.multiplier,
-      },
-    },
-  };
-}
-
-function monkFocusBattleExecution(option: {
-  readonly battleExecution?: unknown;
-}): MonkFocusBattleExecution | null {
-  const battleExecution = option.battleExecution;
-  if (!isRecord(battleExecution)) return null;
-  if (
-    battleExecution["kind"] === "bonus_action_unarmed_strike_sequence" &&
-    battleExecution["focusPointCost"] === 1 &&
-    battleExecution["strikeCount"] === 2
-  ) {
-    return {
-      kind: "bonus_action_unarmed_strike_sequence",
-      focusPointCost: 1,
-      strikeCount: 2,
-    };
-  }
-  if (
-    battleExecution["kind"] === "bonus_action_defensive_modes" &&
-    battleExecution["freeAction"] === "disengage" &&
-    battleExecution["focusPointCost"] === 1 &&
-    tupleMatches(battleExecution["focusActions"], ["disengage", "dodge"])
-  ) {
-    return {
-      kind: "bonus_action_defensive_modes",
-      freeAction: "disengage",
-      focusPointCost: 1,
-      focusActions: ["disengage", "dodge"],
-    };
-  }
-  const jumpDistanceMultiplier = battleExecution["jumpDistanceMultiplier"];
-  if (
-    battleExecution["kind"] === "bonus_action_mobility_modes" &&
-    battleExecution["freeAction"] === "dash" &&
-    battleExecution["focusPointCost"] === 1 &&
-    tupleMatches(battleExecution["focusActions"], ["disengage", "dash"]) &&
-    isRecord(jumpDistanceMultiplier) &&
-    jumpDistanceMultiplier["multiplier"] === 2 &&
-    jumpDistanceMultiplier["expires"] === "end_of_turn"
-  ) {
-    return {
-      kind: "bonus_action_mobility_modes",
-      freeAction: "dash",
-      focusPointCost: 1,
-      focusActions: ["disengage", "dash"],
-      jumpDistanceMultiplier: { multiplier: 2, expires: "end_of_turn" },
-    };
-  }
-  /* v8 ignore start -- @preserve -- Malformed authored Focus option: known option projections are handled above; any other battle-execution shape remains unsupported. The function terminator shares V8's ignored fallback range. */
-  return null;
-}
-/* v8 ignore stop -- @preserve */
-
-function tupleMatches<T extends readonly [string, string]>(
-  actual: unknown,
-  expected: T,
-): actual is T {
-  return (
-    Array.isArray(actual) &&
-    actual.length === 2 &&
-    actual[0] === expected[0] &&
-    actual[1] === expected[1]
+  return Match.value(admitMonkFocusProcedure(unit)).pipe(
+    Match.when({ tag: "notBattleOwned" }, () => null),
+    Match.when({ tag: "rejected" }, () => "unsupported" as const),
+    Match.when({ tag: "admitted" }, ({ procedure }) => procedure.facts),
+    Match.exhaustive,
   );
 }
 
@@ -4230,10 +3968,15 @@ export function failedSavingThrowRerollProfileForUnit(
   SupportedUnitFeatureProfile,
   { readonly kind: "failedSavingThrowReroll" }
 > | null {
-  const admission = admitFailedSavingThrowRerollProcedure(unit);
-  return admission.tag === "admitted"
-    ? { ...admission.procedure.facts, unit }
-    : null;
+  return Match.value(admitFailedSavingThrowRerollProcedure(unit)).pipe(
+    Match.when({ tag: "notBattleOwned" }, () => null),
+    Match.when({ tag: "rejected" }, () => null),
+    Match.when({ tag: "admitted" }, ({ procedure }) => ({
+      ...procedure.facts,
+      unit,
+    })),
+    Match.exhaustive,
+  );
 }
 
 export function spellSlotHealingModifierProfileForUnit(
@@ -6995,47 +6738,21 @@ export function battleBardicInspirationGrantSupportForUnit(
     : null;
 }
 
-type DruidWildShapeKnownFormAdmission = {
-  readonly unit: DruidWildShapeFeatureRecord;
-  readonly knownFormRoster: DruidWildShapeKnownFormsRoster;
-};
-
-function druidWildShapeKnownFormAdmissionForUnit(
-  unit: AuthoredUnitSource,
-): DruidWildShapeKnownFormAdmission | "unsupported" | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "druid" ||
-    unit.mechanics.family !== "activation"
-  ) {
-    return null;
-  }
-  let knownFormRoster: DruidWildShapeKnownFormsRoster | undefined;
-  for (const phase of unit.mechanics.phases) {
-    knownFormRoster = druidWildShapeKnownFormRosterFromPhase(phase);
-    if (knownFormRoster !== undefined) break;
-  }
-  if (knownFormRoster === undefined) {
-    return null;
-  }
-  if (!isDruidWildShapeFeatureRecord(unit)) {
-    return "unsupported";
-  }
-  return { unit, knownFormRoster };
-}
-
 export function battleDruidWildShapeKnownFormSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleDruidWildShapeKnownFormSupport {
-  const admission = druidWildShapeKnownFormAdmissionForUnit(unit);
-  if (admission === null || admission === "unsupported") {
-    return admission;
-  }
-  return (
-    druidWildShapeKnownFormProfileForAdmission(
-      admission,
-      classLevel(admission.unit.acquiredAtLevel),
-    ) ?? "unsupported"
+  return Match.value(admitDruidWildShapeProcedure(unit)).pipe(
+    Match.when({ tag: "notBattleOwned" }, () => null),
+    Match.when({ tag: "rejected" }, () => "unsupported" as const),
+    Match.when({ tag: "admitted" }, ({ projection }) =>
+      druidWildShapeKnownFormProfileForTemplate(
+        projection.procedure,
+        classLevel(
+          projection.procedure.binding.requirements.classLevel.minimumLevel,
+        ),
+      ),
+    ),
+    Match.exhaustive,
   );
 }
 
@@ -7073,23 +6790,25 @@ function battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
   unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): BattleDruidWildShapeKnownFormSupport {
-  const admission = druidWildShapeKnownFormAdmissionForUnit(unit);
-  if (admission === null || admission === "unsupported") {
-    return admission;
-  }
-  const actualClassLevel = findCharacterClassLevel(
-    classLevels,
-    admission.unit.className,
-  );
-  if (
-    actualClassLevel === undefined ||
-    actualClassLevel < admission.unit.acquiredAtLevel
-  ) {
-    return null;
-  }
-  return (
-    druidWildShapeKnownFormProfileForAdmission(admission, actualClassLevel) ??
-    "unsupported"
+  return Match.value(admitDruidWildShapeProcedure(unit)).pipe(
+    Match.when({ tag: "notBattleOwned" }, () => null),
+    Match.when({ tag: "rejected" }, () => "unsupported" as const),
+    Match.when({ tag: "admitted" }, ({ projection }) => {
+      const classLevelRequirement =
+        projection.procedure.binding.requirements.classLevel;
+      const actualClassLevel = findCharacterClassLevel(
+        classLevels,
+        classLevelRequirement.className,
+      );
+      return actualClassLevel === undefined ||
+        actualClassLevel < classLevelRequirement.minimumLevel
+        ? null
+        : druidWildShapeKnownFormProfileForTemplate(
+            projection.procedure,
+            actualClassLevel,
+          );
+    }),
+    Match.exhaustive,
   );
 }
 
@@ -7168,30 +6887,25 @@ function parseDruidWildShapeKnownFormUnitFeatureProfile(
   return { ...support, unit };
 }
 
-function druidWildShapeKnownFormProfileForAdmission(
-  admission: DruidWildShapeKnownFormAdmission,
+function druidWildShapeKnownFormProfileForTemplate(
+  template: DruidWildShapeProcedureTemplate,
   classLevel: ClassLevel,
-): BattleDruidWildShapeKnownFormSupportProfile | null {
-  const knownFormRoster = admission.knownFormRoster;
-  const knownFormCount = classLevelTotalChoicesAtLevel(
-    knownFormRoster.knownForms,
-    classLevel,
-  );
-  if (knownFormCount === null) {
-    return null;
-  }
+): BattleDruidWildShapeKnownFormSupportProfile {
+  const knownFormRoster = template.knownFormRoster;
   return {
     kind: DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
     classLevel,
     knownFormRoster: {
       creatureType: knownFormRoster.creatureType,
-      count: knownFormCount,
+      count: classLevelTotalChoicesAtLevel(
+        knownFormRoster.count.levels,
+        classLevel,
+      ),
       maxChallengeRating: thresholdTierNumberAtClassLevel(
         knownFormRoster.maxChallengeRating,
         classLevel,
       ),
       flySpeed:
-        knownFormRoster.flySpeed.kind === "allowed_at_class_level" &&
         Number(classLevel) >= knownFormRoster.flySpeed.atLevel
           ? "allowed"
           : "forbidden",
@@ -7200,23 +6914,22 @@ function druidWildShapeKnownFormProfileForAdmission(
 }
 
 function classLevelTotalChoicesAtLevel(
-  choices: DruidWildShapeKnownFormsRoster["knownForms"],
+  levels: DruidWildShapeProcedureTemplate["knownFormRoster"]["count"]["levels"],
   classLevel: ClassLevel,
-): number | null {
-  if (choices.kind !== "class_level_total_choices") return null;
-  return choices.levels.reduce(
+): number {
+  return levels.reduce(
     (total, tier) => (Number(classLevel) >= tier.atLevel ? tier.total : total),
     0,
   );
 }
 
 function thresholdTierNumberAtClassLevel(
-  tiers: DruidWildShapeKnownFormsRoster["maxChallengeRating"],
+  threshold: DruidWildShapeProcedureTemplate["knownFormRoster"]["maxChallengeRating"],
   classLevel: ClassLevel,
 ): number {
-  return tiers.tiers.reduce(
+  return threshold.tiers.reduce<number>(
     (value, tier) => (Number(classLevel) >= tier.atLevel ? tier.value : value),
-    tiers.base,
+    threshold.base,
   );
 }
 

@@ -620,7 +620,7 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
     ).toEqual(
       Result.succeed({
         unit,
-        supportProfiles: [supportProfile],
+        supportProfiles: [],
       }),
     );
     expect(battleFailedSavingThrowRerollSupportForUnit(unit)).toEqual(

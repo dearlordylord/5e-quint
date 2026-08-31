@@ -1726,24 +1726,25 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
         kind: "classFeatureAbilitySaveDc",
         base: 8,
         ability: "wis",
+        includesProficiencyBonus: true,
       },
       flurryOfBlows: {
-        displayName: "Flurry of Blows",
+        kind: "bonusActionUnarmedStrikeSequence",
         focusPointCost: 1,
         strikeCount: 2,
       },
       patientDefense: {
-        displayName: "Patient Defense",
+        kind: "bonusActionDefensiveModes",
         freeAction: "disengage",
         focusPointCost: 1,
         focusActions: ["disengage", "dodge"],
       },
       stepOfTheWind: {
-        displayName: "Step of the Wind",
+        kind: "bonusActionMobilityModes",
         freeAction: "dash",
         focusPointCost: 1,
         focusActions: ["disengage", "dash"],
-        jumpDistanceMultiplier: { multiplier: 2 },
+        jumpDistanceMultiplier: { multiplier: 2, expires: "endOfTurn" },
       },
     } as const;
 
@@ -1755,7 +1756,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     ).toEqual(
       Result.succeed({
         unit: unitLibrary.requireUnit(monkMonksFocusUnitId),
-        supportProfiles: [supportProfile],
+        supportProfiles: [],
       }),
     );
   });
@@ -1860,7 +1861,11 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
           initialOptions: unit.mechanics.optionSet.initialOptions.map(
             (option) => ({
               ...option,
-              battleExecution: { kind: "unsupported_focus_execution" },
+              battleExecution: {
+                kind: "bonus_action_unarmed_strike_sequence",
+                focusPointCost: 1,
+                strikeCount: 1,
+              },
             }),
           ),
         },
