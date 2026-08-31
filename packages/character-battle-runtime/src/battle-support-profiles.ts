@@ -1,12 +1,10 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
-  admitResourceFeature,
   battleUnitRefWithSupportProfiles,
   TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   type CharacterBattleCreatureInit,
   type BattleUnitRef,
   type BattleUnitSupportProfileSourceFacts,
-  type ResourceFeatureAdmission,
 } from "@dnd/battle-runtime";
 import {
   characterBuildUnitRefs,
@@ -35,10 +33,6 @@ type CharacterBattleWeaponMasterySelection = NonNullable<
 
 type AuthoredBattleUnitRef = Omit<BattleUnitRef, "unit"> & {
   readonly unit: UnitRecord;
-  readonly resourceFeatureAdmission: Exclude<
-    ResourceFeatureAdmission,
-    { readonly tag: "rejected" }
-  >;
 };
 
 const TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS = [
@@ -207,12 +201,6 @@ function withBattleSupportProfiles(
       `Unknown Character Build Unit for battle initialization: ${unitRef.unitId}.`,
     );
   }
-  const resourceFeatureAdmission = admitResourceFeature(unitOption.value);
-  if (resourceFeatureAdmission.tag === "rejected") {
-    return battleSupportProfileIssue(
-      resourceFeatureAdmission.issues.map(({ message }) => message).join(" "),
-    );
-  }
   const battleUnitRef = battleUnitRefWithSupportProfiles({
     unitRef,
     unit: unitOption.value,
@@ -224,7 +212,6 @@ function withBattleSupportProfiles(
     : Result.succeed({
         ...battleUnitRef.success,
         unit: unitOption.value,
-        resourceFeatureAdmission,
       });
 }
 
@@ -381,7 +368,6 @@ function uniqueBattleUnitRefs(
     const existing = uniqueRefs[existingIndex];
     uniqueRefs[existingIndex] = {
       unit: existing.unit,
-      resourceFeatureAdmission: existing.resourceFeatureAdmission,
       supportProfiles: uniqueBattleSupportProfiles([
         ...existing.supportProfiles,
         ...ref.supportProfiles,

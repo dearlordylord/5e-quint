@@ -12,10 +12,6 @@ import {
   battleUnitSupportProfilesForUnit,
   parseSupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
-import { admitAtomicClassFeatureProcedure } from "./atomic-class-feature.ts";
-import { admitAtomicSpeciesTraitProcedure } from "./atomic-species-trait-procedure.ts";
-import { admitResourceFeature } from "./resource-feature-admission.ts";
-import { admitWeaponMasteryProcedure } from "./weapon-mastery.ts";
 
 const catalogResult = buildUnitCatalog({ collections: [srdUnitCollection] });
 if (catalogResult.tag !== "ok") {
@@ -130,13 +126,9 @@ const CANONICAL_BATTLE_VISIBLE_SUBSET_ROOT_IDS = [
 ] as const;
 
 function hasSupportObservation(
-  unit: AuthoredUnitSource,
   result: ReturnType<typeof battleUnitSupportProfilesForUnit>,
 ): boolean {
-  return (
-    (Result.isSuccess(result) && result.success.length > 0) ||
-    admitResourceFeature(unit).tag !== "notBattleOwned"
-  );
+  return Result.isSuccess(result) && result.success.length > 0;
 }
 
 function minimumOwningClassContext(unit: AuthoredUnitSource) {
@@ -156,15 +148,12 @@ describe("Battle feature and mastery support observations", () => {
     const sourceFactObserved = new Set<string>();
 
     for (const unit of units) {
-      if (
-        hasSupportObservation(unit, battleUnitSupportProfilesForUnit({ unit }))
-      ) {
+      if (hasSupportObservation(battleUnitSupportProfilesForUnit({ unit }))) {
         baseObserved.add(unit.id);
       }
       for (const draconicAncestryDamageType of DRACONIC_ANCESTRY_DAMAGE_TYPES) {
         if (
           hasSupportObservation(
-            unit,
             battleUnitSupportProfilesForUnit({
               unit,
               sourceFacts: { draconicAncestryDamageType },
@@ -193,7 +182,6 @@ describe("Battle feature and mastery support observations", () => {
       const observed = DRACONIC_ANCESTRY_DAMAGE_TYPES.some(
         (draconicAncestryDamageType) =>
           hasSupportObservation(
-            unit,
             battleUnitSupportProfilesForUnit({
               unit,
               sourceFacts: { draconicAncestryDamageType },
@@ -206,13 +194,7 @@ describe("Battle feature and mastery support observations", () => {
         minimumOwningClassContext(unit),
         { draconicAncestryDamageType: "acid" },
       );
-      const resourceFeature = admitResourceFeature(unit);
-      const remainsContextualResourceFeature =
-        resourceFeature.tag === "admitted" &&
-        resourceFeature.procedure.kind === "monkFocus";
-      return singularProfile === null || remainsContextualResourceFeature
-        ? [unit.id]
-        : [];
+      return singularProfile === null ? [unit.id] : [];
     });
 
     expect(contextualOrSupportOnly.sort()).toEqual([
@@ -226,82 +208,5 @@ describe("Battle feature and mastery support observations", () => {
         .filter((id) => canonicalSubset.has(unitId(id)))
         .sort(),
     ).toEqual(["mastery_push", "monk_monks_focus"]);
-  });
-
-  test("records exact consumed and unowned evidence for every canonical subset root", () => {
-    const evidenceCounts = Object.fromEntries(
-      CANONICAL_BATTLE_VISIBLE_SUBSET_ROOT_IDS.map((id) => {
-        const unit = units.find((candidate) => candidate.id === id);
-        if (unit === undefined)
-          throw new Error(`Missing canonical Unit ${id}.`);
-        const resourceFeature = admitResourceFeature(unit);
-        if (resourceFeature.tag === "admitted") {
-          const admitted = resourceFeature.procedure.admitted;
-          if (resourceFeature.procedure.kind === "monkFocus") {
-            return [
-              id,
-              {
-                consumed: admitted.evidence.filter(
-                  ({ disposition }) => disposition === "consumed",
-                ).length,
-                unowned: admitted.evidence.filter(
-                  ({ disposition }) => disposition === "unowned",
-                ).length,
-              },
-            ];
-          }
-          return [
-            id,
-            {
-              consumed: admitted.evidence.consumed.length,
-              unowned: admitted.evidence.unowned.length,
-            },
-          ];
-        }
-        const atomicClass = admitAtomicClassFeatureProcedure(unit);
-        if (atomicClass.tag === "admitted") {
-          return [
-            id,
-            {
-              consumed: atomicClass.procedure.evidence.consumed.length,
-              unowned: atomicClass.procedure.evidence.unowned.length,
-            },
-          ];
-        }
-        const atomicSpecies = admitAtomicSpeciesTraitProcedure(unit);
-        if (atomicSpecies.tag === "admitted") {
-          return [
-            id,
-            {
-              consumed: atomicSpecies.procedure.evidence.consumed.length,
-              unowned: atomicSpecies.procedure.evidence.unowned.length,
-            },
-          ];
-        }
-        const mastery = admitWeaponMasteryProcedure(unit);
-        if (mastery.tag === "admitted") {
-          return [
-            id,
-            {
-              consumed: mastery.procedure.evidence.consumed.length,
-              unowned: mastery.procedure.evidence.unowned.length,
-            },
-          ];
-        }
-        throw new Error(`Canonical Unit ${id} has no Battle evidence owner.`);
-      }),
-    );
-
-    expect(evidenceCounts).toEqual({
-      druid_wild_shape: { consumed: 7, unowned: 0 },
-      fighter_indomitable: { consumed: 1, unowned: 0 },
-      mastery_push: { consumed: 1, unowned: 0 },
-      monk_acrobatic_movement: { consumed: 1, unowned: 0 },
-      monk_monks_focus: { consumed: 6, unowned: 3 },
-      rogue_fast_hands: { consumed: 1, unowned: 0 },
-      species_halfling_luck: { consumed: 1, unowned: 0 },
-      species_halfling_naturally_stealthy: { consumed: 1, unowned: 0 },
-      species_halfling_nimbleness: { consumed: 1, unowned: 0 },
-    });
   });
 });
