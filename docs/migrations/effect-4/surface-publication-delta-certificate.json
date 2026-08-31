@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 946224,
-        "sha256": "8b3466a7ed3b714788aac208ad6d76684eeb9c59037a9d05b6a7d491d4218867"
+        "byteLength": 2185207,
+        "sha256": "2c20db88f147fabd87fafb06e303183fb37ba3943db7c23147ed32346f3a3c47"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "3b21fae3c1a73a9a6d6ed591aea1b9391dbfcff99e01f79129aeef7d939cc8f2",
+        "candidateCanonicalJsonSha256": "d31c7c060dfb875d0867e5d39a281670f1570b8622022d56d977e9b505701066",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -29,18 +29,263 @@
           },
           "candidate": {
             "recordCounts": {
-              "units": 399,
-              "statBlocks": 21,
-              "total": 420
+              "units": 434,
+              "statBlocks": 330,
+              "total": 764
             },
             "orderedIdSha256": {
-              "units": "bc200b3061654b6a3ca19aa5d64195daba6f2dbe2977a6a7dd15e84733849b22",
-              "statBlocks": "367c1236b838d3265f1b87f3c297642f6906c72bee951d496fdd4ee996322e4e",
-              "all": "1ba47988d91731d46927a075f3d75707a33c83571a81d2075884ec3005f15a92"
+              "units": "7fe05e0ce6af4b265b21504b3af6599edced1bf05d60ecb8ec7da9ad8b72cf27",
+              "statBlocks": "45ed846dccc5b724a6e80509244db57dd927ed5bcfd901f9e42def8da2451ba4",
+              "all": "df3546b790c5d64c0273f144fb039741fcb7c91bc1fc1883658d4b3d8d7083d7"
             }
           }
         },
         "reviewedRecordDeltas": [
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "animate_dead",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "12e46a7bd9dfcca795c6c83b8b2651184d7d67a4c078ed734cdc5b175269af28"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "chain_lightning",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "bd6a700c5b1636fdb9292749b16f2d0137b278fc1bbbf18086c5be810999d498"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "clairvoyance",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "0acc35b5dcf1cb3397266592e027c980ed54e8201cb349dc577a803e1c54f38e"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "confusion",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "8bd0dfcecfe2ddb8648be0e602795d9646b8d44e8a7c9618401694550783ecef"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "control_water",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "550f7cddea8f9b4d927a36058aff29005ff7dfa31170203e2b562c424563c9f4"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "control_weather",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f61cfc79483b5e9360ae7c6f4dbeb7a73b7d51a1c3ad6ccbf594b3b22e5d08e9"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "create_undead",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "dfbfd8a2fbd8eb50f7603c133ae843cde15b9c32b66153c6e8d754717770e05b"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "dimension_door",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ae718f433f759d39b5df219db92b2d24a84f64fac9f1bf08cfdf6551f462d99a"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "disguise_self",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9f1f060fc3800c42c3171437c9286c63e922b8d22a545c182d5cb13aa947a173"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "druidcraft",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "be888eb8a2d05353854cece742f301b9ba23f3d30d4f9a150f7c0c46b8e8e068"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "elementalism",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "d98277b4e3c9ce6b007741e1f8f9c4ba4b6a9c65d09d0bd48a4060be13e2c504"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "etherealness",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "63c3d8891a4e32ad525a5241510ab7c33a68fb4519f71905781803f28374141b"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "fear",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9640b1522c43600ca4a0d60af8dace91cb3223978631de1d1d633fde8691d0bd"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "finger_of_death",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1f05aa2ae913e8c26c528a5e72ae482d123f8cf6e5b65b827f136c2e453108c6"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "harm",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "0b7d9bcc820e7f974081cf625fadc5c67b895d43be9621726c42de85222b08e2"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "heroes_feast",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "3a9f77c87b05c24a50813d81a17cdecda9650fdabf40735eae68d024c0daf7e3"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "ice_storm",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "22bce68b5d5395225cffbc75bc8707e3c6b65a1b7016a5e63ce31d4dbdddea34"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "identify",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9181b989725298b009087786056fdc3c8c063c771dfb48727877fdfd611febfa"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "mage_hand",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a1cd5920146f67f7a053d79c21a18284b85a7bf69378eaf35558768cdc1a67c5"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "major_image",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "151dc5514488296d1277830beec2fd8afb2c69a5131358f584a833bc343a7d93"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "phantasmal_killer",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ab0e0a2195bc1405b53ff7520553a02bb79ff03384b741884e6eae14804da2b7"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "plane_shift",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "14f6f8371e583e4ec8329d8d80e03a9bbb631ca2c8fd215b482c028fe7113d1a"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "power_word_kill",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "013d7c451cd68d4e38eeb72039e66fc85d64fc696f105f2e52764c89fe5019cb"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "power_word_stun",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "007cc9285dbef98cf4ecc869f0f79d533c5a7e037567ceb4cca1eb6bcb5b379b"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "project_image",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "cb737a19fefa8d40642a7c7d29360c8c0c2231cec2f06e66b3a26ec7943af601"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "resurrection",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "111e0e46d900321900b808e3ee6f217efc8e26f795984a028430c8116b07fe89"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "spirit_guardians",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "42b5c730b37575e9bba3869f66a77f47a7ce7c351d94c94b1bd2155d000e28b2"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "teleport",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1efac21d0566bdfc23350c534e983b1d3bc52391608d6447dd2765d1482eb40a"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "tongues",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "2f41346776b417d9752e8ba450aa1d84304413f40b1a8a24231e998b593946f1"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "true_seeing",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "5c33a10d7db117302e673f1627fa7da50557f6b23846b3c163280a48bd431301"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "vitriolic_sphere",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "6a2bb4b522433bcd74b59ae5ab5f83f01b5fc3d38e05a843e42668448ff90807"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "wall_of_fire",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "76c2812701bcabb19d339c895675380e0c30b2e7164813561c6660c0430762b7"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "water_breathing",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "95e884a42c1f0eb82933b5773d27dadf574cc878dede36a4fa6ef5537a0b23cc"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "wind_walk",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "6de6606198e2d3756e5d061f1ce5778b7d75d7d054aba982931c6108e621aa03"
+          },
+          {
+            "kind": "added",
+            "family": "units",
+            "id": "word_of_recall",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1a2efa6ff769e8a48077aabf841d4e9d71d6bd58d13ccb6a2773f0fbfda78026"
+          },
           {
             "kind": "changed",
             "family": "units",
@@ -140,18 +385,34 @@
           {
             "kind": "changed",
             "family": "units",
-            "id": "magic_weapon",
-            "semanticClass": "authored-execution-vocabulary",
-            "baselineCanonicalJsonSha256": "483919bdf2bfb895d36e831054300f5803005121695eefadbf1cc1f1be9c0f35",
-            "candidateCanonicalJsonSha256": "3565086e6627a3d704e3c017243b640d5be4ba4012809b362ef176923f60c8d9"
-          },
-          {
-            "kind": "changed",
-            "family": "units",
             "id": "produce_flame",
             "semanticClass": "truthful-illumination-emission",
             "baselineCanonicalJsonSha256": "fd6b1298a25015300fb7d9f4873c7952b9e8da242ed4b41b62110dd15e5ca5ee",
             "candidateCanonicalJsonSha256": "882420e20cade20b24aaab7cc4354eaeaa553904a9dd00c0aefa9e3c0a935cc0"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "starry_wisp",
+            "semanticClass": "truthful-illumination-emission",
+            "baselineCanonicalJsonSha256": "313c8fe7c18e4d346eba62c0a7952b95b5532cff15096650ac058abdf2b9067d",
+            "candidateCanonicalJsonSha256": "225f25845496cea57f86ca73752e5b5bf74f701641b1b62c2b9b69604fa7c1db"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "thaumaturgy",
+            "semanticClass": "authored-modal-ongoing-effect",
+            "baselineCanonicalJsonSha256": "70a7e293ed6dfc28799bddc01ca1a5e250199668355ab06d0fe384ffe7270428",
+            "candidateCanonicalJsonSha256": "26babde59ea7a6a6e36fbd79e56b6f4dff065d19a4f634753d1b692bc8c71eb0"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "magic_weapon",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "483919bdf2bfb895d36e831054300f5803005121695eefadbf1cc1f1be9c0f35",
+            "candidateCanonicalJsonSha256": "3565086e6627a3d704e3c017243b640d5be4ba4012809b362ef176923f60c8d9"
           },
           {
             "kind": "changed",
@@ -170,20 +431,2335 @@
             "candidateCanonicalJsonSha256": "520e453fcdc7e1a425b5914127c4ac81087f5a1559e11d0c229b5a0c25f1cc9d"
           },
           {
-            "kind": "changed",
-            "family": "units",
-            "id": "starry_wisp",
-            "semanticClass": "truthful-illumination-emission",
-            "baselineCanonicalJsonSha256": "313c8fe7c18e4d346eba62c0a7952b95b5532cff15096650ac058abdf2b9067d",
-            "candidateCanonicalJsonSha256": "225f25845496cea57f86ca73752e5b5bf74f701641b1b62c2b9b69604fa7c1db"
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_allosaurus",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "651bf347d9f745a228fe176fbde1e1d5e227e9e8a59304290f17243785ca605a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ankylosaurus",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "fcdc4a09a6e263911b579106df1cdf52e5c8590523f5a3882d5f6fdc512d7c70"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ape",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "67dc5cf38f3cbc09094a5dff59018b1806bd55afbc566438e7978a8e79583d6c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_archelon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "d2b9f194bb81a7970c2b1bb0381299b61d8254cb16d9aaa0aca9490c445b2f9d"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_baboon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ae6638d6d5ebf973c13667516393083c9702e270e9ae256f9609e8055c92ed71"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_badger",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "983da6855a0151014a6ad6d6d37f0f2355fb54bb4a365f4412af0be192d53157"
           },
           {
             "kind": "changed",
-            "family": "units",
-            "id": "thaumaturgy",
-            "semanticClass": "authored-modal-ongoing-effect",
-            "baselineCanonicalJsonSha256": "70a7e293ed6dfc28799bddc01ca1a5e250199668355ab06d0fe384ffe7270428",
-            "candidateCanonicalJsonSha256": "26babde59ea7a6a6e36fbd79e56b6f4dff065d19a4f634753d1b692bc8c71eb0"
+            "family": "statBlocks",
+            "id": "stat_block_bat",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "709436060fb72784a9d6927946393ef16d12609543b79f5885a17cf911512d40",
+            "candidateCanonicalJsonSha256": "2844fb3fc17ed9ffcbf7f46d8908e9203caa02ca25a1ce66e20c795cb5cf9756"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_black_bear",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "86c9d1b73ebf066c59d2cbd4a2328cebce42eb8ccb9323f702aea9790bb5182d"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_blood_hawk",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f93bca5c8d0e450fa341d32be8329cfb35118fd5ab384304b73311d1292578bd"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_boar",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "3facaeea80037fd9c7eb8697d7c7e9ee5f87b60b04d4c4ceb51ed20ac8dd2d88"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_brown_bear",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1039462d8a1c904651883ca170ce0e34682d7963f8f6ab735a4ecc9862b88ccf"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_camel",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1bcbe8a5280c58bec4a1c2965652b438ab93bd2f0f96c868d42b184fca6a40c2"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_cat",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "0a43107b75a2b769a5261e61740fd6277a3c19064543e8f4015fd4202846defc",
+            "candidateCanonicalJsonSha256": "25fcf1f37d600e3ff5cefd30e12aac1f5d3137efb16c558d47a2fc69edf13e3a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_constrictor_snake",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4b8e1df57d234f8baa34a762de7f79eae0808a205b6214a5a410cae685250a5b"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_crab",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f21224a81b0a52d6f6d0dfbcf083013c80927e8f10db928c510b36017441e0a8"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_crocodile",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "3495146be7c971b1c82a18db6242e35b72c917e706a93a4d83db798b6f06ab76"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_deer",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e1bd05ed21c98f0fa447ca671a11722fb33a98fe0e029e2b7e5e61d9d18efb01"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_dire_wolf",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ebf61bd618af2bbe92f948e1917a78f2aba90defb349e59b9f772d1a9ed9c2ea"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_draft_horse",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c22daa5a41e970a0b01f89b59a15af2b55b3f512f37c5d3cf344a1db35c53cf8"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_eagle",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "60c901c32a72ecee064616b45bd9df019df04906b5a9dc6bc395f8fe3d802b96"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_elephant",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "2a6d9eb5bccfc899a499e7cdd6d9c4746e9e87826035d6cde21186c7e4801b5a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_elk",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f23a398def28c3a441c562102df1952831d5002287686bd310d34141765c5737"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_flying_snake",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a30802049b4e8f0b1c506b13e93f61fce9f17cd8e1ef206fd415764cf9248894"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_frog",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "9575c729b9595f9f6191f5cb61f59891b22bf0b855ec00aa4ee0fde75c0b8de0",
+            "candidateCanonicalJsonSha256": "ed219b99b83418887c21df4890149fa78ec0bcc620aee131527e00595ae764c3"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_ape",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a3159890aaad7559662a4491b94f57a3459433c0cc6281a4bc9d3c5818eada7f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_badger",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "bc20abf693ea429a2017ebdd11cf629e1f66870a765650338b765574f596c0a3"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_bat",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "da8498b60c396c41484f3ae69b09bee9f28470e53c8c39cc9060760731e9ee1b"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_boar",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1b40c9daa9a31c21a85d501a6bb29e187e16a37971e50f44745b9dead3b60f0e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_centipede",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9ca91ec681ae844cfb7bc35195778733971604f50622436a966e2f85808942ec"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_constrictor_snake",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e355768fe0b0cf7667b97c0f70076998384bbea5799c0d010ff77486751988ee"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_crab",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e23c3d6c727c0ab557f8b3582d41c4bc032cc31b372de3123e07c89fb8f087ed"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_crocodile",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "40e6743e052fcd7297bc5249725d8ff5b9d1e8869e283ec3c85e705c5b354b10"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_eagle",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "680edf08801bae1df4823a1f3da1ca4ba7912655a1a5e86c63d107716c8511c9"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_elk",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "37149325501276d4c001ab5bf0f97d06bb0c4fcf1f62a816fabf0496fc42fb70"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_fire_beetle",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "fa06314bac714938a9194841d67cab1b4b2b042a177a7a9ca9e1a99f4f9ce35f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_frog",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "7578081ca16a0a947aaadc37a6025650474cb7e77ed8135e8a0e87b3202d6597"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_goat",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4c3cc2c1c5355f95d8740e161d13d4f81d0dca5b60c0c792d0e6f3c28e267b16"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_hyena",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "21547e3ae1ffd125b46b4bbe70ec0766850bb587856b54cfa7dd619e626462f9"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_lizard",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "12f6226f5c45e944ae1ce553b4fdccc114ff233759342b08936f5620c1f0fc90"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_octopus",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "af416cc11ad090e381057bf850d692829ad5dd183168909cfdf76671e23ff714"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_owl",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "b4d268141bbf08f3aafedaa59f9550142830c1d26562715aa5e64cfee584103e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_rat",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "b3051578560a58e9ac082c6f10220621ab741db76f38a78026cc278df99f6aaf"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_scorpion",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "439a813b0dbf495c70cf1d78bbe833267a4dfaa5def5c5368fc7b7fe9328eac3"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_seahorse",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9fba82d98bf11f85210cb234c117645336d2fd53bbed76ddb7114286e5e1e9a2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_shark",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "8ebfeee7029d7c94cd4aa3ab2fefe600198cb06b854ed5c4bdba1845065423c2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_spider",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "241dcb8ffb89710cc9673fff4a10e2e2f4d2970afc15ee39bd00fa3b8f412507"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_toad",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "8341e241d0cb3e7e235bbb8cf5cc710e6ecd9f3c67e3944af8f6ba98de62c39c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_venomous_snake",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c8435cd98a6478ad3daa0b509670eb9c54bfda5706ca68e7e55a8a362875f024"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_vulture",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "afb1fa882ef53404dcc9bb9992e9574f04e7bdc1ba80c3b95ff3906da2601ed8"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_wasp",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ff7e9add7a07575ec83d9aa5f0c14086489ca983d977b42be2669c7ad3f0bb30"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_weasel",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "bfdfe0bbd1720a4a82b6775dde3aeca79dd072ad9c336ee21afa7bc3db98f7cb"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_giant_wolf_spider",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "97a8d9f1f209eb93ab484bca13d1ac82660fcd973ba2f9bbbf831aacd4d354c8"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_goat",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ee0492c958f539fa8452aa7618fed503de7001c64ab75cffcbfa9ed7040786c0"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_hawk",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "782ba91e19b016881b1752b9b7d7cbbfac9008f4d57d82b1ed58a9ea579dc6b2",
+            "candidateCanonicalJsonSha256": "825b452ba59e83c5267a26637fb9d8f7cbe6a6940ce9d1dc680dbfd9b41be91f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_hippopotamus",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ea132cceb65e902598cc32371dd8b9f6d0448f92b3dfb5b688300e582204f987"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_hunter_shark",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "7be3920565d20a034381fdb32f484e0c4c1359daf151d2dd4d5f2f6b7d134c44"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_hyena",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f29df97a8778893d85091a8da705545aac043970d1ee128a5b7a4a06aa7f173c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_jackal",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "2034f55886098fcc947a1e66e206bfbfa342eb9a30212c04ad53733935cf91fd"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_killer_whale",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "871f1e566aa54db540ec127e5d36ec3b78b9b684a46b14c96d6e5b5eb9eff505"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_lion",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "22bfccf9226062b476c8d222de48b1036b415a155644bf5cef5cf7f42cc8d4d8"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_lizard",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "32342fc5263f6d962f6b5dd5d0036a5204faa6a4eb6dc7e79bd6e73956e0dafa",
+            "candidateCanonicalJsonSha256": "4a8d5cbdff22b2e844cbe9c345710d82ccdb3e7a129520722a7f6224d2851349"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_mammoth",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "df21ac67c32642147d1c8bd004860df5a03f22d5b81b4db5b1915f7e5bd55ab2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_mastiff",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "24a2618610a069f801e465e2e629f5946b98893b6e4d4a3cd4ce34eee04bec03"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_mule",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c6419093a25238bb9c200e63e34fe9f4ca0aa64c7fc10650b18b0ea68d7c9029"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_octopus",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "0269a8e2d692a41eadaa5f39cabc1872012a7fb0cc88b014bc49b7d277e7b76f",
+            "candidateCanonicalJsonSha256": "cda869bf373b98d29428733a9b30f82005333836f47cd9f244eeaa3c8a6f3bcf"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_owl",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "d6f33a0a59efded86bb48df3930a9d4aa73593086304bbf48d2d1e61fd7428ea",
+            "candidateCanonicalJsonSha256": "22fae7fd715bacd5f15258400d48f33b6fd5b6280652467b8c79a0b26012fba8"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_panther",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e170d1f8a3805bcd7bb3710534741f43ec45b931bcf4fa2397b103a0b77a93fa"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_piranha",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f62be28dbe47c265dcbe2939f8f86b2eba0cba7bad2fd885fbe560878385a64e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_plesiosaurus",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c55171d7daf86defc3bd0dcf8edc4867177016dfe4a3a0086cb8658c9f0da38b"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_polar_bear",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ff30e2d7a064e67ffa45b26468ee4e2ccbc7fdf09954c67d5c9059644b6952c1"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_pony",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "be6185d7f4530718cd719dc0ad0360b6d02dbaa973c7c47d3b87f5c1ecf84e98"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_pteranodon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "5c2f2c23870a6578107485d482251807e47fba5877fa08454ab6fe987c96dc0c"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_rat",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "3dbeda49a03fd259259b02a561b428e747602aac21d015d5c4de5b71e8873b7d",
+            "candidateCanonicalJsonSha256": "d356b87a652cd078145a9a5ebe1bd6de1b7c74cb762ea9ba30e9c0508bc5d8c0"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_raven",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "800ac2375abbfabb68984044d124cbd4205f67a3b2ff5f8470b4e4f283493c86",
+            "candidateCanonicalJsonSha256": "56d3fae964f6c6db5df875f34bb6355abdbd3b9e91d8c0a53abcadcabd589b83"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_reef_shark",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1d42ce2ad35cee5ffacfcea0f34bf39bd70eb237f466146548e391313e842054"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_rhinoceros",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c9ed38bbba76fd7b6da0346cb6321221257d47f30f4a192a26ff6a0c4be3e3ec"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_riding_horse",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "5d840ba1e7cda8c06f49d1d262bb5a2940931974d2f0dbaf9c87d3f65c33d7da",
+            "candidateCanonicalJsonSha256": "cbcfad4f601da9d3dcdc6ce70eed45847d124392b390fd5cc36872d6b322051a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_saber_toothed_tiger",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c33ef585689ba34cb80b274389439b001ad930435725002ae814ed8089a97aab"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_scorpion",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a5f3bcfdd6695e1d4bbcd4546c335c07a08a322b118705bc10a5592c30a36c10"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_seahorse",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "aee552d7615bb2b90ef191d0f1a91c42a05f58f93ac6aec104304fffee24bdd5"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_spider",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "9b0cc0059fe73ea67f4ca70e7345ec547474d2724d33f49f17cbfefe94562dd6",
+            "candidateCanonicalJsonSha256": "0a7014747b4f4fd200bf63021a56db29c745c4ce8a8c045b6a22fa72d72f039c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_swarm_of_bats",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "eb47ceff3ab593587f2dc46500587ea29ad32ebbf33948e16416b6808754bbfd"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_swarm_of_insects",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4b140994cf7c38034f3c1a280932c2474ff623dc389438e1f578127000c38cc6"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_swarm_of_piranhas",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "aea555ea1427a2b3203c00269c9bb8d7ef647fd3d050a7a47422ef602d438772"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_swarm_of_rats",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4bd13f450212abbfcc9825c905874a934ce394c32de402828d066d04beeb46bb"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_swarm_of_ravens",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1374fe27cfed0580b3f54f5bb93bfed5fd6c0487fb05d1d21d182bef9a538de5"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_swarm_of_venomous_snakes",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "055894e632134eb90f67dd9ef88386faea119d6fc32e3d51c0160b1098d41510"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_tiger",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "2583b11d551a6671452af1ed1bf35ae581c1de495a6c79608108d704cfc651a1"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_triceratops",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4cf2a2354a4d46ffa61267362418e4dc2eccd3c310da7d8338b3f69720ba1063"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_tyrannosaurus_rex",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "990fd1d4faf8be59d020b9b11bcdd48c29f847751c45e5e33fb3278b92676dcb"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_venomous_snake",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "3ac48927acb44e93b0431df8d8fcba583e9af4ce4371d8b5e93eb8c230fbc36a",
+            "candidateCanonicalJsonSha256": "21e06b058fc053b94877e9b33088ce4acd5c29cb0099b3562744db5f3b071d2f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_vulture",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4c7c2d0a9fe862bdaa88f4a82e206994f2dddbc6cb1a16590850b6e23f958f6f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_warhorse",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "5b83f6f8eac3339f44ed3dfdca7adc012a30860de32613dd250db8d1c2641281"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_weasel",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "ab4eb6e830086c2bf65bef187fbf6e425308313813c18eabfa2905b6cd1429ec",
+            "candidateCanonicalJsonSha256": "126f2c12e49d92c02b61e7edec9b06b63111bca2ff597292559e36036e741803"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_wolf",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "5315643b365b22d77c2547027456346f414497fe627f392c6462c7599a504914",
+            "candidateCanonicalJsonSha256": "f374eac571a5ba80362517652261a7167ca50ab8f42c2d600f461205ed5aef07"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_aboleth",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "bd142c33127faa74bdd86dfc04efb30f2451a6c547db08525ce92b56d1132a88"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_air_elemental",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "0d0b71b9fdd80c6658a7f42d90ac6bce5161ed1df774963bd21395bd856aafc3"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_animated_armor",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "6733ebe1b135c9fde5870a2f2da38ffad0d3edb9c05958aaef0085812454640d"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_animated_flying_sword",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "168407fa7c24a612ba89842ac55173863d59af38754b0af967b1980d77cc3010"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_animated_rug_of_smothering",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "6cb94aa3317eb1e02b55c9f95234c7e64c089790696de43e42c596048d0511f2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ankheg",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "6a4bb15931d9f07e69b7f5da49a572321438967f6fb5cf0732ac657bfa145380"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_assassin",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "51157d6078b25fb1a4f43e368c4374d59bb9b5f3d21772a3ab171346f30c8d17"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_awakened_shrub",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "54ba3b7229467ba125d3c6e93accb2ff76f848f0cc8438aa7ce0258bed29687c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_awakened_tree",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e5f46b60060e14ac18db32e45f4fb4da554b7049a7c4d4bbd25bbe36ae24a202"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_axe_beak",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "59e7e78e733168145120bb49f5ac5326598d6475f9d77a5aa60711b31e77d506"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_azer_sentinel",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "07cd13768c97d4e5ebcc816511ce920d3449b0484765ea9a0ed7973e3d0b8133"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_balor",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "689839ceb6826d2f3b3bd398fcf744fa494f8ae400e503250963c4ebaa096aba"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_bandit",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "07ece77b9488985e352e9520854a14206154e915b7124f4072385179c513e74a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_bandit_captain",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c3e57e6811ce06718e86bdad071c9e584494fb355bbde2ede4c197a884af1f0b"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_barbed_devil",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "3a69b5271201770abb8c1d072d0d298d53c0e68edc7796491dea5dfbad4ec668"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_basilisk",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "7be02b85c2826fe4f964c19ac145b0b0facbb917c98a06ff321fcb3147a082b8"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_bearded_devil",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "269799ff3af647f0d256de1d30a226fc34a764572aa3b120459dd38ea2aee89b"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_behir",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "310a29a90585240e8bb517a97c27c98dc68b81386637a5b5f5aa0a410d73a181"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_berserker",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "b24ed5f288b32a7523c43242f2e59fe3e2e62368b9feeeff93ea83a708dd1172"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_black_dragon_wyrmling",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "955d5908d25f3e1b9bc795251949ce56bb186558c991d24a43a18a208c3dc26b"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_young_black_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "24b4201158aa18ae1485a4b976b21924da9b56e2eb6aa0dad2016eb008e09e8f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_adult_black_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "8436bc944257f28a65efbd3be48ed94253391bd22dc35734cce0d5bc64110cdb"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ancient_black_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "68ab5250d0fee558b08486c1c0db74234b5a8c14c3ad706de85891fd7833084d"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_black_pudding",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c4a900c4f1cf0e8fac3b19196e0f114aa93b5abe54115054bf609bf9c0fea049"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_blink_dog",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f613b0a98395bd7128aa937bcbcdca3588b53ebc354756ee877e2214afd041cc"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_blue_dragon_wyrmling",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "947c2809578187771c677dcff1713fe6d19846ef7c09982dff4602a77d90bfd8"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_young_blue_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "235fa2571392eb3c6019a3ea966ad07bdfb4d1addf4392e46a51b3450c1e77ea"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_adult_blue_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9cb00c7e1284c48e2b633fdfccb2fba75f309bab50c8e2bb4aff83bc21a3b887"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ancient_blue_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ef0975cbaf6a8771de69895b7257782ec75e004b0b3982686e6d2a4d83ebd4f4"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_bone_devil",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "94d6b5f5bd576f4a5df12e704eca39c7b9d500a44f458e5a10e339e2d4d4acd4"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_brass_dragon_wyrmling",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f6e055fff86ffc74d2118c7ca7c2f51dd1b16d4c8f132f004c21e6f462e7324b"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_young_brass_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "d683406589411d692677506dce0692eb77733c646e552e8620765b4baa1443b1"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_adult_brass_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4def09c83648397a054b5e292a0de0ac3c3a72126ad80e7fa1127a18b82af17c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ancient_brass_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "48fe83d8d4b4383528d2b175c081e945294197eab45909b298b53f828089f026"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_bronze_dragon_wyrmling",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e62a0196a3a6c0b3901b622f0e65832f782536199d592baaa20de728f94f5823"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_young_bronze_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "3e94b8a5b24688f56c4595747f692f3b16f2d727a5f64b90a86d8a7fe0980577"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_adult_bronze_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "36b47bf6869be8ea1dce2cc907bdb75c2652ba1831515162a8e4dd159eef3266"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ancient_bronze_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f0fe83e1fea23184f4bb94f412b4f64779e9e93e74d3869df64f93f93b429836"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_bugbear_stalker",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "99f9e98b66591d260005f89f1f6830453663f32c6d6995a75097a5717fe71be3"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_bugbear_warrior",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a2c081c0762b123b9d33e97ded76e2a12c54afb928f2f457db8597a920abe6f2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_bulette",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "2486b0efa17617d642e9eb6aadcfcc73e116d29909ea4a697956f8af65924e87"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_centaur_trooper",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "32b6efb50480f31c2e234ac5ce076a5d85fe5b1e108ff74b4ad7c83b437554f2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_chain_devil",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "6c8948d153846c3b9ecb50cc8983708155a8bcff91771b0a1faaa28941f2b0b9"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_chimera",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "7301adceab738f0195e83a3eb17aa97e9efd209287018c50f47fb2759d6c8217"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_chuul",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4356e2da0a3c3b2bc0de26ffe4af775c3670cb52a929fd53f5833ca94213ed86"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_clay_golem",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "6688cb311122075eb6aceb806da69a5d9697e9b5e0eb8010531f915a270747af"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_cloaker",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "bf6c51a0237ad5d05af69a2c9f2c5cf2edee2a6c5991d93cf64e3562ea521fa5"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_cloud_giant",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "36ae8f1d4038faee59a0636742747460b8369d8f9776184efdbd47d4fc5894ce"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_cockatrice",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "51b3b3fae07a194ca8517c77127587667bd410b45c07b36dcc3c324f7fe7d0a3"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_commoner",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "7905545f169064df92a2b6e025e02a67e3910fb48776d7ae736d7dea3afcae00"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_copper_dragon_wyrmling",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "21f3d369e0fd2318452f3e5dca00a3dbe51a184a09528887ecb0ca03da3a207a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_young_copper_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1508c178ff3b6ca514c35f257d98c4cc04e7fa6788de35dd4d4dea395a59ce1a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_adult_copper_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "7174824860d3b725de0c8a216f03ed44eab26e166a9d1585f031993e7c98d0e4"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ancient_copper_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c24158a1893c6f1d5513966c3a6ab8b8e6df4dbeb14ed81335270f404bc036b9"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_couatl",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "d96470b65db03647a19c1ff17b24efed4e3044a4f004b6eac02a33c26a97d6cf"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_swarm_of_crawling_claws",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9ff1b61049cf85795c4c070d5d3a3df47f248b843db996d2bbabc3e960e34341"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_cultist",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a89a592d0815a6ceeb26bb1a09bf542476a5b9be42e1e3175d8636530dc309a9"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_cultist_fanatic",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9e5036ac0e8381bda7db70c88c57fb70073fe6508cc38ee8d12d53849772ef9a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_darkmantle",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "471b148496e0686b1ffacf64e6ba033282a1f0b20c6881ce329a62a940c7b45f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_death_dog",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "27ecbcfb8665d31a1095503b957d09a45e8adbe06da4928c5d3545434c39a635"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_deva",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "b2adabaf195c2439ed20a28462423e6e42e4014b450f8ca9ce3b2b65dcdb0d0c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_djinni",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4e67d9d1eeb1c87f994f149917728580f4e323cf3983e2fa300c0a08d7298545"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_doppelganger",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "18c910ff90ab52d7e4abdb66be4f675c8be63c86288d68b1020aa8cf295028a7"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_dragon_turtle",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "34b99fc16ed8fa01370a16d09e7ec74ace08d34e47e0a340d5752c902c452f68"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_dretch",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "0b97f6968245bc5412fe12bff7bd2b9dfff7233a138fcdfb68e057f89d0aaf94"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_drider",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "b438d1b4a5567447575e64a4d3d36546cf797adf4dc7c267d33721184f0fbba2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_druid",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e20a39592d664b5508dd423ad07814924f99509d9a86fa0af2ec53a67daaab08"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_dryad",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4c5ad7b114521c1ee4ac7e6fe1e1939c81cf93a7ab7c0ab72fb7925f7eeacb36"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_earth_elemental",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "84b2d2fc5534dbb48e9c96e2572f0f756fb9023bb662275205a3860c53f5902f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_efreeti",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "65e52e33889d3cc026fa6427a2f460b3a261db8bff839f46195847d5270a4070"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_erinyes",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "820188f15581bfd0d08ee77b660d5c2a2bdc232f6be3a993c5c1a89b911c74e0"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ettercap",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4679ec68511eb90ef6971f5f7bd566d7e8cb502ed38e2c7c073a43a77410b7fe"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ettin",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e07da848301b53aef2736190c093ea8b9e28c2ecb120ad0e166074ccc226379e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_fire_elemental",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "740571b5959558335411615f24d93ebc3e8662a6fe985f1c708c13f2962848bf"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_fire_giant",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9b057eaf2ff29e6ebc26f0510a02bc81794ee3a061ea891776941a304395479f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_flesh_golem",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "dcf1c0d695d42e3f9c2545392427b5ca696179813cc4697ad9a3e8273acbbc17"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_frost_giant",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "6541922c8ec2de6e5a7453712fe393d517a33a2594efc08ede2c75883d0d354e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_shrieker_fungus",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "7f4e4c62b80aa07a32ef7369de5ca98908fcca30249e6c3cb84455bed2f92f52"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_violet_fungus",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "96cea5cc22f4a41a74647913d362d18d5119509a81a0d3aa38f3a342c49c7f96"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_gargoyle",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9e3a6205cddb8851aed5bbe8bf3fe61eec6354e91bf66897a26c66cee7c2b4c6"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_gelatinous_cube",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "0827160b8b291163b4c195d6333f34e560989188f2dc1b328d669d561ab9c9aa"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ghast",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "bbf21428eef16a274abf68de468d2e9671e372d27ed58655359d1e9351cf9f4c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ghost",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e5b9c69d440d4129626934d984f4a2a942d82fcfa7c2771d87d3ab46205c97fc"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ghoul",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a1f0550c1ce9d9c56f528b08037de58a9b40ffaa1dc1183ff3615acafe1dd254"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_gibbering_mouther",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a96d51e394aec515bee26e9cac4f32a5f6fccc2c01ef6e5438ee41d16fd1b34f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_glabrezu",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "64287f6e4ac1f74e80322beed402bc9ed3ada6e302511fdf0b5a62d26c346fab"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_gladiator",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "b5f9918d294bcc96a80709960fd4c9e9af8f3b3928906670a7ce611eec753a74"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_gnoll_warrior",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "21116643648f1716bc6a86c73eef994f03bbfd68c2bb4ca9141276d9e3cb6515"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_goblin_minion",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f642aa5e770ae0d9df693cfc2aed0bc084455bd7d6377340c798cc0e3235239c"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_goblin_warrior",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "34be87d1017ce164152a32eac6a68ead5902f6141a1f7aac8681df715ec95981",
+            "candidateCanonicalJsonSha256": "449db888835783b411c838a03bde6a7817123e42eeafd468d92ab98080619b7e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_goblin_boss",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "143cd93c6ad14fd99e0fd8f6e3abd1edfacebf3e0812ebb8937610538c337909"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_gold_dragon_wyrmling",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "d5e7db92851fadb9a930956c43c21c5a987487906d58bf149ada871a25f26e95"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_young_gold_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "dc811036f3a06e3a83a92dd2f47e88a97d108660579f7fc279ebc947559b53c6"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_adult_gold_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "7a6e965cbf2ee384a64bec852178ba2443484771c79158f9217a1693c6de9ad0"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ancient_gold_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "3326873fccced14fa575b18f4933df134b2506999d833e41c2adba83a04cc1b3"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_gorgon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f9744d7c7aa592390f844c8d8d5e300670a2cdc792df3e53342d726e514913b4"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_gray_ooze",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "fd5d580b69e50b821e1c0a06b8c6e23aa9c828b97c6ab1a09d213bb1bfb010a7"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_green_dragon_wyrmling",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "7307f7a39042daa47c33dcc861631bd9a50c0d42f8126f8c8c88ff6a537d24c2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_young_green_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ac808bccb8b1c7efc95c90d406424dee445f2513d28e63d80eccbd92d717e8bf"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_adult_green_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c57b1698bb13d90371fa14933792bb7b85a5ed3ca78916775ab7a71f005e86ee"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ancient_green_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e7764e1e99cc76763244e867b68c398e84af941d9a44ef6c79d9ce246108380a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_green_hag",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "8c26c5a76dd630ee530bdb05ed9cc605f2ff3cbed602eb85d9c74ae4b0fbfeda"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_grick",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "5acffb186e897055b24f7f26c9cd5081628d18667659a80b3be8c42d3e976a3e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_griffon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "b53076d265d6c98386c46b2039597fe5ba3f4a2791c7e512a46993af2a603e39"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_grimlock",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "15d5918260885e365a22e359a27f98341a64f094ed99ac8e5f2a65a5e9f6a65a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_guardian_naga",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "564d8a71a3794ad66bd7ef79afde537cf138039f1d5e9bd565a5717261309d50"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_guard",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a4b9a99d5bb8e0c1d937ea145768b11c8d6eb40bf049fb3306ebde9e7c710c99"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_guard_captain",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c0bb1ab7f46290379127efdcaa6b35990401a31c7a45ead0be18d3dd53e8e9ce"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_half_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "53e3dac571ff1fae0bb6c4dd1df516859e19e22ce39512e0e0bb753fcd5d8e25"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_harpy",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "b1fa4d493ddb3772038402dcd7ce3908b09ce0d1c5f1ad40fcd34713b8018f53"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_hell_hound",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1109a75c4fd84ade8f50c39071eb28b28cfa378697e9e0320426b8bedf2c8187"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_hezrou",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "335c025412f8da3d534c01597262652e4e28c282e62adeb4f86377efc75fdd49"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_hill_giant",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "802e25d25f5cbea4f1c8f62963b2d7623cb22b159976d199b3b07a1dd91de750"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_hippogriff",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "8d092aa8e78f3045330ab6dc1ffc18b8881695ecd245274b6fe99d808688c243"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_hobgoblin_warrior",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "edad2f375738e10c78642c411d19e97e761ffa64a14190992d9a4e908f5feedd"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_hobgoblin_captain",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "d52d9a7b47685f4c05ab3e2c97d03d84ebbdfa2dce46a9d63144f063701450a3"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_homunculus",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "6d8c9af12d4017b1a8cd8a1046df11efbb1797a161cc7048f41c81ae3f1823d3"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_horned_devil",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "960dd7717250850289d5a18658502b29ae30fa633c80aacc204efbffc470f128"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_hydra",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "437531b4520e942853976180a6416dcfcc5c38459e40b1021c789392e84bbb97"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ice_devil",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "7e37e295cff779a49c9bbe6ca59175ff1df1f54d0728f2c442d2e7454abe579f"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_imp",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "c73e474f58f721634f62a726b2e2d18a99ff3392a83ce5517fdcda6bc2d92294",
+            "candidateCanonicalJsonSha256": "569c59d4659ffbd3311b13ce96e52a8c1f9999561f810bc6ebc15c2f4c1d8a20"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_incubus",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a0ce1a2689ffdad86feaf52aecb3f2e4a08e9b702c5cf42380b028fffd417c99"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_invisible_stalker",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "55913cbf6a8bb13762e5ef68cd431bd1d7210849ce95657a00542266716571b4"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_iron_golem",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "402a856e424ba76d6597197a14495b70a5db22166f87fdb61c6195d3a5401b9e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_knight",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "65be1ae647ab0bf1d189aa9b409b3a9c8e46b9bf800c96942e800edba73a3b76"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_kobold_warrior",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a088d694c995c131e4cddb5bf14df7d6ffb754dcde691fcf37769ac315d65b25"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_kraken",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "d8fc7ed12d845bc96f234f05174954dd3342b793dad8aef5ce8ce672d4aba267"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_lamia",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "b60bf911d3d47316cb301abf7a92df5c6b528bcb088b3bf442a0e66779966421"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_lemure",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f8121bb72d068cde60d146b0279fb0d7802d25c4817346dfb187acd5f757a410"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_lich",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "b36db5a6d62c1c2c7d648aa7ca88d99cf95c9f6030ce91e9d2a59b48384af2c3"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_mage",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f59bf0fc40c8ca4359b0d70ff70b5221903a97e31b55cd4b1f672da6023187b3"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_archmage",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "8ace6dd95e9e51ccdf4310b87e479ea55a023ac2926d9df9a3ee67ad6df9a2c0"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_magmin",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "8976c1146da9779c860834c1c130702a40249135d9e44681a79624ee74afbe81"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_manticore",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "47af5d666ac0fafdb8c0ccc86a7ad1df0faa554c4d148838f13f66a31d878cd0"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_marilith",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "21299368bfadedd3d06fae5a0f66990d8e1876838e2db047eeeedf47ecb5c39e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_medusa",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1ffb67727d663e325b233121434534dc88508be06c46bd10723fb182d60e7f83"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_dust_mephit",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "45635ca39e581e91ec80b9c55edd7cd6170c478b2271a2a55bb429167df8bf8e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ice_mephit",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9045b5d6f26d3bc46a1fc250748a57432b3ea0462f17a4ae41d2b76549cf0598"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_magma_mephit",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e867a167b0f85107e5dfde07da0430a813af44e0a7766d1b7cafaa1eb4f0d228"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_steam_mephit",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "0c7e45772732cbc479826ebcb4b246f652c662e9bda3256dc54711162397165d"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_merfolk_skirmisher",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c3ab69496824d0c88733f2da2e07c9793fd59ad3582a2fdced790c97d50c9a57"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_merrow",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "da4b443c66ca3992201d7a75c1cc0e7d502f81ce4e16066d0df95b0d70a24e1e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_mimic",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ab7af81641a9ea55932da0875b376ab0f1479ff665083757360b909889898818"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_minotaur_of_baphomet",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a585f68a14680d31aed10cd2d897b04e12624e58d17c51a48e7acabcf8ccf537"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_mummy",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c807ed20e5bd492b0c3b18836b5b61291d891c08834eec74fb08258243510369"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_mummy_lord",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ad97fbdf093aac1e2d95e480d078782611038786fdde365d4095b842398c8176"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_nalfeshnee",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "343843b7e25c7047c466b14c8f70dc73e8e677922e74b30dec7daf795c2d5244"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_night_hag",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "6fa095bd19de170b01d987f74134f0e97527ad663f770f7d33003be6c6b31d3d"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_nightmare",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "fe919d2bca0a96ec4016724c16b107157f66635f274a10206a07bf96d1117998"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_noble",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "96b9f6be99aec44c574affaedbff78e60040cb2813dd54ed832ec93590b3e373"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ochre_jelly",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "bdb3fa21e5514e56cec1886d46afdccf771f527f731aaafb010c262cf2cb11db"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ogre",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f780ce8016b6be26189eabc2be36898d7456704371b4470f4390d3c02f8a115f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_oni",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "bdf4528efbd4fb139e9d3d041f2021283161947d78be7120f259c939119450d2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_otyugh",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "449a1ede4cf71b9a28cc71a882b66d14dba159199c4fec56d26ef357acfd1479"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_owlbear",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a390b2da22f907fc1d9784bae1bb81e581532dd2d86b73abb01b21e40fd1383b"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_pegasus",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "6e2c9dac9a748b25f3edfcc4e6d93a1d7e26ff5e8b7d08e8b40c08c745bcfc4c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_phase_spider",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c0013ad8e21d28648432fd376a480b6a9d6836588806c0d83357e9816c4d742c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_pirate",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "5102cd528c80ae23c667b2f138ea0b9f98b31bd1a82bc4f117187888af1b0b93"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_pirate_captain",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4b228601ff3e77655e1a52ce8cf96077dec30939d8ec2f2e1cfdd4c6b1fb0597"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_pit_fiend",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "3a62b0edd96bd0b7d661a5805556794dcf457eb582b3d9bbe833b288ff36d4e8"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_planetar",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ed3c1ea324e851b5f32f6a676b169061e42357d5a5bacb9cee4394002fc21573"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_priest_acolyte",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "b9178ab3ab9d7f67f84105ecec30a9049e5fbd693f0c44aae49167e399bd5d06"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_priest",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f29dc6febe551e2a2b72c80e841efaf3c47063e828a00fb3fac220c90a69e779"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_pseudodragon",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "50737d802ffbd3d0ae2b949b7079adbf6f871765bc805ad4198912ee12bd494c",
+            "candidateCanonicalJsonSha256": "a4232010f59e7420c112df5b5ab7f14623c1d7be22c4abf77f214a7b79639c65"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_purple_worm",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "59a6e24d4fd500f79c9b2fa16051ea29a28af28e913b47917031bb85a339ea9d"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_quasit",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "58c9ae14c1f5706cb6a2910ac7373eb47edd9c0e421dd54d15e114db5126d27e",
+            "candidateCanonicalJsonSha256": "0ada7b0cff74ff9b363800b45b14bc6380c6ba984c3565be6f33b4e9f4d59495"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_rakshasa",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f69d59476a0bb46a8a36db99b766db06dd769203c8cfe01fb4794647a22d5587"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_red_dragon_wyrmling",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "d9d5a226ea806ee399a8a30810b7e6584670dc7ae8485dc617f09c59ab742934"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_young_red_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "5b05fded9b7f02c3dda0d6fcf3c3a006c31788cca329ad34747404a4237a0981"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_adult_red_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "2da5d5c287e1a17817c3afba1df62e48c3d513a642c0280258ac4df98528d5e2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ancient_red_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "62e517c00819de699f39c1f5eedf6dcd0efa2e56d8a96a965464698b2e88a35e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_remorhaz",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "29b6b39320cc0889508bb95306d3dd83d2a8b7ff8c767130f0aa3a5a7b05f00c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_roc",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1b912cf7fcb01b4139c8706c5ea373f32cfd72bb92c3b08fae4679b55b06c10d"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_roper",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "24ddd1c03e614cdd5c5618b90fe9ade9431dcae7a6859d3ccc77422fb61154f3"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_rust_monster",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "ae6d28bb9182a9de6797f668513fefff6bbfe57f8efec5c985b6ba88c258a466"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_sahuagin_warrior",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "d21ffcaecf75afabced589c73638e44987c29bd571d82b967c589cf16b0a18d5"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_salamander",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "47195b805b29f3358b8cc42f56d9893cba97eb4ea4e2b27d6fc0cf3f5b3d8dab"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_satyr",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "be7e922a7e2408a6896fbf94823adf08783b1c4eade15bd1e5c316c204bb873a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_scout",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "56207b2bd04334b05aceeec2c4d839a4e3f81db8a833f374b8dc45aa7d556364"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_sea_hag",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "d9e55e66bdb4520593ab7be602d79396c944128fd78dab9e20e9d3dc1cd5055d"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_shadow",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a40b82f79c53e6d98bd97c5f37e31a998de35851cf99b060609022a8695063a5"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_shambling_mound",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "681fd440564464be68a9970fc63c2ff9a73ba51c23c676d73ad01c0eb3848254"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_shield_guardian",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9c9ef1cbca18290ab49625c21782bf93f7e33f386b30f01664b984f63dfa3771"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_silver_dragon_wyrmling",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "92c9bf5e285834a9d3f6b4f441e1b379e865cac90b3731dafa52a695ff0cebde"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_young_silver_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "64aca16976eadf22912edfb2928e950a9249bc9ad8fa562488383119074b9c62"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_adult_silver_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "1f841e587706e0f52a6caef6553f99f6283d5dbd49b4ec15cc59328710057605"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ancient_silver_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "0ff7f90e7bdda063b804298013f7c041160cc3e94b961b3bbedd5a77e417f051"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_skeleton",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "b82d898efc8ae8c12eee493159dadb46f1f603bda61946be4e523a37eb1c8798",
+            "candidateCanonicalJsonSha256": "1be2e538643855e8bdaa393729ed5ce38013d0167b3ac3f042437d4e54365200"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_warhorse_skeleton",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c762c8d682746a18230f44c5ed3afc3cd94419be5eb439d98e1d03e45ce66db5"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_minotaur_skeleton",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "cb3250da9bc37728fd07b20a7700ba0df7283872a65dccc5a7e9c4a8a8574ff0"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_solar",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "930f3b281a3a9aee28e41334645982adfce1bc3218cd94864a970ba5684b4173"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_specter",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "d08b735146e5b1786cd100804c7dbf2ed18590b61d06fb5a3e6ed7b17740de6c"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_sphinx_of_wonder",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "7788126c2feb28de3aac85c75c680a22f8e6caf9502cd2c4408dcb69f71dada7",
+            "candidateCanonicalJsonSha256": "e45ef7d342c6383d887203377052b9186807f8ce214f5704a91c07f886ddc7ef"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_sphinx_of_lore",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "456c631be84609f767174c506bdd95adda668b9de00bd08a8cdd38688349f5a2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_sphinx_of_valor",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "92f5d5b9648de8251a7dea2621decea8b1225b78573c9644941eccf5151f230a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_spirit_naga",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "9d81350b356a48189a6f1ccef9a2c55565adf5115d1f7e333dcb0b3bc7d0b550"
+          },
+          {
+            "kind": "changed",
+            "family": "statBlocks",
+            "id": "stat_block_sprite",
+            "semanticClass": "authored-execution-vocabulary",
+            "baselineCanonicalJsonSha256": "98f9718c690489a1ef13dc7e49f3bc1a4750bdf465fb3557e76c22a5bd260329",
+            "candidateCanonicalJsonSha256": "13187aa2c4b4afe09277613298d4b0792a6913c535f1668d53c76929bc715603"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_spy",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4051b2ca761ef43af8df6422ecab100b1f80a5c63198ce030b0ac43841679bf9"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_stirge",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "3b44374d3e194f9c2919e02c6ea042a85de129c8e65520458f6aaade3084576c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_stone_giant",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "01138ff55bfd89a3569992731fa342f6b2a77aea491457d9362044cd3f199d3b"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_stone_golem",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "8f0a4ea830a3c79e37ff294ee6dbd911f9b4e6042bc8c47bf3abf855a3a02b7b"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_storm_giant",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "834a95c353612d53c02887f14eb4212b05fee8c34fdecc7a58f38e18e041568e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_succubus",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "bf947c3ad0bfdd1a545adf7d91c7f75f3c81e296d1c9d39156fe7c95a15381e2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_tarrasque",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "af78bd6c69111321ebc36b019621e092586cff69817b4e900988e3297ddfce56"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_tough",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "5bd2fdb049c296f5361e68a2db1e6253787de06b9e27143c4c37a75540e5344f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_tough_boss",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c44cb17d1356f8c2dc96e76123da4281d2c3a1a843a26699cc73a169ee61fcd2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_treant",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f72ba689024e12f3df5c024d0d73c77d2e91d076282a141f968545ab6163e25c"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_troll",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "8b675894a7204bf618ac7297da754626f29477c1ebe5c2f2d5d6d7f1a685a4bc"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_troll_limb",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "111aef6a2460a1a2ee53fb06dfea0ee6ea4efaae432243dc1dac0061556c034f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_unicorn",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "73a33a9306d78094142890595d7e4963f09726899843721c8bfe4c90f4691179"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_vampire_familiar",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "890a07ea4863417d7dee741775dc0ae1002387ea855da616c21d234717d19d58"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_vampire_spawn",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c3ad0eb4debdf6dbbdf4d7d6f15b23045299fd72f392939b8d6ef37266418d0f"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_vampire",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "4dcf3fa52f5055276c271d2bc1c3cf624c71386c43bb39cdf238b535c9386f49"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_vrock",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e1589e3e6e7d91c13cc0e9c8d07149992bbbdde67aa63ad7351ffff248846dd1"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_warrior_infantry",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c1c06d484dba4e96e556397eca96bf475b886a6e87f703c8bd63fba63e76bb09"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_warrior_veteran",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "7e103dc826d69d84c75a439913b55ba476719663ef85351994185533a593eb2e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_water_elemental",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f98ad4822e2db89e98a4980135bead08eae7fa0a9a8b0db3267f9db943883c95"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_werebear",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "333443e4eaa15251ebfec5aadc841df66792e32b2544ba63aa64976dc2938913"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_wereboar",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e66f8204936b4933ca90a464c034e33e2d57d1b56a263af69ca1017a7e6528f0"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_wererat",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "25b51587dec1d66c7124b84382b6d450e2c75d14e6ac40ad69c302e4941b8230"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_weretiger",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "e15d534c728342f8a525ef8c71721b413b5c2b2bb73ee41795cbc7643fb109f0"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_werewolf",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a7791bbdb50e3b5b10d6ef0b8127a6c3a624b04790ab82c4b3f4ecb30879cf30"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_white_dragon_wyrmling",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "35e6a0bc5fa7ea76454cac74c01e1f77d39bb12fd8f2992bc6b73b88f5d68801"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_young_white_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "5b08b4f5a323446cc6a5380a95f31c7d1d227d709aff6fcf2f984d30f42407b2"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_adult_white_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "f1dea9e26610f82ca2c3e2aeebc6a695b2677c836428346c653c278cfd6b5b5a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ancient_white_dragon",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "a10f9f736e52e4a4a3be34d35bf104874d70b53757f4b46d97d7618e4a587950"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_wight",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "c6be71cf93a7b7133aa50b00351fd219f1a3094a9be451ae7a47ce0b87d1912e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_will_o_wisp",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "3fe3c1efae78f8ccd57500e17c2e5851f7585b28c523ef044bb0c4e378d1d88e"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_winter_wolf",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "306f54e8fe304f60096ecc13397da8414ddc6394f9209bb1f0dd78fb7479e980"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_worg",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "7f8a41cda44fa01cde872c2f161b4331c3372c177253a43396db09027fb3ab76"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_wraith",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "5bb263949f1d6dcb18a97f00d8837aa8218a7b377f856a0f48cb4358370d31cb"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_wyvern",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "535e1b632f7d99c2395edc0b3e4d2066da9881214a167bb4ba45b38f72dce92a"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_xorn",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "19ebf2a0ac80e1dc061d973228e73e14f20c7bf853a576ab557459fea0988e17"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_zombie",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "636b19f4b7cc80b68eccbd3b6aa6174dbaddbc668f142a249d4cd7e30c3becda"
+          },
+          {
+            "kind": "added",
+            "family": "statBlocks",
+            "id": "stat_block_ogre_zombie",
+            "semanticClass": "authored-catalog-membership",
+            "candidateCanonicalJsonSha256": "effa37a2927a48d240e64c14ab877066a411744b70f223dd3c5fd85f71f1f951"
           }
         ],
         "reviewedOrderDeltas": [
@@ -229,19 +2805,19 @@
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1463610,
-        "sha256": "a585309c35c859c5afcc43b7d3f2f54c7a4151dcbc5394df575b7ac80a9b3c6a"
+        "byteLength": 1589418,
+        "sha256": "c42c4c1e8001497d8588f2620aa9e6407c2fff87ae455a0931dcf0ffba62ba09"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "887cdb6035411546a24cc49029dccf135ce2f5e1e53ba91d98d558d905077d28",
+        "candidateCanonicalJsonSha256": "ba078afcadc37fdd6314255d0952578bfe3bbc1b1968780ec65a3f3d457130c8",
         "definitions": {
           "baseline": 1305,
-          "candidate": 1082
+          "candidate": 1198
         },
         "references": {
           "baseline": 8778,
-          "candidate": 7350
+          "candidate": 7683
         },
         "localReferencesComplete": {
           "baseline": true,

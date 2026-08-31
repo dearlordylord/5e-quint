@@ -12,9 +12,13 @@ baseline commit can be resolved.
 The aggregate evidence is closed over the symmetric union of authored record
 identities. Each semantic delta is explicitly `changed`, `added`, or `removed`,
 has the hashes applicable to that shape, and has one reviewed semantic class.
-The current candidate has 18 changed records, no additions, and no removals.
-Their classes are persistent rule facts, companion lifecycle, modal ongoing
-effect, identity-free execution vocabulary, and truthful illumination emission.
+The current candidate has 39 changed records, 344 additions, and no removals.
+The changed set comprises the previously reviewed 18 Unit changes plus 21
+pre-existing Stat Blocks reconstructed from the canonical SRD corpus. The
+additions comprise 35 Units and 309 Stat Blocks. Changed-record classes are
+persistent rule facts, companion lifecycle, modal ongoing effect,
+identity-free execution vocabulary, and truthful illumination emission; every
+addition is classified only as authored catalog membership.
 The certificate schema couples those five classes to `changed`; `added` and
 `removed` accept only the catalog-membership class.
 The baseline and candidate membership evidence each record counts and ordered
