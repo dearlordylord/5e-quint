@@ -59,11 +59,6 @@ export type StatBlockScopedProjectionFailure =
       readonly tag: "source-not-supplied";
       readonly sourcePath: SrdStatBlockSourcePath;
     }
-  | {
-      readonly tag: "source-path-mismatch";
-      readonly suppliedSourcePath: SrdStatBlockSourcePath;
-      readonly occurrenceSourcePath: SrdStatBlockSourcePath;
-    }
   | { readonly tag: "projection-outcome-not-supplied" }
   | { readonly tag: "projection-outside-parity-denominator" }
   | {
@@ -78,12 +73,6 @@ export type StatBlockScopedProjectionFailure =
 export type StatBlockScopedProjectionEvidenceAnchor =
   RawProjectionEvidenceAnchor;
 export type StatBlockScopedProjectionIssue = RawProjectionIssue;
-
-function scopedProjectionFailure(
-  failure: RawProjectionFailure,
-): StatBlockScopedProjectionFailure {
-  return failure;
-}
 
 type StatBlockScopedProjectionOutcome =
   | { readonly tag: "projected"; readonly mechanics: StatBlockScopedMechanics }
@@ -221,7 +210,7 @@ function projectRawOccurrence(
       evidence,
       outcome: {
         tag: "failed" as const,
-        failure: scopedProjectionFailure(failure),
+        failure,
       },
     })),
     Match.when({ tag: "projected" }, ({ projection }) => ({
@@ -245,7 +234,7 @@ function projectAuthoredRecord(
       evidence,
       outcome: {
         tag: "failed" as const,
-        failure: scopedProjectionFailure(failure),
+        failure,
       },
     })),
     Match.when({ tag: "projected" }, ({ projection }) => ({
