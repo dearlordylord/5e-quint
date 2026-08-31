@@ -170,10 +170,13 @@ test("keeps resource feature projection parse-once across Wild Shape and executi
     ...source.matchAll(/parseSupportedUnitFeatureProfile\s*\(/g),
   ]).toHaveLength(1);
   expect(source).toMatch(
-    /const resourceUnitFeatureProfiles =\s*projectCharacterResourceUnitFeatureProfiles\([\s\S]*?characterDruidWildShapeAvailableFormsInitIssue\(\s*creatureInit,\s*resourceUnitFeatureProfiles,\s*\)/,
+    /const resourceUnitFeatureProcedures =\s*projectCharacterResourceUnitFeatureProcedures\([\s\S]*?characterDruidWildShapeAvailableFormsInitIssue\(\s*creatureInit,\s*resourceUnitFeatureProcedures,\s*\)/,
   );
   expect(source).toMatch(
-    /unitFeatureProfiles:\s*\[\s*\.\.\.resourceUnitFeatureProfiles\.flatMap\(/,
+    /unitFeatureProcedures:\s*\[\s*\.\.\.resourceUnitFeatureProcedures\.flatMap\(/,
+  );
+  expect(source).toMatch(
+    /resourceUnitFeatureProcedures\.flatMap\(\s*\(\{ facts \}\) =>\s*\(facts\.kind === "druidWildShapeKnownForm"/,
   );
 });
 
