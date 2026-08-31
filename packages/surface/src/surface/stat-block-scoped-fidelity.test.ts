@@ -420,29 +420,14 @@ const MUTATION_DESCRIPTORS = [
   ),
   mechanicsMutationDescriptor(
     "trait-effect",
-    ({ traits }) => traits.some(({ effect }) => effect !== null),
+    ({ traits }) => traits.some(({ effect }) => effect !== undefined),
     (mechanics) => ({
       ...mechanics,
-      traits: mechanics.traits.map((trait) =>
-        Match.value(trait.effect).pipe(
-          Match.when(null, () => trait),
-          Match.when(
-            {
-              kind: "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target",
-            },
-            () => ({ ...trait, effect: null }),
-          ),
-          Match.when({ kind: "caster_shared_resistance" }, () => ({
-            ...trait,
-            effect: null,
-          })),
-          Match.when({ kind: "caster_heal_link" }, () => ({
-            ...trait,
-            effect: null,
-          })),
-          Match.exhaustive,
-        ),
-      ),
+      traits: mechanics.traits.map((trait) => {
+        if (trait.effect === undefined) return trait;
+        const { effect: _effect, ...withoutEffect } = trait;
+        return withoutEffect;
+      }),
     }),
   ),
   mechanicsMutationDescriptor(

@@ -6816,7 +6816,7 @@ const StandaloneStatBlockSharedSchema = Schema.Struct({
  * structural union makes a non-Swarm distinct from either valid Swarm pair;
  * aggregate Size remains the canonical runtime projection fact.
  */
-const StandaloneStatBlockSizeAndSwarmSchema = Schema.Union(
+export const StandaloneStatBlockSizeAndSwarmSchema = Schema.Union(
   strictStruct({
     size: StandaloneStatBlockSizeSchema,
     swarm: optionalExact(ForbiddenValueSchema),

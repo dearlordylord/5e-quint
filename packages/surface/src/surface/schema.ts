@@ -89,6 +89,7 @@ export {
   StandaloneStatBlockAbilityScoresSchema,
   StandaloneStatBlockSpeedEntrySchema,
   StandaloneStatBlockSchema,
+  StandaloneStatBlockSizeAndSwarmSchema,
   StandaloneStatBlockSizeSchema,
   StandaloneStatBlockValueSchema,
   StatBlockGmSpeedChoiceSchema,

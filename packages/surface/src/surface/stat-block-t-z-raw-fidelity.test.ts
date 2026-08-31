@@ -73,40 +73,35 @@ describe("T–Z form-restricted Speed fidelity", () => {
   test("preserves every canonical form-only spelling without making it unrestricted", () => {
     const byName = projectionByName(lycanthropes.projection);
     expect(requireNamed(byName, "Werebear").generalFacts.speeds).toEqual([
-      { kind: "walk", feet: 30, hover: false },
+      { kind: "walk", feet: { kind: "literal", value: 30 } },
       {
         kind: "walk",
-        feet: 40,
-        hover: false,
+        feet: { kind: "literal", value: 40 },
         availability: { kind: "forms_only", forms: ["bear"] },
       },
       {
         kind: "climb",
-        feet: 30,
-        hover: false,
+        feet: { kind: "literal", value: 30 },
         availability: { kind: "forms_only", forms: ["bear"] },
       },
     ]);
     expect(requireNamed(byName, "Wereboar").generalFacts.speeds[1]).toEqual({
       kind: "walk",
-      feet: 40,
-      hover: false,
+      feet: { kind: "literal", value: 40 },
       availability: { kind: "forms_only", forms: ["boar"] },
     });
     expect(requireNamed(byName, "Wererat").generalFacts.speeds).toEqual([
-      { kind: "walk", feet: 30, hover: false },
-      { kind: "climb", feet: 30, hover: false },
+      { kind: "walk", feet: { kind: "literal", value: 30 } },
+      { kind: "climb", feet: { kind: "literal", value: 30 } },
     ]);
     expect(requireNamed(byName, "Weretiger").generalFacts.speeds[1]).toEqual({
       kind: "walk",
-      feet: 40,
-      hover: false,
+      feet: { kind: "literal", value: 40 },
       availability: { kind: "forms_only", forms: ["tiger"] },
     });
     expect(requireNamed(byName, "Werewolf").generalFacts.speeds[1]).toEqual({
       kind: "walk",
-      feet: 40,
-      hover: false,
+      feet: { kind: "literal", value: 40 },
       availability: { kind: "forms_only", forms: ["wolf"] },
     });
   });
@@ -146,10 +141,20 @@ describe("qualified condition Immunity fidelity", () => {
       sourcePath: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
       names: ["Vampire Familiar"],
     }).projection[0];
-    expect(archmage?.generalFacts.immunityQualifiedConditions).toEqual([
+    expect(
+      archmage?.generalFacts.immunities.kind === "some"
+        && "qualifiedConditions" in archmage.generalFacts.immunities.value
+        ? archmage.generalFacts.immunities.value.qualifiedConditions
+        : undefined,
+    ).toEqual([
       { condition: "charmed", qualifier: "with *Mind Blank*" },
     ]);
-    expect(vampireFamiliar?.generalFacts.immunityQualifiedConditions).toEqual([
+    expect(
+      vampireFamiliar?.generalFacts.immunities.kind === "some"
+        && "qualifiedConditions" in vampireFamiliar.generalFacts.immunities.value
+        ? vampireFamiliar.generalFacts.immunities.value.qualifiedConditions
+        : undefined,
+    ).toEqual([
       { condition: "charmed", qualifier: "except from its vampire master" },
     ]);
   });

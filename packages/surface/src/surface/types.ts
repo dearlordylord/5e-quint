@@ -675,6 +675,9 @@ export type StatBlockCreatureProjection = Schema.Schema.Type<
 export type StandaloneStatBlock = Schema.Schema.Type<
   typeof SurfaceSchema.StandaloneStatBlockSchema
 >;
+export type StandaloneStatBlockSizeAndSwarm = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneStatBlockSizeAndSwarmSchema
+>;
 export type StandaloneStatBlockValue = Schema.Schema.Type<
   typeof SurfaceSchema.StandaloneStatBlockValueSchema
 >;
