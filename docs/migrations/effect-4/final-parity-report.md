@@ -2,9 +2,9 @@
 
 This report describes the reviewed Effect 4 integration line through
 `ad053d7de`. The source migration, master reconciliation, finite-delta
-certificates, and selected QNT-owner sweep are complete. Issue #386 remains
-open until the three terminal public commands run at the final committed tip
-and their receipts are posted to the issue.
+certificates, and supplementary observed QNT-owner sweep are recorded. Issue
+#386 remains open until the terminal public commands, receipt update, and
+post-gate tracked-document attestation described below are complete.
 
 ## Selected cohort and controlled-red closure
 
@@ -24,7 +24,7 @@ waivers.
 
 ## Reviewed reconciliation
 
-The Effect migration was reconciled with current master at `42c838942`. The
+The Effect migration was reconciled with current master at `83b69ec9e`. The
 reviewed stat-block integration was then reconciled at `7be12837c`, its
 complexity settlement landed at `2ca8e4ccb`, and current master was reconciled
 again at `075da3fd9`. The reconciliation retained one canonical runtime catalog,
@@ -64,17 +64,24 @@ the final committed tip.
 
 ## QNT and runtime parity
 
-The selected #381 proof sweep ran at `c4d42c94f` under the repository MBT/proof
-lock. It completed all 133 selected owners with 133 passes, zero failures, and
-terminal `SWEEP_PASS` after 3,141 seconds. The complete log is 26,237 bytes and
-has SHA-256
+The supplementary [selected #381 owner-sweep log](./evidence/dnd-gh381-qnt-sweep-c4d42c94f.log)
+was observed at `c4d42c94f`. It records repository-lock acquisition, all 133
+selected owners with 133 `OWNER_PASS` markers, zero recorded owner failures,
+and terminal `SWEEP_PASS` after 3,141 seconds. The tracked log is 26,237 bytes
+and has SHA-256
 `f594ab24f437fcfbf6d3d7c982726edec3ba50b89dddcbf85629bf2594b5cc6a`.
 
+The log does not retain the exact Quint mode invoked for each owner or the
+outer wrapper's process exit status. It is therefore a supplementary observed
+owner sweep, not a `pnpm proof:qnt` receipt and not evidence that the public
+proof lane passed.
+
 No `.qnt` file, QNT owner-role registry, or #381 generated manifest changed
-between `c4d42c94f` and `ad053d7de`. The sweep therefore remains the formal-owner
-receipt for the reconciled source line. Focused Battle MBT and runtime suites
-remain semantic projection evidence; they are not substituted for the QNT
-sweep or the terminal workspace gates.
+between `c4d42c94f` and `ad053d7de`. The observation therefore remains relevant
+to the unchanged selected owners without becoming a formal proof receipt.
+Focused Battle MBT and runtime suites remain semantic projection evidence;
+they are not substituted for a public proof receipt or the terminal workspace
+gates.
 
 ## Master-reconciliation declaration certificate
 
@@ -135,6 +142,12 @@ inferring it from workspace manifests. The reconciliation also retained the
 repository's authored-identity and PHB+ boundary: production execution is
 driven by parsed Surface shape, typed procedure facts, and runtime state.
 
+The latest recorded focused application build passed while retaining Vite's
+existing large-chunk advisory. Its current disposition remains pending until
+the terminal milestone build reconfirms it at the gated commit; the advisory
+must be recorded in the terminal receipt even if it remains a non-failing
+warning.
+
 Reviewer loops covered RAW traceability, ubiquitous language and domain shape,
 QNT/runtime parity, architecture and connascence, and repository Standards and
 Spec compliance. Reasonable findings were repaired and the reconciliation and
@@ -152,10 +165,20 @@ pnpm quality:milestone
 ```
 
 They must run serially and directly so each command owns the shared repository
-lock. Their exact commit, exit status, and result summary will be posted to
-[#386](https://github.com/dearlordylord/5e-quint/issues/386). Only after those
-receipts pass can #386 be closed and the separate SR-00 post-landing Cleanroom
-receipt be updated.
+lock. Their exact commit, exit status, and result summary will be recorded only
+in this report and posted to
+[#386](https://github.com/dearlordylord/5e-quint/issues/386); the controlled-red
+ledger links here instead of duplicating the receipts.
+
+Recording those results creates a tracked documentation commit after the first
+three gates. Before closure, a post-first-gates attestation must identify the
+gated commit and receipt commit, prove their tracked diff contains only this
+report, and pass `pnpm check:markdown-links` at the receipt commit. If any
+executable source, configuration, generated artifact, certificate, or other
+tracked file changed after the gated commit, the three public gates must be
+rerun at the new source tip. Only after the terminal receipts and this
+tracked-document attestation pass can #386 be closed and the separate SR-00
+post-landing Cleanroom receipt be updated.
 
 Active Cleanroom SR-04G work is independent of this migration certification and
 is intentionally unchanged by this report.
@@ -168,6 +191,7 @@ is intentionally unchanged by this report.
 | Exact installed and shipped Effect cohort              | Complete and verifier-owned                                                           |
 | Immutable oracle and finite reviewed deltas            | Complete and certificate-owned                                                        |
 | Packaged/containerized lifecycle boundaries            | Complete in reviewed focused evidence; terminal quality receipt pending               |
-| RAW/domain/QNT/runtime/architecture review convergence | Complete, including the selected-owner sweep receipt above                            |
+| Vite large-chunk advisory                              | Pending terminal milestone-build reconfirmation and receipt                           |
+| RAW/domain/QNT/runtime/architecture review convergence | Complete; supplementary selected-owner observation retained above                     |
 | Public `typecheck`, `test`, and `quality:milestone`    | Pending at the final committed tip                                                    |
-| Live #386 and SR-00 receipt closure                    | Pending the three terminal receipts                                                   |
+| Live #386 and SR-00 receipt closure                    | Pending terminal receipts and post-gate tracked-document attestation                  |

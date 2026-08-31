@@ -1233,10 +1233,11 @@ domain, architecture, and connascence boundaries. Standards and Spec/RAW
 re-review converged without remaining findings. The complete current
 disposition is in the [final parity report](./final-parity-report.md).
 
-The selected #381 QNT sweep passed and remains applicable to the reconciled
-source line. Its exact fixed point, owner disposition, elapsed time, log
-measurement, digest, and unchanged-range evidence are owned by the
-[final parity report](./final-parity-report.md#qnt-and-runtime-parity).
+The supplementary selected #381 QNT owner-sweep observation remains relevant
+to the unchanged reconciled source line but is not a `pnpm proof:qnt` receipt.
+Its exact fixed point, recorded owner disposition, elapsed time, tracked log,
+measurement, digest, limitations, and unchanged-range evidence are owned by
+the [final parity report](./final-parity-report.md#qnt-and-runtime-parity).
 
 The migration exception is closed in source and no waiver remains. Final issue
 closure is nevertheless pending these exact public commands at the final
@@ -1248,10 +1249,13 @@ pnpm test
 pnpm quality:milestone
 ```
 
-They will run serially and directly under their owning repository locks. Their
-commit, exit status, and result summary will be posted to issue #386. This
-ledger does not infer those terminal passes from the zero-diagnostic inventory,
-focused checks, certificates, or earlier broad runs.
+They will run serially and directly under their owning repository locks. The
+[final parity report](./final-parity-report.md#terminal-public-receipts) alone
+will own their exact commit, exit status, and result summary; this ledger links
+to that receipt instead of restating it. The report also owns the required
+post-first-gates tracked-document attestation before closure. This ledger does
+not infer terminal passes from the zero-diagnostic inventory, focused checks,
+certificates, or earlier broad runs.
 
 The SR-00 post-landing Cleanroom receipt remains unchanged until the #386
 terminal receipts exist. Active SR-04G work is independent and is not modified
