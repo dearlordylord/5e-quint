@@ -283,9 +283,7 @@ export function resolveInterruptLifecycleDecision(input: {
       fills: admittedChoice.selection.fills,
       ...optionalProperty(
         "spatialMeleeSpellAttackProxyCommitCheckpoint",
-        frame.continuation.kind === "replay"
-          ? frame.continuation.spatialMeleeSpellAttackProxyCommitCheckpoint
-          : undefined,
+        spatialMeleeSpellAttackProxyCommitCheckpoint(frame),
       ),
     },
   };
@@ -322,9 +320,7 @@ export function resolveInterruptLifecycleDecision(input: {
       replayingInterruptedProcedure: true,
       ...optionalProperty(
         "spatialMeleeSpellAttackProxyCommitCheckpoint",
-        frame.continuation.kind === "replay"
-          ? frame.continuation.spatialMeleeSpellAttackProxyCommitCheckpoint
-          : undefined,
+        spatialMeleeSpellAttackProxyCommitCheckpoint(frame),
       ),
     },
     [admittedActiveInterruptProcedure]: true,
@@ -332,6 +328,14 @@ export function resolveInterruptLifecycleDecision(input: {
   return withInterruptRoute(
     completeResolvedActiveInterruptIfPending(interruptResult, input.execution),
   );
+}
+
+function spatialMeleeSpellAttackProxyCommitCheckpoint(
+  frame: BattleInterruptCheckpoint,
+) {
+  return frame.continuation.kind === "replay"
+    ? frame.continuation.spatialMeleeSpellAttackProxyCommitCheckpoint
+    : undefined;
 }
 
 /**
