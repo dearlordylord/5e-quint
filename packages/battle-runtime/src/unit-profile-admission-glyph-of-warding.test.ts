@@ -1401,7 +1401,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
   test("stored readied-compatible Concentration damage release lasts full duration without replacing Concentration", () => {
     const storedInvocation = storedSpellInvocation(mindSpikeUnitId, 2);
     expect(storedInvocation.procedure).toBe("saveGatedDamage");
-    expect(storedInvocation.spell.mechanics.duration.kind).toBe(
+    expect(storedInvocation.spell.spellDefinitionRuleFacts.duration.kind).toBe(
       "concentration",
     );
     const session = glyphBattleSession({
@@ -1656,7 +1656,8 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     const singleCreatureInvocation = storedSpellInvocation(mindSpikeUnitId, 2);
     if (
       singleCreatureInvocation.procedure !== "saveGatedDamage" ||
-      singleCreatureInvocation.spell.mechanics.duration.kind !== "concentration"
+      singleCreatureInvocation.spell.spellDefinitionRuleFacts.duration.kind !==
+        "concentration"
     ) {
       throw new Error("Expected Mind Spike save-gated damage Concentration.");
     }
@@ -1686,7 +1687,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
   test("rejects stored roll modifiers that are not exact single-creature releases", () => {
     const storedInvocation = storedSpellInvocation(blessUnitId, 1);
     expect(storedInvocation.procedure).toBe("rollModifier");
-    expect(storedInvocation.spell.mechanics.duration.kind).toBe(
+    expect(storedInvocation.spell.spellDefinitionRuleFacts.duration.kind).toBe(
       "concentration",
     );
     expect(
@@ -1718,9 +1719,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         releaseCase.procedure,
       );
       expect(storedInvocation.procedure).toBe(releaseCase.procedure);
-      expect(storedInvocation.spell.mechanics.duration.kind).toBe(
-        "concentration",
-      );
+      expect(
+        storedInvocation.spell.spellDefinitionRuleFacts.duration.kind,
+      ).toBe("concentration");
       const session = sessionWithGlyphEffect(
         requireCompletedGlyphEffect({
           anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
@@ -1956,8 +1957,10 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       "selfTransformationMode",
     );
     expect(storedInvocation.procedure).toBe("selfTransformationMode");
-    expect(storedInvocation.spell.mechanics.range).toEqual({ kind: "self" });
-    expect(storedInvocation.spell.mechanics.duration.kind).toBe(
+    expect(storedInvocation.spell.spellDefinitionRuleFacts.range).toEqual({
+      kind: "self",
+    });
+    expect(storedInvocation.spell.spellDefinitionRuleFacts.duration.kind).toBe(
       "concentration",
     );
     const session = sessionWithGlyphEffect(
@@ -2180,9 +2183,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         releaseCase.slotLevel,
       );
       expect(storedInvocation.procedure).toBe(releaseCase.procedure);
-      expect(storedInvocation.spell.mechanics.duration.kind).toBe(
-        "concentration",
-      );
+      expect(
+        storedInvocation.spell.spellDefinitionRuleFacts.duration.kind,
+      ).toBe("concentration");
       if (!("durationTicks" in storedInvocation)) {
         throw new Error("Expected stored area ongoing duration ticks.");
       }
@@ -2341,15 +2344,15 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       3,
     );
     expect(storedInvocation.procedure).toBe("saveGatedAreaControl");
-    expect(storedInvocation.spell.mechanics.duration.kind).toBe(
+    expect(storedInvocation.spell.spellDefinitionRuleFacts.duration.kind).toBe(
       "concentration",
     );
     const nonConcentrationStoredInvocation = {
       ...storedInvocation,
       spell: {
         ...storedInvocation.spell,
-        mechanics: {
-          ...storedInvocation.spell.mechanics,
+        spellDefinitionRuleFacts: {
+          ...storedInvocation.spell.spellDefinitionRuleFacts,
           duration: { kind: "instantaneous" },
         },
       },
@@ -2768,9 +2771,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     const storedInvocation = storedSpellInvocation(blindnessDeafnessUnitId, 2);
 
     expect(storedInvocation.procedure).toBe("saveGatedCondition");
-    expect(storedInvocation.spell.mechanics.duration.kind).not.toBe(
-      "concentration",
-    );
+    expect(
+      storedInvocation.spell.spellDefinitionRuleFacts.duration.kind,
+    ).not.toBe("concentration");
     expect(
       glyphDurableOccurrenceEffectFromCompletedInscription({
         profile: requireGlyphProfile(),
@@ -3191,7 +3194,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
   test("stored harmful-object release keeps frontiers durable and lasts full duration", () => {
     const storedInvocation = storedSpellInvocation(spiritualWeaponUnitId, 2);
     expect(storedInvocation.procedure).toBe("spatialMeleeSpellAttackProxy");
-    expect(storedInvocation.spell.mechanics.duration.kind).toBe(
+    expect(storedInvocation.spell.spellDefinitionRuleFacts.duration.kind).toBe(
       "concentration",
     );
     const session = sessionWithGlyphEffect(
