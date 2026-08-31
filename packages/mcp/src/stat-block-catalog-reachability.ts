@@ -252,35 +252,48 @@ function listedIdentitySelectionIssues(
   });
 }
 
-export function evaluateSrdStatBlockCatalogReachability(
-  input: SrdStatBlockCatalogReachabilityInput,
-): SrdStatBlockCatalogReachabilityResult {
-  const listedStatBlocks = input.catalog.listStatBlocks();
-  const installedById = indexByStatBlockId(input.installedStatBlocks);
-  const listedById = indexByStatBlockId(listedStatBlocks);
-  const installedAuthoredIdentities = indexAuthoredIdentities(
-    input.installedStatBlocks,
-  );
-  const issues: SrdStatBlockCatalogReachabilityIssue[] = [];
-
+function installedCardinalityIssues(
+  installedStatBlocks: readonly Srd521StatBlock[],
+  installedById: ReadonlyMap<
+    StatBlockId,
+    readonly [Srd521StatBlock, ...Srd521StatBlock[]]
+  >,
+  installedAuthoredIdentities: ReadonlyMap<
+    NormalizedStatBlockIdentity,
+    StatBlockId
+  >,
+): readonly SrdStatBlockCatalogReachabilityIssue[] {
   if (
-    input.installedStatBlocks.length !==
-      EXPECTED_INSTALLED_SRD_STAT_BLOCK_COUNT ||
-    installedById.size !== EXPECTED_INSTALLED_SRD_STAT_BLOCK_COUNT ||
-    installedAuthoredIdentities.size !== EXPECTED_INSTALLED_SRD_STAT_BLOCK_COUNT
+    installedStatBlocks.length === EXPECTED_INSTALLED_SRD_STAT_BLOCK_COUNT &&
+    installedById.size === EXPECTED_INSTALLED_SRD_STAT_BLOCK_COUNT &&
+    installedAuthoredIdentities.size === EXPECTED_INSTALLED_SRD_STAT_BLOCK_COUNT
   ) {
-    issues.push({
+    return [];
+  }
+  return [
+    {
       kind: "installed-cardinality-mismatch",
       expected: EXPECTED_INSTALLED_SRD_STAT_BLOCK_COUNT,
-      actualInstalledCount: NonNegativeInteger(
-        input.installedStatBlocks.length,
-      ),
+      actualInstalledCount: NonNegativeInteger(installedStatBlocks.length),
       actualUniqueStatBlockIdCount: NonNegativeInteger(installedById.size),
       actualUniqueAuthoredIdentityCount: NonNegativeInteger(
         installedAuthoredIdentities.size,
       ),
-    });
-  }
+    },
+  ];
+}
+
+function installedIndexIssues(
+  installedById: ReadonlyMap<
+    StatBlockId,
+    readonly [Srd521StatBlock, ...Srd521StatBlock[]]
+  >,
+  listedById: ReadonlyMap<
+    StatBlockId,
+    readonly [Srd521StatBlock, ...Srd521StatBlock[]]
+  >,
+): readonly SrdStatBlockCatalogReachabilityIssue[] {
+  const issues: SrdStatBlockCatalogReachabilityIssue[] = [];
   for (const [statBlockId, occurrences] of installedById) {
     if (occurrences.length > 1) {
       issues.push({
@@ -293,48 +306,71 @@ export function evaluateSrdStatBlockCatalogReachability(
       issues.push({ kind: "missing-list-entry", statBlockId });
     }
   }
-  issues.push(
-    ...collectAuthoredIdentityIssues("installed", input.installedStatBlocks),
-  );
+  return issues;
+}
 
-  for (const [statBlockId, listedOccurrences] of listedById) {
-    const installed = installedById.get(statBlockId)?.[0];
-    if (installed === undefined) {
-      issues.push({ kind: "unexpected-list-entry", statBlockId });
-    }
-    if (listedOccurrences.length > 1) {
+function listedOccurrenceIssues(
+  statBlockId: StatBlockId,
+  listedOccurrences: readonly [Srd521StatBlock, ...Srd521StatBlock[]],
+  installed: Srd521StatBlock | undefined,
+): readonly SrdStatBlockCatalogReachabilityIssue[] {
+  const issues: SrdStatBlockCatalogReachabilityIssue[] = [];
+  if (installed === undefined) {
+    issues.push({ kind: "unexpected-list-entry", statBlockId });
+  }
+  if (listedOccurrences.length > 1) {
+    issues.push({
+      kind: "duplicate-list-entry",
+      statBlockId,
+      occurrences: PositiveInteger(listedOccurrences.length),
+    });
+  }
+  if (installed === undefined) return issues;
+  for (const [listEntryIndex, listed] of listedOccurrences.entries()) {
+    if (!isSameCanonicalStatBlock(listed, installed)) {
       issues.push({
-        kind: "duplicate-list-entry",
+        kind: "listed-record-mismatch",
         statBlockId,
-        occurrences: PositiveInteger(listedOccurrences.length),
+        listEntryOrdinal: PositiveInteger(listEntryIndex + 1),
       });
     }
-    if (installed !== undefined) {
-      for (const [listEntryIndex, listed] of listedOccurrences.entries()) {
-        if (!isSameCanonicalStatBlock(listed, installed)) {
-          issues.push({
-            kind: "listed-record-mismatch",
-            statBlockId,
-            listEntryOrdinal: PositiveInteger(listEntryIndex + 1),
-          });
-        }
-      }
-    }
+  }
+  return issues;
+}
 
+function listedIndexIssues(
+  input: SrdStatBlockCatalogReachabilityInput,
+  installedById: ReadonlyMap<
+    StatBlockId,
+    readonly [Srd521StatBlock, ...Srd521StatBlock[]]
+  >,
+  listedById: ReadonlyMap<
+    StatBlockId,
+    readonly [Srd521StatBlock, ...Srd521StatBlock[]]
+  >,
+): readonly SrdStatBlockCatalogReachabilityIssue[] {
+  const issues: SrdStatBlockCatalogReachabilityIssue[] = [];
+  for (const [statBlockId, listedOccurrences] of listedById) {
+    const installed = installedById.get(statBlockId)?.[0];
     issues.push(
+      ...listedOccurrenceIssues(statBlockId, listedOccurrences, installed),
       ...listedIdentitySelectionIssues(input, statBlockId, installed),
     );
   }
-  issues.push(...collectAuthoredIdentityIssues("list", listedStatBlocks));
+  return issues;
+}
 
-  const firstIssue = issues[0];
+function reachabilityResult(
+  issues: readonly SrdStatBlockCatalogReachabilityIssue[],
+  listedById: ReadonlyMap<
+    StatBlockId,
+    readonly [Srd521StatBlock, ...Srd521StatBlock[]]
+  >,
+): SrdStatBlockCatalogReachabilityResult {
+  const [firstIssue, ...remainingIssues] = issues;
   if (firstIssue !== undefined) {
-    return {
-      tag: "unreachable",
-      issues: [firstIssue, ...issues.slice(1)],
-    };
+    return { tag: "unreachable", issues: [firstIssue, ...remainingIssues] };
   }
-
   const [firstStatBlockId, ...remainingStatBlockIds] = listedById.keys();
   /* v8 ignore start -- @preserve -- exact installed cardinality plus empty missing-list issues prove that the listed identity set is non-empty */
   if (firstStatBlockId === undefined) {
@@ -345,4 +381,27 @@ export function evaluateSrdStatBlockCatalogReachability(
     tag: "reachable",
     statBlockIds: [firstStatBlockId, ...remainingStatBlockIds],
   };
+}
+
+export function evaluateSrdStatBlockCatalogReachability(
+  input: SrdStatBlockCatalogReachabilityInput,
+): SrdStatBlockCatalogReachabilityResult {
+  const listedStatBlocks = input.catalog.listStatBlocks();
+  const installedById = indexByStatBlockId(input.installedStatBlocks);
+  const listedById = indexByStatBlockId(listedStatBlocks);
+  const installedAuthoredIdentities = indexAuthoredIdentities(
+    input.installedStatBlocks,
+  );
+  const issues = [
+    ...installedCardinalityIssues(
+      input.installedStatBlocks,
+      installedById,
+      installedAuthoredIdentities,
+    ),
+    ...installedIndexIssues(installedById, listedById),
+    ...collectAuthoredIdentityIssues("installed", input.installedStatBlocks),
+    ...listedIndexIssues(input, installedById, listedById),
+    ...collectAuthoredIdentityIssues("list", listedStatBlocks),
+  ];
+  return reachabilityResult(issues, listedById);
 }
