@@ -6644,7 +6644,7 @@ const RESERVED_STAT_BLOCK_LANGUAGE_NAMES = ["all", "none"] as const;
 
 /** Compare reserved labels after trimming and lower-casing, while preserving
  * the authored spelling of every non-reserved language label. */
-const StatBlockLanguageNameSchema = surfaceIdentity(
+export const StatBlockLanguageNameSchema = surfaceIdentity(
   Schema.NonEmptyTrimmedString.pipe(
     Schema.filter(
       (language) =>

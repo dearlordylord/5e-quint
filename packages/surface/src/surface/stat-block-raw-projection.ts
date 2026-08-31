@@ -36,6 +36,7 @@ import {
   StatBlockCommunicationSchema,
   StatBlockGearEntrySchema,
   StatBlockInitiativeSchema,
+  StatBlockLanguageNameSchema,
   StatBlockPassivePerceptionSchema,
   StatBlockTextOnlyReasonSchema,
   CreatureTraitSchema,
@@ -323,6 +324,21 @@ const decodeEvidenceValue = <Value, Encoded>(
     : malformedEvidence(context, field, evidence, expected, dependencyFallback);
 };
 
+const positiveIntegerEvidence = (
+  context: ProjectionIssueContext,
+  evidence: string,
+  field: string,
+): number =>
+  decodeEvidenceValue(
+    context,
+    PositiveIntegerSchema,
+    Number(evidence),
+    evidence,
+    field,
+    "a positive integer",
+    1,
+  );
+
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
@@ -446,6 +462,15 @@ const ProcedureBaseFields = {
   resourceLimits: Schema.Array(ResourceLimitProjectionSchema),
 } as const;
 
+const RangedAttackRangeSchema = strictStruct({
+  normal: PositiveIntegerSchema,
+  long: PositiveIntegerSchema,
+}).pipe(
+  Schema.filter(({ normal, long }) => normal <= long, {
+    message: () => "Normal attack range cannot exceed long range.",
+  }),
+);
+
 const ProcedureProjectionSchema = Schema.Union(
   strictStruct({
     ...ProcedureBaseFields,
@@ -472,14 +497,7 @@ const ProcedureProjectionSchema = Schema.Union(
     attackBonus: SignedIntegerSchema,
     attackAbilityEvidence: AttackAbilityEvidenceSchema,
     multiattackCount: exactOptional(PositiveIntegerSchema),
-    rangeFeet: strictStruct({
-      normal: PositiveIntegerSchema,
-      long: PositiveIntegerSchema,
-    }).pipe(
-      Schema.filter(({ normal, long }) => normal <= long, {
-        message: () => "Normal attack range cannot exceed long range.",
-      }),
-    ),
+    rangeFeet: RangedAttackRangeSchema,
     ammunition: exactOptional(NonEmptyStringSchema),
     reachFeet: exactOptional(ForbiddenValueSchema),
     onHit: nonEmpty(AttackEffectProjectionSchema),
@@ -684,6 +702,13 @@ const signedNumber = (value: string): number =>
 
 const normalizedProse = (value: string): string =>
   value.replaceAll("*", "").replace(/\s+/g, " ").trim();
+
+const normalizedProcedureEvidence = (value: string): string =>
+  value
+    .replaceAll("*", "")
+    .replace(/\s*\n+\s*/g, " - ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const normalizedIdentifier = (value: string): string =>
   value.toLowerCase().replaceAll(" ", "_");
@@ -1305,12 +1330,10 @@ const parseAbilityMatrix = (
   const matrixIssueCount = issueContext.issues.length;
   const facts = rows.flatMap((cells, rowIndex) => {
     const expandedCells = cells.flatMap((cell) => {
-      const combinedAbilityScore = cell.match(
-        /^(STR|DEX|CON|INT|WIS|CHA) (\d+)$/,
-      );
-      return combinedAbilityScore === null
+      const compactFact = cell.match(/^([A-Z]+) (.+)$/);
+      return compactFact === null
         ? [cell]
-        : [combinedAbilityScore[1] ?? "", combinedAbilityScore[2] ?? ""];
+        : [compactFact[1] ?? "", compactFact[2] ?? ""];
     });
     if (
       expandedCells.length !== 12 ||
@@ -1756,10 +1779,17 @@ const parseImmunities = (
   if (line === undefined) {
     return { kind: "none" };
   }
-  const [firstGroup = "", explicitConditions] = line
-    .replace("**Immunities**", "")
-    .trim()
-    .split("; ");
+  const immunityGroups = line.replace("**Immunities**", "").trim().split("; ");
+  if (immunityGroups.length > 2) {
+    return malformedEvidence(
+      issueContext,
+      "immunities.groups",
+      immunityGroups.join("; "),
+      "at most one damage-type group and one condition group",
+      { kind: "some", value: DEPENDENCY_FALLBACK_IMMUNITY },
+    );
+  }
+  const [firstGroup = "", explicitConditions] = immunityGroups;
   const parseDamageTypes = (value: string): readonly DamageType[] =>
     value === ""
       ? []
@@ -1924,6 +1954,11 @@ const parseSenses = (
             ),
           );
           if (kind === undefined) return [];
+          const rangeFeet = positiveIntegerEvidence(
+            issueContext,
+            sense[2] ?? "",
+            `${field}.rangeFeet`,
+          );
           const qualifier = sense[3];
           if (qualifier !== undefined) {
             if (
@@ -1942,16 +1977,23 @@ const parseSenses = (
             return [
               {
                 kind,
-                rangeFeet: Number(sense[2]),
+                rangeFeet,
                 qualifier: "unimpeded_by_magical_darkness" as const,
               },
             ];
           }
-          return [{ kind, rangeFeet: Number(sense[2]) }];
+          return [{ kind, rangeFeet }];
         });
   return {
     senses: sortedAbsentOrNonEmpty(senses, ({ kind }) => kind),
-    passivePerception: Number(passive?.[1]),
+    passivePerception:
+      passive === undefined
+        ? 1
+        : positiveIntegerEvidence(
+            issueContext,
+            passive[1] ?? "",
+            "passivePerception",
+          ),
   };
 };
 
@@ -1970,14 +2012,21 @@ const parseGear = (
     .replace("**Gear**", "")
     .trim()
     .split(", ")
-    .map((part) => {
+    .map((part, index) => {
       const gear = requireMatch(
         issueContext,
         part,
         /^(.*?)(?: \((\d+)\))?$/,
         "gear",
       );
-      const quantity = Number(gear[2] ?? 1);
+      const quantity =
+        gear[2] === undefined
+          ? 1
+          : positiveIntegerEvidence(
+              issueContext,
+              gear[2],
+              `gear.${index}.quantity`,
+            );
       const item = gear[1] ?? "";
       return {
         item: projectedGearItem(item, quantity),
@@ -2011,7 +2060,18 @@ const parseLanguageSet = (
     issueContext,
     (additional?.[1] ?? value)
       .split(/, (?![^()]*\))| and /)
-      .map((language) => language.replace(/^and /, "")),
+      .map((language, index) => {
+        const evidence = language.replace(/^and /, "");
+        return decodeEvidenceValue(
+          issueContext,
+          StatBlockLanguageNameSchema,
+          evidence,
+          evidence,
+          `communication.languages.${index}`,
+          "a nonempty non-reserved language name",
+          "Common",
+        );
+      }),
     "communication.languages",
     "Common",
   );
@@ -2053,7 +2113,15 @@ const parseCommunicationCandidate = (
   const telepathy =
     telepathyText?.[1] === undefined
       ? {}
-      : { telepathy: { rangeFeet: Number(telepathyText[1]) } };
+      : {
+          telepathy: {
+            rangeFeet: positiveIntegerEvidence(
+              issueContext,
+              telepathyText[1],
+              "communication.telepathy.rangeFeet",
+            ),
+          },
+        };
   const understoodOnly = withoutTelepathy.match(
     /^Understands (.+) but can't speak$/,
   );
@@ -2064,7 +2132,17 @@ const parseCommunicationCandidate = (
       ...telepathy,
     };
   }
-  const [spoken = "", qualifier] = withoutTelepathy.split("; ");
+  const communicationGroups = withoutTelepathy.split("; ");
+  if (communicationGroups.length > 2) {
+    return malformedEvidence(
+      issueContext,
+      "communication.groups",
+      withoutTelepathy,
+      "a spoken-language group and at most one qualifier",
+      { kind: "none" },
+    );
+  }
+  const [spoken = "", qualifier] = communicationGroups;
   if (telepathyText !== null && qualifier === undefined) {
     return {
       kind: "spoken_and_understood",
@@ -2073,17 +2151,24 @@ const parseCommunicationCandidate = (
     };
   }
   if (qualifier?.startsWith("telepathy ") === true) {
-    const telepathy = requireMatch(
-      issueContext,
-      qualifier,
-      /^telepathy (\d+) ft\.(?: \((doesn't allow the receiving creature to respond telepathically|works only with creatures that understand (.+))\))?$/,
-      "communication.telepathy",
+    const telepathy = assess(issueContext, () =>
+      requireMatch(
+        issueContext,
+        qualifier,
+        /^telepathy (\d+) ft\.(?: \((doesn't allow the receiving creature to respond telepathically|works only with creatures that understand (.+))\))?$/,
+        "communication.telepathy",
+      ),
     );
+    if (telepathy === undefined) return { kind: "none" };
     return {
       kind: "spoken_and_understood",
       languages: parseLanguageSet(issueContext, spoken),
       telepathy: {
-        rangeFeet: Number(telepathy[1]),
+        rangeFeet: positiveIntegerEvidence(
+          issueContext,
+          telepathy[1] ?? "",
+          "communication.telepathy.rangeFeet",
+        ),
         ...(telepathy[3] === undefined
           ? {}
           : {
@@ -2544,6 +2629,7 @@ const parseDamage = (
 };
 
 const parseRawResourceLimits = (
+  issueContext: ProjectionIssueContext,
   name: string,
 ): readonly ResourceLimitProjection[] => {
   if (/\(Recharge after a Short or Long Rest\)$/.test(name)) {
@@ -2560,7 +2646,15 @@ const parseRawResourceLimits = (
     return [
       {
         kind: "recharge",
-        minimumRoll: Number(recharge[1]),
+        minimumRoll: decodeEvidenceValue(
+          issueContext,
+          Schema.Number.pipe(Schema.int(), Schema.between(2, 6)),
+          Number(recharge[1]),
+          recharge[1] ?? "",
+          `resources.${normalizedProcedureName(name)}.minimumRoll`,
+          "a recharge minimum from 2 through 6",
+          6,
+        ),
         ownership: "shared",
       },
     ];
@@ -2571,7 +2665,11 @@ const parseRawResourceLimits = (
     : [
         {
           kind: "daily",
-          uses: Number(daily[1]),
+          uses: positiveIntegerEvidence(
+            issueContext,
+            daily[1] ?? "",
+            `resources.${normalizedProcedureName(name)}.uses`,
+          ),
           ownership: "shared",
         },
       ];
@@ -2799,21 +2897,48 @@ const parseSimpleAttack = (
         amount: { kind: "static", static: 1 },
       },
     ),
-    resourceLimits: parseRawResourceLimits(entry.name),
+    resourceLimits: parseRawResourceLimits(issueContext, entry.name),
   };
   return Match.value(attackType).pipe(
     Match.when("melee", (attackType) => ({
       ...commonAttack,
       attackType,
-      reachFeet: Number(match[3]),
+      reachFeet: positiveIntegerEvidence(
+        issueContext,
+        match[3] ?? "",
+        `procedures.${entry.name}.reachFeet`,
+      ),
     })),
     Match.when("ranged", (attackType) => ({
       ...commonAttack,
       attackType,
-      rangeFeet: {
-        normal: Number(match[4]),
-        long: Number(match[5] ?? match[4]),
-      },
+      rangeFeet: (() => {
+        const rangeCandidate = assess(issueContext, () => ({
+          normal: positiveIntegerEvidence(
+            issueContext,
+            match[4] ?? "",
+            `procedures.${entry.name}.rangeFeet.normal`,
+          ),
+          long: positiveIntegerEvidence(
+            issueContext,
+            match[5] ?? match[4] ?? "",
+            `procedures.${entry.name}.rangeFeet.long`,
+          ),
+        }));
+        return rangeCandidate === undefined
+          ? { normal: 1, long: 1 }
+          : decodeEvidenceValue(
+              issueContext,
+              RangedAttackRangeSchema,
+              rangeCandidate,
+              match[5] === undefined
+                ? (match[4] ?? "")
+                : `${match[4]}/${match[5]}`,
+              `procedures.${entry.name}.rangeFeet`,
+              "positive normal range not exceeding long range",
+              { normal: 1, long: 1 },
+            );
+      })(),
       ...(ammunition === undefined ? {} : { ammunition }),
     })),
     Match.exhaustive,
@@ -2849,18 +2974,37 @@ const parseSimpleSave = (
       match[1] ?? "",
       `procedures.${entry.name}.ability`,
     ),
-    dc: Number(match[2]),
+    dc: positiveIntegerEvidence(
+      issueContext,
+      match[2] ?? "",
+      `procedures.${entry.name}.dc`,
+    ),
     area:
       line === null
-        ? { kind: "cone", lengthFeet: Number(match[3]) }
+        ? {
+            kind: "cone",
+            lengthFeet: positiveIntegerEvidence(
+              issueContext,
+              match[3] ?? "",
+              `procedures.${entry.name}.area.lengthFeet`,
+            ),
+          }
         : {
             kind: "line",
-            lengthFeet: Number(match[3]),
-            widthFeet: Number(match[4]),
+            lengthFeet: positiveIntegerEvidence(
+              issueContext,
+              match[3] ?? "",
+              `procedures.${entry.name}.area.lengthFeet`,
+            ),
+            widthFeet: positiveIntegerEvidence(
+              issueContext,
+              match[4] ?? "",
+              `procedures.${entry.name}.area.widthFeet`,
+            ),
           },
     onFail,
     onSuccess: "half_damage",
-    resourceLimits: parseRawResourceLimits(entry.name),
+    resourceLimits: parseRawResourceLimits(issueContext, entry.name),
   };
 };
 
@@ -2899,7 +3043,7 @@ const parseSimpleMultiattack = (
         { procedureName: pair[2], count: firstCount },
         { procedureName: pair[4], count: secondCount },
       ],
-      resourceLimits: parseRawResourceLimits(entry.name),
+      resourceLimits: parseRawResourceLimits(issueContext, entry.name),
     };
   }
   const match = entry.description.match(
@@ -2921,7 +3065,7 @@ const parseSimpleMultiattack = (
     name: normalizedProcedureName(entry.name),
     kind: "multiattack",
     dispatches: [{ procedureName: match[2], count }],
-    resourceLimits: parseRawResourceLimits(entry.name),
+    resourceLimits: parseRawResourceLimits(issueContext, entry.name),
   };
 };
 
@@ -2944,7 +3088,11 @@ const splitOutsideParentheses = (value: string): readonly string[] => {
   return parts.filter((part) => part.length > 0);
 };
 
-const parseSpell = (value: string): SpellProjection => {
+const parseSpell = (
+  issueContext: ProjectionIssueContext,
+  value: string,
+  field: string,
+): SpellProjection => {
   const annotation = value.match(/^(.+?) \((.+)\)$/);
   const name = annotation?.[1] ?? value;
   const detail = annotation?.[2];
@@ -2955,7 +3103,13 @@ const parseSpell = (value: string): SpellProjection => {
       ? detail === undefined
         ? {}
         : { restriction: detail }
-      : { castAtLevel: Number(level[1]) }),
+      : {
+          castAtLevel: positiveIntegerEvidence(
+            issueContext,
+            level[1] ?? "",
+            `${field}.castAtLevel`,
+          ),
+        }),
   };
 };
 
@@ -2974,39 +3128,73 @@ const parseSpellcasting = (
     /^The .+ casts one of the following spells, (?:(requiring no (?:(Somatic or )?Material|spell) components) and )?using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as (?:the )?spellcasting ability(?: \(spell save DC (\d+)(?:, ([+−-]\d+) to hit with spell attacks)?\))?: /,
   );
   if (header === null) return undefined;
-  const groups = Array.from(
-    entry.description.matchAll(
-      /(?:- )?(?:At Will|(\d+)\/Day( Each)?): (.+?)(?= (?:- )?(?:At Will|\d+\/Day(?: Each)?):|$)/g,
-    ),
-    (
-      group,
-    ): Extract<
-      ProcedureProjection,
-      { readonly kind: "spellcasting" }
-    >["groups"][number] => {
-      const uses = group[1];
+  const groupIssueCount = issueContext.issues.length;
+  const groups = entry.description
+    .slice(header[0].length)
+    .replace(/^[- ]+/, "")
+    .replace(/ (?=\d+\/Day(?: Each)?:)/g, " - ")
+    .split(" - ")
+    .flatMap((segment, groupIndex) => {
+      const groupEvidence = segment.replace(/^[- ]+/, "");
+      const group = assess(issueContext, () =>
+        requireMatch(
+          issueContext,
+          groupEvidence,
+          /^([^:]+): (.+)$/,
+          `procedures.${entry.name}.groups.${groupIndex}`,
+        ),
+      );
+      if (group === undefined) return [];
+      const label = group[1] ?? "";
+      const supportedLabel = label.match(/^(?:At Will|(\d+)\/Day( Each)?)$/);
+      if (supportedLabel === null) {
+        unsupportedEvidence(
+          issueContext,
+          `procedures.${entry.name}.groups.${groupIndex}.label`,
+          label,
+          "At Will, N/Day, or N/Day Each",
+          undefined,
+        );
+        return [];
+      }
+      const uses = supportedLabel[1];
       const spells = nonEmptyValues(
         issueContext,
-        splitOutsideParentheses(group[3] ?? "").map(parseSpell),
-        `procedures.${entry.name}.spells`,
+        splitOutsideParentheses(group[2] ?? "").map((spell, index) =>
+          parseSpell(
+            issueContext,
+            spell,
+            `procedures.${entry.name}.groups.${groupIndex}.spells.${index}`,
+          ),
+        ),
+        `procedures.${entry.name}.groups.${groupIndex}.spells`,
         { spellId: normalizedIdentifier(entry.name) },
       );
-      return uses === undefined
-        ? { kind: "at_will", spells, resourceLimits: [] }
-        : {
-            kind: "limited",
-            spells,
-            resourceLimits: [
-              {
-                kind: "daily",
-                uses: Number(uses),
-                ownership: group[2] === undefined ? "shared" : "each",
-              },
-            ],
-          };
-    },
-  );
+      return [
+        uses === undefined
+          ? { kind: "at_will" as const, spells, resourceLimits: [] as const }
+          : {
+              kind: "limited" as const,
+              spells,
+              resourceLimits: [
+                {
+                  kind: "daily" as const,
+                  uses: positiveIntegerEvidence(
+                    issueContext,
+                    uses,
+                    `procedures.${entry.name}.groups.${groupIndex}.uses`,
+                  ),
+                  ownership:
+                    supportedLabel[2] === undefined
+                      ? ("shared" as const)
+                      : ("each" as const),
+                },
+              ] as const,
+            },
+      ];
+    });
   if (groups.length === 0) {
+    if (issueContext.issues.length > groupIssueCount) return undefined;
     return missingEvidence(
       issueContext,
       `procedures.${entry.name}.groups`,
@@ -3023,7 +3211,15 @@ const parseSpellcasting = (
       header[3] ?? "",
       `procedures.${entry.name}.ability`,
     ),
-    ...(header[4] === undefined ? {} : { spellSaveDc: Number(header[4]) }),
+    ...(header[4] === undefined
+      ? {}
+      : {
+          spellSaveDc: positiveIntegerEvidence(
+            issueContext,
+            header[4],
+            `procedures.${entry.name}.spellSaveDc`,
+          ),
+        }),
     ...(header[5] === undefined
       ? {}
       : { spellAttackBonus: signedNumber(header[5]) }),
@@ -3048,7 +3244,7 @@ const parseSpellcasting = (
         resourceLimits: [],
       },
     ),
-    resourceLimits: parseRawResourceLimits(entry.name),
+    resourceLimits: parseRawResourceLimits(issueContext, entry.name),
   };
 };
 
@@ -3080,8 +3276,12 @@ const parseDirectSpellcasting = (
   if (match[2] !== undefined && sourceRestriction !== undefined) {
     return undefined;
   }
-  const spells = splitOutsideParentheses(match[1] ?? "").map((value) =>
-    parseSpell(value.replace(/^or /, "")),
+  const spells = splitOutsideParentheses(match[1] ?? "").map((value, index) =>
+    parseSpell(
+      issueContext,
+      value.replace(/^or /, ""),
+      `procedures.${entry.name}.spells.${index}`,
+    ),
   );
   if (
     spells.length === 0 ||
@@ -3106,7 +3306,7 @@ const parseDirectSpellcasting = (
       )
     : inherited;
   if (ability === undefined) return undefined;
-  const limits = parseRawResourceLimits(entry.name);
+  const limits = parseRawResourceLimits(issueContext, entry.name);
   const projectedSpellList = nonEmptyValues(
     issueContext,
     projectedSpells,
@@ -3184,7 +3384,7 @@ const parseActionOption = (
           `procedures.${entry.name}.options`,
           normalizedProcedureName(entry.name),
         ),
-        resourceLimits: parseRawResourceLimits(entry.name),
+        resourceLimits: parseRawResourceLimits(issueContext, entry.name),
       };
 };
 
@@ -3201,7 +3401,9 @@ const rawTextOnlyReason = (
   /^The .+ casts .+ twice, requiring no .+ components and using .+ as the spellcasting ability/.test(
     entry.description,
   ) ||
-  (parseRawResourceLimits(entry.name).length === 0 &&
+  (!/\((?:Recharge (?:\d(?:–\d)?|after a Short or Long Rest)|\d+\/Day(?:; .+)?)\)$/.test(
+    entry.name,
+  ) &&
     /^The .+ casts .+ \(level \d+ version\), requiring no spell components and using .+ as the spellcasting ability/.test(
       entry.description,
     )) ||
@@ -3264,7 +3466,7 @@ const parseRawProcedure = (
       kind: "textOnly",
       description: entry.description,
       reason: rawTextOnlyReason(entry),
-      resourceLimits: parseRawResourceLimits(entry.name),
+      resourceLimits: parseRawResourceLimits(issueContext, entry.name),
     }
   );
 };
@@ -3277,18 +3479,30 @@ const parseLegendaryActionUses = (
     candidate.startsWith("*Legendary Action Uses:"),
   );
   if (line === undefined) return undefined;
-  const uses = requireMatch(
+  const uses = assess(issueContext, () =>
+    requireMatch(
+      issueContext,
+      line,
+      /^\*Legendary Action Uses: (\d+)(?: \((\d+) in Lair\))?\./,
+      "legendaryActionUses",
+    ),
+  );
+  if (uses === undefined) return undefined;
+  const usesOutsideLair = positiveIntegerEvidence(
     issueContext,
-    line,
-    /^\*Legendary Action Uses: (\d+)(?: \((\d+) in Lair\))?\./,
-    "legendaryActionUses",
+    uses[1] ?? "",
+    "legendaryActionUses.usesOutsideLair",
   );
   return uses[2] === undefined
-    ? { kind: "fixed", uses: Number(uses[1]) }
+    ? { kind: "fixed", uses: usesOutsideLair }
     : {
         kind: "lair_bonus",
-        usesOutsideLair: Number(uses[1]),
-        additionalUsesInLair: Number(uses[2]) - Number(uses[1]),
+        usesOutsideLair,
+        additionalUsesInLair: positiveIntegerEvidence(
+          issueContext,
+          String(Number(uses[2]) - usesOutsideLair),
+          "legendaryActionUses.additionalUsesInLair",
+        ),
       };
 };
 
@@ -3444,7 +3658,7 @@ const projectRawStatBlockUnsafe = (
             kind: "textOnly" as const,
             description: entry.description,
             reason: "unsupported_action_shape" as const,
-            resourceLimits: parseRawResourceLimits(entry.name),
+            resourceLimits: parseRawResourceLimits(issueContext, entry.name),
           };
         }),
         Match.when({ kind: "textOnly" }, (unchanged) => unchanged),
@@ -3455,9 +3669,37 @@ const projectRawStatBlockUnsafe = (
         Match.exhaustive,
       ),
   );
-  const legendaryActionUses = assess(issueContext, () =>
+  const legendaryIssueCount = issueContext.issues.length;
+  const parsedLegendaryActionUses = assess(issueContext, () =>
     parseLegendaryActionUses(issueContext, lines),
   );
+  const hasLegendaryActionEntries = entries.some(
+    ({ section }) => section === "Legendary Actions",
+  );
+  const legendaryActionUses = (() => {
+    if (
+      hasLegendaryActionEntries &&
+      parsedLegendaryActionUses === undefined &&
+      issueContext.issues.length === legendaryIssueCount
+    ) {
+      return missingEvidence(
+        issueContext,
+        "legendaryActionUses",
+        "Legendary Action Uses for the present Legendary Actions section",
+        undefined,
+      );
+    }
+    if (!hasLegendaryActionEntries && parsedLegendaryActionUses !== undefined) {
+      return unsupportedEvidence(
+        issueContext,
+        "legendaryActionUses",
+        "uses without Legendary Actions",
+        "uses paired with a nonempty Legendary Actions section",
+        undefined,
+      );
+    }
+    return parsedLegendaryActionUses;
+  })();
   const resources = procedureResourceLimits(procedures);
 
   return {
@@ -4133,7 +4375,7 @@ const projectAuthoredProcedures = (
         const parsed = parseSpellcasting(issueContext, {
           section,
           name: textOnly.name,
-          description: normalizedProse(textOnly.description),
+          description: normalizedProcedureEvidence(textOnly.description),
         });
         parsedTextOnlySpellcasting.set(entry, { value: parsed });
         return Match.value(parsed).pipe(
@@ -4196,7 +4438,7 @@ const projectAuthoredProcedures = (
             {
               section,
               name: textOnly.name,
-              description: normalizedProse(textOnly.description),
+              description: normalizedProcedureEvidence(textOnly.description),
             },
             {
               abilityScores: record.statBlock.abilityScores,

@@ -2278,7 +2278,210 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     ]);
   });
 
-  test("reports malformed Spellcasting groups once on RAW and authored parse-once paths", () => {
+  test("accumulates independent positive-bound failures in senses and spell limits", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Giant Owl",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutatedSource = canonicalSource
+      .split(/\r?\n/)
+      .map((line, index) => {
+        if (
+          index + 1 < occurrence.anchor.lineStart ||
+          index + 1 > occurrence.anchor.lineEnd
+        ) {
+          return line;
+        }
+        if (line.startsWith("**Senses**")) {
+          return line.replace("Darkvision 120 ft.", "Darkvision 0 ft.");
+        }
+        return line.startsWith("1/Day:")
+          ? line.replace("1/Day:", "0/Day:")
+          : line;
+      })
+      .join("\n");
+
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(
+      result.failure.issues.map(({ kind, anchor, ...issue }) => ({
+        kind,
+        field: anchor.field,
+        evidence: "evidence" in issue ? issue.evidence : undefined,
+      })),
+    ).toEqual([
+      {
+        kind: "malformed-evidence",
+        field: "senses.0.rangeFeet",
+        evidence: "0",
+      },
+      {
+        kind: "malformed-evidence",
+        field: "procedures.Spellcasting.groups.1.uses",
+        evidence: "0",
+      },
+    ]);
+  });
+
+  test("finds invalid compact-matrix scores independently of neighboring valid cells", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Centaur Trooper",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+
+    fc.assert(
+      fc.property(
+        fc.uniqueArray(fc.constantFrom(0, 1), {
+          minLength: 1,
+          maxLength: 2,
+        }),
+        (selected) => {
+          const selectedSet = new Set(selected);
+          const mutatedSource = canonicalSource
+            .split(/\r?\n/)
+            .map((line, index) => {
+              if (
+                index + 1 < occurrence.anchor.lineStart ||
+                index + 1 > occurrence.anchor.lineEnd
+              ) {
+                return line;
+              }
+              return line
+                .replace("DEX 14", selectedSet.has(0) ? "DEX 0" : "DEX 14")
+                .replace("CON 14", selectedSet.has(1) ? "CON 31" : "CON 14");
+            })
+            .join("\n");
+          const result = projectRawStatBlock(
+            {
+              sourcePath: occurrence.anchor.sourcePath,
+              contents: mutatedSource,
+            },
+            occurrence,
+            equipmentSource,
+          );
+          expect(result.tag).toBe("failed");
+          if (
+            result.tag !== "failed" ||
+            result.failure.tag !== "projection-issues"
+          ) {
+            return;
+          }
+          expect(
+            result.failure.issues.map(({ kind, anchor }) => ({
+              kind,
+              field: anchor.field,
+            })),
+          ).toEqual(
+            [...selectedSet]
+              .sort((left, right) => left - right)
+              .map((selectedIndex) => ({
+                kind: "malformed-evidence",
+                field: `abilityScores.matrix.${selectedIndex + 1}.score`,
+              })),
+          );
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
+  test("rejects a reserved language and reversed ranged-attack distance at their owners", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Centaur Trooper",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutatedSource = canonicalSource
+      .split(/\r?\n/)
+      .map((line, index) => {
+        if (
+          index + 1 < occurrence.anchor.lineStart ||
+          index + 1 > occurrence.anchor.lineEnd
+        ) {
+          return line;
+        }
+        if (line.startsWith("**Languages**")) {
+          return line.replace("Elvish", "All");
+        }
+        return line.startsWith("**Longbow.")
+          ? line.replace("range 150/600 ft.", "range 600/150 ft.")
+          : line;
+      })
+      .join("\n");
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(
+      result.failure.issues.map(({ kind, anchor }) => ({
+        kind,
+        field: anchor.field,
+      })),
+    ).toEqual([
+      { kind: "malformed-evidence", field: "communication.languages.0" },
+      { kind: "malformed-evidence", field: "procedures.Longbow.rangeFeet" },
+    ]);
+  });
+
+  test("reports missing Legendary Action Uses at the correlated domain field", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Adult Red Dragon",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutatedSource = canonicalSource
+      .split(/\r?\n/)
+      .filter(
+        (line, index) =>
+          index + 1 < occurrence.anchor.lineStart ||
+          index + 1 > occurrence.anchor.lineEnd ||
+          !line.startsWith("*Legendary Action Uses:"),
+      )
+      .join("\n");
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(result.failure.issues).toEqual([
+      expect.objectContaining({
+        kind: "missing-required-evidence",
+        anchor: expect.objectContaining({ field: "legendaryActionUses" }),
+      }),
+    ]);
+  });
+
+  test("reports each malformed Spellcasting group on RAW and authored parse-once paths", () => {
     const occurrence = corpusParity.discovery.occurrences.find(
       ({ name }) => name === "Incubus",
     );
@@ -2338,11 +2541,24 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       ) {
         continue;
       }
-      expect(result.failure.issues).toHaveLength(1);
-      expect(result.failure.issues[0]).toMatchObject({
-        kind: "missing-required-evidence",
-        anchor: { field: "procedures.Spellcasting.groups" },
-      });
+      expect(
+        result.failure.issues.map(({ kind, anchor, ...issue }) => ({
+          kind,
+          field: anchor.field,
+          evidence: "evidence" in issue ? issue.evidence : undefined,
+        })),
+      ).toEqual([
+        {
+          kind: "unsupported-evidence",
+          field: "procedures.Spellcasting.groups.0.label",
+          evidence: "Unsupported",
+        },
+        {
+          kind: "unsupported-evidence",
+          field: "procedures.Spellcasting.groups.1.label",
+          evidence: "Also Unsupported",
+        },
+      ]);
     }
   });
 
