@@ -218,10 +218,11 @@ function unitSupportProcedureIsOwnedByUnitFeature(
     typeof candidate.profile === "object" &&
     candidate.profile.kind === "failedSavingThrowReroll"
   ) {
+    const supportProfileKind = candidate.profile.kind;
     return unitFeatureProcedures.some(
       (feature) =>
         feature.unitId === candidate.unitId &&
-        feature.execution.kind === candidate.profile.kind,
+        feature.execution.kind === supportProfileKind,
     );
   }
   const supportExecution = unitSupportProcedureExecution(
