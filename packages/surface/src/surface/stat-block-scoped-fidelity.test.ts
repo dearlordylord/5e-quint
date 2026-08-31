@@ -2101,7 +2101,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     }
     expect(result.failure.issues).toHaveLength(1);
     expect(result.failure.issues[0]).toMatchObject({
-      kind: "malformed-evidence",
+      kind: "missing-required-evidence",
       anchor: { field: "resistances.options" },
     });
   });
@@ -2231,6 +2231,45 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     ]);
   });
 
+  test("anchors an empty procedure description before text-only fallback projection", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Allosaurus",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutatedSource = canonicalSource
+      .split(/\r?\n/)
+      .map((line, index) =>
+        index + 1 >= occurrence.anchor.lineStart &&
+        index + 1 <= occurrence.anchor.lineEnd &&
+        line.startsWith("**Bite.")
+          ? "**Bite.**"
+          : line,
+      )
+      .join("\n");
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(result.failure.issues).toEqual([
+      expect.objectContaining({
+        kind: "malformed-evidence",
+        anchor: expect.objectContaining({
+          field: "procedures.Bite.description",
+        }),
+        evidence: "",
+      }),
+    ]);
+  });
+
   test("anchors domain-invalid HP and damage dice at their numeric leaves", () => {
     const occurrence = corpusParity.discovery.occurrences.find(
       ({ name }) => name === "Allosaurus",
@@ -2334,6 +2373,35 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     ]);
   });
 
+  test("accepts zero Passive Perception through its canonical nonnegative owner", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Giant Owl",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutatedSource = canonicalSource
+      .split(/\r?\n/)
+      .map((line, index) =>
+        index + 1 >= occurrence.anchor.lineStart &&
+        index + 1 <= occurrence.anchor.lineEnd &&
+        line.startsWith("**Senses**")
+          ? line.replace("Passive Perception 16", "Passive Perception 0")
+          : line,
+      )
+      .join("\n");
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("projected");
+    if (result.tag !== "projected") return;
+    expect(result.projection.generalFacts.passivePerception).toBe(0);
+  });
+
   test("anchors a direct-spell save DC failure at the procedure leaf", () => {
     const occurrence = corpusParity.discovery.occurrences.find(
       ({ name }) => name === "Dust Mephit",
@@ -2398,6 +2466,81 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         anchor: expect.objectContaining({ field: "gear.0.item" }),
         evidence: "",
       }),
+    ]);
+  });
+
+  test("anchors duplicate saving throw abilities at the later source item", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Earth Elemental",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutatedSource = canonicalSource.replace(
+      "**Saves** STR +5, CON +5",
+      "**Saves** STR +5, STR +5",
+    );
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(result.failure.issues).toEqual([
+      expect.objectContaining({
+        kind: "malformed-evidence",
+        anchor: expect.objectContaining({
+          field: "savingThrowModifiers.1.ability",
+        }),
+        evidence: "STR",
+      }),
+    ]);
+  });
+
+  test("accumulates duplicate Size alternatives and a swarm-status creature tag", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Mage",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const mutatedSource = canonicalSource.replace(
+      "Medium or Small Humanoid (Wizard), Neutral",
+      "Medium or Medium Humanoid (swarm), Neutral",
+    );
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents: mutatedSource },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(
+      result.failure.issues.map(({ kind, anchor, ...issue }) => ({
+        kind,
+        field: anchor.field,
+        evidence: "evidence" in issue ? issue.evidence : undefined,
+      })),
+    ).toEqual([
+      {
+        kind: "malformed-evidence",
+        field: "size.options.1",
+        evidence: "Medium",
+      },
+      {
+        kind: "malformed-evidence",
+        field: "creatureTypeTags.0",
+        evidence: "swarm",
+      },
     ]);
   });
 
@@ -2685,6 +2828,261 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       expect.objectContaining({
         kind: "missing-required-evidence",
         anchor: expect.objectContaining({ field: "legendaryActionUses" }),
+      }),
+    ]);
+  });
+
+  test("covers the exhaustive exact-cause review matrix with table-driven RAW mutations", () => {
+    const cases = [
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("**Speed**") ? line.replace("60 ft.", "0 ft.") : line,
+        expected: [
+          { kind: "malformed-evidence", field: "speeds.0.feet", evidence: "0" },
+        ],
+      },
+      {
+        name: "Swarm of Insects",
+        mutate: (line: string) =>
+          line.startsWith("**Speed**")
+            ? line.replace("Climb or Fly", "Climb or Climb")
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "speeds.1.gmChoice.1.kind",
+            evidence: "Climb",
+          },
+        ],
+      },
+      {
+        name: "Hydra",
+        mutate: (line: string) =>
+          line.startsWith("**Immunities**")
+            ? "**Immunities** Blinded, Blinded (while sleeping)"
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "immunities.qualifiedConditions.1.condition",
+            evidence: "Blinded (while sleeping)",
+          },
+        ],
+      },
+      {
+        name: "Dretch",
+        mutate: (line: string) =>
+          line.startsWith("**Languages**")
+            ? "**Languages** None; telepathy malformed"
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "communication.languages.0",
+            evidence: "None",
+          },
+          {
+            kind: "malformed-evidence",
+            field: "communication.telepathy",
+            evidence: "telepathy malformed",
+          },
+        ],
+      },
+      {
+        name: "Dretch",
+        mutate: (line: string) =>
+          line.startsWith("**Languages**")
+            ? line.replace("understand Abyssal", "understand None")
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field:
+              "communication.telepathy.requiresLanguageUnderstanding.languages.0",
+            evidence: "None",
+          },
+        ],
+      },
+      {
+        name: "Blink Dog",
+        mutate: (line: string) =>
+          line.startsWith("**Languages**")
+            ? "**Languages** Blink Dog; understands malformed"
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "communication.understoodLanguages",
+            evidence: "understands malformed",
+          },
+        ],
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("**CR**")
+            ? line.replace(/\*\*CR\*\* [^ ]+/, "**CR** 1/0")
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "challengeRating.denominator",
+            evidence: "0",
+          },
+        ],
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("**Bite.")
+            ? line.replace("**Bite.", "** Bite.")
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "procedures.0.name",
+            evidence: " Bite",
+          },
+        ],
+      },
+      {
+        name: "Adult Red Dragon",
+        mutate: (line: string) =>
+          line.startsWith("*Legendary Action Uses:")
+            ? line.replace("3 (4 in Lair)", "3 (2 in Lair)")
+            : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "legendaryActionUses.usesInLair",
+            evidence: "2",
+          },
+        ],
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("**AC**") ? line.replace("13 ", "13 ( ) ") : line,
+        expected: [
+          {
+            kind: "malformed-evidence",
+            field: "ac.annotations.0",
+            evidence: " ",
+          },
+        ],
+      },
+    ] as const;
+
+    for (const scenario of cases) {
+      const occurrence = corpusParity.discovery.occurrences.find(
+        ({ name }) => name === scenario.name,
+      );
+      expect(occurrence, scenario.name).toBeDefined();
+      if (occurrence === undefined) continue;
+      const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+      expect(canonicalSource, scenario.name).toBeDefined();
+      if (canonicalSource === undefined) continue;
+      const contents = canonicalSource
+        .split(/\r?\n/)
+        .map((line, index) =>
+          index + 1 >= occurrence.anchor.lineStart &&
+          index + 1 <= occurrence.anchor.lineEnd
+            ? scenario.mutate(line)
+            : line,
+        )
+        .join("\n");
+      const result = projectRawStatBlock(
+        { sourcePath: occurrence.anchor.sourcePath, contents },
+        occurrence,
+        equipmentSource,
+      );
+      expect(result.tag, scenario.name).toBe("failed");
+      if (
+        result.tag !== "failed" ||
+        result.failure.tag !== "projection-issues"
+      ) {
+        continue;
+      }
+      expect(
+        result.failure.issues.map(({ kind, anchor, ...issue }) => ({
+          kind,
+          field: anchor.field,
+          evidence: "evidence" in issue ? issue.evidence : undefined,
+        })),
+        scenario.name,
+      ).toEqual(scenario.expected);
+    }
+  });
+
+  test("uses the trait description owner rather than the procedure description owner", () => {
+    const occurrence = corpusParity.discovery.occurrences.find(
+      ({ name }) => name === "Hydra",
+    );
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const canonicalSource = sourceByPath.get(occurrence.anchor.sourcePath);
+    expect(canonicalSource).toBeDefined();
+    if (canonicalSource === undefined) return;
+    const contents = canonicalSource
+      .split(/\r?\n/)
+      .map((line, index) =>
+        index + 1 >= occurrence.anchor.lineStart &&
+        index + 1 <= occurrence.anchor.lineEnd &&
+        line.startsWith("***Hold Breath.")
+          ? "***Hold Breath.***"
+          : line,
+      )
+      .join("\n");
+    const result = projectRawStatBlock(
+      { sourcePath: occurrence.anchor.sourcePath, contents },
+      occurrence,
+      equipmentSource,
+    );
+    expect(result.tag).toBe("projected");
+    if (result.tag !== "projected") return;
+    expect(
+      result.projection.traits.find(({ name }) => name === "Hold Breath")
+        ?.description,
+    ).toBe("");
+  });
+
+  test("normalizes and validates an authored text-only description once for both consumers", () => {
+    const giantOwl = srdStatBlockCollection.statBlocks.find(
+      ({ name }) => name === "Giant Owl",
+    );
+    expect(giantOwl).toBeDefined();
+    if (giantOwl === undefined) return;
+    const actions = giantOwl.statBlock.actions;
+    expect(actions).toBeDefined();
+    if (actions === undefined) return;
+    const [firstAction, ...remainingActions] = actions;
+    const mutateAction = (entry: (typeof actions)[number]) =>
+      entry.kind === "textOnly" && entry.name === "Spellcasting"
+        ? { ...entry, description: "***" }
+        : entry;
+    const mutated = {
+      ...giantOwl,
+      statBlock: {
+        ...giantOwl.statBlock,
+        actions: [
+          mutateAction(firstAction),
+          ...remainingActions.map(mutateAction),
+        ] as const,
+      },
+    };
+    const result = projectAuthoredStatBlock(mutated, equipmentSource);
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(result.failure.issues).toEqual([
+      expect.objectContaining({
+        kind: "malformed-evidence",
+        anchor: expect.objectContaining({
+          field: "procedures.Spellcasting.description",
+        }),
+        evidence: "",
       }),
     ]);
   });

@@ -5675,11 +5675,20 @@ const StatBlockSpellcastingExecutableProcedureEntryFields = {
   resourceRefs: StatBlockProcedureNoResourceRefsSchema,
 } as const;
 
+export const StatBlockProcedureDescriptionSchema = surfaceExactProse(
+  Schema.NonEmptyTrimmedString,
+);
+
+export const StatBlockProcedureNameSchema = surfaceIdentity(
+  Schema.NonEmptyTrimmedString,
+  "name",
+);
+
 const StatBlockTextOnlyProcedureEntryFields = {
   kind: Schema.Literal("textOnly"),
   procedureOrdinal: StatBlockProcedureOrdinalSchema,
-  name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
-  description: surfaceExactProse(Schema.NonEmptyTrimmedString),
+  name: StatBlockProcedureNameSchema,
+  description: StatBlockProcedureDescriptionSchema,
   reason: StatBlockTextOnlyReasonSchema,
   resourceRefs: StatBlockProcedureResourceRefsSchema,
 } as const;
@@ -5906,9 +5915,12 @@ export const CreatureTraitEffectSchema = Schema.Union(
   }),
 );
 
+export const CreatureTraitNameSchema = surfaceIdentity(Schema.String, "name");
+export const CreatureTraitDescriptionSchema = surfaceExactProse(Schema.String);
+
 export const CreatureTraitSchema = Schema.Struct({
-  name: surfaceIdentity(Schema.String, "name"),
-  description: surfaceExactProse(Schema.String),
+  name: CreatureTraitNameSchema,
+  description: CreatureTraitDescriptionSchema,
   effect: optionalExact(CreatureTraitEffectSchema),
 });
 
@@ -6628,11 +6640,13 @@ export const StandaloneStatBlockSpeedEntrySchema = Schema.Union(
   StatBlockGmSpeedChoiceSchema,
 );
 
+export const StatBlockArmorClassAnnotationSchema = surfaceExactProse(
+  Schema.NonEmptyTrimmedString,
+);
+
 export const StatBlockArmorClassSchema = Schema.Struct({
   value: StandaloneStatBlockValueSchema,
-  annotations: optionalExact(
-    nonEmpty(surfaceExactProse(Schema.NonEmptyTrimmedString)),
-  ),
+  annotations: optionalExact(nonEmpty(StatBlockArmorClassAnnotationSchema)),
 });
 
 export const StatBlockGearItemSchema = surfaceIdentity(
