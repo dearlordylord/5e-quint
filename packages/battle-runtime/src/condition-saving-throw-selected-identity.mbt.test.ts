@@ -49,6 +49,7 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
@@ -62,7 +63,7 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { spellConditionChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 
 type ConditionSavingThrowSelectedIdentityProjection = {
   readonly targetCharmed: boolean;
@@ -99,7 +100,7 @@ type ActionSpellAct = AvailableBattleAct & {
   >;
 };
 type CharacterCreatureInit = Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >;
 type CharacterClassName =
@@ -1205,7 +1206,7 @@ function conditionSpellBattle(
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }

@@ -30,7 +30,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { openAfterDamageSequenceInterruptWindow } from "./battle-reducer/interrupt-execution.ts";
 import {
@@ -62,6 +62,7 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -1172,11 +1173,11 @@ function battleWithHellishRebuke(
   spell: SpellRecord,
   input: {
     readonly damagerSpellcasting?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["spellcasting"];
     readonly casterSpellcasting?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["spellcasting"];
   } = {},
@@ -1218,7 +1219,7 @@ function battleWithHellishRebuke(
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -1320,7 +1321,7 @@ function startDirectSpellLaneBattle(
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -1330,11 +1331,11 @@ function characterCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly classLevels?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {

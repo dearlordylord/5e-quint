@@ -20,7 +20,6 @@ import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import { Result } from "effect";
 import * as Option from "effect/Option";
 import { Schema } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { describe, expect, test } from "vitest";
 import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
@@ -89,8 +88,10 @@ import {
   type BattleHole,
   type BattleInterruptProcedureChoice,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleState,
   type BattleRuntimeSession,
+  type CombatantId,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
 import { battleStatBlockProcedureExecutionRef } from "./identity.ts";
@@ -136,6 +137,7 @@ import {
   spellSlotLevel,
 } from "@dnd/shared/types";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 const casterId = combatantId("caster");
 const familiarId = combatantId("caster-familiar");
@@ -202,7 +204,7 @@ function requireSpellRecord(unitId: string): SpellRecord {
 }
 
 function halflingLuckUnitRef(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unit = halflingLuckUnit();
@@ -218,7 +220,7 @@ function halflingLuckUnitRef(): Extract<
 
 function halflingLuckUnitFeature(): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"]
 >[number] {
@@ -301,100 +303,42 @@ function startFixtureBattle(
     statBlockCatalog,
     parseSharedStatBlockId("stat_block_skeleton"),
   );
-  const maxHp = literalHp(skeleton);
   const result = startBattle({
     battleId: battleId("companion-lifecycle-test"),
     combatants: [
-      {
+      authoredSkeletonBattleInit({
         combatantId: casterId,
-        initiative: initiativeScore(12),
-        creatureInit: {
-          kind: "statBlock",
-          source: Result.getOrThrow(
-            battleStatBlockCombatantSource(
-              projectedStatBlockRuntimeSource(skeleton),
-            ),
-          ),
-          currentHp: maxHp,
-          tempHp: Hp(0),
-          ammunitionStocks: [
-            { ammunition: "arrow" as const, remaining: resourceCount(20) },
-          ],
-          conditions: [],
-          presentation: {
-            displayName: "Caster",
-            communication: { kind: "none" as const },
-            traits: [],
-            orderedProcedures: [],
-          },
-        },
-      },
+        initiative: 12,
+        displayName: "Caster",
+        arrowCount: 20,
+        statBlock: skeleton,
+      }),
       ...(input.includeEnemy === true
         ? [
-            {
+            authoredSkeletonBattleInit({
               combatantId: enemyId,
-              initiative: initiativeScore(10),
-              creatureInit: {
-                kind: "statBlock" as const,
-                source: Result.getOrThrow(
-                  battleStatBlockCombatantSource(
-                    projectedStatBlockRuntimeSource(skeleton),
-                  ),
-                ),
-                currentHp: maxHp,
-                tempHp: Hp(0),
-                ammunitionStocks: [
-                  {
-                    ammunition: "arrow" as const,
-                    remaining: resourceCount(20),
-                  },
-                ],
-                conditions: [],
-                presentation: {
-                  displayName: "Enemy",
-                  communication: { kind: "none" as const },
-                  traits: [],
-                  orderedProcedures: [],
-                },
-              },
-            },
+              initiative: 10,
+              displayName: "Enemy",
+              arrowCount: 20,
+              statBlock: skeleton,
+            }),
           ]
         : []),
       ...(input.extraCombatantId === undefined
         ? []
         : [
-            {
+            authoredSkeletonBattleInit({
               combatantId: input.extraCombatantId,
-              initiative: initiativeScore(10),
-              creatureInit: {
-                kind: "statBlock" as const,
-                source: Result.getOrThrow(
-                  battleStatBlockCombatantSource(
-                    projectedStatBlockRuntimeSource(skeleton),
-                  ),
-                ),
-                currentHp: maxHp,
-                tempHp: Hp(0),
-                ammunitionStocks: [
-                  {
-                    ammunition: "arrow" as const,
-                    remaining: resourceCount(20),
-                  },
-                ],
-                conditions: [],
-                presentation: {
-                  displayName: "Other Combatant",
-                  communication: { kind: "none" as const },
-                  traits: [],
-                  orderedProcedures: [],
-                },
-              },
-            },
+              initiative: 10,
+              displayName: "Other Combatant",
+              arrowCount: 20,
+              statBlock: skeleton,
+            }),
           ]),
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -470,7 +414,7 @@ function startSpellcasterFixtureBattle(
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -479,11 +423,11 @@ function startPactWarlockFixtureBattle(
   input: {
     readonly targetHasShield?: boolean;
     readonly ownerCharacterUnitRefs?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["characterUnitRefs"];
     readonly ownerCharacterUnitFeatures?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["unitFeatures"];
   } = {},
@@ -554,7 +498,7 @@ function startPactWarlockFixtureBattle(
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -638,7 +582,7 @@ function startWildCompanionDruidFixtureBattle(input: {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -711,7 +655,7 @@ function startWrongOwnerPactFixtureBattle(): BattleRuntimeSession {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -756,7 +700,7 @@ function startSpawnedCompanionSpellcasterFixtureBattle(): BattleRuntimeSession {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -832,6 +776,26 @@ function literalHp(statBlock: StatBlockRecord): Hp {
     throw new Error("Test Stat Block must use literal HP.");
   }
   return Hp(hp.value);
+}
+
+function authoredSkeletonBattleInit(input: {
+  readonly combatantId: CombatantId;
+  readonly initiative: number;
+  readonly displayName: string;
+  readonly arrowCount: number;
+  readonly statBlock: StatBlockRecord;
+}): BattleCreatureInit {
+  return {
+    combatantId: input.combatantId,
+    initiative: initiativeScore(input.initiative),
+    statBlock: { ...input.statBlock, name: input.displayName },
+    currentHp: literalHp(input.statBlock),
+    tempHp: Hp(0),
+    ammunitionStocks: [
+      { ammunition: "arrow", remaining: resourceCount(input.arrowCount) },
+    ],
+    conditions: [],
+  };
 }
 
 function positiveCompanionHp(value: number) {
@@ -927,23 +891,23 @@ function characterCreature(input: {
   readonly className?: "wizard" | "warlock" | "druid";
   readonly classLevel?: number;
   readonly classLevels?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
   readonly characterUnitRefs?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
   readonly resources?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
   readonly druidWildShapeKnownForms?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["druidWildShapeAvailableForms"];
   readonly currentHp?: number;
@@ -2239,7 +2203,11 @@ describe("Find Familiar lifecycle", () => {
         act.subject.action === "reappear",
     );
     expect(reappearanceAct?.subject.tag).toBe("companionLifecycle");
-    if (reappearanceAct?.subject.tag !== "companionLifecycle") return;
+    if (
+      reappearanceAct?.subject.tag !== "companionLifecycle" ||
+      reappearanceAct.subject.action !== "reappear"
+    )
+      return;
 
     const reappeared = resolveBattleSubject({
       state: reappearanceReadyState,
@@ -2258,7 +2226,7 @@ describe("Find Familiar lifecycle", () => {
           ),
         ),
       ],
-      statBlockCatalog: runtimeStatBlockCatalog,
+      statBlockCatalog,
     });
     expect(reappeared.tag).toBe("resolved");
     if (reappeared.tag !== "resolved") return;
@@ -2431,58 +2399,23 @@ describe("Find Familiar lifecycle", () => {
       statBlockCatalog,
       parseSharedStatBlockId("stat_block_skeleton"),
     );
-    const skeletonHp = literalHp(skeleton);
     const started = startBattle({
       battleId: battleId("pact-skeleton-ammunition-lifecycle"),
       combatants: [
-        {
+        authoredSkeletonBattleInit({
           combatantId: casterId,
-          initiative: initiativeScore(12),
-          creatureInit: {
-            kind: "statBlock",
-            source: Result.getOrThrow(
-              battleStatBlockCombatantSource(
-                projectedStatBlockRuntimeSource(skeleton),
-              ),
-            ),
-            currentHp: skeletonHp,
-            tempHp: Hp(0),
-            ammunitionStocks: [
-              { ammunition: "arrow", remaining: resourceCount(20) },
-            ],
-            conditions: [],
-            presentation: {
-              displayName: "Pact Owner",
-              communication: { kind: "none" as const },
-              traits: [],
-              orderedProcedures: [],
-            },
-          },
-        },
-        {
+          initiative: 12,
+          displayName: "Pact Owner",
+          arrowCount: 20,
+          statBlock: skeleton,
+        }),
+        authoredSkeletonBattleInit({
           combatantId: familiarId,
-          initiative: initiativeScore(11),
-          creatureInit: {
-            kind: "statBlock",
-            source: Result.getOrThrow(
-              battleStatBlockCombatantSource(
-                projectedStatBlockRuntimeSource(skeleton),
-              ),
-            ),
-            currentHp: skeletonHp,
-            tempHp: Hp(0),
-            ammunitionStocks: [
-              { ammunition: "arrow", remaining: resourceCount(7) },
-            ],
-            conditions: [],
-            presentation: {
-              displayName: "Pact Skeleton Familiar",
-              communication: { kind: "none" as const },
-              traits: [],
-              orderedProcedures: [],
-            },
-          },
-        },
+          initiative: 11,
+          displayName: "Pact Skeleton Familiar",
+          arrowCount: 7,
+          statBlock: skeleton,
+        }),
       ],
     });
     expect(Result.isSuccess(started)).toBe(true);

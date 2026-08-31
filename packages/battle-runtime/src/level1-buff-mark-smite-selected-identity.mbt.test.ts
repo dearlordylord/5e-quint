@@ -31,8 +31,6 @@ import {
 // UNIT-IDENTITY-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Result } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { describe, expect, it } from "vitest";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
@@ -80,6 +78,7 @@ import {
   type AvailableBattleAct,
   type BattleAttackRollHole,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleDamageRollHole,
   type BattleFill,
   type BattleHole,
@@ -129,7 +128,7 @@ import {
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import type { BattleInterruptSubject } from "./battle-subjects.ts";
 
 type Level1BuffMarkSmiteSelectedIdentityAction =
@@ -287,7 +286,7 @@ type HuntersMarkMarkedTarget = "target" | "transferTarget" | "none";
 type HuntersMarkTransferKind = "awaitingTargetDrop" | "available" | "none";
 type HuntersMarkRetargetTiming = "sameTurn" | "none";
 type CharacterCreatureInit = Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >;
 type CharacterClassName =
@@ -2612,7 +2611,7 @@ type Level1BuffMarkSmiteBattleInput = {
   readonly weaponProficiencies?: readonly WeaponProficiency[];
   readonly attack?: NonNullable<
     Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["attack"]
   >;
@@ -2679,7 +2678,7 @@ function level1BuffMarkSmiteSession(
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -2691,11 +2690,11 @@ function level1BuffMarkSmiteCreature(input: {
   readonly className?: CharacterClassName;
   readonly weaponProficiencies?: readonly WeaponProficiency[];
   readonly attack?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"];
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {
@@ -2774,21 +2773,14 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
     statBlockLibrary,
     statBlockId("stat_block_goblin_warrior"),
   );
-  const projected = Result.getOrThrow(projectAuthoredStatBlock(statBlock));
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: Result.getOrThrow(
-        battleStatBlockCombatantSource(projected.runtime),
-      ),
-      currentHp: Hp(statBlock.statBlock.hp.value),
-      tempHp: Hp(0),
-      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
-      conditions: [],
-      presentation: projected.presentation,
-    },
+    statBlock,
+    currentHp: Hp(statBlock.statBlock.hp.value),
+    tempHp: Hp(0),
+    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+    conditions: [],
   };
 }
 
@@ -2934,7 +2926,7 @@ function resolveWeaponHitWithAttackRoll(input: {
 
 function zeroAbilityLongswordAttack(): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"]
 > {
@@ -2948,7 +2940,7 @@ function zeroAbilityWeaponAttack(
     | TrueStrikeDaggerUnitId,
 ): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"]
 > {

@@ -35,7 +35,7 @@ import {
   characterId,
   combatantId,
   snapshotBattle,
-  type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -285,7 +285,7 @@ function deathSavingThrowCharacterSeed(input: {
   readonly initiative: number;
   readonly currentHp: number;
   readonly zeroHpLifecycle?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["zeroHpLifecycle"];
 }): ReturnType<typeof characterSeed> {

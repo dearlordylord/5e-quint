@@ -6,7 +6,6 @@ import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-REPLAY: L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage doPreventProtectionFromEvilAndGoodScopedCharmAndPossession doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 import { Result, Schema } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { battleActsWithReducerRouteEvents } from "./battle-act-composition.ts";
 import { describe, expect, it } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -47,6 +46,7 @@ import {
   type BattleActiveEffect,
   type BattleAttackExecutionSelection,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleReducerRouteEvent,
   type BattleCreatureState,
   type BattleFill,
@@ -80,7 +80,7 @@ import {
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   battleProcedureExecutionRefForTest,
   battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
@@ -92,7 +92,6 @@ import {
   characterSpellProcedure,
   type SpellProcedureExecution,
 } from "./character-execution-admission.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 
 type CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
   | "init"
@@ -203,7 +202,7 @@ type StatBlockAttackAct = BattleActDiscoveryCandidate & {
   >;
 };
 type CharacterCreatureInit = Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >;
 type CharacterClassName =
@@ -1389,7 +1388,7 @@ function animalFriendshipBattle(): BattleState {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -1445,7 +1444,7 @@ function protectionFromEvilAndGoodBattle(): BattleState {
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -1749,23 +1748,14 @@ function statBlockCreature(input: {
   readonly statBlock: StatBlockRecord;
   readonly initiative: number;
 }): BattleCreatureInit {
-  const projected = Result.getOrThrow(
-    projectAuthoredStatBlock(input.statBlock),
-  );
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: Result.getOrThrow(
-        battleStatBlockCombatantSource(projected.runtime),
-      ),
-      currentHp: Hp(projected.runtime.statBlock.hp.value),
-      tempHp: Hp(0),
-      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
-      conditions: [],
-      presentation: projected.presentation,
-    },
+    statBlock: input.statBlock,
+    currentHp: Hp(input.statBlock.statBlock.hp.value),
+    tempHp: Hp(0),
+    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+    conditions: [],
   };
 }
 

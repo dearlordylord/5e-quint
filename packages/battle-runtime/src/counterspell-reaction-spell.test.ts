@@ -33,6 +33,7 @@ import {
   startBattle,
   settleBattleRuntimeTransaction,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
@@ -1536,7 +1537,7 @@ function srdSpellRecord(unitId: string): SpellRecord {
 
 type CharacterSpellcastingInit = NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"]
 >;
@@ -1797,11 +1798,11 @@ function characterCreature(input: {
   readonly initiative: number;
   readonly spellcasting: CharacterSpellcastingInit;
   readonly resources?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
   readonly characterUnitRefs?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
 }): BattleCreatureInit {
