@@ -186,8 +186,10 @@ import {
 } from "../unit-feature-support.ts";
 import type {
   BattleCreatureOriginSnapshot,
+  BattleCreatureSnapshot,
   BattleFill,
   BattleHole,
+  BattlePresentedCreatureSnapshot,
   BattlePresentedSnapshot,
   BattleSnapshot,
 } from "../battle-state-execution.ts";
@@ -6878,9 +6880,14 @@ const BattleCreatureSnapshotShapeSchema = Schema.Union([
   }),
 ]);
 
+type BattleCreatureSnapshotDomainInput = AssignableTo<
+  Schema.Schema.Type<typeof BattleCreatureSnapshotShapeSchema>,
+  BattleCreatureSnapshot
+>;
+
 const BattleCreatureSnapshotSchema = BattleCreatureSnapshotShapeSchema.pipe(
   Schema.check(
-    Schema.makeFilter<unknown>(
+    Schema.makeFilter<BattleCreatureSnapshotDomainInput>(
       (snapshot) =>
         Schema.is(BattleCreatureSnapshotInvariantShapeSchema)(snapshot) &&
         battleCreatureSnapshotInvariantsHold(snapshot),
@@ -6902,10 +6909,15 @@ const BattlePresentedCreatureSnapshotShapeSchema = Schema.Union([
   }),
 ]);
 
+type BattlePresentedCreatureSnapshotDomainInput = AssignableTo<
+  Schema.Schema.Type<typeof BattlePresentedCreatureSnapshotShapeSchema>,
+  BattlePresentedCreatureSnapshot
+>;
+
 const BattlePresentedCreatureSnapshotSchema =
   BattlePresentedCreatureSnapshotShapeSchema.pipe(
     Schema.check(
-      Schema.makeFilter<unknown>(
+      Schema.makeFilter<BattlePresentedCreatureSnapshotDomainInput>(
         (snapshot) =>
           Schema.is(BattleCreatureSnapshotInvariantShapeSchema)(snapshot) &&
           battleCreatureSnapshotInvariantsHold(snapshot),
