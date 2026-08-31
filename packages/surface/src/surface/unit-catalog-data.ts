@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
 /** Eager canonical SRD Unit collection. Keep this module out of runtime bundles that receive staged projections. */
 // Content JSON is generated from the matching content/*.dhall source.
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.

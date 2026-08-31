@@ -334,9 +334,8 @@
         "packages/battle-runtime/src/battle-reducer/creature-state.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
-        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-facts.ts",
         "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-runtime.ts",
-        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-turn-restriction.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/save-gated-turn-constraint-bundle.ts",
         "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
@@ -3368,7 +3367,7 @@
       "runtimeOwners": [
         "packages/character-sheet-runtime/src/armor-class.ts",
         "packages/shared-algebras/src/armor-class-algebra.ts",
-        "packages/surface/src/surface/unit-catalog.ts"
+        "packages/surface/src/surface/unit-catalog-data.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -5347,7 +5346,7 @@
         "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/save-gated-turn-constraint-facts.ts",
         "packages/battle-runtime/src/battle-reducer/statblock.ts"
       ],
       "status": "covered",
