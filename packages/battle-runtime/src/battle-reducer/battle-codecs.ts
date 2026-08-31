@@ -33,6 +33,7 @@ import {
   AmmunitionKindSchema,
   STANDARD_ACTION_KINDS,
   StatBlockId,
+  UnitId,
   type StandardActionKind,
 } from "@dnd/shared/game-facts";
 import {
@@ -6903,6 +6904,61 @@ const BattleCreatureSnapshotSchema = BattleCreatureSnapshotShapeSchema.pipe(
   ),
 );
 
+type EncodedOf<S extends { readonly Encoded: unknown }> = S["Encoded"];
+
+type EncodedCharacterBattleCreatureOriginSnapshot = {
+  readonly kind: "character";
+  readonly characterId: EncodedOf<typeof CharacterIdSchema>;
+  readonly execution: {
+    readonly scopeRef: EncodedOf<typeof BattleCharacterExecutionScopeRef>;
+    readonly nextProcedureOrdinal?: never;
+    readonly procedureBindings: readonly EncodedOf<
+      typeof CharacterProcedureBindingSnapshotSchema
+    >[];
+  };
+  readonly attackExecution: {
+    readonly scopeRef: EncodedOf<typeof BattleAttackExecutionScopeRef>;
+    readonly attackProcedureRef: EncodedOf<
+      typeof BattleAttackProcedureExecutionRef
+    > | null;
+    readonly unarmedStrikeProcedureRef: EncodedOf<
+      typeof BattleAttackProcedureExecutionRef
+    >;
+    readonly offHandAttackProcedureRef: EncodedOf<
+      typeof BattleAttackProcedureExecutionRef
+    > | null;
+  };
+  readonly resources: readonly EncodedOf<
+    typeof BattleCharacterResourceSnapshotSchema
+  >[];
+  readonly druidWildShapeAvailableForms: readonly {
+    readonly statBlockId: EncodedOf<typeof StatBlockId>;
+    readonly execution: EncodedOf<typeof StatBlockExecutionSnapshotSchema>;
+  }[];
+  readonly spellcasting: {
+    readonly spellSlots: readonly {
+      readonly spellLevel: EncodedOf<typeof SpellSlotLevel>;
+      readonly count: EncodedOf<typeof ResourceCount>;
+      readonly expended: EncodedOf<typeof ResourceCount>;
+    }[];
+  } | null;
+};
+
+type EncodedStatBlockBattleCreatureOriginSnapshot = {
+  readonly kind: "statBlock";
+  readonly statBlockId: EncodedOf<typeof StatBlockId>;
+  readonly execution: EncodedOf<typeof StatBlockExecutionSnapshotSchema>;
+};
+
+type EncodedBattlePresentedCreatureSnapshot = Schema.Struct.Encoded<
+  typeof BattleCreatureSnapshotCommonFields
+> & {
+  readonly displayName: EncodedOf<typeof BattleCreatureDisplayNameSchema>;
+  readonly origin:
+    | EncodedCharacterBattleCreatureOriginSnapshot
+    | EncodedStatBlockBattleCreatureOriginSnapshot;
+};
+
 const BattlePresentedCreatureSnapshotShapeSchema = Schema.Union([
   Schema.Struct({
     ...BattleCreatureSnapshotCommonFields,
@@ -6921,22 +6977,58 @@ type BattlePresentedCreatureSnapshotDomainInput = AssignableTo<
   BattlePresentedCreatureSnapshot
 >;
 
-const BattlePresentedCreatureSnapshotSchema =
-  BattlePresentedCreatureSnapshotShapeSchema.pipe(
-    Schema.check(
-      Schema.makeFilter<BattlePresentedCreatureSnapshotDomainInput>(
-        (snapshot) =>
-          Schema.is(BattleCreatureSnapshotInvariantShapeSchema)(snapshot) &&
-          battleCreatureSnapshotInvariantsHold(snapshot),
-        battleCreatureSnapshotInvariantAnnotations,
-      ),
+const BattlePresentedCreatureSnapshotSchema: Schema.Codec<
+  BattlePresentedCreatureSnapshot,
+  EncodedBattlePresentedCreatureSnapshot,
+  never,
+  never
+> = BattlePresentedCreatureSnapshotShapeSchema.pipe(
+  Schema.check(
+    Schema.makeFilter<BattlePresentedCreatureSnapshotDomainInput>(
+      (snapshot) =>
+        Schema.is(BattleCreatureSnapshotInvariantShapeSchema)(snapshot) &&
+        battleCreatureSnapshotInvariantsHold(snapshot),
+      battleCreatureSnapshotInvariantAnnotations,
     ),
-  );
+  ),
+);
 
-export const BattleUnitSupportSourceSchema = Schema.Union([
+type ClassicNonSrdMechanicsUnitSchemaType = {
+  readonly id: Schema.Schema.Type<typeof UnitId>;
+  readonly syntheticLabel: string;
+  readonly provenance: {
+    readonly kind: "classic-2024-mechanics-source-lane";
+  };
+  readonly kind: "class_feature";
+  readonly mechanics: {
+    readonly family: "alternate_action_cost";
+    readonly from: {
+      readonly kind: "standard_action";
+      readonly actions: readonly StandardActionKind[];
+    };
+    readonly to: { readonly kind: "bonus_action" };
+  };
+};
+
+type BattleUnitSupportSourceSchemaType =
+  | Schema.Schema.Type<typeof UnitRecordSchema>
+  | ClassicNonSrdMechanicsUnitSchemaType;
+
+type EncodedClassicNonSrdMechanicsUnit = Omit<
+  ClassicNonSrdMechanicsUnitSchemaType,
+  "id"
+> & { readonly id: string };
+
+export const BattleUnitSupportSourceSchema: Schema.Codec<
+  BattleUnitSupportSourceSchemaType,
+  | Schema.Codec.Encoded<typeof UnitRecordSchema>
+  | EncodedClassicNonSrdMechanicsUnit,
+  never,
+  never
+> = Schema.Union([
   UnitRecordSchema,
   Schema.Struct({
-    id: Schema.String,
+    id: UnitId,
     syntheticLabel: Schema.String,
     provenance: Schema.Struct({
       kind: Schema.Literal("classic-2024-mechanics-source-lane"),
