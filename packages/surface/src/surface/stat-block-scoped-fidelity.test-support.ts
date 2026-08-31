@@ -2,7 +2,7 @@ export {
   projectSrdStatBlockScopedFidelity,
   projectStatBlockScopedMechanicsList,
   reconcileSrdStatBlockScopedFidelity,
-} from "./stat-block-scoped-fidelity.internal.ts";
+} from "./stat-block-scoped-fidelity-evaluation.ts";
 
 export type {
   SrdStatBlockAuthoredFidelityProjection,
@@ -12,4 +12,4 @@ export type {
   SrdStatBlockScopedFidelityResult,
   StatBlockScopedMechanics,
   StatBlockScopedProjectionFailure,
-} from "./stat-block-scoped-fidelity.internal.ts";
+} from "./stat-block-scoped-fidelity-evaluation.ts";
