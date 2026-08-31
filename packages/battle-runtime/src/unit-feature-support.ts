@@ -55,6 +55,8 @@ import type {
   CharacterBattleClassLevelInit,
 } from "./character-class-level.ts";
 import { type BrutalStrikeProfile } from "./procedure-execution/brutal-strike.ts";
+import { admitAtomicClassFeatureProcedure } from "./procedure-admission/atomic-class-feature.ts";
+import { admitAtomicSpeciesTraitProcedure } from "./procedure-admission/atomic-species-trait-procedure.ts";
 import { admitWeaponMasteryProcedure } from "./procedure-admission/weapon-mastery.ts";
 export {
   battleWeaponMasteryCleaveSupportForUnit,
@@ -1245,25 +1247,54 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     supportProfiles.push(bonusActionStandardActionSupport);
   }
 
-  const bonusActionDelegatedStandardActionsSupport =
-    battleBonusActionDelegatedStandardActionsSupportForUnit(input.unit);
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (bonusActionDelegatedStandardActionsSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Bonus Action delegated standard-action Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (bonusActionDelegatedStandardActionsSupport !== null) {
-    supportProfiles.push(bonusActionDelegatedStandardActionsSupport);
-  }
-
   if (isClassicNonSrdMechanicsUnit(input.unit)) {
     return Result.succeed({
       supportProfiles,
       huntersPreyAdmission: { tag: "notHuntersPrey", unit: input.unit },
     });
   }
+
+  const atomicClassFeatureProcedure = Match.value(
+    admitAtomicClassFeatureProcedure(input.unit),
+  ).pipe(
+    Match.when({ tag: "notBattleOwned" }, () =>
+      Result.succeed<readonly BattleUnitSupportProfile[]>([]),
+    ),
+    Match.when({ tag: "admitted" }, ({ procedure }) =>
+      Result.succeed<readonly BattleUnitSupportProfile[]>(
+        Match.value(procedure.facts).pipe(
+          Match.when(
+            { kind: "bonusActionDelegatedStandardActions" },
+            ({ actionEconomy }) => [actionEconomy],
+          ),
+          Match.when({ kind: "acrobaticMovement" }, (facts) => [facts]),
+          Match.exhaustive,
+        ),
+      ),
+    ),
+    Match.when({ tag: "rejected" }, ({ issues }) =>
+      battleUnitSupportProfileIssue(
+        Match.value(issues[0].procedure).pipe(
+          Match.when(
+            "bonusActionDelegatedStandardActions",
+            () =>
+              `Unsupported battle Bonus Action delegated standard-action Unit hook: ${input.unit.id}.`,
+          ),
+          Match.when(
+            "acrobaticMovement",
+            () =>
+              `Unsupported battle Acrobatic Movement Unit hook: ${input.unit.id}.`,
+          ),
+          Match.exhaustive,
+        ),
+      ),
+    ),
+    Match.exhaustive,
+  );
+  if (Result.isFailure(atomicClassFeatureProcedure)) {
+    return Result.fail(atomicClassFeatureProcedure.failure);
+  }
+  supportProfiles.push(...atomicClassFeatureProcedure.success);
 
   const criticalRangeSupport =
     battleWeaponOrUnarmedCriticalRange19SupportForUnit(input.unit);
@@ -1409,18 +1440,43 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
     supportProfiles.push(attackActionAreaSaveDamageReplacementSupport);
   }
 
-  const d20TestNaturalOneRerollSupport =
-    battleD20TestNaturalOneRerollSupportForUnit(input.unit);
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (d20TestNaturalOneRerollSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle D20 Test natural-1 reroll Unit hook: ${input.unit.id}.`,
-    );
+  const atomicSpeciesTraitProcedure = Match.value(
+    admitAtomicSpeciesTraitProcedure(input.unit),
+  ).pipe(
+    Match.when({ tag: "notBattleOwned" }, () =>
+      Result.succeed<readonly BattleUnitSupportProfile[]>([]),
+    ),
+    Match.when({ tag: "admitted" }, ({ procedure }) =>
+      Result.succeed<readonly BattleUnitSupportProfile[]>([procedure.facts]),
+    ),
+    Match.when({ tag: "rejected" }, ({ issues }) =>
+      battleUnitSupportProfileIssue(
+        Match.value(issues[0].procedure).pipe(
+          Match.when(
+            "d20TestNaturalOneReroll",
+            () =>
+              `Unsupported battle D20 Test natural-1 reroll Unit hook: ${input.unit.id}.`,
+          ),
+          Match.when(
+            "creatureSpaceMovementPermission",
+            () =>
+              `Unsupported battle creature-space movement permission Unit hook: ${input.unit.id}.`,
+          ),
+          Match.when(
+            "hideActionObscurementPermission",
+            () =>
+              `Unsupported battle Hide action obscurement permission Unit hook: ${input.unit.id}.`,
+          ),
+          Match.exhaustive,
+        ),
+      ),
+    ),
+    Match.exhaustive,
+  );
+  if (Result.isFailure(atomicSpeciesTraitProcedure)) {
+    return Result.fail(atomicSpeciesTraitProcedure.failure);
   }
-  /* v8 ignore stop -- @preserve */
-  if (d20TestNaturalOneRerollSupport !== null) {
-    supportProfiles.push(d20TestNaturalOneRerollSupport);
-  }
+  supportProfiles.push(...atomicSpeciesTraitProcedure.success);
 
   const passiveSavingThrowRollModeSupport =
     battlePassiveSavingThrowRollModeSupportForUnit(input.unit);
@@ -1489,46 +1545,6 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   /* v8 ignore stop -- @preserve */
   if (passiveSpeedKindGrantsSupport !== null) {
     supportProfiles.push(passiveSpeedKindGrantsSupport);
-  }
-
-  const acrobaticMovementSupport = battleAcrobaticMovementSupportForUnit(
-    input.unit,
-  );
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (acrobaticMovementSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Acrobatic Movement Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (acrobaticMovementSupport !== null) {
-    supportProfiles.push(acrobaticMovementSupport);
-  }
-
-  const creatureSpaceMovementPermissionSupport =
-    battleCreatureSpaceMovementPermissionSupportForUnit(input.unit);
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (creatureSpaceMovementPermissionSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle creature-space movement permission Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (creatureSpaceMovementPermissionSupport !== null) {
-    supportProfiles.push(creatureSpaceMovementPermissionSupport);
-  }
-
-  const hideActionObscurementPermissionSupport =
-    battleHideActionObscurementPermissionSupportForUnit(input.unit);
-  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (hideActionObscurementPermissionSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Hide action obscurement permission Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (hideActionObscurementPermissionSupport !== null) {
-    supportProfiles.push(hideActionObscurementPermissionSupport);
   }
 
   const weaponDamageDiceRollChoiceSupport =
@@ -2688,66 +2704,25 @@ type BattleBonusActionDelegatedStandardActionsSupport =
 export function battleBonusActionDelegatedStandardActionsSupportForUnit(
   unit: BattleUnitSupportSource,
 ): BattleBonusActionDelegatedStandardActionsSupport {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.mechanics.family !== "bonus_action_delegated_standard_actions"
-  ) {
-    return null;
-  }
-
-  const { sleightOfHand, objectUse } = unit.mechanics;
-  /* v8 ignore start -- @preserve -- Malformed delegated-action Surface mechanics are rejected here; the canonical supported projection is covered by admission tests. */
-  if (
-    unit.mechanics.activationCost.kind !== "bonus_action" ||
-    sleightOfHand.abilityCheck.ability !== "dex" ||
-    sleightOfHand.abilityCheck.skill !== "sleight_of_hand" ||
-    !tuple3Matches(sleightOfHand.operations, [
-      "pick_lock_with_thieves_tools",
-      "disarm_trap_with_thieves_tools",
-      "pick_pocket",
-    ]) ||
-    !delegatedObjectUseActionsMatch(objectUse.actions)
-  ) {
-    return "unsupported";
-  }
-  /* v8 ignore stop -- @preserve */
-
-  return {
-    kind: BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
-    activationCost: { kind: "bonusAction" },
-    sleightOfHand: {
-      abilityCheck: { ability: "dex", skill: "sleight_of_hand" },
-      operations: [
-        "pick_lock_with_thieves_tools",
-        "disarm_trap_with_thieves_tools",
-        "pick_pocket",
-      ],
-    },
-    objectUse: {
-      actions: [
-        { action: "utilize" },
-        {
-          action: "magic",
-          restrictedTo: "magicItemRequiresMagicAction",
-        },
-      ],
-    },
-  };
-}
-
-function delegatedObjectUseActionsMatch(
-  actions: readonly {
-    readonly action: StandardActionKind;
-    readonly restrictedTo?: string;
-  }[],
-): boolean {
-  const [utilize, magic, ...extra] = actions;
-  return (
-    extra.length === 0 &&
-    utilize?.action === "utilize" &&
-    utilize.restrictedTo === undefined &&
-    magic?.action === "magic" &&
-    magic.restrictedTo === "magic_item_requires_magic_action"
+  if (isClassicNonSrdMechanicsUnit(unit)) return null;
+  return Match.value(admitAtomicClassFeatureProcedure(unit)).pipe(
+    Match.when({ tag: "notBattleOwned" }, () => null),
+    Match.when({ tag: "rejected" }, ({ issues }) =>
+      issues[0].procedure === "bonusActionDelegatedStandardActions"
+        ? ("unsupported" as const)
+        : null,
+    ),
+    Match.when({ tag: "admitted" }, ({ procedure }) =>
+      Match.value(procedure.facts).pipe(
+        Match.when(
+          { kind: "bonusActionDelegatedStandardActions" },
+          ({ actionEconomy }) => actionEconomy,
+        ),
+        Match.when({ kind: "acrobaticMovement" }, () => null),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
   );
 }
 
@@ -2934,19 +2909,6 @@ function tupleMatches<T extends readonly [string, string]>(
     actual.length === 2 &&
     actual[0] === expected[0] &&
     actual[1] === expected[1]
-  );
-}
-
-function tuple3Matches<T extends readonly [string, string, string]>(
-  actual: unknown,
-  expected: T,
-): actual is T {
-  return (
-    Array.isArray(actual) &&
-    actual.length === 3 &&
-    actual[0] === expected[0] &&
-    actual[1] === expected[1] &&
-    actual[2] === expected[2]
   );
 }
 
@@ -3376,16 +3338,23 @@ export function battleAttackActionAreaSaveDamageReplacementSupportForUnit(input:
 export function battleD20TestNaturalOneRerollSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleD20TestNaturalOneRerollSupport {
-  if (!hasD20TestNaturalOneRerollMechanics(unit)) {
-    return null;
-  }
-  const reroll = d20TestNaturalOneRerollProfileForUnit(unit);
-  return reroll === null
-    ? "unsupported"
-    : {
-        kind: D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE,
-        reroll,
-      };
+  return Match.value(admitAtomicSpeciesTraitProcedure(unit)).pipe(
+    Match.when({ tag: "notBattleOwned" }, () => null),
+    Match.when({ tag: "rejected" }, ({ issues }) =>
+      issues[0].procedure === "d20TestNaturalOneReroll"
+        ? ("unsupported" as const)
+        : null,
+    ),
+    Match.when({ tag: "admitted" }, ({ procedure }) =>
+      Match.value(procedure.facts).pipe(
+        Match.when({ kind: "d20TestNaturalOneReroll" }, (facts) => facts),
+        Match.when({ kind: "creatureSpaceMovementPermission" }, () => null),
+        Match.when({ kind: "hideActionObscurementPermission" }, () => null),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function battlePassiveSavingThrowRollModeSupportForUnit(
@@ -3467,46 +3436,72 @@ export function battlePassiveSpeedKindGrantsSupportForUnit(
 export function battleAcrobaticMovementSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleAcrobaticMovementSupport {
-  if (!hasAcrobaticMovementMechanics(unit)) {
-    return null;
-  }
-  const acrobaticMovement = acrobaticMovementProfileForUnit(unit);
-  return acrobaticMovement === null
-    ? "unsupported"
-    : {
-        kind: ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
-        acrobaticMovement,
-      };
+  return Match.value(admitAtomicClassFeatureProcedure(unit)).pipe(
+    Match.when({ tag: "notBattleOwned" }, () => null),
+    Match.when({ tag: "rejected" }, ({ issues }) =>
+      issues[0].procedure === "acrobaticMovement"
+        ? ("unsupported" as const)
+        : null,
+    ),
+    Match.when({ tag: "admitted" }, ({ procedure }) =>
+      Match.value(procedure.facts).pipe(
+        Match.when({ kind: "acrobaticMovement" }, (facts) => facts),
+        Match.when({ kind: "bonusActionDelegatedStandardActions" }, () => null),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function battleCreatureSpaceMovementPermissionSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleCreatureSpaceMovementPermissionSupport {
-  if (!hasCreatureSpaceMovementPermissionMechanics(unit)) {
-    return null;
-  }
-  const permission = creatureSpaceMovementPermissionProfileForUnit(unit);
-  return permission === null
-    ? "unsupported"
-    : {
-        kind: CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE,
-        permission,
-      };
+  return Match.value(admitAtomicSpeciesTraitProcedure(unit)).pipe(
+    Match.when({ tag: "notBattleOwned" }, () => null),
+    Match.when({ tag: "rejected" }, ({ issues }) =>
+      issues[0].procedure === "creatureSpaceMovementPermission"
+        ? ("unsupported" as const)
+        : null,
+    ),
+    Match.when({ tag: "admitted" }, ({ procedure }) =>
+      Match.value(procedure.facts).pipe(
+        Match.when(
+          { kind: "creatureSpaceMovementPermission" },
+          (facts) => facts,
+        ),
+        Match.when({ kind: "d20TestNaturalOneReroll" }, () => null),
+        Match.when({ kind: "hideActionObscurementPermission" }, () => null),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function battleHideActionObscurementPermissionSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleHideActionObscurementPermissionSupport {
-  if (!hasHideActionObscurementPermissionMechanics(unit)) {
-    return null;
-  }
-  const permission = hideActionObscurementPermissionProfileForUnit(unit);
-  return permission === null
-    ? "unsupported"
-    : {
-        kind: HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
-        permission,
-      };
+  return Match.value(admitAtomicSpeciesTraitProcedure(unit)).pipe(
+    Match.when({ tag: "notBattleOwned" }, () => null),
+    Match.when({ tag: "rejected" }, ({ issues }) =>
+      issues[0].procedure === "hideActionObscurementPermission"
+        ? ("unsupported" as const)
+        : null,
+    ),
+    Match.when({ tag: "admitted" }, ({ procedure }) =>
+      Match.value(procedure.facts).pipe(
+        Match.when(
+          { kind: "hideActionObscurementPermission" },
+          (facts) => facts,
+        ),
+        Match.when({ kind: "creatureSpaceMovementPermission" }, () => null),
+        Match.when({ kind: "d20TestNaturalOneReroll" }, () => null),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function battleWeaponDamageDiceRollChoiceSupportForUnit(
@@ -3882,43 +3877,6 @@ function hasFailedSavingThrowRerollMechanics(
   return hasClassFeatureMechanicsFamily(unit, "failed_saving_throw_reroll");
 }
 
-type D20TestNaturalOneRerollUnit = Extract<
-  AuthoredUnitSource,
-  { readonly kind: "species_trait" }
-> & {
-  readonly mechanics: {
-    readonly family: "d20_test_natural_one_reroll";
-  };
-};
-
-function hasD20TestNaturalOneRerollMechanics(
-  unit: AuthoredUnitSource,
-): unit is D20TestNaturalOneRerollUnit {
-  return (
-    unit.kind === "species_trait" &&
-    unit.mechanics.family === "d20_test_natural_one_reroll"
-  );
-}
-
-function d20TestNaturalOneRerollProfileForUnit(
-  unit: AuthoredUnitSource,
-): D20TestNaturalOneRerollProfile | null {
-  if (!hasD20TestNaturalOneRerollMechanics(unit)) {
-    return null;
-  }
-  return unit.mechanics.optional === true &&
-    unit.mechanics.trigger.kind === "d20_test_roll_is" &&
-    unit.mechanics.trigger.dieFace === 1 &&
-    unit.mechanics.reroll.kind === "reroll_triggering_d20" &&
-    unit.mechanics.reroll.use === "new_roll"
-    ? {
-        optional: true,
-        trigger: { kind: "d20TestRollIs", dieFace: 1 },
-        reroll: { kind: "triggeringD20", use: "newRoll" },
-      }
-    : null;
-}
-
 function hasPassiveArmorClassBonusMechanics(unit: AuthoredUnitSource): boolean {
   if (unit.kind !== "feat" || unit.mechanics.family !== "passive") {
     return false;
@@ -4049,31 +4007,6 @@ function hasPassiveSpeedKindGrantsMechanics(unit: AuthoredUnitSource): boolean {
     (part) =>
       part.family === "passive" &&
       part.grants.some((effect) => effect.kind === "grant_speed"),
-  );
-}
-
-function hasAcrobaticMovementMechanics(unit: AuthoredUnitSource): boolean {
-  return (
-    unit.kind === "class_feature" &&
-    unit.mechanics.family === "acrobatic_movement"
-  );
-}
-
-function hasCreatureSpaceMovementPermissionMechanics(
-  unit: AuthoredUnitSource,
-): boolean {
-  return (
-    unit.kind === "species_trait" &&
-    unit.mechanics.family === "creature_space_movement_permission"
-  );
-}
-
-function hasHideActionObscurementPermissionMechanics(
-  unit: AuthoredUnitSource,
-): boolean {
-  return (
-    unit.kind === "species_trait" &&
-    unit.mechanics.family === "hide_action_obscurement_permission"
   );
 }
 
@@ -5353,96 +5286,28 @@ export function passiveSpeedKindGrantsProfileForUnit(
 export function acrobaticMovementProfileForUnit(
   unit: AuthoredUnitSource,
 ): AcrobaticMovementProfile | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "monk" ||
-    unit.mechanics.family !== "acrobatic_movement"
-  ) {
-    return null;
-  }
-  const condition = passiveSpeedBonusConditionForEquipmentPredicate(
-    unit.mechanics.condition,
-  );
-  if (
-    condition?.kind !== "unarmoredUnshielded" ||
-    unit.mechanics.movement.timing !== "on_your_turn" ||
-    unit.mechanics.movement.verticalSurfaces.path !==
-      "along_vertical_surfaces" ||
-    unit.mechanics.movement.verticalSurfaces.withoutFallingDuringMovement !==
-      true ||
-    unit.mechanics.movement.liquids.path !== "across_liquids" ||
-    unit.mechanics.movement.liquids.withoutFallingDuringMovement !== true
-  ) {
-    return null;
-  }
-  return {
-    condition,
-    timing: "onYourTurn",
-    paths: [
-      {
-        kind: "verticalSurface",
-        path: "alongVerticalSurface",
-        withoutFallingDuringMovement: true,
-      },
-      {
-        kind: "liquid",
-        path: "acrossLiquid",
-        withoutFallingDuringMovement: true,
-      },
-    ],
-  };
+  const support = battleAcrobaticMovementSupportForUnit(unit);
+  return support === null || support === "unsupported"
+    ? null
+    : support.acrobaticMovement;
 }
 
 export function creatureSpaceMovementPermissionProfileForUnit(
   unit: AuthoredUnitSource,
 ): CreatureSpaceMovementPermissionProfile | null {
-  if (
-    unit.kind !== "species_trait" ||
-    unit.mechanics.family !== "creature_space_movement_permission"
-  ) {
-    return null;
-  }
-  const mechanics = unit.mechanics;
-  if (
-    mechanics.moveThrough.kind !== "occupied_creature_space" ||
-    mechanics.moveThrough.creatureSizeRelationToSelf !== "larger" ||
-    mechanics.canStopInOccupiedSpace !== false
-  ) {
-    return null;
-  }
-  return {
-    moveThrough: {
-      kind: "occupiedCreatureSpace",
-      creatureSizeRelationToSelf: "larger",
-    },
-    canStopInOccupiedSpace: false,
-  };
+  const support = battleCreatureSpaceMovementPermissionSupportForUnit(unit);
+  return support === null || support === "unsupported"
+    ? null
+    : support.permission;
 }
 
 export function hideActionObscurementPermissionProfileForUnit(
   unit: AuthoredUnitSource,
 ): HideActionObscurementPermissionProfile | null {
-  if (
-    unit.kind !== "species_trait" ||
-    unit.mechanics.family !== "hide_action_obscurement_permission" ||
-    unit.mechanics.action !== "hide"
-  ) {
-    return null;
-  }
-  const mechanics = unit.mechanics;
-  if (
-    mechanics.allowedObscurement.kind !== "obscured_only_by_creature" ||
-    mechanics.allowedObscurement.creatureSizeRelationToSelf !==
-      "at_least_one_size_larger"
-  ) {
-    return null;
-  }
-  return {
-    allowedObscurement: {
-      kind: "obscuredOnlyByCreature",
-      creatureSizeRelationToSelf: "atLeastOneSizeLarger",
-    },
-  };
+  const support = battleHideActionObscurementPermissionSupportForUnit(unit);
+  return support === null || support === "unsupported"
+    ? null
+    : support.permission;
 }
 
 function passiveSpeedBonusProfileForPassiveMechanics(
