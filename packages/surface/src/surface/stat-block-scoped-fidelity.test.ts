@@ -3131,6 +3131,474 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     }
   });
 
+  test("keeps malformed RAW evidence owned by the same field in every mutation order", () => {
+    const cases = [
+      {
+        name: "Allosaurus",
+        mutate: (line: string) => (line.startsWith("*Large Beast") ? "" : line),
+        expectedField: "metadata",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("*Large Beast") ? "*Large Beast*" : line,
+        expectedField: "metadata",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("*Large Beast")
+            ? line.replace("Unaligned", "Chaotic")
+            : line,
+        expectedField: "alignment",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("*Large Beast")
+            ? line.replace("Large", "Large or Bogus")
+            : line,
+        expectedField: "size.options.1",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("*Large Beast")
+            ? line.replace("Large", "Large or Large")
+            : line,
+        expectedField: "size.options.1",
+      },
+      {
+        name: "Swarm of Insects",
+        mutate: (line: string) =>
+          line.startsWith("*Medium Swarm")
+            ? line.replace("Medium Swarm", "Small Swarm")
+            : line,
+        expectedField: "swarm",
+      },
+      {
+        name: "Swarm of Insects",
+        mutate: (line: string) =>
+          line.startsWith("*Medium Swarm")
+            ? line.replace("Beasts", "Fiends")
+            : line,
+        expectedField: "creatureType",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("*Large Beast")
+            ? line.replace("(Dinosaur)", "( )")
+            : line,
+        expectedField: "creatureTypeTags.0",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) => (line.startsWith("**Speed**") ? "" : line),
+        expectedField: "speeds",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("**Speed**") ? "**Speed** malformed" : line,
+        expectedField: "speeds.0",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) => (line.startsWith("| STR 19") ? "" : line),
+        expectedField: "abilityScores.matrix",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("| STR 19") ? line.replace("STR 19", "DEX 19") : line,
+        expectedField: "abilityScores.matrix.labels",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("| STR 19") ? line.replace("STR 19", "STR") : line,
+        expectedField: "abilityScores.matrix.0",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) => (line.startsWith("|") ? "" : line),
+        expectedField: "abilityScores",
+      },
+      {
+        name: "Earth Elemental",
+        mutate: (line: string) =>
+          line.startsWith("**Saves**")
+            ? `${line}, INT +0, WIS +0, CHA +0, DEX +0, STR +5`
+            : line,
+        expectedField: "savingThrowModifiers",
+      },
+      {
+        name: "Earth Elemental",
+        mutate: (line: string) =>
+          line.startsWith("**Saves**") ? "**Saves** STR" : line,
+        expectedField: "savingThrowModifiers.0",
+      },
+      {
+        name: "Earth Elemental",
+        mutate: (line: string) =>
+          line.startsWith("**Vulnerabilities**") ? "**Vulnerabilities**" : line,
+        expectedField: "vulnerabilities.damageTypes.0",
+      },
+      {
+        name: "Earth Elemental",
+        mutate: (line: string) =>
+          line.startsWith("**Immunities**")
+            ? "**Immunities** Poison, Poisoned"
+            : line,
+        expectedField: "immunities.group",
+      },
+      {
+        name: "Earth Elemental",
+        mutate: (line: string) =>
+          line.startsWith("**Immunities**")
+            ? `${line}; Blinded; Charmed`
+            : line,
+        expectedField: "immunities.groups",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) => (line.startsWith("**Senses**") ? "" : line),
+        expectedField: "senses",
+      },
+      {
+        name: "Earth Elemental",
+        mutate: (line: string) =>
+          line.startsWith("**Senses**")
+            ? line.replace("Darkvision", "Echovision")
+            : line,
+        expectedField: "senses.0",
+      },
+      {
+        name: "Earth Elemental",
+        mutate: (line: string) =>
+          line.startsWith("**Senses**")
+            ? line.replace(
+                "Darkvision 60 ft.",
+                "Darkvision 60 ft. (underwater)",
+              )
+            : line,
+        expectedField: "senses.0.qualifier",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("**Senses**")
+            ? line.replace("Passive Perception 15", "")
+            : line,
+        expectedField: "passivePerception",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("**Languages**") ? "" : line,
+        expectedField: "communication",
+      },
+      {
+        name: "Earth Elemental",
+        mutate: (line: string) =>
+          line.startsWith("**Languages**")
+            ? "**Languages** Common; understands Elvish; malformed"
+            : line,
+        expectedField: "communication.groups",
+      },
+      {
+        name: "Earth Elemental",
+        mutate: (line: string) =>
+          line.startsWith("**Languages**")
+            ? "**Languages** Common; malformed"
+            : line,
+        expectedField: "communication",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) => (line.startsWith("**AC**") ? "" : line),
+        expectedField: "ac",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) => (line.startsWith("**HP**") ? "" : line),
+        expectedField: "hp",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) => (line.startsWith("**CR**") ? "" : line),
+        expectedField: "challengeRating",
+      },
+      {
+        name: "Aboleth",
+        mutate: (line: string) => (line.startsWith("| **Score**") ? "" : line),
+        expectedField: "abilityScores",
+      },
+      {
+        name: "Aboleth",
+        mutate: (line: string) =>
+          line.startsWith("| **Score**") ? line.replace("| 18 |", "|") : line,
+        expectedField: "abilityScores.5",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("**Skills**") ? "**Skills** Perception" : line,
+        expectedField: "skillModifiers.0",
+      },
+      {
+        name: "Allosaurus",
+        mutate: (line: string) =>
+          line.startsWith("**Skills**") ? "**Skills** Bogus +5" : line,
+        expectedField: "skillModifiers.0.skill",
+      },
+      {
+        name: "Half-Dragon",
+        mutate: (line: string) =>
+          line.startsWith("***Draconic Origin.")
+            ? line.replace("choice):", "choice) -")
+            : line,
+        expectedField: "resistances.options",
+      },
+      {
+        name: "Hobgoblin Warrior",
+        mutate: (line: string) =>
+          line.startsWith("**Gear**") ? "**Gear**" : line,
+        expectedField: "gear.0.item",
+      },
+      {
+        name: "Kobold Warrior",
+        mutate: (line: string) =>
+          line.startsWith("**Gear**") ? line.replace("(3)", "(0)") : line,
+        expectedField: "gear.0.quantity",
+      },
+      {
+        name: "Chimera",
+        mutate: (line: string) =>
+          line.startsWith("**Ram.") ? line.replace("Prone", "Bogus") : line,
+        expectedField: "procedures.Ram.condition",
+      },
+      {
+        name: "Chimera",
+        mutate: (line: string) =>
+          line.startsWith("**Fire Breath")
+            ? line.replace("Recharge 5–6", "Recharge 1–6")
+            : line,
+        expectedField: "resources.Fire Breath.minimumRoll",
+      },
+      {
+        name: "Chimera",
+        mutate: (line: string) =>
+          line.startsWith("**Fire Breath")
+            ? line.replace("DC 15", "DC 0")
+            : line,
+        expectedField: "procedures.Fire Breath (Recharge 5–6).dc",
+      },
+      {
+        name: "Chimera",
+        mutate: (line: string) =>
+          line.startsWith("**Fire Breath")
+            ? line.replace("15-foot Cone", "0-foot Cone")
+            : line,
+        expectedField: "procedures.Fire Breath (Recharge 5–6).area.lengthFeet",
+      },
+      {
+        name: "Chimera",
+        mutate: (line: string) =>
+          line.startsWith("**Fire Breath")
+            ? line.replace("31 (7d8)", "0 (7d8)")
+            : line,
+        expectedField: "procedures.Fire Breath (Recharge 5–6).onFail.static",
+      },
+      {
+        name: "Chimera",
+        mutate: (line: string) =>
+          line.startsWith("**Fire Breath") ? line.replace("7d8", "7d7") : line,
+        expectedField: "procedures.Fire Breath (Recharge 5–6).onFail.dieSize",
+      },
+    ] as const;
+
+    fc.assert(
+      fc.property(
+        fc.shuffledSubarray([...cases], {
+          minLength: cases.length,
+          maxLength: cases.length,
+        }),
+        (orderedCases) => {
+          for (const scenario of orderedCases) {
+            const occurrence = corpusParity.discovery.occurrences.find(
+              ({ name }) => name === scenario.name,
+            );
+            expect(occurrence, scenario.name).toBeDefined();
+            if (occurrence === undefined) continue;
+            const canonicalSource = sourceByPath.get(
+              occurrence.anchor.sourcePath,
+            );
+            expect(canonicalSource, scenario.name).toBeDefined();
+            if (canonicalSource === undefined) continue;
+            const contents = canonicalSource
+              .split(/\r?\n/)
+              .map((line, index) =>
+                index + 1 >= occurrence.anchor.lineStart &&
+                index + 1 <= occurrence.anchor.lineEnd
+                  ? scenario.mutate(line)
+                  : line,
+              )
+              .join("\n");
+            const result = projectRawStatBlock(
+              { sourcePath: occurrence.anchor.sourcePath, contents },
+              occurrence,
+              equipmentSource,
+            );
+            expect(result.tag, scenario.name).toBe("failed");
+            if (
+              result.tag !== "failed" ||
+              result.failure.tag !== "projection-issues"
+            ) {
+              continue;
+            }
+            const issueFields = result.failure.issues.map(
+              ({ anchor }) => anchor.field,
+            );
+            expect(
+              issueFields,
+              `${scenario.name}: ${JSON.stringify(issueFields)}`,
+            ).toContain(scenario.expectedField);
+          }
+        },
+      ),
+      { numRuns: 5, seed: 352481 },
+    );
+  });
+
+  test("demotes unsupported attack shapes to text-only in every mutation order", () => {
+    const cases = [
+      {
+        evidence: "alternative damage type",
+        name: "Chimera",
+        procedureName: "Bite",
+        mutate: (line: string) =>
+          line.startsWith("**Bite.")
+            ? line.replace(
+                "18 (4d6 + 4) Piercing damage",
+                "18 (4d6 + 4) Fire damage",
+              )
+            : line,
+      },
+      {
+        evidence: "missing base dice",
+        name: "Chimera",
+        procedureName: "Bite",
+        mutate: (line: string) =>
+          line.startsWith("**Bite.")
+            ? line.replace("11 (2d6 + 4)", "11")
+            : line,
+      },
+      {
+        evidence: "mismatched die size",
+        name: "Chimera",
+        procedureName: "Bite",
+        mutate: (line: string) =>
+          line.startsWith("**Bite.")
+            ? line.replace("18 (4d6 + 4)", "18 (4d8 + 4)")
+            : line,
+      },
+      {
+        evidence: "nonincreasing alternative dice",
+        name: "Chimera",
+        procedureName: "Bite",
+        mutate: (line: string) =>
+          line.startsWith("**Bite.")
+            ? line.replace("18 (4d6 + 4)", "18 (2d6 + 4)")
+            : line,
+      },
+      {
+        evidence: "nonincreasing alternative static damage",
+        name: "Chimera",
+        procedureName: "Bite",
+        mutate: (line: string) =>
+          line.startsWith("**Bite.")
+            ? line.replace("18 (4d6 + 4)", "10 (4d6 + 4)")
+            : line,
+      },
+      {
+        evidence: "impossible attack bonus",
+        name: "Chimera",
+        procedureName: "Bite",
+        mutate: (line: string) =>
+          line.startsWith("**Bite.")
+            ? line.replace("+7, reach", "+99, reach")
+            : line,
+      },
+      {
+        evidence: "unsupported residual text",
+        name: "Chimera",
+        procedureName: "Ram",
+        mutate: (line: string) =>
+          line.startsWith("**Ram.")
+            ? line.replace(" condition.", " condition and sings.")
+            : line,
+      },
+      {
+        evidence: "unresolved multiattack dispatch",
+        name: "Ankylosaurus",
+        procedureName: "Multiattack",
+        mutate: (line: string) =>
+          line.startsWith("**Multiattack.")
+            ? line.replace("Tail attacks", "Missing attacks")
+            : line,
+      },
+    ] as const;
+
+    fc.assert(
+      fc.property(
+        fc.shuffledSubarray([...cases], {
+          minLength: cases.length,
+          maxLength: cases.length,
+        }),
+        (orderedCases) => {
+          for (const scenario of orderedCases) {
+            const occurrence = corpusParity.discovery.occurrences.find(
+              ({ name }) => name === scenario.name,
+            );
+            expect(occurrence, scenario.name).toBeDefined();
+            if (occurrence === undefined) continue;
+            const canonicalSource = sourceByPath.get(
+              occurrence.anchor.sourcePath,
+            );
+            expect(canonicalSource, scenario.name).toBeDefined();
+            if (canonicalSource === undefined) continue;
+            const contents = canonicalSource
+              .split(/\r?\n/)
+              .map((line, index) =>
+                index + 1 >= occurrence.anchor.lineStart &&
+                index + 1 <= occurrence.anchor.lineEnd
+                  ? scenario.mutate(line)
+                  : line,
+              )
+              .join("\n");
+            const result = projectRawStatBlock(
+              { sourcePath: occurrence.anchor.sourcePath, contents },
+              occurrence,
+              equipmentSource,
+            );
+            const context = `${scenario.name}: ${scenario.evidence}`;
+            expect(result.tag, context).toBe("projected");
+            if (result.tag !== "projected") continue;
+            expect(result.projection.procedures, context).toContainEqual(
+              expect.objectContaining({
+                name: scenario.procedureName,
+                kind: "textOnly",
+              }),
+            );
+          }
+        },
+      ),
+      { numRuns: 5, seed: 352482 },
+    );
+  });
+
   test("uses the trait description owner rather than the procedure description owner", () => {
     const occurrence = corpusParity.discovery.occurrences.find(
       ({ name }) => name === "Hydra",
@@ -3403,6 +3871,185 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     ]);
   });
 
+  test("rejects authored procedure shapes outside scoped fidelity", () => {
+    const allosaurus = srdStatBlockCollection.statBlocks.find(
+      ({ name }) => name === "Allosaurus",
+    );
+    expect(allosaurus).toBeDefined();
+    if (allosaurus === undefined) return;
+    const actions = allosaurus.statBlock.actions;
+    expect(actions).toBeDefined();
+    if (actions === undefined) return;
+    type Action = (typeof actions)[number];
+
+    const cases: readonly {
+      readonly expectedField: string;
+      readonly mutate: (action: Action) => Action;
+    }[] = [
+      {
+        expectedField: "procedures.Bite.onHit.0.static",
+        mutate: (action) => {
+          if (
+            action.kind !== "executable" ||
+            action.procedure.kind !== "attack_roll" ||
+            action.procedure.name !== "Bite"
+          ) {
+            return action;
+          }
+          const [effect, ...remainingEffects] = action.procedure.onHit;
+          if (
+            effect.kind !== "damage" ||
+            effect.amount.kind !== "fixed" ||
+            !("expr" in effect.amount)
+          ) {
+            return action;
+          }
+          const { static: _static, ...amountWithoutStatic } = effect.amount;
+          return {
+            ...action,
+            procedure: {
+              ...action.procedure,
+              onHit: [
+                { ...effect, amount: amountWithoutStatic },
+                ...remainingEffects,
+              ],
+            },
+          };
+        },
+      },
+      {
+        expectedField: "procedures.Bite.onHit.0",
+        mutate: (action) =>
+          action.kind === "executable" &&
+          action.procedure.kind === "attack_roll" &&
+          action.procedure.name === "Bite"
+            ? {
+                ...action,
+                procedure: {
+                  ...action.procedure,
+                  onHit: [{ kind: "apply_condition", condition: "prone" }],
+                },
+              }
+            : action,
+      },
+      {
+        expectedField: "procedures.Synthetic Support",
+        mutate: (action) =>
+          action.kind === "executable" &&
+          action.procedure.kind === "attack_roll" &&
+          action.procedure.name === "Bite"
+            ? {
+                ...action,
+                procedure: {
+                  kind: "support",
+                  name: "Synthetic Support",
+                  target: "self",
+                  effect: action.procedure.onHit[0],
+                },
+              }
+            : action,
+      },
+      {
+        expectedField: "procedures.Synthetic Save.onFail",
+        mutate: (action) =>
+          action.kind === "executable" &&
+          action.procedure.kind === "attack_roll" &&
+          action.procedure.name === "Bite"
+            ? {
+                ...action,
+                procedure: {
+                  kind: "save",
+                  name: "Synthetic Save",
+                  ability: "dex",
+                  dc: { kind: "fixed", dc: 10 },
+                  area: { kind: "sphere", radiusFeet: 10 },
+                  onFail: { kind: "apply_condition", condition: "prone" },
+                  onSuccess: action.procedure.onHit[0],
+                },
+              }
+            : action,
+      },
+    ];
+
+    for (const scenario of cases) {
+      const [firstAction, ...remainingActions] = actions;
+      const result = projectAuthoredStatBlock(
+        {
+          ...allosaurus,
+          statBlock: {
+            ...allosaurus.statBlock,
+            actions: [
+              scenario.mutate(firstAction),
+              ...remainingActions.map(scenario.mutate),
+            ],
+          },
+        },
+        equipmentSource,
+      );
+      expect(result.tag, scenario.expectedField).toBe("failed");
+      if (
+        result.tag !== "failed" ||
+        result.failure.tag !== "projection-issues"
+      ) {
+        continue;
+      }
+      expect(
+        result.failure.issues.map(({ anchor }) => anchor.field),
+        scenario.expectedField,
+      ).toContain(scenario.expectedField);
+    }
+  });
+
+  test("reports an authored multiattack dispatch whose target was removed", () => {
+    const ankylosaurus = srdStatBlockCollection.statBlocks.find(
+      ({ name }) => name === "Ankylosaurus",
+    );
+    expect(ankylosaurus).toBeDefined();
+    if (ankylosaurus === undefined) return;
+    const actions = ankylosaurus.statBlock.actions;
+    expect(actions).toBeDefined();
+    if (actions === undefined) return;
+    const multiattackOrdinal = actions.find(
+      (action) =>
+        action.kind === "executable" && action.procedure.kind === "multiattack",
+    )?.procedureOrdinal;
+    expect(multiattackOrdinal).toBeDefined();
+    if (multiattackOrdinal === undefined) return;
+    const [firstAction, ...remainingActions] = actions;
+    const removeTailOrdinal = (action: (typeof actions)[number]) =>
+      action.kind === "executable" &&
+      action.procedure.kind === "attack_roll" &&
+      action.procedure.name === "Tail"
+        ? { ...action, procedureOrdinal: multiattackOrdinal }
+        : action;
+
+    const result = projectAuthoredStatBlock(
+      {
+        ...ankylosaurus,
+        statBlock: {
+          ...ankylosaurus.statBlock,
+          actions: [
+            removeTailOrdinal(firstAction),
+            ...remainingActions.map(removeTailOrdinal),
+          ],
+        },
+      },
+      equipmentSource,
+    );
+    expect(result.tag).toBe("failed");
+    if (result.tag !== "failed" || result.failure.tag !== "projection-issues") {
+      return;
+    }
+    expect(result.failure.issues).toContainEqual(
+      expect.objectContaining({
+        kind: "unresolved-reference",
+        anchor: expect.objectContaining({
+          field: "procedures.Multiattack.dispatches",
+        }),
+      }),
+    );
+  });
+
   test("accumulates every malformed skill item in source order without dependent skill-name issues", () => {
     const occurrence = corpusParity.discovery.occurrences.find(
       ({ name }) => name === "Ape",
@@ -3549,6 +4196,91 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       ],
     });
     expect(result.authoredAdmissions).toHaveLength(330);
+  });
+
+  test("projects every denominator-binding failure before reconciliation", () => {
+    const [firstRecord, ...remainingRecords] =
+      srdStatBlockCollection.statBlocks;
+    expect(firstRecord).toBeDefined();
+    if (firstRecord === undefined) return;
+    const resourceRecord = srdStatBlockCollection.statBlocks.find(
+      ({ name }) => name === "Young White Dragon",
+    );
+    expect(resourceRecord).toBeDefined();
+    if (resourceRecord === undefined) return;
+    const { resources: _resources, ...statBlockWithoutResources } =
+      resourceRecord.statBlock;
+    const invalidResourceRecord: typeof resourceRecord = {
+      ...resourceRecord,
+      statBlock: statBlockWithoutResources,
+    };
+
+    const inputs = [
+      { ...corpusInput, authoredRecords: remainingRecords },
+      {
+        ...corpusInput,
+        authoredRecords: [...srdStatBlockCollection.statBlocks, firstRecord],
+      },
+      {
+        ...corpusInput,
+        parity: { ...corpusParity, installedRecords: remainingRecords },
+      },
+      {
+        ...corpusInput,
+        parity: {
+          ...corpusParity,
+          installedRecords: [firstRecord, firstRecord, ...remainingRecords],
+        },
+      },
+      {
+        ...corpusInput,
+        authoredRecords: srdStatBlockCollection.statBlocks.map((record) =>
+          record === resourceRecord ? invalidResourceRecord : record,
+        ),
+      },
+    ] as const;
+
+    const observedFailureTags = new Set<string>();
+    for (const input of inputs) {
+      const projection = projectSrdStatBlockScopedFidelity(input);
+      for (const authored of projection.authored) {
+        if (authored.outcome.tag === "failed") {
+          observedFailureTags.add(authored.outcome.failure.tag);
+        }
+      }
+      expect(reconcileSrdStatBlockScopedFidelity(projection).tag).toBe(
+        "inconsistent",
+      );
+    }
+
+    expect(observedFailureTags).toEqual(
+      new Set([
+        "projection-outcome-not-supplied",
+        "projection-binding-not-unique",
+        "projection-outside-parity-denominator",
+        "projection-issues",
+      ]),
+    );
+
+    const occurrence = corpusParity.discovery.occurrences[0];
+    expect(occurrence).toBeDefined();
+    if (occurrence === undefined) return;
+    const malformedSourceByPath = new Map(sourceByPath);
+    malformedSourceByPath.set(occurrence.anchor.sourcePath, "");
+    const malformedRaw = projectSrdStatBlockScopedFidelity({
+      ...corpusInput,
+      sourceByPath: malformedSourceByPath,
+    });
+    expect(
+      malformedRaw.raw.some(
+        ({ outcome }) =>
+          outcome.tag === "failed" &&
+          outcome.failure.tag === "projection-issues",
+      ),
+    ).toBe(true);
+    expect(reconcileSrdStatBlockScopedFidelity(malformedRaw).tag).toBe(
+      "inconsistent",
+    );
   });
 
   test("rejects empty projection outcomes against the clean parity denominators", () => {

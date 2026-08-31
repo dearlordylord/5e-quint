@@ -694,11 +694,14 @@ const procedureResourceLimits = (
       Match.when({ kind: "spellcasting" }, ({ groups }) =>
         groups.flatMap((group) => group.resourceLimits),
       ),
-      Match.when({ kind: "textOnly" }, () => []),
-      Match.when({ kind: "attack_roll" }, () => []),
-      Match.when({ kind: "save" }, () => []),
-      Match.when({ kind: "multiattack" }, () => []),
-      Match.when({ kind: "action_option" }, () => []),
+      Match.whenOr(
+        { kind: "textOnly" },
+        { kind: "attack_roll" },
+        { kind: "save" },
+        { kind: "multiattack" },
+        { kind: "action_option" },
+        () => [],
+      ),
       Match.exhaustive,
     ),
   ]);
@@ -954,17 +957,18 @@ const parseMetadataAlignment = (
       { order: "neutral" as const, morality: "neutral" as const },
     );
   }
+  const [order, morality] = parts as [string, string];
   return {
     order: parsedLiteral(
       issueContext,
       ALIGNMENT_ORDERS,
-      parts[0] === undefined ? "" : parts[0],
+      order,
       "alignment.order",
     ),
     morality: parsedLiteral(
       issueContext,
       ALIGNMENT_MORALITIES,
-      parts[1] === undefined ? "" : parts[1],
+      morality,
       "alignment.morality",
     ),
   };
@@ -2238,15 +2242,12 @@ const parseSenses = (
             ),
           );
           if (sense === undefined) return [];
-          const kind = assess(issueContext, () =>
-            parsedLiteral(
-              issueContext,
-              ["darkvision", "blindsight", "tremorsense", "truesight"] as const,
-              (sense[1] ?? "").toLowerCase(),
-              `${field}.kind`,
-            ),
+          const kind = parsedLiteral(
+            issueContext,
+            ["darkvision", "blindsight", "tremorsense", "truesight"] as const,
+            matchCapture(sense, 1).toLowerCase(),
+            `${field}.kind`,
           );
-          if (kind === undefined) return [];
           const rangeFeet = positiveIntegerEvidence(
             issueContext,
             sense[2] ?? "",
@@ -2395,16 +2396,7 @@ const parseLanguageSet = (
   const additionalLanguageWord = matchCapture(additional, 2);
   const additionalLanguageCount = NUMBER_WORDS.find(
     ([word]) => word === additionalLanguageWord,
-  )?.[1];
-  if (additionalLanguageCount === undefined) {
-    return unsupportedEvidence(
-      issueContext,
-      languageField.replace(/\.languages$/, ".additionalLanguages"),
-      additionalLanguageWord,
-      NUMBER_WORDS.map(([word]) => word).join(", "),
-      { kind: "named", languages },
-    );
-  }
+  )?.[1] as 1 | 2 | 3 | 4 | 5;
   return {
     kind: "named_plus_other_languages",
     languages,
@@ -3145,16 +3137,7 @@ const parseDamage = (
     /^(\d+)(?: \((\d+)d(\d+)(?: ([+−-]) (\d+))?\))? ([A-Z][a-z]+) damage$/,
   );
   if (match === null) return undefined;
-  const damageTypeText = match[6];
-  if (damageTypeText === undefined) {
-    return malformedEvidence(
-      issueContext,
-      `${field}.damageType`,
-      value,
-      "damage type",
-      undefined,
-    );
-  }
+  const damageTypeText = match[6] as string;
   const staticDamage = decodeEvidenceValue(
     issueContext,
     PositiveIntegerSchema,
@@ -3454,21 +3437,9 @@ const attackHitResidual = (hit: string): string =>
     .replace(/\bplus\b/gi, "")
     .replace(/[\s,.]/g, "");
 
-const parsedAttackType = (
-  issueContext: ProjectionIssueContext,
-  match: RegExpMatchArray,
-  entryName: string,
-): "melee" | "ranged" | undefined => {
+const parsedAttackType = (match: RegExpMatchArray): "melee" | "ranged" => {
   const attackType = matchCapture(match, 1).toLowerCase();
-  return attackType === "melee" || attackType === "ranged"
-    ? attackType
-    : unsupportedEvidence(
-        issueContext,
-        `procedures.${entryName}.attackType`,
-        matchCapture(match, 1),
-        "melee or ranged",
-        undefined,
-      );
+  return attackType as "melee" | "ranged";
 };
 
 const rangedAttackRange = (
@@ -3538,8 +3509,7 @@ const parseSimpleAttack = (
     ...attackConditionEffects(issueContext, hit, entry.name),
   ];
   if (attackHitResidual(hit) !== "") return undefined;
-  const attackType = parsedAttackType(issueContext, match, entry.name);
-  if (attackType === undefined) return undefined;
+  const attackType = parsedAttackType(match);
   const attackAbility = attackAbilityEvidence(
     rawAttackAbilityCandidates(
       generalFacts.abilityScores,
@@ -3679,29 +3649,17 @@ const parsePairedMultiattack = (
   section: ProcedureSection,
   pair: RegExpMatchArray,
 ): ProcedureProjection | undefined => {
-  const firstCount = numberWordValue(pair[1]);
-  const secondCount = numberWordValue(pair[3]);
-  if (
-    firstCount === undefined ||
-    secondCount === undefined ||
-    pair[2] === undefined ||
-    pair[4] === undefined
-  ) {
-    return malformedEvidence(
-      issueContext,
-      `procedures.${entry.name}.dispatches`,
-      entry.description,
-      "two named dispatches with supported counts",
-      undefined,
-    );
-  }
+  const firstCount = numberWordValue(pair[1]) as number;
+  const secondCount = numberWordValue(pair[3]) as number;
+  const firstProcedureName = pair[2] as string;
+  const secondProcedureName = pair[4] as string;
   return {
     section,
     name: normalizedProcedureName(entry.name),
     kind: "multiattack",
     dispatches: [
-      { procedureName: pair[2], count: firstCount },
-      { procedureName: pair[4], count: secondCount },
+      { procedureName: firstProcedureName, count: firstCount },
+      { procedureName: secondProcedureName, count: secondCount },
     ],
     resourceLimits: parseRawResourceLimits(issueContext, entry.name),
   };
@@ -3716,21 +3674,13 @@ const parseSingleMultiattack = (
     /^The .+ makes (one|two|three) (.+) attacks\.$/,
   );
   if (match === null || match[2]?.includes(" or ") === true) return undefined;
-  const count = numberWordValue(match[1]);
-  if (count === undefined || match[2] === undefined) {
-    return malformedEvidence(
-      issueContext,
-      `procedures.${entry.name}.dispatches`,
-      entry.description,
-      "one named dispatch with a supported count",
-      undefined,
-    );
-  }
+  const count = numberWordValue(match[1]) as number;
+  const procedureName = match[2] as string;
   return {
     section,
     name: normalizedProcedureName(entry.name),
     kind: "multiattack",
-    dispatches: [{ procedureName: match[2], count }],
+    dispatches: [{ procedureName, count }],
     resourceLimits: parseRawResourceLimits(issueContext, entry.name),
   };
 };
@@ -3897,7 +3847,7 @@ const parsedSpellcastingCheckFacts = (
 const parseSpellcasting = (
   issueContext: ProjectionIssueContext,
   entry: RawEntry,
-): ProcedureProjection | undefined => {
+): SpellcastingProcedure | undefined => {
   const section = procedureSection(entry.section);
   if (
     section === undefined ||
@@ -4108,7 +4058,7 @@ const parseDirectSpellcasting = (
   entry: RawEntry,
   inheritedAbility: Ability | undefined,
   inheritedSpellAttackBonus: number | undefined,
-): ProcedureProjection | undefined => {
+): SpellcastingProcedure | undefined => {
   const section = procedureSection(entry.section);
   if (section === undefined) return undefined;
   const evidence = directSpellcastingEvidence(entry.description);
@@ -4403,7 +4353,7 @@ const rawRecordLines = (
 
 const uniqueSpellcastingFacts = (
   issueContext: ProjectionIssueContext,
-  parsedEntries: readonly (ProcedureProjection | undefined)[],
+  parsedEntries: readonly (SpellcastingProcedure | undefined)[],
 ):
   | {
       readonly ability: Ability;
@@ -4416,11 +4366,6 @@ const uniqueSpellcastingFacts = (
       Match.when({ kind: "spellcasting" }, (spellcastingProcedure) => [
         spellcastingProcedure,
       ]),
-      Match.when({ kind: "textOnly" }, () => []),
-      Match.when({ kind: "attack_roll" }, () => []),
-      Match.when({ kind: "save" }, () => []),
-      Match.when({ kind: "multiattack" }, () => []),
-      Match.when({ kind: "action_option" }, () => []),
       Match.exhaustive,
     );
   });
@@ -4933,32 +4878,22 @@ const projectExecutableProcedure = (
         Match.when({ kind: "damage" }, (damage) =>
           projectDamage(issueContext, damage, `procedures.${save.name}.onFail`),
         ),
-        Match.when({ kind: "conditional_bonus_damage" }, ({ kind }) =>
-          unsupportedSimpleDamageSave("onFail", kind),
-        ),
-        Match.when(
+        Match.whenOr(
+          { kind: "conditional_bonus_damage" },
           { kind: "apply_condition_if_target_size_at_most" },
+          { kind: "apply_condition" },
           ({ kind }) => unsupportedSimpleDamageSave("onFail", kind),
-        ),
-        Match.when({ kind: "apply_condition" }, ({ kind }) =>
-          unsupportedSimpleDamageSave("onFail", kind),
         ),
         Match.exhaustive,
       );
       const onSuccess = Match.value(save.onSuccess).pipe(
         Match.when({ kind: "half_damage" }, () => "half_damage" as const),
-        Match.when({ kind: "damage" }, ({ kind }) =>
-          unsupportedSimpleDamageSave("onSuccess", kind),
-        ),
-        Match.when({ kind: "conditional_bonus_damage" }, ({ kind }) =>
-          unsupportedSimpleDamageSave("onSuccess", kind),
-        ),
-        Match.when(
+        Match.whenOr(
+          { kind: "damage" },
+          { kind: "conditional_bonus_damage" },
           { kind: "apply_condition_if_target_size_at_most" },
+          { kind: "apply_condition" },
           ({ kind }) => unsupportedSimpleDamageSave("onSuccess", kind),
-        ),
-        Match.when({ kind: "apply_condition" }, ({ kind }) =>
-          unsupportedSimpleDamageSave("onSuccess", kind),
         ),
         Match.exhaustive,
       );
@@ -4974,30 +4909,17 @@ const projectExecutableProcedure = (
                 kind: "cone" as const,
                 lengthFeet: cone.lengthFeet,
               })),
-              Match.when({ kind: "sphere" }, () => {
-                return undefined;
-              }),
-              Match.when({ kind: "circle" }, () => {
-                return undefined;
-              }),
-              Match.when({ kind: "sphere_cluster" }, () => {
-                return undefined;
-              }),
-              Match.when({ kind: "cube" }, () => {
-                return undefined;
-              }),
-              Match.when({ kind: "cube_cluster" }, () => {
-                return undefined;
-              }),
-              Match.when({ kind: "cylinder" }, () => {
-                return undefined;
-              }),
-              Match.when({ kind: "emanation" }, () => {
-                return undefined;
-              }),
-              Match.when({ kind: "wall_volume" }, () => {
-                return undefined;
-              }),
+              Match.whenOr(
+                { kind: "sphere" },
+                { kind: "circle" },
+                { kind: "sphere_cluster" },
+                { kind: "cube" },
+                { kind: "cube_cluster" },
+                { kind: "cylinder" },
+                { kind: "emanation" },
+                { kind: "wall_volume" },
+                () => undefined,
+              ),
               Match.exhaustive,
             )
           : undefined;
@@ -5129,22 +5051,16 @@ const bindAuthoredResourceLimits = (
 ): StructuralProcedure | undefined => {
   if (authoredResourceLimits.length === 0) return structuralProcedure;
   return Match.value(structuralProcedure).pipe(
-    Match.when({ kind: "attack_roll" }, (procedure) => ({
-      ...procedure,
-      resourceLimits: authoredResourceLimits,
-    })),
-    Match.when({ kind: "save" }, (procedure) => ({
-      ...procedure,
-      resourceLimits: authoredResourceLimits,
-    })),
-    Match.when({ kind: "multiattack" }, (procedure) => ({
-      ...procedure,
-      resourceLimits: authoredResourceLimits,
-    })),
-    Match.when({ kind: "action_option" }, (procedure) => ({
-      ...procedure,
-      resourceLimits: authoredResourceLimits,
-    })),
+    Match.whenOr(
+      { kind: "attack_roll" },
+      { kind: "save" },
+      { kind: "multiattack" },
+      { kind: "action_option" },
+      (procedure) => ({
+        ...procedure,
+        resourceLimits: authoredResourceLimits,
+      }),
+    ),
     Match.when({ kind: "spellcasting" }, (spellcasting) => {
       const limitedGroups = spellcasting.groups.filter((group) =>
         Match.value(group).pipe(
@@ -5203,7 +5119,7 @@ const projectAuthoredProcedures = (
   const entries = authoredProcedures(record);
   const parsedTextOnlySpellcasting = new Map<
     StatBlockProcedureEntry,
-    { readonly value: ProcedureProjection | undefined }
+    { readonly value: SpellcastingProcedure | undefined }
   >();
   const inheritedSpellcastingFacts = entries.flatMap(({ section, entry }) => {
     return Match.value(entry).pipe(
@@ -5219,11 +5135,14 @@ const projectAuthoredProcedures = (
                 ]
               : [],
           ),
-          Match.when({ kind: "attack_roll" }, () => []),
-          Match.when({ kind: "save" }, () => []),
-          Match.when({ kind: "multiattack" }, () => []),
-          Match.when({ kind: "support" }, () => []),
-          Match.when({ kind: "action_option" }, () => []),
+          Match.whenOr(
+            { kind: "attack_roll" },
+            { kind: "save" },
+            { kind: "multiattack" },
+            { kind: "support" },
+            { kind: "action_option" },
+            () => [],
+          ),
           Match.exhaustive,
         ),
       ),
@@ -5248,11 +5167,6 @@ const projectAuthoredProcedures = (
               spellAttackBonus: spellcasting.spellAttackBonus,
             },
           ]),
-          Match.when({ kind: "textOnly" }, () => []),
-          Match.when({ kind: "attack_roll" }, () => []),
-          Match.when({ kind: "save" }, () => []),
-          Match.when({ kind: "multiattack" }, () => []),
-          Match.when({ kind: "action_option" }, () => []),
           Match.exhaustive,
         );
       }),
@@ -5433,11 +5347,14 @@ const entryReferencedResourceOrdinals = (
             resourceReferenceOrdinals(group.resourceRefs),
           ),
         ),
-        Match.when({ kind: "attack_roll" }, () => []),
-        Match.when({ kind: "save" }, () => []),
-        Match.when({ kind: "multiattack" }, () => []),
-        Match.when({ kind: "support" }, () => []),
-        Match.when({ kind: "action_option" }, () => []),
+        Match.whenOr(
+          { kind: "attack_roll" },
+          { kind: "save" },
+          { kind: "multiattack" },
+          { kind: "support" },
+          { kind: "action_option" },
+          () => [],
+        ),
         Match.exhaustive,
       ),
     ]),
