@@ -92,10 +92,18 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   concentrationSavingThrowFill,
   resolveBattleSubject,
   monsterMultiattackStatBlock,
 } from "./battle-runtime.test-support.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
+import { battleStateWithReconciledCurrentActorTurnConstraint } from "./battle-reducer/save-gated-turn-constraint-runtime.ts";
+
+type SaveGatedTurnConstraintBundleEffect = Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "saveGatedTurnConstraintBundle" }
+>;
 
 type LastResult =
   | "init"
@@ -439,12 +447,14 @@ describe("Slow active-penalties MBT parity", () => {
     );
     const actionSpent = spendTargetAction(targetTurnAfterActionCast);
     const concentrationEnded = endSlowConcentrationAfterAction(actionSpent);
-    expect(slowActivePenaltiesProjection(actionSpent)).toMatchObject({
+    expect(saveGatedTurnConstraintBundleProjection(actionSpent)).toMatchObject({
       turnActionOrBonusChoice: "action",
       targetTurnCanSpendAction: false,
       targetTurnCanSpendBonusAction: false,
     });
-    expect(slowActivePenaltiesProjection(concentrationEnded)).toMatchObject({
+    expect(
+      saveGatedTurnConstraintBundleProjection(concentrationEnded),
+    ).toMatchObject({
       turnActionOrBonusChoice: "notRestricted",
       targetTurnCanSpendAction: false,
       targetTurnCanSpendBonusAction: true,
@@ -459,12 +469,16 @@ describe("Slow active-penalties MBT parity", () => {
     const bonusActionSpent = spendTargetBonusAction(targetTurnAfterBonusCast);
     const durationExpired =
       expireSlowDurationAfterBonusAction(bonusActionSpent);
-    expect(slowActivePenaltiesProjection(bonusActionSpent)).toMatchObject({
+    expect(
+      saveGatedTurnConstraintBundleProjection(bonusActionSpent),
+    ).toMatchObject({
       turnActionOrBonusChoice: "bonusAction",
       targetTurnCanSpendAction: false,
       targetTurnCanSpendBonusAction: false,
     });
-    expect(slowActivePenaltiesProjection(durationExpired)).toMatchObject({
+    expect(
+      saveGatedTurnConstraintBundleProjection(durationExpired),
+    ).toMatchObject({
       turnActionOrBonusChoice: "notRestricted",
       targetTurnCanSpendAction: true,
       targetTurnCanSpendBonusAction: false,
@@ -488,13 +502,17 @@ describe("Slow active-penalties MBT parity", () => {
     } as const;
 
     const concentrationEnded = endSlowConcentration(initialRuntimeState());
-    expect(slowActivePenaltiesProjection(concentrationEnded)).toMatchObject({
+    expect(
+      saveGatedTurnConstraintBundleProjection(concentrationEnded),
+    ).toMatchObject({
       ...expectedCastEconomyAfterCleanup,
       lastResult: "concentrationEnded",
     });
 
     const durationExpired = expireSlowDuration(initialRuntimeState());
-    expect(slowActivePenaltiesProjection(durationExpired)).toMatchObject({
+    expect(
+      saveGatedTurnConstraintBundleProjection(durationExpired),
+    ).toMatchObject({
       ...expectedCastEconomyAfterCleanup,
       lastResult: "durationExpired",
     });
@@ -504,7 +522,7 @@ describe("Slow active-penalties MBT parity", () => {
     const actionSpent = spendCompatibleActionResourceBeforeSlow(
       initialRuntimeState(),
     );
-    expect(slowActivePenaltiesProjection(actionSpent)).toMatchObject({
+    expect(saveGatedTurnConstraintBundleProjection(actionSpent)).toMatchObject({
       targetSlowed: false,
       actionTakenThisTurn: true,
       actionTakingResourceCount: 2,
@@ -519,7 +537,7 @@ describe("Slow active-penalties MBT parity", () => {
     ).toEqual(["turn", "unit"]);
 
     const slowed = reconcileSlowAfterCompatibleAction(actionSpent);
-    expect(slowActivePenaltiesProjection(slowed)).toMatchObject({
+    expect(saveGatedTurnConstraintBundleProjection(slowed)).toMatchObject({
       targetSlowed: false,
       affectedTargetCount: 1,
       turnActionOrBonusChoice: "action",
@@ -536,7 +554,7 @@ describe("Slow active-penalties MBT parity", () => {
     ).toEqual(["turn"]);
 
     const cleaned = cleanupSlowAfterCompatibleAction(slowed);
-    expect(slowActivePenaltiesProjection(cleaned)).toMatchObject({
+    expect(saveGatedTurnConstraintBundleProjection(cleaned)).toMatchObject({
       affectedTargetCount: 0,
       turnActionOrBonusChoice: "notRestricted",
       actionTakenThisTurn: true,
@@ -554,7 +572,7 @@ describe("Slow active-penalties MBT parity", () => {
     const unspent = reconcileSlowWithUntakenExtraActionResource(
       initialRuntimeState(),
     );
-    expect(slowActivePenaltiesProjection(unspent)).toMatchObject({
+    expect(saveGatedTurnConstraintBundleProjection(unspent)).toMatchObject({
       affectedTargetCount: 1,
       turnActionOrBonusChoice: "notChosen",
       actionTakenThisTurn: false,
@@ -919,32 +937,36 @@ function battleWithCompatibleActionResources(
 
 function battleStateWithSyntheticSelfSlow(
   state: BattleState,
-  sourceProcedureRef: SlowActivePenaltiesEffect["sourceProcedureRef"],
+  sourceProcedureRef: SaveGatedTurnConstraintBundleEffect["sourceProcedureRef"],
 ): BattleState {
   const caster = requireCombatant(state, spellCasterId);
-  const activeEffect: SlowActivePenaltiesEffect = {
-    kind: "slowActivePenalties",
+  const activeEffect: SaveGatedTurnConstraintBundleEffect = {
+    kind: "saveGatedTurnConstraintBundle",
     sourceProcedureRef,
     sourceCombatantId: spellCasterId,
-    save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
     expiresAt: {
       kind: "concentration",
       combatantId: spellCasterId,
       durationTicks: elapsedTimeTicks(10),
     },
   };
-  const affectedCaster = {
-    ...caster,
-    concentration: {
-      sourceProcedureRef,
-      effectKind: "spellEffect" as const,
-    },
-    activeEffects: [...caster.activeEffects, activeEffect],
-  };
-  return battleStateWithReconciledCurrentActorSlowTurnRestriction({
+  const stateWithConcentration = {
     ...state,
-    combatants: new Map(state.combatants).set(spellCasterId, affectedCaster),
-  });
+    combatants: new Map(state.combatants).set(spellCasterId, {
+      ...caster,
+      concentration: {
+        sourceProcedureRef,
+        effectKind: "spellEffect" as const,
+      },
+    }),
+  } satisfies BattleState;
+  return battleStateWithReconciledCurrentActorTurnConstraint(
+    battleStateWithAllocatedEffectForTest({
+      state: stateWithConcentration,
+      ownerId: spellCasterId,
+      effect: activeEffect,
+    }),
+  );
 }
 
 function castSlowMultiattackFailedSave(
@@ -1264,8 +1286,8 @@ function stateWithSlowDurationTicks(
         {
           ...combatant,
           activeEffects: combatant.activeEffects.map((effect) =>
-            effect.kind === "slowActivePenalties"
-              ? slowActivePenaltiesEffectWithDurationTicks(
+            effect.kind === "saveGatedTurnConstraintBundle"
+              ? saveGatedTurnConstraintBundleEffectWithDurationTicks(
                   effect,
                   durationTicks,
                 )
@@ -1277,10 +1299,10 @@ function stateWithSlowDurationTicks(
   };
 }
 
-function slowActivePenaltiesEffectWithDurationTicks(
-  effect: SlowActivePenaltiesEffect,
+function saveGatedTurnConstraintBundleEffectWithDurationTicks(
+  effect: SaveGatedTurnConstraintBundleEffect,
   durationTicks: ReturnType<typeof elapsedTimeTicks>,
-): SlowActivePenaltiesEffect {
+): SaveGatedTurnConstraintBundleEffect {
   if (
     effect.sourceCombatantId !== spellCasterId ||
     effect.expiresAt.kind !== "concentration"
@@ -1557,7 +1579,7 @@ function requestSomaticFailure(
     spellTargetId,
     expeditiousRetreatUnitId,
   );
-  const hole = requireSlowSomaticSpellFailureHole(act.initialHoles);
+  const hole = requireTurnConstraintSomaticSpellFailureHole(act.initialHoles);
   expect(hole.failurePercent).toBe(
     SAVE_GATED_TURN_CONSTRAINT_SOMATIC_FAILURE_PERCENT,
   );
@@ -1580,11 +1602,11 @@ function fillSomaticSpellFailure(
     spellTargetId,
     expeditiousRetreatUnitId,
   );
-  const hole = requireSlowSomaticSpellFailureHole(state.holes);
+  const hole = requireTurnConstraintSomaticSpellFailureHole(state.holes);
   const resolved = resolveBattleSubject({
     state: state.battle.state,
     subject: act.subject,
-    fills: [slowSomaticSpellFailureFill(hole, true)],
+    fills: [turnConstraintSomaticSpellFailureFill(hole, true)],
   });
   expect(resolved).toMatchObject({ tag: "resolved" });
   if (resolved.tag !== "resolved") {
@@ -1620,11 +1642,11 @@ function saveGatedTurnConstraintBundleProjection(
   );
   const secondTargetSlowed =
     secondTarget?.activeEffects.some(
-      (effect) => effect.kind === "slowActivePenalties",
+      (effect) => effect.kind === "saveGatedTurnConstraintBundle",
     ) ?? false;
   const multiattackTargetSlowed =
     multiattackTarget?.activeEffects.some(
-      (effect) => effect.kind === "slowActivePenalties",
+      (effect) => effect.kind === "saveGatedTurnConstraintBundle",
     ) ?? false;
   const casterConcentrationSourceProcedureRef =
     caster.concentration?.sourceProcedureRef;
@@ -1641,7 +1663,7 @@ function saveGatedTurnConstraintBundleProjection(
   const affectedTargetCount =
     concentratedSlowEffects === false ? 0 : concentratedSlowEffects.length;
   const somaticFailureHole = state.holes.find(
-    (hole) => hole.kind === "slowSomaticSpellFailureOutcome",
+    (hole) => hole.kind === "turnConstraintSomaticSpellFailureOutcome",
   );
   const multiattack = slowStatBlockMultiattackProjection(state);
   return {
@@ -1829,7 +1851,7 @@ function requireSlowEndTurnSaveHole(holes: readonly BattleHole[]): Extract<
   return hole;
 }
 
-function requireSlowSomaticSpellFailureHole(
+function requireTurnConstraintSomaticSpellFailureHole(
   holes: readonly BattleHole[],
 ): Extract<
   BattleHole,
@@ -1838,7 +1860,7 @@ function requireSlowSomaticSpellFailureHole(
   return requireHole(holes, "turnConstraintSomaticSpellFailureOutcome");
 }
 
-function slowSomaticSpellFailureFill(
+function turnConstraintSomaticSpellFailureFill(
   hole: Extract<
     BattleHole,
     { readonly kind: "turnConstraintSomaticSpellFailureOutcome" }

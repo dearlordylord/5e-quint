@@ -7,7 +7,6 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import fc from "fast-check";
 import { Schema } from "effect";
 import * as Result from "effect/Result";
@@ -31,7 +30,7 @@ import type {
   BattleSubject,
   NonSpellExecutableProcedureKind,
 } from "./battle-runtime.test-support.ts";
-import type { BattleActiveEffect } from "./battle-state-execution.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import {
   abilityCheckFill,
   attackDamageHoleAfterHit,
@@ -83,12 +82,14 @@ import {
   skeletonCreatureInit,
   skeletonId,
   snapshotBattle,
+  spellRecord,
   startBattleRight,
   statBlockCreatureInit,
   statBlockRecord,
   targetFill,
   testLightHammerAttack,
   testPoisonWeaponAttack,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
   BattleStatBlockProcedureExecutionRef,
@@ -114,6 +115,7 @@ import { supportedStatBlockAttackHitConditionRiders } from "./statblock-attack-h
 import { statBlockRechargeRollFillMatchesHole } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import { isStatBlockBattleCreatureState } from "./battle-reducer/battle-discovery.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 
 function discoverStatBlockActs(state: BattleState) {
   return discoverBattleActs(
@@ -321,24 +323,30 @@ function repeatedProcedureRefs(
   return [procedureRef, ...repeatedProcedureRefs(procedureRef, count - 1)];
 }
 
-function slowActivePenaltiesEffectForTest(): Extract<
-  BattleActiveEffect,
-  { readonly kind: "slowActivePenalties" }
+function saveGatedTurnConstraintBundleEffectForTest(
+  state: BattleState,
+): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "saveGatedTurnConstraintBundle" }
 > {
+  const source = state.combatants.get(fighterId);
+  if (source === undefined) {
+    throw new Error("Expected the turn-constraint source combatant.");
+  }
+  const invocation = supportedSpellActs(state, source).find(
+    (candidate) => candidate.procedure === "saveGatedTurnConstraintBundle",
+  );
+  if (invocation?.procedure !== "saveGatedTurnConstraintBundle") {
+    throw new Error("Expected a save-gated turn-constraint invocation.");
+  }
   return {
-    kind: "slowActivePenalties",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      "synthetic-slow-multiattack-resource",
-    ),
+    kind: "saveGatedTurnConstraintBundle",
+    sourceProcedureRef: invocation.sourceProcedureRef,
     sourceCombatantId: fighterId,
-    save: {
-      ability: "wis",
-      dc: { kind: "caster_spell_save_dc" },
-    },
     expiresAt: {
       kind: "concentration",
       combatantId: fighterId,
-      durationTicks: elapsedTimeTicks(10),
+      durationTicks: invocation.durationTicks,
     },
   };
 }
@@ -1491,7 +1499,14 @@ describe("battle runtime: Stat Block actions", () => {
         state: startBattleRight({
           battleId: battleId("battle-monster-multiattack"),
           combatants: [
-            characterSeed({ initiative: 20 }),
+            characterSeed({
+              initiative: 20,
+              spellcasting: wizardSpellcasting({
+                cantrips: [],
+                preparedSpells: [spellRecord("slow")],
+                spellSlots: [{ spellLevel: 3, count: 1 }],
+              }),
+            }),
             statBlockCreatureInit({
               initiative: 10,
               statBlock: monsterMultiattackStatBlock(),
@@ -1634,16 +1649,12 @@ describe("battle runtime: Stat Block actions", () => {
     if (multiattackActor === undefined) {
       throw new Error("Expected the Multiattack actor.");
     }
-    const multiattackStateAfterSlowApplied: BattleState = {
-      ...multiattackState,
-      combatants: new Map(multiattackState.combatants).set(goblinId, {
-        ...multiattackActor,
-        activeEffects: [
-          ...multiattackActor.activeEffects,
-          slowActivePenaltiesEffectForTest(),
-        ],
-      }),
-    };
+    const multiattackStateAfterSlowApplied =
+      battleStateWithAllocatedEffectForTest({
+        state: multiattackState,
+        ownerId: goblinId,
+        effect: saveGatedTurnConstraintBundleEffectForTest(multiattackState),
+      });
     const shortbow = discoverStatBlockActs(
       multiattackStateAfterSlowApplied,
     ).find(
@@ -2162,7 +2173,14 @@ describe("battle runtime: Stat Block actions", () => {
         state: startBattleRight({
           battleId: battleId("battle-stat-block-slow-multiattack-resource"),
           combatants: [
-            characterSeed({ initiative: 20 }),
+            characterSeed({
+              initiative: 20,
+              spellcasting: wizardSpellcasting({
+                cantrips: [],
+                preparedSpells: [spellRecord("slow")],
+                spellSlots: [{ spellLevel: 3, count: 1 }],
+              }),
+            }),
             statBlockCreatureInit({
               initiative: 10,
               statBlock,
@@ -2176,16 +2194,11 @@ describe("battle runtime: Stat Block actions", () => {
     if (goblin?.origin.kind !== "statBlock") {
       throw new Error("Expected Stat Block goblin.");
     }
-    const slowedGoblinTurn: BattleState = {
-      ...goblinTurn,
-      combatants: new Map(goblinTurn.combatants).set(goblinId, {
-        ...goblin,
-        activeEffects: [
-          ...goblin.activeEffects,
-          slowActivePenaltiesEffectForTest(),
-        ],
-      }),
-    };
+    const slowedGoblinTurn = battleStateWithAllocatedEffectForTest({
+      state: goblinTurn,
+      ownerId: goblinId,
+      effect: saveGatedTurnConstraintBundleEffectForTest(goblinTurn),
+    });
     const subject = discoveredMultiattackSubject(slowedGoblinTurn);
     const afterMultiattack = requireResolved(
       resolveBattleSubject({
@@ -2226,7 +2239,7 @@ describe("battle runtime: Stat Block actions", () => {
       combatants: new Map(afterMultiattack.combatants).set(goblinId, {
         ...afterMultiattackActor,
         activeEffects: afterMultiattackActor.activeEffects.filter(
-          (effect) => effect.kind !== "slowActivePenalties",
+          (effect) => effect.kind !== "saveGatedTurnConstraintBundle",
         ),
       }),
     };
@@ -2258,7 +2271,14 @@ describe("battle runtime: Stat Block actions", () => {
         state: startBattleRight({
           battleId: battleId("battle-stat-block-multiattack-resource-oracle"),
           combatants: [
-            characterSeed({ initiative: 20 }),
+            characterSeed({
+              initiative: 20,
+              spellcasting: wizardSpellcasting({
+                cantrips: [],
+                preparedSpells: [spellRecord("slow")],
+                spellSlots: [{ spellLevel: 3, count: 1 }],
+              }),
+            }),
             statBlockCreatureInit({
               initiative: 10,
               statBlock: monsterResourceStatBlock(),
@@ -2313,17 +2333,20 @@ describe("battle runtime: Stat Block actions", () => {
                 ),
               },
             };
-          const actorForPlan = slowed
-            ? {
-                ...actor,
-                activeEffects: [
-                  ...actor.activeEffects,
-                  slowActivePenaltiesEffectForTest(),
-                ],
-              }
-            : actor;
+          const stateForPlan = slowed
+            ? battleStateWithAllocatedEffectForTest({
+                state: baseTurn,
+                ownerId: goblinId,
+                effect: saveGatedTurnConstraintBundleEffectForTest(baseTurn),
+              })
+            : baseTurn;
+          const actorForPlan = stateForPlan.combatants.get(goblinId);
+          if (actorForPlan?.origin.kind !== "statBlock") {
+            throw new Error("Expected the Stat Block resource-plan actor.");
+          }
           const dispatchResourceDemand =
             statBlockMultiattackDispatchResourceDemandForActor(
+              stateForPlan,
               actorForPlan,
               binding,
             );

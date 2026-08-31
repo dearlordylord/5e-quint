@@ -5,7 +5,7 @@ import {
   monsterMultiattackStatBlock,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { BattleSnapshotSchema } from "./index.ts";
+import { BattleSnapshotSchema, discoverBattleActCandidates } from "./index.ts";
 import { battleEffectExecutionRef } from "./identity.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C17-HASTE-POSITIVE-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C18-HASTE-LETHARGY-RUNTIME haste
@@ -242,15 +242,24 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
         Schema.decodeUnknownResult(BattleSnapshotSchema)(ordinaryTurn),
       ),
     ).toBe(true);
+    const ordinaryHasteOccurrence = ordinaryTurn.combatants
+      .find((combatant) => combatant.combatantId === spellTargetId)
+      ?.activeEffectOccurrences.find(
+        (occurrence) =>
+          occurrence.effectRef === ordinaryHasteResource.sourceEffectRef,
+      );
+    expect(ordinaryHasteOccurrence).toBeDefined();
+    if (ordinaryHasteOccurrence === undefined) return;
     const inactiveHaste = {
       ...ordinaryTurn,
       combatants: ordinaryTurn.combatants.map((combatant) =>
         combatant.combatantId === spellTargetId
           ? {
               ...combatant,
-              activeEffectRefs: combatant.activeEffectRefs.filter(
-                (effectRef) =>
-                  effectRef !== ordinaryHasteResource.sourceEffectRef,
+              activeEffectOccurrences: combatant.activeEffectOccurrences.filter(
+                (occurrence) =>
+                  occurrence.effectRef !==
+                  ordinaryHasteResource.sourceEffectRef,
               ),
             }
           : combatant,
@@ -280,9 +289,12 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
         combatant.combatantId === spellCasterId
           ? {
               ...combatant,
-              activeEffectRefs: [
-                ...combatant.activeEffectRefs,
-                foreignEffectRef,
+              activeEffectOccurrences: [
+                ...combatant.activeEffectOccurrences,
+                {
+                  ...ordinaryHasteOccurrence,
+                  effectRef: foreignEffectRef,
+                },
               ],
             }
           : combatant,
