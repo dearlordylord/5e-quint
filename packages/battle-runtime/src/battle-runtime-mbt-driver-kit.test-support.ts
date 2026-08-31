@@ -81,7 +81,6 @@ import {
   wizardId as interruptWizardId,
   resolveBattleSubject,
   nonSpellExecutableProcedureEntry,
-  projectedStatBlockRuntimeSource,
   type BattleActSelectorForTest,
 } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";

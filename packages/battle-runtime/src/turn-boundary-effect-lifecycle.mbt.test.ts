@@ -18,7 +18,6 @@ import {
   Hp,
   NonNegativeInteger,
   Round,
-  spellSlotLevel,
 } from "@dnd/shared/types";
 import {
   battleProcedureExecutionCursor,

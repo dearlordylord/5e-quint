@@ -3,7 +3,10 @@ import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
-import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
+import {
+  decodeCreatureImmunityDeclarationSync,
+  StatBlockProcedureResourceOrdinalSchema,
+} from "@dnd/surface/surface/schema";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
 import type { BattleCreatureInit } from "./battle-init.ts";
@@ -27,6 +30,7 @@ import {
 import {
   characterSeed,
   fighterId,
+  expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary,
   removeBattleCombatantsRight,
   startBattleRight,
   monsterResourceStatBlock,
