@@ -6,7 +6,12 @@ import {
   type CharacterBattleCombatantInit,
 } from "@dnd/battle-runtime";
 import { statBlockId } from "@dnd/shared/game-facts";
-import { Hp } from "@dnd/shared/types";
+import { Hp, resourceCount } from "@dnd/shared/types";
+import {
+  assertSrd521StatBlock,
+  buildStatBlockCatalog,
+  defineSrdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
 import {
   SrdStatBlockRecordSchema,
   StatBlockProcedureOrdinalSchema,
@@ -16,10 +21,11 @@ import type {
   StatBlockProcedureEntry,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
-import { Result, Option, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 import { describe, expect, expectTypeOf, test } from "vitest";
 
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
+import { battleStatBlockExecutionCatalog } from "./battle-stat-block-execution-catalog.ts";
 import { handleToolCall } from "./server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import type { StatBlockCombatantToolInput } from "./start-battle-tool-input.ts";
@@ -88,22 +94,15 @@ describe("MCP authored Stat Block battle admission boundary", () => {
         resources: [resource, resource],
       },
     } satisfies StatBlockRecord;
-    const root = {
-      ...baseRoot,
-      statBlockCatalog: {
-        ...baseRoot.statBlockCatalog,
-        getStatBlock: (id: StatBlockRecord["id"]) =>
-          id === invalid.id
-            ? Option.some(invalid)
-            : baseRoot.statBlockCatalog.getStatBlock(id),
-      },
-    } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
+    const root = rootWithAuthoredStatBlocks(baseRoot, [base, invalid]);
 
     const started = admitStatBlockThroughStartBoundary({
       root,
       combatant: {
         ...statBlockCombatant(base),
-        ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+        ammunitionStocks: [
+          { ammunition: "arrow", remaining: resourceCount(20) },
+        ],
       },
     });
     expect(Result.isSuccess(started)).toBe(true);
@@ -190,13 +189,7 @@ describe("MCP authored Stat Block battle admission boundary", () => {
         },
       },
     } satisfies StatBlockRecord;
-    const root = {
-      ...baseRoot,
-      statBlockCatalog: {
-        ...baseRoot.statBlockCatalog,
-        getStatBlock: () => Option.some(invalid),
-      },
-    } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
+    const root = rootWithAuthoredStatBlocks(baseRoot, [invalid]);
 
     const projected = admitStatBlockThroughStartBoundary({
       root,
@@ -254,16 +247,7 @@ describe("MCP authored Stat Block battle admission boundary", () => {
         actions: [unsupportedAttack, multiattack],
       },
     });
-    const root = {
-      ...baseRoot,
-      statBlockCatalog: {
-        ...baseRoot.statBlockCatalog,
-        getStatBlock: (id: StatBlockRecord["id"]) =>
-          id === invalid.id
-            ? Option.some(invalid)
-            : baseRoot.statBlockCatalog.getStatBlock(id),
-      },
-    } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
+    const root = rootWithAuthoredStatBlocks(baseRoot, [invalid]);
 
     const projected = admitStatBlockThroughStartBoundary({
       root,
@@ -297,13 +281,7 @@ describe("MCP authored Stat Block battle admission boundary", () => {
         size: { kind: "alternatives", options: ["small", "medium"] },
       },
     } satisfies StatBlockRecord;
-    const root = {
-      ...baseRoot,
-      statBlockCatalog: {
-        ...baseRoot.statBlockCatalog,
-        getStatBlock: () => Option.some(invalid),
-      },
-    } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
+    const root = rootWithAuthoredStatBlocks(baseRoot, [invalid]);
 
     const projected = admitStatBlockThroughStartBoundary({
       root,
@@ -342,16 +320,7 @@ describe("MCP authored Stat Block battle admission boundary", () => {
         ),
       },
     });
-    const root = {
-      ...baseRoot,
-      statBlockCatalog: {
-        ...baseRoot.statBlockCatalog,
-        getStatBlock: (id: StatBlockRecord["id"]) =>
-          id === invalid.id
-            ? Option.some(invalid)
-            : baseRoot.statBlockCatalog.getStatBlock(id),
-      },
-    } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
+    const root = rootWithAuthoredStatBlocks(baseRoot, [invalid]);
 
     const projected = admitStatBlockThroughStartBoundary({
       root,
@@ -406,16 +375,7 @@ describe("MCP authored Stat Block battle admission boundary", () => {
         },
       },
     });
-    const root = {
-      ...baseRoot,
-      statBlockCatalog: {
-        ...baseRoot.statBlockCatalog,
-        getStatBlock: (id: StatBlockRecord["id"]) =>
-          id === invalid.id
-            ? Option.some(invalid)
-            : baseRoot.statBlockCatalog.getStatBlock(id),
-      },
-    } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
+    const root = rootWithAuthoredStatBlocks(baseRoot, [invalid]);
 
     const projected = admitStatBlockThroughStartBoundary({
       root,
@@ -451,13 +411,7 @@ describe("MCP authored Stat Block battle admission boundary", () => {
         resources: [invalidResource],
       },
     } satisfies StatBlockRecord;
-    const root = {
-      ...baseRoot,
-      statBlockCatalog: {
-        ...baseRoot.statBlockCatalog,
-        getStatBlock: () => Option.some(invalid),
-      },
-    } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
+    const root = rootWithAuthoredStatBlocks(baseRoot, [invalid]);
 
     const projected = admitStatBlockThroughStartBoundary({
       root,
@@ -491,6 +445,29 @@ function statBlockCombatant(
   };
 }
 
+function rootWithAuthoredStatBlocks(
+  baseRoot: ReturnType<typeof createMcpPlaySessionRoot>,
+  statBlocks: readonly StatBlockRecord[],
+): ReturnType<typeof createMcpPlaySessionRoot> {
+  const catalog = buildStatBlockCatalog({
+    collections: [
+      defineSrdStatBlockCollection({
+        statBlocks: statBlocks.map(assertSrd521StatBlock),
+      }),
+    ],
+  });
+  if (catalog.tag !== "ok") {
+    throw new Error("Expected the MCP fixture Stat Block catalog to build.");
+  }
+  return {
+    ...baseRoot,
+    statBlockCatalog: catalog.catalog,
+    battleStatBlockExecutionCatalog: battleStatBlockExecutionCatalog(
+      catalog.catalog,
+    ),
+  };
+}
+
 function admitStatBlockThroughStartBoundary(input: {
   readonly root: ReturnType<typeof createMcpPlaySessionRoot>;
   readonly combatant: StatBlockCombatantToolInput;
@@ -505,9 +482,7 @@ function admitStatBlockThroughStartBoundary(input: {
       initialCombatants: [input.combatant],
     }),
   );
-  return response.isError === true
-    ? Result.fail(response)
-    : Result.succeed(jsonContentPayload(response));
+  return toolCallResult(response);
 }
 
 function admitStatBlockThroughAddBoundary(input: {
@@ -524,9 +499,21 @@ function admitStatBlockThroughAddBoundary(input: {
       },
     }),
   );
-  return response.isError === true
-    ? Result.fail(response)
-    : Result.succeed(jsonContentPayload(response));
+  return toolCallResult(response);
+}
+
+function toolCallResult(response: ReturnType<typeof handleToolCall>) {
+  const outcome =
+    "isError" in response
+      ? { tag: "failure" as const, response }
+      : { tag: "success" as const, response };
+  return Match.value(outcome).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      failure: ({ response: failure }) => Result.fail(failure),
+      success: ({ response: success }) =>
+        Result.succeed(jsonContentPayload(success)),
+    }),
+  );
 }
 
 function expectStartAdmissionIssue(

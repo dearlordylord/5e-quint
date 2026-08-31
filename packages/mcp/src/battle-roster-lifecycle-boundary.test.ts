@@ -3,6 +3,7 @@ import {
   battleId,
   combatantId as makeCombatantId,
   characterId as makeCharacterId,
+  statBlockProcedurePresentations,
 } from "@dnd/battle-runtime";
 import { Hp } from "@dnd/shared/types";
 import { Option, Result } from "effect";
@@ -18,7 +19,6 @@ import { battleMechanicsEnvelopeForSession } from "./battle-tool-payloads.ts";
 import { battleSubjectIsAvailableWithoutPendingFills } from "./battle-tool-frontier.ts";
 import { BATTLE_LIFECYCLE_RECOVERY } from "./battle-roster-lifecycle.ts";
 import {
-  attackExecutionSelectionForSubjectForTest,
   fighterId,
   findAct,
   goblinId,
@@ -26,6 +26,8 @@ import {
   movementFeet,
   readyDeclarationFillForTest,
 } from "../../battle-runtime/src/battle-runtime.test-support.ts";
+import { attackExecutionSelectionForOption } from "../../battle-runtime/src/battle-action-options.ts";
+import { statBlockAttackActionOptions } from "../../battle-runtime/src/stat-block-execution-state.ts";
 
 function handleToolCall(
   root: ReturnType<typeof createMcpPlaySessionRoot>,
@@ -179,18 +181,25 @@ function pendingInterruptTransaction() {
   if (movementHole?.kind !== "movement") {
     throw new Error("Expected the fixture's movement hole.");
   }
-  const goblinAttackProcedure = session.context.statBlocks
-    .get(goblinId)
-    ?.procedures.find((procedure) => procedure.kind === "attack");
-  if (goblinAttackProcedure === undefined) {
-    throw new Error("Expected the Goblin's admitted attack procedure.");
+  const goblin = session.state.combatants.get(goblinId);
+  const goblinPresentation = session.context.statBlocks.get(goblinId);
+  if (goblin?.origin.kind !== "statBlock" || goblinPresentation === undefined) {
+    throw new Error("Expected the admitted Goblin Stat Block.");
   }
-  const goblinAttackSubject = {
-    tag: "action" as const,
-    actorId: goblinId,
-    action: "attack" as const,
-    procedureRef: goblinAttackProcedure.procedureRef,
-  };
+  const goblinAttackProcedureRef = Result.getOrThrow(
+    statBlockProcedurePresentations({
+      execution: goblin.origin.execution,
+      presentation: goblinPresentation,
+    }),
+  ).find(
+    (procedure) => procedure.kind === "attack" && procedure.name === "Scimitar",
+  )?.procedureRef;
+  const goblinAttack = statBlockAttackActionOptions(
+    goblin.origin.execution,
+  ).find((attack) => attack.procedureRef === goblinAttackProcedureRef);
+  if (goblinAttack === undefined) {
+    throw new Error("Expected the Goblin's admitted Scimitar attack.");
+  }
   const pending = readToolPayload(
     handleToolCall(root, "fill_battle_hole", {
       subject: movement.subject,
@@ -200,7 +209,7 @@ function pendingInterruptTransaction() {
           {
             reactorId: goblinId,
             distanceFeet: movementFeet(5),
-            ...attackExecutionSelectionForSubjectForTest(goblinAttackSubject),
+            ...attackExecutionSelectionForOption(goblinAttack),
           },
         ],
       }),
