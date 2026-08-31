@@ -38,7 +38,7 @@ export type StatBlockScopedMechanics = {
   readonly procedures: readonly StatBlockScopedProcedure[];
 };
 
-export type StatBlockAuthoredAdmissionEvidence =
+type StatBlockAuthoredAdmissionEvidence =
   StatBlockScopedFidelityProjection["textOnlyProcedures"];
 
 type SrdStatBlockRawFidelityEvidence = {
