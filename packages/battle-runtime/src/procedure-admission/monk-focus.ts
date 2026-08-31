@@ -298,6 +298,19 @@ function monkFocusAdmissionIssues(
   mechanics: ResourceContainerMechanics,
   observations: readonly OptionObservation[],
 ): readonly MonkFocusProcedureAdmissionIssue[] {
+  return [
+    ...monkFocusRootAdmissionIssues(mechanics, observations),
+    ...observations.flatMap(monkFocusOptionAdmissionIssues),
+    ...MONK_FOCUS_OPTION_PROCEDURE_KINDS.flatMap((procedureKind) =>
+      monkFocusProcedureKindAdmissionIssues(procedureKind, observations),
+    ),
+  ];
+}
+
+function monkFocusRootAdmissionIssues(
+  mechanics: ResourceContainerMechanics,
+  observations: readonly OptionObservation[],
+): readonly MonkFocusProcedureAdmissionIssue[] {
   const issues: MonkFocusProcedureAdmissionIssue[] = [];
   if (!monkFocusResourceIsSupported(mechanics)) {
     issues.push(
@@ -344,49 +357,59 @@ function monkFocusAdmissionIssues(
       ),
     );
   }
-  for (const observation of observations) {
-    if (observation.procedureKind === null || !observation.supported) {
-      const mechanicsPath = effectPath(observation.ordinal);
-      const message =
-        "Each Monk Focus option requires one completely supported execution procedure.";
-      issues.push(
-        observation.procedureKind === null
-          ? unrecognizedOptionProcedureIssue(mechanicsPath, message)
-          : procedureAdmissionIssue(
-              "unsupportedOptionProcedure",
-              observation.procedureKind,
-              mechanicsPath,
-              message,
-            ),
-      );
-    }
-  }
-  for (const procedureKind of MONK_FOCUS_OPTION_PROCEDURE_KINDS) {
-    const matching = observations.filter(
-      (observation) => observation.procedureKind === procedureKind,
-    );
-    if (matching.length === 0) {
-      issues.push(
-        procedureAdmissionIssue(
-          "missingOptionProcedureKind",
-          procedureKind,
-          rootMechanicsPath(),
-          `Monk Focus requires the ${procedureKind} procedure.`,
+  return issues;
+}
+
+function monkFocusOptionAdmissionIssues(
+  observation: OptionObservation,
+): readonly MonkFocusProcedureAdmissionIssue[] {
+  if (observation.procedureKind !== null && observation.supported) return [];
+  const mechanicsPath = effectPath(observation.ordinal);
+  const message =
+    "Each Monk Focus option requires one completely supported execution procedure.";
+  return [
+    observation.procedureKind === null
+      ? unrecognizedOptionProcedureIssue(mechanicsPath, message)
+      : procedureAdmissionIssue(
+          "unsupportedOptionProcedure",
+          observation.procedureKind,
+          mechanicsPath,
+          message,
         ),
-      );
-    }
-    for (const duplicate of matching.slice(1)) {
-      issues.push(
+  ];
+}
+
+function monkFocusProcedureKindAdmissionIssues(
+  procedureKind: MonkFocusOptionProcedureKind,
+  observations: readonly OptionObservation[],
+): readonly MonkFocusProcedureAdmissionIssue[] {
+  const matching = observations.filter(
+    (observation) => observation.procedureKind === procedureKind,
+  );
+  const missing =
+    matching.length === 0
+      ? [
+          procedureAdmissionIssue(
+            "missingOptionProcedureKind",
+            procedureKind,
+            rootMechanicsPath(),
+            `Monk Focus requires the ${procedureKind} procedure.`,
+          ),
+        ]
+      : [];
+  return [
+    ...missing,
+    ...matching
+      .slice(1)
+      .map((duplicate) =>
         procedureAdmissionIssue(
           "duplicateOptionProcedureKind",
           procedureKind,
           effectPath(duplicate.ordinal),
           `Monk Focus must not repeat the ${procedureKind} procedure.`,
         ),
-      );
-    }
-  }
-  return issues;
+      ),
+  ];
 }
 
 function monkFocusResourceIsSupported(

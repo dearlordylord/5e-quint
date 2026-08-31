@@ -994,33 +994,47 @@ function characterBattleResourceForUnitOrNull(
   if (zeroHitPointReplacement !== null) {
     return zeroHitPointReplacement.resource;
   }
-  if (
-    unit.kind === "species_trait" &&
-    unit.mechanics.family === "activation" &&
-    (bonusActionDashTemporaryHitPointsProfileForUnit(unit) !== null ||
-      unitHasAttackActionAreaSaveDamageReplacementResourceShape(unit))
-  ) {
-    const resource = unit.mechanics.resource;
-    if (resource !== undefined) {
-      if (!activationResourceIsSupportedByBattleForUnit(unit, resource)) {
-        /* v8 ignore start -- @preserve -- Both admitted species-resource profiles require a use-count resource with a proficiency-bonus cap, so this support predicate is established by the profile guards above. */
-        return null;
-        /* v8 ignore stop -- @preserve */
-      }
-      return resource;
-    }
+  const speciesTraitResource = speciesTraitBattleResourceForUnit(unit);
+  if (speciesTraitResource !== null) return speciesTraitResource;
+  return classFeatureBattleResourceForUnit(unit);
+}
+
+function speciesTraitBattleResourceForUnit(
+  unit: UnitRecord,
+): CharacterBattleResourceExecutionFacts | null {
+  if (unit.kind !== "species_trait") return null;
+  if (unit.mechanics.family !== "activation") return null;
+  if (!speciesTraitHasBattleResourceProfile(unit)) return null;
+  const resource = unit.mechanics.resource;
+  if (resource === undefined) return null;
+  if (!activationResourceIsSupportedByBattleForUnit(unit, resource)) {
+    /* v8 ignore start -- @preserve -- Both admitted species-resource profiles require a use-count resource with a proficiency-bonus cap, so this support predicate is established by the profile guards above. */
+    return null;
+    /* v8 ignore stop -- @preserve */
   }
+  return resource;
+}
+
+function speciesTraitHasBattleResourceProfile(
+  unit: Extract<UnitRecord, { readonly kind: "species_trait" }>,
+): boolean {
+  return (
+    bonusActionDashTemporaryHitPointsProfileForUnit(unit) !== null ||
+    unitHasAttackActionAreaSaveDamageReplacementResourceShape(unit)
+  );
+}
+
+function classFeatureBattleResourceForUnit(
+  unit: UnitRecord,
+): CharacterBattleResourceExecutionFacts | null {
+  if (unit.kind !== "class_feature") return null;
   if (
-    unit.kind === "class_feature" &&
     unit.mechanics.family === "resource_pool" &&
     pointPoolResourceIsSupportedByBattle(unit.mechanics.resource)
   ) {
     return unit.mechanics.resource;
   }
-  if (
-    unit.kind === "class_feature" &&
-    unit.mechanics.family === "resource_container"
-  ) {
+  if (unit.mechanics.family === "resource_container") {
     return activationResourceIsSupportedByBattleForUnit(
       unit,
       unit.mechanics.resource,
@@ -1028,15 +1042,20 @@ function characterBattleResourceForUnitOrNull(
       ? unit.mechanics.resource
       : null;
   }
+  return classFeatureActivationResourceForUnit(unit);
+}
+
+function classFeatureActivationResourceForUnit(
+  unit: Extract<UnitRecord, { readonly kind: "class_feature" }>,
+): CharacterBattleResourceExecutionFacts | null {
   if (
-    unit.kind !== "class_feature" ||
-    (unit.mechanics.family !== "activation" &&
-      unit.mechanics.family !== "reaction_roll_or_damage_reduction") ||
-    !("resource" in unit.mechanics) ||
-    unit.mechanics.resource === undefined
+    unit.mechanics.family !== "activation" &&
+    unit.mechanics.family !== "reaction_roll_or_damage_reduction"
   ) {
     return null;
   }
+  if (!("resource" in unit.mechanics)) return null;
+  if (unit.mechanics.resource === undefined) return null;
   return activationResourceIsSupportedByBattleForUnit(
     unit,
     unit.mechanics.resource,

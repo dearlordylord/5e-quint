@@ -5,6 +5,7 @@ import { Match } from "effect";
 
 import type { StatBlockRecord } from "../packages/surface/src/surface/types.ts";
 import { normalizeStatBlockIdentity } from "../packages/surface/src/surface/stat-block-identity.ts";
+import { stripSrdStatBlockMarkdownEmphasis } from "../packages/surface/src/surface/stat-block-raw-markdown-normalization.ts";
 import {
   SRD_STAT_BLOCK_SCOPE,
   SRD_STAT_BLOCK_SOURCE_PATHS,
@@ -769,11 +770,7 @@ function normalizeSourceBlock(
 }
 
 function normalizePlainLine(line: string): string {
-  return line
-    .replace(/^[-*]\s+/, "")
-    .replace(/\*+/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return normalizeInlineMarkdown(line.replace(/^[-*]\s+/, ""));
 }
 
 function parseTableRow(line: string): string[] {
@@ -782,7 +779,11 @@ function parseTableRow(line: string): string[] {
 }
 
 function normalizeTableCell(cell: string): string {
-  return cell.replace(/\*+/g, "").replace(/\s+/g, " ").trim();
+  return normalizeInlineMarkdown(cell);
+}
+
+function normalizeInlineMarkdown(value: string): string {
+  return stripSrdStatBlockMarkdownEmphasis(value).replace(/\s+/g, " ").trim();
 }
 
 function normalizeTable(

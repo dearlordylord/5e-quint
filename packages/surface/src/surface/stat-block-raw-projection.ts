@@ -13,6 +13,7 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { SrdStatBlockSourceOccurrence } from "./stat-block-parity-observation.ts";
+import { stripSrdStatBlockMarkdownEmphasis } from "./stat-block-raw-markdown-normalization.ts";
 import {
   AbilitySchema,
   ChallengeRatingSchema,
@@ -727,11 +728,10 @@ const signedNumber = (value: string): number =>
   Number(value.replace("−", "-").replace("+", ""));
 
 const normalizedProse = (value: string): string =>
-  value.replaceAll("*", "").replace(/\s+/g, " ").trim();
+  stripSrdStatBlockMarkdownEmphasis(value).replace(/\s+/g, " ").trim();
 
 const normalizedProcedureEvidence = (value: string): string =>
-  value
-    .replaceAll("*", "")
+  stripSrdStatBlockMarkdownEmphasis(value)
     .replace(/\s*\n+\s*/g, " - ")
     .replace(/\s+/g, " ")
     .trim();
@@ -1082,9 +1082,7 @@ const parseMetadata = (
     creatureTypeTags: [] as const,
     alignment: "unaligned" as const,
   };
-  const metadataLine = lines.find(
-    (line) => line.startsWith("*") && !line.startsWith("**"),
-  );
+  const metadataLine = lines.find((line) => /^[*_](?![*_])/.test(line));
   if (metadataLine === undefined) {
     return missingEvidence(
       issueContext,
@@ -1096,8 +1094,8 @@ const parseMetadata = (
   const metadata = assess(issueContext, () =>
     requireMatch(
       issueContext,
-      metadataLine,
-      /^\*(.+?) ([A-Za-z]+)(?: \(([^)]+)\))?, (.+)\*$/,
+      stripSrdStatBlockMarkdownEmphasis(metadataLine),
+      /^(.+?) ([A-Za-z]+)(?: \(([^)]+)\))?, (.+)$/,
       "metadata",
     ),
   );
@@ -1913,7 +1911,9 @@ const parseVulnerabilities = (
           "vulnerabilities.damageTypes",
           "acid",
         ),
-        qualifier: matchCapture(qualified, 2),
+        qualifier: stripSrdStatBlockMarkdownEmphasis(
+          matchCapture(qualified, 2),
+        ),
       };
 };
 
@@ -3015,7 +3015,7 @@ const parseRawEntries = (
       current = startRawEntry(issueContext, entryCounts, section, entry);
       continue;
     }
-    if (current !== undefined && !line.startsWith("*Legendary Action Uses:")) {
+    if (current !== undefined && !isLegendaryActionUsesLine(line)) {
       current.parts.push(line);
     }
   }
@@ -4310,15 +4310,14 @@ const parseLegendaryActionUses = (
   issueContext: ProjectionIssueContext,
   lines: readonly string[],
 ): ScopedGeneralFacts["legendaryActionUses"] => {
-  const line = lines.find((candidate) =>
-    candidate.startsWith("*Legendary Action Uses:"),
-  );
+  const line = lines.find(isLegendaryActionUsesLine);
   if (line === undefined) return undefined;
+  const normalizedLine = stripSrdStatBlockMarkdownEmphasis(line);
   const uses = assess(issueContext, () =>
     requireMatch(
       issueContext,
-      line,
-      /^\*Legendary Action Uses: (\d+)(?: \((\d+) in Lair\))?\./,
+      normalizedLine,
+      /^Legendary Action Uses: (\d+)(?: \((\d+) in Lair\))?\./,
       "legendaryActionUses",
     ),
   );
@@ -4366,6 +4365,9 @@ const parseLegendaryActionUses = (
     additionalUsesInLair: usesInLair - usesOutsideLair,
   };
 };
+
+const isLegendaryActionUsesLine = (line: string): boolean =>
+  stripSrdStatBlockMarkdownEmphasis(line).startsWith("Legendary Action Uses:");
 
 const procedureName = (entry: StatBlockProcedureEntry): string =>
   Match.value(entry).pipe(
@@ -5412,7 +5414,7 @@ const projectVulnerabilities = (
         "vulnerabilities.damageTypes",
         "acid",
       ),
-      qualifier: qualified.qualifier,
+      qualifier: stripSrdStatBlockMarkdownEmphasis(qualified.qualifier),
     })),
     Match.when({ kind: "fixed" }, (fixed) => ({
       kind: "fixed" as const,

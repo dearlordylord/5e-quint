@@ -2881,7 +2881,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
         (line, index) =>
           index + 1 < occurrence.anchor.lineStart ||
           index + 1 > occurrence.anchor.lineEnd ||
-          !line.startsWith("*Legendary Action Uses:"),
+          !/^[*_]Legendary Action Uses:/.test(line),
       )
       .join("\n");
     const result = projectRawStatBlock(
@@ -3115,7 +3115,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Adult Red Dragon",
         mutate: (line: string) =>
-          line.startsWith("*Legendary Action Uses:")
+          /^[*_]Legendary Action Uses:/.test(line)
             ? line.replace("3 (4 in Lair)", "3 (2 in Lair)")
             : line,
         expected: [
@@ -3129,7 +3129,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Adult Red Dragon",
         mutate: (line: string) =>
-          line.startsWith("*Legendary Action Uses:")
+          /^[*_]Legendary Action Uses:/.test(line)
             ? line.replace("3 (4 in Lair)", "0 (0 in Lair)")
             : line,
         expected: [
@@ -3519,7 +3519,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Adult Gold Dragon",
         mutate: (line: string) =>
-          line.startsWith("*Legendary Action Uses:")
+          /^[*_]Legendary Action Uses:/.test(line)
             ? line.replace("Uses: 3", "Uses: 0")
             : line,
         expectedField: "legendaryActionUses.usesOutsideLair",
@@ -3527,7 +3527,7 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
       {
         name: "Adult Gold Dragon",
         mutate: (line: string) =>
-          line.startsWith("*Legendary Action Uses:")
+          /^[*_]Legendary Action Uses:/.test(line)
             ? "*Legendary Action Uses: malformed."
             : line,
         expectedField: "legendaryActionUses",

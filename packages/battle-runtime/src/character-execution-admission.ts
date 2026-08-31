@@ -200,6 +200,56 @@ type ResourceFeatureProcedureBinding =
       readonly messages: ReadonlyNonEmptyArray<string>;
     };
 
+function bindProfileUnitFeatureProcedure(
+  procedure: BoundUnitFeatureProcedureFacts,
+  input: {
+    readonly resourcePoolRefsByUnitId: ReadonlyMap<
+      AuthoredUnitSource["id"],
+      BattleResourcePoolExecutionRef
+    >;
+    readonly classLevels: CharacterBattleClassLevels;
+    readonly executionContext: UnitFeatureProcedureExecutionContext;
+  },
+): ResourceFeatureProcedureBinding {
+  if (procedure.facts.kind === "failedSavingThrowReroll") {
+    const binding = bindFailedSavingThrowRerollProcedure(
+      { sourceUnitId: procedure.sourceUnitId, facts: procedure.facts },
+      input,
+    );
+    return binding.tag === "rejected"
+      ? {
+          tag: "rejected",
+          messages: resourceFeatureBindingMessages(binding.issues),
+        }
+      : {
+          tag: "bound",
+          candidate: {
+            unitId: procedure.sourceUnitId,
+            execution: binding.procedure.execution,
+          },
+        };
+  }
+  const execution = unitFeatureProcedureExecution(
+    procedure.facts,
+    input.executionContext,
+  );
+  if (execution !== undefined) {
+    return {
+      tag: "bound",
+      candidate: { unitId: procedure.sourceUnitId, execution },
+    };
+  }
+  return procedure.facts.kind === "cunningStrike" ||
+    procedure.facts.kind === "cunningStrikeOptionGrant"
+    ? { tag: "notAvailable" }
+    : {
+        tag: "rejected",
+        messages: [
+          `Unit feature profile ${procedure.facts.kind} references an unavailable mechanical execution resource.`,
+        ],
+      };
+}
+
 function resourceFeatureBindingMessages(
   issues: ReadonlyNonEmptyArray<{ readonly message: string }>,
 ): ReadonlyNonEmptyArray<string> {
@@ -419,50 +469,25 @@ export function characterExecutionFromUnits(input: {
   );
   const boundProfileUnitProcedures = unitFeatureProcedures.flatMap(
     (procedure) => {
-      const failedSavingThrowBinding =
-        procedure.facts.kind === "failedSavingThrowReroll"
-          ? bindFailedSavingThrowRerollProcedure(
-              {
-                sourceUnitId: procedure.sourceUnitId,
-                facts: procedure.facts,
-              },
-              {
-                resourcePoolRefsByUnitId,
-                classLevels: input.classLevels,
-              },
-            )
-          : null;
-      if (failedSavingThrowBinding?.tag === "rejected") {
+      const binding = bindProfileUnitFeatureProcedure(procedure, {
+        resourcePoolRefsByUnitId,
+        classLevels: input.classLevels,
+        executionContext: unitFeatureExecutionContext,
+      });
+      if (binding.tag === "rejected") {
         supportProfileIssues.push(
-          ...failedSavingThrowBinding.issues.map((issue) => ({
+          ...binding.messages.map((message) => ({
             tag: "battleUnitSupportProfileIssue" as const,
-            message: issue.message,
+            message,
           })),
         );
         return [];
       }
-      const execution =
-        failedSavingThrowBinding?.procedure.execution ??
-        unitFeatureProcedureExecution(
-          procedure.facts,
-          unitFeatureExecutionContext,
-        );
-      if (
-        execution === undefined &&
-        procedure.facts.kind !== "cunningStrike" &&
-        procedure.facts.kind !== "cunningStrikeOptionGrant"
-      ) {
-        supportProfileIssues.push({
-          tag: "battleUnitSupportProfileIssue",
-          message: `Unit feature profile ${procedure.facts.kind} references an unavailable mechanical execution resource.`,
-        });
-      }
-      return execution === undefined
+      return binding.tag === "notAvailable"
         ? []
         : [
             {
-              unitId: procedure.sourceUnitId,
-              execution,
+              ...binding.candidate,
               source: characterUnitProcedureSourceForAdmission(
                 scopeRef,
                 input.resourceUnits,
