@@ -54,31 +54,63 @@ function unreachableIssues(
   );
 }
 
+const REACHABILITY_MUTATION_RECORD_IDS = {
+  missing: statBlockId("stat_block_aboleth"),
+  duplicate: statBlockId("stat_block_adult_black_dragon"),
+  listedMismatch: statBlockId("stat_block_adult_blue_dragon"),
+  unselectable: statBlockId("stat_block_adult_brass_dragon"),
+  selectedMismatch: statBlockId("stat_block_adult_bronze_dragon"),
+  presentationFailure: statBlockId("stat_block_adult_copper_dragon"),
+  presentationIdentityMismatch: statBlockId("stat_block_adult_gold_dragon"),
+  unexpectedSource: statBlockId("stat_block_adult_green_dragon"),
+} as const;
+type ReachabilityMutationRecordRole =
+  keyof typeof REACHABILITY_MUTATION_RECORD_IDS;
+type InstalledStatBlock = (typeof srdStatBlockCollection.statBlocks)[number];
+
+function installedRecordForMutationRole(
+  installed: readonly InstalledStatBlock[],
+  role: ReachabilityMutationRecordRole,
+): InstalledStatBlock {
+  const expectedId = REACHABILITY_MUTATION_RECORD_IDS[role];
+  const record = installed.find(({ id }) => id === expectedId);
+  if (record === undefined) {
+    throw new Error(
+      `Reachability mutation role ${role} requires installed record ${expectedId}`,
+    );
+  }
+  return record;
+}
+
 function mutatedReachability(mutations: readonly IndependentMutation[]) {
   const mutationSet = new Set(mutations);
   const installed = srdStatBlockCollection.statBlocks;
-  const [
-    missing,
-    duplicate,
-    listedMismatch,
-    unselectable,
-    selectedMismatch,
-    presentationFailure,
-    presentationIdentityMismatch,
-    unexpectedSource,
-  ] = installed;
-  if (
-    missing === undefined ||
-    duplicate === undefined ||
-    listedMismatch === undefined ||
-    unselectable === undefined ||
-    selectedMismatch === undefined ||
-    presentationFailure === undefined ||
-    presentationIdentityMismatch === undefined ||
-    unexpectedSource === undefined
-  ) {
-    throw new Error("Reachability mutations require eight installed records");
-  }
+  const missing = installedRecordForMutationRole(installed, "missing");
+  const duplicate = installedRecordForMutationRole(installed, "duplicate");
+  const listedMismatch = installedRecordForMutationRole(
+    installed,
+    "listedMismatch",
+  );
+  const unselectable = installedRecordForMutationRole(
+    installed,
+    "unselectable",
+  );
+  const selectedMismatch = installedRecordForMutationRole(
+    installed,
+    "selectedMismatch",
+  );
+  const presentationFailure = installedRecordForMutationRole(
+    installed,
+    "presentationFailure",
+  );
+  const presentationIdentityMismatch = installedRecordForMutationRole(
+    installed,
+    "presentationIdentityMismatch",
+  );
+  const unexpectedSource = installedRecordForMutationRole(
+    installed,
+    "unexpectedSource",
+  );
   const unexpected = {
     ...unexpectedSource,
     id: statBlockId("stat_block_synthetic_unexpected_reachability"),
