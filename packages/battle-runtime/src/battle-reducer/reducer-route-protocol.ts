@@ -114,74 +114,88 @@ export type BattleReducerRouteOwnerGroup =
   | "battleTablePresentation"
   | "battleTurnBoundary";
 
+export const BATTLE_REDUCER_ROUTE_HOLE_KINDS = [
+  "abilityCheck",
+  "abilityChoice",
+  "attackDamageDisposition",
+  "attackRoll",
+  "compelledBehaviorOptionChoice",
+  "companionReappearanceInitiative",
+  "concentrationSavingThrow",
+  "conditionChoice",
+  "damageTypeChoice",
+  "deathSavingThrow",
+  "grappleOutcome",
+  "directionalPersistentAreaDirectionChoice",
+  "hitPointHealingDistribution",
+  "interruptDecision",
+  "controlledVerticalSuspensionAltitudeChange",
+  "controlledVerticalSuspensionInitialRise",
+  "movement",
+  "objectDropResolution",
+  "ongoingSpellTargetChoice",
+  "readyDeclaration",
+  "rolledDice",
+  "targetingSaveInterdictionOutcome",
+  "savingThrowOutcome",
+  "selfTransformationModeChoice",
+  "shoveOutcome",
+  "skillChoice",
+  "turnConstraintSomaticSpellFailureOutcome",
+  "spellcastingAbilityCheck",
+  "spellTargetAllocation",
+  "spellTargetList",
+  "startTurnOccurrenceOrder",
+  "statBlockRechargeRoll",
+  "targetAbilityChoices",
+  "targetChoice",
+  "temporaryHitPointChoice",
+  "unitFeatureDecision",
+  "wildShapeEquipmentDisposition",
+] as const;
+
 export type BattleReducerRouteHole =
-  | "abilityCheck"
-  | "abilityChoice"
-  | "attackDamageDisposition"
-  | "attackRoll"
-  | "compelledBehaviorOptionChoice"
-  | "companionReappearanceInitiative"
-  | "concentrationSavingThrow"
-  | "conditionChoice"
-  | "damageTypeChoice"
-  | "deathSavingThrow"
-  | "grappleOutcome"
-  | "directionalPersistentAreaDirectionChoice"
-  | "hitPointHealingDistribution"
-  | "interruptDecision"
-  | "controlledVerticalSuspensionAltitudeChange"
-  | "controlledVerticalSuspensionInitialRise"
-  | "movement"
-  | "objectDropResolution"
-  | "ongoingSpellTargetChoice"
-  | "rolledDice"
-  | "targetingSaveInterdictionOutcome"
-  | "savingThrowOutcome"
-  | "selfTransformationModeChoice"
-  | "shoveOutcome"
-  | "skillChoice"
-  | "turnConstraintSomaticSpellFailureOutcome"
-  | "spellcastingAbilityCheck"
-  | "spellTargetAllocation"
-  | "spellTargetList"
-  | "statBlockRechargeRoll"
-  | "targetAbilityChoices"
-  | "targetChoice"
-  | "unitFeatureDecision"
-  | "wildShapeEquipmentDisposition";
+  (typeof BATTLE_REDUCER_ROUTE_HOLE_KINDS)[number];
+
+export const BATTLE_REDUCER_ROUTE_FILL_KINDS = [
+  "abilityCheck",
+  "attackDamageDisposition",
+  "attackRoll",
+  "compelledBehaviorOptionChoice",
+  "companionReappearanceInitiative",
+  "concentrationSavingThrow",
+  "conditionChoice",
+  "damageTypeChoice",
+  "deathSavingThrow",
+  "grappleOutcome",
+  "directionalPersistentAreaDirectionChoice",
+  "hitPointHealingDistribution",
+  "interruptDecision",
+  "controlledVerticalSuspensionAltitudeChange",
+  "controlledVerticalSuspensionInitialRise",
+  "weaponAttackDamageEnhancementTargetItem",
+  "movement",
+  "objectDropResolution",
+  "ongoingSpellTargetChoice",
+  "readyDeclaration",
+  "rolledDice",
+  "targetingSaveInterdictionOutcome",
+  "savingThrowOutcome",
+  "selfTransformationModeChoice",
+  "shoveOutcome",
+  "turnConstraintSomaticSpellFailureOutcome",
+  "spellTargetAllocation",
+  "spellTargetList",
+  "startTurnOccurrenceOrder",
+  "statBlockRechargeRoll",
+  "targetChoice",
+  "temporaryHitPointChoice",
+  "unitFeatureDecision",
+  "wildShapeEquipmentDisposition",
+] as const;
 
 export type BattleReducerRouteFillKind =
-  | "abilityCheck"
-  | "attackDamageDisposition"
-  | "attackRoll"
-  | "compelledBehaviorOptionChoice"
-  | "companionReappearanceInitiative"
-  | "concentrationSavingThrow"
-  | "conditionChoice"
-  | "damageTypeChoice"
-  | "deathSavingThrow"
-  | "grappleOutcome"
-  | "directionalPersistentAreaDirectionChoice"
-  | "hitPointHealingDistribution"
-  | "interruptDecision"
-  | "controlledVerticalSuspensionAltitudeChange"
-  | "controlledVerticalSuspensionInitialRise"
-  | "weaponAttackDamageEnhancementTargetItem"
-  | "movement"
-  | "objectDropResolution"
-  | "ongoingSpellTargetChoice"
-  | "rolledDice"
-  | "targetingSaveInterdictionOutcome"
-  | "savingThrowOutcome"
-  | "selfTransformationModeChoice"
-  | "shoveOutcome"
-  | "turnConstraintSomaticSpellFailureOutcome"
-  | "spellTargetAllocation"
-  | "spellTargetList"
-  | "statBlockRechargeRoll"
-  | "targetChoice"
-  | "unitFeatureDecision"
-  | "wildShapeEquipmentDisposition";
+  (typeof BATTLE_REDUCER_ROUTE_FILL_KINDS)[number];
 
 export type BattleReducerRouteFill =
   | BattleReducerRouteFillKind

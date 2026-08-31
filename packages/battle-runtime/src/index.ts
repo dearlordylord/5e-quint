@@ -68,6 +68,10 @@ export {
   type BattleInitiativePosition,
 } from "./battle-initiative-position.ts";
 
+export {
+  BATTLE_REDUCER_ROUTE_FILL_KINDS,
+  BATTLE_REDUCER_ROUTE_HOLE_KINDS,
+} from "./battle-reducer/reducer-route-protocol.ts";
 export type {
   CharacterExecutionAdmission,
   CharacterExecutionState,

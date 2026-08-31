@@ -107,6 +107,8 @@ import type {
 import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
+  BATTLE_REDUCER_ROUTE_FILL_KINDS,
+  BATTLE_REDUCER_ROUTE_HOLE_KINDS,
   BATTLE_INVALID_REASON_CODES,
   battleAmmunitionStock,
   battleId,
@@ -892,6 +894,15 @@ type ReducerRouteOwnerGroup = BattleReducerRouteOwnerGroup;
 type ReducerRouteHole = BattleReducerRouteHole;
 type ReducerRouteFill = BattleReducerRouteFill;
 type ReducerRouteFillKind = Extract<BattleReducerRouteFill, string>;
+type ReducerRouteQntFillKind = Exclude<
+  ReducerRouteFillKind,
+  "weaponAttackDamageEnhancementTargetItem"
+>;
+const REDUCER_ROUTE_STRUCTURED_FILL_KIND_VARIANT_TAGS = [
+  "AbilityChoiceFillKind",
+  "SkillChoiceFillKind",
+  "TargetAbilityChoicesFillKind",
+] as const;
 type ReducerRouteAbilityChoice = Ability;
 type ReducerRouteSkillChoice = SurfaceSkill;
 type ReducerRouteEvent = BattleReducerRouteEvent;
@@ -12521,80 +12532,57 @@ const CONDITION_IMMUNITY_TEMPORARY_HIT_POINT_OWNER_BY_VARIANT_TAG = {
   Record<string, ConditionImmunityTemporaryHitPointOwner>
 >;
 
-const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
-  AbilityCheckHoleKind: "abilityCheck",
-  AbilityChoiceHoleKind: "abilityChoice",
-  AttackDamageDispositionHoleKind: "attackDamageDisposition",
-  AttackRollHoleKind: "attackRoll",
-  CompelledBehaviorOptionChoiceHoleKind: "compelledBehaviorOptionChoice",
-  CompanionReappearanceInitiativeHoleKind: "companionReappearanceInitiative",
-  ConcentrationSavingThrowHoleKind: "concentrationSavingThrow",
-  ConditionChoiceHoleKind: "conditionChoice",
-  DamageTypeChoiceHoleKind: "damageTypeChoice",
-  DeathSavingThrowHoleKind: "deathSavingThrow",
-  GrappleOutcomeHoleKind: "grappleOutcome",
-  GustOfWindLineDirectionChoiceHoleKind:
-    "directionalPersistentAreaDirectionChoice",
-  HitPointHealingDistributionHoleKind: "hitPointHealingDistribution",
-  InterruptDecisionHoleKind: "interruptDecision",
-  LevitateAltitudeChangeHoleKind: "controlledVerticalSuspensionAltitudeChange",
-  LevitateInitialRiseHoleKind: "controlledVerticalSuspensionInitialRise",
-  MovementHoleKind: "movement",
-  ObjectDropResolutionHoleKind: "objectDropResolution",
-  OngoingSpellTargetChoiceHoleKind: "ongoingSpellTargetChoice",
-  RolledDiceHoleKind: "rolledDice",
-  SanctuaryInterdictionOutcomeHoleKind: "targetingSaveInterdictionOutcome",
-  SavingThrowOutcomeHoleKind: "savingThrowOutcome",
-  SelfTransformationModeChoiceHoleKind: "selfTransformationModeChoice",
-  ShoveOutcomeHoleKind: "shoveOutcome",
-  SkillChoiceHoleKind: "skillChoice",
-  SlowSomaticSpellFailureOutcomeHoleKind:
-    "turnConstraintSomaticSpellFailureOutcome",
-  SpellcastingAbilityCheckHoleKind: "spellcastingAbilityCheck",
-  SpellTargetAllocationHoleKind: "spellTargetAllocation",
-  SpellTargetListHoleKind: "spellTargetList",
-  StatBlockRechargeRollHoleKind: "statBlockRechargeRoll",
-  TargetAbilityChoicesHoleKind: "targetAbilityChoices",
-  TargetChoiceHoleKind: "targetChoice",
-  UnitFeatureDecisionHoleKind: "unitFeatureDecision",
-  WildShapeEquipmentDispositionHoleKind: "wildShapeEquipmentDisposition",
-} as const satisfies Readonly<Record<string, ReducerRouteHole>>;
+function reducerRouteVariantDictionary<
+  const Kinds extends readonly string[],
+  const Suffix extends "HoleKind" | "FillKind",
+>(
+  kinds: Kinds,
+  suffix: Suffix,
+): {
+  readonly tags: readonly `${Capitalize<Kinds[number]>}${Suffix}`[];
+  readonly byTag: Readonly<
+    Record<`${Capitalize<Kinds[number]>}${Suffix}`, Kinds[number]>
+  >;
+} {
+  const entries = kinds.map((kind) => [
+    `${kind.charAt(0).toUpperCase()}${kind.slice(1)}${suffix}`,
+    kind,
+  ]);
+  // Object.fromEntries and Array.map erase the key/value correlation established
+  // by this single construction over the fixed ASCII route-kind vocabulary.
+  return {
+    tags: entries.map(([tag]) => tag),
+    byTag: Object.fromEntries(entries),
+  } as {
+    readonly tags: readonly `${Capitalize<Kinds[number]>}${Suffix}`[];
+    readonly byTag: Readonly<
+      Record<`${Capitalize<Kinds[number]>}${Suffix}`, Kinds[number]>
+    >;
+  };
+}
 
-const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = {
-  AbilityCheckFillKind: "abilityCheck",
-  AttackDamageDispositionFillKind: "attackDamageDisposition",
-  AttackRollFillKind: "attackRoll",
-  CompelledBehaviorOptionChoiceFillKind: "compelledBehaviorOptionChoice",
-  CompanionReappearanceInitiativeFillKind: "companionReappearanceInitiative",
-  ConcentrationSavingThrowFillKind: "concentrationSavingThrow",
-  ConditionChoiceFillKind: "conditionChoice",
-  DamageTypeChoiceFillKind: "damageTypeChoice",
-  DeathSavingThrowFillKind: "deathSavingThrow",
-  GrappleOutcomeFillKind: "grappleOutcome",
-  GustOfWindLineDirectionChoiceFillKind:
-    "directionalPersistentAreaDirectionChoice",
-  HitPointHealingDistributionFillKind: "hitPointHealingDistribution",
-  InterruptDecisionFillKind: "interruptDecision",
-  LevitateAltitudeChangeFillKind: "controlledVerticalSuspensionAltitudeChange",
-  LevitateInitialRiseFillKind: "controlledVerticalSuspensionInitialRise",
-  MagicWeaponTargetItemFillKind: "weaponAttackDamageEnhancementTargetItem",
-  MovementFillKind: "movement",
-  ObjectDropResolutionFillKind: "objectDropResolution",
-  OngoingSpellTargetChoiceFillKind: "ongoingSpellTargetChoice",
-  RolledDiceFillKind: "rolledDice",
-  SanctuaryInterdictionOutcomeFillKind: "targetingSaveInterdictionOutcome",
-  SavingThrowOutcomeFillKind: "savingThrowOutcome",
-  SelfTransformationModeChoiceFillKind: "selfTransformationModeChoice",
-  ShoveOutcomeFillKind: "shoveOutcome",
-  SlowSomaticSpellFailureOutcomeFillKind:
-    "turnConstraintSomaticSpellFailureOutcome",
-  SpellTargetAllocationFillKind: "spellTargetAllocation",
-  SpellTargetListFillKind: "spellTargetList",
-  StatBlockRechargeRollFillKind: "statBlockRechargeRoll",
-  TargetChoiceFillKind: "targetChoice",
-  UnitFeatureDecisionFillKind: "unitFeatureDecision",
-  WildShapeEquipmentDispositionFillKind: "wildShapeEquipmentDisposition",
-} as const satisfies Readonly<Record<string, ReducerRouteFillKind>>;
+const REDUCER_ROUTE_HOLE_VARIANTS = reducerRouteVariantDictionary(
+  BATTLE_REDUCER_ROUTE_HOLE_KINDS,
+  "HoleKind",
+);
+const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = REDUCER_ROUTE_HOLE_VARIANTS.byTag;
+const REDUCER_ROUTE_QNT_FILL_KINDS = BATTLE_REDUCER_ROUTE_FILL_KINDS.filter(
+  (kind): kind is ReducerRouteQntFillKind =>
+    kind !== "weaponAttackDamageEnhancementTargetItem",
+);
+const REDUCER_ROUTE_FILL_VARIANTS = reducerRouteVariantDictionary(
+  REDUCER_ROUTE_QNT_FILL_KINDS,
+  "FillKind",
+);
+const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = REDUCER_ROUTE_FILL_VARIANTS.byTag;
+
+export function reducerRouteVariantTags() {
+  return {
+    holeKinds: REDUCER_ROUTE_HOLE_VARIANTS.tags,
+    genericFillKinds: REDUCER_ROUTE_FILL_VARIANTS.tags,
+    structuredFillKinds: REDUCER_ROUTE_STRUCTURED_FILL_KIND_VARIANT_TAGS,
+  };
+}
 
 const REDUCER_ROUTE_ABILITY_CHOICE_BY_VARIANT_TAG = {
   RouteAbilityStr: "str",
