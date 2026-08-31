@@ -1,4 +1,4 @@
-import { Match } from "effect";
+import { Match, Result } from "effect";
 
 import { PositiveInteger } from "@dnd/shared/types";
 import {
@@ -25,9 +25,9 @@ import {
   type UnitMechanicsPath,
 } from "@dnd/surface/surface/mechanics-graph-path";
 import {
-  srdUnitAuthoredLinks,
-  type SurfaceAuthoredLink,
-} from "@dnd/surface/surface/portable-surface";
+  collectSurfaceUnitAuthoredRelations,
+  type SurfaceAuthoredRelation,
+} from "@dnd/surface/surface/surface-relations";
 import type {
   SrdSurface,
   SrdUnitRecord,
@@ -218,16 +218,19 @@ function inspectCharacterDefinitionLinks(
   const statBlockIds = new Set(
     input.surface.statBlocks.map((statBlock) => String(statBlock.id)),
   );
-  const projection = srdUnitAuthoredLinks(input.unit);
-  for (const issue of projection.issues) {
-    addAdmissionIssue(
-      issues,
-      "unsupported_mechanics",
-      rootMechanicsPath(),
-      `The Character Definition authored-link graph cannot be interpreted: ${issue.message}`,
-    );
+  const relationGraph = collectSurfaceUnitAuthoredRelations(input.unit);
+  if (Result.isFailure(relationGraph)) {
+    for (const issue of relationGraph.failure) {
+      addAdmissionIssue(
+        issues,
+        "unsupported_mechanics",
+        rootMechanicsPath(),
+        `The Character Definition authored-relation graph cannot be interpreted: ${issue.message}`,
+      );
+    }
+    return;
   }
-  for (const [index, link] of projection.links.entries()) {
+  for (const [index, link] of relationGraph.success.entries()) {
     inspectCharacterDefinitionLink({
       index,
       link,
@@ -240,7 +243,7 @@ function inspectCharacterDefinitionLinks(
 
 function inspectCharacterDefinitionLink(input: {
   readonly index: number;
-  readonly link: SurfaceAuthoredLink;
+  readonly link: SurfaceAuthoredRelation;
   readonly issues: CharacterDefinitionAdmissionIssue[];
   readonly statBlockIds: ReadonlySet<string>;
   readonly unitIds: ReadonlyMap<string, UnitRecord>;
@@ -258,32 +261,32 @@ function inspectCharacterDefinitionLink(input: {
   }
 
   if (
-    input.link.category === "dependency" &&
-    !input.statBlockIds.has(input.link.targetId)
+    input.link.relationKind === "dependency" &&
+    !input.statBlockIds.has(input.link.targetRecordId)
   ) {
     addAdmissionIssue(
       input.issues,
       "incomplete_graph",
       linkPath,
-      `The Character Definition ${input.link.relation} authored ${input.link.category} does not resolve to an installed ${input.link.targetKind}.`,
+      `The Character Definition ${input.link.relation} authored ${input.link.relationKind} does not resolve to an installed ${input.link.targetKind}.`,
     );
   }
 }
 
 function inspectCharacterDefinitionUnitLink(input: {
-  readonly link: SurfaceAuthoredLink & { readonly targetKind: "unit" };
+  readonly link: SurfaceAuthoredRelation & { readonly targetKind: "unit" };
   readonly linkPath: UnitMechanicsPath;
   readonly issues: CharacterDefinitionAdmissionIssue[];
   readonly unitIds: ReadonlyMap<string, UnitRecord>;
 }): void {
-  const target = input.unitIds.get(input.link.targetId);
+  const target = input.unitIds.get(input.link.targetRecordId);
   if (target === undefined) {
-    if (input.link.category === "dependency") {
+    if (input.link.relationKind === "dependency") {
       addAdmissionIssue(
         input.issues,
         "incomplete_graph",
         input.linkPath,
-        `The Character Definition ${input.link.relation} authored ${input.link.category} does not resolve to an installed ${input.link.targetKind}.`,
+        `The Character Definition ${input.link.relation} authored ${input.link.relationKind} does not resolve to an installed ${input.link.targetKind}.`,
       );
     }
     return;
@@ -323,7 +326,7 @@ const CHARACTER_DEFINITION_ITEM_KINDS = [
 ] as const satisfies ReadonlyArray<UnitRecord["kind"]>;
 
 function expectedCharacterDefinitionTargetKinds(
-  link: SurfaceAuthoredLink,
+  link: SurfaceAuthoredRelation,
 ): readonly UnitRecord["kind"][] | undefined {
   if (link.targetKind !== "unit") return undefined;
   return Match.value(link.relation).pipe(
@@ -337,6 +340,7 @@ function expectedCharacterDefinitionTargetKinds(
       "linked-spell-reference",
       () => CHARACTER_DEFINITION_SPELL_KINDS,
     ),
+    Match.when("mastery-reference", () => undefined),
     Match.when("origin-feat-reference", () => CHARACTER_DEFINITION_FEAT_KINDS),
     Match.when("resource-link", () => undefined),
     Match.when("spell-reference", () => CHARACTER_DEFINITION_SPELL_KINDS),
@@ -355,13 +359,13 @@ function expectedCharacterDefinitionTargetKinds(
 
 function characterDefinitionLinkPath(
   index: number,
-  link: SurfaceAuthoredLink,
+  link: SurfaceAuthoredRelation,
 ): UnitMechanicsPath {
   return unitMechanicsPath([
     { kind: "singleton", role: "recordMechanics" },
     {
       kind: "occurrence",
-      role: link.category === "dependency" ? "dependency" : "reference",
+      role: link.relationKind === "dependency" ? "dependency" : "reference",
       ordinal: PositiveInteger(index + 1),
     },
   ]);

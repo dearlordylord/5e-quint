@@ -1,6 +1,7 @@
 export {
   closeSrdSurface,
   collectSurfaceAuthoredRelations,
+  collectSurfaceUnitAuthoredRelations,
   type SurfaceAuthoredRelation,
   type SurfaceRelationClosureIssue,
   type SurfaceRelationClosureIssues,

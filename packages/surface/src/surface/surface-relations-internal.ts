@@ -808,6 +808,22 @@ const surfaceWalkResult = (
     : Result.fail([firstIssue, ...collections.issues.slice(1)]);
 };
 
+/** Collect authored relations from one already-decoded Unit record. */
+export function collectSurfaceUnitAuthoredRelations(
+  unit: UnitRecord,
+): Result.Result<
+  readonly SurfaceAuthoredRelation[],
+  SurfaceRelationTraversalIssues
+> {
+  return surfaceWalkResult(
+    collectSurfaceRecordAuthoredRelations({
+      source: { sourceKind: "unit", value: unit },
+      schema: UnitRecordSchema,
+      value: unit,
+    }),
+  );
+}
+
 /**
  * Walk decoded records using the role annotations attached to the canonical
  * Surface schemas. It is intentionally iterative: recursive authored effect

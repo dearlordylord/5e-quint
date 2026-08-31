@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -13,7 +13,7 @@ import {
   type UnitReaderResult,
 } from "@dnd/surface/surface/character-creation-readers";
 import {
-  decodeUnitRecordEither,
+  decodeUnitRecordResult,
   decodeUnitRecordSync,
   SrdUnitRecordSchema,
 } from "@dnd/surface/surface/schema";
@@ -29,7 +29,10 @@ import {
   admitCharacterDefinitionMechanicsGraph,
   projectCharacterDefinition,
 } from "./character-definition-projection.ts";
-import { srdUnitAuthoredLinks } from "@dnd/surface/surface/portable-surface";
+import {
+  collectSurfaceUnitAuthoredRelations,
+  type SurfaceAuthoredRelation,
+} from "@dnd/surface/surface/surface-relations";
 import { PositiveInteger } from "@dnd/shared/types";
 import { unitMechanicsPath } from "@dnd/surface/surface/mechanics-graph-path";
 
@@ -280,23 +283,27 @@ describe("Character Definition static projection", () => {
     if (classRoot === undefined) {
       throw new Error("The SRD test catalog must contain a fighter root.");
     }
-    const dependency = srdUnitAuthoredLinks(classRoot).links.find(
-      (link) => link.category === "dependency",
+    const dependency = characterDefinitionRootRelations(classRoot).find(
+      (link) => link.relationKind === "dependency",
     );
     if (dependency === undefined) {
       throw new Error("The fighter root must contain an authored dependency.");
     }
-    const dependencyIndex = srdUnitAuthoredLinks(classRoot).links.findIndex(
+    const dependencyIndex = characterDefinitionRootRelations(
+      classRoot,
+    ).findIndex(
       (link) =>
-        link.category === dependency.category &&
-        link.path === dependency.path &&
-        link.targetId === dependency.targetId,
+        link.relationKind === dependency.relationKind &&
+        link.fieldPath === dependency.fieldPath &&
+        link.targetRecordId === dependency.targetRecordId,
     );
     if (dependencyIndex < 0) {
       throw new Error("The fighter dependency must retain its authored link.");
     }
     const missingDependencySurface = surfaceWithUnits(
-      completeSurface.units.filter((unit) => unit.id !== dependency.targetId),
+      completeSurface.units.filter(
+        (unit) => unit.id !== dependency.targetRecordId,
+      ),
     );
 
     const result = admitCharacterDefinitionMechanicsGraph({
@@ -350,8 +357,8 @@ describe("Character Definition static projection", () => {
       ],
     };
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(SrdUnitRecordSchema, {
+      Result.isSuccess(
+        Schema.decodeUnknownResult(SrdUnitRecordSchema, {
           onExcessProperty: "error",
         })(malformedRaw),
       ),
@@ -360,9 +367,9 @@ describe("Character Definition static projection", () => {
       onExcessProperty: "error",
     })(malformedRaw);
     expect(projectCharacterDefinition(malformed).tag).toBe("readable");
-    const malformedLinkIndex = srdUnitAuthoredLinks(malformed).links.findIndex(
-      (link) => link.path.endsWith(".featureGrants[0].unitId"),
-    );
+    const malformedLinkIndex = characterDefinitionRootRelations(
+      malformed,
+    ).findIndex((link) => link.fieldPath.endsWith("featureGrants[0].unitId"));
     if (malformedLinkIndex < 0) {
       throw new Error(
         "The malformed class must retain its feature grant link.",
@@ -417,7 +424,7 @@ describe("Character Definition static projection", () => {
     // UnitRecord is the already-decoded projection input. The Surface schema
     // therefore owns the ambiguity control and prevents this state from
     // reaching the shape-based Character Definition projection.
-    expect(Either.isLeft(decodeUnitRecordEither(contradictory))).toBe(true);
+    expect(Result.isFailure(decodeUnitRecordResult(contradictory))).toBe(true);
   });
 });
 
@@ -469,4 +476,16 @@ function surfaceWithUnits(units: readonly SrdUnitRecord[]): SrdSurface {
     units: [first, ...rest],
     statBlocks: [firstStatBlock, ...remainingStatBlocks],
   };
+}
+
+function characterDefinitionRootRelations(
+  root: SrdUnitRecord,
+): readonly SurfaceAuthoredRelation[] {
+  const relations = collectSurfaceUnitAuthoredRelations(root);
+  if (Result.isFailure(relations)) {
+    throw new Error(
+      `The Character Definition root relation graph must be readable: ${relations.failure[0].message}`,
+    );
+  }
+  return relations.success;
 }
