@@ -5,7 +5,7 @@ import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-REPLAY: L1H-ANIMAL-FRIENDSHIP animal_friendship doDiscoverAnimalFriendshipBeastTargetAdmission doResolveAnimalFriendshipFailedSaveCharmed doResolveAnimalFriendshipCasterDamageBreak
 // UNIT-IDENTITY-REPLAY: L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage doPreventProtectionFromEvilAndGoodScopedCharmAndPossession doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
-import { Result, Schema } from "effect";
+import { Schema } from "effect";
 import { battleActsWithReducerRouteEvents } from "./battle-act-composition.ts";
 import { describe, expect, it } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -42,7 +42,6 @@ import {
   resolveBattlePossessionAttempt,
   snapshotBattle,
   spellActiveEffectExecutionRef,
-  startBattle,
   type BattleActiveEffect,
   type BattleAttackExecutionSelection,
   type BattleCreatureInit,
@@ -80,11 +79,11 @@ import {
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
-import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   battleProcedureExecutionRefForTest,
   battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   resolveBattleSubject,
+  startBattleSessionRight,
   statBlockProcedurePresentationsForStateForTest,
 } from "./battle-runtime.test-support.ts";
 import { battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest } from "./low-level-effect-occurrence.test-support.ts";
@@ -1345,7 +1344,7 @@ function srdSpellRecord(
 
 function animalFriendshipBattle(): BattleState {
   const spell = srdSpellRecord(animalFriendshipUnitId);
-  const result = startBattle({
+  return startBattleSessionRight({
     battleId: battleId("creature-type-protection-and-charm-selected-identity"),
     combatants: [
       spellcasterCreature({
@@ -1386,17 +1385,13 @@ function animalFriendshipBattle(): BattleState {
         initiative: 9,
       }),
     ],
-  });
-  if (Result.isFailure(result)) {
-    throw new Error(battleInitializationIssueMessage(result.failure));
-  }
-  return result.success.state;
+  }).state;
 }
 
 function protectionFromEvilAndGoodBattle(): BattleState {
   const protection = srdSpellRecord(protectionFromEvilAndGoodUnitId);
   const charmPerson = srdSpellRecord(charmPersonUnitId);
-  const result = startBattle({
+  return startBattleSessionRight({
     battleId: battleId("creature-type-protection-and-charm-selected-identity"),
     combatants: [
       spellcasterCreature({
@@ -1442,11 +1437,7 @@ function protectionFromEvilAndGoodBattle(): BattleState {
         initiative: 10,
       }),
     ],
-  });
-  if (Result.isFailure(result)) {
-    throw new Error(battleInitializationIssueMessage(result.failure));
-  }
-  return result.success.state;
+  }).state;
 }
 
 function resolveProtectionFromEvilAndGood(): {
