@@ -7,53 +7,6 @@ import {
   type StatBlockScopedFidelityProjection,
 } from "./stat-block-raw-projection.ts";
 
-type ProjectedProcedure =
-  StatBlockScopedFidelityProjection["procedures"][number];
-type ProjectedAttack = Extract<
-  ProjectedProcedure,
-  { readonly kind: "attack_roll" }
->;
-type ProjectedAttackEffect = ProjectedAttack["onHit"][number];
-type ProjectedSpellGroup = Extract<
-  ProjectedProcedure,
-  { readonly kind: "spellcasting" }
->["groups"][number];
-
-const impossibleMeleeAttack: ProjectedAttack = {
-  section: "Actions",
-  name: "Synthetic Strike",
-  kind: "attack_roll",
-  attackType: "melee",
-  attackBonus: 4,
-  attackAbilityEvidence: { kind: "resolved", ability: "str" },
-  // @ts-expect-error A melee attack cannot carry ranged distance.
-  rangeFeet: { normal: 30, long: 120 },
-  onHit: [
-    {
-      kind: "damage",
-      damageType: "force",
-      amount: { kind: "fixed", static: 4 },
-    },
-  ],
-  resourceLimits: [],
-};
-
-const impossibleDamage: ProjectedAttackEffect = {
-  kind: "damage",
-  damageType: "force",
-  // @ts-expect-error Dice count without a die size is not a damage expression.
-  amount: { kind: "fixed", static: 4, expr: { dice: 1 } },
-};
-
-const impossibleAtWillGroup: ProjectedSpellGroup = {
-  kind: "at_will",
-  spells: [{ spellId: "synthetic_spell" }],
-  // @ts-expect-error At-will spells cannot consume a limited-use resource.
-  resourceLimits: [{ kind: "daily", uses: 1, ownership: "shared" }],
-};
-
-void [impossibleMeleeAttack, impossibleDamage, impossibleAtWillGroup];
-
 const positiveInteger = fc.integer({ min: 1, max: 300 });
 const attackAbility = fc.constantFrom("str", "dex", "int", "wis", "cha");
 const damageType = fc.constantFrom(
@@ -71,7 +24,7 @@ const damageType = fc.constantFrom(
 
 const damageAmount = fc.oneof(
   positiveInteger.map((staticDamage) => ({
-    kind: "fixed" as const,
+    kind: "static" as const,
     static: staticDamage,
   })),
   fc
@@ -82,7 +35,7 @@ const damageAmount = fc.oneof(
       flat: fc.option(fc.integer({ min: -5, max: 20 }), { nil: undefined }),
     })
     .map(({ staticDamage, dice, dieSize, flat }) => ({
-      kind: "fixed" as const,
+      kind: "dice_expression" as const,
       static: staticDamage,
       expr: {
         dice,
@@ -128,6 +81,147 @@ const attackProcedure = fc
     resourceLimits: [],
   }));
 
+const resourceLimit = positiveInteger.map((uses) => ({
+  kind: "daily" as const,
+  uses,
+  ownership: "shared" as const,
+}));
+
+const spellGroup = fc.oneof(
+  positiveInteger.map((count) => ({
+    kind: "at_will" as const,
+    spells: [{ spellId: "synthetic_spell", count }],
+    resourceLimits: [] as const,
+  })),
+  fc.tuple(positiveInteger, resourceLimit).map(([count, limit]) => ({
+    kind: "limited" as const,
+    spells: [{ spellId: "synthetic_spell", count }],
+    resourceLimits: [limit],
+  })),
+);
+
+const procedureArbitrary = fc.oneof(
+  attackProcedure,
+  positiveInteger.map((count) => ({
+    section: "Actions" as const,
+    name: "Synthetic Multiattack",
+    kind: "multiattack" as const,
+    dispatches: [{ procedureName: "Synthetic Strike", count }],
+    resourceLimits: [],
+  })),
+  fc.constant({
+    section: "Actions" as const,
+    name: "Synthetic Options",
+    kind: "action_option" as const,
+    options: ["Synthetic Strike", "Synthetic Burst"],
+    resourceLimits: [],
+  }),
+  spellGroup.map((group) => ({
+    section: "Actions" as const,
+    name: "Synthetic Spellcasting",
+    kind: "spellcasting" as const,
+    ability: "int" as const,
+    components: { kind: "spell_definition" as const },
+    groups: [group],
+    resourceLimits: [],
+  })),
+  fc
+    .tuple(positiveInteger, damageType, damageAmount)
+    .map(([dc, type, amount]) => ({
+      section: "Actions" as const,
+      name: "Synthetic Burst",
+      kind: "save" as const,
+      ability: "dex" as const,
+      dc,
+      area: { kind: "cone" as const, lengthFeet: 15 },
+      onFail: { kind: "damage" as const, damageType: type, amount },
+      onSuccess: "half_damage" as const,
+      resourceLimits: [],
+    })),
+);
+
+const speeds = fc.oneof(
+  fc.constant([
+    { kind: "walk" as const, feet: { kind: "literal" as const, value: 30 } },
+  ]),
+  fc.boolean().map((hover) => [
+    {
+      kind: "fly" as const,
+      feet: { kind: "literal" as const, value: 30 },
+      ...(hover ? { hover: true as const } : {}),
+    },
+  ]),
+  fc.constant([
+    {
+      kind: "gm_choice" as const,
+      alternatives: [
+        {
+          kind: "climb" as const,
+          feet: { kind: "literal" as const, value: 20 },
+        },
+        {
+          kind: "fly" as const,
+          feet: { kind: "literal" as const, value: 20 },
+          hover: true as const,
+        },
+      ],
+    },
+  ]),
+);
+
+const nonEmptyDamageTypes = fc.uniqueArray(damageType, {
+  minLength: 1,
+  maxLength: 4,
+});
+const resistances = fc.oneof(
+  fc.constant({ kind: "none" as const }),
+  nonEmptyDamageTypes.map((damageTypes) => ({
+    kind: "fixed" as const,
+    damageTypes,
+  })),
+  nonEmptyDamageTypes.map((options) => ({
+    kind: "choose_one_from" as const,
+    options,
+  })),
+);
+const immunities = fc.oneof(
+  fc.constant({ kind: "none" as const }),
+  nonEmptyDamageTypes.map((damageTypes) => ({
+    kind: "some" as const,
+    value: { damageTypes },
+  })),
+  fc.constant({
+    kind: "some" as const,
+    value: {
+      conditions: ["charmed" as const],
+      qualifiedConditions: [
+        { condition: "frightened" as const, qualifier: "synthetic source" },
+      ],
+    },
+  }),
+);
+
+const communication = fc.oneof(
+  fc.constant({ kind: "none" as const }),
+  fc.constant({
+    kind: "spoken_and_understood" as const,
+    languages: { kind: "named" as const, languages: ["Common"] },
+  }),
+);
+
+const traits = fc.oneof(
+  fc.constant([]),
+  fc.constant([
+    {
+      name: "Synthetic Trait",
+      description: "Synthetic comparison evidence.",
+      effect: {
+        kind: "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target" as const,
+      },
+    },
+  ]),
+);
+
 const sizeAndSwarm = fc.oneof(
   fc
     .constantFrom("tiny", "small", "medium", "large", "huge", "gargantuan")
@@ -139,43 +233,61 @@ const sizeAndSwarm = fc.oneof(
 );
 
 const projectionArbitrary = fc
-  .record({ sizeAndSwarm, procedure: attackProcedure })
-  .map(({ sizeAndSwarm: sizeAndSwarmValue, procedure }): unknown => ({
-    generalFacts: {
-      challengeRating: 1,
+  .record({
+    sizeAndSwarm,
+    procedure: procedureArbitrary,
+    speeds,
+    resistances,
+    immunities,
+    communication,
+    traits,
+  })
+  .map(
+    ({
       sizeAndSwarm: sizeAndSwarmValue,
-      creatureType: "construct",
-      creatureTypeTags: [],
-      alignment: "unaligned",
-      ac: { kind: "literal", value: 12, annotations: [] },
-      hp: { kind: "literal", value: 20 },
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
-      abilityScores: {
-        str: 10,
-        dex: 10,
-        con: 10,
-        int: 10,
-        wis: 10,
-        cha: 10,
+      procedure,
+      speeds: speedValues,
+      resistances: resistanceValue,
+      immunities: immunityValue,
+      communication: communicationValue,
+      traits: traitValues,
+    }): unknown => ({
+      generalFacts: {
+        challengeRating: 1,
+        sizeAndSwarm: sizeAndSwarmValue,
+        creatureType: "construct",
+        creatureTypeTags: [],
+        alignment: "unaligned",
+        ac: { kind: "literal", value: 12, annotations: [] },
+        hp: { kind: "literal", value: 20 },
+        speeds: speedValues,
+        abilityScores: {
+          str: 10,
+          dex: 10,
+          con: 10,
+          int: 10,
+          wis: 10,
+          cha: 10,
+        },
+        initiative: { modifier: 0, score: 10 },
+        savingThrowModifiers: [],
+        saveProficiencies: [],
+        skillModifiers: [],
+        vulnerabilities: { kind: "none" },
+        resistances: resistanceValue,
+        immunities: immunityValue,
+        senses: [],
+        passivePerception: 10,
+        gear: [],
+        communication: communicationValue,
       },
-      initiative: { modifier: 0, score: 10 },
-      savingThrowModifiers: [],
-      saveProficiencies: [],
-      skillModifiers: [],
-      vulnerabilities: { kind: "none" },
-      resistances: { kind: "none" },
-      immunities: { kind: "none" },
-      senses: [],
-      passivePerception: 10,
-      gear: [],
-      communication: { kind: "none" },
-    },
-    resources: [],
-    entryNames: ["Actions/Synthetic Strike"],
-    traits: [],
-    textOnlyProcedures: [],
-    procedures: [procedure],
-  }));
+      resources: [],
+      entryNames: ["Actions/Synthetic Strike"],
+      traits: traitValues,
+      textOnlyProcedures: [],
+      procedures: [procedure],
+    }),
+  );
 
 const decodeProjection = Schema.decodeUnknownEither(
   StatBlockScopedFidelityProjectionSchema,
@@ -199,7 +311,34 @@ function expectIndependentProjectionInvariants(
         expect("reachFeet" in attack).toBe(false);
         expect(attack.onHit.length).toBeGreaterThan(0);
       }),
-      Match.orElse(() => undefined),
+      Match.when({ kind: "textOnly" }, () => undefined),
+      Match.when({ kind: "save" }, (save) => {
+        expect(save.dc).toBeGreaterThan(0);
+        expect(save.onFail.amount.static).toBeGreaterThan(0);
+      }),
+      Match.when({ kind: "multiattack" }, (multiattack) => {
+        expect(multiattack.dispatches.length).toBeGreaterThan(0);
+      }),
+      Match.when({ kind: "action_option" }, (options) => {
+        expect(options.options.length).toBeGreaterThan(0);
+      }),
+      Match.when({ kind: "spellcasting" }, (spellcasting) => {
+        expect(spellcasting.groups.length).toBeGreaterThan(0);
+        for (const group of spellcasting.groups) {
+          Match.value(group).pipe(
+            Match.when({ kind: "at_will" }, (atWill) => {
+              expect(atWill.spells.length).toBeGreaterThan(0);
+              expect(atWill.resourceLimits).toHaveLength(0);
+            }),
+            Match.when({ kind: "limited" }, (limited) => {
+              expect(limited.spells.length).toBeGreaterThan(0);
+              expect(limited.resourceLimits.length).toBeGreaterThan(0);
+            }),
+            Match.exhaustive,
+          );
+        }
+      }),
+      Match.exhaustive,
     );
   }
   const swarm = projection.generalFacts.sizeAndSwarm.swarm;
@@ -209,6 +348,57 @@ function expectIndependentProjectionInvariants(
       projection.generalFacts.sizeAndSwarm.size,
     );
   }
+  for (const speed of projection.generalFacts.speeds) {
+    Match.value(speed).pipe(
+      Match.when({ kind: "gm_choice" }, ({ alternatives }) => {
+        expect(alternatives.length).toBeGreaterThanOrEqual(2);
+        expect(
+          new Set(alternatives.map((alternative) => alternative.kind)).size,
+        ).toBe(alternatives.length);
+      }),
+      Match.when({ kind: "fly" }, (fly) => {
+        expect(fly.feet.value).toBeGreaterThan(0);
+        expect(fly.hover === undefined || fly.hover === true).toBe(true);
+      }),
+      Match.when({ kind: "walk" }, (nonFly) => {
+        expect("hover" in nonFly).toBe(false);
+      }),
+      Match.when({ kind: "burrow" }, (nonFly) => {
+        expect("hover" in nonFly).toBe(false);
+      }),
+      Match.when({ kind: "climb" }, (nonFly) => {
+        expect("hover" in nonFly).toBe(false);
+      }),
+      Match.when({ kind: "swim" }, (nonFly) => {
+        expect("hover" in nonFly).toBe(false);
+      }),
+      Match.exhaustive,
+    );
+  }
+  Match.value(projection.generalFacts.resistances).pipe(
+    Match.when({ kind: "none" }, () => undefined),
+    Match.when({ kind: "fixed" }, ({ damageTypes }) => {
+      expect(damageTypes.length).toBeGreaterThan(0);
+    }),
+    Match.when({ kind: "choose_one_from" }, ({ options }) => {
+      expect(options.length).toBeGreaterThan(0);
+    }),
+    Match.exhaustive,
+  );
+  Match.value(projection.generalFacts.immunities).pipe(
+    Match.when({ kind: "none" }, () => undefined),
+    Match.when({ kind: "some" }, ({ value }) => {
+      const fixed = new Set<string>(
+        "conditions" in value ? value.conditions : [],
+      );
+      const qualified =
+        "qualifiedConditions" in value ? value.qualifiedConditions : [];
+      expect(qualified.every(({ condition }) => !fixed.has(condition))).toBe(
+        true,
+      );
+    }),
+    Match.exhaustive,
+  );
 }
 
 describe("domain-valid scoped Stat Block projections", () => {
@@ -218,8 +408,7 @@ describe("domain-valid scoped Stat Block projections", () => {
         const decoded = decodeProjection(candidate);
         expect(Either.isRight(decoded)).toBe(true);
         if (Either.isLeft(decoded)) return;
-        const projection = decoded.right as StatBlockScopedFidelityProjection;
-        expectIndependentProjectionInvariants(projection);
+        expectIndependentProjectionInvariants(decoded.right);
         const encoded = Schema.encodeUnknownEither(
           StatBlockScopedFidelityProjectionSchema,
         )(decoded.right);
@@ -241,14 +430,50 @@ describe("domain-valid scoped Stat Block projections", () => {
       numRuns: 1,
       seed: 490,
     })[0];
+    const sampledAttack = fc.sample(attackProcedure, {
+      numRuns: 1,
+      seed: 491,
+    })[0];
+    const sampledProjection = Schema.decodeUnknownSync(
+      StatBlockScopedFidelityProjectionSchema,
+    )(sampled);
     const candidate = Schema.decodeUnknownSync(
       StatBlockScopedFidelityProjectionSchema,
-    )(sampled) as Record<string, unknown>;
-    const generalFacts = candidate.generalFacts as Record<string, unknown>;
-    const procedure =
-      (candidate.procedures as readonly Record<string, unknown>[])[0] ?? {};
-    const onHit = procedure.onHit as readonly Record<string, unknown>[];
-    const damage = onHit[0] ?? {};
+    )({
+      ...sampledProjection,
+      procedures: [sampledAttack],
+    });
+    const generalFacts = candidate.generalFacts;
+    const firstProcedure = candidate.procedures[0];
+    if (firstProcedure === undefined) {
+      throw new Error(
+        "The constrained projection generator omitted its attack",
+      );
+    }
+    const procedure = Match.value(firstProcedure).pipe(
+      Match.when({ kind: "attack_roll" }, (attack) => attack),
+      Match.when({ kind: "textOnly" }, () => {
+        throw new Error("The constrained projection generator made text-only");
+      }),
+      Match.when({ kind: "save" }, () => {
+        throw new Error("The constrained projection generator made a save");
+      }),
+      Match.when({ kind: "multiattack" }, () => {
+        throw new Error(
+          "The constrained projection generator made multiattack",
+        );
+      }),
+      Match.when({ kind: "action_option" }, () => {
+        throw new Error("The constrained projection generator made options");
+      }),
+      Match.when({ kind: "spellcasting" }, () => {
+        throw new Error(
+          "The constrained projection generator made spellcasting",
+        );
+      }),
+      Match.exhaustive,
+    );
+    const damage = procedure.onHit[0];
     const invalidCandidates: readonly unknown[] = [
       {
         ...candidate,
@@ -318,21 +543,11 @@ describe("domain-valid scoped Stat Block projections", () => {
             onHit: [
               {
                 ...damage,
-                amount: { kind: "fixed", static: 4, expr: { dice: 1 } },
-              },
-            ],
-          },
-        ],
-      },
-      {
-        ...candidate,
-        procedures: [
-          {
-            ...procedure,
-            onHit: [
-              {
-                ...damage,
-                amount: { kind: "fixed", static: 4, expr: { dieSize: 6 } },
+                amount: {
+                  kind: "dice_expression",
+                  static: 4,
+                  expr: { dice: 1 },
+                },
               },
             ],
           },
@@ -347,7 +562,25 @@ describe("domain-valid scoped Stat Block projections", () => {
               {
                 ...damage,
                 amount: {
-                  kind: "fixed",
+                  kind: "dice_expression",
+                  static: 4,
+                  expr: { dieSize: 6 },
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        ...candidate,
+        procedures: [
+          {
+            ...procedure,
+            onHit: [
+              {
+                ...damage,
+                amount: {
+                  kind: "static",
                   static: 4,
                   spellcastingMod: true,
                 },
@@ -501,9 +734,7 @@ describe("domain-valid scoped Stat Block projections", () => {
               {
                 kind: "at_will",
                 spells: [{ spellId: "synthetic_spell" }],
-                resourceLimits: [
-                  { kind: "daily", uses: 1, ownership: "shared" },
-                ],
+                resourceLimits: [],
               },
             ],
             resourceLimits: [],
@@ -558,10 +789,158 @@ describe("domain-valid scoped Stat Block projections", () => {
           },
         ],
       },
+      {
+        ...candidate,
+        procedures: [
+          {
+            section: "Actions",
+            name: "Synthetic Spellcasting",
+            kind: "spellcasting",
+            ability: "int",
+            components: { kind: "spell_definition" },
+            groups: [
+              {
+                kind: "at_will",
+                spells: [{ spellId: "synthetic_spell" }],
+                resourceLimits: [
+                  { kind: "daily", uses: 1, ownership: "shared" },
+                ],
+              },
+            ],
+            resourceLimits: [],
+          },
+        ],
+      },
+      {
+        ...candidate,
+        generalFacts: { ...generalFacts, creatureTypeTags: ["swarm"] },
+      },
+      {
+        ...candidate,
+        generalFacts: {
+          ...generalFacts,
+          savingThrowModifiers: [
+            { ability: "dex", modifier: 2 },
+            { ability: "dex", modifier: 4 },
+          ],
+        },
+      },
+      {
+        ...candidate,
+        generalFacts: {
+          ...generalFacts,
+          legendaryActionUses: { kind: "fixed", uses: 3 },
+        },
+      },
+      {
+        ...candidate,
+        generalFacts: {
+          ...generalFacts,
+          speeds: [{ kind: "gm_choice", alternatives: [] }],
+        },
+      },
+      {
+        ...candidate,
+        generalFacts: {
+          ...generalFacts,
+          speeds: [
+            {
+              kind: "gm_choice",
+              alternatives: [
+                {
+                  kind: "walk",
+                  feet: { kind: "literal", value: 20 },
+                  availability: {
+                    kind: "forms_only",
+                    forms: ["synthetic_form"],
+                  },
+                },
+                { kind: "fly", feet: { kind: "literal", value: 20 } },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        ...candidate,
+        generalFacts: {
+          ...generalFacts,
+          communication: {
+            kind: "spoken_and_understood",
+            languages: { kind: "named", languages: [] },
+          },
+        },
+      },
+      {
+        ...candidate,
+        traits: [
+          {
+            name: "Synthetic Trait",
+            description: "Synthetic comparison evidence.",
+            effect: null,
+          },
+        ],
+      },
     ];
 
-    for (const invalid of invalidCandidates) {
-      expect(Either.isLeft(decodeProjection(invalid))).toBe(true);
-    }
+    const invalidLabels = [
+      "melee attack with range",
+      "ranged attack with reach",
+      "attack with empty on-hit effects",
+      "ranged attack with reversed range",
+      "ambiguous attack with duplicate abilities",
+      "ambiguous attack with one ability",
+      "damage dice without die size",
+      "damage die size without dice",
+      "static damage with a modifier",
+      "non-fly speed with explicit false hover",
+      "non-fly speed with true hover",
+      "GM speed choice with one alternative",
+      "GM speed choice with duplicate alternatives",
+      "nullable swarm sentinel",
+      "swarm with invalid aggregate size",
+      "empty fixed resistance",
+      "empty chosen resistance",
+      "empty present immunity",
+      "overlapping fixed and qualified immunity",
+      "empty multiattack dispatches",
+      "empty action options",
+      "material component true sentinel",
+      "spellcasting with no groups",
+      "at-will group with no spells",
+      "limited group with no resources",
+      "at-will group with a resource",
+      "swarm encoded as creature type tag",
+      "duplicate saving throw abilities",
+      "legendary uses without legendary actions",
+      "GM speed choice with no alternatives",
+      "GM speed choice with restricted alternative",
+      "named language set with no languages",
+      "trait null effect sentinel",
+    ] as const;
+
+    expect(invalidCandidates).toHaveLength(invalidLabels.length);
+
+    invalidCandidates.forEach((invalid, index) => {
+      const label = invalidLabels[index] ?? "unlabeled invalid projection";
+      const decoded = decodeProjection(invalid);
+      expect(Either.isLeft(decoded), label).toBe(true);
+      if (Either.isLeft(decoded)) {
+        const message = String(decoded.left);
+        if (label === "ambiguous attack with duplicate abilities") {
+          expect(message, label).toContain("distinct abilities");
+        }
+        if (label === "overlapping fixed and qualified immunity") {
+          expect(message, label).toContain(
+            "cannot be both fixed and qualified",
+          );
+        }
+        if (label === "legendary uses without legendary actions") {
+          expect(message, label).toContain(
+            "Legendary Action uses and a nonempty Legendary Action section",
+          );
+        }
+      }
+    });
   });
 });

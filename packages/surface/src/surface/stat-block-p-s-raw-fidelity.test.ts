@@ -68,7 +68,7 @@ describe("P–S repeated source occurrences", () => {
     const tToZStoneGiant = requireProjection(tToZByName, "Stone Giant");
     const dexSave = (projection: typeof pToSStoneGiant): number | undefined =>
       projection.generalFacts.savingThrowModifiers.find(
-        ({ name }) => name === "dex",
+        ({ ability }) => ability === "dex",
       )?.modifier;
 
     expect(dexSave(pToSStoneGiant)).toBe(5);

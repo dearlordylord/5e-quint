@@ -17,19 +17,26 @@ import {
   ChallengeRatingSchema,
   ConditionSchema,
   CreatureTypeSchema,
+  CreatureSavingThrowModifiersSchema,
+  CreatureSkillModifierSchema,
   DamageTypeSchema,
   SizeSchema,
-  SkillSchema,
   StandaloneStatBlockSpeedEntrySchema,
   StandaloneStatBlockSizeAndSwarmSchema,
   StandaloneCreatureSenseSchema,
   StandaloneStatBlockAbilityScoresSchema,
+  StandaloneStatBlockCreatureTypeTagsSchema,
   StatBlockCommunicationSchema,
   StatBlockTextOnlyReasonSchema,
   CreatureTraitSchema,
   CreatureImmunityListSchema,
 } from "./schema.ts";
-import { exactOptional, nonEmpty, strictStruct } from "./schema-helpers.ts";
+import {
+  exactOptional,
+  ForbiddenValueSchema,
+  nonEmpty,
+  strictStruct,
+} from "./schema-helpers.ts";
 import {
   isChallengeRating,
   statBlockProficiencyBonusForChallengeRating,
@@ -42,19 +49,13 @@ import {
   type Ability,
   type ChallengeRating,
   type Condition,
-  type CreatureType,
-  type CreatureTrait,
-  type CreatureImmunityList,
+  type CreatureSkillModifier,
   type DamageType,
-  type Size,
-  type Skill,
   type SrdStatBlockRecord,
-  type StandaloneStatBlockSizeAndSwarm,
   type StandaloneCreatureSense,
   type StandaloneStatBlockSpeedEntry,
   type StatBlockCommunication,
   type StatBlockProcedureEntry,
-  type StatBlockTextOnlyReason,
 } from "./types.ts";
 
 /**
@@ -66,8 +67,6 @@ import {
 const ABILITY_NAMES = ABILITIES;
 const ATTACK_ABILITY_NAMES = ["str", "dex", "int", "wis", "cha"] as const;
 type AttackAbility = (typeof ATTACK_ABILITY_NAMES)[number];
-type NonEmptyStrings = ReadonlyNonEmptyArray<string>;
-
 type AbilityMatrixFact = {
   readonly ability: Ability;
   readonly score: number;
@@ -120,271 +119,6 @@ type RawEntry = {
   readonly description: string;
 };
 
-type NamedModifier<Name extends string> = {
-  readonly name: Name;
-  readonly modifier: number;
-};
-
-type AttackAbilityEvidence =
-  | { readonly kind: "resolved"; readonly ability: AttackAbility }
-  | {
-      readonly kind: "unresolved";
-      readonly candidates: readonly [
-        AttackAbility,
-        AttackAbility,
-        ...AttackAbility[],
-      ];
-    };
-
-type ResourceLimitProjection =
-  | {
-      readonly kind: "daily";
-      readonly uses: number;
-      readonly ownership: "shared" | "each";
-    }
-  | {
-      readonly kind: "recharge";
-      readonly minimumRoll: number;
-      readonly ownership: "shared" | "each";
-    }
-  | {
-      readonly kind: "recharge_after_rest";
-      readonly rest: "short_or_long";
-      readonly ownership: "shared" | "each";
-    };
-
-type DamageAmountProjection =
-  | {
-      readonly kind: "fixed";
-      readonly static: number;
-    }
-  | {
-      readonly kind: "fixed";
-      readonly static: number;
-      readonly expr: {
-        readonly dice: number;
-        readonly dieSize: number;
-        readonly flat?: number;
-        readonly spellcastingMod?: true;
-        readonly abilityModifier?: Ability;
-      };
-    };
-
-type DamageProjection = {
-  readonly kind: "damage";
-  readonly damageType: DamageType;
-  readonly amount: DamageAmountProjection;
-};
-
-type ResistanceProjection =
-  | { readonly kind: "none" }
-  | {
-      readonly kind: "fixed";
-      readonly damageTypes: ReadonlyNonEmptyArray<DamageType>;
-    }
-  | {
-      readonly kind: "choose_one_from";
-      readonly options: ReadonlyNonEmptyArray<DamageType>;
-    };
-
-type AttackEffectProjection =
-  | DamageProjection
-  | (Omit<DamageProjection, "kind"> & {
-      readonly kind: "conditional_bonus_damage";
-      readonly when: "attack_roll_had_advantage";
-    })
-  | {
-      readonly kind: "apply_condition_if_target_size_at_most";
-      readonly condition: Condition;
-      readonly maxCreatureSize: Size;
-    }
-  | {
-      readonly kind: "apply_condition";
-      readonly condition: Condition;
-      readonly expiresAt: "source_next_turn_end" | "target_next_turn_end";
-    };
-
-type SpellProjection = {
-  readonly spellId: string;
-  readonly count?: number;
-  readonly castAtLevel?: number;
-  readonly restriction?: string;
-};
-
-type SpellcastingGroupProjection =
-  | {
-      readonly kind: "at_will";
-      readonly spells: ReadonlyNonEmptyArray<SpellProjection>;
-      readonly resourceLimits: readonly [];
-    }
-  | {
-      readonly kind: "limited";
-      readonly spells: ReadonlyNonEmptyArray<SpellProjection>;
-      readonly resourceLimits: ReadonlyNonEmptyArray<ResourceLimitProjection>;
-    };
-
-type ProcedureProjection =
-  | {
-      readonly section: ProcedureSection;
-      readonly name: string;
-      readonly kind: "textOnly";
-      readonly description: string;
-      readonly reason: StatBlockTextOnlyReason;
-      readonly resourceLimits: readonly ResourceLimitProjection[];
-    }
-  | ({
-      readonly section: ProcedureSection;
-      readonly name: string;
-      readonly kind: "attack_roll";
-      readonly attackBonus: number;
-      readonly attackAbilityEvidence: AttackAbilityEvidence;
-      readonly multiattackCount?: number;
-      readonly onHit: ReadonlyNonEmptyArray<AttackEffectProjection>;
-      readonly resourceLimits: readonly ResourceLimitProjection[];
-    } & (
-      | {
-          readonly attackType: "melee";
-          readonly reachFeet: number;
-        }
-      | {
-          readonly attackType: "ranged";
-          readonly rangeFeet: {
-            readonly normal: number;
-            readonly long: number;
-          };
-          readonly ammunition?: string;
-        }
-    ))
-  | {
-      readonly section: ProcedureSection;
-      readonly name: string;
-      readonly kind: "save";
-      readonly ability: Ability;
-      readonly dc: number;
-      readonly area:
-        | {
-            readonly kind: "line";
-            readonly lengthFeet: number;
-            readonly widthFeet: number;
-          }
-        | { readonly kind: "cone"; readonly lengthFeet: number };
-      readonly onFail: DamageProjection;
-      readonly onSuccess: "half_damage";
-      readonly multiattackCount?: number;
-      readonly resourceLimits: readonly ResourceLimitProjection[];
-    }
-  | {
-      readonly section: ProcedureSection;
-      readonly name: string;
-      readonly kind: "multiattack";
-      readonly dispatches: ReadonlyNonEmptyArray<{
-        readonly procedureName: string;
-        readonly count: number;
-      }>;
-      readonly resourceLimits: readonly ResourceLimitProjection[];
-    }
-  | {
-      readonly section: ProcedureSection;
-      readonly name: string;
-      readonly kind: "action_option";
-      readonly options: NonEmptyStrings;
-      readonly resourceLimits: readonly ResourceLimitProjection[];
-    }
-  | {
-      readonly section: ProcedureSection;
-      readonly name: string;
-      readonly kind: "spellcasting";
-      readonly ability: Ability;
-      readonly spellSaveDc?: number;
-      readonly spellAttackBonus?: number;
-      readonly components:
-        | { readonly kind: "spell_definition" }
-        | {
-            readonly kind: "fixed";
-            readonly v: boolean;
-            readonly s: boolean;
-            readonly m: false | string;
-          };
-      readonly groups: ReadonlyNonEmptyArray<SpellcastingGroupProjection>;
-      readonly resourceLimits: readonly ResourceLimitProjection[];
-    };
-
-type StructuralProcedure = Exclude<
-  ProcedureProjection,
-  { readonly kind: "textOnly" }
->;
-
-type ScopedGeneralFacts = {
-  readonly challengeRating: ChallengeRating;
-  readonly sizeAndSwarm: StandaloneStatBlockSizeAndSwarm;
-  readonly creatureType: CreatureType;
-  readonly creatureTypeTags: readonly string[];
-  readonly alignment:
-    | "unaligned"
-    | {
-        readonly order: (typeof ALIGNMENT_ORDERS)[number];
-        readonly morality: (typeof ALIGNMENT_MORALITIES)[number];
-      };
-  readonly ac: {
-    readonly kind: "literal";
-    readonly value: number;
-    readonly annotations: readonly string[];
-  };
-  readonly hp: { readonly kind: "literal"; readonly value: number };
-  readonly speeds: ReadonlyNonEmptyArray<StandaloneStatBlockSpeedEntry>;
-  readonly abilityScores: Readonly<Record<Ability, number>>;
-  readonly initiative: { readonly modifier: number; readonly score: number };
-  readonly savingThrowModifiers: readonly NamedModifier<Ability>[];
-  readonly saveProficiencies: readonly Ability[];
-  readonly skillModifiers: readonly NamedModifier<Skill>[];
-  readonly vulnerabilities:
-    | { readonly kind: "none" }
-    | {
-        readonly kind: "fixed";
-        readonly damageTypes: ReadonlyNonEmptyArray<DamageType>;
-      }
-    | {
-        readonly kind: "qualified";
-        readonly damageTypes: ReadonlyNonEmptyArray<DamageType>;
-        readonly qualifier: string;
-      };
-  readonly resistances: ResistanceProjection;
-  readonly immunities:
-    | { readonly kind: "none" }
-    | { readonly kind: "some"; readonly value: CreatureImmunityList };
-  readonly senses: readonly StandaloneCreatureSense[];
-  readonly passivePerception: number;
-  readonly gear: readonly {
-    readonly item: string;
-    readonly quantity: number;
-  }[];
-  readonly communication: StatBlockCommunication;
-  readonly legendaryActionUses?:
-    | {
-        readonly kind: "fixed";
-        readonly uses: number;
-      }
-    | {
-        readonly kind: "lair_bonus";
-        readonly usesOutsideLair: number;
-        readonly additionalUsesInLair: number;
-      };
-};
-
-export type StatBlockScopedFidelityProjection = {
-  readonly generalFacts: ScopedGeneralFacts;
-  readonly resources: readonly ResourceLimitProjection[];
-  readonly entryNames: readonly string[];
-  readonly traits: readonly CreatureTrait[];
-  readonly textOnlyProcedures: readonly {
-    readonly section: ProcedureSection;
-    readonly name: string;
-    readonly description: string;
-    readonly reason: StatBlockTextOnlyReason;
-  }[];
-  readonly procedures: readonly ProcedureProjection[];
-};
-
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
@@ -414,11 +148,12 @@ const ResourceLimitProjectionSchema = Schema.Union(
 
 const DamageAmountProjectionSchema = Schema.Union(
   strictStruct({
-    kind: Schema.Literal("fixed"),
+    kind: Schema.Literal("static"),
     static: PositiveIntegerSchema,
+    expr: exactOptional(ForbiddenValueSchema),
   }),
   strictStruct({
-    kind: Schema.Literal("fixed"),
+    kind: Schema.Literal("dice_expression"),
     static: PositiveIntegerSchema,
     expr: strictStruct({
       dice: PositiveIntegerSchema,
@@ -463,11 +198,12 @@ const AttackAbilityEvidenceSchema = Schema.Union(
   }),
   strictStruct({
     kind: Schema.Literal("unresolved"),
-    candidates: nonEmpty(AttackAbilitySchema).pipe(
+    candidates: Schema.Tuple(
+      [AttackAbilitySchema, AttackAbilitySchema],
+      AttackAbilitySchema,
+    ).pipe(
       Schema.filter(
-        (candidates) =>
-          candidates.length >= 2 &&
-          new Set(candidates).size === candidates.length,
+        (candidates) => new Set(candidates).size === candidates.length,
         {
           message: () =>
             "Unresolved attack evidence requires at least two distinct abilities.",
@@ -518,6 +254,8 @@ const ProcedureProjectionSchema = Schema.Union(
     attackAbilityEvidence: AttackAbilityEvidenceSchema,
     multiattackCount: exactOptional(PositiveIntegerSchema),
     reachFeet: PositiveIntegerSchema,
+    rangeFeet: exactOptional(ForbiddenValueSchema),
+    ammunition: exactOptional(ForbiddenValueSchema),
     onHit: nonEmpty(AttackEffectProjectionSchema),
   }),
   strictStruct({
@@ -536,6 +274,7 @@ const ProcedureProjectionSchema = Schema.Union(
       }),
     ),
     ammunition: exactOptional(NonEmptyStringSchema),
+    reachFeet: exactOptional(ForbiddenValueSchema),
     onHit: nonEmpty(AttackEffectProjectionSchema),
   }),
   strictStruct({
@@ -592,14 +331,6 @@ const ProcedureProjectionSchema = Schema.Union(
   }),
 );
 
-const NamedAbilityModifierSchema = strictStruct({
-  name: AbilitySchema,
-  modifier: SignedIntegerSchema,
-});
-const NamedSkillModifierSchema = strictStruct({
-  name: SkillSchema,
-  modifier: SignedIntegerSchema,
-});
 const VulnerabilityProjectionSchema = Schema.Union(
   strictStruct({ kind: Schema.Literal("none") }),
   strictStruct({
@@ -629,7 +360,10 @@ export const StatBlockScopedFidelityProjectionSchema = strictStruct({
     challengeRating: ChallengeRatingSchema,
     sizeAndSwarm: StandaloneStatBlockSizeAndSwarmSchema,
     creatureType: CreatureTypeSchema,
-    creatureTypeTags: Schema.Array(NonEmptyStringSchema),
+    creatureTypeTags: Schema.Union(
+      Schema.Tuple(),
+      StandaloneStatBlockCreatureTypeTagsSchema,
+    ),
     alignment: Schema.Union(
       Schema.Literal("unaligned"),
       strictStruct({
@@ -652,9 +386,12 @@ export const StatBlockScopedFidelityProjectionSchema = strictStruct({
       modifier: SignedIntegerSchema,
       score: PositiveIntegerSchema,
     }),
-    savingThrowModifiers: Schema.Array(NamedAbilityModifierSchema),
+    savingThrowModifiers: Schema.Union(
+      Schema.Tuple(),
+      CreatureSavingThrowModifiersSchema,
+    ),
     saveProficiencies: Schema.Array(AbilitySchema),
-    skillModifiers: Schema.Array(NamedSkillModifierSchema),
+    skillModifiers: Schema.Array(CreatureSkillModifierSchema),
     vulnerabilities: VulnerabilityProjectionSchema,
     resistances: ResistanceProjectionSchema,
     immunities: Schema.Union(
@@ -699,7 +436,56 @@ export const StatBlockScopedFidelityProjectionSchema = strictStruct({
     }),
   ),
   procedures: Schema.Array(ProcedureProjectionSchema),
-});
+}).pipe(
+  Schema.filter(
+    (projection) =>
+      (projection.generalFacts.legendaryActionUses !== undefined) ===
+      projection.procedures.some(
+        ({ section }) => section === "Legendary Actions",
+      ),
+    {
+      message: () =>
+        "Legendary Action uses and a nonempty Legendary Action section must occur together.",
+    },
+  ),
+);
+
+export type StatBlockScopedFidelityProjection = Schema.Schema.Type<
+  typeof StatBlockScopedFidelityProjectionSchema
+>;
+
+type ScopedGeneralFacts = StatBlockScopedFidelityProjection["generalFacts"];
+type ProcedureProjection =
+  StatBlockScopedFidelityProjection["procedures"][number];
+type StructuralProcedure = Exclude<
+  ProcedureProjection,
+  { readonly kind: "textOnly" }
+>;
+type ResourceLimitProjection =
+  StatBlockScopedFidelityProjection["resources"][number];
+type DamageProjection = Extract<
+  Extract<
+    ProcedureProjection,
+    { readonly kind: "attack_roll" }
+  >["onHit"][number],
+  { readonly kind: "damage" }
+>;
+type DamageAmountProjection = DamageProjection["amount"];
+type AttackEffectProjection = Extract<
+  ProcedureProjection,
+  { readonly kind: "attack_roll" }
+>["onHit"][number];
+type AttackAbilityEvidence = Extract<
+  ProcedureProjection,
+  { readonly kind: "attack_roll" }
+>["attackAbilityEvidence"];
+type ResistanceProjection = ScopedGeneralFacts["resistances"];
+type SpellcastingProcedure = Extract<
+  ProcedureProjection,
+  { readonly kind: "spellcasting" }
+>;
+type SpellcastingGroupProjection = SpellcastingProcedure["groups"][number];
+type SpellProjection = SpellcastingGroupProjection["spells"][number];
 
 const procedureResourceLimits = (
   procedures: readonly ProcedureProjection[],
@@ -828,10 +614,22 @@ const parsedLiteral = <Value extends string>(
   return value;
 };
 
-const sortedModifiers = <Name extends string>(
-  values: readonly NamedModifier<Name>[],
-): readonly NamedModifier<Name>[] =>
-  [...values].sort((left, right) => left.name.localeCompare(right.name));
+const sortedByDomainName = <Value>(
+  values: readonly Value[],
+  domainName: (value: Value) => string,
+): readonly Value[] =>
+  [...values].sort((left, right) =>
+    domainName(left).localeCompare(domainName(right)),
+  );
+
+const sortedAbsentOrNonEmpty = <Value>(
+  values: readonly Value[],
+  domainName: (value: Value) => string,
+): readonly [] | ReadonlyNonEmptyArray<Value> => {
+  const sorted = sortedByDomainName(values, domainName);
+  const [first, ...rest] = sorted;
+  return first === undefined ? [] : [first, ...rest];
+};
 
 const parseMetadata = (
   lines: readonly string[],
@@ -990,18 +788,27 @@ const parseSpeeds = (
                 ),
               },
             };
-      return kind === "fly"
-        ? Schema.decodeUnknownSync(StandaloneStatBlockSpeedEntrySchema)({
+      const decodeNonFly = () =>
+        Schema.decodeUnknownSync(StandaloneStatBlockSpeedEntrySchema)({
+          kind,
+          feet: { kind: "literal", value: Number(speed[2]) },
+          ...availability,
+        });
+      return Match.value(kind).pipe(
+        Match.when("fly", () =>
+          Schema.decodeUnknownSync(StandaloneStatBlockSpeedEntrySchema)({
             kind,
             feet: { kind: "literal", value: Number(speed[2]) },
             ...(qualifier === "hover" ? { hover: true as const } : {}),
             ...availability,
-          })
-        : Schema.decodeUnknownSync(StandaloneStatBlockSpeedEntrySchema)({
-            kind,
-            feet: { kind: "literal", value: Number(speed[2]) },
-            ...availability,
-          });
+          }),
+        ),
+        Match.when("walk", decodeNonFly),
+        Match.when("burrow", decodeNonFly),
+        Match.when("climb", decodeNonFly),
+        Match.when("swim", decodeNonFly),
+        Match.exhaustive,
+      );
     });
   const [first, ...rest] = speeds;
   if (first === undefined) throw new Error(`Missing ${context} Speed`);
@@ -1222,23 +1029,25 @@ const parseAbilityScores = (
 const parseSavingThrowModifiers = (
   lines: readonly string[],
   context: string,
-): readonly NamedModifier<Ability>[] => {
+): ScopedGeneralFacts["savingThrowModifiers"] => {
   if (lines.some((line) => line.startsWith("| **Save**"))) {
     const saveValues = abilityRecord(parseAbilityRow(lines, "Save", context));
-    return sortedModifiers(
+    return sortedAbsentOrNonEmpty(
       ABILITY_NAMES.map((ability) => ({
-        name: ability,
+        ability,
         modifier: saveValues[ability],
       })),
+      ({ ability }) => ability,
     );
   }
   const abilityMatrix = parseAbilityMatrix(lines, context);
   if (abilityMatrix !== undefined) {
-    return sortedModifiers(
+    return sortedAbsentOrNonEmpty(
       abilityMatrix.map(({ ability, saveModifier }) => ({
-        name: ability,
+        ability,
         modifier: saveModifier,
       })),
+      ({ ability }) => ability,
     );
   }
   const combinedCells = lines
@@ -1268,16 +1077,17 @@ const parseSavingThrowModifiers = (
         return signedNumber(value);
       }),
     );
-    return sortedModifiers(
+    return sortedAbsentOrNonEmpty(
       ABILITY_NAMES.map((ability) => ({
-        name: ability,
+        ability,
         modifier: saveValues[ability],
       })),
+      ({ ability }) => ability,
     );
   }
   const line = lines.find((candidate) => candidate.startsWith("**Saves**"));
   if (line === undefined) return [];
-  return sortedModifiers(
+  return sortedAbsentOrNonEmpty(
     line
       .replace("**Saves**", "")
       .trim()
@@ -1289,7 +1099,7 @@ const parseSavingThrowModifiers = (
           `${context} Saves`,
         );
         return {
-          name: parsedLiteral(
+          ability: parsedLiteral(
             ABILITY_NAMES,
             (modifier[1] ?? "").toLowerCase(),
             `${context} Save ability`,
@@ -1297,18 +1107,19 @@ const parseSavingThrowModifiers = (
           modifier: signedNumber(modifier[2] ?? ""),
         };
       }),
+    ({ ability }) => ability,
   );
 };
 
 const parseNamedModifiers = (
   lines: readonly string[],
   label: "Skills",
-): readonly NamedModifier<Skill>[] => {
+): readonly CreatureSkillModifier[] => {
   const line = lines.find((candidate) => candidate.startsWith(`**${label}**`));
   if (line === undefined) {
     return [];
   }
-  return sortedModifiers(
+  return sortedByDomainName(
     line
       .replace(`**${label}**`, "")
       .trim()
@@ -1316,7 +1127,7 @@ const parseNamedModifiers = (
       .map((part) => {
         const modifier = requireMatch(part, /^(.+?) ([+−-]?\d+)$/, label);
         return {
-          name: parsedLiteral(
+          skill: parsedLiteral(
             SKILLS,
             normalizedIdentifier(modifier[1] ?? ""),
             "Skill",
@@ -1324,6 +1135,7 @@ const parseNamedModifiers = (
           modifier: signedNumber(modifier[2] ?? ""),
         };
       }),
+    ({ skill }) => skill,
   );
 };
 
@@ -1913,9 +1725,9 @@ const parseDamage = (
   const staticDamage = Number(match[1]);
   const amount: DamageAmountProjection =
     match[2] === undefined || match[3] === undefined
-      ? { kind: "fixed", static: staticDamage }
+      ? { kind: "static", static: staticDamage }
       : {
-          kind: "fixed",
+          kind: "dice_expression",
           static: staticDamage,
           expr: {
             dice: Number(match[2]),
@@ -2036,7 +1848,7 @@ const parseSimpleAttack = (
           kind: "conditional_bonus_damage" as const,
           damageType: totalDamage.damageType,
           amount: {
-            kind: "fixed" as const,
+            kind: "dice_expression" as const,
             static: totalAmount.static - baseAmount.static,
             expr: {
               dice: totalAmount.expr.dice - baseAmount.expr.dice,
@@ -2168,21 +1980,23 @@ const parseSimpleAttack = (
     onHit: nonEmptyValues(onHit, `${entry.name} attack effects`),
     resourceLimits: parseRawResourceLimits(entry.name),
   };
-  return attackType === "melee"
-    ? {
-        ...commonAttack,
-        attackType,
-        reachFeet: Number(match[3]),
-      }
-    : {
-        ...commonAttack,
-        attackType,
-        rangeFeet: {
-          normal: Number(match[4]),
-          long: Number(match[5] ?? match[4]),
-        },
-        ...(ammunition === undefined ? {} : { ammunition }),
-      };
+  return Match.value(attackType).pipe(
+    Match.when("melee", (attackType) => ({
+      ...commonAttack,
+      attackType,
+      reachFeet: Number(match[3]),
+    })),
+    Match.when("ranged", (attackType) => ({
+      ...commonAttack,
+      attackType,
+      rangeFeet: {
+        normal: Number(match[4]),
+        long: Number(match[5] ?? match[4]),
+      },
+      ...(ammunition === undefined ? {} : { ammunition }),
+    })),
+    Match.exhaustive,
+  );
 };
 
 const parseSimpleSave = (entry: RawEntry): ProcedureProjection | undefined => {
@@ -2778,9 +2592,9 @@ const projectDamageFields = (
     damageType: damage.damageType,
     amount:
       expression === undefined
-        ? { kind: "fixed", static: staticDamage }
+        ? { kind: "static", static: staticDamage }
         : {
-            kind: "fixed",
+            kind: "dice_expression",
             static: staticDamage,
             expr: {
               dice: expression.dice,
@@ -3531,7 +3345,13 @@ const projectAuthoredStatBlockUnsafe = (
               swarm: record.statBlock.swarm,
             },
       creatureType: record.statBlock.creatureType,
-      creatureTypeTags: sortedStrings(record.statBlock.creatureTypeTags ?? []),
+      creatureTypeTags:
+        record.statBlock.creatureTypeTags === undefined
+          ? []
+          : sortedNonEmptyStrings(
+              record.statBlock.creatureTypeTags,
+              `${record.name} creature type tag`,
+            ),
       alignment: record.statBlock.alignment,
       ac: {
         ...record.statBlock.ac.value,
@@ -3541,19 +3361,16 @@ const projectAuthoredStatBlockUnsafe = (
       speeds: record.statBlock.speeds,
       abilityScores: record.statBlock.abilityScores,
       initiative: record.statBlock.initiative,
-      savingThrowModifiers: sortedModifiers(
-        (record.statBlock.savingThrowModifiers ?? []).map(
-          ({ ability, modifier }) => ({ name: ability, modifier }),
-        ),
+      savingThrowModifiers: sortedAbsentOrNonEmpty(
+        record.statBlock.savingThrowModifiers ?? [],
+        ({ ability }) => ability,
       ),
       saveProficiencies: sortedStrings(
         record.statBlock.saveProficiencies ?? [],
       ),
-      skillModifiers: sortedModifiers(
-        (record.statBlock.skillModifiers ?? []).map(({ skill, modifier }) => ({
-          name: skill,
-          modifier,
-        })),
+      skillModifiers: sortedByDomainName(
+        record.statBlock.skillModifiers ?? [],
+        ({ skill }) => skill,
       ),
       vulnerabilities: projectVulnerabilities(record),
       resistances:
@@ -3655,7 +3472,7 @@ function projectionResult(
             message: String(decoded.left),
           },
         }
-      : { tag: "projected", projection };
+      : { tag: "projected", projection: decoded.right };
   } catch (error) {
     return error instanceof Error
       ? {

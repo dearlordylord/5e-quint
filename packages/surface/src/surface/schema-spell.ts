@@ -6396,7 +6396,7 @@ const hasDistinctSavingThrowAbilities = (
 ): boolean =>
   new Set(modifiers.map(({ ability }) => ability)).size === modifiers.length;
 
-const CreatureSavingThrowModifiersSchema = nonEmpty(
+export const CreatureSavingThrowModifiersSchema = nonEmpty(
   CreatureSavingThrowModifierSchema,
 ).pipe(
   Schema.maxItems(MAX_SAVING_THROW_MODIFIERS),
@@ -6536,11 +6536,14 @@ const StandaloneUnrestrictedCreatureSpeedSchema = Schema.Union(
   strictStruct({
     kind: StandaloneNonFlyCreatureSpeedKindSchema,
     ...StandaloneCreatureSpeedFields,
+    hover: optionalExact(ForbiddenValueSchema),
+    availability: optionalExact(ForbiddenValueSchema),
   }),
   strictStruct({
     kind: StandaloneFlyCreatureSpeedKindSchema,
     ...StandaloneCreatureSpeedFields,
     hover: optionalExact(Schema.Literal(true)),
+    availability: optionalExact(ForbiddenValueSchema),
   }),
 );
 
@@ -6548,6 +6551,7 @@ const StandaloneFormRestrictedCreatureSpeedSchema = Schema.Union(
   strictStruct({
     kind: StandaloneNonFlyCreatureSpeedKindSchema,
     ...StandaloneCreatureSpeedFields,
+    hover: optionalExact(ForbiddenValueSchema),
     availability: StatBlockFormRestrictedSpeedAvailabilitySchema,
   }),
   strictStruct({
@@ -6775,16 +6779,18 @@ const encodesSwarmStatus = (tag: string): boolean => {
  * facts that a spawned/runtime projection intentionally does not carry.
  * Hit Dice notation is deliberately not represented here yet.
  */
+export const StandaloneStatBlockCreatureTypeTagsSchema = nonEmpty(
+  surfaceIdentity(Schema.NonEmptyTrimmedString, "label"),
+).pipe(
+  Schema.filter((tags) => tags.every((tag) => !encodesSwarmStatus(tag)), {
+    message: () =>
+      "A Stat Block swarm must use the swarm constituent-size field rather than a creature type tag.",
+  }),
+);
+
 const StandaloneStatBlockSharedSchema = Schema.Struct({
   creatureType: CreatureTypeSchema,
-  creatureTypeTags: optionalExact(
-    nonEmpty(surfaceIdentity(Schema.NonEmptyTrimmedString, "label")).pipe(
-      Schema.filter((tags) => tags.every((tag) => !encodesSwarmStatus(tag)), {
-        message: () =>
-          "A Stat Block swarm must use the swarm constituent-size field rather than a creature type tag.",
-      }),
-    ),
-  ),
+  creatureTypeTags: optionalExact(StandaloneStatBlockCreatureTypeTagsSchema),
   alignment: StatBlockAlignmentSchema,
   ac: StatBlockArmorClassSchema,
   hp: StandaloneStatBlockValueSchema,

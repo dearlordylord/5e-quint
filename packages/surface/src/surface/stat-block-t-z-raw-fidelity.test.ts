@@ -57,7 +57,7 @@ describe("T–Z repeated source occurrence reconciliation", () => {
     }
     const dexSave = (projection: (typeof repeatedPToS.projection)[number]) =>
       projection.generalFacts.savingThrowModifiers.find(
-        ({ name }) => name === "dex",
+        ({ ability }) => ability === "dex",
       )?.modifier;
     expect(dexSave(requireNamed(pToS, "Stone Giant"))).toBe(5);
     expect(dexSave(requireNamed(tToZ, "Stone Giant"))).toBe(5);
