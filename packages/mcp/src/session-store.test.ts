@@ -23,6 +23,7 @@ import {
 import { Hp } from "@dnd/shared/types";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import {
+  assertSrd521StatBlock,
   buildStatBlockCatalog,
   srdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
@@ -61,15 +62,18 @@ const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
 describe("MCP character sessions", () => {
   test("drops a selected Stat Block projection after catalog drift", () => {
     const root = createMcpPlaySessionRoot();
-    const selected = assertStatBlockForTest(
-      root.statBlockCatalog,
-      statBlockId("stat_block_goblin_warrior"),
+    const selected = assertSrd521StatBlock(
+      assertStatBlockForTest(
+        root.statBlockCatalog,
+        statBlockId("stat_block_goblin_warrior"),
+      ),
     );
     let retained = true;
     const store = createMcpSessionStore({
       statBlockCatalog: {
         ...root.statBlockCatalog,
-        getStatBlock: () => (retained ? Option.some(selected) : Option.none()),
+        getStatBlock: () =>
+          retained ? Option.some(selected) : Option.none<typeof selected>(),
       },
       unitLibrary: root.unitLibrary,
     });

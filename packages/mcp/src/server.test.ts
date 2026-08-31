@@ -4802,9 +4802,11 @@ describe("MCP server route", () => {
       }),
     );
 
-    const skeleton = assertStatBlockForTest(
-      root.statBlockCatalog,
-      statBlockId("stat_block_skeleton"),
+    const skeleton = assertSrd521StatBlock(
+      assertStatBlockForTest(
+        root.statBlockCatalog,
+        statBlockId("stat_block_skeleton"),
+      ),
     );
     const malformedStatBlock = {
       ...skeleton,
@@ -5447,9 +5449,11 @@ describe("MCP server route", () => {
       },
     });
 
-    const base = assertStatBlockForTest(
-      invalidHpRoot.statBlockCatalog,
-      statBlockId("stat_block_goblin_warrior"),
+    const base = assertSrd521StatBlock(
+      assertStatBlockForTest(
+        invalidHpRoot.statBlockCatalog,
+        statBlockId("stat_block_goblin_warrior"),
+      ),
     );
     const invalidMechanicsRecord = {
       ...base,
