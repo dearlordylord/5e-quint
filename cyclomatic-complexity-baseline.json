@@ -142,7 +142,7 @@
       "module/binding:combatantHandUses": 18
     },
     "packages/battle-runtime/src/battle-reducer/creature-state.ts": {
-      "module/binding:battleCreatureStateAdmissionFromInit": 31
+      "module/binding:battleCreatureStateAdmissionFromInit": 30
     },
     "packages/battle-runtime/src/battle-reducer/cunning-strike.ts": {
       "module/binding:eligibleCunningStrikeContexts/call:execution.procedureBindings.flatMap:argument-0": 10,
@@ -274,7 +274,7 @@
       "module/binding:grappleLinkForTarget": 9
     },
     "packages/battle-runtime/src/battle-reducer/open-hand-technique.ts": {
-      "module/binding:openHandTechniqueFlurryHit": 19,
+      "module/binding:openHandTechniqueFlurryHit": 14,
       "module/binding:resolveOpenHandTechniqueSaveChoice": 12
     },
     "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts": {
@@ -758,7 +758,6 @@
     },
     "packages/battle-runtime/src/character-battle-resources.ts": {
       "module/binding:characterBattleMetamagicInitIssue": 10,
-      "module/binding:characterBattleResourceForUnitOrNull": 22,
       "module/binding:pactOfTheChainSpawnedCompanionSpellProfileForSpell": 11
     },
     "packages/battle-runtime/src/character-class-level.ts": {
@@ -809,27 +808,19 @@
       "module/binding:statBlockAttackMechanicsSupport": 12
     },
     "packages/battle-runtime/src/unit-feature-support.ts": {
-      "module/binding:acrobaticMovementProfileForUnit": 11,
       "module/binding:attackActionAreaSaveDamageReplacementProfileForUnit": 23,
       "module/binding:attackActionAttackCountScalingProfileForUnit": 10,
       "module/binding:attackDamageDieFloorProfileForUnit": 10,
       "module/binding:attackDamageRiderMechanicsProjection": 19,
       "module/binding:bardicInspirationReactionReduction": 10,
       "module/binding:battleDruidWildCompanionSpellCastSupportForUnit": 10,
-      "module/binding:battleMonkFocusBattleOptionsSupportForUnit": 30,
       "module/binding:battleRetaliationReactionAttackSupportForUnit": 25,
       "module/binding:battleTacticalMasterReplacementSupportForUnit": 9,
       "module/binding:battleUnitRefWithSupportProfiles": 10,
-      "module/binding:battleUnitSupportProfilesForInputWithHuntersPreyAdmission": 110,
-      "module/binding:battleWeaponMasteryCleaveSupportForUnit": 13,
-      "module/binding:battleWeaponMasteryPushSupportForUnit": 11,
-      "module/binding:battleWeaponMasterySapSupportForUnit": 13,
-      "module/binding:battleWeaponMasterySlowSupportForUnit": 11,
-      "module/binding:battleWeaponMasteryToppleSupportForUnit": 14,
+      "module/binding:battleUnitSupportProfilesForInputWithHuntersPreyAdmission": 86,
       "module/binding:bonusActionDashTemporaryHitPointsProfileForUnit": 19,
       "module/binding:breathWeaponDamageAmount": 15,
       "module/binding:enemyZeroHitPointTemporaryHitPointsProfileForUnit": 9,
-      "module/binding:failedSavingThrowRerollProfileForUnit": 21,
       "module/binding:hasBonusActionDashTemporaryHitPointsMechanics": 10,
       "module/binding:huntersPreyAdmittedMechanicsProfileForUnit": 10,
       "module/binding:huntersPreyAdmittedMechanicsProfileForUnit/call:mechanics.options.find:argument-0": 9,
@@ -841,7 +832,6 @@
       "module/binding:magicActionHealingPoolProfileForUnit": 16,
       "module/binding:magicActionSaveGatedConditionProfileForUnit": 24,
       "module/binding:martialArtsAttackProjectionMechanicsForUnit": 25,
-      "module/binding:monkFocusBattleExecution": 16,
       "module/binding:openHandTechniqueProfileForUnit": 15,
       "module/binding:parseAuthoredAttackDamageReductionZeroDamageRedirect": 28,
       "module/binding:parseBardicInspirationGrantUnitFeatureProfile": 35,
@@ -886,7 +876,6 @@
       "module/binding:settleCompanionFromBattle": 10
     },
     "packages/character-battle-runtime/src/index.ts": {
-      "module/binding:characterResourceExpendituresFromBattle": 35,
       "module/binding:characterSheetPactSlotExpenditureFromBattle": 9,
       "module/binding:characterSheetSpellSlotSourceStateFromBattle": 19,
       "module/binding:settleBattleCombatantIntoCharacterSheet": 20,
