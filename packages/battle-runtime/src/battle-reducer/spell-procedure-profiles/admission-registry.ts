@@ -1,5 +1,8 @@
-import type { SupportedSpellInvocation } from "../../battle-state-execution.ts";
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleSpellAdmissionSource,
+  type SupportedSpellInvocation,
+} from "../../battle-state-execution.ts";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 import {
   type AnySpellProcedureAdmission,
@@ -23,7 +26,10 @@ export function admitRegisteredSpellProcedures(
   ctx: SpellAdmissionContext,
 ): readonly SupportedSpellInvocation[] {
   return registeredSpellProcedureAdmissions().flatMap(({ admit }) =>
-    admit(spell, ctx).map((invocation) => ({ ...invocation, spell })),
+    admit(spell, ctx).map((invocation) => ({
+      ...invocation,
+      spell: battleSpellExecutionSourceFromAdmission(spell),
+    })),
   );
 }
 
