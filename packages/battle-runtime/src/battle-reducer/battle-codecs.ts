@@ -27,7 +27,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { ArmorClassSchema as BattleArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
-import { AdditionalActionResourceRestrictionSchema } from "@dnd/shared-algebras/action-economy-algebra";
+import { AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema } from "@dnd/shared-algebras/action-economy-algebra";
 import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion-protocol-algebra";
 import {
   AmmunitionKindSchema,
@@ -5912,7 +5912,7 @@ export const RuntimeActionResourceSchema = Schema.Union([
     sourceOwnerId: Schema.optionalKey(Schema.Never),
     sourceEffectRef: BattleEffectExecutionRef,
     sourceProcedureRef: Schema.optionalKey(Schema.Never),
-    restriction: AdditionalActionResourceRestrictionSchema,
+    restriction: AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("action"),

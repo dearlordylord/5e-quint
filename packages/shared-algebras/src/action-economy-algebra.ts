@@ -23,26 +23,28 @@ const STANDARD_ACTION_KIND_SET: ReadonlySet<string> = new Set(
   STANDARD_ACTION_KINDS,
 );
 
-export const AdditionalActionResourceRestrictionSchema = Schema.Struct({
-  kind: Schema.Literal("allow_only"),
-  actions: Schema.Tuple([
-    Schema.Struct({
-      action: Schema.Literal("attack"),
-      attackLimit: Schema.Struct({
-        kind: Schema.Literal("attack_count"),
-        count: Schema.Literal(1),
+export const AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema =
+  Schema.Struct({
+    kind: Schema.Literal("allow_only"),
+    actions: Schema.Tuple([
+      Schema.Struct({
+        action: Schema.Literal("attack"),
+        attackLimit: Schema.Struct({
+          kind: Schema.Literal("attack_count"),
+          count: Schema.Literal(1),
+        }),
       }),
-    }),
-    Schema.Struct({ action: Schema.Literal("dash") }),
-    Schema.Struct({ action: Schema.Literal("disengage") }),
-    Schema.Struct({ action: Schema.Literal("hide") }),
-    Schema.Struct({ action: Schema.Literal("utilize") }),
-  ]),
-});
-export type AdditionalActionResourceRestriction = Schema.Schema.Type<
-  typeof AdditionalActionResourceRestrictionSchema
->;
-export const ADDITIONAL_ACTION_RESOURCE_RESTRICTION = {
+      Schema.Struct({ action: Schema.Literal("dash") }),
+      Schema.Struct({ action: Schema.Literal("disengage") }),
+      Schema.Struct({ action: Schema.Literal("hide") }),
+      Schema.Struct({ action: Schema.Literal("utilize") }),
+    ]),
+  });
+export type AttackOnceOrDashDisengageHideUtilizeActionRestriction =
+  Schema.Schema.Type<
+    typeof AttackOnceOrDashDisengageHideUtilizeActionRestrictionSchema
+  >;
+export const ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION = {
   kind: "allow_only",
   actions: [
     {
@@ -54,14 +56,14 @@ export const ADDITIONAL_ACTION_RESOURCE_RESTRICTION = {
     { action: "hide" },
     { action: "utilize" },
   ],
-} as const satisfies AdditionalActionResourceRestriction;
+} as const satisfies AttackOnceOrDashDisengageHideUtilizeActionRestriction;
 
-export function isAdditionalActionResourceRestriction(
+export function isAttackOnceOrDashDisengageHideUtilizeActionRestriction(
   restriction: ActionRestriction | undefined,
 ): boolean {
   if (restriction?.kind !== "allow_only") return false;
   const expectedActionKinds =
-    ADDITIONAL_ACTION_RESOURCE_RESTRICTION.actions.map(
+    ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION.actions.map(
       (allowed) => allowed.action,
     );
   const actualActionKinds = new Set(
@@ -92,7 +94,7 @@ export type RuntimeActionResource =
       readonly kind: "action";
       readonly source: "spellEffect";
       readonly sourceEffectRef: BattleEffectExecutionRef;
-      readonly restriction: AdditionalActionResourceRestriction;
+      readonly restriction: AttackOnceOrDashDisengageHideUtilizeActionRestriction;
     }
   | {
       readonly kind: "action";
@@ -782,7 +784,7 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
 export function grantSpellEffectActionResource<T extends ActionEconomyState>(
   state: T,
   sourceEffectRef: BattleEffectExecutionRef,
-  restriction: AdditionalActionResourceRestriction,
+  restriction: AttackOnceOrDashDisengageHideUtilizeActionRestriction,
 ): Result.Result<T, ActionEconomySpendError> {
   if (hasSpellEffectActionResource(state, sourceEffectRef)) {
     return Result.fail("spell-effect action resource already granted");

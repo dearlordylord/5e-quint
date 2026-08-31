@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
-import { ADDITIONAL_ACTION_RESOURCE_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
+import { ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
 import { D6_ROLL_RESULTS, NonNegativeInteger } from "@dnd/shared/types";
 import {
   statBlockId as parseSharedStatBlockId,
@@ -3178,7 +3178,8 @@ describe("battle codec act ownership boundaries", () => {
             sourceEffectRef: battleEffectExecutionRefForTest(
               "forged-multiattack-continuation",
             ),
-            restriction: ADDITIONAL_ACTION_RESOURCE_RESTRICTION,
+            restriction:
+              ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION,
           },
         ],
       },

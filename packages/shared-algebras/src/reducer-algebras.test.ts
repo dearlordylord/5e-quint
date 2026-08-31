@@ -25,8 +25,8 @@ import {
   enableMovementActionBonusActionExclusion,
   grantSpellEffectActionResource,
   grantUnitActionResource,
-  ADDITIONAL_ACTION_RESOURCE_RESTRICTION,
-  isAdditionalActionResourceRestriction,
+  ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION,
+  isAttackOnceOrDashDisengageHideUtilizeActionRestriction,
   isSupportedSurfaceCastingTimeKind,
   markMovementSpentForMovementActionBonusActionExclusion,
   resetTurnActionEconomy,
@@ -112,7 +112,7 @@ const spellEffectActionResource = {
   kind: "action",
   source: "spellEffect",
   sourceEffectRef: spellEffectRef,
-  restriction: ADDITIONAL_ACTION_RESOURCE_RESTRICTION,
+  restriction: ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION,
 } as const satisfies RuntimeActionResource;
 const statBlockMultiattackActionResource = {
   kind: "action",
@@ -235,7 +235,7 @@ describe("action-economy-algebra", () => {
 
   it("recognizes the canonical additional-action resource restriction", () => {
     const [attack, dash, disengage, hide] =
-      ADDITIONAL_ACTION_RESOURCE_RESTRICTION.actions;
+      ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION.actions;
     const missingUtilize: ActionRestriction = {
       kind: "allow_only",
       actions: [attack, dash, disengage, hide],
@@ -244,15 +244,23 @@ describe("action-economy-algebra", () => {
       kind: "allow_only",
       actions: [attack, dash, disengage, hide, hide],
     };
-    expect(isAdditionalActionResourceRestriction(undefined)).toBe(false);
-    expect(isAdditionalActionResourceRestriction({ kind: "none" })).toBe(false);
     expect(
-      isAdditionalActionResourceRestriction(
-        ADDITIONAL_ACTION_RESOURCE_RESTRICTION,
+      isAttackOnceOrDashDisengageHideUtilizeActionRestriction(undefined),
+    ).toBe(false);
+    expect(
+      isAttackOnceOrDashDisengageHideUtilizeActionRestriction({ kind: "none" }),
+    ).toBe(false);
+    expect(
+      isAttackOnceOrDashDisengageHideUtilizeActionRestriction(
+        ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION,
       ),
     ).toBe(true);
-    expect(isAdditionalActionResourceRestriction(missingUtilize)).toBe(false);
-    expect(isAdditionalActionResourceRestriction(duplicateHide)).toBe(false);
+    expect(
+      isAttackOnceOrDashDisengageHideUtilizeActionRestriction(missingUtilize),
+    ).toBe(false);
+    expect(
+      isAttackOnceOrDashDisengageHideUtilizeActionRestriction(duplicateHide),
+    ).toBe(false);
   });
 
   it("applies each restricted action-resource dispatch contract", () => {
@@ -562,7 +570,7 @@ describe("action-economy-algebra", () => {
     const granted = grantSpellEffectActionResource(
       resetTurnActionEconomy(emptyActionEconomyState()),
       spellEffectRef,
-      ADDITIONAL_ACTION_RESOURCE_RESTRICTION,
+      ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION,
     );
     expect(Result.isSuccess(granted)).toBe(true);
     if (Result.isFailure(granted)) return;
@@ -585,7 +593,7 @@ describe("action-economy-algebra", () => {
     const granted = grantSpellEffectActionResource(
       resetTurnActionEconomy(emptyActionEconomyState()),
       spellEffectRef,
-      ADDITIONAL_ACTION_RESOURCE_RESTRICTION,
+      ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION,
     );
     expect(Result.isSuccess(granted)).toBe(true);
     if (Result.isFailure(granted)) return;
@@ -594,7 +602,7 @@ describe("action-economy-algebra", () => {
       grantSpellEffectActionResource(
         granted.success,
         spellEffectRef,
-        ADDITIONAL_ACTION_RESOURCE_RESTRICTION,
+        ATTACK_ONCE_OR_DASH_DISENGAGE_HIDE_UTILIZE_ACTION_RESTRICTION,
       ),
     ).toEqual(Result.fail("spell-effect action resource already granted"));
   });
