@@ -1,4 +1,4 @@
-import { Result, Match, Schema, SchemaIssue } from "effect";
+import { Result, Match, Predicate, Schema, SchemaIssue } from "effect";
 import * as AST from "effect/SchemaAST";
 
 import { compareCodePoints } from "./oracle-canonical.ts";
@@ -236,9 +236,7 @@ function unknownVariantDiscriminant(
 function variantInputRecord(
   input: unknown,
 ): Record<PropertyKey, unknown> | undefined {
-  return typeof input === "object" && input !== null && !Array.isArray(input)
-    ? (input as Record<PropertyKey, unknown>)
-    : undefined;
+  return Predicate.isObject(input) ? input : undefined;
 }
 
 function unionLiteralDiscriminantCandidates(
@@ -390,7 +388,10 @@ function refinementNumberCode(actual: unknown): RefinementCode | undefined {
 }
 
 function filterHasUniqueItems(filter: AST.Filter<unknown>): boolean {
-  const annotation = filter.annotations?.toJsonSchema?.({} as never);
+  const annotation = filter.annotations?.toJsonSchema?.({
+    type: undefined,
+    schemas: [],
+  });
   return (
     typeof annotation === "object" &&
     annotation !== null &&

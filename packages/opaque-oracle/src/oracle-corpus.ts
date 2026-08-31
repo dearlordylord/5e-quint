@@ -53,7 +53,18 @@ export const OracleCorpusSchema = OracleCorpusWithPositionalLengthSchema.pipe(
 });
 export type OracleCorpus = Schema.Schema.Type<typeof OracleCorpusSchema>;
 
-export const OracleCorpusDocumentSchema = documentSchema(OracleCorpusSchema);
+function requireAuthoredOracleCorpusDocumentSchema() {
+  return Result.getOrThrowWith(
+    documentSchema(OracleCorpusSchema),
+    ([issue]) =>
+      new Error(
+        `Invalid authored Oracle Corpus Document schema (${issue.tag} at ${issue.path}).`,
+      ),
+  );
+}
+
+export const OracleCorpusDocumentSchema =
+  requireAuthoredOracleCorpusDocumentSchema();
 export const OracleCorpusDocumentJsonSchema = documentJsonSchema(
   OracleCorpusDocumentSchema,
 );
