@@ -2,7 +2,7 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import type { BattleSpellAdmissionSource } from "../battle-state-execution.ts";
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 
-export function ongoingConcentrationAreaSpellFacts(
+export function ongoingAreaSpellFacts(
   source: SpellMechanics | Pick<BattleSpellAdmissionSource, "mechanics">,
 ) {
   const mechanics = "mechanics" in source ? source.mechanics : source;
@@ -11,17 +11,29 @@ export function ongoingConcentrationAreaSpellFacts(
   }
   const duration = mechanics.duration;
   const attachment = mechanics.attachment;
-  if (
-    duration.kind !== "concentration" ||
-    attachment.kind !== "hole" ||
-    attachment.value.kind !== "area"
-  ) {
+  if (attachment.kind !== "hole" || attachment.value.kind !== "area") {
     return null;
   }
+  const durationTicks =
+    duration.kind === "concentration"
+      ? elapsedTimeTicksFromTimeSpanDuration(duration.upTo)
+      : duration.kind === "timed"
+        ? elapsedTimeTicksFromTimeSpanDuration(duration.value)
+        : undefined;
   return {
     mechanics,
     duration,
-    durationTicks: elapsedTimeTicksFromTimeSpanDuration(duration.upTo),
+    durationTicks,
     area: attachment.value,
   };
+}
+
+export function ongoingConcentrationAreaSpellFacts(
+  source: SpellMechanics | Pick<BattleSpellAdmissionSource, "mechanics">,
+) {
+  const facts = ongoingAreaSpellFacts(source);
+  return facts?.duration.kind === "concentration" &&
+    facts.durationTicks !== undefined
+    ? facts
+    : null;
 }

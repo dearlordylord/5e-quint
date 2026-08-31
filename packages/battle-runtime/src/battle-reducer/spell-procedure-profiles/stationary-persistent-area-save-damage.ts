@@ -2,7 +2,7 @@ import type {
   BattleSpellAdmissionSource,
   BattleSpellExecutionSource,
 } from "../../battle-state-execution.ts";
-import { ongoingConcentrationAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
+import { ongoingAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -35,7 +35,7 @@ import {
   spellOngoingOperationPath,
   type SpellMechanicsBranchPath,
 } from "@dnd/surface/surface/spell-mechanics-path";
-import type { SpellMechanics } from "@dnd/surface/surface/types";
+import type { SpellMechanics, UsageLimit } from "@dnd/surface/surface/types";
 import { Match, Result, Schema } from "effect";
 
 import {
@@ -145,16 +145,15 @@ const STATIONARY_PERSISTENT_AREA_CONSUMED_PATHS = [
   spellDurationValuePath(),
   spellOngoingAttachmentPath(),
   spellOngoingInitialPhasePath(),
+  spellOngoingOperationPath(PositiveInteger(1)),
+  spellOngoingOperationPath(PositiveInteger(2)),
+  spellOngoingOperationPath(PositiveInteger(3)),
   spellOngoingOperationEffectPath(PositiveInteger(1)),
   spellOngoingOperationEffectPath(PositiveInteger(2)),
   spellOngoingOperationEffectPath(PositiveInteger(3)),
 ] as const;
 
-const STATIONARY_PERSISTENT_AREA_UNOWNED_PATHS = [
-  spellOngoingOperationPath(PositiveInteger(1)),
-  spellOngoingOperationPath(PositiveInteger(2)),
-  spellOngoingOperationPath(PositiveInteger(3)),
-] as const;
+const STATIONARY_PERSISTENT_AREA_UNOWNED_PATHS = [] as const;
 
 const STATIONARY_PERSISTENT_AREA_LEVEL = 5;
 const STATIONARY_PERSISTENT_AREA_RANGE_FEET = 300;
@@ -216,17 +215,9 @@ function stationaryPersistentAreaMechanicsAdmission(
     return { tag: "notRepresented" };
   }
 
-  const ongoing = ongoingConcentrationAreaSpellFacts(source.mechanics);
+  const ongoing = ongoingAreaSpellFacts(source.mechanics);
   if (ongoing === null) {
-    return {
-      tag: "unsupported",
-      issues: [
-        stationaryPersistentAreaAdmissionIssue({
-          failedFact: "duration",
-          mechanicsPath: spellDurationValuePath(),
-        }),
-      ],
-    };
+    return { tag: "notRepresented" };
   }
 
   const failures = stationaryPersistentAreaFailures(ongoing);
@@ -264,7 +255,7 @@ function stationaryPersistentAreaMechanicsAdmission(
       ],
     };
   }
-  if (Result.isFailure(durationTicks)) {
+  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
     return {
       tag: "unsupported",
       issues: [
@@ -355,19 +346,14 @@ function isStationaryPersistentAreaRepresentation(
 }
 
 function stationaryPersistentAreaFailures(
-  ongoing: NonNullable<ReturnType<typeof ongoingConcentrationAreaSpellFacts>>,
+  ongoing: NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>,
 ): readonly StationaryPersistentAreaFailure[] {
   const { mechanics, duration, durationTicks, area } = ongoing;
-  const { passiveOperation, enterOperation, endTurnOperation } =
+  const { operations, passiveOperation, enterOperation, endTurnOperation } =
     stationaryPersistentAreaOperations(mechanics);
   const initialDamageAmount = stationaryPersistentAreaSaveGateDamageAmount(
     mechanics.initialPhase,
   );
-  const saveLimitGroup = sharedOncePerTurnLimitGroup([
-    stationaryPersistentAreaInitialUsageLimit(mechanics.initialPhase),
-    enterOperation?.usageLimit,
-    endTurnOperation?.usageLimit,
-  ]);
   const failures: StationaryPersistentAreaFailure[] = [];
   if (mechanics.level !== STATIONARY_PERSISTENT_AREA_LEVEL) {
     failures.push({
@@ -396,7 +382,7 @@ function stationaryPersistentAreaFailures(
       mechanicsPath: spellDurationValuePath(),
     });
   }
-  if (Result.isFailure(durationTicks)) {
+  if (durationTicks === undefined || Result.isFailure(durationTicks)) {
     failures.push({
       failedFact: "durationTicks",
       mechanicsPath: spellDurationValuePath(),
@@ -417,46 +403,63 @@ function stationaryPersistentAreaFailures(
       mechanicsPath: spellOngoingInitialPhasePath(),
     });
   }
-  if (!isStationaryPersistentAreaPassiveOperation(passiveOperation?.effect)) {
+  if (
+    !isStationaryPersistentAreaPassiveOperation(
+      passiveOperation?.operation.effect,
+    )
+  ) {
     failures.push({
       failedFact: "passiveOperation",
-      mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(1)),
-    });
-  }
-  if (
-    stationaryPersistentAreaSaveGateDamageAmount(enterOperation?.effect) ===
-    null
-  ) {
-    failures.push({
-      failedFact: "enterOperation",
-      mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(2)),
-    });
-  }
-  if (
-    stationaryPersistentAreaSaveGateDamageAmount(endTurnOperation?.effect) ===
-    null
-  ) {
-    failures.push({
-      failedFact: "endTurnOperation",
-      mechanicsPath: spellOngoingOperationEffectPath(PositiveInteger(3)),
-    });
-  }
-  if (
-    mechanics.operations.length !== STATIONARY_PERSISTENT_AREA_OPERATION_COUNT
-  ) {
-    failures.push({
-      failedFact: "operationCount",
-      mechanicsPath: spellOngoingOperationPath(
-        PositiveInteger(STATIONARY_PERSISTENT_AREA_OPERATION_COUNT),
+      mechanicsPath: stationaryPersistentAreaOperationEffectPath(
+        passiveOperation,
+        PositiveInteger(1),
       ),
     });
   }
-  if (saveLimitGroup === null || saveLimitGroup.length === 0) {
+  if (
+    stationaryPersistentAreaSaveGateDamageAmount(
+      enterOperation?.operation.effect,
+    ) === null
+  ) {
     failures.push({
-      failedFact: "oncePerTurnLimitGroup",
-      mechanicsPath: spellOngoingInitialPhasePath(),
+      failedFact: "enterOperation",
+      mechanicsPath: stationaryPersistentAreaOperationEffectPath(
+        enterOperation,
+        PositiveInteger(2),
+      ),
     });
   }
+  if (
+    stationaryPersistentAreaSaveGateDamageAmount(
+      endTurnOperation?.operation.effect,
+    ) === null
+  ) {
+    failures.push({
+      failedFact: "endTurnOperation",
+      mechanicsPath: stationaryPersistentAreaOperationEffectPath(
+        endTurnOperation,
+        PositiveInteger(3),
+      ),
+    });
+  }
+  if (operations.length !== STATIONARY_PERSISTENT_AREA_OPERATION_COUNT) {
+    const extraOperation =
+      operations[STATIONARY_PERSISTENT_AREA_OPERATION_COUNT];
+    failures.push({
+      failedFact: "operationCount",
+      mechanicsPath: spellOngoingOperationPath(
+        extraOperation?.ordinal ??
+          PositiveInteger(STATIONARY_PERSISTENT_AREA_OPERATION_COUNT),
+      ),
+    });
+  }
+  failures.push(
+    ...stationaryPersistentAreaUsageLimitFailures({
+      initialPhase: mechanics.initialPhase,
+      enterOperation,
+      endTurnOperation,
+    }),
+  );
   return failures;
 }
 
@@ -480,18 +483,103 @@ function stationaryPersistentAreaInitialUsageLimit(
     : undefined;
 }
 
+type StationaryPersistentAreaOperationOccurrence = {
+  readonly operation: StationaryPersistentAreaMechanics["operations"][number];
+  readonly ordinal: PositiveInteger;
+};
+
+function stationaryPersistentAreaOperationPath(
+  operation: StationaryPersistentAreaOperationOccurrence | undefined,
+  fallbackOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return spellOngoingOperationPath(operation?.ordinal ?? fallbackOrdinal);
+}
+
+function stationaryPersistentAreaOperationEffectPath(
+  operation: StationaryPersistentAreaOperationOccurrence | undefined,
+  fallbackOrdinal: PositiveInteger,
+): SpellMechanicsBranchPath {
+  return spellOngoingOperationEffectPath(operation?.ordinal ?? fallbackOrdinal);
+}
+
+function stationaryPersistentAreaUsageLimitFailures(input: {
+  readonly initialPhase: StationaryPersistentAreaMechanics["initialPhase"];
+  readonly enterOperation:
+    | StationaryPersistentAreaOperationOccurrence
+    | undefined;
+  readonly endTurnOperation:
+    | StationaryPersistentAreaOperationOccurrence
+    | undefined;
+}): readonly StationaryPersistentAreaFailure[] {
+  const entries = [
+    {
+      limit: stationaryPersistentAreaInitialUsageLimit(input.initialPhase),
+      mechanicsPath: spellOngoingInitialPhasePath(),
+    },
+    {
+      limit: input.enterOperation?.operation.usageLimit,
+      mechanicsPath: stationaryPersistentAreaOperationPath(
+        input.enterOperation,
+        PositiveInteger(2),
+      ),
+    },
+    {
+      limit: input.endTurnOperation?.operation.usageLimit,
+      mechanicsPath: stationaryPersistentAreaOperationPath(
+        input.endTurnOperation,
+        PositiveInteger(3),
+      ),
+    },
+  ] satisfies readonly {
+    readonly limit: UsageLimit | undefined;
+    readonly mechanicsPath: SpellMechanicsBranchPath;
+  }[];
+  const sharedLimitGroup = sharedOncePerTurnLimitGroup(
+    entries.map(({ limit }) => limit),
+  );
+  if (sharedLimitGroup !== null && sharedLimitGroup.length > 0) {
+    return [];
+  }
+  const expectedLimitGroup = entries
+    .map(({ limit }) => limit)
+    .find(
+      (limit) =>
+        limit?.kind === "once_per_turn" &&
+        limit.limitGroup !== undefined &&
+        limit.limitGroup.length > 0,
+    )?.limitGroup;
+  return entries.flatMap(({ limit, mechanicsPath }) =>
+    expectedLimitGroup !== undefined &&
+    limit?.kind === "once_per_turn" &&
+    limit.limitGroup === expectedLimitGroup
+      ? []
+      : [
+          {
+            failedFact: "oncePerTurnLimitGroup" as const,
+            mechanicsPath,
+          },
+        ],
+  );
+}
+
 function stationaryPersistentAreaOperations(
   mechanics: StationaryPersistentAreaMechanics,
 ) {
+  const operations = mechanics.operations.map((operation, index) => ({
+    operation,
+    ordinal: PositiveInteger(index + 1),
+  }));
   return {
-    passiveOperation: mechanics.operations.find(
-      (operation) => operation.trigger.kind === "passive",
+    operations,
+    passiveOperation: operations.find(
+      ({ operation }) => operation.trigger.kind === "passive",
     ),
-    enterOperation: mechanics.operations.find(
-      (operation) => operation.trigger.kind === "on_creature_enters_area",
+    enterOperation: operations.find(
+      ({ operation }) => operation.trigger.kind === "on_creature_enters_area",
     ),
-    endTurnOperation: mechanics.operations.find(
-      (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
+    endTurnOperation: operations.find(
+      ({ operation }) =>
+        operation.trigger.kind === "on_creature_ends_turn_in_area",
     ),
   };
 }
@@ -510,10 +598,11 @@ function isStationaryPersistentAreaSpellHeader(
 }
 
 function isStationaryPersistentAreaDuration(
-  duration: NonNullable<
-    ReturnType<typeof ongoingConcentrationAreaSpellFacts>
-  >["duration"],
+  duration: NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>["duration"],
 ): boolean {
+  if (duration.kind !== "concentration") {
+    return false;
+  }
   return (
     duration.upTo.unit === "minute" &&
     duration.upTo.amount === STATIONARY_PERSISTENT_AREA_DURATION_MINUTES
@@ -521,12 +610,8 @@ function isStationaryPersistentAreaDuration(
 }
 
 function isStationaryPersistentAreaGeometry(
-  area: NonNullable<
-    ReturnType<typeof ongoingConcentrationAreaSpellFacts>
-  >["area"],
-): area is NonNullable<
-  ReturnType<typeof ongoingConcentrationAreaSpellFacts>
->["area"] & {
+  area: NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>["area"],
+): area is NonNullable<ReturnType<typeof ongoingAreaSpellFacts>>["area"] & {
   readonly origin: { readonly kind: "point_within_range" };
   readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
 } {
