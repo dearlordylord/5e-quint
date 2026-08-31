@@ -9228,7 +9228,8 @@ function serializedMonkFocusStrikeOwnsBoundProcedures(
     owner.origin.attackExecution.unarmedStrikeProcedureRef ===
       subject.procedureRef &&
     focusBinding !== undefined &&
-    focusBinding.procedure.kind === "unitSupportProfile" &&
+    (focusBinding.procedure.kind === "unitFeature" ||
+      focusBinding.procedure.kind === "unitSupportProfile") &&
     (typeof focusBinding.procedure.execution === "string"
       ? focusBinding.procedure.execution
       : focusBinding.procedure.execution.kind) ===

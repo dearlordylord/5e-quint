@@ -5,7 +5,10 @@ import {
   unitLibrary,
   unitMechanicsVariant,
 } from "../unit-profile-admission-catalog.test-support.ts";
-import { admitResourceFeature } from "./resource-feature-admission.ts";
+import {
+  admitResourceFeature,
+  resourceFeatureExecutionFacts,
+} from "./resource-feature-admission.ts";
 
 const canonicalResourceFeatures = [
   {
@@ -66,14 +69,17 @@ describe("resource-feature procedure admission", () => {
       expect(admission).toMatchObject({
         tag: "admitted",
         sourceUnitId: unit.id,
-        resource,
         procedure: { kind: procedureKind },
       });
       if (admission.tag !== "admitted") {
         throw new Error("Expected admitted resource feature.");
       }
-      expect(admission.resource).not.toHaveProperty("resetCadence");
-      expect(admission.resource).not.toHaveProperty("className");
+      const executionResource = resourceFeatureExecutionFacts(
+        admission.procedure,
+      );
+      expect(executionResource).toEqual(resource);
+      expect(executionResource).not.toHaveProperty("resetCadence");
+      expect(executionResource).not.toHaveProperty("className");
       expect(admission.procedure.admitted).not.toHaveProperty("unitId");
       expect(admission.procedure.admitted).not.toHaveProperty("sourceUnitId");
     },
@@ -99,7 +105,9 @@ describe("resource-feature procedure admission", () => {
       ) {
         return;
       }
-      expect(renamedAdmission.resource).toEqual(canonicalAdmission.resource);
+      expect(resourceFeatureExecutionFacts(renamedAdmission.procedure)).toEqual(
+        resourceFeatureExecutionFacts(canonicalAdmission.procedure),
+      );
       expect(renamedAdmission.procedure).toEqual(canonicalAdmission.procedure);
       expect(renamedAdmission.sourceUnitId).toBe(renamed.id);
     },

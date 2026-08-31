@@ -5,6 +5,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 import { describe, expect, test } from "vitest";
 import { Result, Schema } from "effect";
+import { NonNegativeInteger } from "@dnd/shared/types";
 import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
 import {
   advanceToActorNextTurnForTest,
@@ -51,9 +52,10 @@ import {
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import { spellSlotInvocationRef } from "./index.ts";
+import { battleProcedureExecutionRef } from "./identity.ts";
 
 describe("battle runtime: Monk's Focus battle options", () => {
-  test("rejects an execution ref bound to a different Unit procedure family", () => {
+  test("rejects an unbound execution ref", () => {
     const state = startBattleRight({
       battleId: battleId("battle-monk-focus-wrong-procedure-family"),
       combatants: [
@@ -88,12 +90,10 @@ describe("battle runtime: Monk's Focus battle options", () => {
     if (monk?.origin.kind !== "character") {
       throw new Error("Expected character Monk.");
     }
-    const unrelatedProcedureRef = monk.origin.execution.procedureBindings.find(
-      (binding) => binding.procedureRef !== subject.procedureRef,
-    )?.procedureRef;
-    if (unrelatedProcedureRef === undefined) {
-      throw new Error("Expected a distinct Unit feature procedure binding.");
-    }
+    const unrelatedProcedureRef = battleProcedureExecutionRef(
+      monk.origin.execution.scopeRef,
+      NonNegativeInteger(999),
+    );
 
     const mismatchedSubject = {
       ...subject,
@@ -1294,7 +1294,10 @@ function monkFocusResourceForSubject(
     (candidate) => candidate.procedureRef === subject.procedureRef,
   );
   const procedure = binding?.procedure;
-  if (procedure?.kind !== "unitSupportProfile") {
+  if (
+    procedure?.kind !== "unitFeature" &&
+    procedure?.kind !== "unitSupportProfile"
+  ) {
     throw new Error("Expected a resource-backed Monk Focus procedure.");
   }
   if (

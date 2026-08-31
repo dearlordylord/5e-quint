@@ -424,7 +424,8 @@ function openHandTechniqueFlurryHit(
   );
   const focusProcedure = focusBinding?.procedure;
   if (
-    focusProcedure?.kind !== "unitSupportProfile" ||
+    (focusProcedure?.kind !== "unitFeature" &&
+      focusProcedure?.kind !== "unitSupportProfile") ||
     typeof focusProcedure.execution !== "object" ||
     focusProcedure.execution.kind !== "monkFocusBattleOptions" ||
     focusProcedure.source.kind !== "resourcePool"

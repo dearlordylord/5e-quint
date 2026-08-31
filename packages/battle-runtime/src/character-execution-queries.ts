@@ -72,7 +72,10 @@ export const CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY = {
   kind: "unitFeatureOrSupportProfile",
 } as const satisfies CharacterUnitProcedureQuery;
 export const MONK_FOCUS_PROCEDURE_QUERY = {
-  kind: "unitSupportProfile",
+  kind: "unitFeatureOrSupportProfileKinds",
+  featureKinds: new Set<UnitFeatureProcedureExecution["kind"]>([
+    MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
+  ]),
   supportKinds: new Set<UnitSupportProfileKind>([
     MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
   ]),

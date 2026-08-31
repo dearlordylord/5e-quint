@@ -43,9 +43,21 @@ export type UnboundResourceFeatureProcedure =
 
 export type AdmittedResourceFeature = {
   readonly sourceUnitId: AuthoredUnitSource["id"];
-  readonly resource: CharacterBattleResourceExecutionFacts;
   readonly procedure: UnboundResourceFeatureProcedure;
 };
+
+export function resourceFeatureExecutionFacts(
+  procedure: UnboundResourceFeatureProcedure,
+): CharacterBattleResourceExecutionFacts {
+  return Match.value(procedure).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      failedSavingThrowReroll: ({ admitted }) =>
+        failedSavingThrowRerollResource(admitted),
+      druidWildShape: ({ admitted }) => druidWildShapeResource(admitted),
+      monkFocus: ({ admitted }) => monkFocusResource(admitted),
+    }),
+  );
+}
 
 export type ResourceFeatureAdmission =
   | { readonly tag: "notBattleOwned" }
@@ -83,7 +95,6 @@ function failedSavingThrowRerollAdmission(
       admitted: ({ source, procedure }) =>
         admitted({
           sourceUnitId: source.unitId,
-          resource: failedSavingThrowRerollResource(procedure),
           procedure: {
             kind: "failedSavingThrowReroll",
             admitted: procedure,
@@ -103,7 +114,6 @@ function druidWildShapeAdmission(
       admitted: ({ source, projection }) =>
         admitted({
           sourceUnitId: source.unitId,
-          resource: druidWildShapeResource(projection),
           procedure: { kind: "druidWildShape", admitted: projection },
         }),
     }),
@@ -120,7 +130,6 @@ function monkFocusAdmission(
       admitted: ({ source, procedure }) =>
         admitted({
           sourceUnitId: source.unitId,
-          resource: monkFocusResource(procedure),
           procedure: { kind: "monkFocus", admitted: procedure },
         }),
     }),

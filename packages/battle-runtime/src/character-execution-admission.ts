@@ -195,7 +195,17 @@ type ResourceFeatureProcedureBinding =
       readonly candidate: UnitFeatureProcedureCandidate;
     }
   | { readonly tag: "notAvailable" }
-  | { readonly tag: "rejected"; readonly messages: readonly string[] };
+  | {
+      readonly tag: "rejected";
+      readonly messages: ReadonlyNonEmptyArray<string>;
+    };
+
+function resourceFeatureBindingMessages(
+  issues: ReadonlyNonEmptyArray<{ readonly message: string }>,
+): ReadonlyNonEmptyArray<string> {
+  const [firstIssue, ...remainingIssues] = issues;
+  return [firstIssue.message, ...remainingIssues.map(({ message }) => message)];
+}
 
 function bindResourceFeatureProcedure(
   feature: AdmittedResourceFeature,
@@ -217,7 +227,7 @@ function bindResourceFeatureProcedure(
         return binding.tag === "rejected"
           ? {
               tag: "rejected" as const,
-              messages: binding.issues.map(({ message }) => message),
+              messages: resourceFeatureBindingMessages(binding.issues),
             }
           : {
               tag: "bound" as const,
@@ -244,7 +254,7 @@ function bindResourceFeatureProcedure(
             notAvailable: () => ({ tag: "notAvailable" as const }),
             rejected: ({ issues }) => ({
               tag: "rejected" as const,
-              messages: issues.map(({ message }) => message),
+              messages: resourceFeatureBindingMessages(issues),
             }),
           }),
         );
@@ -257,7 +267,7 @@ function bindResourceFeatureProcedure(
         if (binding.tag === "rejected") {
           return {
             tag: "rejected" as const,
-            messages: binding.issues.map(({ message }) => message),
+            messages: resourceFeatureBindingMessages(binding.issues),
           };
         }
         const execution = unitFeatureProcedureExecution(
@@ -269,7 +279,7 @@ function bindResourceFeatureProcedure(
               tag: "rejected" as const,
               messages: [
                 "Bound Monk Focus facts must project a Battle execution.",
-              ],
+              ] as const,
             }
           : {
               tag: "bound" as const,

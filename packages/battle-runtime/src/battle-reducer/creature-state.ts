@@ -1176,7 +1176,10 @@ function projectCharacterResourceAdmissionInputs(
           projected.push({
             tag: "projectedCharacterBattleResource",
             init: input,
-            projection: { tag: "resourceFeature", feature },
+            projection: {
+              tag: "resourceFeature",
+              procedure: feature.procedure,
+            },
           }),
         rejected: ({ issues: admissionIssues }) =>
           issues.push(
@@ -1199,7 +1202,12 @@ function characterResourceFeatureProcedures(
 ): readonly AdmittedResourceFeature[] {
   return resources.flatMap((resource) =>
     "tag" in resource && resource.projection.tag === "resourceFeature"
-      ? [resource.projection.feature]
+      ? [
+          {
+            sourceUnitId: resource.init.unit.id,
+            procedure: resource.projection.procedure,
+          },
+        ]
       : [],
   );
 }

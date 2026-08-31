@@ -64,7 +64,8 @@ import {
 } from "./procedure-admission/persistent-armor-effect-facts.ts";
 import {
   admitResourceFeature,
-  type AdmittedResourceFeature,
+  resourceFeatureExecutionFacts,
+  type UnboundResourceFeatureProcedure,
 } from "./procedure-admission/resource-feature-admission.ts";
 import {
   type CharacterBattleActivationResource,
@@ -140,7 +141,7 @@ export type CharacterBattleResourceProjection =
     }
   | {
       readonly tag: "resourceFeature";
-      readonly feature: AdmittedResourceFeature;
+      readonly procedure: UnboundResourceFeatureProcedure;
     };
 
 export type ProjectedCharacterBattleResourceInit = {
@@ -163,7 +164,8 @@ export function characterBattleResourceExecutionFacts(
     return Match.value(input.projection).pipe(
       Match.discriminatorsExhaustive("tag")({
         resource: ({ resource }) => resource,
-        resourceFeature: ({ feature }) => feature.resource,
+        resourceFeature: ({ procedure }) =>
+          resourceFeatureExecutionFacts(procedure),
       }),
     );
   }
@@ -968,7 +970,9 @@ function characterBattleResourceForUnitOrNull(
 ): CharacterBattleResourceExecutionFacts | null {
   const resourceFeature = admitResourceFeature(unit);
   if (resourceFeature.tag === "rejected") return null;
-  if (resourceFeature.tag === "admitted") return resourceFeature.resource;
+  if (resourceFeature.tag === "admitted") {
+    return resourceFeatureExecutionFacts(resourceFeature.procedure);
+  }
   const freeCastResource = classFeatureSpellFreeCastResource(unit);
   if (freeCastResource !== null) {
     return freeCastResource;

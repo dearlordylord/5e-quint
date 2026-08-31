@@ -288,6 +288,7 @@ export {
 
 export {
   admitResourceFeature,
+  resourceFeatureExecutionFacts,
   type AdmittedResourceFeature,
   type ResourceFeatureAdmission,
   type ResourceFeatureAdmissionIssue,
