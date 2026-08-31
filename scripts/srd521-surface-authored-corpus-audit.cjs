@@ -522,20 +522,6 @@ function branchDiscriminatorMatches(ast, value) {
   });
 }
 
-const exactDecodedBranchPredicateCache = new WeakMap();
-
-function decodedBranchAcceptsExactly(ast, value) {
-  const branch = unwrappedSchemaAst(ast);
-  const cached = exactDecodedBranchPredicateCache.get(branch);
-  if (cached !== undefined) return cached(value);
-  const decode = Schema.decodeUnknownResult(Schema.make(branch), {
-    onExcessProperty: "error",
-  });
-  const predicate = (candidate) => Result.isSuccess(decode(candidate));
-  exactDecodedBranchPredicateCache.set(branch, predicate);
-  return predicate(value);
-}
-
 function decoderCompatibleUnionBranches(types, value) {
   const taggedCandidates = types.filter(
     (type) =>
@@ -578,7 +564,7 @@ function soleDecodedLiteralDiscriminatorSelection(types, value) {
       untagged.push(type);
     }
   }
-  if (tagged.length !== 1 || !decodedBranchAcceptsExactly(tagged[0], value)) {
+  if (tagged.length !== 1 || branchMatchStatus(tagged[0], value) !== "match") {
     return undefined;
   }
   return { branch: tagged[0], untagged };
