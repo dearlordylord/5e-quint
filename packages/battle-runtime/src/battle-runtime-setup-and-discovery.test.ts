@@ -58,7 +58,10 @@ import {
 import { describe, expect, test } from "vitest";
 import fc from "fast-check";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
-import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
+import {
+  battleInitializationIssueMessage,
+  removeBattleCombatants,
+} from "./battle-reducer/api-lifecycle.ts";
 import {
   characterBattleLevel,
   parseCharacterBattleClassLevels,
@@ -735,7 +738,7 @@ describe("battle runtime: setup and discovery", () => {
       });
       expect(
         Result.isFailure(result)
-          ? battleStateInitIssueMessage(result.failure)
+          ? battleInitializationIssueMessage(result.failure)
           : "admitted",
       ).toBe("fighter class level must be an integer from 1 to 20.");
     }
@@ -757,7 +760,7 @@ describe("battle runtime: setup and discovery", () => {
     });
     expect(
       Result.isFailure(result)
-        ? battleStateInitIssueMessage(result.failure)
+        ? battleInitializationIssueMessage(result.failure)
         : "admitted",
     ).toBe("Character class levels duplicate fighter.");
   });
@@ -778,7 +781,7 @@ describe("battle runtime: setup and discovery", () => {
     });
     expect(
       Result.isFailure(result)
-        ? battleStateInitIssueMessage(result.failure)
+        ? battleInitializationIssueMessage(result.failure)
         : "admitted",
     ).toBe("Total character level must not exceed 20.");
   });
@@ -800,10 +803,10 @@ describe("battle runtime: setup and discovery", () => {
     });
     expect(
       Result.isFailure(result)
-        ? battleStateInitIssueMessage(result.failure)
+        ? battleInitializationIssueMessage(result.failure)
         : "admitted",
     ).toBe(
-      "fighter class level must be an integer from 1 to 20.; Character class levels duplicate fighter.; wizard class level must be an integer from 1 to 20.",
+      "fighter class level must be an integer from 1 to 20. Character class levels duplicate fighter. wizard class level must be an integer from 1 to 20.",
     );
   });
 

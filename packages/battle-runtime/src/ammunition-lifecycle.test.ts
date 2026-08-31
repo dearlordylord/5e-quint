@@ -28,13 +28,14 @@ import {
   skeletonId,
   skeletonCreatureInit,
   startBattleSessionRight,
+  statBlockCreatureInit,
   wizardId,
   wizardVsSkeletonBattle,
 } from "./battle-runtime.test-support.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
   battleId,
-  battleStateInitIssueMessage,
+  battleInitializationIssueMessage,
   combatantId,
   discoverBattleActs,
   resolveBattleSubject,
@@ -44,12 +45,11 @@ import {
 describe("ammunition lifecycle", () => {
   it("rejects duplicate stocks and reports missing required stock at admission", () => {
     const skeleton = skeletonCreatureInit({ initiative: 10 });
-    if (skeleton.creatureInit.kind !== "statBlock") return;
     const withStocks = (
-      ammunitionStocks: typeof skeleton.creatureInit.ammunitionStocks,
+      ammunitionStocks: typeof skeleton.ammunitionStocks,
     ) => ({
       ...skeleton,
-      creatureInit: { ...skeleton.creatureInit, ammunitionStocks },
+      ammunitionStocks,
     });
 
     const duplicate = startBattle({
@@ -63,7 +63,7 @@ describe("ammunition lifecycle", () => {
     });
     expect(Result.isFailure(duplicate)).toBe(true);
     if (Result.isSuccess(duplicate)) return;
-    expect(battleStateInitIssueMessage(duplicate.failure)).toBe(
+    expect(battleInitializationIssueMessage(duplicate.failure)).toBe(
       "Duplicate ammunition stock for ammunition kind: arrow",
     );
 
@@ -73,7 +73,7 @@ describe("ammunition lifecycle", () => {
     });
     expect(Result.isFailure(missing)).toBe(true);
     if (Result.isSuccess(missing)) return;
-    expect(battleStateInitIssueMessage(missing.failure)).toBe(
+    expect(battleInitializationIssueMessage(missing.failure)).toBe(
       "Stat Block battle initialization requires an explicit arrow ammunition stock.",
     );
   });
@@ -254,11 +254,12 @@ describe("ammunition lifecycle", () => {
       battleId: battleId("battle-ammunition-public-resolution"),
       combatants: [
         skeletonCreatureInit({ initiative: 20 }),
-        {
-          ...skeletonCreatureInit({ initiative: 15 }),
+        statBlockCreatureInit({
           combatantId: secondSkeletonId,
-          displayName: "Second Skeleton",
-        },
+          statBlock: skeletonCreatureInit({ initiative: 15 }).statBlock,
+          statBlockName: "Second Skeleton",
+          initiative: 15,
+        }),
         characterSeed({
           combatantId: wizardId,
           displayName: "Synthetic Target",
