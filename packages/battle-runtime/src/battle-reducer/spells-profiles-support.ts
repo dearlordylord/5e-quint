@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import type { ElapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import {
@@ -135,21 +136,11 @@ export function temporaryAbilityCheckRollModeProjection(
   ) {
     return null;
   }
-  const effect = singleTemporaryAbilityCheckRollModeEffect(
+  const durationTicks = temporaryAbilityCheckRollModeDurationTicks(
     mechanics.mode.options,
-  );
-  if (effect === null) {
-    return null;
-  }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     mechanics.duration.value,
   );
-  if (Result.isFailure(durationTicks)) {
-    return null;
-  }
-  if (
-    !temporaryAbilityCheckRollModeEffectMatches(effect, durationTicks.success)
-  ) {
+  if (durationTicks === null) {
     return null;
   }
   return {
@@ -158,7 +149,7 @@ export function temporaryAbilityCheckRollModeProjection(
       sourceCombatantId: actorId,
       expiresAt: {
         kind: "duration",
-        durationTicks: durationTicks.success,
+        durationTicks,
       },
     },
     rangeFeet: movementFeet(mechanics.range.feet),
@@ -226,6 +217,29 @@ function singleTemporaryAbilityCheckRollModeEffect(
   }
   const [effect] = matchingEffects;
   return effect;
+}
+
+function temporaryAbilityCheckRollModeDurationTicks(
+  options: TemporaryAbilityCheckRollModeMechanics["mode"]["options"],
+  duration: Extract<
+    TemporaryAbilityCheckRollModeMechanics["duration"],
+    { readonly kind: "timed" }
+  >["value"],
+): ElapsedTimeTicks | null {
+  const effect = singleTemporaryAbilityCheckRollModeEffect(options);
+  if (effect === null) {
+    return null;
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration);
+  if (Result.isFailure(durationTicks)) {
+    return null;
+  }
+  return temporaryAbilityCheckRollModeEffectMatches(
+    effect,
+    durationTicks.success,
+  )
+    ? durationTicks.success
+    : null;
 }
 
 function temporaryAbilityCheckRollModeEffectMatches(
