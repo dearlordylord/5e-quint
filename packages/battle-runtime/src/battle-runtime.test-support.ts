@@ -2412,6 +2412,17 @@ function resolveBattleSubjectWithOptionalFamiliarAdmission(
   ) {
     return resolveBattleSubjectRuntime(input);
   }
+  const storedCompanion = input.state.companions.get(input.subject.actorId);
+  const authoredForm =
+    storedCompanion === undefined
+      ? undefined
+      : Option.getOrUndefined(
+          catalog.getStatBlock(storedCompanion.resolvedStatBlockId),
+        );
+  const presentation =
+    authoredForm === undefined
+      ? undefined
+      : Result.getOrThrow(projectAuthoredStatBlock(authoredForm)).presentation;
   const admission = admitSpawnedCompanionReappearance({
     state: input.state,
     casterId: input.subject.actorId,
@@ -2420,6 +2431,15 @@ function resolveBattleSubjectWithOptionalFamiliarAdmission(
         Option.map(catalog.getStatBlock(id), projectedStatBlockRuntimeSource),
     },
   });
+  if (Result.isSuccess(admission) && presentation !== undefined) {
+    statBlockPresentationsByExecutionScopeForTest.set(
+      String(
+        admission.success.mechanics.combatantAdmission.origin.execution
+          .scopeRef,
+      ),
+      presentation,
+    );
+  }
   return Result.isFailure(admission)
     ? resolveBattleSubjectRuntime(input)
     : resolveAdmittedCompanionReappearanceSubject({
