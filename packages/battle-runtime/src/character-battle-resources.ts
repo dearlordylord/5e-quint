@@ -10,7 +10,7 @@ import {
   spellSlotLevel,
   type ProficiencyBonus,
 } from "@dnd/shared/types";
-import { Match } from "effect";
+import { Brand, Match } from "effect";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
 // UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
@@ -65,7 +65,7 @@ import {
 import {
   admitResourceFeature,
   resourceFeatureExecutionFacts,
-  type UnboundResourceFeatureProcedure,
+  type AdmittedResourceFeature,
 } from "./procedure-admission/resource-feature-admission.ts";
 import {
   type CharacterBattleActivationResource,
@@ -141,10 +141,10 @@ export type CharacterBattleResourceProjection =
     }
   | {
       readonly tag: "resourceFeature";
-      readonly procedure: UnboundResourceFeatureProcedure;
+      readonly feature: AdmittedResourceFeature;
     };
 
-export type ProjectedCharacterBattleResourceInit = {
+type ProjectedCharacterBattleResourceInitData = {
   readonly tag: "projectedCharacterBattleResource";
   readonly init: Exclude<
     CharacterBattleResourceInit,
@@ -152,6 +152,46 @@ export type ProjectedCharacterBattleResourceInit = {
   >;
   readonly projection: CharacterBattleResourceProjection;
 };
+
+export type ProjectedCharacterBattleResourceInit =
+  ProjectedCharacterBattleResourceInitData &
+    Brand.Brand<"ProjectedCharacterBattleResourceInit">;
+
+const ProjectedCharacterBattleResourceInit =
+  Brand.nominal<ProjectedCharacterBattleResourceInit>();
+
+export type CharacterBattleResourceFeatureProjection =
+  | {
+      readonly tag: "projected";
+      readonly input: ProjectedCharacterBattleResourceInit;
+    }
+  | {
+      readonly tag: "sourceMismatch";
+      readonly message: string;
+    };
+
+export function projectCharacterBattleResourceFeature(
+  init: Exclude<
+    CharacterBattleResourceInit,
+    CharacterBattleSpellAccessFreeCastResourceInit
+  >,
+  feature: AdmittedResourceFeature,
+): CharacterBattleResourceFeatureProjection {
+  if (init.unit.id !== feature.sourceUnitId) {
+    return {
+      tag: "sourceMismatch",
+      message: `Character battle resource feature source does not match its resource Unit: ${feature.sourceUnitId} != ${init.unit.id}.`,
+    };
+  }
+  return {
+    tag: "projected",
+    input: ProjectedCharacterBattleResourceInit({
+      tag: "projectedCharacterBattleResource",
+      init,
+      projection: { tag: "resourceFeature", feature },
+    }),
+  };
+}
 
 export type CharacterBattleResourceAdmissionInput =
   | CharacterBattleResourceInit
@@ -164,8 +204,8 @@ export function characterBattleResourceExecutionFacts(
     return Match.value(input.projection).pipe(
       Match.discriminatorsExhaustive("tag")({
         resource: ({ resource }) => resource,
-        resourceFeature: ({ procedure }) =>
-          resourceFeatureExecutionFacts(procedure),
+        resourceFeature: ({ feature }) =>
+          resourceFeatureExecutionFacts(feature.procedure),
       }),
     );
   }
@@ -233,10 +273,7 @@ export type CharacterBattleResourceOwnership = {
   readonly resourcePoolRef: BattleResourcePoolExecutionRef;
   readonly unit: UnitRecord;
   readonly purpose:
-    | {
-        readonly tag: "unitResource";
-        readonly projection: CharacterBattleResourceProjection;
-      }
+    | { readonly tag: "unitResource" }
     | {
         readonly tag: "spellAccessFreeCast";
         readonly spellId: SpellRecord["id"];
@@ -266,16 +303,7 @@ export function admitCharacterBattleResources(
         unit: init.unit,
         purpose:
           init.spellAccessFreeCast === undefined
-            ? {
-                tag: "unitResource" as const,
-                projection:
-                  "tag" in input
-                    ? input.projection
-                    : {
-                        tag: "resource" as const,
-                        resource: characterBattleResourceExecutionFacts(input),
-                      },
-              }
+            ? { tag: "unitResource" as const }
             : {
                 tag: "spellAccessFreeCast" as const,
                 spellId: init.spellAccessFreeCast.spellId,

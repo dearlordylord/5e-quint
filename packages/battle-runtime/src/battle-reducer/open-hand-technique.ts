@@ -20,16 +20,16 @@ import type {
 } from "../battle-state-execution.ts";
 import type { MonkFocusFlurryOfBlowsStrikeSubject } from "../battle-subjects.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
-import {
-  characterProcedureBinding,
-  type UnitSupportProcedureExecution,
-} from "../character-execution-queries.ts";
+import type { UnitSupportProcedureExecution } from "../character-execution-queries.ts";
 
 import {
   battleCreatureStateWithKnockOutPreservedConditions,
   isCharacterBattleCreatureState,
 } from "./creature-state-execution.ts";
-import { isMonkFocusFlurryOfBlowsActionResource } from "./monk-focus.ts";
+import {
+  isMonkFocusFlurryOfBlowsActionResource,
+  monkFocusResourceForActor,
+} from "./monk-focus.ts";
 import { combatantProficiencyBonus } from "./movement-speed.ts";
 import { scoreModifier } from "./domain-helpers.ts";
 import {
@@ -418,21 +418,13 @@ function openHandTechniqueFlurryHit(
   ) {
     return null;
   }
-  const focusBinding = characterProcedureBinding(
-    actor.origin.execution,
+  const focus = monkFocusResourceForActor(
+    state,
+    actorId,
     subject.focusProcedureRef,
   );
-  const focusProcedure = focusBinding?.procedure;
-  if (
-    (focusProcedure?.kind !== "unitFeature" &&
-      focusProcedure?.kind !== "unitSupportProfile") ||
-    typeof focusProcedure.execution !== "object" ||
-    focusProcedure.execution.kind !== "monkFocusBattleOptions" ||
-    focusProcedure.source.kind !== "resourcePool"
-  ) {
-    return null;
-  }
-  const focusResourcePoolRef = focusProcedure.source.resourcePoolRef;
+  if (focus === null) return null;
+  const focusResourcePoolRef = focus.resource.resourcePoolRef;
   const binding = actor.origin.execution.procedureBindings.find((candidate) => {
     const candidateProcedure = candidate.procedure;
     return (

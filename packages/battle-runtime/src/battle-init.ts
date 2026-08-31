@@ -28,7 +28,7 @@ import type {
 import type {
   CharacterBattleFeatureInit,
   CharacterBattleMetamagicInit,
-  CharacterBattleResourceAdmissionInput,
+  CharacterBattleResourceInit,
   CharacterBattleSpellcastingInit,
 } from "./character-battle-resources.ts";
 import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
@@ -564,7 +564,7 @@ export type CharacterBattleCreatureInit = {
   readonly offHandAttack?: CharacterBattleCreatureInitWeaponAttack | undefined;
   readonly unitFeatures?: readonly CharacterBattleFeatureInit[];
   readonly invocationFeatures?: readonly CharacterBattleInvocationFeature[];
-  readonly resources?: readonly CharacterBattleResourceAdmissionInput[];
+  readonly resources?: readonly CharacterBattleResourceInit[];
   readonly metamagic?: CharacterBattleMetamagicInit;
   readonly spellcasting?: CharacterBattleSpellcastingInit;
 };

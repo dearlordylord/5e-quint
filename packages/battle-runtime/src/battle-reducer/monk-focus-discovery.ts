@@ -16,6 +16,7 @@ import type {
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type { UnitSupportProcedureExecution } from "../character-execution-queries.ts";
 import type { UnitFeatureProcedureExecution } from "../character-execution-vocabulary.ts";
+import { isUnitFeatureProcedureOwner } from "../unit-procedure-kind.ts";
 import {
   characterBattleResourceIsUseCount,
   resourceHasUsesRemaining,
@@ -264,8 +265,7 @@ export function monkFocusResourceForActor(
     }
     const procedure = binding.procedure;
     if (
-      (procedure.kind !== "unitFeature" &&
-        procedure.kind !== "unitSupportProfile") ||
+      !isUnitFeatureProcedureOwner(procedure) ||
       typeof procedure.execution !== "object" ||
       procedure.execution.kind !== "monkFocusBattleOptions" ||
       procedure.source.kind !== "resourcePool"

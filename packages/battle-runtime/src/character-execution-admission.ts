@@ -417,59 +417,61 @@ export function characterExecutionFromUnits(input: {
           ];
     },
   );
-  const legacyUnitProcedures = unitFeatureProcedures.flatMap((procedure) => {
-    const failedSavingThrowBinding =
-      procedure.facts.kind === "failedSavingThrowReroll"
-        ? bindFailedSavingThrowRerollProcedure(
+  const boundProfileUnitProcedures = unitFeatureProcedures.flatMap(
+    (procedure) => {
+      const failedSavingThrowBinding =
+        procedure.facts.kind === "failedSavingThrowReroll"
+          ? bindFailedSavingThrowRerollProcedure(
+              {
+                sourceUnitId: procedure.sourceUnitId,
+                facts: procedure.facts,
+              },
+              {
+                resourcePoolRefsByUnitId,
+                classLevels: input.classLevels,
+              },
+            )
+          : null;
+      if (failedSavingThrowBinding?.tag === "rejected") {
+        supportProfileIssues.push(
+          ...failedSavingThrowBinding.issues.map((issue) => ({
+            tag: "battleUnitSupportProfileIssue" as const,
+            message: issue.message,
+          })),
+        );
+        return [];
+      }
+      const execution =
+        failedSavingThrowBinding?.procedure.execution ??
+        unitFeatureProcedureExecution(
+          procedure.facts,
+          unitFeatureExecutionContext,
+        );
+      if (
+        execution === undefined &&
+        procedure.facts.kind !== "cunningStrike" &&
+        procedure.facts.kind !== "cunningStrikeOptionGrant"
+      ) {
+        supportProfileIssues.push({
+          tag: "battleUnitSupportProfileIssue",
+          message: `Unit feature profile ${procedure.facts.kind} references an unavailable mechanical execution resource.`,
+        });
+      }
+      return execution === undefined
+        ? []
+        : [
             {
-              sourceUnitId: procedure.sourceUnitId,
-              facts: procedure.facts,
+              unitId: procedure.sourceUnitId,
+              execution,
+              source: characterUnitProcedureSourceForAdmission(
+                scopeRef,
+                input.resourceUnits,
+                procedure.sourceUnitId,
+              ),
             },
-            {
-              resourcePoolRefsByUnitId,
-              classLevels: input.classLevels,
-            },
-          )
-        : null;
-    if (failedSavingThrowBinding?.tag === "rejected") {
-      supportProfileIssues.push(
-        ...failedSavingThrowBinding.issues.map((issue) => ({
-          tag: "battleUnitSupportProfileIssue" as const,
-          message: issue.message,
-        })),
-      );
-      return [];
-    }
-    const execution =
-      failedSavingThrowBinding?.procedure.execution ??
-      unitFeatureProcedureExecution(
-        procedure.facts,
-        unitFeatureExecutionContext,
-      );
-    if (
-      execution === undefined &&
-      procedure.facts.kind !== "cunningStrike" &&
-      procedure.facts.kind !== "cunningStrikeOptionGrant"
-    ) {
-      supportProfileIssues.push({
-        tag: "battleUnitSupportProfileIssue",
-        message: `Unit feature profile ${procedure.facts.kind} references an unavailable mechanical execution resource.`,
-      });
-    }
-    return execution === undefined
-      ? []
-      : [
-          {
-            unitId: procedure.sourceUnitId,
-            execution,
-            source: characterUnitProcedureSourceForAdmission(
-              scopeRef,
-              input.resourceUnits,
-              procedure.sourceUnitId,
-            ),
-          },
-        ];
-  });
+          ];
+    },
+  );
   const resourceFeatureProcedureKeys = new Set(
     resourceFeatureUnitProcedures.map(
       ({ unitId, execution }) => `${unitId}\u0000${execution.kind}`,
@@ -477,7 +479,7 @@ export function characterExecutionFromUnits(input: {
   );
   const unitProcedures = [
     ...resourceFeatureUnitProcedures,
-    ...legacyUnitProcedures.filter(
+    ...boundProfileUnitProcedures.filter(
       ({ unitId, execution }) =>
         !resourceFeatureProcedureKeys.has(`${unitId}\u0000${execution.kind}`),
     ),

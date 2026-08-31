@@ -17,7 +17,9 @@ import {
   effectiveCharacterBattlePreparedSpells,
   parseCharacterBattleInvocationSpellAccesses,
   parseCharacterBattleClassLevels,
+  projectCharacterBattleResourceFeature,
 } from "./character-battle-resources.ts";
+import { admitResourceFeature } from "./procedure-admission/resource-feature-admission.ts";
 import {
   characterBattleResourceIsPointPool,
   characterBattleResourceIsUnlimited,
@@ -146,6 +148,23 @@ describe("character battle resource projections", () => {
     },
   );
 
+  test("rejects a projected resource feature paired with another source Unit", () => {
+    const monkFocus = unitLibrary.requireUnit(monkMonksFocusUnitId);
+    const indomitable = unitLibrary.requireUnit(fighterIndomitableUnitId);
+    const admission = admitResourceFeature(monkFocus);
+    if (admission.tag !== "admitted") {
+      throw new Error("Expected admitted Monk Focus resource feature.");
+    }
+
+    expect(
+      projectCharacterBattleResourceFeature({ unit: indomitable }, admission),
+    ).toEqual({
+      tag: "sourceMismatch",
+      message:
+        "Character battle resource feature source does not match its resource Unit: monk_monks_focus != fighter_indomitable.",
+    });
+  });
+
   test("ability-modifier caps honor a minimum and an omitted minimum", () => {
     const bardicInspiration = unitLibrary.requireUnit(
       bardBardicInspirationUnitId,
@@ -257,13 +276,7 @@ describe("character battle resource projections", () => {
           {
             resourcePoolRef,
             unit,
-            purpose: {
-              tag: "unitResource",
-              projection: {
-                tag: "resource",
-                resource: characterBattleResourceForUnit(unit),
-              },
-            },
+            purpose: { tag: "unitResource" },
           },
         ],
       ),

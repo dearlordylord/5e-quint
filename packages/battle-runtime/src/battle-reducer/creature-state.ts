@@ -73,6 +73,7 @@ import {
   characterSpellcastingState,
   parseCharacterBattleInvocationSpellAccesses,
   parseCharacterBattleClassLevels,
+  projectCharacterBattleResourceFeature,
   type CharacterBattleFeatureInit,
   type CharacterBattleResourceInit,
   type CharacterBattleResourceAdmissionInput,
@@ -1157,7 +1158,7 @@ export function characterResourceInitIssue(
 }
 
 function projectCharacterResourceAdmissionInputs(
-  inputs: readonly CharacterBattleResourceAdmissionInput[],
+  inputs: readonly CharacterBattleResourceInit[],
 ): Result.Result<
   readonly CharacterBattleResourceAdmissionInput[],
   readonly [BattleUnitSupportProfileIssue, ...BattleUnitSupportProfileIssue[]]
@@ -1165,22 +1166,30 @@ function projectCharacterResourceAdmissionInputs(
   const projected: CharacterBattleResourceAdmissionInput[] = [];
   const issues: BattleUnitSupportProfileIssue[] = [];
   for (const input of inputs) {
-    if ("tag" in input || input.spellAccessFreeCast !== undefined) {
+    if (input.spellAccessFreeCast !== undefined) {
       projected.push(input);
       continue;
     }
     Match.value(admitResourceFeature(input.unit)).pipe(
       Match.discriminatorsExhaustive("tag")({
         notBattleOwned: () => projected.push(input),
-        admitted: (feature) =>
-          projected.push({
-            tag: "projectedCharacterBattleResource",
-            init: input,
-            projection: {
-              tag: "resourceFeature",
-              procedure: feature.procedure,
-            },
-          }),
+        admitted: (feature) => {
+          const projection = projectCharacterBattleResourceFeature(
+            input,
+            feature,
+          );
+          return Match.value(projection).pipe(
+            Match.discriminatorsExhaustive("tag")({
+              projected: ({ input: projectedInput }) =>
+                projected.push(projectedInput),
+              sourceMismatch: ({ message }) =>
+                issues.push({
+                  tag: "battleUnitSupportProfileIssue",
+                  message,
+                }),
+            }),
+          );
+        },
         rejected: ({ issues: admissionIssues }) =>
           issues.push(
             ...admissionIssues.map(({ message }) => ({
@@ -1202,12 +1211,7 @@ function characterResourceFeatureProcedures(
 ): readonly AdmittedResourceFeature[] {
   return resources.flatMap((resource) =>
     "tag" in resource && resource.projection.tag === "resourceFeature"
-      ? [
-          {
-            sourceUnitId: resource.init.unit.id,
-            procedure: resource.projection.procedure,
-          },
-        ]
+      ? [resource.projection.feature]
       : [],
   );
 }
