@@ -22,9 +22,9 @@ This section is the sole mutable handoff for a new session.
 - `SR-00` integration base: `301229532`
 - Active landing unit: `integration/cleanroom-sr-04g` at
   `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`
-- Next action: regenerate the #474 complete/partial/no-owner spell-profile
-  inventory from current master `42c838942`, map repeated SpellRecord
-  recognition, and divide profile-owner implementation leases
+- Next action: integrate the three active #474 implementation lanes: canonical
+  profile-owned static admission/evidence, parse-once execution carrier, and
+  exact 98-complete/23-partial/74-no-owner observation coverage
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded
@@ -147,6 +147,9 @@ explicitly abandoned.
 | Checkpoint/unit | Ticket/slice                                    | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                 | State  |
 | --------------- | ----------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | `SR-04G`        | #474 Battle spell mechanics procedure admission | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04g`; `integration/cleanroom-sr-04g` | `42c838942` | Spell profile-owner static projection, exact partial-root path evidence, consumer migration, focused verification, and reviewer convergence | Active |
+| `SR-04G-A`      | #474 static admission/evidence contract          | McClintock         | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-admission`; `work/cleanroom-sr04g-admission` | `69a93d3ca` | Canonical registry-derived static admission/result/evidence contract and focused contract tests | Active |
+| `SR-04G-B`      | #474 parse-once execution carrier                | Popper             | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-carrier`; `work/cleanroom-sr04g-carrier` | `69a93d3ca` | Static Spell Definition facts, dynamic casting join, and downstream raw-mechanics consumer removal | Active |
+| `SR-04G-C`      | #474 root observation coverage                   | Ohm                | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr04g-observation`; `work/cleanroom-sr04g-observation` | `69a93d3ca` | Exact root membership/path controls, renamed synthetic parity, unsupported controls, and issue accumulation tests | Active |
 
 ## Landing discipline
 
