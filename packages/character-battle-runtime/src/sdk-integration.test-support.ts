@@ -707,7 +707,7 @@ function levelFiveFighterUnitChoicePreferredOptionIds(
       authoredUnitId("weapon_longsword"),
       authoredUnitId("weapon_spear"),
       authoredUnitId("weapon_flail"),
-      authoredUnitId("weapon_dagger"),
+      authoredUnitId("weapon_greataxe"),
     ];
   }
 
