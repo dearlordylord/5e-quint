@@ -55,6 +55,17 @@ type PersistentAreaSaveConditionMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >;
+type PersistentAreaSaveConditionMechanicsShape =
+  PersistentAreaSaveConditionMechanics & {
+    readonly range: Extract<
+      PersistentAreaSaveConditionMechanics["range"],
+      { readonly kind: "point" }
+    > & { readonly feet: number };
+    readonly duration: Extract<
+      PersistentAreaSaveConditionMechanics["duration"],
+      { readonly kind: "timed" }
+    >;
+  };
 type PersistentAreaSaveConditionPhase = Extract<
   NonNullable<PersistentAreaSaveConditionMechanics["initialPhase"]>,
   { readonly kind: "save_gate" }
@@ -146,14 +157,7 @@ function persistentAreaSaveConditionSpell(
       ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.value)
       : null;
   if (
-    spell.mechanics.level !== 1 ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 60 ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "minute" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.operations.length !== 3 ||
+    !persistentAreaSaveConditionEnvelopeIsSupported(spell.mechanics) ||
     !isPersistentAreaSaveConditionPhase(phase) ||
     passiveOperation?.effect.kind !== "area_is_difficult_terrain" ||
     !isPersistentAreaSaveConditionEffect(enterOperation?.effect) ||
@@ -173,6 +177,21 @@ function persistentAreaSaveConditionSpell(
     durationTicks: durationTicks.success,
     rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
+}
+
+function persistentAreaSaveConditionEnvelopeIsSupported(
+  mechanics: PersistentAreaSaveConditionMechanics,
+): mechanics is PersistentAreaSaveConditionMechanicsShape {
+  return (
+    mechanics.level === 1 &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === 60 &&
+    mechanics.duration.kind === "timed" &&
+    mechanics.duration.value.unit === "minute" &&
+    mechanics.duration.value.amount === 1 &&
+    mechanics.operations.length === 3
+  );
 }
 
 function isPersistentAreaSaveConditionPhase(

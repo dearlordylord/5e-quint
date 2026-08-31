@@ -355,11 +355,7 @@ export function castResolvedSpawnedCompanion(
     findCompanionEntryByOwner(input.state.companions, input.casterId)
       ?.companion,
   );
-  if (
-    prior.tag !== "none" &&
-    prior.familiar.identity.tag === "retainedBetweenBattles" &&
-    input.retainedTransition !== "sessionOwned"
-  ) {
+  if (!spawnedCompanionRetainedTransitionIsAllowed(prior, input)) {
     return invalidSpawnedCompanionResult(
       input.state,
       "invalidFill",
@@ -453,6 +449,17 @@ export function castResolvedSpawnedCompanion(
     nextState.state,
     [],
     spawnedCompanionLifecycleRouteEvents(),
+  );
+}
+
+function spawnedCompanionRetainedTransitionIsAllowed(
+  prior: ReturnType<typeof spawnedCompanionCastPrior>,
+  input: Pick<ResolvedSpawnedCompanionCastInput, "retainedTransition">,
+): boolean {
+  return (
+    prior.tag === "none" ||
+    prior.familiar.identity.tag !== "retainedBetweenBattles" ||
+    input.retainedTransition === "sessionOwned"
   );
 }
 

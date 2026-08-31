@@ -22,6 +22,7 @@ import type {
   BattleReducerRouteSubjectFamily,
 } from "./reducer-route-protocol.ts";
 import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
+import { Match } from "effect";
 
 export function spatialEffectCompositionRouteForDiscoveredAct(
   state: BattleState,
@@ -218,8 +219,10 @@ function movableLightCompositionRoute(
   invocation: SpatialRouteInvocation | undefined,
 ): BattleReducerRouteEvents | undefined {
   if (invocation?.procedure !== "movableLightManifestation") return undefined;
-  return invocation.operation === "create"
-    ? [
+  return Match.value(invocation.operation).pipe(
+    Match.when(
+      "create",
+      (): BattleReducerRouteEvents => [
         spatialCompositionResolveWithoutFill(
           "spatialEffect",
           "battleActiveEffect",
@@ -232,8 +235,11 @@ function movableLightCompositionRoute(
           "spatialEffect",
           "battleLightProjection",
         ),
-      ]
-    : [
+      ],
+    ),
+    Match.when(
+      "reposition",
+      (): BattleReducerRouteEvents => [
         spatialCompositionResolve(
           "spatialEffect",
           "targetChoice",
@@ -244,7 +250,10 @@ function movableLightCompositionRoute(
           "spatialEffect",
           "battleLightProjection",
         ),
-      ];
+      ],
+    ),
+    Match.exhaustive,
+  );
 }
 
 function persistentAreaCompositionRoute(

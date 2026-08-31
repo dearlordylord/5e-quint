@@ -77,6 +77,16 @@ type TranslatingPersistentAreaMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >;
+type OngoingConcentrationAreaSpell = NonNullable<
+  ReturnType<typeof ongoingConcentrationAreaSpellFacts>
+>;
+type TranslatingPersistentAreaMechanicsShape =
+  TranslatingPersistentAreaMechanics & {
+    readonly range: Extract<
+      TranslatingPersistentAreaMechanics["range"],
+      { readonly kind: "point" }
+    > & { readonly feet: number };
+  };
 type TranslatingPersistentAreaSaveGate = Extract<
   NonNullable<TranslatingPersistentAreaMechanics["initialPhase"]>,
   { readonly kind: "save_gate" }
@@ -184,17 +194,7 @@ function persistentAreaSaveDamageSpell(
     initialPhase?.kind === "save_gate" ? initialPhase.usageLimit : undefined;
 
   if (
-    mechanics.level !== TRANSLATING_PERSISTENT_AREA_LEVEL ||
-    mechanics.castingTime.kind !== "action" ||
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== TRANSLATING_PERSISTENT_AREA_RANGE_FEET ||
-    duration.upTo.unit !== "minute" ||
-    duration.upTo.amount !== TRANSLATING_PERSISTENT_AREA_DURATION_MINUTES ||
-    duration.earlyEnd?.some(
-      (earlyEnd) => earlyEnd.kind === "area_dispersed_by_strong_wind",
-    ) !== true ||
-    mechanics.operations.length !==
-      TRANSLATING_PERSISTENT_AREA_OPERATION_COUNT ||
+    !translatingPersistentAreaEnvelopeIsSupported(mechanics, duration) ||
     Result.isFailure(durationTicks) ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
@@ -228,6 +228,32 @@ function persistentAreaSaveDamageSpell(
     translationDistanceFeet: moveOperation.effect.distanceFeet,
     damageAmount: initialDamageAmount,
   };
+}
+
+function translatingPersistentAreaEnvelopeIsSupported(
+  mechanics: TranslatingPersistentAreaMechanics,
+  duration: OngoingConcentrationAreaSpell["duration"],
+): mechanics is TranslatingPersistentAreaMechanicsShape {
+  return (
+    mechanics.level === TRANSLATING_PERSISTENT_AREA_LEVEL &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === TRANSLATING_PERSISTENT_AREA_RANGE_FEET &&
+    duration.upTo.unit === "minute" &&
+    duration.upTo.amount === TRANSLATING_PERSISTENT_AREA_DURATION_MINUTES &&
+    translatingPersistentAreaHasStrongWindEarlyEnd(duration) &&
+    mechanics.operations.length === TRANSLATING_PERSISTENT_AREA_OPERATION_COUNT
+  );
+}
+
+function translatingPersistentAreaHasStrongWindEarlyEnd(
+  duration: OngoingConcentrationAreaSpell["duration"],
+): boolean {
+  return (
+    duration.earlyEnd?.some(
+      (earlyEnd) => earlyEnd.kind === "area_dispersed_by_strong_wind",
+    ) === true
+  );
 }
 
 function translatingPersistentAreaSaveGateDamageAmount(

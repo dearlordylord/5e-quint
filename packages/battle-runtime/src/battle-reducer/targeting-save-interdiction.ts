@@ -143,7 +143,7 @@ export function targetingSaveInterdictionCheck(
     durableEffect?.kind === "targetingSaveInterdiction"
       ? boundTargetingSaveInterdictionEffect(input.state, durableEffect)
       : undefined;
-  if (warded === undefined || effect === undefined) {
+  if (effect === undefined) {
     return { tag: "notWarded" };
   }
   const hole = targetingSaveInterdictionOutcomeHole({
@@ -186,20 +186,16 @@ export function targetingSaveInterdictionCheck(
     return { tag: "lost" };
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (value.outcome.targetId === input.wardedCombatantId) {
+  const replacementTargetIssue =
+    targetingSaveInterdictionReplacementTargetIssue(
+      input.state,
+      input.wardedCombatantId,
+      value.outcome.targetId,
+    );
+  if (replacementTargetIssue !== null) {
     return {
       tag: "invalid",
-      message:
-        "Interdiction replacement target must differ from the warded target.",
-    };
-  }
-  /* v8 ignore stop -- @preserve */
-  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!input.state.combatants.has(value.outcome.targetId)) {
-    return {
-      tag: "invalid",
-      message:
-        "Interdiction replacement target must be a combatant in this battle.",
+      message: replacementTargetIssue,
     };
   }
   /* v8 ignore stop -- @preserve */
@@ -244,6 +240,19 @@ export function targetingSaveInterdictionCheck(
     spatialFacts: value.outcome.spatialFacts,
     relationshipFacts,
   };
+}
+
+function targetingSaveInterdictionReplacementTargetIssue(
+  state: BattleState,
+  wardedCombatantId: CombatantId,
+  replacementTargetId: CombatantId,
+): string | null {
+  if (replacementTargetId === wardedCombatantId) {
+    return "Interdiction replacement target must differ from the warded target.";
+  }
+  return state.combatants.has(replacementTargetId)
+    ? null
+    : "Interdiction replacement target must be a combatant in this battle.";
 }
 
 type TargetingSaveInterdictionOutcomeHoleInput = {

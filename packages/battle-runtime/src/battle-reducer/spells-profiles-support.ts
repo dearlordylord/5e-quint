@@ -80,6 +80,21 @@ type AbilityCheckRollModeSpellProjection = {
 type RollModifierSpellProjection =
   | D20RollModifierSpellProjection
   | AbilityCheckRollModeSpellProjection;
+type TemporaryAbilityCheckRollModeMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "modal_ongoing_effect" }
+> & {
+  readonly range: Extract<
+    BattleSpellAdmissionSource["mechanics"]["range"],
+    { readonly kind: "point" }
+  > & { readonly feet: number };
+  readonly duration: Extract<
+    BattleSpellAdmissionSource["mechanics"]["duration"],
+    { readonly kind: "timed" }
+  >;
+};
+type TemporaryAbilityCheckRollModeDuration =
+  TemporaryAbilityCheckRollModeMechanics["duration"];
 export function isD20RollModifierSpellProjection(
   projection: RollModifierSpellProjection,
 ): projection is D20RollModifierSpellProjection {
@@ -107,16 +122,8 @@ export function temporaryAbilityCheckRollModeProjection(
   TemporaryAbilityCheckRollModeSpellInvocation,
   "activeEffect" | "rangeFeet" | "selectedMode" | "concurrentDurationModeLimit"
 > | null {
-  const castingTime = topLevelSpellCastingTime(spell.mechanics);
   if (
-    spell.mechanics.family !== "modal_ongoing_effect" ||
-    spell.mechanics.level !== 0 ||
-    castingTime?.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 30 ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "minute" ||
-    spell.mechanics.duration.value.amount !== 1 ||
+    !temporaryAbilityCheckRollModeEnvelopeIsSupported(spell) ||
     spell.mechanics.attachment.kind !== "self" ||
     spell.mechanics.concurrentEffectLimit?.appliesTo !==
       "spell_duration_modes" ||
@@ -184,6 +191,31 @@ export function temporaryAbilityCheckRollModeProjection(
       maximumActive: TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
     },
   };
+}
+
+function temporaryAbilityCheckRollModeEnvelopeIsSupported(
+  spell: BattleSpellAdmissionSource,
+): spell is BattleSpellAdmissionSource & {
+  readonly mechanics: TemporaryAbilityCheckRollModeMechanics;
+} {
+  return (
+    spell.mechanics.family === "modal_ongoing_effect" &&
+    spell.mechanics.level === 0 &&
+    topLevelSpellCastingTime(spell.mechanics)?.kind === "action" &&
+    spell.mechanics.range.kind === "point" &&
+    spell.mechanics.range.feet === 30 &&
+    temporaryAbilityCheckRollModeDurationIsSupported(spell.mechanics.duration)
+  );
+}
+
+function temporaryAbilityCheckRollModeDurationIsSupported(
+  duration: BattleSpellAdmissionSource["mechanics"]["duration"],
+): duration is TemporaryAbilityCheckRollModeDuration {
+  return (
+    duration.kind === "timed" &&
+    duration.value.unit === "minute" &&
+    duration.value.amount === 1
+  );
 }
 
 export function scalarBuffSpellActionCost(

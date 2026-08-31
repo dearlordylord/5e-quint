@@ -66,6 +66,15 @@ type OngoingSaveGateEffect = Extract<
   OngoingOperationEffect,
   { readonly kind: "save_gate" }
 >;
+type OngoingConcentrationAreaSpell = NonNullable<
+  ReturnType<typeof ongoingConcentrationAreaSpellFacts>
+>;
+type PersistentAreaSaveCompositeMechanicsShape = OngoingMechanics & {
+  readonly range: Extract<
+    OngoingMechanics["range"],
+    { readonly kind: "point" }
+  > & { readonly feet: number };
+};
 type PersistentAreaSaveCompositeSaveEffect = OngoingSaveGateEffect & {
   readonly onFail: Extract<
     OngoingSaveGateEffect["onFail"],
@@ -151,14 +160,7 @@ function persistentAreaSaveCompositeSpell(
       operation.effect.kind === "douse_exposed_flames",
   );
   if (
-    mechanics.level !== PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL ||
-    mechanics.castingTime.kind !== "action" ||
-    mechanics.range.kind !== "point" ||
-    mechanics.range.feet !== PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET ||
-    duration.upTo.unit !== "minute" ||
-    duration.upTo.amount !== PERSISTENT_AREA_SAVE_COMPOSITE_DURATION_MINUTES ||
-    mechanics.operations.length !==
-      PERSISTENT_AREA_SAVE_COMPOSITE_OPERATION_COUNT ||
+    !persistentAreaSaveCompositeEnvelopeIsSupported(mechanics, duration) ||
     Result.isFailure(durationTicks) ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
@@ -184,6 +186,22 @@ function persistentAreaSaveCompositeSpell(
     radiusFeet: area.shape.radiusFeet,
     heightFeet: area.shape.heightFeet,
   };
+}
+
+function persistentAreaSaveCompositeEnvelopeIsSupported(
+  mechanics: OngoingMechanics,
+  duration: OngoingConcentrationAreaSpell["duration"],
+): mechanics is PersistentAreaSaveCompositeMechanicsShape {
+  return (
+    mechanics.level === PERSISTENT_AREA_SAVE_COMPOSITE_LEVEL &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === PERSISTENT_AREA_SAVE_COMPOSITE_RANGE_FEET &&
+    duration.upTo.unit === "minute" &&
+    duration.upTo.amount === PERSISTENT_AREA_SAVE_COMPOSITE_DURATION_MINUTES &&
+    mechanics.operations.length ===
+      PERSISTENT_AREA_SAVE_COMPOSITE_OPERATION_COUNT
+  );
 }
 
 function isPersistentAreaSaveCompositeSaveGate(

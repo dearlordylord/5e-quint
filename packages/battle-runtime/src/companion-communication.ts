@@ -164,6 +164,11 @@ export type PreparedSpawnedCompanionTouchSpellDelivery = {
   readonly targetChoiceCount: number;
 };
 
+type SpawnedCompanionTouchDeliveryProcedure = Extract<
+  NonNullable<ReturnType<typeof characterSpellProcedure>>,
+  { readonly spellRuleFacts: unknown }
+>;
+
 export function prepareTouchSpellDeliveryThroughSpawnedCompanion(input: {
   readonly state: BattleState;
   readonly subject: Extract<
@@ -194,11 +199,7 @@ export function prepareTouchSpellDeliveryThroughSpawnedCompanion(input: {
     actor,
   );
   /* v8 ignore start -- @preserve -- Familiar delivery acts retain their admitted spell binding; a missing or non-spell procedure requires a forged procedure reference. */
-  if (
-    procedure === undefined ||
-    !("spellRuleFacts" in procedure) ||
-    !spellInvocationIsSpellcasting(procedure)
-  ) {
+  if (!isSpawnedCompanionTouchDeliveryProcedure(procedure)) {
     return invalidTransition(
       "unsupportedActOption",
       "Companion touch delivery requires a supported spell invocation.",
@@ -255,6 +256,16 @@ export function prepareTouchSpellDeliveryThroughSpawnedCompanion(input: {
     familiarId: connection.familiarId,
     targetChoiceCount: deliveryFills.targetChoiceCount,
   };
+}
+
+function isSpawnedCompanionTouchDeliveryProcedure(
+  procedure: ReturnType<typeof characterSpellProcedure>,
+): procedure is SpawnedCompanionTouchDeliveryProcedure {
+  return (
+    procedure !== undefined &&
+    "spellRuleFacts" in procedure &&
+    spellInvocationIsSpellcasting(procedure)
+  );
 }
 
 export function spendSpawnedCompanionTouchDeliveryReaction(input: {

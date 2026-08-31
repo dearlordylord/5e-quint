@@ -212,13 +212,7 @@ function movablePersistentAreaSpell(
   );
 
   if (
-    !hasMovablePersistentAreaHeader(spell.mechanics) ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !==
-      MOVABLE_PERSISTENT_AREA_DURATION_MINUTES ||
-    spell.mechanics.operations.length !==
-      MOVABLE_PERSISTENT_AREA_OPERATION_COUNT ||
+    !hasMovablePersistentAreaEnvelope(spell.mechanics) ||
     durationTicks === null ||
     Result.isFailure(durationTicks) ||
     cylinderArea?.kind !== "area" ||
@@ -253,7 +247,7 @@ function movablePersistentAreaSpell(
   };
 }
 
-function hasMovablePersistentAreaHeader(
+function hasMovablePersistentAreaEnvelope(
   mechanics: Extract<
     BattleSpellAdmissionSource["mechanics"],
     { readonly family: "ongoing_effect" }
@@ -263,7 +257,12 @@ function hasMovablePersistentAreaHeader(
     mechanics.level === MOVABLE_PERSISTENT_AREA_LEVEL &&
     mechanics.castingTime.kind === "action" &&
     mechanics.range.kind === "point" &&
-    mechanics.range.feet === MOVABLE_PERSISTENT_AREA_RANGE_FEET
+    mechanics.range.feet === MOVABLE_PERSISTENT_AREA_RANGE_FEET &&
+    mechanics.duration.kind === "concentration" &&
+    mechanics.duration.upTo.unit === "minute" &&
+    mechanics.duration.upTo.amount ===
+      MOVABLE_PERSISTENT_AREA_DURATION_MINUTES &&
+    mechanics.operations.length === MOVABLE_PERSISTENT_AREA_OPERATION_COUNT
   );
 }
 

@@ -2,6 +2,7 @@ import {
   canSpendAction,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
+import type { MovementFeet } from "@dnd/shared/types";
 import * as Result from "effect/Result";
 import {
   spellActiveEffectForExecutionRef,
@@ -9,8 +10,10 @@ import {
 } from "../effect-execution-ref.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
+  BattleControlledVerticalSuspensionAltitudeChangeHole,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
+  BattleVerticalSuspensionAltitudeDirection,
 } from "../battle-state-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { combatantCanTakeActions } from "./creature-state-execution.ts";
@@ -59,7 +62,6 @@ export function resolveControlledVerticalSuspensionAltitudeControlCommand(
       ? selectedEffect
       : undefined;
   if (
-    target === undefined ||
     effect === undefined ||
     effect.sourceCombatantId !== input.subject.actorId
   ) {
@@ -114,12 +116,7 @@ export function resolveControlledVerticalSuspensionAltitudeControlCommand(
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !hole.directions.includes(fill.value.direction) ||
-    fill.value.distanceFeet <= 0 ||
-    fill.value.distanceFeet > hole.maxDistanceFeet ||
-    !Number.isInteger(fill.value.distanceFeet)
-  ) {
+  if (!controlledVerticalSuspensionAltitudeChangeWithinHole(hole, fill.value)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
@@ -166,6 +163,21 @@ export function resolveControlledVerticalSuspensionAltitudeControlCommand(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function controlledVerticalSuspensionAltitudeChangeWithinHole(
+  hole: BattleControlledVerticalSuspensionAltitudeChangeHole,
+  change: {
+    readonly direction: BattleVerticalSuspensionAltitudeDirection;
+    readonly distanceFeet: MovementFeet;
+  },
+): boolean {
+  return (
+    hole.directions.includes(change.direction) &&
+    change.distanceFeet > 0 &&
+    change.distanceFeet <= hole.maxDistanceFeet &&
+    Number.isInteger(change.distanceFeet)
+  );
 }
 
 export function resolveReplaceSelfTransformationModeCommand(

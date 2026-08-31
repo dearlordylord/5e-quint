@@ -33,7 +33,7 @@
       "module/binding:expendActionSpellSlot": 11
     },
     "packages/battle-runtime/src/battle-reducer/active-spell-control-procedures.ts": {
-      "module/binding:resolveControlledVerticalSuspensionAltitudeControlCommand": 20,
+      "module/binding:resolveControlledVerticalSuspensionAltitudeControlCommand": 16,
       "module/binding:resolveReplaceSelfTransformationModeCommand": 12
     },
     "packages/battle-runtime/src/battle-reducer/after-hit-spell-routes.ts": {
@@ -490,7 +490,7 @@
       "module/binding:isMovablePersistentAreaInitialSaveGate": 12,
       "module/binding:isMovablePersistentAreaSaveGate": 12,
       "module/binding:movablePersistentAreaDamageEffect": 12,
-      "module/binding:movablePersistentAreaSpell": 40
+      "module/binding:movablePersistentAreaSpell": 36
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/directional-persistent-area.ts": {
       "module/binding:directionalPersistentAreaSpell": 37,
@@ -514,7 +514,7 @@
       "module/binding:isHeldFlameAttackOngoingEffectSpell": 13
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts": {
-      "module/binding:isStagedSaveConditionPhase": 36,
+      "module/binding:isStagedSaveConditionPhase": 11,
       "module/binding:stagedSaveConditionSpell": 16
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/levitated-creature.ts": {
@@ -573,7 +573,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-composite.ts": {
       "module/binding:isPersistentAreaSaveCompositeSaveGate": 9,
-      "module/binding:persistentAreaSaveCompositeSpell": 26
+      "module/binding:persistentAreaSaveCompositeSpell": 20
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-condition-escape.ts": {
       "module/binding:isPersistentAreaSaveConditionEscapeEscapeOperation": 12,
@@ -581,7 +581,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-condition.ts": {
       "module/binding:isPersistentAreaSaveConditionEffect": 12,
-      "module/binding:persistentAreaSaveConditionSpell": 20
+      "module/binding:persistentAreaSaveConditionSpell": 13
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-armor-effect.ts": {
       "module/binding:resolvePersistentArmorEffect": 13
@@ -611,7 +611,7 @@
       "module/binding:selfTransformationNaturalWeaponsEffect": 9
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/source-turn-translation-persistent-area-save-damage.ts": {
-      "module/binding:persistentAreaSaveDamageSpell": 35,
+      "module/binding:persistentAreaSaveDamageSpell": 27,
       "module/binding:translatingPersistentAreaSaveGateDamageAmount": 15
     },
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/spatial-melee-spell-attack-proxy.ts": {
@@ -694,7 +694,7 @@
       "module/binding:rollModifierSpellTargeting": 9,
       "module/binding:scalarBuffSpellEffect": 28,
       "module/binding:supportedTemporaryHitPointsAmountExpr": 11,
-      "module/binding:temporaryAbilityCheckRollModeProjection": 28
+      "module/binding:temporaryAbilityCheckRollModeProjection": 20
     },
     "packages/battle-runtime/src/battle-reducer/spells-profiles.ts": {
       "module/binding:supportedPreparedAfterDamageReactionSaveSpellProfile": 23
@@ -798,7 +798,7 @@
       "module/binding:stunningStrikeHit": 9
     },
     "packages/battle-runtime/src/battle-reducer/targeting-save-interdiction.ts": {
-      "module/binding:targetingSaveInterdictionCheck": 17
+      "module/binding:targetingSaveInterdictionCheck": 15
     },
     "packages/battle-runtime/src/battle-reducer/triggered-reaction-spell-procedures.ts": {
       "module/binding:resolveCastTriggeredReactionSpellCommand": 26,
@@ -857,7 +857,7 @@
       "module/binding:executableSpellProcedureFromLiveEffects": 15
     },
     "packages/battle-runtime/src/companion-communication.ts": {
-      "module/binding:prepareTouchSpellDeliveryThroughSpawnedCompanion": 15,
+      "module/binding:prepareTouchSpellDeliveryThroughSpawnedCompanion": 13,
       "module/binding:spawnedCompanionTouchDeliveryFills": 10
     },
     "packages/battle-runtime/src/companion-lifecycle-execution.ts": {
@@ -865,7 +865,7 @@
     },
     "packages/battle-runtime/src/companion-lifecycle.ts": {
       "module/binding:admitCompanionToBattle": 9,
-      "module/binding:castResolvedSpawnedCompanion": 14,
+      "module/binding:castResolvedSpawnedCompanion": 12,
       "module/binding:castWildCompanion": 14,
       "module/binding:selectedStoredFormStatBlockId": 9,
       "module/binding:spendWildCompanionCost": 10
