@@ -915,6 +915,59 @@ describe("whole-lane SRD Stat Block scoped fidelity", () => {
     expect(mechanics).not.toHaveProperty("sourceSection");
   });
 
+  test("derives structurally varied authored names once at the denominator join", () => {
+    const target = cachedCorpusProjections.authored.find(({ outcome }) =>
+      Match.value(outcome).pipe(
+        Match.when({ tag: "projected" }, () => true),
+        Match.when({ tag: "failed" }, () => false),
+        Match.exhaustive,
+      ),
+    );
+    if (target === undefined) {
+      throw new Error("The corpus has no projected authored evidence");
+    }
+    const installedRecord = corpusParity.installedRecords.find(
+      ({ id }) => id === target.evidence.statBlockId,
+    );
+    if (installedRecord === undefined) {
+      throw new Error("The projected evidence is outside the denominator");
+    }
+    const whitespace = fc
+      .array(fc.constantFrom(" ", "\t", "\n"), { maxLength: 3 })
+      .map((characters) => characters.join(""));
+
+    fc.assert(
+      fc.property(whitespace, whitespace, (leading, trailing) => {
+        const variantName = `${leading}${installedRecord.name.toUpperCase()}${trailing}`;
+        expect(normalizeStatBlockIdentity(variantName)).toBe(
+          normalizeStatBlockIdentity(installedRecord.name),
+        );
+        const result = consistentResult(
+          reconcileSrdStatBlockScopedFidelity({
+            parity: {
+              ...corpusParity,
+              discovery: { occurrences: [], identities: [], issues: [] },
+              installedRecords: [installedRecord],
+              issues: [],
+            },
+            raw: [],
+            authored: [
+              {
+                ...target,
+                evidence: { ...target.evidence, name: variantName },
+              },
+            ],
+          }),
+        );
+        expect(result.authoredAdmissions).toHaveLength(1);
+        expect(result.authoredAdmissions[0]?.authoredRecord.name).toBe(
+          variantName,
+        );
+      }),
+      { numRuns: 50 },
+    );
+  });
+
   test("keeps delimiter-bearing authored identities collision free", () => {
     expectDelimiterCollisionEvidence(
       delimiterCollisionAssessment("x", "y", "z"),
