@@ -4,8 +4,8 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Result, Option } from "effect";
 
 import {
   AWAKEN_MATERIAL_COMPONENTS,
@@ -67,7 +67,7 @@ function awakenTargetIssue(target: CharacterSheetAwakenTarget): string | null {
 }
 
 function awakenInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly casting: CharacterSheetAwakenCasting;
   readonly target: CharacterSheetAwakenTarget;
 }): Result.Result<CharacterSheetAwakenInvocation, CharacterSheetIssue> {
@@ -82,11 +82,11 @@ function awakenInvocationFromSpell(input: {
     spell.mechanics.duration.kind !== "instantaneous" ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    !("materialCostGp" in spell.mechanics.components) ||
-    spell.mechanics.components.materialCostGp !==
+    spell.mechanics.components.material.kind !== "present" ||
+    Option.isNone(spell.mechanics.components.material.costGp) ||
+    spell.mechanics.components.material.costGp.value !==
       AWAKEN_MATERIAL_COMPONENTS.agateCostGpMinimum ||
-    !("materialConsumed" in spell.mechanics.components) ||
-    spell.mechanics.components.materialConsumed !== true
+    spell.mechanics.components.material.consumed !== true
   ) {
     return characterSheetIssue(
       "Awaken requires the supported level-5 touch transformation profile.",
@@ -138,7 +138,7 @@ function awakenInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "awaken",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

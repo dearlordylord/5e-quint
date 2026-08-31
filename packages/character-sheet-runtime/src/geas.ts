@@ -7,7 +7,7 @@ import {
 } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -87,7 +87,7 @@ function geasTargetIssue(target: CharacterSheetGeasTarget): string | null {
 }
 
 function geasInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly target: CharacterSheetGeasTarget;
   readonly command: CharacterSheetGeasCommand;
 }): Result.Result<CharacterSheetGeasInvocation, CharacterSheetIssue> {
@@ -106,7 +106,7 @@ function geasInvocationFromSpell(input: {
     spell.mechanics.duration.value.amount !== GEAS_DURATION_DAYS ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== false ||
-    spell.mechanics.components.m !== false
+    spell.mechanics.components.material.kind !== "absent"
   ) {
     return characterSheetIssue(
       "Geas requires the supported level-5 Enchantment command profile.",
@@ -144,7 +144,7 @@ function geasInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "geas",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

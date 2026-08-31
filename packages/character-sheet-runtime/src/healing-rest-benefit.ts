@@ -25,17 +25,18 @@ import {
   type ResourceCount,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
-import {
-  topLevelSpellCastingTime,
-  type SpellRecord,
-  type UnitRecord,
-} from "@dnd/surface/surface/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
 
 import {
   projectCharacterSheetClassFeature,
   type CharacterSheetClassFeatureFacts,
 } from "./character-feature-projection.ts";
+import {
+  projectCharacterSheetSpellSource,
+  type CharacterSheetSpellFacts,
+} from "./character-spell-projection.ts";
+import { characterSheetTopLevelSpellCastingTime } from "./spell-profile-shape.ts";
 import {
   characterSheetCurrentHp,
   recoverCharacterSheetHitPoints,
@@ -284,12 +285,15 @@ export function characterSheetSpellRestBenefitProfile(input: {
   readonly unitLibrary: UnitCatalog;
 }): Result.Result<CharacterSheetSpellRestBenefitProfile, CharacterSheetIssue> {
   const unit = input.unitLibrary.getUnit(input.spellId);
-  if (Option.isNone(unit) || unit.value.kind !== "spell") {
+  const spell = Option.isSome(unit)
+    ? projectCharacterSheetSpellSource(unit.value)
+    : Option.none();
+  if (Option.isNone(spell)) {
     return characterSheetIssue(
       "Spell rest benefit application requires an installed Spell Definition.",
     );
   }
-  const mechanics = unit.value.mechanics;
+  const mechanics = spell.value.mechanics;
   /* v8 ignore start -- @preserve -- Unsupported authored spell shape: rest-benefit projection requires the admitted leveled casting shell, one direct recipient phase, and effect trio. */
   if (mechanics.family !== "activation" || mechanics.level < 1) {
     return characterSheetIssue(
@@ -339,7 +343,7 @@ export function characterSheetSpellRestBenefitProfile(input: {
   }
   /* v8 ignore stop -- @preserve */
   return Result.succeed({
-    spellId: unit.value.id,
+    spellId: spell.value.unitId,
     baseSpellLevel: spellSlotLevel(mechanics.level),
     maxRecipients: selection.count,
     healingBaseDice: healing.amount.base.dice,
@@ -1080,8 +1084,10 @@ function isRestSpellSlotRecoveryFeature(
   );
 }
 
-function isSpellRestBenefitCastingShell(mechanics: SpellRecord["mechanics"]) {
-  const castingTime = topLevelSpellCastingTime(mechanics);
+function isSpellRestBenefitCastingShell(
+  mechanics: CharacterSheetSpellFacts["mechanics"],
+) {
+  const castingTime = characterSheetTopLevelSpellCastingTime(mechanics);
   return (
     castingTime?.kind === "minutes" &&
     castingTime.amount === 10 &&

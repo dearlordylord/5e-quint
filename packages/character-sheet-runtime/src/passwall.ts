@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -75,7 +75,7 @@ function passwallDimensionIssue(
 }
 
 function passwallInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly surface: CharacterSheetPasswallSurface;
   readonly dimensions: CharacterSheetPasswallDimensions;
 }): Result.Result<CharacterSheetPasswallInvocation, CharacterSheetIssue> {
@@ -121,7 +121,7 @@ function passwallInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "passwall",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

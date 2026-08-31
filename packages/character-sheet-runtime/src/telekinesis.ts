@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -68,7 +68,7 @@ function telekinesisTargetIssue(
 }
 
 function telekinesisInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly target: CharacterSheetTelekinesisTarget;
 }): Result.Result<CharacterSheetTelekinesisInvocation, CharacterSheetIssue> {
   const spell = input.spell;
@@ -85,7 +85,7 @@ function telekinesisInvocationFromSpell(input: {
     spell.mechanics.duration.upTo.amount !== TELEKINESIS_DURATION_MINUTES ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== false
+    spell.mechanics.components.material.kind !== "absent"
   ) {
     return characterSheetIssue(
       "Telekinesis requires the supported level-5 sustained force-control profile.",
@@ -110,7 +110,7 @@ function telekinesisInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "telekinesis",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",
@@ -141,7 +141,9 @@ function telekinesisInvocationFromSpell(input: {
   });
 }
 
-function hasSupportedTelekinesisOperations(spell: SpellRecord): boolean {
+function hasSupportedTelekinesisOperations(
+  spell: CharacterSheetSpellSource,
+): boolean {
   /* v8 ignore next -- @preserve -- Unsupported authored Telekinesis data: admission requires ongoing-effect mechanics before operation projection. */
   if (spell.mechanics.family !== "ongoing_effect") return false;
   const operations = spell.mechanics.operations;

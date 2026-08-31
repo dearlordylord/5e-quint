@@ -14,7 +14,6 @@ import {
 import type {
   DamageType,
   DruidCircleLandChoice,
-  SpellRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
@@ -23,6 +22,7 @@ import {
   projectCharacterSheetClassFeature,
   type CharacterSheetClassFeatureFacts,
 } from "./character-feature-projection.ts";
+import { projectCharacterSheetSpellSource } from "./character-spell-projection.ts";
 import {
   characterSheetIssue,
   type CharacterSheet,
@@ -228,9 +228,15 @@ export function removeSelfRestorationConditionAtTurnEnd(input: {
 export function empoweredEvocationDamageRollModifier(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-  readonly spell: SpellRecord;
+  readonly spell: UnitRecord;
   readonly spellSourceUnitId: UnitRecord["id"];
 }): Result.Result<CharacterSheetEmpoweredEvocation, CharacterSheetIssue> {
+  const spell = projectCharacterSheetSpellSource(input.spell);
+  if (Option.isNone(spell)) {
+    return characterSheetIssue(
+      "Empowered Evocation requires a Spell Definition.",
+    );
+  }
   const featureOwned = ownedClassFeature(
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
     authoredUnitId(EMPOWERED_EVOCATION_UNIT_ID),
@@ -265,10 +271,7 @@ export function empoweredEvocationDamageRollModifier(input: {
       "Empowered Evocation requires Wizard Spell Access.",
     );
   }
-  if (
-    !("school" in input.spell.mechanics) ||
-    input.spell.mechanics.school !== mechanics.school
-  ) {
+  if (spell.value.mechanics.school !== mechanics.school) {
     return characterSheetIssue(
       "Empowered Evocation requires an Evocation Spell Definition.",
     );
@@ -296,7 +299,7 @@ export function empoweredEvocationDamageRollModifier(input: {
     ...spellSource.preparedSpells,
   ];
   /* v8 ignore start -- @preserve -- A spell passed to this narrowed operation must already belong to the selected Wizard spell-access source. */
-  if (!spellAccess.includes(input.spell.id)) {
+  if (!spellAccess.includes(spell.value.unitId)) {
     return characterSheetIssue(
       "Empowered Evocation requires the spell to be present in Wizard Spell Access.",
     );

@@ -8,7 +8,7 @@ import {
   spellSlotLevel,
 } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -63,7 +63,7 @@ export function castCommune(input: {
 }
 
 function communeInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly previousCastCountSinceLongRest: CharacterSheetCommuneInvocation["repeatedCasting"]["previousCastCountSinceLongRest"];
 }): Result.Result<CharacterSheetCommuneInvocation, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Commune support profile required by this projector. */
@@ -104,7 +104,7 @@ function communeInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "commune",
-    spellId: input.spell.id,
+    spellId: input.spell.unitId,
     spellLevel: input.spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

@@ -38,7 +38,6 @@ import {
 } from "@dnd/surface/surface/find-familiar-forms";
 import type {
   ClassFeatureRecord,
-  SpellRecord,
   StatBlockRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
@@ -48,6 +47,10 @@ import {
   projectCharacterSheetClassFeature,
   type CharacterSheetClassFeatureFacts,
 } from "./character-feature-projection.ts";
+import {
+  projectCharacterSheetSpellSource,
+  type CharacterSheetSpellSource,
+} from "./character-spell-projection.ts";
 
 import { characterSheetResources } from "./resources.ts";
 import { characterSheetSpellInvocation } from "./spell-invocation.ts";
@@ -433,7 +436,7 @@ function retainedCompanionCreationSource(
     });
     /* v8 ignore next -- @preserve -- Malformed retained companion request: a ritual source must pass the spell-access invocation boundary that admitted it. */
     if (Result.isFailure(invocation)) return Result.fail(invocation.failure);
-    const spell = requiredSpellRecord(
+    const spell = requiredSpellSource(
       input.unitLibrary,
       invocation.success.spellId,
     );
@@ -480,7 +483,7 @@ function retainedCompanionCreationSource(
     spend: source.spend,
   });
   if (spendIssue !== null) return characterSheetIssue(spendIssue);
-  const spell = requiredSpellRecord(
+  const spell = requiredSpellSource(
     input.unitLibrary,
     authoredUnitId(feature.success.mechanics.spellId),
   );
@@ -505,7 +508,7 @@ function retainedCompanionPreparedSpell(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly spellId: UnitRecord["id"];
-}): Result.Result<SpellRecord, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetSpellSource, CharacterSheetIssue> {
   if (!isSpellcastingBuild(input.sheet.build)) {
     return characterSheetIssue(
       "Retained companion spell-slot source requires the selected spell prepared or otherwise effective as prepared.",
@@ -524,14 +527,14 @@ function retainedCompanionPreparedSpell(input: {
       "Retained companion spell-slot source requires the selected spell prepared or otherwise effective as prepared.",
     );
   }
-  return requiredSpellRecord(input.unitLibrary, input.spellId);
+  return requiredSpellSource(input.unitLibrary, input.spellId);
 }
 
 function retainedCompanionInvocationSpell(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly spellId: UnitRecord["id"];
-}): Result.Result<SpellRecord, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetSpellSource, CharacterSheetIssue> {
   if (
     input.spellId !== PACT_OF_THE_CHAIN_SPELL_ID ||
     !hasSelectedEldritchInvocation(
@@ -543,7 +546,7 @@ function retainedCompanionInvocationSpell(input: {
       "Retained companion invocation source must provide familiar form eligibility.",
     );
   }
-  return requiredSpellRecord(input.unitLibrary, input.spellId);
+  return requiredSpellSource(input.unitLibrary, input.spellId);
 }
 
 type RetainedCompanionSpellCastFeature = CharacterSheetClassFeatureFacts & {
@@ -807,16 +810,17 @@ function statBlockLiteralHp(statBlock: StatBlockRecord): HpType | null {
     : null;
 }
 
-function requiredSpellRecord(
+function requiredSpellSource(
   unitLibrary: UnitCatalog,
   spellId: UnitRecord["id"],
-): Result.Result<SpellRecord, CharacterSheetIssue> {
+): Result.Result<CharacterSheetSpellSource, CharacterSheetIssue> {
   const unit = unitLibrary.getUnit(spellId);
   if (Option.isNone(unit)) {
     return characterSheetIssue(`Unknown Spell Unit id: ${spellId}`);
   }
-  return unit.value.kind === "spell"
-    ? Result.succeed(unit.value)
+  const spell = projectCharacterSheetSpellSource(unit.value);
+  return Option.isSome(spell)
+    ? Result.succeed(spell.value)
     : characterSheetIssue(
         "Retained companion source must reference a Spell record.",
       );

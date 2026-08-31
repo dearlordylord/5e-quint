@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -81,7 +81,7 @@ function seemingTargetIssue(
 }
 
 function seemingInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly targets: readonly CharacterSheetSeemingTarget[];
 }): Result.Result<CharacterSheetSeemingInvocation, CharacterSheetIssue> {
   const spell = input.spell;
@@ -95,7 +95,7 @@ function seemingInvocationFromSpell(input: {
     spell.mechanics.duration.kind !== "timed" ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== false ||
+    spell.mechanics.components.material.kind !== "absent" ||
     spell.mechanics.school !== "illusion"
   ) {
     return characterSheetIssue(
@@ -137,7 +137,7 @@ function seemingInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "seeming",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

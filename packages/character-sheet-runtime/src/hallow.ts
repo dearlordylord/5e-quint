@@ -3,8 +3,8 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
+import { Result, Option } from "effect";
 
 import {
   HALLOW_MATERIAL_COMPONENTS,
@@ -146,7 +146,7 @@ function hallowExtraEffectCreatureTypesIssue(
 }
 
 function hallowInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly casting: CharacterSheetHallowCasting;
   readonly area: CharacterSheetHallowArea;
   readonly wardCreatureTypes: CharacterSheetHallowCreatureTypes;
@@ -164,11 +164,11 @@ function hallowInvocationFromSpell(input: {
     !spell.mechanics.duration.endsOn?.some((end) => end === "dispel") ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    !("materialCostGp" in spell.mechanics.components) ||
-    spell.mechanics.components.materialCostGp !==
+    spell.mechanics.components.material.kind !== "present" ||
+    Option.isNone(spell.mechanics.components.material.costGp) ||
+    spell.mechanics.components.material.costGp.value !==
       HALLOW_MATERIAL_COMPONENTS.consumedIncenseCostGpMinimum ||
-    !("materialConsumed" in spell.mechanics.components) ||
-    spell.mechanics.components.materialConsumed !== true
+    spell.mechanics.components.material.consumed !== true
   ) {
     return characterSheetIssue(
       "Hallow requires the supported level-5 durable area profile.",
@@ -196,7 +196,7 @@ function hallowInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "hallow",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

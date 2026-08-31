@@ -62,6 +62,15 @@ Current executable state:
   from class-feature always-prepared grants and creation-retained Magic
   Initiate selections. Magic Initiate cantrips remain learned access; its level
   1 spell is always prepared and retains the feat-selected spellcasting ability.
+- `projectCharacterSheetSpell` is the package-local static Spell Definition
+  admission boundary. It removes root-record identity and Material-component
+  prose while retaining one correlated typed material presence, cost, and
+  consumption contract. Nested authored expression remains admission input only
+  until specialized structural readers narrow it; execution results do not
+  expose that expression. `projectPartialCharacterSheetSpell` adds exact consumed/unowned
+  Unit mechanics paths for the 31 structurally partial spell roots currently
+  owned by Character Sheet. The projection contains no build selection, actor,
+  expenditure, rest, current-state, or generated Slice-membership facts.
 - `spellAccessFreeCast` is the generic limited free-cast resource. Its identity
   is the Spell Access pair of source Unit and Spell Unit, capacity is derived
   from the projected access or installed class-feature grant, and the sheet

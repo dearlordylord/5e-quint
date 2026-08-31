@@ -167,7 +167,7 @@ describe("Character Sheet runtime / spell invocation", () => {
     ).toMatchObject([
       {
         tag: "spellbookRitual",
-        spell: { id: "detect_magic" },
+        spell: { unitId: "detect_magic" },
         spellcastingSourceUnitId: "class_wizard",
         featureUnitId: "wizard_ritual_adept",
       },

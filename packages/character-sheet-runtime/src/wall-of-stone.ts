@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -85,7 +85,7 @@ function wallOfStoneShapeIssue(
 }
 
 function wallOfStoneInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly placement: CharacterSheetWallOfStonePlacement;
   readonly shape: CharacterSheetWallOfStoneShape;
 }): Result.Result<CharacterSheetWallOfStoneInvocation, CharacterSheetIssue> {
@@ -104,7 +104,7 @@ function wallOfStoneInvocationFromSpell(input: {
     spell.mechanics.duration.permanentIfMaintainedFull !== true ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== "a cube of granite"
+    spell.mechanics.components.material.kind !== "present"
   ) {
     return characterSheetIssue(
       "Wall of Stone requires the supported level-5 stone wall profile.",
@@ -128,7 +128,7 @@ function wallOfStoneInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "wallOfStone",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",
@@ -172,7 +172,9 @@ function wallOfStoneInvocationFromSpell(input: {
   });
 }
 
-function hasSupportedWallOfStonePhase(spell: SpellRecord): boolean {
+function hasSupportedWallOfStonePhase(
+  spell: CharacterSheetSpellSource,
+): boolean {
   /* v8 ignore next -- @preserve -- Unsupported authored Wall of Stone data: admission requires activation mechanics before phase projection. */
   if (spell.mechanics.family !== "activation") return false;
   return spell.mechanics.phases.some((phase) => {

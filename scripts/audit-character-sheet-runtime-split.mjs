@@ -29,6 +29,23 @@ const EXPECTED_EXPORTS = [
   "PartialCharacterSheetFeatureProjectionResult",
   "projectCharacterSheetFeature",
   "projectPartialCharacterSheetFeature",
+  "CHARACTER_SHEET_SPELL_EVIDENCE_BRANCHES",
+  "CHARACTER_SHEET_SPELL_PATH_DISPOSITIONS",
+  "PARTIAL_CHARACTER_SHEET_SPELL_PROJECTION_ISSUE_CODES",
+  "CharacterSheetSpellComponents",
+  "CharacterSheetSpellEvidenceBranch",
+  "CharacterSheetSpellFacts",
+  "CharacterSheetSpellMechanics",
+  "CharacterSheetSpellPathDisposition",
+  "CharacterSheetSpellPathEvidence",
+  "CharacterSheetSpellSource",
+  "PartialCharacterSheetSpellProjection",
+  "PartialCharacterSheetSpellProjectionIssue",
+  "PartialCharacterSheetSpellProjectionIssueCode",
+  "PartialCharacterSheetSpellProjectionResult",
+  "projectCharacterSheetSpell",
+  "projectCharacterSheetSpellSource",
+  "projectPartialCharacterSheetSpell",
   "CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE",
   "CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS",
   "CHARACTER_SHEET_LONG_REST_BASE_TICKS",
@@ -353,6 +370,91 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "PartialCharacterSheetFeatureProjectionResult",
     reason:
       "Character Sheet owns readable feature evidence or a non-empty accumulated rejection as one closed result.",
+  },
+  {
+    name: "projectCharacterSheetSpell",
+    reason:
+      "Character Sheet owns the production-consumed root-record-identity-free Spell Definition admission boundary, including removal of authored Material-component prose.",
+  },
+  {
+    name: "projectCharacterSheetSpellSource",
+    reason:
+      "Character Sheet owns the selection-boundary correlation between an already-selected Unit ref and root-record-identity-free static spell admission facts.",
+  },
+  {
+    name: "projectPartialCharacterSheetSpell",
+    reason:
+      "Character Sheet owns exact partial-spell mechanics-path disposition and accumulated typed rejection for terminal Cleanroom composition.",
+  },
+  {
+    name: "CHARACTER_SHEET_SPELL_PATH_DISPOSITIONS",
+    reason:
+      "Character Sheet owns the fixed consumed/unowned path-disposition vocabulary used by spell evidence.",
+  },
+  {
+    name: "CHARACTER_SHEET_SPELL_EVIDENCE_BRANCHES",
+    reason:
+      "Character Sheet owns the named spell branches correlated with its mechanics-path evidence.",
+  },
+  {
+    name: "PARTIAL_CHARACTER_SHEET_SPELL_PROJECTION_ISSUE_CODES",
+    reason:
+      "Character Sheet owns the fixed rejection-code vocabulary for partial spell projection.",
+  },
+  {
+    name: "CharacterSheetSpellComponents",
+    reason:
+      "Character Sheet owns the correlated Material-component presence, cost, and consumption contract without authored prose.",
+  },
+  {
+    name: "CharacterSheetSpellMechanics",
+    reason:
+      "Character Sheet owns the root-record-identity-free spell admission union with Material prose removed; specialized readers narrow remaining authored expression before execution.",
+  },
+  {
+    name: "CharacterSheetSpellFacts",
+    reason:
+      "Character Sheet owns static spell admission facts with root-record identity and Material prose removed; nested authored expression never leaves specialist admission as execution output.",
+  },
+  {
+    name: "CharacterSheetSpellSource",
+    reason:
+      "Character Sheet owns the selected Unit-ref wrapper around root-record-identity-free admission facts without restoring authored identity to execution facts.",
+  },
+  {
+    name: "CharacterSheetSpellPathDisposition",
+    reason:
+      "Character Sheet owns the typed consumed/unowned disposition carried by spell path evidence.",
+  },
+  {
+    name: "CharacterSheetSpellEvidenceBranch",
+    reason:
+      "Character Sheet owns the typed branch vocabulary carried beside spell mechanics paths.",
+  },
+  {
+    name: "CharacterSheetSpellPathEvidence",
+    reason:
+      "Character Sheet owns the exact mechanics-path evidence contract for partial spell roots.",
+  },
+  {
+    name: "PartialCharacterSheetSpellProjection",
+    reason:
+      "Character Sheet owns the non-empty evidence correlation for a structurally partial spell projection.",
+  },
+  {
+    name: "PartialCharacterSheetSpellProjectionIssue",
+    reason:
+      "Character Sheet owns precise spell-projection failures with Unit mechanics paths.",
+  },
+  {
+    name: "PartialCharacterSheetSpellProjectionIssueCode",
+    reason:
+      "Character Sheet owns the typed code union for partial spell projection rejection.",
+  },
+  {
+    name: "PartialCharacterSheetSpellProjectionResult",
+    reason:
+      "Character Sheet owns readable spell evidence or a non-empty accumulated rejection as one closed result.",
   },
   {
     name: "CharacterSheetIdSchema",

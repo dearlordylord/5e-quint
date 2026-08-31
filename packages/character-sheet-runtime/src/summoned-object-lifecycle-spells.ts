@@ -7,8 +7,10 @@ import {
 } from "@dnd/shared/elapsed-time";
 import { Hp, spellSlotLevel, type SpellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import type { DamageType } from "@dnd/surface/surface/types";
+import { Result, Option } from "effect";
+
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 
 import { castPreparedSpell } from "./prepared-spell-cast.ts";
 import {
@@ -171,7 +173,7 @@ function castLifecycleSpell<Invocation>(input: {
   readonly spellId: string;
   readonly castLevel: SpellSlotLevel;
   readonly invocation: (
-    spell: SpellRecord,
+    spell: CharacterSheetSpellSource,
   ) => Result.Result<Invocation, CharacterSheetIssue>;
 }) {
   return castPreparedSpell({
@@ -215,7 +217,7 @@ function animateObjectsTargetIssue(input: {
 }
 
 function animateObjectsInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly targets: readonly CharacterSheetAnimateObjectsTarget[];
   readonly spellcastingAbilityModifier: number;
   readonly castLevel: SpellSlotLevel;
@@ -293,7 +295,7 @@ function animateObjectsInvocationFromSpell(input: {
 }
 
 function conjureElementalInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly spirit: CharacterSheetConjureElementalSpirit;
   readonly castLevel: SpellSlotLevel;
 }): Result.Result<
@@ -361,7 +363,7 @@ function conjureElementalInvocationFromSpell(input: {
 }
 
 function summonDragonInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly spirit: CharacterSheetSummonDragonSpirit;
   readonly castLevel: SpellSlotLevel;
 }): Result.Result<CharacterSheetSummonDragonInvocation, CharacterSheetIssue> {
@@ -453,7 +455,7 @@ function summonDragonInvocationFromSpell(input: {
 }
 
 function planarBindingInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly target: CharacterSheetPlanarBindingTarget;
   readonly castLevel: SpellSlotLevel;
 }): Result.Result<CharacterSheetPlanarBindingInvocation, CharacterSheetIssue> {
@@ -504,11 +506,11 @@ function planarBindingInvocationFromSpell(input: {
 }
 
 function preparedLifecycleInvocation(
-  spell: SpellRecord,
+  spell: CharacterSheetSpellSource,
   castLevel: SpellSlotLevel,
 ) {
   return {
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     castLevel,
     spellSlotCost: { kind: "ordinary" as const, spellLevel: castLevel },
@@ -606,14 +608,14 @@ function conjureElementalDamageType(
 }
 
 function hasConsumedMaterialCost(
-  components: SpellRecord["mechanics"]["components"],
+  components: CharacterSheetSpellSource["mechanics"]["components"],
   costGp: number,
 ): boolean {
   return (
-    "materialConsumed" in components &&
-    components.materialConsumed === true &&
-    "materialCostGp" in components &&
-    components.materialCostGp === costGp
+    components.material.kind === "present" &&
+    components.material.consumed === true &&
+    Option.isSome(components.material.costGp) &&
+    components.material.costGp.value === costGp
   );
 }
 

@@ -8,7 +8,7 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import { characterSheetHitPointMaximum } from "./hit-points.ts";
@@ -66,7 +66,7 @@ export function castArcaneHand(input: {
 }
 
 function arcaneHandInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly space: CharacterSheetArcaneHandSpace;
   readonly castLevel: SpellSlotLevel;
   readonly hitPointMaximum: HpType;
@@ -85,7 +85,7 @@ function arcaneHandInvocationFromSpell(input: {
     spell.mechanics.duration.upTo.amount !== ARCANE_HAND_DURATION_MINUTES ||
     spell.mechanics.components.v !== true ||
     spell.mechanics.components.s !== true ||
-    spell.mechanics.components.m !== "an eggshell and a glove"
+    spell.mechanics.components.material.kind !== "present"
   ) {
     return characterSheetIssue(
       "Arcane Hand requires the supported level-5 magical hand profile.",
@@ -117,7 +117,7 @@ function arcaneHandInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "arcaneHand",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     castLevel: input.castLevel,
     spellSlotCost: {

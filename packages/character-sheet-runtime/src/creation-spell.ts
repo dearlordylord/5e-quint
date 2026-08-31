@@ -8,7 +8,7 @@ import {
 } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel, type SpellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -97,7 +97,7 @@ function creationObjectIssue(input: {
 }
 
 function creationInvocationFromSpell(input: {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly object: CharacterSheetCreationObject;
   readonly castLevel: SpellSlotLevel;
 }): Result.Result<CharacterSheetCreationInvocation, CharacterSheetIssue> {
@@ -143,7 +143,7 @@ function creationInvocationFromSpell(input: {
 
   return Result.succeed({
     tag: "creation",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     castLevel: input.castLevel,
     spellSlotCost: {

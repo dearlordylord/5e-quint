@@ -3,7 +3,7 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { CharacterSheetSpellSource } from "./character-spell-projection.ts";
 import { Result } from "effect";
 
 import {
@@ -37,7 +37,7 @@ export function castCommuneWithNature(input: {
 }
 
 function communeWithNatureInvocationFromSpell(
-  spell: SpellRecord,
+  spell: CharacterSheetSpellSource,
 ): Result.Result<
   CharacterSheetCommuneWithNatureInvocation,
   CharacterSheetIssue
@@ -65,7 +65,7 @@ function communeWithNatureInvocationFromSpell(
 
   return Result.succeed({
     tag: "communeWithNature",
-    spellId: spell.id,
+    spellId: spell.unitId,
     spellLevel: spell.mechanics.level,
     spellSlotCost: {
       kind: "ordinary",

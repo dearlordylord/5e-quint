@@ -1,12 +1,13 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.restoration-death-spell-session
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import { Hp, spellSlotLevel, type SpellSlotLevel } from "@dnd/shared/types";
-import type {
-  ActivationPhase,
-  SpellRecord,
-  UnitRecord,
-} from "@dnd/surface/surface/types";
-import { Result } from "effect";
+import type { ActivationPhase, UnitRecord } from "@dnd/surface/surface/types";
+import { Result, Option } from "effect";
+
+import {
+  projectCharacterSheetSpellSource,
+  type CharacterSheetSpellSource,
+} from "./character-spell-projection.ts";
 
 import {
   characterSheetCurrentHp,
@@ -171,19 +172,19 @@ type ReviveDeadCreatureEffect = {
   };
 };
 type GreaterRestorationProfile = {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly minimumCastLevel: SpellSlotLevel;
   readonly materialCostGp: number;
   readonly conditions: readonly CharacterSheetGreaterRestorationCondition[];
 };
 type RaiseDeadProfile = {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly minimumCastLevel: SpellSlotLevel;
   readonly materialCostGp: number;
   readonly revive: ReviveDeadCreatureEffect;
 };
 type ReincarnateProfile = {
-  readonly spell: SpellRecord;
+  readonly spell: CharacterSheetSpellSource;
   readonly minimumCastLevel: SpellSlotLevel;
   readonly materialCostGp: number;
   readonly deathWindowDays: number;
@@ -231,7 +232,7 @@ export function castGreaterRestorationOnSheet(
   return Result.succeed({
     caster: sourceIsTarget ? restored : prepared.success.caster,
     target: restored,
-    spellId: profile.success.spell.id,
+    spellId: profile.success.spell.unitId,
     castLevel: prepared.success.castLevel,
     deferredMechanics: [],
   });
@@ -279,7 +280,7 @@ export function castRaiseDeadOnSheet(
         (condition) => condition !== "poisoned",
       ),
     },
-    spellId: profile.success.spell.id,
+    spellId: profile.success.spell.unitId,
     castLevel: prepared.success.castLevel,
     deferredMechanics: [
       "raise_dead_d20_test_penalty",
@@ -294,7 +295,7 @@ export function castReincarnateOnSheet(
   const profile = reincarnateProfileForSpell(input);
   /* v8 ignore next -- @preserve -- A rejected profile is unsupported authored Reincarnate data. */
   if (Result.isFailure(profile)) return Result.fail(profile.failure);
-  if (!hasPreparedSpellAccess(input.caster, profile.success.spell.id)) {
+  if (!hasPreparedSpellAccess(input.caster, profile.success.spell.unitId)) {
     return characterSheetIssue(
       "Reincarnate requires prepared class Spell Access.",
     );
@@ -321,7 +322,7 @@ export function castReincarnateOnSheet(
   return Result.succeed({
     caster: prepared.success.caster,
     target: input.target,
-    spellId: profile.success.spell.id,
+    spellId: profile.success.spell.unitId,
     castLevel: prepared.success.castLevel,
     targetRemains: input.eligibility.targetRemains,
     speciesReplacement: {
@@ -429,7 +430,7 @@ function greaterRestorationProfileForSpell(input: {
   readonly unitLibrary: UnitCatalog;
   readonly spellId: UnitRecord["id"];
 }): Result.Result<GreaterRestorationProfile, CharacterSheetIssue> {
-  const spell = spellRecord(input.unitLibrary, input.spellId);
+  const spell = spellSource(input.unitLibrary, input.spellId);
   /* v8 ignore next -- @preserve -- Spell lookup failure is unsupported authored Greater Restoration catalog data. */
   if (Result.isFailure(spell)) return Result.fail(spell.failure);
   const shell = activationTouchMaterialShell(spell.success);
@@ -464,7 +465,7 @@ function raiseDeadProfileForSpell(input: {
   readonly unitLibrary: UnitCatalog;
   readonly spellId: UnitRecord["id"];
 }): Result.Result<RaiseDeadProfile, CharacterSheetIssue> {
-  const spell = spellRecord(input.unitLibrary, input.spellId);
+  const spell = spellSource(input.unitLibrary, input.spellId);
   /* v8 ignore next -- @preserve -- Spell lookup failure is unsupported authored Raise Dead catalog data. */
   if (Result.isFailure(spell)) return Result.fail(spell.failure);
   const shell = activationTouchMaterialShell(spell.success);
@@ -501,7 +502,7 @@ function reincarnateProfileForSpell(input: {
   readonly unitLibrary: UnitCatalog;
   readonly spellId: UnitRecord["id"];
 }): Result.Result<ReincarnateProfile, CharacterSheetIssue> {
-  const spell = spellRecord(input.unitLibrary, input.spellId);
+  const spell = spellSource(input.unitLibrary, input.spellId);
   /* v8 ignore next -- @preserve -- Spell lookup failure is unsupported authored Reincarnate catalog data. */
   if (Result.isFailure(spell)) return Result.fail(spell.failure);
   const shell = activationTouchMaterialShell(spell.success);
@@ -531,35 +532,36 @@ function reincarnateProfileForSpell(input: {
   });
 }
 
-function spellRecord(
+function spellSource(
   unitLibrary: UnitCatalog,
   spellId: UnitRecord["id"],
-): Result.Result<SpellRecord, CharacterSheetIssue> {
+): Result.Result<CharacterSheetSpellSource, CharacterSheetIssue> {
   const unit = getRequiredUnit(unitLibrary, spellId);
   /* v8 ignore next -- @preserve -- A missing selected spell Unit is unsupported authored catalog input. */
   if (Result.isFailure(unit)) return Result.fail(unit.failure);
   /* v8 ignore start -- @preserve -- Unsupported authored reference: the selected restoration/death spell id resolves to a non-spell Unit. */
-  if (unit.success.kind !== "spell")
+  const spell = projectCharacterSheetSpellSource(unit.success);
+  if (Option.isNone(spell))
     return characterSheetIssue(
       "Restoration/death spell casting requires a Spell record.",
     );
   /* v8 ignore stop -- @preserve */
-  return Result.succeed(unit.success);
+  return Result.succeed(spell.value);
 }
 
 function activationTouchMaterialShell(
-  spell: SpellRecord,
+  spell: CharacterSheetSpellSource,
 ): Result.Result<{ readonly materialCostGp: number }, CharacterSheetIssue> {
-  const components: unknown = spell.mechanics.components;
+  const components = spell.mechanics.components;
   /* v8 ignore start -- @preserve -- Unsupported authored spell shape: restoration/death spells require the admitted leveled instantaneous touch shell and consumed material component. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level < 1 ||
     spell.mechanics.range.kind !== "touch" ||
     spell.mechanics.duration.kind !== "instantaneous" ||
-    !isRecord(components) ||
-    components["materialConsumed"] !== true ||
-    typeof components["materialCostGp"] !== "number"
+    components.material.kind !== "present" ||
+    components.material.consumed !== true ||
+    Option.isNone(components.material.costGp)
   ) {
     return characterSheetIssue(
       "Restoration/death spell casting requires a leveled instantaneous touch Spell Definition with a consumed material component.",
@@ -567,12 +569,12 @@ function activationTouchMaterialShell(
   }
   /* v8 ignore stop -- @preserve */
   return Result.succeed({
-    materialCostGp: components["materialCostGp"],
+    materialCostGp: components.material.costGp.value,
   });
 }
 
 function singleDirectCreaturePhase(
-  spell: SpellRecord,
+  spell: CharacterSheetSpellSource,
 ): Result.Result<DirectActivationPhase, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Unsupported authored restoration data: admission requires activation mechanics with exactly one phase. */
   const phase =
@@ -604,7 +606,7 @@ function singleDirectCreaturePhase(
 }
 
 function singleDirectDeadCreaturePhase(
-  spell: SpellRecord,
+  spell: CharacterSheetSpellSource,
 ): Result.Result<DirectActivationPhase, CharacterSheetIssue> {
   const phase = singleDirectCreaturePhase(spell);
   /* v8 ignore next -- @preserve -- Base phase rejection is unsupported authored Raise Dead data. */
@@ -623,7 +625,7 @@ function singleDirectDeadCreaturePhase(
 }
 
 function singleDirectDeadHumanoidPhase(
-  spell: SpellRecord,
+  spell: CharacterSheetSpellSource,
 ): Result.Result<DirectActivationPhase, CharacterSheetIssue> {
   const phase = singleDirectCreaturePhase(spell);
   /* v8 ignore next -- @preserve -- Base phase rejection is unsupported authored Reincarnate data. */
