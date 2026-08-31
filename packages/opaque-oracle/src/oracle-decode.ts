@@ -251,27 +251,53 @@ function unknownVariantIssuePath(
 function unknownObjectVariantDiscriminator(
   issue: SchemaIssue.InvalidType | SchemaIssue.AnyOf,
 ): string | undefined {
+  const variant = unknownObjectVariant(issue);
+  if (variant === undefined) return undefined;
+  const { input, members } = variant;
+  const firstMember = members[0];
+  if (firstMember?._tag !== "Objects") return undefined;
+  for (const property of firstMember.propertySignatures) {
+    const discriminator = unknownVariantDiscriminatorProperty(
+      input,
+      members,
+      property.name,
+    );
+    if (discriminator !== undefined) return discriminator;
+  }
+  return undefined;
+}
+
+type UnknownObjectVariant = {
+  readonly input: object;
+  readonly members: readonly AST.AST[];
+};
+
+function unknownObjectVariant(
+  issue: SchemaIssue.InvalidType | SchemaIssue.AnyOf,
+): UnknownObjectVariant | undefined {
+  if (issue.ast._tag !== "Union") return undefined;
   if (
-    issue.ast._tag !== "Union" ||
     typeof issue.input !== "object" ||
     issue.input === null ||
     Array.isArray(issue.input)
   ) {
     return undefined;
   }
-  const members = issue.ast.types;
-  const firstMember = members[0];
-  if (firstMember?._tag !== "Objects") return undefined;
-  for (const property of firstMember.propertySignatures) {
-    if (typeof property.name !== "string") continue;
-    const actual = Reflect.get(issue.input, property.name);
-    if (typeof actual !== "string") continue;
-    const expected = commonLiteralPropertyValues(members, property.name);
-    if (expected !== undefined && !expected.includes(actual)) {
-      return property.name;
-    }
-  }
-  return undefined;
+  return { input: issue.input, members: issue.ast.types };
+}
+
+function unknownVariantDiscriminatorProperty(
+  input: object,
+  members: readonly AST.AST[],
+  propertyName: PropertyKey,
+): string | undefined {
+  if (typeof propertyName !== "string") return undefined;
+  const actual = Reflect.get(input, propertyName);
+  if (typeof actual !== "string") return undefined;
+  const expected = commonLiteralPropertyValues(members, propertyName);
+  return expected !== undefined && !expected.includes(actual)
+    ? propertyName
+    : undefined;
 }
 
 function commonLiteralPropertyValues(
