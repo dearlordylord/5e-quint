@@ -1,3 +1,4 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
 import {

@@ -321,11 +321,22 @@ describe("Surface publication delta verifier", () => {
 
   test("rejects an arbitrary schema-valid certificate mutation", () => {
     const result = withFixture(({ certificatePath: fixturePath }) => {
-      const certificate = readFileSync(fixturePath, "utf8");
-      writeFileSync(
-        fixturePath,
-        certificate.replace('"byteLength": 946224', '"byteLength": 946225'),
+      const certificate = fixtureObject(
+        JSON.parse(readFileSync(fixturePath, "utf8")),
+        "certificate",
       );
+      const candidate = fixtureObjectField(
+        fixtureObjectField(
+          fixtureObjectField(certificate, "artifacts"),
+          "aggregate",
+        ),
+        "candidate",
+      );
+      if (typeof candidate.byteLength !== "number") {
+        throw new Error("Expected candidate byte length");
+      }
+      candidate.byteLength += 1;
+      writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
     });
 
     expect(result.tag).toBe("invalid");
@@ -334,14 +345,19 @@ describe("Surface publication delta verifier", () => {
 
   test("rejects a certificate hash mutation", () => {
     const result = withFixture(({ certificatePath: fixturePath }) => {
-      const certificate = readFileSync(fixturePath, "utf8");
-      writeFileSync(
-        fixturePath,
-        certificate.replace(
-          "8b3466a7ed3b714788aac208ad6d76684eeb9c59037a9d05b6a7d491d4218867",
-          "0000000000000000000000000000000000000000000000000000000000000000",
-        ),
+      const certificate = fixtureObject(
+        JSON.parse(readFileSync(fixturePath, "utf8")),
+        "certificate",
       );
+      const candidate = fixtureObjectField(
+        fixtureObjectField(
+          fixtureObjectField(certificate, "artifacts"),
+          "aggregate",
+        ),
+        "candidate",
+      );
+      candidate.sha256 = "0".repeat(64);
+      writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
     });
 
     expect(result.tag).toBe("invalid");
@@ -617,9 +633,14 @@ describe("Surface publication delta verifier", () => {
     expect(issueKinds(result)).toContain("certificate-invalid");
   }, 180_000);
 
-  test.each(["added", "removed"] as const)(
-    "rejects a %s delta classified as a content change",
-    (kind) => {
+  test.each([
+    ["added", "authored-persistent-rule-facts"],
+    ["removed", "authored-persistent-rule-facts"],
+    ["added", "authored-stat-block-fidelity"],
+    ["removed", "authored-stat-block-fidelity"],
+  ] as const)(
+    "rejects a %s delta classified as %s",
+    (kind, semanticClass) => {
       const result = withFixture(
         (paths) => {
           certifyMembershipDelta(paths, kind);
@@ -628,7 +649,7 @@ describe("Surface publication delta verifier", () => {
             paths.certificatePath,
             certificate.replace(
               '"semanticClass": "authored-catalog-membership"',
-              '"semanticClass": "authored-persistent-rule-facts"',
+              `"semanticClass": "${semanticClass}"`,
             ),
           );
         },
