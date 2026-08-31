@@ -13,15 +13,17 @@ This section is the sole mutable handoff for a new session.
 
 - Ledger state observed: 2026-08-31
 - Current frontier: `SR-04`
-- Active work: none; next Creation-train ticket is #469
-- Active owner: none
+- Active work: #469 feature and trait mechanics projection
+- Active owner: Codex orchestrator
 - Last completed landing unit: `SR-04A` Character Definition static projection,
   #464
 - Last accepted milestone SHA: `65bbb45b8`
 - Coordination base before `SR-00`: `51beff526`
 - `SR-00` integration base: `301229532`
-- Active landing unit: none
-- Next action: claim `SR-04B` for #469 from the latest ledger-accepted `master`
+- Active landing unit: `integration/cleanroom-sr-04b` at
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04b`
+- Next action: audit current feature/trait recognition, partial-root evidence,
+  and prior #469 implementation from lease base `2b5989812`
 - Parallel work allowed now: `SR-09` and `SR-12` are available, subject to the
   serialized write hotspots and a current-base write-set audit
 - Cleanroom Acceptance Run #39: excluded
@@ -136,8 +138,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice | Owner | Worktree/branch | Base SHA | Write lease | State |
-| --------------- | ------------ | ----- | --------------- | -------- | ----------- | ----- |
+| Checkpoint/unit | Ticket/slice                                | Owner              | Worktree/branch                                                                               | Base SHA    | Write lease                                                                                                                                                       | State  |
+| --------------- | ------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-04B`        | #469 feature and trait mechanics projection | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-04b`; `integration/cleanroom-sr-04b` | `2b5989812` | Character Creation feature/trait projection, mechanics-path evidence, production discovery/finalization consumers, focused verification, and reviewer convergence | Active |
 
 ## Landing discipline
 
