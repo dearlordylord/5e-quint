@@ -1,7 +1,7 @@
 import { Hp } from "@dnd/shared/types";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { Result } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   decodeCreatureImmunityDeclarationSync,
@@ -151,11 +151,99 @@ describe("Stat Block combatant admission capability", () => {
       resources: resources.slice(1),
     });
 
-    expect(
-      Result.isFailure(initialized)
-        ? battleStateInitIssueMessage(initialized.failure)
-        : "initialized",
-    ).toBe("Battle runtime requires literal Stat Block Armor Class.");
+    expect(Result.isFailure(admitted)).toBe(true);
+    if (Result.isSuccess(admitted)) return;
+    const firstResource = resources[0];
+    if (firstResource === undefined) {
+      throw new Error("Expected a declared Stat Block resource.");
+    }
+    expect(admitted.failure).toEqual({
+      tag: "statBlockResourceGraphIssue",
+      issues: [
+        {
+          kind: "missingResourceDeclaration",
+          ordinal: firstResource.ordinal,
+        },
+      ],
+    });
+  });
+
+  test("rejects duplicate Stat Block resource declaration ordinals", () => {
+    const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
+    const [firstResource, ...remainingResources] = source.resources;
+    if (firstResource === undefined) {
+      throw new Error("Expected the first resource declaration.");
+    }
+
+    const admitted = battleStatBlockCombatantSource({
+      ...source,
+      resources: [firstResource, firstResource, ...remainingResources],
+    });
+
+    expect(Result.isFailure(admitted)).toBe(true);
+    if (Result.isSuccess(admitted)) return;
+    expect(admitted.failure).toEqual({
+      tag: "statBlockResourceGraphIssue",
+      issues: [
+        { kind: "duplicateResourceOrdinal", ordinal: firstResource.ordinal },
+      ],
+    });
+  });
+
+  test("accumulates duplicate and distinct missing resource graph issues", () => {
+    const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
+    const [firstResource, secondResource] = source.resources;
+    if (firstResource === undefined || secondResource === undefined) {
+      throw new Error("Expected both resource declarations.");
+    }
+    const missingThree = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(3);
+    const missingFour = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(4);
+    const [firstProcedure, ...remainingProcedures] = source.procedures;
+    if (
+      firstProcedure === undefined ||
+      firstProcedure.kind === "spellcasting"
+    ) {
+      throw new Error("Expected the first resource-backed procedure.");
+    }
+
+    const admitted = battleStatBlockCombatantSource({
+      ...source,
+      resources: [firstResource, firstResource, secondResource, secondResource],
+      procedures: [
+        {
+          ...firstProcedure,
+          resourceRefs: [
+            firstResource.ordinal,
+            missingThree,
+            missingThree,
+            missingFour,
+          ],
+        },
+        ...remainingProcedures,
+      ],
+    });
+
+    expect(Result.isFailure(admitted)).toBe(true);
+    if (Result.isSuccess(admitted)) return;
+    expect(admitted.failure).toEqual({
+      tag: "statBlockResourceGraphIssue",
+      issues: [
+        { kind: "duplicateResourceOrdinal", ordinal: firstResource.ordinal },
+        { kind: "duplicateResourceOrdinal", ordinal: secondResource.ordinal },
+        { kind: "missingResourceDeclaration", ordinal: missingThree },
+        { kind: "missingResourceDeclaration", ordinal: missingFour },
+      ],
+    });
+  });
+
+  test("rejects nonliteral authored Stat Block initialization facts at the schema boundary", () => {
+    expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary(
+      statBlockRecord(),
+    );
   });
 
   test("retains caller-supplied initial conditions for Stat Block creatures", () => {
@@ -262,7 +350,7 @@ describe("Stat Block combatant admission capability", () => {
 
     expect(
       Result.isFailure(initialized)
-        ? battleStateInitIssueMessage(initialized.failure)
+        ? authoredStatBlockBattleInitIssueMessage(initialized.failure)
         : "initialized",
     ).toBe("Stat Block combatant is immune to initial prone condition.");
   });

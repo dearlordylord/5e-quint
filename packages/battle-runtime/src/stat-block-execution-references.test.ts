@@ -5,6 +5,10 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  attackExecutionSelectionForOption,
+  boundAttackExecutionSelectionMatchesOption,
+} from "./battle-action-options.ts";
 import { Result, Schema } from "effect";
 import {
   NonNegativeInteger,
@@ -101,6 +105,9 @@ import {
 } from "./battle-reducer/api-lifecycle.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
 import { escapeSpellRestraintAbilityCheckHoleKey } from "./battle-reducer/selected-effect-hole-key.ts";
 
 const isolatedExecutionBattleId = battleId(
@@ -2625,6 +2632,8 @@ describe("Stat Block execution references", () => {
       monsterResourceStatBlock(),
       monsterResourceStatBlock(),
     ] as const;
+    const firstRuntimeSource = projectedStatBlockRuntimeSource(statBlocks[0]);
+    const secondRuntimeSource = projectedStatBlockRuntimeSource(statBlocks[1]);
     const admissions = isolatedStatBlockAdmissions(actorId, statBlocks);
     const snapshots = admissions.map((admission) =>
       statBlockExecutionSnapshot(admission.execution),
@@ -2668,7 +2677,7 @@ describe("Stat Block execution references", () => {
     const restoredExpired = restoreStatBlockExecutionAdmission(
       isolatedExecutionBattleId,
       actorId,
-      statBlocks[0],
+      firstRuntimeSource,
       firstHistoricalSnapshot,
     );
     expect(Result.isSuccess(restoredExpired)).toBe(true);
@@ -2688,8 +2697,8 @@ describe("Stat Block execution references", () => {
       isolatedExecutionBattleId,
       actorId,
       [
-        { statBlock: statBlocks[0], snapshot: firstHistoricalSnapshot },
-        { statBlock: statBlocks[1], snapshot: secondHistoricalSnapshot },
+        { statBlock: firstRuntimeSource, snapshot: firstHistoricalSnapshot },
+        { statBlock: secondRuntimeSource, snapshot: secondHistoricalSnapshot },
       ],
     );
     expect(Result.isFailure(duplicated)).toBe(true);

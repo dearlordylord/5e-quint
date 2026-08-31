@@ -1,5 +1,7 @@
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   abilityModifier as battleAbilityModifier,
@@ -579,6 +581,7 @@ describe("battle presentation joins", () => {
       actor.origin.execution.procedureBindings.find(
         (binding) =>
           binding.procedure.kind !== "unarmedStrike" &&
+          binding.procedure.kind !== "effectOccurrenceSource" &&
           binding.procedure.section === firstProcedure.section &&
           binding.procedure.procedureOrdinal ===
             firstProcedure.procedureOrdinal,

@@ -3,13 +3,12 @@ import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
   battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
   nonSpellExecutableProcedureEntry,
-  projectedStatBlockRuntimeSource,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import { isDeepStrictEqual } from "node:util";
 
 import { Result } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { battleCreatureInitFromStatBlock } from "./battle-init.ts";
 import { describe, it } from "vitest";
 
 import { DieRollResult, Hp } from "@dnd/shared/types";
@@ -17,6 +16,7 @@ import type {
   AuthoredExecutableProcedure,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 import {
@@ -443,26 +443,17 @@ function statBlockCreature(input: {
   readonly initiative: number;
   readonly statBlock: StatBlockRecord;
 }): BattleCreatureInit {
-  return {
-    combatantId: input.combatantId,
-    initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: Result.getOrThrow(
-        battleStatBlockCombatantSource(input.statBlock),
-      ),
+  return Result.getOrThrow(
+    battleCreatureInitFromStatBlock({
+      combatantId: input.combatantId,
+      initiative: initiativeScore(input.initiative),
+      statBlock: { ...input.statBlock, name: input.displayName },
       currentHp: Hp(12),
       tempHp: Hp(0),
       ammunitionStocks: [],
       conditions: [],
-      presentation: {
-        displayName: input.displayName,
-        communication: { kind: "none" },
-        traits: [],
-        orderedProcedures: [],
-      },
-    },
-  };
+    }),
+  );
 }
 
 function multiDamageAttackerStatBlock(): StatBlockRecord {
