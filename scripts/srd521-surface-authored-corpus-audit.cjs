@@ -253,40 +253,102 @@ function checkPasses(check, value, ast) {
   return check.checks.every((nested) => checkPasses(nested, value, ast));
 }
 
-function immediateBranchMatchStatus(ast, value) {
+function directBranchMatchStatus(ast, value) {
   const branch = unwrappedSchemaAst(ast);
-  let result;
   if (SchemaAST.isLiteral(branch)) {
-    result = value === branch.literal ? "match" : "no-match";
-  } else if (SchemaAST.isString(branch)) {
-    result = typeof value === "string" ? "match" : "no-match";
-  } else if (SchemaAST.isNull(branch)) {
-    result = value === null ? "match" : "no-match";
-  } else if (SchemaAST.isNumber(branch)) {
-    result = typeof value === "number" ? "match" : "no-match";
-  } else if (SchemaAST.isBoolean(branch)) {
-    result = typeof value === "boolean" ? "match" : "no-match";
-  } else if (
+    return value === branch.literal ? "match" : "no-match";
+  }
+  if (SchemaAST.isString(branch)) {
+    return typeof value === "string" ? "match" : "no-match";
+  }
+  if (SchemaAST.isNull(branch)) {
+    return value === null ? "match" : "no-match";
+  }
+  if (SchemaAST.isNumber(branch)) {
+    return typeof value === "number" ? "match" : "no-match";
+  }
+  if (SchemaAST.isBoolean(branch)) {
+    return typeof value === "boolean" ? "match" : "no-match";
+  }
+  if (
     SchemaAST.isUnknown(branch) ||
     SchemaAST.isAny(branch) ||
     SchemaAST.isNever(branch)
   ) {
-    result = "match";
-  } else if (SchemaAST.isArrays(branch) && !Array.isArray(value)) {
-    result = "no-match";
-  } else if (
-    SchemaAST.isObjects(branch) &&
-    (!value || typeof value !== "object" || Array.isArray(value))
-  ) {
-    result = "no-match";
-  } else {
+    return "match";
+  }
+  if (SchemaAST.isArrays(branch)) {
+    if (!Array.isArray(value)) return "no-match";
+    const required =
+      branch.elements.filter((element) => !SchemaAST.isOptional(element))
+        .length + Math.max(0, branch.rest.length - 1);
+    if (value.length < required) return "no-match";
+    return branch.rest.length === 0 && value.length > branch.elements.length
+      ? "no-match"
+      : undefined;
+  }
+  if (!SchemaAST.isObjects(branch)) return undefined;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return "no-match";
+  }
+  for (const property of branch.propertySignatures) {
+    if (
+      !SchemaAST.isOptional(property.type) &&
+      !Object.prototype.hasOwnProperty.call(value, property.name)
+    ) {
+      return "no-match";
+    }
+  }
+  if (branch.indexSignatures.length === 0) {
+    const known = new Set(
+      branch.propertySignatures.map((property) => String(property.name)),
+    );
+    if (Object.keys(value).some((name) => !known.has(name))) {
+      return "no-match";
+    }
+  }
+  const discriminators = branch.propertySignatures.filter(
+    (property) =>
+      !SchemaAST.isOptional(property.type) &&
+      isLiteralDiscriminatorProperty(property.type),
+  );
+  return discriminators.length > 0 &&
+    !discriminators.some((property) =>
+      Object.prototype.hasOwnProperty.call(value, property.name),
+    )
+    ? "unknown"
+    : undefined;
+}
+
+function applyBranchChecks(ast, value, status) {
+  if (status === "no-match") return status;
+  const branch = unwrappedSchemaAst(ast);
+  if (!branch || typeof branch !== "object") {
+    return status;
+  }
+  return branch.checks === undefined ||
+    branch.checks.every((check) => checkPasses(check, value, branch))
+    ? status
+    : "no-match";
+}
+
+function immediateBranchMatchStatus(ast, value) {
+  const status = directBranchMatchStatus(ast, value);
+  if (status === undefined) {
     return undefined;
   }
-  return result !== "no-match" &&
-    branch?.checks !== undefined &&
-    !branch.checks.every((check) => checkPasses(check, value, branch))
-    ? "no-match"
-    : result;
+  return applyBranchChecks(ast, value, status);
+}
+
+function completedBranchMatchStatus(branch, statuses, direct) {
+  if (SchemaAST.isUnion(branch)) {
+    if (statuses.includes("match")) return "match";
+    return statuses.includes("unknown") ? "unknown" : "no-match";
+  }
+  if (SchemaAST.isSuspend(branch)) return statuses[0] ?? "unknown";
+  if (direct !== undefined) return direct;
+  if (statuses.includes("no-match")) return "no-match";
+  return statuses.includes("unknown") ? "unknown" : "match";
 }
 
 function branchMatchStatus(ast, value) {
@@ -364,58 +426,6 @@ function branchMatchStatus(ast, value) {
     }
     return [];
   };
-  const directStatus = (schemaAst, current) => {
-    const branch = unwrappedSchemaAst(schemaAst);
-    if (!branch || typeof branch !== "object") return "unknown";
-    if (SchemaAST.isLiteral(branch))
-      return current === branch.literal ? "match" : "no-match";
-    if (SchemaAST.isString(branch))
-      return typeof current === "string" ? "match" : "no-match";
-    if (SchemaAST.isNull(branch))
-      return current === null ? "match" : "no-match";
-    if (SchemaAST.isNumber(branch))
-      return typeof current === "number" ? "match" : "no-match";
-    if (SchemaAST.isBoolean(branch))
-      return typeof current === "boolean" ? "match" : "no-match";
-    if (SchemaAST.isArrays(branch)) {
-      if (!Array.isArray(current)) return "no-match";
-      const required =
-        branch.elements.filter((element) => !SchemaAST.isOptional(element))
-          .length + Math.max(0, branch.rest.length - 1);
-      if (current.length < required) return "no-match";
-      return branch.rest.length === 0 && current.length > branch.elements.length
-        ? "no-match"
-        : undefined;
-    }
-    if (!SchemaAST.isObjects(branch)) return undefined;
-    if (!current || typeof current !== "object" || Array.isArray(current))
-      return "no-match";
-    for (const property of branch.propertySignatures) {
-      if (
-        !SchemaAST.isOptional(property.type) &&
-        !Object.prototype.hasOwnProperty.call(current, property.name)
-      )
-        return "no-match";
-    }
-    if (branch.indexSignatures.length === 0) {
-      const known = new Set(
-        branch.propertySignatures.map((property) => String(property.name)),
-      );
-      if (Object.keys(current).some((name) => !known.has(name)))
-        return "no-match";
-    }
-    const discriminators = branch.propertySignatures.filter(
-      (property) =>
-        !SchemaAST.isOptional(property.type) &&
-        isLiteralDiscriminatorProperty(property.type),
-    );
-    return discriminators.length > 0 &&
-      !discriminators.some((property) =>
-        Object.prototype.hasOwnProperty.call(current, property.name),
-      )
-      ? "unknown"
-      : undefined;
-  };
   while (pending.length > 0) {
     const task = pending.pop();
     const branch = unwrappedSchemaAst(task.ast);
@@ -425,30 +435,13 @@ function branchMatchStatus(ast, value) {
         (dependency) =>
           getResult(dependency.ast, dependency.value) ?? "unknown",
       );
-      let result = directStatus(task.ast, task.value);
-      if (SchemaAST.isUnion(branch)) {
-        result = statuses.includes("match")
-          ? "match"
-          : statuses.includes("unknown")
-            ? "unknown"
-            : "no-match";
-      } else if (SchemaAST.isSuspend(branch)) {
-        result = statuses[0] ?? "unknown";
-      } else if (result === undefined) {
-        result = statuses.includes("no-match")
-          ? "no-match"
-          : statuses.includes("unknown")
-            ? "unknown"
-            : "match";
-      }
-      if (
-        result !== "no-match" &&
-        branch?.checks !== undefined &&
-        !branch.checks.every((check) => checkPasses(check, task.value, branch))
-      ) {
-        result = "no-match";
-      }
-      putResult(task.ast, task.value, result);
+      const direct = directBranchMatchStatus(task.ast, task.value);
+      const result = completedBranchMatchStatus(branch, statuses, direct);
+      putResult(
+        task.ast,
+        task.value,
+        applyBranchChecks(task.ast, task.value, result),
+      );
       continue;
     }
     if (getResult(task.ast, task.value) !== undefined) continue;
@@ -473,29 +466,41 @@ function branchMatchStatus(ast, value) {
 
 const literalDiscriminatorAlternativesCache = new WeakMap();
 
+function cacheLiteralDiscriminatorAlternatives(ast, alternatives) {
+  literalDiscriminatorAlternativesCache.set(ast, alternatives);
+  return alternatives;
+}
+
 function literalDiscriminatorAlternatives(ast) {
   const cached = literalDiscriminatorAlternativesCache.get(ast);
   if (cached !== undefined) return cached;
   const branch = structuralSchemaAst(ast);
   if (!branch || typeof branch !== "object") return [];
-  let alternatives;
   if (SchemaAST.isSuspend(branch)) {
-    alternatives = literalDiscriminatorAlternatives(suspendedAst(branch));
-  } else if (SchemaAST.isUnion(branch)) {
-    alternatives = branch.types.flatMap(literalDiscriminatorAlternatives);
-  } else if (SchemaAST.isObjects(branch)) {
+    return cacheLiteralDiscriminatorAlternatives(
+      ast,
+      literalDiscriminatorAlternatives(suspendedAst(branch)),
+    );
+  }
+  if (SchemaAST.isUnion(branch)) {
+    return cacheLiteralDiscriminatorAlternatives(
+      ast,
+      branch.types.flatMap(literalDiscriminatorAlternatives),
+    );
+  }
+  if (SchemaAST.isObjects(branch)) {
     const properties = branch.propertySignatures.flatMap((property) =>
       !SchemaAST.isOptional(property.type) &&
       isLiteralDiscriminatorProperty(property.type)
         ? [{ name: property.name, values: literalValues(property.type) }]
         : [],
     );
-    alternatives = properties.length === 0 ? [] : [properties];
-  } else {
-    alternatives = [];
+    return cacheLiteralDiscriminatorAlternatives(
+      ast,
+      properties.length === 0 ? [] : [properties],
+    );
   }
-  literalDiscriminatorAlternativesCache.set(ast, alternatives);
-  return alternatives;
+  return cacheLiteralDiscriminatorAlternatives(ast, []);
 }
 
 function branchHasLiteralDiscriminator(ast) {
@@ -517,41 +522,44 @@ function branchDiscriminatorMatches(ast, value) {
   });
 }
 
-function shallowBranchMayContainValue(ast, value) {
-  const branch = unwrappedSchemaAst(ast);
-  if (SchemaAST.isSuspend(branch)) {
-    return shallowBranchMayContainValue(suspendedAst(branch), value);
-  }
+const decodedBranchPredicateCache = new WeakMap();
+const branchSuspensionCache = new WeakMap();
+
+function uncachedBranchUsesSuspension(branch) {
+  if (SchemaAST.isSuspend(branch)) return true;
   if (SchemaAST.isUnion(branch)) {
-    return branch.types.some((type) =>
-      shallowBranchMayContainValue(type, value),
-    );
+    return branch.types.some(branchUsesSuspension);
   }
-  const immediate = immediateBranchMatchStatus(branch, value);
-  if (immediate !== undefined) return immediate !== "no-match";
   if (SchemaAST.isArrays(branch)) {
-    const required =
-      branch.elements.filter((element) => !SchemaAST.isOptional(element))
-        .length + Math.max(0, branch.rest.length - 1);
-    return (
-      value.length >= required &&
-      (branch.rest.length > 0 || value.length <= branch.elements.length)
-    );
+    return [...branch.elements, ...branch.rest].some(branchUsesSuspension);
   }
-  if (!SchemaAST.isObjects(branch)) return true;
-  for (const property of branch.propertySignatures) {
-    if (
-      !SchemaAST.isOptional(property.type) &&
-      !Object.prototype.hasOwnProperty.call(value, property.name)
-    ) {
-      return false;
-    }
-  }
-  if (branch.indexSignatures.length > 0) return true;
-  const known = new Set(
-    branch.propertySignatures.map((property) => String(property.name)),
+  return (
+    SchemaAST.isObjects(branch) &&
+    branch.propertySignatures.some((property) =>
+      branchUsesSuspension(property.type),
+    )
   );
-  return !Object.keys(value).some((name) => !known.has(name));
+}
+
+function branchUsesSuspension(ast) {
+  const cached = branchSuspensionCache.get(ast);
+  if (cached !== undefined) return cached;
+  const branch = unwrappedSchemaAst(ast);
+  const usesSuspension = uncachedBranchUsesSuspension(branch);
+  branchSuspensionCache.set(ast, usesSuspension);
+  return usesSuspension;
+}
+
+function decodedBranchAcceptsValue(ast, value) {
+  if (branchUsesSuspension(ast)) {
+    return branchMatchStatus(ast, value) === "match";
+  }
+  const branch = unwrappedSchemaAst(ast);
+  const cached = decodedBranchPredicateCache.get(branch);
+  if (cached !== undefined) return cached(value);
+  const predicate = Schema.is(Schema.make(branch));
+  decodedBranchPredicateCache.set(branch, predicate);
+  return predicate(value);
 }
 
 function decoderCompatibleUnionBranches(types, value) {
@@ -596,12 +604,10 @@ function soleDecodedLiteralDiscriminatorSelection(types, value) {
       untagged.push(type);
     }
   }
-  const compatible =
-    tagged.length > 1
-      ? tagged.filter((type) => shallowBranchMayContainValue(type, value))
-      : tagged;
-  if (compatible.length !== 1) return undefined;
-  return { branch: compatible[0], untagged };
+  if (tagged.length !== 1 || !decodedBranchAcceptsValue(tagged[0], value)) {
+    return undefined;
+  }
+  return { branch: tagged[0], untagged };
 }
 
 function matchingUnionBranches(types, value) {
@@ -623,6 +629,32 @@ function matchingUnionBranches(types, value) {
 const relationReachabilityCache = new WeakMap();
 const relationReachabilityResolving = new WeakSet();
 
+function cacheRelationReachability(ast, reachable) {
+  relationReachabilityResolving.delete(ast);
+  relationReachabilityCache.set(ast, reachable);
+  return reachable;
+}
+
+function uncachedSchemaMayContainAuthoredRelation(branch) {
+  if (SchemaAST.isSuspend(branch)) {
+    return schemaMayContainAuthoredRelation(suspendedAst(branch));
+  }
+  if (SchemaAST.isUnion(branch)) {
+    return branch.types.some(schemaMayContainAuthoredRelation);
+  }
+  if (SchemaAST.isArrays(branch)) {
+    return [...branch.elements, ...branch.rest].some(
+      schemaMayContainAuthoredRelation,
+    );
+  }
+  return (
+    SchemaAST.isObjects(branch) &&
+    branch.propertySignatures.some((property) =>
+      schemaMayContainAuthoredRelation(property.type),
+    )
+  );
+}
+
 function schemaMayContainAuthoredRelation(ast) {
   const cached = relationReachabilityCache.get(ast);
   if (cached !== undefined) return cached;
@@ -634,35 +666,14 @@ function schemaMayContainAuthoredRelation(ast) {
       (role) => role.category === "reference" || role.category === "dependency",
     )
   ) {
-    relationReachabilityResolving.delete(ast);
-    relationReachabilityCache.set(ast, true);
-    return true;
+    return cacheRelationReachability(ast, true);
   }
   if (roles.length > 0) {
-    relationReachabilityResolving.delete(ast);
-    relationReachabilityCache.set(ast, false);
-    return false;
+    return cacheRelationReachability(ast, false);
   }
   const branch = decodedSchemaAst(ast);
-  let reachable;
-  if (SchemaAST.isSuspend(branch)) {
-    reachable = schemaMayContainAuthoredRelation(suspendedAst(branch));
-  } else if (SchemaAST.isUnion(branch)) {
-    reachable = branch.types.some(schemaMayContainAuthoredRelation);
-  } else if (SchemaAST.isArrays(branch)) {
-    reachable = [...branch.elements, ...branch.rest].some(
-      schemaMayContainAuthoredRelation,
-    );
-  } else if (SchemaAST.isObjects(branch)) {
-    reachable = branch.propertySignatures.some((property) =>
-      schemaMayContainAuthoredRelation(property.type),
-    );
-  } else {
-    reachable = false;
-  }
-  relationReachabilityResolving.delete(ast);
-  relationReachabilityCache.set(ast, reachable);
-  return reachable;
+  const reachable = uncachedSchemaMayContainAuthoredRelation(branch);
+  return cacheRelationReachability(ast, reachable);
 }
 
 function taskMayContainAuthoredRelation(ast, inheritedRole) {
