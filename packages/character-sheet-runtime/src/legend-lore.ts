@@ -53,19 +53,7 @@ function legendLoreInvocationFromSpell(input: {
 }): Result.Result<CharacterSheetLegendLoreInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Legend Lore support profile required by this projector. */
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 5 ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.castingTime.kind !== "minutes" ||
-    spell.mechanics.castingTime.amount !== 10 ||
-    spell.mechanics.duration.kind !== "instantaneous" ||
-    spell.mechanics.components.v !== true ||
-    spell.mechanics.components.s !== true ||
-    spell.mechanics.components.material.kind !== "present" ||
-    Option.isNone(spell.mechanics.components.material.costGp) ||
-    spell.mechanics.components.material.costGp.value !== 450
-  ) {
+  if (!hasLegendLoreSpellProfile(spell)) {
     return characterSheetIssue(
       "Legend Lore requires the supported self-range level-5 Divination profile.",
     );
@@ -94,6 +82,47 @@ function legendLoreInvocationFromSpell(input: {
     subject: input.subject,
     lore: legendLoreOutcome(input.subject),
   });
+}
+
+type LegendLoreSpellSource = CharacterSheetSpellSource & {
+  readonly mechanics: Extract<
+    CharacterSheetSpellSource["mechanics"],
+    { readonly family: "activation" }
+  >;
+};
+
+function hasLegendLoreSpellProfile(
+  spell: CharacterSheetSpellSource,
+): spell is LegendLoreSpellSource {
+  return (
+    hasLegendLoreActivationProfile(spell) && hasLegendLoreMaterialProfile(spell)
+  );
+}
+
+function hasLegendLoreActivationProfile(
+  spell: CharacterSheetSpellSource,
+): spell is LegendLoreSpellSource {
+  return (
+    spell.mechanics.family === "activation" &&
+    spell.mechanics.level === 5 &&
+    spell.mechanics.range.kind === "self" &&
+    spell.mechanics.castingTime.kind === "minutes" &&
+    spell.mechanics.castingTime.amount === 10 &&
+    spell.mechanics.duration.kind === "instantaneous"
+  );
+}
+
+function hasLegendLoreMaterialProfile(
+  spell: CharacterSheetSpellSource,
+): boolean {
+  const components = spell.mechanics.components;
+  return (
+    components.v === true &&
+    components.s === true &&
+    components.material.kind === "present" &&
+    Option.isSome(components.material.costGp) &&
+    components.material.costGp.value === 450
+  );
 }
 
 function legendLoreOutcome(
