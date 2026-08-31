@@ -99,6 +99,37 @@ function ordinarySpellCastResource(
     : { kind: "ordinarySpellCast", metamagicApplications };
 }
 
+function areaOngoingSpellFillSetHasUnrelatedFills(
+  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
+): boolean {
+  const optionalFills = [
+    fillSet.targetId,
+    fillSet.objectTarget,
+    fillSet.targetAllocation,
+    fillSet.targetList,
+    fillSet.attackRoll,
+    fillSet.savingThrowOutcomes,
+    fillSet.skillChoice,
+    fillSet.targetAbilityChoices,
+    fillSet.abilityChoice,
+    fillSet.compelledBehaviorOptionChoice,
+    fillSet.damageTypeChoice,
+    fillSet.damageRoll,
+    fillSet.movement,
+    fillSet.attackBurstDamageRoll,
+    fillSet.healingRoll,
+  ];
+  const repeatedFills = [
+    fillSet.concentrationSavingThrows,
+    fillSet.damageDispositions,
+    fillSet.spellDamageReductionRolls,
+  ];
+  return (
+    optionalFills.some((fill) => fill !== undefined) ||
+    repeatedFills.some((fills) => fills.length > 0)
+  );
+}
+
 function areaOngoingSpellReleaseResourceState(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
@@ -281,26 +312,7 @@ export function resolvePersistentAreaTraitSpellAct(input: {
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
+  if (areaOngoingSpellFillSetHasUnrelatedFills(input.fillSet)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -361,26 +373,7 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
+  if (areaOngoingSpellFillSetHasUnrelatedFills(input.fillSet)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -496,26 +489,7 @@ export function resolveRamMovablePersistentAreaSpellAct(input: {
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
+  if (areaOngoingSpellFillSetHasUnrelatedFills(input.fillSet)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -576,26 +550,7 @@ export function resolveAreaMovementDistanceDamageSpellAct(input: {
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
+  if (areaOngoingSpellFillSetHasUnrelatedFills(input.fillSet)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -662,26 +617,7 @@ export function resolveMovablePersistentAreaSpellAct(input: {
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
+  if (areaOngoingSpellFillSetHasUnrelatedFills(input.fillSet)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -742,26 +678,7 @@ export function resolvePersistentAreaSaveConditionEscapeSpellAct(input: {
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
+  if (areaOngoingSpellFillSetHasUnrelatedFills(input.fillSet)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -821,26 +738,7 @@ export function resolvePersistentAreaSaveCompositeSpellAct(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
+  if (areaOngoingSpellFillSetHasUnrelatedFills(input.fillSet)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -896,26 +794,7 @@ export function resolveStationaryPersistentAreaAreaHazardSpellAct(input: {
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
+  if (areaOngoingSpellFillSetHasUnrelatedFills(input.fillSet)) {
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -971,26 +850,7 @@ export function resolveTranslatingPersistentAreaAreaHazardSpellAct(input: {
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.targetId !== undefined ||
-    input.fillSet.objectTarget !== undefined ||
-    input.fillSet.targetAllocation !== undefined ||
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.attackRoll !== undefined ||
-    input.fillSet.savingThrowOutcomes !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined ||
-    input.fillSet.abilityChoice !== undefined ||
-    input.fillSet.compelledBehaviorOptionChoice !== undefined ||
-    input.fillSet.damageTypeChoice !== undefined ||
-    input.fillSet.concentrationSavingThrows.length > 0 ||
-    input.fillSet.damageDispositions.length > 0 ||
-    input.fillSet.damageRoll !== undefined ||
-    input.fillSet.movement !== undefined ||
-    input.fillSet.spellDamageReductionRolls.length > 0 ||
-    input.fillSet.attackBurstDamageRoll !== undefined ||
-    input.fillSet.healingRoll !== undefined
-  ) {
+  if (areaOngoingSpellFillSetHasUnrelatedFills(input.fillSet)) {
     return invalidResult(
       input.input.state,
       "invalidFill",

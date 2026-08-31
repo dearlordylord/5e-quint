@@ -157,113 +157,132 @@ export function resumeInterruptedProcedure(
     });
   }
   if (continuation.kind === "attackDamage") {
-    const damageAmount = attackDamageContinuationAmount(state, continuation);
-    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (damageAmount === null) {
-      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        state,
-        "invalidFill",
-        "Attack damage target is no longer available.",
-      );
-    }
-    /* v8 ignore stop -- @preserve */
-    const concentrationPending = attackDamageContinuationConcentrationHole(
+    return resumeAttackDamageInterruptedProcedure({
       state,
       continuation,
-    );
-    if (concentrationPending !== null) {
-      const pendingState = {
-        ...state,
-        interruptStack: [
-          ...state.interruptStack,
-          attackDamageContinuationConcentrationFrame(
-            continuation,
-            handledInterruptTrigger,
-          ),
-        ],
-      };
-      return needsHolesResult(
-        pendingState,
-        continuation.participant,
-        [concentrationPending],
-        DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY,
-      );
-    }
-    const continuationConcentrationSavingThrows =
-      attackDamageContinuationConcentrationFills(continuation);
-    const damageRepeatSave = attackDamageContinuationRepeatSaveResolution(
-      state,
-      continuation,
-      damageAmount,
-    );
-    if (damageRepeatSave.tag === "invalid") {
-      return invalidResult(state, "invalidFill", damageRepeatSave.message);
-    }
-    if (damageRepeatSave.tag === "needsHoles") {
-      const pendingState = {
-        ...state,
-        interruptStack: [
-          ...state.interruptStack,
-          attackDamageContinuationRepeatSaveFrame(
-            continuation,
-            handledInterruptTrigger,
-          ),
-        ],
-      };
-      return needsHolesResult(
-        pendingState,
-        continuation.participant,
-        damageRepeatSave.missingHoles,
-        DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY,
-      );
-    }
-    const damagedState = applyAttackDamageAmount({
-      state,
-      attackerId: attackDamageInterruptionParticipantId(continuation),
-      targetId: continuation.target.combatantId,
-      damageAmount,
-      deathFailuresAtZeroHp: attackDamageDeathFailuresAtZeroHp(continuation),
-      damageDisposition: continuation.continuation.damageDisposition,
-      attackDamageRiders: continuation.continuation.attackDamageRiders,
-      saveGatedConditionDamageRepeatSave: damageRepeatSave.context,
-      weaponDamageDiceRollChoice:
-        continuation.continuation.weaponDamageDiceRollChoice,
-      concentrationSavingThrow: attackDamageContinuationTargetConcentrationFill(
-        state,
-        continuation,
-      ),
-      linkedDefenseResistanceDamageShareConcentrationSavingThrows:
-        continuationConcentrationSavingThrows,
-      spatialFacts: attackDamageContinuationTargetSpatialFacts(continuation),
-      relationshipDecisions: continuation.continuation.relationshipDecisions,
-    });
-    const afterDamageEvent = {
-      damageSourceId: attackDamageInterruptionParticipantId(continuation),
-      damagedId: continuation.target.combatantId,
-      damageAmount,
-      reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
-        facts: attackDamageContinuationTargetSpatialFacts(continuation),
-        damagedId: continuation.target.combatantId,
-        damageSourceId: attackDamageInterruptionParticipantId(continuation),
-      }),
-    } satisfies BattleAfterDamageEvent;
-    return resolveAttackDamageContinuationCunningStrike({
-      state: damagedState,
-      frame: {
-        kind: "attackDamageContinuationCunningStrike",
-        continuation,
-        afterDamageEvent,
-        handledInterruptTrigger,
-      },
-      subject: continuation.participant,
-      fills: attackDamageContinuationCunningStrikePrefixFills(continuation),
+      handledInterruptTrigger,
       attackResolvers,
     });
   }
 
   continuation satisfies never;
   throw new Error("Unhandled interrupted procedure variant.");
+}
+
+function resumeAttackDamageInterruptedProcedure(input: {
+  readonly state: BattleState;
+  readonly continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "attackDamage" }
+  >;
+  readonly handledInterruptTrigger: BattleInterruptTrigger;
+  readonly attackResolvers: BattleAttackResolvers;
+}): BattleResolutionResult {
+  const { state, continuation, handledInterruptTrigger, attackResolvers } =
+    input;
+  const damageAmount = attackDamageContinuationAmount(state, continuation);
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (damageAmount === null) {
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return invalidResult(
+      state,
+      "invalidFill",
+      "Attack damage target is no longer available.",
+    );
+  }
+  /* v8 ignore stop -- @preserve */
+  const concentrationPending = attackDamageContinuationConcentrationHole(
+    state,
+    continuation,
+  );
+  if (concentrationPending !== null) {
+    const pendingState = {
+      ...state,
+      interruptStack: [
+        ...state.interruptStack,
+        attackDamageContinuationConcentrationFrame(
+          continuation,
+          handledInterruptTrigger,
+        ),
+      ],
+    };
+    return needsHolesResult(
+      pendingState,
+      continuation.participant,
+      [concentrationPending],
+      DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY,
+    );
+  }
+  const continuationConcentrationSavingThrows =
+    attackDamageContinuationConcentrationFills(continuation);
+  const damageRepeatSave = attackDamageContinuationRepeatSaveResolution(
+    state,
+    continuation,
+    damageAmount,
+  );
+  if (damageRepeatSave.tag === "invalid") {
+    return invalidResult(state, "invalidFill", damageRepeatSave.message);
+  }
+  if (damageRepeatSave.tag === "needsHoles") {
+    const pendingState = {
+      ...state,
+      interruptStack: [
+        ...state.interruptStack,
+        attackDamageContinuationRepeatSaveFrame(
+          continuation,
+          handledInterruptTrigger,
+        ),
+      ],
+    };
+    return needsHolesResult(
+      pendingState,
+      continuation.participant,
+      damageRepeatSave.missingHoles,
+      DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY,
+    );
+  }
+  const damagedState = applyAttackDamageAmount({
+    state,
+    attackerId: attackDamageInterruptionParticipantId(continuation),
+    targetId: continuation.target.combatantId,
+    damageAmount,
+    deathFailuresAtZeroHp: attackDamageDeathFailuresAtZeroHp(continuation),
+    damageDisposition: continuation.continuation.damageDisposition,
+    attackDamageRiders: continuation.continuation.attackDamageRiders,
+    saveGatedConditionDamageRepeatSave: damageRepeatSave.context,
+    weaponDamageDiceRollChoice:
+      continuation.continuation.weaponDamageDiceRollChoice,
+    concentrationSavingThrow: attackDamageContinuationTargetConcentrationFill(
+      state,
+      continuation,
+    ),
+    linkedDefenseResistanceDamageShareConcentrationSavingThrows:
+      continuationConcentrationSavingThrows,
+    spatialFacts: attackDamageContinuationTargetSpatialFacts(continuation),
+    relationshipDecisions: continuation.continuation.relationshipDecisions,
+  });
+  const afterDamageEvent = {
+    damageSourceId: attackDamageInterruptionParticipantId(continuation),
+    damagedId: continuation.target.combatantId,
+    damageAmount,
+    reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+      facts: attackDamageContinuationTargetSpatialFacts(continuation),
+      damagedId: continuation.target.combatantId,
+      damageSourceId: attackDamageInterruptionParticipantId(continuation),
+    }),
+  } satisfies BattleAfterDamageEvent;
+  return resolveAttackDamageContinuationCunningStrike({
+    state: damagedState,
+    frame: {
+      kind: "attackDamageContinuationCunningStrike",
+      continuation,
+      afterDamageEvent,
+      handledInterruptTrigger,
+    },
+    subject: continuation.participant,
+    fills: attackDamageContinuationCunningStrikePrefixFills(continuation),
+    attackResolvers,
+  });
 }
 
 function resumeMovementContinuation(
