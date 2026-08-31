@@ -522,7 +522,49 @@ export function hitPointBudgetConditionRepeatSaveRouteForResolution(
   if (endConcentrationRoute !== undefined) {
     return endConcentrationRoute;
   }
-  return undefined;
+
+  if (
+    !isStagedSaveConditionSubject(input.state, input.subject) ||
+    result.tag !== "resolved" ||
+    !input.fills.some((fill) => fill.kind === "savingThrowOutcome")
+  ) {
+    return undefined;
+  }
+
+  return nonEmptyRouteEvents([
+    ...(combatantsConditionsChanged(input.state, result.state)
+      ? [
+          resolveBattleSubjectRoute(
+            "repeatSaveConditionEffect" as const,
+            "savingThrowOutcome" as const,
+            [],
+            "battleConditionLifecycle" as const,
+          ),
+        ]
+      : []),
+    ...(combatantsActiveEffectsChanged(input.state, result.state)
+      ? [
+          resolveBattleSubjectWithoutFillRoute(
+            "repeatSaveConditionEffect" as const,
+            [],
+            "battleActiveEffect" as const,
+          ),
+        ]
+      : []),
+    ...(combatantConcentrationChanged(
+      input.state,
+      result.state,
+      input.subject.actorId,
+    )
+      ? [
+          resolveBattleSubjectWithoutFillRoute(
+            "repeatSaveConditionEffect" as const,
+            [],
+            "battleConcentration" as const,
+          ),
+        ]
+      : []),
+  ]);
 }
 
 export function repeatSaveConditionEffectRouteForResolution(
@@ -533,9 +575,18 @@ export function repeatSaveConditionEffectRouteForResolution(
     return undefined;
   }
   if (input.fills.length === 0) {
-    if (result.tag !== "needsHoles") {
-      return undefined;
+    if (result.tag === "resolved") {
+      return hasPendingHitPointBudgetConditionRepeatSaveEffect(input.state)
+        ? [
+            resolveBattleSubjectWithoutFillRoute(
+              "repeatSaveConditionEffect",
+              [],
+              "battleTurnBoundary",
+            ),
+          ]
+        : undefined;
     }
+    if (result.tag !== "needsHoles") return undefined;
     const holes = repeatSaveConditionEffectRouteHoles(result.holes);
     if (holes.length === 0) {
       return undefined;
@@ -933,6 +984,16 @@ function combatantOwnsHitPointBudgetConditionRepeatSaveEffect(
         (effect.kind === "stagedSaveConditionPendingRepeat" ||
           effect.kind === "stagedSaveConditionApplied") &&
         effect.expiresAt.combatantId === combatantId,
+    ),
+  );
+}
+
+function hasPendingHitPointBudgetConditionRepeatSaveEffect(
+  state: BattleState,
+): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) => effect.kind === "stagedSaveConditionPendingRepeat",
     ),
   );
 }

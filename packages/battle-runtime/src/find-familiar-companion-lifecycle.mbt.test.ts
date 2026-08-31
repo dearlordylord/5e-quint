@@ -1111,7 +1111,7 @@ function normalizeSpawnedCompanionQuintState(
       "Expected Find Familiar companion witness holes to be empty.",
     );
   }
-  const event = spawnedCompanionLifecycleEvent(state["qEvent"]);
+  const event = spawnedCompanionLifecycleEvent(state["qScenarioOutcome"]);
   assertWitnessProtocolConsistentWithScenario({
     label: "Find Familiar companion lifecycle",
     scenarioOutcome: event.tag,
@@ -1162,7 +1162,7 @@ function spawnedCompanionLifecycleEvent(
   raw: unknown,
 ): SpawnedCompanionLifecycleEvent {
   const tag = literalField(
-    quintVariantTag(raw, "qEvent"),
+    quintVariantTag(raw, "qScenarioOutcome"),
     FIND_FAMILIAR_COMPANION_LIFECYCLE_QNT_EVENT_TAGS,
   );
   const value = FIND_FAMILIAR_COMPANION_LIFECYCLE_EVENT_BY_TAG[tag];
