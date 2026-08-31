@@ -19,8 +19,7 @@ import {
 import type { FreshCharacterSheet } from "../../../packages/character-sheet-runtime/src/index.ts";
 import { armorClass } from "../../../packages/shared-algebras/src/armor-class-algebra.ts";
 import { Hp, movementFeet } from "../../../packages/shared/src/types.ts";
-import { srdStatBlockCollection } from "../../../packages/surface/src/surface/installed-srd-stat-block-catalog.ts";
-import { buildStatBlockCatalog } from "../../../packages/surface/src/surface/stat-block-catalog.ts";
+import { srdStatBlockCatalog } from "../../../packages/surface/src/surface/installed-srd-stat-block-catalog.ts";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -81,56 +80,44 @@ function setupContext(
 ):
   | { readonly tag: "ready"; readonly context: ScenarioSetupContext }
   | { readonly tag: "invalid"; readonly message: string } {
-  const statBlocks = buildStatBlockCatalog({
-    collections: [srdStatBlockCollection],
-  });
   const units = buildUnitCatalog({ collections: [srdUnitCollection] });
   return Match.value(units).pipe(
     Match.when({ tag: "invalid" }, () => ({
       tag: "invalid" as const,
       message: "SRD Unit catalog is invalid.",
     })),
-    Match.when({ tag: "ok" }, ({ catalog: unitCatalog }) =>
-      Match.value(statBlocks).pipe(
-        Match.when({ tag: "invalid" }, () => ({
-          tag: "invalid" as const,
-          message: "SRD Stat Block catalog is invalid.",
-        })),
-        Match.when({ tag: "ok" }, ({ catalog: validCatalog }) => ({
-          tag: "ready" as const,
-          context: {
-            characterSheets,
-            statBlockCatalog: validCatalog,
-            statBlocks: validCatalog.listStatBlocks(),
-            unitCatalog,
-            sdk: {
-              authoredStatBlockBattleInitIssueMessage,
-              battleAmmunitionStock,
-              battleCreatureInitFromStatBlock: battleCreatureInitFromStatBlock,
-              battleId,
-              battleObjectId,
-              battleStateInitIssueMessage,
-              characterBattleRuntimeIssueMessage,
-              characterSheetBattleInit,
-              combatantId,
-              initiativeScore,
-              startBattle,
-              armorClass,
-              hp: Hp,
-              movementFeet,
-              createScenarioSession,
-              scenarioSessionWithTableD20TestCircumstance,
-              scenarioDistanceFeet,
-              scenarioTableSpatialFingerprint,
-              scenarioSessionIssueMessage,
-              tableAuthoredSpatialDecision,
-              isLeft: Either.isLeft,
-            },
-          },
-        })),
-        Match.exhaustive,
-      ),
-    ),
+    Match.when({ tag: "ok" }, ({ catalog: unitCatalog }) => ({
+      tag: "ready" as const,
+      context: {
+        characterSheets,
+        statBlockCatalog: srdStatBlockCatalog,
+        statBlocks: srdStatBlockCatalog.listStatBlocks(),
+        unitCatalog,
+        sdk: {
+          authoredStatBlockBattleInitIssueMessage,
+          battleAmmunitionStock,
+          battleCreatureInitFromStatBlock,
+          battleId,
+          battleObjectId,
+          battleStateInitIssueMessage,
+          characterBattleRuntimeIssueMessage,
+          characterSheetBattleInit,
+          combatantId,
+          initiativeScore,
+          startBattle,
+          armorClass,
+          hp: Hp,
+          movementFeet,
+          createScenarioSession,
+          scenarioSessionWithTableD20TestCircumstance,
+          scenarioDistanceFeet,
+          scenarioTableSpatialFingerprint,
+          scenarioSessionIssueMessage,
+          tableAuthoredSpatialDecision,
+          isLeft: Either.isLeft,
+        },
+      },
+    })),
     Match.exhaustive,
   );
 }
