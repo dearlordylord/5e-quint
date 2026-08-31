@@ -1191,7 +1191,7 @@ not run for this issue snapshot.
 
 ## Issue #386 current certification and controlled-red closure
 
-The current integrated source fixed point is `595a3ac1c`, including the
+The current integrated source fixed point is `e936c8c1a`, including the
 refreshed generated certification artifacts and reviewed Raw Swarm declaration
 measure. The final controlled-red inventory still covers all 13 package owners
 with zero recorded diagnostics, and its SHA-256 remains
@@ -1279,10 +1279,13 @@ required. Focused integration evidence at this fixed point includes an exit-0
 Battle Runtime typecheck, an eight-file suite with 68 passing tests, and a final
 redirect-focused three-file suite with 31 passing tests.
 
-The complete clean-consumer smoke passed after the reviewed cap correction,
-including deployed MCP, container, Raw Swarm consumer, and SIGINT/SIGTERM
-lifecycle cases. Its exact public declaration graph is 523 files and 3,965,396
-bytes under the unchanged 10 MiB cap, leaving 6,520,364 bytes of margin.
+The current public declaration graph is 523 files and 3,969,709 bytes under the
+unchanged 10 MiB cap, leaving 6,516,051 bytes of margin. A milestone attempt
+validated that measure and passed the long deployed MCP, container, Raw Swarm
+consumer, and SIGINT/SIGTERM cases, but stopped on a duplicated old-margin unit
+assertion. Commit `e936c8c1a` derives that assertion from the canonical measure
+and its focused test passed 1/1. The operator declined another complete
+milestone run, so no terminal clean-consumer or quality pass is claimed.
 
 This final-current paragraph does not rewrite the historical issue snapshots
 above. It also does not claim a complete QNT proof pass, broad

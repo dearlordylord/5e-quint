@@ -1,7 +1,7 @@
 # Effect 4 final parity report
 
 This is the current certification narrative for GitHub issue #386. It records
-the integrated source fixed point through `595a3ac1c`, including the refreshed
+the integrated source fixed point through `e936c8c1a`, including the refreshed
 certification artifacts and reviewed Raw Swarm declaration measure. It is not
 yet a final closure claim: the full proof terminal result, broad workspace
 gates, and live GitHub closure remain pending below. The five refreshed Battle
@@ -67,12 +67,17 @@ reported
 
 ## Clean-consumer distribution
 
-The complete focused clean-consumer smoke passed after reviewing the declaration
-cap change: one test file and all five tests passed. The deterministic public
-declaration graph is 523 files and 3,965,396 bytes; the 10 MiB byte cap remains
-unchanged, leaving 6,520,364 bytes of margin. The run completed the deployed MCP,
-container, Raw Swarm consumer, and SIGINT/SIGTERM lifecycle cases. The prior
-source-map parse diagnostic did not recur.
+The deterministic public declaration graph is 523 files and 3,969,709 bytes;
+the 10 MiB byte cap remains unchanged, leaving 6,516,051 bytes of margin. The
+first milestone attempt detected the 241-byte reviewed-measure drift. The
+second attempt validated the updated graph and passed six of the seven combined
+clean-consumer tests, including the long deployed MCP, container, Raw Swarm
+consumer, and SIGINT/SIGTERM lifecycle cases. Its only failure was a 9 ms unit
+assertion that duplicated the old derived margin. Commit `e936c8c1a` replaces
+that duplicate literal with the canonical subtraction, and the focused test
+then passed 1/1. The operator declined a third complete milestone run, so this
+is focused repair evidence rather than a complete clean-consumer or quality
+pass at the current fixed point.
 
 ## Registry, coverage, and formal-model scope
 
@@ -140,7 +145,10 @@ report does not call it passed.
 ## Review convergence
 
 Final Standards and independent RAW, domain, QNT/runtime, architecture, and
-connascence reviews converged at `595a3ac1c` with no implementation findings.
+connascence reviews converged again through `36db26aeb`. The final round found
+and repaired one nonempty compelled-movement helper contract and one
+non-exhaustive three-variant route projection; three independent re-reviews
+then reported no findings.
 The final repairs closed the Hideous Laughter damage-triggered repeat-save gap
 for every positive-damage owner, including redirected damage. Durable attack
 continuations now admit only the exact pending repeat-save hole and leave state
@@ -151,9 +159,12 @@ the existing identity-free QNT semantic core and obligation mapping, so no QNT
 model change was required. Authored-identity/PHB+ safety and route/fill
 partitioning also converged without findings.
 
-Focused integration evidence at the same fixed point includes an exit-0 Battle
-Runtime typecheck, an eight-file suite with 68 passing tests, and the final
-redirect-focused three-file suite with 31 passing tests.
+Focused integration evidence includes an exit-0 Battle Runtime typecheck, the
+existing eight-file suite with 68 passing tests, the redirect-focused
+three-file suite with 31 passing tests, 58 passing compelled-movement tests,
+seven passing spatial-route tests, and the exact complexity baseline policy:
+11/11 self-tests plus 706 recorded violations across 270 files with zero
+regressions.
 
 Spec certification is still partial. The refreshed Oracle, #381 manifest,
 coverage authorities, Temporary Hit Point disposition, A51 reachability model,
@@ -201,8 +212,13 @@ are recorded:
 - live GitHub status and closure of #381 and #386, followed by the SR-00
   Cleanroom ledger disposition.
 
-No previous test-file, test-count, transformed-module, build, or proof result
-is reused as evidence for this integrated fixed point. Issues #381 and #386 and
-SR-00 remain pending until the remaining entries above are replaced by their
-observed results, the unobserved full-proof risk is explicitly dispositioned,
-and the live issue chain agrees.
+The milestone command was attempted twice under its public broad-lock wrapper.
+Both attempts passed the Effect cohort/certification checks, all 15 Oracle
+self-tests, and the pinned 7,246-identity verifier. The first stopped on the
+reviewed declaration byte drift; the second stopped only on the stale derived
+margin assertion described above. The command never reached a terminal pass.
+At the operator's direction neither the milestone nor proof lane will be rerun
+for this landing. No previous test-file, test-count, transformed-module, build,
+or proof result is promoted to a current pass. Issues #381 and #386 and SR-00
+therefore retain an explicit verification exception until the live issue and
+ledger disposition records the operator decision.
