@@ -35,6 +35,7 @@ import {
   StatBlockArmorClassSchema,
   StatBlockCommunicationSchema,
   StatBlockGearEntrySchema,
+  StatBlockGearItemSchema,
   StatBlockInitiativeSchema,
   StatBlockLanguageNameSchema,
   StatBlockPassivePerceptionSchema,
@@ -1330,7 +1331,7 @@ const parseAbilityMatrix = (
   const matrixIssueCount = issueContext.issues.length;
   const facts = rows.flatMap((cells, rowIndex) => {
     const expandedCells = cells.flatMap((cell) => {
-      const compactFact = cell.match(/^([A-Z]+) (.+)$/);
+      const compactFact = cell.match(/^(\S+) (.+)$/);
       return compactFact === null
         ? [cell]
         : [compactFact[1] ?? "", compactFact[2] ?? ""];
@@ -1781,12 +1782,12 @@ const parseImmunities = (
   }
   const immunityGroups = line.replace("**Immunities**", "").trim().split("; ");
   if (immunityGroups.length > 2) {
-    return malformedEvidence(
+    malformedEvidence(
       issueContext,
       "immunities.groups",
       immunityGroups.join("; "),
       "at most one damage-type group and one condition group",
-      { kind: "some", value: DEPENDENCY_FALLBACK_IMMUNITY },
+      undefined,
     );
   }
   const [firstGroup = "", explicitConditions] = immunityGroups;
@@ -2027,9 +2028,18 @@ const parseGear = (
               gear[2],
               `gear.${index}.quantity`,
             );
-      const item = gear[1] ?? "";
+      const itemEvidence = gear[1] ?? "";
+      const item = decodeEvidenceValue(
+        issueContext,
+        StatBlockGearItemSchema,
+        projectedGearItem(itemEvidence, quantity),
+        itemEvidence,
+        `gear.${index}.item`,
+        "a nonempty gear item label",
+        "Gear",
+      );
       return {
-        item: projectedGearItem(item, quantity),
+        item,
         quantity,
       };
     })
@@ -2048,6 +2058,29 @@ const NUMBER_WORDS = [
   ["five", 5],
 ] as const;
 
+const parseLanguageNames = (
+  issueContext: ProjectionIssueContext,
+  value: string,
+  field: string,
+) =>
+  nonEmptyValues(
+    issueContext,
+    value.split(/, (?![^()]*\))| and /).map((language, index) => {
+      const evidence = language.replace(/^and /, "");
+      return decodeEvidenceValue(
+        issueContext,
+        StatBlockLanguageNameSchema,
+        evidence,
+        evidence,
+        `${field}.${index}`,
+        "a nonempty non-reserved language name",
+        "Common",
+      );
+    }),
+    field,
+    "Common",
+  );
+
 const parseLanguageSet = (
   issueContext: ProjectionIssueContext,
   value: string,
@@ -2056,24 +2089,10 @@ const parseLanguageSet = (
   const additional = value.match(
     /^(.+) plus (one|two|three|four|five) other languages?$/,
   );
-  const languages = nonEmptyValues(
+  const languages = parseLanguageNames(
     issueContext,
-    (additional?.[1] ?? value)
-      .split(/, (?![^()]*\))| and /)
-      .map((language, index) => {
-        const evidence = language.replace(/^and /, "");
-        return decodeEvidenceValue(
-          issueContext,
-          StatBlockLanguageNameSchema,
-          evidence,
-          evidence,
-          `communication.languages.${index}`,
-          "a nonempty non-reserved language name",
-          "Common",
-        );
-      }),
+    additional?.[1] ?? value,
     "communication.languages",
-    "Common",
   );
   if (additional === null) return { kind: "named", languages };
   const additionalLanguageCount = NUMBER_WORDS.find(
@@ -2134,12 +2153,12 @@ const parseCommunicationCandidate = (
   }
   const communicationGroups = withoutTelepathy.split("; ");
   if (communicationGroups.length > 2) {
-    return malformedEvidence(
+    malformedEvidence(
       issueContext,
       "communication.groups",
       withoutTelepathy,
       "a spoken-language group and at most one qualifier",
-      { kind: "none" },
+      undefined,
     );
   }
   const [spoken = "", qualifier] = communicationGroups;
@@ -2195,11 +2214,10 @@ const parseCommunicationCandidate = (
       languages: parseLanguageSet(issueContext, spoken),
       additionallyUnderstoodButCannotSpeak: {
         kind: "named",
-        languages: nonEmptyValues(
+        languages: parseLanguageNames(
           issueContext,
-          (understood[1] ?? "").split(/, (?:and )?| and /),
-          "communication.understoodLanguages",
-          "Common",
+          understood[1] ?? "",
+          "communication.additionallyUnderstoodButCannotSpeak.languages",
         ),
       },
     };
@@ -3339,7 +3357,13 @@ const parseDirectSpellcasting = (
       ? {}
       : { spellAttackBonus: inheritedSpellAttackBonus }),
     ...(explicit && match[5] !== undefined
-      ? { spellSaveDc: Number(match[5]) }
+      ? {
+          spellSaveDc: positiveIntegerEvidence(
+            issueContext,
+            match[5],
+            `procedures.${entry.name}.spellSaveDc`,
+          ),
+        }
       : {}),
     components:
       explicitAbility !== null

@@ -6635,8 +6635,13 @@ export const StatBlockArmorClassSchema = Schema.Struct({
   ),
 });
 
+export const StatBlockGearItemSchema = surfaceIdentity(
+  Schema.NonEmptyTrimmedString,
+  "label",
+);
+
 export const StatBlockGearEntrySchema = Schema.Struct({
-  item: surfaceIdentity(Schema.NonEmptyTrimmedString, "label"),
+  item: StatBlockGearItemSchema,
   quantity: optionalExact(PositiveIntegerSchema),
 });
 

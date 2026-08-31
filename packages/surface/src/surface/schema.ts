@@ -100,6 +100,7 @@ export {
   StatBlockArmorClassSchema,
   StatBlockCommunicationSchema,
   StatBlockGearEntrySchema,
+  StatBlockGearItemSchema,
   StatBlockInitiativeModifierSchema,
   StatBlockInitiativeSchema,
   StatBlockLanguageNameSchema,
