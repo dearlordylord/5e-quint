@@ -20,14 +20,14 @@ export type SpellMechanicsHeaderFact =
   (typeof SPELL_MECHANICS_HEADER_FACTS)[number];
 
 export const SPELL_MECHANICS_HEADER_FACT_ORDINALS = {
-  level: 1,
-  school: 2,
-  range: 3,
-  components: 4,
-  duration: 5,
-  castingTime: 6,
-  family: 7,
-} as const satisfies Record<SpellMechanicsHeaderFact, number>;
+  level: PositiveInteger(1),
+  school: PositiveInteger(2),
+  range: PositiveInteger(3),
+  components: PositiveInteger(4),
+  duration: PositiveInteger(5),
+  castingTime: PositiveInteger(6),
+  family: PositiveInteger(7),
+} as const satisfies Record<SpellMechanicsHeaderFact, PositiveInteger>;
 
 export const SPELL_MATERIAL_COMPONENT_BRANCHES = [
   "cost",
@@ -38,11 +38,14 @@ export type SpellMaterialComponentBranch =
   (typeof SPELL_MATERIAL_COMPONENT_BRANCHES)[number];
 
 export const SPELL_MATERIAL_COMPONENT_BRANCH_COORDINATES = {
-  cost: { role: "resource", ordinal: 1 },
-  consumption: { role: "effect", ordinal: 1 },
+  cost: { role: "resource", ordinal: PositiveInteger(1) },
+  consumption: { role: "effect", ordinal: PositiveInteger(1) },
 } as const satisfies Record<
   SpellMaterialComponentBranch,
-  { readonly role: "resource" | "effect"; readonly ordinal: number }
+  {
+    readonly role: "resource" | "effect";
+    readonly ordinal: PositiveInteger;
+  }
 >;
 
 export const SPELL_DURATION_BRANCHES = [
@@ -54,50 +57,58 @@ export const SPELL_DURATION_BRANCHES = [
 export type SpellDurationBranch = (typeof SPELL_DURATION_BRANCHES)[number];
 
 export const SPELL_DURATION_BRANCH_COORDINATES = {
-  value: { role: "generalFact", firstOrdinal: 1 },
-  extension: { role: "extension", firstOrdinal: 1 },
-  ending: { role: "effect", firstOrdinal: 1 },
+  value: { role: "generalFact", firstOrdinal: PositiveInteger(1) },
+  extension: { role: "extension", firstOrdinal: PositiveInteger(1) },
+  ending: { role: "effect", firstOrdinal: PositiveInteger(1) },
 } as const satisfies Record<
   SpellDurationBranch,
   {
     readonly role: "generalFact" | "extension" | "effect";
-    readonly firstOrdinal: number;
+    readonly firstOrdinal: PositiveInteger;
   }
 >;
 
 const SPELL_ACTIVATION_BRANCH_COORDINATES = {
-  attachment: { role: "generalFact", ordinal: 1 },
+  attachment: { role: "generalFact", ordinal: PositiveInteger(1) },
 } as const;
 
 const SPELL_ONGOING_BRANCH_COORDINATES = {
-  attachment: { role: "effect", ordinal: 1 },
-  operationEffect: { role: "effect", ordinal: 1 },
+  attachment: { role: "effect", ordinal: PositiveInteger(1) },
+  operationEffect: { role: "effect", ordinal: PositiveInteger(1) },
 } as const;
 
 const SPELL_TEMPLATED_SPAWN_BRANCH_COORDINATES = {
-  statBlock: { role: "effect", ordinal: 1 },
-  control: { role: "procedure", ordinal: 1 },
-  reversion: { role: "effect", ordinal: 2 },
+  statBlock: { role: "effect", ordinal: PositiveInteger(1) },
+  control: { role: "procedure", ordinal: PositiveInteger(1) },
+  reversion: { role: "effect", ordinal: PositiveInteger(2) },
 } as const;
 
 const SPELL_SPAWNED_CREATURE_BRANCH_COORDINATES = {
-  creature: { role: "effect", ordinal: 1 },
-  control: { role: "procedure", ordinal: 1 },
-  dismissal: { role: "effect", ordinal: 2 },
+  creature: { role: "effect", ordinal: PositiveInteger(1) },
+  control: { role: "procedure", ordinal: PositiveInteger(1) },
+  dismissal: { role: "effect", ordinal: PositiveInteger(2) },
 } as const;
 
 const SPELL_GLYPH_BRANCH_COORDINATES = {
-  occurrence: { role: "effect", ordinal: 1 },
-  trigger: { role: "procedure", ordinal: 1 },
-  release: { role: "effect", ordinal: 2 },
-  explosiveRelease: { role: "procedure", ordinal: 2 },
-  storedRelease: { role: "procedure", ordinal: 3 },
+  occurrence: { role: "effect", ordinal: PositiveInteger(1) },
+  trigger: { role: "procedure", ordinal: PositiveInteger(1) },
+  release: { role: "effect", ordinal: PositiveInteger(2) },
+  explosiveRelease: { role: "procedure", ordinal: PositiveInteger(2) },
+  storedRelease: { role: "procedure", ordinal: PositiveInteger(3) },
 } as const;
 
 const RECORD_MECHANICS_NODE = {
   kind: "singleton",
   role: "recordMechanics",
 } as const;
+
+export type SpellMechanicsBranchPath = Omit<UnitMechanicsPath, "nodes"> & {
+  readonly nodes: readonly [
+    typeof RECORD_MECHANICS_NODE,
+    MechanicsGraphPathNode,
+    ...MechanicsGraphPathNode[],
+  ];
+};
 
 /**
  * The root coordinate for a spell's authored mechanics graph. This coordinate
@@ -109,64 +120,69 @@ export function spellMechanicsRootPath(): UnitMechanicsPath {
 
 export function spellMechanicsHeaderPath(
   fact: SpellMechanicsHeaderFact,
-): UnitMechanicsPath {
+): SpellMechanicsBranchPath {
   return spellMechanicsPath(
-    occurrence(
-      "generalFact",
-      PositiveInteger(SPELL_MECHANICS_HEADER_FACT_ORDINALS[fact]),
-    ),
+    occurrence("generalFact", SPELL_MECHANICS_HEADER_FACT_ORDINALS[fact]),
   );
 }
 
 export function spellMaterialComponentPath(
   branch: SpellMaterialComponentBranch,
-): UnitMechanicsPath {
+): SpellMechanicsBranchPath {
   const coordinate = SPELL_MATERIAL_COMPONENT_BRANCH_COORDINATES[branch];
   return spellMechanicsPath(
     headerNode("components"),
-    occurrence(coordinate.role, PositiveInteger(coordinate.ordinal)),
+    occurrence(coordinate.role, coordinate.ordinal),
   );
 }
 
-export function spellDurationValuePath(): UnitMechanicsPath {
+export function spellDurationValuePath(): SpellMechanicsBranchPath {
   return spellDurationBranchPath(
     SPELL_DURATION_BRANCH_COORDINATES.value.role,
-    PositiveInteger(SPELL_DURATION_BRANCH_COORDINATES.value.firstOrdinal),
+    SPELL_DURATION_BRANCH_COORDINATES.value.firstOrdinal,
   );
 }
 
 export function spellDurationExtensionPath(
   ordinal: PositiveInteger,
-): UnitMechanicsPath {
-  return spellDurationBranchPath("extension", ordinal);
+): SpellMechanicsBranchPath {
+  const coordinate = SPELL_DURATION_BRANCH_COORDINATES.extension;
+  return spellDurationBranchPath(
+    coordinate.role,
+    durationBranchOrdinal(coordinate.firstOrdinal, ordinal),
+  );
 }
 
 export function spellDurationEndingPath(
   ordinal: PositiveInteger,
-): UnitMechanicsPath {
-  return spellDurationBranchPath("effect", ordinal);
+): SpellMechanicsBranchPath {
+  const coordinate = SPELL_DURATION_BRANCH_COORDINATES.ending;
+  return spellDurationBranchPath(
+    coordinate.role,
+    durationBranchOrdinal(coordinate.firstOrdinal, ordinal),
+  );
 }
 
 export function spellActivationPhasePath(
   phaseOrdinal: PositiveInteger,
-): UnitMechanicsPath {
+): SpellMechanicsBranchPath {
   return spellMechanicsPath(occurrence("procedure", phaseOrdinal));
 }
 
 export function spellActivationAttachmentPath(
   phaseOrdinal: PositiveInteger,
-): UnitMechanicsPath {
+): SpellMechanicsBranchPath {
   const attachment = SPELL_ACTIVATION_BRANCH_COORDINATES.attachment;
   return spellMechanicsPath(
     occurrence("procedure", phaseOrdinal),
-    occurrence(attachment.role, PositiveInteger(attachment.ordinal)),
+    occurrence(attachment.role, attachment.ordinal),
   );
 }
 
 export function spellActivationRepeatPath(
   phaseOrdinal: PositiveInteger,
   repeatOrdinal: PositiveInteger,
-): UnitMechanicsPath {
+): SpellMechanicsBranchPath {
   return spellMechanicsPath(
     occurrence("procedure", phaseOrdinal),
     occurrence("procedure", repeatOrdinal),
@@ -176,148 +192,127 @@ export function spellActivationRepeatPath(
 export function spellActivationEffectPath(
   phaseOrdinal: PositiveInteger,
   effectOrdinal: PositiveInteger,
-): UnitMechanicsPath {
+): SpellMechanicsBranchPath {
   return spellMechanicsPath(
     occurrence("procedure", phaseOrdinal),
     occurrence("effect", effectOrdinal),
   );
 }
 
-export function spellOngoingAttachmentPath(): UnitMechanicsPath {
+export function spellOngoingAttachmentPath(): SpellMechanicsBranchPath {
   const attachment = SPELL_ONGOING_BRANCH_COORDINATES.attachment;
-  return spellMechanicsPath(
-    occurrence(attachment.role, PositiveInteger(attachment.ordinal)),
-  );
+  return spellMechanicsPath(occurrence(attachment.role, attachment.ordinal));
 }
 
-export function spellOngoingInitialPhasePath(): UnitMechanicsPath {
+export function spellOngoingInitialPhasePath(): SpellMechanicsBranchPath {
   return spellMechanicsPath(singleton("action"));
 }
 
 export function spellOngoingOperationPath(
   operationOrdinal: PositiveInteger,
-): UnitMechanicsPath {
+): SpellMechanicsBranchPath {
   return spellMechanicsPath(occurrence("procedure", operationOrdinal));
 }
 
 export function spellOngoingOperationEffectPath(
   operationOrdinal: PositiveInteger,
-): UnitMechanicsPath {
+): SpellMechanicsBranchPath {
   const effect = SPELL_ONGOING_BRANCH_COORDINATES.operationEffect;
   return spellMechanicsPath(
     occurrence("procedure", operationOrdinal),
-    occurrence(effect.role, PositiveInteger(effect.ordinal)),
+    occurrence(effect.role, effect.ordinal),
   );
 }
 
-export function spellTemplatedSpawnCapacityPath(): UnitMechanicsPath {
+export function spellTemplatedSpawnCapacityPath(): SpellMechanicsBranchPath {
   return spellMechanicsPath(singleton("resource"));
 }
 
-export function spellTemplatedSpawnStatBlockPath(): UnitMechanicsPath {
+export function spellTemplatedSpawnStatBlockPath(): SpellMechanicsBranchPath {
   const statBlock = SPELL_TEMPLATED_SPAWN_BRANCH_COORDINATES.statBlock;
-  return spellMechanicsPath(
-    occurrence(statBlock.role, PositiveInteger(statBlock.ordinal)),
-  );
+  return spellMechanicsPath(occurrence(statBlock.role, statBlock.ordinal));
 }
 
 export function spellTemplatedSpawnSizeTierPath(
   tierOrdinal: PositiveInteger,
-): UnitMechanicsPath {
+): SpellMechanicsBranchPath {
   return spellMechanicsPath(occurrence("extension", tierOrdinal));
 }
 
-export function spellTemplatedSpawnControlPath(): UnitMechanicsPath {
+export function spellTemplatedSpawnControlPath(): SpellMechanicsBranchPath {
   const control = SPELL_TEMPLATED_SPAWN_BRANCH_COORDINATES.control;
-  return spellMechanicsPath(
-    occurrence(control.role, PositiveInteger(control.ordinal)),
-  );
+  return spellMechanicsPath(occurrence(control.role, control.ordinal));
 }
 
-export function spellTemplatedSpawnReversionPath(): UnitMechanicsPath {
+export function spellTemplatedSpawnReversionPath(): SpellMechanicsBranchPath {
   const reversion = SPELL_TEMPLATED_SPAWN_BRANCH_COORDINATES.reversion;
-  return spellMechanicsPath(
-    occurrence(reversion.role, PositiveInteger(reversion.ordinal)),
-  );
+  return spellMechanicsPath(occurrence(reversion.role, reversion.ordinal));
 }
 
-export function spellSpawnedCreaturePath(): UnitMechanicsPath {
+export function spellSpawnedCreaturePath(): SpellMechanicsBranchPath {
   const creature = SPELL_SPAWNED_CREATURE_BRANCH_COORDINATES.creature;
-  return spellMechanicsPath(
-    occurrence(creature.role, PositiveInteger(creature.ordinal)),
-  );
+  return spellMechanicsPath(occurrence(creature.role, creature.ordinal));
 }
 
-export function spellSpawnedCreatureControlPath(): UnitMechanicsPath {
+export function spellSpawnedCreatureControlPath(): SpellMechanicsBranchPath {
   const control = SPELL_SPAWNED_CREATURE_BRANCH_COORDINATES.control;
-  return spellMechanicsPath(
-    occurrence(control.role, PositiveInteger(control.ordinal)),
-  );
+  return spellMechanicsPath(occurrence(control.role, control.ordinal));
 }
 
-export function spellSpawnedCreatureDismissalPath(): UnitMechanicsPath {
+export function spellSpawnedCreatureDismissalPath(): SpellMechanicsBranchPath {
   const dismissal = SPELL_SPAWNED_CREATURE_BRANCH_COORDINATES.dismissal;
-  return spellMechanicsPath(
-    occurrence(dismissal.role, PositiveInteger(dismissal.ordinal)),
-  );
+  return spellMechanicsPath(occurrence(dismissal.role, dismissal.ordinal));
 }
 
-export function spellGlyphOccurrencePath(): UnitMechanicsPath {
+export function spellGlyphOccurrencePath(): SpellMechanicsBranchPath {
   const occurrenceCoordinate = SPELL_GLYPH_BRANCH_COORDINATES.occurrence;
   return spellMechanicsPath(
-    occurrence(
-      occurrenceCoordinate.role,
-      PositiveInteger(occurrenceCoordinate.ordinal),
-    ),
+    occurrence(occurrenceCoordinate.role, occurrenceCoordinate.ordinal),
   );
 }
 
-export function spellGlyphTriggerPath(): UnitMechanicsPath {
+export function spellGlyphTriggerPath(): SpellMechanicsBranchPath {
   const trigger = SPELL_GLYPH_BRANCH_COORDINATES.trigger;
-  return spellMechanicsPath(
-    occurrence(trigger.role, PositiveInteger(trigger.ordinal)),
-  );
+  return spellMechanicsPath(occurrence(trigger.role, trigger.ordinal));
 }
 
-export function spellGlyphReleasePath(): UnitMechanicsPath {
+export function spellGlyphReleasePath(): SpellMechanicsBranchPath {
   const release = SPELL_GLYPH_BRANCH_COORDINATES.release;
-  return spellMechanicsPath(
-    occurrence(release.role, PositiveInteger(release.ordinal)),
-  );
+  return spellMechanicsPath(occurrence(release.role, release.ordinal));
 }
 
-export function spellGlyphExplosiveReleasePath(): UnitMechanicsPath {
+export function spellGlyphExplosiveReleasePath(): SpellMechanicsBranchPath {
   const explosive = SPELL_GLYPH_BRANCH_COORDINATES.explosiveRelease;
-  return spellMechanicsPath(
-    occurrence(explosive.role, PositiveInteger(explosive.ordinal)),
-  );
+  return spellMechanicsPath(occurrence(explosive.role, explosive.ordinal));
 }
 
-export function spellGlyphStoredReleasePath(): UnitMechanicsPath {
+export function spellGlyphStoredReleasePath(): SpellMechanicsBranchPath {
   const stored = SPELL_GLYPH_BRANCH_COORDINATES.storedRelease;
-  return spellMechanicsPath(
-    occurrence(stored.role, PositiveInteger(stored.ordinal)),
-  );
+  return spellMechanicsPath(occurrence(stored.role, stored.ordinal));
 }
 
 function spellDurationBranchPath(
   role: "generalFact" | "extension" | "effect",
   ordinal: PositiveInteger,
-): UnitMechanicsPath {
+): SpellMechanicsBranchPath {
   return spellMechanicsPath(headerNode("duration"), occurrence(role, ordinal));
+}
+
+function durationBranchOrdinal(
+  firstOrdinal: PositiveInteger,
+  ordinal: PositiveInteger,
+): PositiveInteger {
+  return PositiveInteger(firstOrdinal + ordinal - 1);
 }
 
 function spellMechanicsPath(
   ...tail: readonly [MechanicsGraphPathNode, ...MechanicsGraphPathNode[]]
-): UnitMechanicsPath {
-  return unitMechanicsPath([RECORD_MECHANICS_NODE, ...tail]);
+): SpellMechanicsBranchPath {
+  return { family: "unit", nodes: [RECORD_MECHANICS_NODE, ...tail] };
 }
 
 function headerNode(fact: SpellMechanicsHeaderFact): MechanicsGraphPathNode {
-  return occurrence(
-    "generalFact",
-    PositiveInteger(SPELL_MECHANICS_HEADER_FACT_ORDINALS[fact]),
-  );
+  return occurrence("generalFact", SPELL_MECHANICS_HEADER_FACT_ORDINALS[fact]);
 }
 
 function occurrence(

@@ -36,6 +36,7 @@ import {
   spellTemplatedSpawnReversionPath,
   spellTemplatedSpawnSizeTierPath,
   spellTemplatedSpawnStatBlockPath,
+  type SpellMechanicsBranchPath,
 } from "./spell-mechanics-path.ts";
 
 describe("spell mechanics paths", () => {
@@ -72,8 +73,8 @@ describe("spell mechanics paths", () => {
   });
 
   test("builds root, header, material, and duration coordinates", () => {
-    expectCoordinates([
-      [spellMechanicsRootPath(), "recordMechanics"],
+    expect(coordinate(spellMechanicsRootPath())).toBe("recordMechanics");
+    expectBranchCoordinates([
       [spellMechanicsHeaderPath("level"), "recordMechanics/generalFact:1"],
       [spellMechanicsHeaderPath("family"), "recordMechanics/generalFact:7"],
       [
@@ -97,7 +98,7 @@ describe("spell mechanics paths", () => {
   });
 
   test("builds activation and ongoing coordinates", () => {
-    expectCoordinates([
+    expectBranchCoordinates([
       [
         spellActivationPhasePath(PositiveInteger(2)),
         "recordMechanics/procedure:2",
@@ -128,7 +129,7 @@ describe("spell mechanics paths", () => {
   });
 
   test("builds templated and spawned-creature coordinates", () => {
-    expectCoordinates([
+    expectBranchCoordinates([
       [spellTemplatedSpawnCapacityPath(), "recordMechanics/resource"],
       [spellTemplatedSpawnStatBlockPath(), "recordMechanics/effect:1"],
       [
@@ -144,7 +145,7 @@ describe("spell mechanics paths", () => {
   });
 
   test("builds sibling glyph occurrence, trigger, and release coordinates", () => {
-    expectCoordinates([
+    expectBranchCoordinates([
       [spellGlyphOccurrencePath(), "recordMechanics/effect:1"],
       [spellGlyphTriggerPath(), "recordMechanics/procedure:1"],
       [spellGlyphReleasePath(), "recordMechanics/effect:2"],
@@ -154,8 +155,8 @@ describe("spell mechanics paths", () => {
   });
 });
 
-function expectCoordinates(
-  cases: readonly (readonly [UnitMechanicsPath, string])[],
+function expectBranchCoordinates(
+  cases: readonly (readonly [SpellMechanicsBranchPath, string])[],
 ): void {
   for (const [path, expected] of cases) {
     expect(coordinate(path)).toBe(expected);
