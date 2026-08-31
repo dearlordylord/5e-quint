@@ -12,21 +12,19 @@
 This section is the sole mutable handoff for a new session.
 
 - Ledger state observed: 2026-08-30
-- Current frontier: `SR-01`
-- Active work: reconcile the landed #479 / PR #480 stat-block parity line with
-  the exact `SR-00` landing
+- Current frontier: `SR-02`
+- Active work: establish the exact common-base convergence receipt from the
+  landed `SR-00` and #479 / PR #480 line
 - Active owner: Codex orchestrator
-- Last completed checkpoint: `SR-00` operational landing, with the explicit
-  proof/quality verification exception retained on #386
-- Last accepted milestone SHA: `ec966d06e`
+- Last completed checkpoint: `SR-01` local master convergence, with the
+  operator-waived interrupted broad/full run recorded as an exception
+- Last accepted milestone SHA: `aceda1aa5`
 - Coordination base before `SR-00`: `51beff526`
 - `SR-00` integration base: `301229532`
-- Active landing unit: `integration/cleanroom-sr-01` at
-  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-01`
-- Next action: audit the two-line delta from common base `ff2404cb4`, merge the
-  ledger lease into the landing worktree, and reconcile `origin/master` without
-  discarding either SR-00 or PR #480 ownership
-- Next action after `SR-01`: establish the exact common-base receipt in `SR-02`
+- Active landing unit: none; `SR-02` is not yet leased
+- Next action: establish the exact common-base receipt for local `master` at
+  accepted SR-01 revision `aceda1aa5`, then audit #102/#103/#105/#56/#119 as
+  directed by the SR-02 execution note
 - Parallel work allowed now: read-only topology/spec review and disjoint
   reconciliation research; only the landing worktree owns integration writes
 - Cleanroom Acceptance Run #39: excluded
@@ -100,8 +98,8 @@ results are on one coherent `master` line.
 | ID      | State    | Outcome / tickets                                          | Start after                  | Complete after                     |
 | ------- | -------- | ---------------------------------------------------------- | ---------------------------- | ---------------------------------- |
 | `SR-00` | Complete | Land and certify the user-owned #368–#386 line             | current user session         | #386 receipt                       |
-| `SR-01` | Active   | Reconcile and land #479 / PR #480                          | `SR-00`                      | #479 receipt                       |
-| `SR-02` | Waiting  | Establish the exact common-base convergence receipt        | `SR-01`                      | stable common-base gate            |
+| `SR-01` | Complete | Reconcile and land #479 / PR #480                          | `SR-00`                      | #479 receipt                       |
+| `SR-02` | Active   | Establish the exact common-base convergence receipt        | `SR-01`                      | stable common-base gate            |
 | `SR-03` | Waiting  | Land typed weapon-mastery references, #476                 | `SR-02`                      | #476 receipt                       |
 | `SR-04` | Waiting  | Land owner projections, #464/#469/#477/#470/#473/#471/#474 | `SR-03`                      | every named ticket receipt         |
 | `SR-05` | Waiting  | Land joins/composition and close #465–#468/#52             | `SR-04`                      | #52 receipt                        |
@@ -127,9 +125,10 @@ coordination checkpoint. Ticket/slice landings inside a checkpoint first append
 rows such as `SR-04A`; the final checkpoint row consolidates them after every
 required unit has landed.
 
-| Checkpoint/unit | Base SHA    | Accepted SHA | Result                                                                                                          | Verification                                                                                                                                                                                          | Ticket evidence                                                                                                                                                                                        | Unlocked |
-| --------------- | ----------- | ------------ | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| `SR-00`         | `f566a5dca` | `ec966d06e`  | Operational landing complete; #386 certification remains open with an operator-accepted proof/quality exception | Final reviews converged; five public Battle MBTs passed; Oracle self-tests 15/15 and 7,246-identity verifier passed; complexity regressions zero; no terminal proof or milestone-quality pass claimed | [#381 closed receipt](https://github.com/dearlordylord/5e-quint/issues/381#issuecomment-5472588960); [#386 open receipt](https://github.com/dearlordylord/5e-quint/issues/386#issuecomment-5472589098) | `SR-01`  |
+| Checkpoint/unit | Base SHA    | Accepted SHA | Result                                                                                                                        | Verification                                                                                                                                                                                                                                                                                                                                                                                | Ticket evidence                                                                                                                                                                                        | Unlocked |
+| --------------- | ----------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| `SR-00`         | `f566a5dca` | `ec966d06e`  | Operational landing complete; #386 certification remains open with an operator-accepted proof/quality exception               | Final reviews converged; five public Battle MBTs passed; Oracle self-tests 15/15 and 7,246-identity verifier passed; complexity regressions zero; no terminal proof or milestone-quality pass claimed                                                                                                                                                                                       | [#381 closed receipt](https://github.com/dearlordylord/5e-quint/issues/381#issuecomment-5472588960); [#386 open receipt](https://github.com/dearlordylord/5e-quint/issues/386#issuecomment-5472589098) | `SR-01`  |
+| `SR-01`         | `b2457bb42` | `aceda1aa5`  | Local master now contains the reviewed SR-00 line and merged #479 / PR #480 cohort without importing the four excluded deltas | Standards and Spec/RAW reviews converged with no findings; Battle Runtime typecheck passed; focused transaction 19/19, projection 27/27, spellcasting allocation 40/40, Surface 27/27 plus encoded-reference 1/1; rules-kernel 162 obligations and unit-profile 435 Units/272 profiles passed; the operator-waived interrupted broad/full run was not replayed and is not claimed as passed | [#479 final merge and preservation receipt](https://github.com/dearlordylord/5e-quint/issues/479#issuecomment-5470608738); [PR #480](https://github.com/dearlordylord/5e-quint/pull/480)               | `SR-02`  |
 
 ## Active landing table
 
@@ -137,9 +136,8 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice   | Owner              | Worktree/branch                                                                             | Base SHA    | Write lease                                                                                                              | State  |
-| --------------- | -------------- | ------------------ | ------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------ | ------ |
-| `SR-01`         | #479 / PR #480 | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-01`; `integration/cleanroom-sr-01` | `c34721102` | two-line convergence of the accepted SR-00 master line and merged PR #480 without replaying or dropping either authority | Active |
+| Checkpoint/unit | Ticket/slice | Owner | Worktree/branch | Base SHA | Write lease | State |
+| --------------- | ------------ | ----- | --------------- | -------- | ----------- | ----- |
 
 ## Landing discipline
 
