@@ -52,7 +52,6 @@ function projectMechanicalWeaponAttackActionOption(
     kind: "weapon",
     weapon: projectMechanicalWeapon(attack.weapon),
     weaponObjectId: attack.weaponObjectId,
-    hasWeaponMastery: attack.hasWeaponMastery,
     ability: attack.ability,
     abilityModifier: attack.abilityModifier,
     ...optionalProperty("attackBonus", attack.attackBonus),

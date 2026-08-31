@@ -47,7 +47,7 @@ let weapon =
               }
             ]
           : List WeaponProperty
-      , mastery = "nick"
+      , masteryUnitId = "mastery_nick"
       , weightPounds = Some 2
       , costGp = 2
       }

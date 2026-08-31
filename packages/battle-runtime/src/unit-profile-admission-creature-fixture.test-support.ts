@@ -396,7 +396,6 @@ export function zeroAbilityWeaponAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: weapon.usage === "ranged" ? "dex" : "str",
     abilityModifier: abilityModifier(0),

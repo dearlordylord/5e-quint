@@ -237,6 +237,7 @@ describe("committed SRD Surface publication", () => {
   }, 180_000);
 
   test("compiles and validates with an independent Draft 2020-12 validator", () => {
+    const surfacePackagePath = fileURLToPath(new URL("../..", import.meta.url));
     const schemaPath = fileURLToPath(
       new URL(
         `../../publication/${SRD_SURFACE_PUBLICATION_FILE_NAMES.schema}`,
@@ -326,7 +327,7 @@ describe("committed SRD Surface publication", () => {
           console.log("valid; rejected " + Object.keys(invalidCases).join(","));
         `,
       ],
-      { encoding: "utf8", timeout: 120_000 },
+      { cwd: surfacePackagePath, encoding: "utf8", timeout: 120_000 },
     );
 
     expect(result.trim()).toBe(

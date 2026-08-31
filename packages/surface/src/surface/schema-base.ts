@@ -43,6 +43,7 @@ export const SURFACE_PROJECTION_KINDS = [
 export const SURFACE_UNIT_REFERENCE_RELATIONS = [
   "excluded-armor-reference",
   "item-reference",
+  "mastery-reference",
   "spell-reference",
   "subclass-choice",
   "unit-reference",

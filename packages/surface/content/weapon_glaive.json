@@ -9,7 +9,7 @@
   },
   "id": "weapon_glaive",
   "kind": "weapon",
-  "mastery": "graze",
+  "masteryUnitId": "mastery_graze",
   "name": "Glaive",
   "properties": [
     {

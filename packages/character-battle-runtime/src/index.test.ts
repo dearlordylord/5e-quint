@@ -1046,7 +1046,15 @@ describe("Character Sheet battle handoff", () => {
       characterBattleSupportProjection(build, missingMasteryProfileCatalog, [
         { weaponUnitId: authoredUnitId("weapon_longsword") },
       ]),
-    ).toMatchObject({ _tag: "Failure" });
+    ).toMatchObject({
+      _tag: "Failure",
+      failure: [
+        {
+          message:
+            "Selected weapon weapon_longsword references unknown mastery Unit mastery_sap through masteryUnitId.",
+        },
+      ],
+    });
     expect(
       initBuild(
         weaponMasteryLongswordFighterBuild(),
@@ -10181,7 +10189,8 @@ describe("Character Build battle projection", () => {
     const fighter = state.state.combatants.get(fighterId);
     expect(
       fighter?.origin.kind === "character" &&
-        fighter.origin.attack?.hasWeaponMastery,
+        fighter.origin.attack !== null &&
+        "masteryProperty" in fighter.origin.attack.weapon,
     ).toBe(true);
     expect(
       state.context.characters.get(fighterId)?.unitPresentationSources,
@@ -10327,7 +10336,8 @@ describe("Character Build battle projection", () => {
     const fighter = state.state.combatants.get(fighterId);
     expect(
       fighter?.origin.kind === "character" &&
-        fighter.origin.attack?.hasWeaponMastery,
+        fighter.origin.attack !== null &&
+        "masteryProperty" in fighter.origin.attack.weapon,
     ).toBe(true);
     expect(
       state.context.characters.get(fighterId)?.unitPresentationSources,
@@ -10409,7 +10419,8 @@ describe("Character Build battle projection", () => {
     const fighter = state.state.combatants.get(fighterId);
     expect(
       fighter?.origin.kind === "character" &&
-        fighter.origin.attack?.hasWeaponMastery,
+        fighter.origin.attack !== null &&
+        "masteryProperty" in fighter.origin.attack.weapon,
     ).toBe(true);
     expect(
       state.context.characters.get(fighterId)?.unitPresentationSources,

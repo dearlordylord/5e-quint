@@ -9,7 +9,7 @@
   },
   "id": "weapon_longsword",
   "kind": "weapon",
-  "mastery": "sap",
+  "masteryUnitId": "mastery_sap",
   "name": "Longsword",
   "properties": [
     {

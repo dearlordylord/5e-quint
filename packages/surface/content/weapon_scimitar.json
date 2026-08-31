@@ -9,7 +9,7 @@
   },
   "id": "weapon_scimitar",
   "kind": "weapon",
-  "mastery": "nick",
+  "masteryUnitId": "mastery_nick",
   "name": "Scimitar",
   "properties": [
     {

@@ -112,6 +112,7 @@ import type {
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import {
   buildUnitCatalog,
+  resolveWeaponMasteryReference,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import acidSplashInput from "../../surface/content/acid_splash.json";
@@ -202,7 +203,10 @@ import {
   spellProcedureExecution,
   type CharacterUnitProcedureQuery,
 } from "./character-execution-admission.ts";
-import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import {
+  admitCharacterWeaponAttackExecutionWeapon,
+  admitResolvedCharacterWeaponAttackExecutionWeapon,
+} from "./character-weapon-execution-admission.ts";
 import { characterBattleCreatureInitWeaponAttack } from "./battle-init.ts";
 import {
   attackExecutionSelectionForOption,
@@ -3969,7 +3973,6 @@ export function testCharacterWeaponAttackForUnit(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -4030,7 +4033,6 @@ export function testDaggerAttack(): TestCharacterWeaponAttack {
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -4048,7 +4050,6 @@ export function testShortswordAttack(): TestCharacterWeaponAttack {
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -4066,7 +4067,6 @@ export function testQuarterstaffAttack(): TestCharacterWeaponAttack {
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -4086,7 +4086,6 @@ export function testGreataxeAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: ability,
@@ -4098,12 +4097,17 @@ export function testRangedCleaveLongbowAttack(): TestCharacterWeaponAttack {
   if (unit.kind !== "weapon") {
     throw new Error("Expected Longbow weapon Unit.");
   }
+  const resolution = Result.getOrThrow(
+    resolveWeaponMasteryReference(unit, unitLibrary),
+  );
   return {
     kind: "weapon",
-    ...admitCharacterWeaponAttackExecutionWeapon(
-      unit,
-      battleObjectId(`main:${unit.id}`),
-      [],
+    ...Result.getOrThrow(
+      admitResolvedCharacterWeaponAttackExecutionWeapon(
+        resolution,
+        battleObjectId(`main:${unit.id}`),
+        [{ weaponUnitId: unit.id }],
+      ),
     ),
     ability: "dex",
     abilityModifier: battleAbilityModifier(3),
@@ -4119,7 +4123,7 @@ export function testRangedCleaveLongbowUnitRef(): BattleUnitRef {
   return {
     unit: {
       ...weapon,
-      mastery: "cleave",
+      masteryUnitId: parseUnitId("mastery_cleave"),
     } satisfies WeaponRecord,
     supportProfiles: [],
   };
@@ -4136,7 +4140,6 @@ export function testLightHammerAttack(): TestCharacterWeaponAttack {
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),

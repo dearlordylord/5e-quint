@@ -4364,7 +4364,6 @@ function weakTrueFormWeaponAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: abilityModifier(-1),

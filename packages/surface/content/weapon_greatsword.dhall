@@ -47,7 +47,7 @@ let weapon =
               }
             ]
           : List WeaponProperty
-      , mastery = "graze"
+      , masteryUnitId = "mastery_graze"
       , weightPounds = Some 6
       , costGp = 50
       }

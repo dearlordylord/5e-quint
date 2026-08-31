@@ -16,9 +16,11 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   DragonbornSpeciesRecord,
   UnitRecord,
-  WeaponMasteryName,
 } from "@dnd/surface/surface/types";
-import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import {
+  resolveWeaponMasteryReference,
+  type UnitCatalog,
+} from "@dnd/surface/surface/unit-catalog";
 import { Option, Result } from "effect";
 import { omitRuntimeDetachedClassSpellChoices } from "./class-spell-choice-projection.ts";
 
@@ -31,16 +33,6 @@ type CharacterBattleWeaponMasterySelection = NonNullable<
 
 type AuthoredBattleUnitRef = Omit<BattleUnitRef, "unit"> & {
   readonly unit: UnitRecord;
-};
-
-const BATTLE_SUPPORTED_MASTERY_UNIT_IDS: Partial<
-  Record<WeaponMasteryName, UnitRecord["id"]>
-> = {
-  cleave: authoredUnitId("mastery_cleave"),
-  push: authoredUnitId("mastery_push"),
-  sap: authoredUnitId("mastery_sap"),
-  slow: authoredUnitId("mastery_slow"),
-  topple: authoredUnitId("mastery_topple"),
 };
 
 const TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS = [
@@ -98,14 +90,18 @@ export function characterBattleSupportProjection(
   )
     ? TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS
     : [];
+  const selectedMasteryUnitIds =
+    battleSupportedMasteryUnitIdsForSelectedWeapons(
+      selectedWeaponMasteries.success,
+      unitLibrary,
+    );
+  if (Result.isFailure(selectedMasteryUnitIds)) {
+    return Result.fail(selectedMasteryUnitIds.failure);
+  }
   const battleMasteryUnitRefs = traverseValidation(
-    [
-      ...battleSupportedMasteryUnitIdsForSelectedWeapons(
-        selectedWeaponMasteries.success,
-        unitLibrary,
-      ),
-      ...replacementMasteryUnitIds,
-    ].map((unitId) => ({ unitId })),
+    [...selectedMasteryUnitIds.success, ...replacementMasteryUnitIds].map(
+      (unitId) => ({ unitId }),
+    ),
     (unitRef) =>
       withBattleSupportProfiles(
         unitRef,
@@ -321,17 +317,40 @@ export function characterBattleWeaponMasterySelections(
 function battleSupportedMasteryUnitIdsForSelectedWeapons(
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
   unitLibrary: UnitCatalog,
-): readonly UnitRecord["id"][] {
-  const unitIds = weaponMasteries.flatMap((mastery) => {
-    const weapon = unitLibrary.getUnit(mastery.weaponUnitId);
-    if (Option.isNone(weapon) || weapon.value.kind !== "weapon") {
-      return [];
+): Result.Result<
+  readonly UnitRecord["id"][],
+  ReadonlyNonEmptyArray<BattleSupportProfileIssue>
+> {
+  const unitIds = traverseValidation(weaponMasteries, (selection) => {
+    const weapon = unitLibrary.getUnit(selection.weaponUnitId);
+    if (Option.isNone(weapon)) {
+      return battleSupportProfileIssue(
+        `Unknown selected Weapon Mastery weapon Unit: ${selection.weaponUnitId}.`,
+      );
     }
-    const masteryUnitId =
-      BATTLE_SUPPORTED_MASTERY_UNIT_IDS[weapon.value.mastery];
-    return masteryUnitId === undefined ? [] : [masteryUnitId];
+    if (weapon.value.kind !== "weapon") {
+      return battleSupportProfileIssue(
+        `Expected selected Weapon Mastery option to be a weapon Unit: ${selection.weaponUnitId}.`,
+      );
+    }
+    const resolution = resolveWeaponMasteryReference(weapon.value, unitLibrary);
+    if (Result.isFailure(resolution)) {
+      const issue = resolution.failure;
+      return battleSupportProfileIssue(
+        issue.tag === "missing"
+          ? `Selected weapon ${issue.root.id} references unknown mastery Unit ${issue.masteryUnitId} through ${issue.fieldPath}.`
+          : `Selected weapon ${issue.root.id} references ${issue.masteryUnitId} through ${issue.fieldPath}, but that Unit has kind ${issue.actualKind} instead of mastery.`,
+      );
+    }
+    return Result.succeed(resolution.success.mastery.id);
   });
-  return unitIds.filter((unitId, index) => unitIds.indexOf(unitId) === index);
+  return Result.isFailure(unitIds)
+    ? Result.fail(unitIds.failure)
+    : Result.succeed(
+        unitIds.success.filter(
+          (unitId, index) => unitIds.success.indexOf(unitId) === index,
+        ),
+      );
 }
 
 function uniqueBattleUnitRefs(

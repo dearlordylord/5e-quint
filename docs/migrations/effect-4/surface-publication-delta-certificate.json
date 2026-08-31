@@ -8,12 +8,12 @@
         "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
       },
       "candidate": {
-        "byteLength": 2185207,
-        "sha256": "2c20db88f147fabd87fafb06e303183fb37ba3943db7c23147ed32346f3a3c47"
+        "byteLength": 2185333,
+        "sha256": "00a95b7dc20797170c7f6fe9947aeee9d76e03970ab44bc8bfbf57ce6b88f63d"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        "candidateCanonicalJsonSha256": "d31c7c060dfb875d0867e5d39a281670f1570b8622022d56d977e9b505701066",
+        "candidateCanonicalJsonSha256": "8f799c929b9867ec4074acc028b0132436ec2e53d2cfcda95d5416238eea1a46",
         "membership": {
           "baseline": {
             "recordCounts": {
@@ -184,6 +184,78 @@
             "baselineCanonicalJsonSha256": "f6458a54b44b2d1bb4c11f1a6e7b80c87aabaec9bd9aad6205f5d77d49fbaccf",
             "candidateCanonicalJsonSha256": "520e453fcdc7e1a425b5914127c4ac81087f5a1559e11d0c229b5a0c25f1cc9d",
             "semanticClass": "authored-persistent-rule-facts"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "weapon_club",
+            "baselineCanonicalJsonSha256": "c6812638c011913a764d52a94fb3282a12df8834a4fa7fb147597b1e4c4c9dd4",
+            "candidateCanonicalJsonSha256": "0b523d66d86eaead58d21f2b318969e476dd14c626a0b1fbba1171555b86c05b",
+            "semanticClass": "authored-cross-record-reference"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "weapon_dagger",
+            "baselineCanonicalJsonSha256": "cbbc79ce9b85a2b712828917ec3c4d89160563851b3121e534f93fa1e530b3c2",
+            "candidateCanonicalJsonSha256": "dad78aac010416637ee353e003d663f29cd2faa87eec5b2959b450455b258b3a",
+            "semanticClass": "authored-cross-record-reference"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "weapon_greataxe",
+            "baselineCanonicalJsonSha256": "d98487180f47470380ee414bd2ebeb89f8218dfc6799f9fdbe165824cf57173d",
+            "candidateCanonicalJsonSha256": "554729a0e39639c1f0ae622969412e251dc4e239c5981bf45e11ec8e5e96f4a2",
+            "semanticClass": "authored-cross-record-reference"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "weapon_longsword",
+            "baselineCanonicalJsonSha256": "0185618f987c9b521e7379bf5eaaada4d69c32bf2cdd0ad5f96f5a0726a2e05c",
+            "candidateCanonicalJsonSha256": "ca532641f46761cbe355c5f7307fccdb4249aa5ef76cfe587b7ca26ae996b274",
+            "semanticClass": "authored-cross-record-reference"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "weapon_spear",
+            "baselineCanonicalJsonSha256": "641fa05f05952a384bbad4fc8a071d2ef3c703a7be0db4f413660053c5e323ec",
+            "candidateCanonicalJsonSha256": "ed3d56b8e9b22a70e722eb772a444dddc46a9888d695d46632ff8b0bf1817479",
+            "semanticClass": "authored-cross-record-reference"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "weapon_flail",
+            "baselineCanonicalJsonSha256": "4a1c0bbbc668153a7665a4c26edbfdccc5193b25aeaf22b4e6beffc32877afae",
+            "candidateCanonicalJsonSha256": "e28afe12caf72dc9c02e1fda656740ecd3281352c338bfedf84e908745c52324",
+            "semanticClass": "authored-cross-record-reference"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "weapon_shortbow",
+            "baselineCanonicalJsonSha256": "8bba1f13e45cc3f91746f362c8efa2249add63211e6f89b76583a5501a9676f5",
+            "candidateCanonicalJsonSha256": "4ef95bfdece04579e9d5a083102821940b91e40e344c3356e1e2309ea6328f2c",
+            "semanticClass": "authored-cross-record-reference"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "weapon_shortsword",
+            "baselineCanonicalJsonSha256": "ce49ba0ab05e1750541eb5650b6e6bf037a16d3adf5b9e1286f4726f3e52f501",
+            "candidateCanonicalJsonSha256": "20bb29faec8cdda0fc571b98fdf042a74a6786f770df9c0df00866fc1fb91ff3",
+            "semanticClass": "authored-cross-record-reference"
+          },
+          {
+            "kind": "changed",
+            "family": "units",
+            "id": "weapon_quarterstaff",
+            "baselineCanonicalJsonSha256": "5833a38ebf284c061c63ec7ddda82e68b4458868ea0388c74e17b1f255f34138",
+            "candidateCanonicalJsonSha256": "e1fbefe308b2df5316cde1ab5d4b7744c5a42694e6278a73911dfcefd4608491",
+            "semanticClass": "authored-cross-record-reference"
           },
           {
             "kind": "changed",
@@ -2805,19 +2877,19 @@
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
       },
       "candidate": {
-        "byteLength": 1589418,
-        "sha256": "c42c4c1e8001497d8588f2620aa9e6407c2fff87ae455a0931dcf0ffba62ba09"
+        "byteLength": 1588630,
+        "sha256": "ac42a65802fe15505b9c8ccff62a00b6885b1191a545043b86d9385df3a057dd"
       },
       "evidence": {
         "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        "candidateCanonicalJsonSha256": "ba078afcadc37fdd6314255d0952578bfe3bbc1b1968780ec65a3f3d457130c8",
+        "candidateCanonicalJsonSha256": "e69f96da2dcc95915f8a8578617aa3159be332a7797616dc6efe5c1e9f68a70a",
         "definitions": {
           "baseline": 1305,
-          "candidate": 1198
+          "candidate": 1190
         },
         "references": {
           "baseline": 8778,
-          "candidate": 7683
+          "candidate": 7675
         },
         "localReferencesComplete": {
           "baseline": true,

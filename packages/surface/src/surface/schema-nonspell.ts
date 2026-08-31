@@ -46,7 +46,6 @@ import {
   WeaponProficiencySchema,
   WeaponCategorySchema,
   WeaponDamageSchema,
-  WeaponMasteryNameSchema,
   WeaponPropertyDetailSchema,
   WeaponUsageSchema,
 } from "./schema-base.ts";
@@ -4476,7 +4475,7 @@ export const WeaponRecordSchema = Schema.Struct({
   usage: WeaponUsageSchema,
   damage: WeaponDamageSchema,
   properties: exactOptional(Schema.Array(WeaponPropertyDetailSchema)),
-  mastery: WeaponMasteryNameSchema,
+  masteryUnitId: surfaceReference(NonEmptyStringSchema, "mastery-reference"),
   weightPounds: exactOptional(Schema.Number),
   costGp: Schema.Number,
 });

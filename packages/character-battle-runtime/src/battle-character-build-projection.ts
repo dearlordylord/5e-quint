@@ -25,6 +25,7 @@ import {
   passiveArmorClassBonusProfileForUnit,
   unitIsSupportedClassFeatureSpellFreeCastResource,
   admitCharacterWeaponExecutionWeapon,
+  admitResolvedCharacterWeaponExecutionWeapon,
   battleObjectId,
   characterBattleCreatureInitWeaponAttack,
 } from "@dnd/battle-runtime";
@@ -86,6 +87,7 @@ import {
   allLeveledSpellsFromAnyClassSpellList,
   classSpellListForSpellcastingClassRecord,
   spellcastingClassRecordForClassName,
+  resolveWeaponMasteryReference,
 } from "@dnd/surface/surface/unit-catalog-core";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Result, Match, Option } from "effect";
@@ -721,10 +723,21 @@ function characterWeaponAttackActionOption(
     return Result.succeed(null);
   }
 
+  const masteryReference = resolveWeaponMasteryReference(
+    unit.success,
+    unitLibrary,
+  );
+  const executionWeapon = Result.isFailure(masteryReference)
+    ? Result.succeed(admitCharacterWeaponExecutionWeapon(unit.success))
+    : admitResolvedCharacterWeaponExecutionWeapon(masteryReference.success);
+  if (Result.isFailure(executionWeapon)) {
+    return battleCreatureInitIssue(executionWeapon.failure.message);
+  }
+
   const baseAttack = {
     ...characterBattleCreatureInitWeaponAttack({
       kind: "weapon",
-      weapon: admitCharacterWeaponExecutionWeapon(unit.success),
+      weapon: executionWeapon.success,
       ability: "str",
       abilityModifier: battleAbilityModifier(
         scoreModifier(build.abilityScores.str),

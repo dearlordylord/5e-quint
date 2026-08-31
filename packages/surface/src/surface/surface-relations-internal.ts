@@ -414,6 +414,7 @@ const primitiveBranchMayContainValue = (
   ast: AST.AST,
   value: unknown,
 ): boolean | undefined => {
+  if (ast._tag === "Null") return value === null;
   if (ast._tag === "Literal") return value === ast.literal;
   if (ast._tag === "String") return typeof value === "string";
   if (ast._tag === "Number") return typeof value === "number";

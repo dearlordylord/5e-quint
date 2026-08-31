@@ -47,7 +47,7 @@ let weapon =
               }
             ]
           : List WeaponProperty
-      , mastery = "vex"
+      , masteryUnitId = "mastery_vex"
       , weightPounds = Some 0.25
       , costGp = 0.05
       }

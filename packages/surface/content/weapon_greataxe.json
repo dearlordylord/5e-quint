@@ -9,7 +9,7 @@
   },
   "id": "weapon_greataxe",
   "kind": "weapon",
-  "mastery": "cleave",
+  "masteryUnitId": "mastery_cleave",
   "name": "Greataxe",
   "properties": [
     {

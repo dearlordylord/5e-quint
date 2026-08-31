@@ -2963,7 +2963,6 @@ function zeroAbilityWeaponAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: abilityModifier(0),

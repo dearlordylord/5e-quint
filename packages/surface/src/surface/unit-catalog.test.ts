@@ -46,6 +46,8 @@ import {
   classSpellListForSpellcastingClassRecord,
   classSpellListPreparedSpellLevel,
   defineSrdUnitCollection,
+  inspectWeaponMasteryReferenceGraph,
+  resolveWeaponMasteryReference,
   srdUnitCollection,
   spellcastingClassRecordForClassName,
 } from "./unit-catalog.ts";
@@ -2664,12 +2666,155 @@ describe("SRD Unit catalog boundary", () => {
         result.catalog.requireUnit("weapon_flail"),
       ] as readonly WeaponRecord[];
 
-      expect(selectedWeapons.map((weapon) => weapon.mastery)).toEqual([
-        "sap",
-        "sap",
-        "sap",
+      expect(selectedWeapons.map((weapon) => weapon.masteryUnitId)).toEqual([
+        "mastery_sap",
+        "mastery_sap",
+        "mastery_sap",
       ]);
     }
+  });
+
+  test("reports the canonical weapon mastery reference closure", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+
+    const weaponRoots = result.catalog
+      .listUnits()
+      .filter((unit): unit is WeaponRecord => unit.kind === "weapon");
+
+    const graph = inspectWeaponMasteryReferenceGraph({
+      weaponRoots,
+      unitCatalog: result.catalog,
+    });
+
+    expect(weaponRoots).toHaveLength(9);
+    expect(
+      graph.resolved.map(({ weapon, mastery }) => ({
+        weaponUnitId: weapon.id,
+        masteryUnitId: mastery.id,
+      })),
+    ).toEqual([
+      { weaponUnitId: "weapon_club", masteryUnitId: "mastery_slow" },
+      { weaponUnitId: "weapon_greataxe", masteryUnitId: "mastery_cleave" },
+      { weaponUnitId: "weapon_longsword", masteryUnitId: "mastery_sap" },
+      { weaponUnitId: "weapon_spear", masteryUnitId: "mastery_sap" },
+      { weaponUnitId: "weapon_flail", masteryUnitId: "mastery_sap" },
+      {
+        weaponUnitId: "weapon_quarterstaff",
+        masteryUnitId: "mastery_topple",
+      },
+    ]);
+    expect(graph.issues).toEqual([
+      {
+        tag: "missing",
+        root: { kind: "unit", id: "weapon_dagger" },
+        mechanicsPath: {
+          family: "unit",
+          nodes: [
+            { kind: "singleton", role: "recordMechanics" },
+            { kind: "singleton", role: "reference" },
+          ],
+        },
+        fieldPath: "masteryUnitId",
+        masteryUnitId: "mastery_nick",
+      },
+      {
+        tag: "missing",
+        root: { kind: "unit", id: "weapon_shortbow" },
+        mechanicsPath: {
+          family: "unit",
+          nodes: [
+            { kind: "singleton", role: "recordMechanics" },
+            { kind: "singleton", role: "reference" },
+          ],
+        },
+        fieldPath: "masteryUnitId",
+        masteryUnitId: "mastery_vex",
+      },
+      {
+        tag: "missing",
+        root: { kind: "unit", id: "weapon_shortsword" },
+        mechanicsPath: {
+          family: "unit",
+          nodes: [
+            { kind: "singleton", role: "recordMechanics" },
+            { kind: "singleton", role: "reference" },
+          ],
+        },
+        fieldPath: "masteryUnitId",
+        masteryUnitId: "mastery_vex",
+      },
+    ]);
+  });
+
+  test("returns the matched weapon with its narrowed mastery record", () => {
+    const catalogResult = buildUnitCatalog({
+      collections: [srdUnitCollection],
+    });
+
+    expect(catalogResult.tag).toBe("ok");
+    if (catalogResult.tag !== "ok") return;
+    const weapon = catalogResult.catalog.requireUnit("weapon_longsword");
+    if (weapon.kind !== "weapon") {
+      throw new Error("Expected canonical weapon fixture.");
+    }
+    const result = resolveWeaponMasteryReference(weapon, catalogResult.catalog);
+
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) return;
+    expect(result.success).toEqual({
+      weapon,
+      mastery: catalogResult.catalog.requireUnit("mastery_sap"),
+    });
+  });
+
+  test("reports a wrong-kind weapon mastery target at its rooted mechanics path", () => {
+    const weapon = srdUnitCollection.units.find(
+      (unit) => unit.id === "weapon_longsword",
+    );
+    const armor = srdUnitCollection.units.find(
+      (unit) => unit.id === "armor_chain_mail",
+    );
+    if (weapon === undefined || armor === undefined) {
+      throw new Error("Expected canonical weapon and armor fixtures.");
+    }
+
+    const wrongKindWeapon = assertSrd521Unit(
+      decodeUnitRecordSync({ ...weapon, masteryUnitId: armor.id }),
+    );
+    const catalogResult = buildUnitCatalog({
+      collections: [
+        defineSrdUnitCollection({ units: [wrongKindWeapon, armor] }),
+      ],
+    });
+
+    expect(catalogResult.tag).toBe("ok");
+    if (catalogResult.tag !== "ok" || wrongKindWeapon.kind !== "weapon") {
+      return;
+    }
+    const result = resolveWeaponMasteryReference(
+      wrongKindWeapon,
+      catalogResult.catalog,
+    );
+
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) return;
+    expect(result.failure).toEqual({
+      tag: "wrongKind",
+      root: { kind: "unit", id: "weapon_longsword" },
+      mechanicsPath: {
+        family: "unit",
+        nodes: [
+          { kind: "singleton", role: "recordMechanics" },
+          { kind: "singleton", role: "reference" },
+        ],
+      },
+      fieldPath: "masteryUnitId",
+      masteryUnitId: "armor_chain_mail",
+      actualKind: "armor",
+    });
   });
 
   test("decodes Command as a closed next-turn option surface", () => {

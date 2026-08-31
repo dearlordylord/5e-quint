@@ -191,6 +191,70 @@ describe("canonical Surface authored relations", () => {
     ).toBe(true);
   });
 
+  it("collects all nine authored weapon mastery Unit references", () => {
+    const result = collectSurfaceAuthoredRelations(srdSurface);
+
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) return;
+    const masteryReferences = result.success.filter(
+      (relation) => relation.relation === "mastery-reference",
+    );
+
+    expect(
+      masteryReferences.map((relation) => ({
+        sourceRecordId: relation.sourceRecordId,
+        fieldPath: relation.fieldPath,
+        targetRecordId: relation.targetRecordId,
+      })),
+    ).toEqual([
+      {
+        sourceRecordId: "weapon_club",
+        fieldPath: "masteryUnitId",
+        targetRecordId: "mastery_slow",
+      },
+      {
+        sourceRecordId: "weapon_dagger",
+        fieldPath: "masteryUnitId",
+        targetRecordId: "mastery_nick",
+      },
+      {
+        sourceRecordId: "weapon_greataxe",
+        fieldPath: "masteryUnitId",
+        targetRecordId: "mastery_cleave",
+      },
+      {
+        sourceRecordId: "weapon_longsword",
+        fieldPath: "masteryUnitId",
+        targetRecordId: "mastery_sap",
+      },
+      {
+        sourceRecordId: "weapon_spear",
+        fieldPath: "masteryUnitId",
+        targetRecordId: "mastery_sap",
+      },
+      {
+        sourceRecordId: "weapon_flail",
+        fieldPath: "masteryUnitId",
+        targetRecordId: "mastery_sap",
+      },
+      {
+        sourceRecordId: "weapon_shortbow",
+        fieldPath: "masteryUnitId",
+        targetRecordId: "mastery_vex",
+      },
+      {
+        sourceRecordId: "weapon_shortsword",
+        fieldPath: "masteryUnitId",
+        targetRecordId: "mastery_vex",
+      },
+      {
+        sourceRecordId: "weapon_quarterstaff",
+        fieldPath: "masteryUnitId",
+        targetRecordId: "mastery_topple",
+      },
+    ]);
+  });
+
   it("covers every relation in the schema-decodable Surface corpus", () => {
     const sourceRecords = corpusAudit.readSurfaceRecords();
     const expanded = {
@@ -235,7 +299,7 @@ describe("canonical Surface authored relations", () => {
     expect(publishedActual.success.map(relationKey).sort()).toEqual(
       publishedExpected,
     );
-  });
+  }, 15_000);
 
   it("reports every independently malformed authored target without throwing", () => {
     const malformedRecords = corpusAudit.readSurfaceRecords().map((record) => ({

@@ -57,6 +57,8 @@ import {
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
+  weaponMasteryExecutionPropertyForSupportProfile,
+  type WeaponMasteryPropertySupportProfile,
   type TacticalMasterReplacementMasteryProperty,
 } from "../unit-feature-execution-constants.ts";
 import {
@@ -170,25 +172,6 @@ import {
   targetHasAdjacentNonIncapacitatedAlly,
   weaponAttackDamageExpression,
 } from "./statblock-attacks.ts";
-
-const WEAPON_MASTERY_PROPERTIES_BY_SUPPORT_PROFILE = [
-  { supportProfile: WEAPON_MASTERY_PUSH_SUPPORT_PROFILE, property: "push" },
-  { supportProfile: WEAPON_MASTERY_SAP_SUPPORT_PROFILE, property: "sap" },
-  { supportProfile: WEAPON_MASTERY_SLOW_SUPPORT_PROFILE, property: "slow" },
-  {
-    supportProfile: WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
-    property: "topple",
-  },
-  {
-    supportProfile: WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
-    property: "cleave",
-  },
-] as const satisfies ReadonlyArray<{
-  readonly supportProfile: string;
-  readonly property: CharacterWeaponAttackActionOption["weapon"]["mastery"];
-}>;
-type WeaponMasteryPropertySupportProfile =
-  (typeof WEAPON_MASTERY_PROPERTIES_BY_SUPPORT_PROFILE)[number]["supportProfile"];
 
 type SelectedWeaponMasteryProperty = {
   readonly attack: CharacterWeaponAttackActionOption;
@@ -1771,7 +1754,7 @@ function tacticalMasterReplacementSelection(
   if (!isCharacterBattleCreatureState(attacker)) {
     return null;
   }
-  if (!attack.hasWeaponMastery) {
+  if (!("masteryProperty" in attack.weapon)) {
     return null;
   }
   const binding = attacker.origin.execution.procedureBindings.find(
@@ -1806,7 +1789,7 @@ function weaponAttackWithMasteryProperty<
         ...attack,
         weapon: {
           ...attack.weapon,
-          mastery: property,
+          masteryProperty: property,
         },
       };
 }
@@ -1831,19 +1814,19 @@ function selectedWeaponMasteryProperty(input: {
   readonly supportProfile: WeaponMasteryPropertySupportProfile;
 }): SelectedWeaponMasteryProperty | null {
   const attack = input.attack;
-  const property = weaponMasteryPropertyForSupportProfile(input.supportProfile);
+  const property = weaponMasteryExecutionPropertyForSupportProfile(
+    input.supportProfile,
+  );
   if (
-    property === null ||
+    property === undefined ||
     attack.kind !== "weapon" ||
-    attack.weapon.mastery !== property
+    !("masteryProperty" in attack.weapon) ||
+    attack.weapon.masteryProperty !== property
   ) {
     return null;
   }
   const attacker = input.state.combatants.get(input.attackerId);
   if (!isCharacterBattleCreatureState(attacker)) {
-    return null;
-  }
-  if (!attack.hasWeaponMastery) {
     return null;
   }
   const binding = attacker.origin.execution.procedureBindings.find(
@@ -1854,15 +1837,6 @@ function selectedWeaponMasteryProperty(input: {
   return binding === undefined
     ? null
     : { attack, procedureRef: binding.procedureRef };
-}
-
-function weaponMasteryPropertyForSupportProfile(
-  supportProfile: WeaponMasteryPropertySupportProfile,
-): CharacterWeaponAttackActionOption["weapon"]["mastery"] | null {
-  for (const entry of WEAPON_MASTERY_PROPERTIES_BY_SUPPORT_PROFILE) {
-    if (entry.supportProfile === supportProfile) return entry.property;
-  }
-  return null;
 }
 
 export function consumeSelfAttackRollEffects(
