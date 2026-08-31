@@ -144,6 +144,13 @@ the catalog rejects duplicate Unit ids across installed collections. Catalog
 lookup returns generic `UnitRecord` values; SRD is represented by the
 collection/provenance boundary, not by a runtime-facing record subtype.
 
+`src/surface/srd-unit-publication-membership.json` owns the ordered selection of
+canonical Unit identities published by that collection. The checked generated
+aggregate resolves each identity to its canonical Dhall/strict-JSON peer and
+supplies the static imports consumed by `unit-catalog-data.ts`. Change
+publication membership in the manifest, then run
+`pnpm generate:surface-unit-aggregate`; do not hand-maintain catalog imports.
+
 Runtime packages may narrow catalog records through package-private support
 gates, but authored content remains provenance-bearing Surface data.
 

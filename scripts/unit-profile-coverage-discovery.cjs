@@ -107,38 +107,79 @@ function discoverSrdUnits(root, collection) {
     root,
     collection.discovery.sourcePath,
   );
-  const source = catalog.source;
-  const imports = new Map(
-    [
-      ...source.matchAll(
-        /^\s*import\s+(\w+)\s+from\s+["']([^"']+\.json)["']\s*;?/gm,
-      ),
-    ].map((match) => [
-      match[1],
-      path.resolve(path.dirname(catalog.path), match[2]),
-    ]),
+  const membershipPath = path.join(
+    path.dirname(catalog.path),
+    "srd-unit-publication-membership.json",
   );
-  const unitsBlock = source.match(
-    /export const srdUnitCollection[\s\S]*?units: \[([\s\S]*?)\]\.map/,
-  );
-  if (!unitsBlock)
-    fail(`Could not find srdUnitCollection units in ${catalog.sourcePath}.`);
+  return discoverSrdUnitPublicationMembers(root, collection, membershipPath);
+}
 
-  return [...unitsBlock[1].matchAll(/\b(\w+Input)\b/g)].map((match) => {
-    const importName = match[1];
-    const importPath = imports.get(importName);
-    if (importPath === undefined)
-      fail(`Could not resolve ${importName} import in ${catalog.sourcePath}.`);
-    const sourceRecordPath = repoRelativePath(root, importPath);
-    const record = readJson(importPath);
+function discoverSrdUnitPublicationMembers(root, collection, membershipPath) {
+  const membership = readJson(membershipPath);
+  if (
+    membership.schema !== "dnd.srd-unit-publication-membership.v1" ||
+    !Array.isArray(membership.unitIds) ||
+    membership.unitIds.length === 0 ||
+    Object.keys(membership).length !== 2 ||
+    !membership.unitIds.every(
+      (unitId) => typeof unitId === "string" && unitId.length > 0,
+    )
+  ) {
+    fail(
+      `Invalid SRD Unit publication membership ${repoRelativePath(root, membershipPath)}.`,
+    );
+  }
+  const duplicateUnitId = membership.unitIds.find(
+    (unitId, index) => membership.unitIds.indexOf(unitId) !== index,
+  );
+  if (duplicateUnitId !== undefined) {
+    fail(
+      `Duplicate SRD Unit publication member ${duplicateUnitId} in ${repoRelativePath(root, membershipPath)}.`,
+    );
+  }
+
+  const contentDirectory = path.resolve(
+    path.dirname(membershipPath),
+    "..",
+    "..",
+    "content",
+  );
+  const peers = new Map();
+  for (const peerName of fs
+    .readdirSync(contentDirectory)
+    .filter((name) => name.endsWith(".dhall") && !name.startsWith("_"))
+    .sort()
+    .map((name) => name.replace(/\.dhall$/, ".json"))) {
+    const peerPath = path.join(contentDirectory, peerName);
+    const parsed = readJson(peerPath);
+    const records = Array.isArray(parsed) ? parsed : [parsed];
+    for (const record of records) {
+      if (
+        record?.kind === "statBlock" ||
+        record?.provenance?.kind !== "srd-5.2.1"
+      ) {
+        continue;
+      }
+      if (peers.has(record.id)) {
+        fail(`Duplicate authored SRD Unit peer identity ${record.id}.`);
+      }
+      peers.set(record.id, { peerPath, record });
+    }
+  }
+
+  return membership.unitIds.map((unitId) => {
+    const peer = peers.get(unitId);
+    if (peer === undefined) {
+      fail(`Could not resolve published SRD Unit ${unitId} to a content peer.`);
+    }
     return {
-      unitId: record.id,
+      unitId: peer.record.id,
       collectionId: collection.id,
-      sourceRecordPath,
-      kind: record.kind,
-      provenance: record.provenance,
-      executableMechanics: hasExecutableMechanics(record),
-      rawRecord: record,
+      sourceRecordPath: repoRelativePath(root, peer.peerPath),
+      kind: peer.record.kind,
+      provenance: peer.record.provenance,
+      executableMechanics: hasExecutableMechanics(peer.record),
+      rawRecord: peer.record,
     };
   });
 }
