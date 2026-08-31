@@ -126,10 +126,9 @@ the SHA-256 of the sorted ledger that binds each relative path to its file
 SHA-256 is
 `b196b26a3dd9aa80064b55d867f41344f133738325c10895cc7290f406420809`.
 Relative to the prior 523-file reconciliation certificate, the current graph
-adds these eleven declarations:
+adds these ten declarations:
 
 - `packages/battle-runtime/src/battle-reducer/codec-building-blocks.d.ts`
-- `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/once-per-turn-limit-group-admission.d.ts`
 - `packages/battle-runtime/src/druid-wild-shape-known-form-runtime.d.ts`
 - `packages/battle-runtime/src/procedure-admission/stat-block-procedure-execution-decision.d.ts`
 - `packages/battle-runtime/src/procedure-execution/stat-block-procedure-sections.d.ts`
@@ -140,10 +139,9 @@ adds these eleven declarations:
 - `packages/surface/src/surface/stat-block-catalog-contract.d.ts`
 - `packages/surface/src/surface/stat-block-speed-readers.d.ts`
 
-It removes four declarations: the retired
-`battle-reducer/spell-procedure-profiles/usage-limit-admission.d.ts` owner and
-the Surface `stat-block-catalog.d.ts`, `stat-block-catalog-core.d.ts`,
-and `stat-block-catalog-data.d.ts` runtime/data owners. The lightweight Stat
+It removes three declarations: the Surface `stat-block-catalog.d.ts`,
+`stat-block-catalog-core.d.ts`, and `stat-block-catalog-data.d.ts` runtime/data
+owners. The lightweight Stat
 Block catalog type is now owned by
 [`stat-block-catalog-contract.ts`](../../../packages/surface/src/surface/stat-block-catalog-contract.ts),
 so type-only consumers do not pull the runtime catalog into the public graph.
