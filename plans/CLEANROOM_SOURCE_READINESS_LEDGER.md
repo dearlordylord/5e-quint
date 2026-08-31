@@ -21,7 +21,8 @@ This section is the sole mutable handoff for a new session.
 - Last accepted milestone SHA: `aceda1aa5`
 - Coordination base before `SR-00`: `51beff526`
 - `SR-00` integration base: `301229532`
-- Active landing unit: none; `SR-02` is not yet leased
+- Active landing unit: `integration/cleanroom-sr-02` at
+  `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-02`
 - Next action: establish the exact common-base receipt for local `master` at
   accepted SR-01 revision `aceda1aa5`, then audit #102/#103/#105/#56/#119 as
   directed by the SR-02 execution note
@@ -136,8 +137,9 @@ This table prevents worktrees from silently drifting or sharing write ownership.
 Clear a row only after its landing is recorded on the ticket or the work is
 explicitly abandoned.
 
-| Checkpoint/unit | Ticket/slice | Owner | Worktree/branch | Base SHA | Write lease | State |
-| --------------- | ------------ | ----- | --------------- | -------- | ----------- | ----- |
+| Checkpoint/unit | Ticket/slice                                       | Owner              | Worktree/branch                                                                             | Base SHA    | Write lease                                                                                                                                                                                              | State  |
+| --------------- | -------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `SR-02`         | convergence gate and #102/#103/#105/#56/#119 audit | Codex orchestrator | `/workspace/typescript/.codex-worktrees/dnd-cleanroom-sr-02`; `integration/cleanroom-sr-02` | `9a6d0f3af` | exact-base Surface/report regeneration, Static Mechanics Admission diagnostics, rules-kernel/QNT inventory, ticket audit, and reviewer convergence; the operator-waived broad/full run is not authorized | Active |
 
 ## Landing discipline
 
