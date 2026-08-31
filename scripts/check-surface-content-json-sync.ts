@@ -41,6 +41,11 @@ import type { SrdStatBlockParityInstalledRecord } from "../packages/surface/src/
 
 export type PublicationIssue =
   | {
+      readonly kind: "publication-check-failed";
+      readonly stage: "discovery" | "temporary-directory" | "cleanup";
+      readonly message: string;
+    }
+  | {
       readonly kind: "missing-json";
       readonly source: string;
       readonly peer: string;
@@ -1020,7 +1025,7 @@ function checkPortableCasesArtifact(
   }
 }
 
-export function runPublicationCheck(
+function runPublicationCheckUnsafe(
   options: PublicationCheckOptions,
 ): PublicationCheckResult {
   const { repoRoot, contentDir, compile } = options;
@@ -1053,7 +1058,12 @@ export function runPublicationCheck(
         });
       }
 
-      const compileError = compile(sourcePath, generatedPath);
+      let compileError: string | undefined;
+      try {
+        compileError = compile(sourcePath, generatedPath);
+      } catch (error) {
+        compileError = String(error);
+      }
       let generatedInspection: JsonInspection | undefined;
       if (compileError !== undefined) {
         peerIsHealthy = false;
@@ -1255,7 +1265,15 @@ export function runPublicationCheck(
       }
     }
   } finally {
-    rmSync(temporaryDirectory, { force: true, recursive: true });
+    try {
+      rmSync(temporaryDirectory, { force: true, recursive: true });
+    } catch (error) {
+      issues.push({
+        kind: "publication-check-failed",
+        stage: "cleanup",
+        message: String(error),
+      });
+    }
   }
 
   if (options.publicationDir !== undefined) {
@@ -1282,6 +1300,27 @@ export function runPublicationCheck(
     peerCount: peers.length,
     peerObservations,
   };
+}
+
+export function runPublicationCheck(
+  options: PublicationCheckOptions,
+): PublicationCheckResult {
+  try {
+    return runPublicationCheckUnsafe(options);
+  } catch (error) {
+    return {
+      issues: [
+        {
+          kind: "publication-check-failed",
+          stage: "discovery",
+          message: String(error),
+        },
+      ],
+      sourceCount: 0,
+      peerCount: 0,
+      peerObservations: [],
+    };
+  }
 }
 
 export type SurfacePublicationCheckResult = PublicationCheckResult & {
@@ -1349,7 +1388,11 @@ async function main(): Promise<void> {
       "Surface content publication failed: every canonical Dhall source must have a deterministic, strictly decodable JSON peer.",
     );
     for (const issue of issues) {
-      if (issue.kind === "missing-json") {
+      if (issue.kind === "publication-check-failed") {
+        console.error(
+          `- publication-check-failed (${issue.stage}): ${issue.message}`,
+        );
+      } else if (issue.kind === "missing-json") {
         console.error(`- missing-json: ${issue.source} -> ${issue.peer}`);
       } else if (issue.kind === "orphaned-json") {
         console.error(`- orphaned-json: ${issue.peer}`);

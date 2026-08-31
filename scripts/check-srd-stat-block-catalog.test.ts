@@ -5,7 +5,7 @@ import fc from "fast-check";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { projectSrdStatBlockPeerObservation } from "../packages/surface/src/surface/surface-publication-peer-observation.ts";
-import { decodeSrdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
+import { decodeStatBlockRecords } from "../packages/surface/src/surface/stat-block-catalog.ts";
 import {
   evaluateSrdStatBlockCatalogDiagnostic,
   runSrdStatBlockCatalogDiagnostic,
@@ -13,6 +13,7 @@ import {
   type SrdStatBlockCatalogDiagnosticResult,
 } from "./check-srd-stat-block-catalog.ts";
 import { SRD_STAT_BLOCK_AGGREGATE_RELATIVE_PATH } from "./srd-stat-block-aggregate.ts";
+import { runPublicationCheck } from "./check-surface-content-json-sync.ts";
 
 const MUTATIONS = [
   "aggregate",
@@ -68,11 +69,8 @@ function installedAssessment(
 ) {
   return Match.value(observation.catalogAssessment).pipe(
     Match.when({ tag: "installed" }, (installed) => installed),
-    Match.when({ tag: "installed-membership-rejected" }, () => {
-      throw new Error("Canonical catalog membership was rejected");
-    }),
-    Match.when({ tag: "strict-decode-rejected" }, () => {
-      throw new Error("Canonical strict decode was rejected");
+    Match.when({ tag: "rejected" }, () => {
+      throw new Error("Canonical catalog assessment was rejected");
     }),
     Match.exhaustive,
   );
@@ -128,15 +126,18 @@ function applyMutation(
       },
     })),
     Match.when("strict-decode", () => {
-      const strictDecode = decodeSrdStatBlockCollection([{}]);
+      const strictDecode = decodeStatBlockRecords([{}]);
       if (strictDecode.tag !== "rejected") {
         throw new Error("Malformed aggregate input unexpectedly decoded");
       }
       return {
         ...observation,
         catalogAssessment: {
-          tag: "strict-decode-rejected" as const,
+          tag: "rejected" as const,
           strictDecode,
+          provenance: observation.catalogAssessment.provenance,
+          installedMembership:
+            observation.catalogAssessment.installedMembership,
         },
       };
     }),
@@ -189,8 +190,7 @@ function applyMutation(
             catalogAssessment: {
               ...installed,
               scopedFidelity: {
-                tag: "unavailable" as const,
-                cause: "equipment-source" as const,
+                tag: "equipment-source-unavailable" as const,
                 message: "synthetic equipment failure",
               },
             },
@@ -204,8 +204,13 @@ function applyMutation(
             catalogAssessment: {
               ...installed,
               catalogReachability: {
-                tag: "unavailable" as const,
-                cause: "installed-membership" as const,
+                tag: "unreachable" as const,
+                issues: [
+                  {
+                    kind: "missing-list-entry" as const,
+                    statBlockId: installed.strictDecode.records[0]!.id,
+                  },
+                ] as const,
               },
             },
           },
@@ -303,21 +308,25 @@ describe("standalone SRD Stat Block catalog diagnostic", () => {
 
   it("accumulates strict decode, provenance, and duplicate identity issues", () => {
     const installed = installedAssessment(canonical);
-    const first = installed.strictDecode.collection.statBlocks[0]!;
+    const first = installed.strictDecode.records[0]!;
     const nonSrd = {
       ...first,
       provenance: { kind: "synthetic-test" as const, section: "synthetic" },
     };
-    const result = decodeSrdStatBlockCollection([{}, nonSrd, first, first]);
+    const result = runSrdStatBlockCatalogDiagnostic({
+      repositoryRoot: process.cwd(),
+      aggregateInputs: [{}, nonSrd, first, first],
+      compile: (sourcePath, outputPath) => {
+        copyFileSync(sourcePath.replace(/\.dhall$/, ".json"), outputPath);
+        return undefined;
+      },
+    });
 
-    expect(result.tag).toBe("rejected");
-    if (result.tag === "rejected") {
-      expect(result.issues.map(({ code }) => code)).toEqual([
-        "statBlockDecodeFailed",
-        "nonSrdStatBlockProvenance",
-        "duplicateStatBlockId",
-      ]);
-    }
+    expect(rejectedBlockers(result)).toEqual([
+      "strict-decode",
+      "provenance",
+      "installed-membership",
+    ]);
   });
 
   it("does not invent catalog parity failures when strict decode is unavailable", () => {
@@ -354,5 +363,37 @@ describe("standalone SRD Stat Block catalog diagnostic", () => {
     expect(evaluateSrdStatBlockCatalogDiagnostic(canonical).tag).toBe(
       "accepted",
     );
+  });
+
+  it("turns throwing compiler callbacks into peer evidence without losing independent facts", () => {
+    const result = runSrdStatBlockCatalogDiagnostic({
+      repositoryRoot: process.cwd(),
+      compile: () => {
+        throw new Error("synthetic compiler failure");
+      },
+    });
+
+    expect(rejectedBlockers(result)).toEqual(["generated-peer-agreement"]);
+    expect(result.diagnostic.sourceDenominator).toMatchObject({
+      occurrenceCount: 334,
+      identityCount: 330,
+      issues: [],
+    });
+    expect(result.diagnostic.catalogAssessment.tag).toBe("installed");
+  });
+
+  it("returns typed evidence when publication discovery is unreadable", () => {
+    const result = runPublicationCheck({
+      repoRoot: process.cwd(),
+      contentDir: `${process.cwd()}/synthetic-missing-surface-content`,
+      compile: () => undefined,
+    });
+
+    expect(result).toMatchObject({
+      sourceCount: 0,
+      peerCount: 0,
+      peerObservations: [],
+      issues: [{ kind: "publication-check-failed", stage: "discovery" }],
+    });
   });
 });

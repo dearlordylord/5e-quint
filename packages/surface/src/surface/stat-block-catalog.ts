@@ -1,3 +1,7 @@
+import {
+  PositiveInteger,
+  type PositiveInteger as PositiveIntegerType,
+} from "@dnd/shared/types";
 import { Brand, Either, Option } from "effect";
 
 import { normalizeStatBlockIdentity } from "./stat-block-identity.ts";
@@ -75,30 +79,58 @@ export type StatBlockCatalogBuildResult =
       readonly issues: readonly StatBlockCatalogBuildIssue[];
     };
 
-export type SrdStatBlockCollectionDecodeIssue =
-  | {
-      readonly code: "statBlockDecodeFailed";
-      readonly inputOrdinal: number;
-      readonly message: string;
-    }
-  | {
-      readonly code: "nonSrdStatBlockProvenance";
-      readonly inputOrdinal: number;
-      readonly statBlockId: StatBlockId;
-      readonly actual: Provenance;
-    }
-  | StatBlockCatalogBuildIssue;
+export type StatBlockRecordDecodeIssue = {
+  readonly code: "statBlockDecodeFailed";
+  readonly inputOrdinal: PositiveIntegerType;
+  readonly message: string;
+};
 
-export type SrdStatBlockCollectionDecodeResult =
+export type StatBlockRecordsDecodeResult =
   | {
       readonly tag: "decoded";
-      readonly collection: SrdStatBlockCollection;
+      readonly records: readonly StatBlockRecord[];
     }
   | {
       readonly tag: "rejected";
       readonly issues: readonly [
-        SrdStatBlockCollectionDecodeIssue,
-        ...SrdStatBlockCollectionDecodeIssue[],
+        StatBlockRecordDecodeIssue,
+        ...StatBlockRecordDecodeIssue[],
+      ];
+      readonly decodedRecords: readonly StatBlockRecord[];
+    };
+
+export type SrdStatBlockProvenanceIssue = {
+  readonly code: "nonSrdStatBlockProvenance";
+  readonly inputOrdinal: PositiveIntegerType;
+  readonly statBlockId: StatBlockId;
+  readonly actual: Provenance;
+};
+
+export type SrdStatBlockProvenanceResult =
+  | {
+      readonly tag: "homogeneous";
+      readonly records: readonly Srd521StatBlock[];
+    }
+  | {
+      readonly tag: "mixed";
+      readonly issues: readonly [
+        SrdStatBlockProvenanceIssue,
+        ...SrdStatBlockProvenanceIssue[],
+      ];
+      readonly srdRecords: readonly Srd521StatBlock[];
+    };
+
+export type SrdStatBlockCatalogFromRecordsResult =
+  | {
+      readonly tag: "ok";
+      readonly collection: SrdStatBlockCollection;
+      readonly catalog: SrdStatBlockCatalog;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly issues: readonly [
+        StatBlockCatalogBuildIssue,
+        ...StatBlockCatalogBuildIssue[],
       ];
     };
 
@@ -147,48 +179,82 @@ export function defineSrdStatBlockCollection(input: {
   return collection;
 }
 
-export function decodeSrdStatBlockCollection(
+export function decodeStatBlockRecords(
   inputs: readonly [unknown, ...unknown[]],
-): SrdStatBlockCollectionDecodeResult {
-  const issues: SrdStatBlockCollectionDecodeIssue[] = [];
-  const decodedSrdStatBlocks: Srd521StatBlock[] = [];
+): StatBlockRecordsDecodeResult {
+  const issues: StatBlockRecordDecodeIssue[] = [];
+  const decodedRecords: StatBlockRecord[] = [];
 
   for (const [inputIndex, input] of inputs.entries()) {
     const decoded = decodeStatBlockRecordEither(input);
     if (Either.isLeft(decoded)) {
       issues.push({
         code: "statBlockDecodeFailed",
-        inputOrdinal: inputIndex + 1,
+        inputOrdinal: PositiveInteger(inputIndex + 1),
         message: formatSurfaceDecodeError(decoded.left),
       });
-    } else if (!isSrd521StatBlock(decoded.right)) {
-      issues.push({
-        code: "nonSrdStatBlockProvenance",
-        inputOrdinal: inputIndex + 1,
-        statBlockId: decoded.right.id,
-        actual: decoded.right.provenance,
-      });
     } else {
-      decodedSrdStatBlocks.push(decoded.right);
+      decodedRecords.push(decoded.right);
     }
   }
 
+  const firstIssue = issues[0];
+  return firstIssue === undefined
+    ? { tag: "decoded", records: decodedRecords }
+    : {
+        tag: "rejected",
+        issues: [firstIssue, ...issues.slice(1)],
+        decodedRecords,
+      };
+}
+
+export function evaluateSrdStatBlockProvenance(
+  records: readonly StatBlockRecord[],
+): SrdStatBlockProvenanceResult {
+  const issues: SrdStatBlockProvenanceIssue[] = [];
+  const srdRecords: Srd521StatBlock[] = [];
+  for (const [recordIndex, record] of records.entries()) {
+    if (!isSrd521StatBlock(record)) {
+      issues.push({
+        code: "nonSrdStatBlockProvenance",
+        inputOrdinal: PositiveInteger(recordIndex + 1),
+        statBlockId: record.id,
+        actual: record.provenance,
+      });
+    } else {
+      srdRecords.push(record);
+    }
+  }
+
+  const firstIssue = issues[0];
+  return firstIssue === undefined
+    ? { tag: "homogeneous", records: srdRecords }
+    : {
+        tag: "mixed",
+        issues: [firstIssue, ...issues.slice(1)],
+        srdRecords,
+      };
+}
+
+export function buildSrdStatBlockCatalogFromRecords(
+  records: readonly Srd521StatBlock[],
+): SrdStatBlockCatalogFromRecordsResult {
   const collection = {
     kind: "srdStatBlockCollection",
     provenance: { kind: "srd-5.2.1" },
-    statBlocks: decodedSrdStatBlocks,
+    statBlocks: records,
   } as const satisfies SrdStatBlockCollection;
-  issues.push(...collectStatBlockCatalogIssues([collection]).issues);
-  const firstCollectionIssue = issues[0];
-  if (firstCollectionIssue === undefined) return { tag: "decoded", collection };
-
-  const firstIssue = issues[0];
-  /* v8 ignore start -- @preserve -- every non-decoded path records its typed issue before reaching this internal narrowing point */
+  const result = buildStatBlockCatalog({ collections: [collection] });
+  if (result.tag === "ok") {
+    return { tag: "ok", collection, catalog: result.catalog };
+  }
+  const firstIssue = result.issues[0];
+  /* v8 ignore start -- @preserve -- an invalid catalog build always carries its discovered issue */
   if (firstIssue === undefined) {
-    throw new Error("Rejected SRD Stat Block decode has no issue");
+    throw new Error("Invalid SRD Stat Block catalog has no build issue");
   }
   /* v8 ignore stop -- @preserve */
-  return { tag: "rejected", issues: [firstIssue, ...issues.slice(1)] };
+  return { tag: "invalid", issues: [firstIssue, ...result.issues.slice(1)] };
 }
 
 export function buildStatBlockCatalog(input: {
