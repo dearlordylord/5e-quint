@@ -28,7 +28,7 @@ const initialState: DuplicateHitInterceptionState = {
 
 const driverSchema = {
   init: {},
-  doResolveDuplicateHitInterception: {
+  doResolveMirrorImageHitInterception: {
     attackHits: mbtPickSchemas.bool,
     attackerBlinded: mbtPickSchemas.bool,
     attackerHasBlindsight: mbtPickSchemas.bool,
@@ -45,7 +45,7 @@ function createDuplicateHitInterceptionDriver() {
       init: () => {
         state = initialState;
       },
-      doResolveDuplicateHitInterception: (
+      doResolveMirrorImageHitInterception: (
         fills: DuplicateHitInterceptionFills,
       ) => {
         state = resolveDuplicateHitInterception(state, fills);

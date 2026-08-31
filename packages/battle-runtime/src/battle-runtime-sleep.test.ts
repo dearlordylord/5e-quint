@@ -112,6 +112,27 @@ describe("battle runtime: Sleep", () => {
         turn: { actionResources: [] },
       },
     });
+    expect(result.routeEvents).toEqual([
+      {
+        kind: "resolveBattleSubject",
+        subject: "repeatSaveConditionEffect",
+        fill: "savingThrowOutcome",
+        holes: [],
+        owner: "battleConditionLifecycle",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "repeatSaveConditionEffect",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "repeatSaveConditionEffect",
+        holes: [],
+        owner: "battleConcentration",
+      },
+    ]);
     expect(result.state.combatants.get(goblinId)).toMatchObject({
       conditions: expect.objectContaining({ directIncapacitated: true }),
       activeEffects: [
