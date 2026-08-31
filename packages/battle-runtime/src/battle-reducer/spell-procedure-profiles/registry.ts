@@ -119,10 +119,6 @@ type RegisteredSpellProcedureDeclaration<
   | { readonly admission: { readonly kind: "synthesized" } }
 );
 
-export type RegisteredSpellProcedureDeclarations = {
-  readonly [P in BattleSpellProcedureKey]: RegisteredSpellProcedureDeclaration<P>;
-};
-
 function registeredSpellProcedureDeclaration<
   P extends BattleSpellProcedureKey,
   Facts extends SpellProcedureMechanicsFacts = SpellProcedureMechanicsFacts,
@@ -158,7 +154,7 @@ function registeredSpellProcedureDeclaration<
   };
 }
 
-export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedureDeclarations {
+export function registeredSpellProcedureDeclarations() {
   return {
     damageReduction: registeredSpellProcedureDeclaration(
       damageReductionProfile,
@@ -369,6 +365,16 @@ export function registeredSpellProcedureDeclarations(): RegisteredSpellProcedure
     ),
   };
 }
+
+/**
+ * The canonical table keeps each declaration's inferred static-facts type.
+ * Do not replace this with a mapped default over BattleSpellProcedureKey: the
+ * outer table is the source of the correlated procedure/facts union used by
+ * the derived mechanics-admission projection.
+ */
+export type RegisteredSpellProcedureDeclarations = ReturnType<
+  typeof registeredSpellProcedureDeclarations
+>;
 
 type RegisteredDeclarationProcedureMismatch = {
   [Procedure in keyof RegisteredSpellProcedureDeclarations]:

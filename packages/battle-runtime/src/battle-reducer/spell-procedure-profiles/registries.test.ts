@@ -1,17 +1,19 @@
 import { describe, expect, test } from "vitest";
-import { registeredSpellProcedureAdmissions } from "./admission-registry.ts";
+import { registeredSpellProcedureMechanicsAdmissions } from "./admission-registry.ts";
 import { spellProcedureExecutionFor } from "./execution-registry.ts";
 import { spellProcedureExecutionRegistry } from "./execution-composition.ts";
 
 describe("spell procedure registry views", () => {
-  test("admission traversal exposes only authored admission operations", () => {
-    const admissions = registeredSpellProcedureAdmissions();
+  test("mechanics admission projection exposes only static owner operations", () => {
+    const admissions = registeredSpellProcedureMechanicsAdmissions();
 
     expect(admissions.length).toBeGreaterThan(0);
-    expect(admissions.every((admission) => "admit" in admission)).toBe(true);
-    expect(admissions.every((admission) => !("resolve" in admission))).toBe(
-      true,
-    );
+    expect(
+      admissions.every(
+        (admission) =>
+          Object.keys(admission).sort().join(",") === "admitMechanics",
+      ),
+    ).toBe(true);
   });
 
   test("execution lookup excludes authored admission operations", () => {
