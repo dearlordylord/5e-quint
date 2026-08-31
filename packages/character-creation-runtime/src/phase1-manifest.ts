@@ -123,6 +123,7 @@ export const PHASE1_WEAPON_LONGSWORD_UNIT_ID =
 export const PHASE1_WEAPON_DAGGER_UNIT_ID = authoredUnitId("weapon_dagger");
 export const PHASE1_WEAPON_SPEAR_UNIT_ID = authoredUnitId("weapon_spear");
 export const PHASE1_WEAPON_FLAIL_UNIT_ID = authoredUnitId("weapon_flail");
+export const PHASE1_WEAPON_GREATAXE_UNIT_ID = authoredUnitId("weapon_greataxe");
 export const PHASE1_WEAPON_QUARTERSTAFF_UNIT_ID = authoredUnitId(
   "weapon_quarterstaff",
 );
@@ -202,6 +203,7 @@ export const PHASE1_WEAPON_MASTERY_UNIT_IDS = [
   authoredUnitId(PHASE1_WEAPON_SHORTSWORD_UNIT_ID),
   authoredUnitId(PHASE1_WEAPON_SPEAR_UNIT_ID),
   authoredUnitId(PHASE1_WEAPON_FLAIL_UNIT_ID),
+  authoredUnitId(PHASE1_WEAPON_GREATAXE_UNIT_ID),
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export const SUPPORTED_WEAPON_MASTERY_OPTION_IDS = [
   ...PHASE1_WEAPON_MASTERY_UNIT_IDS.map(creationChoiceOptionId),
