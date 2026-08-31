@@ -40,7 +40,7 @@ module battleRuntimeMovementCompelledMovementSelectedIdentityRouteMbt {
   pure val forcedSpellMovementHoles: Set[BattleHoleFamilyKind] =
     Set(TargetChoiceHoleKind, SavingThrowOutcomeHoleKind, RolledDiceHoleKind, MovementHoleKind)
   pure val commandMovementHoles: Set[BattleHoleFamilyKind] =
-    Set(SpellTargetListHoleKind, CommandOptionChoiceHoleKind, SavingThrowOutcomeHoleKind, MovementHoleKind)
+    Set(SpellTargetListHoleKind, CompelledBehaviorOptionChoiceHoleKind, SavingThrowOutcomeHoleKind, MovementHoleKind)
   pure val movementHoles: Set[BattleHoleFamilyKind] =
     Set(MovementHoleKind)
 

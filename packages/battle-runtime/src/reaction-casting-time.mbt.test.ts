@@ -149,7 +149,7 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 
 const magicMissileUnitId = "magic_missile";
-const spellCastInterruptionReactionUnitId = "spellCastInterruptionReaction";
+const spellCastInterruptionReactionUnitId = "counterspell";
 const hellishRebukeUnitId = "hellish_rebuke";
 const triggerCreatureId = combatantId("reaction-casting-time-trigger-creature");
 const reactorId = combatantId("reaction-casting-time-reactor");
