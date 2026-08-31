@@ -108,24 +108,109 @@ export function temporaryAbilityCheckRollModeProjection(
   "activeEffect" | "rangeFeet" | "selectedMode" | "concurrentDurationModeLimit"
 > | null {
   const castingTime = topLevelSpellCastingTime(spell.mechanics);
+  if (spell.mechanics.family !== "modal_ongoing_effect") {
+    return null;
+  }
+  const mechanics = spell.mechanics;
+  if (mechanics.range.kind !== "point") {
+    return null;
+  }
+  if (typeof mechanics.range.feet !== "number") {
+    return null;
+  }
+  if (mechanics.duration.kind !== "timed") {
+    return null;
+  }
+  if (mechanics.attachment.kind !== "self") {
+    return null;
+  }
   if (
-    spell.mechanics.family !== "modal_ongoing_effect" ||
-    spell.mechanics.level !== 0 ||
-    castingTime?.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 30 ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "minute" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.attachment.kind !== "self" ||
-    spell.mechanics.concurrentEffectLimit?.appliesTo !==
-      "spell_duration_modes" ||
-    spell.mechanics.concurrentEffectLimit.maximumActive !==
-      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS
+    !temporaryAbilityCheckRollModeHeaderMatches({
+      level: mechanics.level,
+      castingTime,
+      rangeFeet: mechanics.range.feet,
+      duration: mechanics.duration.value,
+      concurrentEffectLimit: mechanics.concurrentEffectLimit,
+    })
   ) {
     return null;
   }
-  const matchingEffects = spell.mechanics.mode.options.flatMap((option) => {
+  const effect = singleTemporaryAbilityCheckRollModeEffect(
+    mechanics.mode.options,
+  );
+  if (effect === null) {
+    return null;
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    mechanics.duration.value,
+  );
+  if (Result.isFailure(durationTicks)) {
+    return null;
+  }
+  if (
+    !temporaryAbilityCheckRollModeEffectMatches(effect, durationTicks.success)
+  ) {
+    return null;
+  }
+  return {
+    activeEffect: {
+      kind: "temporaryAbilityCheckRollMode",
+      sourceCombatantId: actorId,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: durationTicks.success,
+      },
+    },
+    rangeFeet: movementFeet(mechanics.range.feet),
+    selectedMode: {
+      kind: "abilityCheckRollMode",
+      ability: "cha",
+      skill: "intimidation",
+      rollMode: "advantage",
+      effectDuration: "spellDuration",
+    },
+    concurrentDurationModeLimit: {
+      maximumActive: TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
+    },
+  };
+}
+
+type TemporaryAbilityCheckRollModeMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "modal_ongoing_effect" }
+>;
+
+function temporaryAbilityCheckRollModeHeaderMatches(facts: {
+  readonly level: TemporaryAbilityCheckRollModeMechanics["level"];
+  readonly castingTime: TopLevelSpellCastingTime | null;
+  readonly rangeFeet: number;
+  readonly duration: Extract<
+    TemporaryAbilityCheckRollModeMechanics["duration"],
+    { readonly kind: "timed" }
+  >["value"];
+  readonly concurrentEffectLimit: TemporaryAbilityCheckRollModeMechanics["concurrentEffectLimit"];
+}): boolean {
+  return [
+    facts.level === 0,
+    facts.castingTime?.kind === "action",
+    facts.rangeFeet === 30,
+    facts.duration.unit === "minute",
+    facts.duration.amount === 1,
+    facts.concurrentEffectLimit?.appliesTo === "spell_duration_modes",
+    facts.concurrentEffectLimit?.maximumActive ===
+      TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
+  ].every(Boolean);
+}
+
+type TemporaryAbilityCheckRollModeEffect = Extract<
+  EffectAtom,
+  { readonly kind: "modify_roll_advantage" }
+>;
+
+function singleTemporaryAbilityCheckRollModeEffect(
+  options: TemporaryAbilityCheckRollModeMechanics["mode"]["options"],
+): TemporaryAbilityCheckRollModeEffect | null {
+  const matchingEffects = options.flatMap((option) => {
     if (option.effectDuration !== "spell_duration") {
       return [];
     }
@@ -140,50 +225,27 @@ export function temporaryAbilityCheckRollModeProjection(
     return null;
   }
   const [effect] = matchingEffects;
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.value,
-  );
-  const skillFilter =
-    effect.kind === "modify_roll_advantage"
-      ? rollModifierSkillFilter(effect.skillFilter)
-      : null;
-  const abilityFilter =
-    effect.kind === "modify_roll_advantage" ? effect.abilityFilter : undefined;
-  if (
-    Result.isFailure(durationTicks) ||
-    Number(durationTicks.success) !==
-      Number(TEMPORARY_ABILITY_CHECK_ROLL_MODE_DURATION_TICKS) ||
-    effect.mode !== "advantage" ||
-    (effect.affects ?? "self_roll") !== "self_roll" ||
-    !sameStringSet(effect.on, ["ability_check"]) ||
-    !Array.isArray(abilityFilter) ||
-    !sameStringSet(abilityFilter, ["cha"]) ||
-    skillFilter?.kind !== "fixed" ||
-    skillFilter.skill !== TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL
-  ) {
-    return null;
-  }
-  return {
-    activeEffect: {
-      kind: "temporaryAbilityCheckRollMode",
-      sourceCombatantId: actorId,
-      expiresAt: {
-        kind: "duration",
-        durationTicks: durationTicks.success,
-      },
-    },
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
-    selectedMode: {
-      kind: "abilityCheckRollMode",
-      ability: "cha",
-      skill: "intimidation",
-      rollMode: "advantage",
-      effectDuration: "spellDuration",
-    },
-    concurrentDurationModeLimit: {
-      maximumActive: TEMPORARY_ABILITY_CHECK_ROLL_MODE_MAX_ACTIVE_EFFECTS,
-    },
-  };
+  return effect;
+}
+
+function temporaryAbilityCheckRollModeEffectMatches(
+  effect: TemporaryAbilityCheckRollModeEffect,
+  durationTicks: TemporaryAbilityCheckRollModeSpellInvocation["activeEffect"]["expiresAt"]["durationTicks"],
+): boolean {
+  const skillFilter = rollModifierSkillFilter(effect.skillFilter);
+  const abilityFilter = effect.abilityFilter;
+  return [
+    Number(durationTicks) ===
+      Number(TEMPORARY_ABILITY_CHECK_ROLL_MODE_DURATION_TICKS),
+    effect.mode === "advantage",
+    (effect.affects ?? "self_roll") === "self_roll",
+    sameStringSet(effect.on, ["ability_check"]),
+    Array.isArray(abilityFilter),
+    Array.isArray(abilityFilter) && sameStringSet(abilityFilter, ["cha"]),
+    skillFilter?.kind === "fixed",
+    skillFilter?.kind === "fixed" &&
+      skillFilter.skill === TEMPORARY_ABILITY_CHECK_ROLL_MODE_SKILL,
+  ].every(Boolean);
 }
 
 export function scalarBuffSpellActionCost(
