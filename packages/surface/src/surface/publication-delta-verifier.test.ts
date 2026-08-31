@@ -147,6 +147,18 @@ function fixtureArrayField(
   return field;
 }
 
+function fixtureAggregateCandidateDigest(
+  certificate: Record<string, unknown>,
+): Record<string, unknown> {
+  return fixtureObjectField(
+    fixtureObjectField(
+      fixtureObjectField(certificate, "artifacts"),
+      "aggregate",
+    ),
+    "candidate",
+  );
+}
+
 function canonicalizeFixture(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonicalizeFixture);
   if (!isFixtureObject(value)) return value;
@@ -317,11 +329,17 @@ describe("Surface publication delta verifier", () => {
 
   test("rejects an arbitrary schema-valid certificate mutation", () => {
     const result = withFixture(({ certificatePath: fixturePath }) => {
-      const certificate = readFileSync(fixturePath, "utf8");
-      writeFileSync(
-        fixturePath,
-        certificate.replace('"byteLength": 946224', '"byteLength": 946225'),
+      const certificate = fixtureObject(
+        JSON.parse(readFileSync(fixturePath, "utf8")),
+        "certificate",
       );
+      const candidate = fixtureAggregateCandidateDigest(certificate);
+      const byteLength = candidate.byteLength;
+      if (typeof byteLength !== "number") {
+        throw new Error("Expected candidate byteLength number");
+      }
+      candidate.byteLength = byteLength + 1;
+      writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
     });
 
     expect(result.tag).toBe("invalid");
@@ -330,14 +348,19 @@ describe("Surface publication delta verifier", () => {
 
   test("rejects a certificate hash mutation", () => {
     const result = withFixture(({ certificatePath: fixturePath }) => {
-      const certificate = readFileSync(fixturePath, "utf8");
-      writeFileSync(
-        fixturePath,
-        certificate.replace(
-          "8b3466a7ed3b714788aac208ad6d76684eeb9c59037a9d05b6a7d491d4218867",
-          "0000000000000000000000000000000000000000000000000000000000000000",
-        ),
+      const certificate = fixtureObject(
+        JSON.parse(readFileSync(fixturePath, "utf8")),
+        "certificate",
       );
+      const candidate = fixtureAggregateCandidateDigest(certificate);
+      const candidateSha256 = candidate.sha256;
+      if (typeof candidateSha256 !== "string") {
+        throw new Error("Expected candidate SHA-256 string");
+      }
+      candidate.sha256 = `${candidateSha256.startsWith("0") ? "1" : "0"}${candidateSha256.slice(
+        1,
+      )}`;
+      writeFileSync(fixturePath, `${JSON.stringify(certificate, null, 2)}\n`);
     });
 
     expect(result.tag).toBe("invalid");
