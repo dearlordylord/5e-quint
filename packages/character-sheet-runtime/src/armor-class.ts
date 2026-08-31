@@ -74,91 +74,133 @@ export function characterSheetArmorClassState(
   }
   /* v8 ignore stop -- @preserve */
 
-  const armor =
-    loadout.armor == null
-      ? undefined
-      : getRequiredUnit(
-          unitLibrary,
-          characterEquipmentItemSourceFromId(loadout.armor).unitId,
-        );
-  /* v8 ignore start -- @preserve -- A loadout armor item id must resolve in the same Unit catalog used to parse equipment. */
-  if (armor !== undefined && Result.isFailure(armor)) {
-    return Result.fail(armor.failure);
-  }
-  /* v8 ignore stop -- @preserve */
-
-  const shield =
-    loadout.shield == null
-      ? undefined
-      : getRequiredUnit(
-          unitLibrary,
-          characterEquipmentItemSourceFromId(loadout.shield).unitId,
-        );
-  /* v8 ignore start -- @preserve -- A loadout shield item id must resolve in the same Unit catalog used to parse equipment. */
-  if (shield !== undefined && Result.isFailure(shield)) {
-    return Result.fail(shield.failure);
-  }
-  /* v8 ignore stop -- @preserve */
-
-  const armorDefinition = projectSelectedEquipmentDefinition(
-    armor === undefined || Result.isFailure(armor) ? undefined : armor.success,
-    "armor",
+  const equipment = selectedLoadoutEquipmentDefinitions(
+    unitLibrary,
+    loadout.armor,
+    loadout.shield,
   );
-  if (Result.isFailure(armorDefinition)) {
-    return Result.fail(armorDefinition.failure);
+  if (Result.isFailure(equipment)) {
+    return Result.fail(equipment.failure);
   }
-  const armorFacts = armorDefinition.success?.facts;
+  const { armorFacts, shield } = equipment.success;
+  const shieldFacts = shield?.facts;
 
-  const shieldDefinition = projectSelectedEquipmentDefinition(
-    shield === undefined || Result.isFailure(shield)
-      ? undefined
-      : shield.success,
-    "shield",
-  );
-  if (Result.isFailure(shieldDefinition)) {
-    return Result.fail(shieldDefinition.failure);
-  }
-  const shieldFacts = shieldDefinition.success?.facts;
-
-  const base =
-    armorFacts !== undefined
-      ? Result.succeed(armorBaseSource(armorFacts))
-      : selectedUnarmoredBaseSource(input, {
-          wearingArmor: false,
-          wieldingShield: shieldFacts !== undefined,
-        });
+  const base = selectedArmorClassBase(input, armorFacts, shieldFacts);
   /* v8 ignore next -- @preserve -- Base selection rejection is malformed stored choice or build/catalog input. */
   if (Result.isFailure(base)) return Result.fail(base.failure);
-
-  const bonuses: ArmorClassState["bonuses"][number][] = [];
-  if (
-    shield !== undefined &&
-    Result.isSuccess(shield) &&
-    shieldFacts !== undefined
-  ) {
-    bonuses.push({
-      kind: "shield",
-      bonus: armorClassDelta(shieldFacts.armorClassProjection.bonus),
-      handUse: shieldFacts.armorClassProjection.handUse,
-      trainingRequired: shieldFacts.armorClassProjection.trainingRequired,
-      sourceUnitId: shield.success.id,
-    });
-  }
 
   return Result.succeed({
     ...defaultState,
     abilityModifiers: characterSheetAbilityModifiers(build),
     base: base.success,
-    bonuses,
+    bonuses: selectedShieldBonuses(shield),
     armorTraining: new Set(armorTraining.success),
-    leftHandUse:
-      shieldFacts !== undefined
-        ? "shield"
-        : loadout.offHandWeapon == null
-          ? "free"
-          : "offWeapon",
+    leftHandUse: selectedLeftHandUse(
+      shieldFacts !== undefined,
+      loadout.offHandWeapon != null,
+    ),
     rightHandUse: loadout.weapon == null ? "free" : "mainWeapon",
   });
+}
+
+type SelectedShield = {
+  readonly unit: UnitRecord;
+  readonly facts: Extract<
+    CharacterSheetEquipmentDefinitionProjection,
+    { readonly kind: "shield" }
+  >["facts"];
+};
+
+type SelectedLoadoutEquipmentDefinitions = {
+  readonly armorFacts: CharacterSheetArmorDefinitionFacts | undefined;
+  readonly shield: SelectedShield | undefined;
+};
+
+function selectedLoadoutEquipmentDefinitions(
+  unitLibrary: UnitCatalog,
+  armorItemId:
+    | Parameters<typeof characterEquipmentItemSourceFromId>[0]
+    | null
+    | undefined,
+  shieldItemId:
+    | Parameters<typeof characterEquipmentItemSourceFromId>[0]
+    | null
+    | undefined,
+): Result.Result<SelectedLoadoutEquipmentDefinitions, CharacterSheetIssue> {
+  const armor = selectedEquipmentUnit(unitLibrary, armorItemId);
+  if (Result.isFailure(armor)) return Result.fail(armor.failure);
+  const shield = selectedEquipmentUnit(unitLibrary, shieldItemId);
+  if (Result.isFailure(shield)) return Result.fail(shield.failure);
+  const armorDefinition = projectSelectedEquipmentDefinition(
+    armor.success,
+    "armor",
+  );
+  if (Result.isFailure(armorDefinition))
+    return Result.fail(armorDefinition.failure);
+  const shieldDefinition = projectSelectedEquipmentDefinition(
+    shield.success,
+    "shield",
+  );
+  if (Result.isFailure(shieldDefinition))
+    return Result.fail(shieldDefinition.failure);
+  return Result.succeed({
+    armorFacts: armorDefinition.success?.facts,
+    shield:
+      shield.success === undefined || shieldDefinition.success === undefined
+        ? undefined
+        : { unit: shield.success, facts: shieldDefinition.success.facts },
+  });
+}
+
+function selectedEquipmentUnit(
+  unitLibrary: UnitCatalog,
+  equipmentItemId:
+    | Parameters<typeof characterEquipmentItemSourceFromId>[0]
+    | null
+    | undefined,
+): Result.Result<UnitRecord | undefined, CharacterSheetIssue> {
+  if (equipmentItemId == null) return Result.succeed(undefined);
+  return getRequiredUnit(
+    unitLibrary,
+    characterEquipmentItemSourceFromId(equipmentItemId).unitId,
+  );
+}
+
+function selectedArmorClassBase(
+  input: CharacterSheetArmorClassStateInput,
+  armorFacts: CharacterSheetArmorDefinitionFacts | undefined,
+  shieldFacts: SelectedShield["facts"] | undefined,
+): Result.Result<ArmorClassBaseSource, CharacterSheetIssue> {
+  if (armorFacts !== undefined)
+    return Result.succeed(armorBaseSource(armorFacts));
+  return selectedUnarmoredBaseSource(input, {
+    wearingArmor: false,
+    wieldingShield: shieldFacts !== undefined,
+  });
+}
+
+function selectedLeftHandUse(
+  wieldingShield: boolean,
+  wieldingOffHandWeapon: boolean,
+): ArmorClassState["leftHandUse"] {
+  if (wieldingShield) return "shield";
+  return wieldingOffHandWeapon ? "offWeapon" : "free";
+}
+
+function selectedShieldBonuses(
+  shield: SelectedShield | undefined,
+): ArmorClassState["bonuses"] {
+  if (shield === undefined) return [];
+  const projection = shield.facts.armorClassProjection;
+  return [
+    {
+      kind: "shield",
+      bonus: armorClassDelta(projection.bonus),
+      handUse: projection.handUse,
+      trainingRequired: projection.trainingRequired,
+      sourceUnitId: shield.unit.id,
+    },
+  ];
 }
 
 function projectSelectedEquipmentDefinition(

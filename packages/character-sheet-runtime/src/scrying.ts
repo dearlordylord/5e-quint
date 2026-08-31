@@ -104,22 +104,7 @@ function scryingInvocationFromSpell(input: {
 }): Result.Result<CharacterSheetScryingInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Scrying support profile required by this projector. */
-  if (
-    spell.mechanics.family !== "activation" ||
-    spell.mechanics.level !== 5 ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.castingTime.kind !== "minutes" ||
-    spell.mechanics.castingTime.amount !== SCRYING_CASTING_TIME_MINUTES ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== SCRYING_CONCENTRATION_MINUTES ||
-    spell.mechanics.components.v !== true ||
-    spell.mechanics.components.s !== true ||
-    spell.mechanics.components.material.kind !== "present" ||
-    Option.isNone(spell.mechanics.components.material.costGp) ||
-    spell.mechanics.components.material.costGp.value !==
-      SCRYING_MATERIAL_COMPONENTS.focusCostGpMinimum
-  ) {
+  if (!hasScryingSpellProfile(spell)) {
     return characterSheetIssue(
       "Scrying requires the supported self-range level-5 Divination sensor profile.",
     );
@@ -188,6 +173,68 @@ function scryingInvocationFromSpell(input: {
       retryLockoutDuration: retryLockoutDuration.success,
     }),
   });
+}
+
+type ScryingActivationSource = CharacterSheetSpellSource & {
+  readonly mechanics: Extract<
+    CharacterSheetSpellSource["mechanics"],
+    { readonly family: "activation" }
+  >;
+};
+type ScryingSpellSource = ScryingActivationSource & {
+  readonly mechanics: ScryingActivationSource["mechanics"] & {
+    readonly duration: Extract<
+      Extract<
+        CharacterSheetSpellSource["mechanics"],
+        { readonly family: "activation" }
+      >["duration"],
+      { readonly kind: "concentration" }
+    >;
+  };
+};
+
+function hasScryingSpellProfile(
+  spell: CharacterSheetSpellSource,
+): spell is ScryingSpellSource {
+  if (!hasScryingActivationProfile(spell)) return false;
+  return (
+    hasScryingTimingProfile(spell) && hasScryingDefinitionMaterialProfile(spell)
+  );
+}
+
+function hasScryingActivationProfile(
+  spell: CharacterSheetSpellSource,
+): spell is ScryingActivationSource {
+  return (
+    spell.mechanics.family === "activation" &&
+    spell.mechanics.level === 5 &&
+    spell.mechanics.range.kind === "self"
+  );
+}
+
+function hasScryingTimingProfile(spell: ScryingActivationSource): boolean {
+  const mechanics = spell.mechanics;
+  if (mechanics.duration.kind !== "concentration") return false;
+  return (
+    mechanics.castingTime.kind === "minutes" &&
+    mechanics.castingTime.amount === SCRYING_CASTING_TIME_MINUTES &&
+    mechanics.duration.upTo.unit === "minute" &&
+    mechanics.duration.upTo.amount === SCRYING_CONCENTRATION_MINUTES
+  );
+}
+
+function hasScryingDefinitionMaterialProfile(
+  spell: CharacterSheetSpellSource,
+): boolean {
+  const components = spell.mechanics.components;
+  return (
+    components.v === true &&
+    components.s === true &&
+    components.material.kind === "present" &&
+    Option.isSome(components.material.costGp) &&
+    components.material.costGp.value ===
+      SCRYING_MATERIAL_COMPONENTS.focusCostGpMinimum
+  );
 }
 
 function scryingSavingThrowContract(
