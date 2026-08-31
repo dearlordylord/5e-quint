@@ -661,6 +661,55 @@ describe("Surface authored string role traversal", () => {
     );
   });
 
+  it("excludes an incompatible sole tagged branch beside an untagged match", () => {
+    const schema = Schema.Union([
+      Schema.Struct({
+        kind: Schema.Literal("tagged"),
+        required: Schema.String.pipe(Schema.check(Schema.isMinLength(2))),
+        text: surfaceSchemaRole(Schema.String, {
+          category: "prose",
+          evidence: "summary",
+        }),
+      }),
+      Schema.Struct({
+        kind: surfaceSchemaRole(Schema.String, {
+          category: "vocabulary",
+          kind: "literal",
+        }),
+        required: Schema.optionalKey(Schema.Unknown),
+        text: surfaceSchemaRole(Schema.String, {
+          category: "identity",
+          kind: "label",
+        }),
+      }),
+    ]);
+    const types = unionTypes(schema);
+    const incompatibleValues = [
+      { kind: "tagged", text: "missing required" },
+      { kind: "tagged", required: 1, text: "wrong required type" },
+      { kind: "tagged", required: "x", text: "failed refinement" },
+    ];
+
+    for (const value of incompatibleValues) {
+      const retained = traversal.decoderCompatibleUnionBranches(types, value);
+      expect(retained).toHaveLength(1);
+      expect(traversal.matchingUnionBranches(types, value)).toEqual(retained);
+      const roles: string[] = [];
+      expect(() =>
+        traversal.walkSurfaceValue(
+          schema,
+          value,
+          (
+            _path: string,
+            _value: string,
+            role: { readonly category: string },
+          ) => roles.push(role.category),
+        ),
+      ).not.toThrow();
+      expect(roles).toEqual(["vocabulary", "identity"]);
+    }
+  });
+
   it("uses tuple shape and element compatibility for union reachability", () => {
     const roles: string[] = [];
     traversal.walkSurfaceValue(
