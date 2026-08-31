@@ -210,7 +210,10 @@ canonical measurement is owned beside the declaration emitter in
 distribution test. The
 [master-reconciliation declaration certificate](../../docs/migrations/effect-4/final-parity-report.md#master-reconciliation-declaration-certificate)
 records the reviewed ten additions and three removals from the previous
-523-file reconciliation certificate and their owning reachability.
+reconciliation certificate and their owning reachability. That comparison is
+pinned to commit `38e79b814`: 523 files and 3,962,445 bytes, with independently
+reproduced sorted POSIX relative-path ledger SHA-256
+`05479f0c8ae9b75bb263ca7dc10cb61ed68fef4da3ba57cd54f4603d41a55cb8`.
 
 The current tracer post-play review keeps this bounded context inline and is
 commandless; its review-invocation manifest intentionally does not admit a
