@@ -10,6 +10,8 @@ A **Spell Procedure Declaration** is the canonical procedure-keyed composition
 for one class of spell behavior. It joins two independently consumed views:
 
 - **admission** — authored Spell Definition traversal through `admit`.
+- **static mechanics admission** — a profile-owned, context-independent
+  projection of already-decoded `SpellMechanics` through `admitMechanics`.
 - **execution** — codecs, discovery, resolution, and metamagic compatibility.
   Target-list and Readied Spell classification are derived from their typed
   mechanical invocation shapes outside the authored declaration contract.
@@ -40,6 +42,23 @@ maintains a second key list or repeats procedure metadata. Resolution imports
 the execution view and its authored-free contract, while authored traversal
 imports the admission view.
 
+Static mechanics admission is another derived view of that same declaration
+table. Every authored profile must expose `admitMechanics`; its contextual
+`admit` consumer remains responsible for state-dependent invocation creation.
+The static result carries source-free profile facts
+and exact `UnitMechanicsPath` evidence. Complete evidence has at least one
+consumed path and no unowned paths; partial evidence has at least one of each.
+Represented-but-unsupported candidates return accumulated typed issues. A root
+with no represented owner returns `notBattleOwned`; it is not a capability
+prerequisite. Authored id, name, kind, provenance, caster, targets,
+slot/resource, turn, session/table facts, and Battle State are not part of the
+static projection.
+
+This contract/composer lane does not claim the 98 complete or 23 partial roots
+until each authored profile supplies its owner hook and its consumers use the
+narrowed facts. The required declaration field intentionally makes that
+remaining migration visible to the compiler.
+
 ## Glossary used by this module
 
 These terms live here, not in `UBIQUITOUS_LANGUAGE.md`, because they
@@ -64,10 +83,12 @@ describe engine internals rather than the game domain:
 spell-procedure-profiles/
   README.md            (this file)
   profile.ts           Admission context and combined declaration contract
+  spell-mechanics-admission.ts
+                      Source-free static projection/evidence contract and fold
   execution-profile.ts Authored-free execution contract
   resolution-contract.ts Procedure-keyed authored-free resolution inputs
   registry.ts          Canonical procedure-keyed declarations
-  admission-registry.ts Authored traversal projection
+  admission-registry.ts Authored traversal and static mechanics views
   execution-registry.ts Authored-free execution port and lookup helpers
   execution-composition.ts Canonical declaration-to-execution projection
   damage-reduction.ts  one file per migrated profile
