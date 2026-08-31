@@ -1138,15 +1138,18 @@ then prove complete newline-framed JSON, byte-for-byte output ownership, exit
 code 130, empty standard error, and cleanup; no timing sleep is used.
 
 After master reconciliation, the public declaration graph has a reviewed
-deterministic measure of 523 files and 3,962,445 bytes. The file limit is
-exactly 523. The byte limit remains 10 MiB, with a 6,523,315-byte margin. Tests
+deterministic measure of 528 files and 4,098,680 bytes. The file limit is
+exactly 528. The byte limit remains 10 MiB, with a 6,387,080-byte margin. Tests
 prove acceptance exactly at both caps and fail-closed rejection at each cap
 plus one, and the real public distribution must equal the reviewed measure.
-The reviewed 12-path growth from the 511-file package-runtime certificate is
-listed with its owning reachability in
+The reviewed ten additions and five removals from the prior 523-file graph are
+listed with their owning reachability in
 [`final-parity-report.md`](./final-parity-report.md#master-reconciliation-declaration-certificate);
-there were no removed declarations and no accidental public leak. Raw Swarm
-lane hygiene again enforces that `quality:body` does not
+the canonical type-only owner is
+[`stat-block-catalog-contract.ts`](../../../packages/surface/src/surface/stat-block-catalog-contract.ts),
+and the generated SRD Stat Block aggregate is excluded from the declaration
+bundle. This focused #385 evidence does not claim completion of the remaining
+#386 public gates. Raw Swarm lane hygiene again enforces that `quality:body` does not
 invoke the deterministic `:body` command; the public deterministic owner
 continues to acquire its documented lock itself.
 

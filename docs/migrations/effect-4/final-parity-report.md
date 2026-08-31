@@ -109,36 +109,35 @@ exercised by the clean-consumer smoke.
 
 ### Master-reconciliation declaration certificate
 
-The fixed Surface and Battle Runtime consumer graph now contains exactly 523
-declaration files and 3,962,445 bytes. The 10 MiB byte cap is unchanged and
-leaves 6,523,315 bytes of margin; the file cap is the exact reviewed count, not
-a permissive growth allowance. Relative to the package-runtime certificate at
-`c8f2e4f2e` (511 files and 4,075,316 bytes), the reconciliation adds exactly
-these 12 reachable declarations and removes none:
+The fixed Surface and Battle Runtime consumer graph now contains exactly 528
+declaration files and 4,098,680 bytes. The 10 MiB byte cap is unchanged and
+leaves 6,387,080 bytes of margin; the file cap is the exact reviewed count, not
+a permissive growth allowance. Relative to the prior 523-file reconciliation
+certificate, the current graph adds these ten declarations:
 
-- `packages/battle-runtime/src/battle-mechanical-attack-options.d.ts`
-- `packages/battle-runtime/src/battle-reducer/interrupt-checkpoint-identity.d.ts`
+- `packages/battle-runtime/src/battle-reducer/codec-building-blocks.d.ts`
 - `packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/once-per-turn-limit-group-admission.d.ts`
-- `packages/battle-runtime/src/battle-runtime-transaction.d.ts`
-- `packages/character-creation-runtime/src/character-display.d.ts`
-- `packages/character-creation-runtime/src/workflow-horizon.d.ts`
-- `packages/shared/src/semantic-refinement.d.ts`
-- `packages/shared/src/structural-value.d.ts`
-- `packages/surface/src/surface/stat-block-catalog-core.d.ts`
-- `packages/surface/src/surface/stat-block-catalog-data.d.ts`
-- `packages/surface/src/surface/unit-catalog-core.d.ts`
-- `packages/surface/src/surface/unit-catalog-data.d.ts`
+- `packages/battle-runtime/src/druid-wild-shape-known-form-runtime.d.ts`
+- `packages/battle-runtime/src/procedure-admission/stat-block-procedure-execution-decision.d.ts`
+- `packages/battle-runtime/src/procedure-execution/stat-block-procedure-sections.d.ts`
+- `packages/battle-runtime/src/stat-block-attack-damage-selection.d.ts`
+- `packages/battle-runtime/src/stat-block-authored-projection.d.ts`
+- `packages/battle-runtime/src/stat-block-presentation-contract.d.ts`
+- `packages/surface/src/surface/stat-block-catalog-contract.d.ts`
+- `packages/surface/src/surface/stat-block-speed-readers.d.ts`
 
-The first four are reachable through the public Battle frontier, replay,
-procedure-profile, and transaction owners. The next four are deliberate
-Character Creation exports or their shared schema/value dependencies. The last
-four are the core/data owners behind the master split Surface facades. The
-focused package-runtime and consumer-distribution suites pass 12/12, including
-the real relocated supervisor initialization, transcript, replay, exact
-Surface-plus-Battle Effect owner substitution, and adversarial
-underdeclaration rejection. A source-map parser error accompanied the initial
-fail-closed 523-versus-511 run; it did not recur on the complete passing retry
-and is not counted as successful evidence from the failed run.
+It removes five declarations: the retired
+`battle-reducer/spell-procedure-profiles/usage-limit-admission.d.ts` owner and
+the Surface `stat-block-catalog.d.ts`, `stat-block-catalog-core.d.ts`,
+`stat-block-catalog-data.d.ts`, and `unit-catalog-data.d.ts` runtime/data
+owners. The lightweight catalog type is now owned by
+[`stat-block-catalog-contract.ts`](../../../packages/surface/src/surface/stat-block-catalog-contract.ts),
+so type-only consumers do not pull the runtime catalog into the public graph.
+The 1,599,076-byte generated `srd-stat-block-aggregate.d.ts` and its
+`stat-block-identity.d.ts` dependency are consequently absent. The focused
+real relocated supervisor test proves initialization, transcript, replay, and
+declaration emission for this graph; this certificate does not claim that the
+remaining issue #386 public gates have run.
 
 ## Public verification
 
