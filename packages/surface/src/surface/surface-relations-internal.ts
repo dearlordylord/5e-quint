@@ -3,8 +3,10 @@ import { Match, Result, Schema } from "effect";
 
 import {
   readSurfaceSchemaRole,
+  surfaceLinkSourceRole,
   surfaceSchemaRolesEqual,
-  type SurfaceLinkSourceRole,
+  type SurfaceLinkSchemaRole,
+  type SurfaceLinkSourceRoleFor,
   type SurfaceSchemaFieldRole,
 } from "./schema-base.ts";
 import { StatBlockRecordSchema, UnitRecordSchema } from "./schema.ts";
@@ -15,10 +17,7 @@ import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 export type SurfaceUnitId = UnitRecord["id"];
 export type SurfaceStatBlockId = StatBlockRecord["id"];
 
-type SurfaceRelationRole = Extract<
-  SurfaceSchemaFieldRole,
-  { readonly category: "reference" | "dependency" }
->;
+type SurfaceRelationRole = SurfaceLinkSchemaRole;
 type SurfaceRecordKind = SurfaceRelationRole["targetKind"];
 type SurfaceRecordId<Kind extends SurfaceRecordKind> = Kind extends "unit"
   ? SurfaceUnitId
@@ -36,7 +35,7 @@ type SurfaceAuthoredRelationBase<
         readonly fieldPath: string;
         readonly relationKind: Role["category"];
         readonly relation: Role["relation"];
-        readonly sourceRole: SurfaceLinkSourceRole;
+        readonly sourceRole: SurfaceLinkSourceRoleFor<Role>;
         readonly targetKind: Role["targetKind"];
         readonly targetRecordId: SurfaceRecordId<Role["targetKind"]>;
       }
@@ -153,6 +152,18 @@ const invalidRelationTargetIssue = (input: {
   message: `Surface ${input.role.category} ${input.role.targetKind} relation target at ${input.path} is not a valid non-empty trimmed id`,
 });
 
+const projectSurfaceAuthoredRelationRole = <Role extends SurfaceRelationRole>(
+  role: Role,
+): {
+  readonly relationKind: Role["category"];
+  readonly relation: Role["relation"];
+  readonly sourceRole: SurfaceLinkSourceRoleFor<Role>;
+} => ({
+  relationKind: role.category,
+  relation: role.relation,
+  sourceRole: surfaceLinkSourceRole(role),
+});
+
 const decodeSurfaceAuthoredRelation = (input: {
   readonly record: SurfaceRelationSource;
   readonly role: SurfaceRelationRole;
@@ -163,10 +174,6 @@ const decodeSurfaceAuthoredRelation = (input: {
   const shared = {
     sourceRecordName: input.record.value.name,
     fieldPath: input.fieldPath,
-    sourceRole:
-      "sourceRole" in input.role
-        ? (input.role.sourceRole ?? "generic")
-        : "generic",
   } as const;
   return Match.value(input.record).pipe(
     Match.when({ sourceKind: "unit" }, ({ value }) =>
@@ -186,8 +193,7 @@ const decodeSurfaceAuthoredRelation = (input: {
                 ...shared,
                 sourceKind: "unit" as const,
                 sourceRecordId: value.id,
-                relationKind: role.category,
-                relation: role.relation,
+                ...projectSurfaceAuthoredRelationRole(role),
                 targetKind: "unit" as const,
                 targetRecordId: targetRecordId.success,
               });
@@ -207,8 +213,7 @@ const decodeSurfaceAuthoredRelation = (input: {
                 ...shared,
                 sourceKind: "unit" as const,
                 sourceRecordId: value.id,
-                relationKind: role.category,
-                relation: role.relation,
+                ...projectSurfaceAuthoredRelationRole(role),
                 targetKind: "unit" as const,
                 targetRecordId: targetRecordId.success,
               });
@@ -230,8 +235,7 @@ const decodeSurfaceAuthoredRelation = (input: {
                   ...shared,
                   sourceKind: "unit" as const,
                   sourceRecordId: value.id,
-                  relationKind: role.category,
-                  relation: role.relation,
+                  ...projectSurfaceAuthoredRelationRole(role),
                   targetKind: "statBlock" as const,
                   targetRecordId: targetRecordId.success,
                 });
@@ -254,8 +258,7 @@ const decodeSurfaceAuthoredRelation = (input: {
                   ...shared,
                   sourceKind: "unit" as const,
                   sourceRecordId: value.id,
-                  relationKind: role.category,
-                  relation: role.relation,
+                  ...projectSurfaceAuthoredRelationRole(role),
                   targetKind: "statBlock" as const,
                   targetRecordId: targetRecordId.success,
                 });
@@ -281,8 +284,7 @@ const decodeSurfaceAuthoredRelation = (input: {
                 ...shared,
                 sourceKind: "statBlock" as const,
                 sourceRecordId: value.id,
-                relationKind: role.category,
-                relation: role.relation,
+                ...projectSurfaceAuthoredRelationRole(role),
                 targetKind: "unit" as const,
                 targetRecordId: targetRecordId.success,
               });
@@ -302,8 +304,7 @@ const decodeSurfaceAuthoredRelation = (input: {
                 ...shared,
                 sourceKind: "statBlock" as const,
                 sourceRecordId: value.id,
-                relationKind: role.category,
-                relation: role.relation,
+                ...projectSurfaceAuthoredRelationRole(role),
                 targetKind: "unit" as const,
                 targetRecordId: targetRecordId.success,
               });
@@ -325,8 +326,7 @@ const decodeSurfaceAuthoredRelation = (input: {
                   ...shared,
                   sourceKind: "statBlock" as const,
                   sourceRecordId: value.id,
-                  relationKind: role.category,
-                  relation: role.relation,
+                  ...projectSurfaceAuthoredRelationRole(role),
                   targetKind: "statBlock" as const,
                   targetRecordId: targetRecordId.success,
                 });
@@ -349,8 +349,7 @@ const decodeSurfaceAuthoredRelation = (input: {
                   ...shared,
                   sourceKind: "statBlock" as const,
                   sourceRecordId: value.id,
-                  relationKind: role.category,
-                  relation: role.relation,
+                  ...projectSurfaceAuthoredRelationRole(role),
                   targetKind: "statBlock" as const,
                   targetRecordId: targetRecordId.success,
                 });
