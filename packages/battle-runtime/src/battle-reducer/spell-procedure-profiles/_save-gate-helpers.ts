@@ -1,4 +1,8 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
+import {
+  battleSpellExecutionSourceFromAdmission,
+  type BattleSpellExecutionSource,
+} from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
@@ -7,10 +11,12 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   DAMAGE_TYPES,
+  PositiveInteger,
   movementFeet,
   type Ability,
   type Condition,
   type DamageType,
+  type ReadonlyNonEmptyArray,
   type MovementFeet,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
@@ -25,6 +31,17 @@ import {
   isFixedDistancePointRange,
   topLevelSpellCastingTime,
 } from "@dnd/surface/surface/types";
+import {
+  spellActivationAttachmentPath,
+  spellActivationEffectPath,
+  spellActivationPhasePath,
+  spellDurationEndingPath,
+  spellDurationExtensionPath,
+  spellDurationValuePath,
+  spellMaterialComponentPath,
+  spellMechanicsHeaderPath,
+  type SpellMechanicsBranchPath,
+} from "@dnd/surface/surface/spell-mechanics-path";
 import { Result, Match } from "effect";
 import {
   FAILED_SAVE_BLINDED_CONDITION as HIT_POINT_BUDGET_FAILED_SAVE_CONDITION,
@@ -58,12 +75,22 @@ import type {
   SaveGatedDamageSpellTargeting,
 } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
+  type SpellMechanicsAdmissionSource,
+  type SpellProcedureAdmissionIssue,
+  type SpellProcedureMechanicsEvidence,
+  type SpellProcedureMechanicsInspection,
+} from "./spell-mechanics-admission.ts";
+import type { SpellDefinitionRuleFacts } from "../../procedure-execution/spell-rule-facts.ts";
+import type { BattleSpellProcedureKey } from "../../character-execution.ts";
+import {
   sameStringSet,
   scalarBuffSpellTargetCountBySlot,
   singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
 } from "../spells-execution-facts.ts";
 import { illuminationEmissionFactsFromSurface } from "./illumination-emission-facts.ts";
+
+type SpellMechanicsSource = Pick<BattleSpellAdmissionSource, "mechanics">;
 
 export type SaveGateConditionSpell = {
   readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
@@ -106,8 +133,8 @@ type AbilityChoiceHoleFilter = {
 type ChosenAbilitySaveDisadvantageEffect = ModifyRollAdvantageEffect & {
   readonly saveAbilityFilter: AbilityChoiceHoleFilter;
 };
-type TimedBattleSpell = BattleSpellAdmissionSource & {
-  readonly mechanics: BattleSpellAdmissionSource["mechanics"] & {
+type TimedBattleSpell = SpellMechanicsSource & {
+  readonly mechanics: SpellMechanicsSource["mechanics"] & {
     readonly duration: Extract<
       BattleSpellAdmissionSource["mechanics"]["duration"],
       { readonly kind: "timed" }
@@ -118,6 +145,206 @@ type SupportedDamageComponent = {
   readonly expr: NonNullable<ReturnType<typeof supportedDamageAmountExpr>>;
   readonly damageType: DamageType;
 };
+type SaveGatedDamageInvocation = Extract<
+  SupportedSpellInvocation,
+  { readonly procedure: "saveGatedDamage" }
+>;
+type SaveGateFailedSaveEffects = NonNullable<
+  ReturnType<typeof supportedSaveGateFailedSaveEffects>
+>;
+type SaveGateDamageEffect = Extract<
+  SaveGateFailureEffect,
+  { readonly kind: "damage" }
+>;
+type SaveGatedDamageEffect = SaveGateDamageEffect & {
+  readonly damageType: DamageType;
+};
+type SaveGatedDamageFailedSaveEffects = Omit<
+  SaveGateFailedSaveEffects,
+  "damage" | "additionalDamageComponents"
+> & {
+  readonly damage: SaveGatedDamageEffect;
+  readonly additionalDamageComponents: readonly SaveGatedDamageEffect[];
+};
+
+/**
+ * Static save-gate facts retained after the authored mechanics graph is
+ * admitted. Damage amounts remain typed Surface facts because their final
+ * dice expression depends on the dynamic slot or character level.
+ */
+export type SaveGatedDamageMechanicsFacts = {
+  readonly ability: SaveGatedDamageInvocation["ability"];
+  readonly dc: SaveGatedDamageInvocation["dc"];
+  readonly targeting: SaveGatedDamageInvocation["targeting"];
+  readonly rangeFeet: SaveGatedDamageInvocation["rangeFeet"];
+  readonly saveRollModeRule: SaveGatedDamageInvocation["saveRollModeRule"];
+  readonly successDamage: SaveGatedDamageInvocation["successDamage"];
+  readonly failedSaveEffects: SaveGatedDamageFailedSaveEffects;
+  readonly postSaveAreaEffect: SpellPostSaveAreaEffect | null;
+};
+
+type SaveGatedDamageMechanicsIssue = Omit<
+  SpellProcedureAdmissionIssue<"saveGatedDamage">,
+  "failedFact"
+> & {
+  readonly failedFact: SaveGateFailedFact;
+};
+const SAVE_GATE_FAILED_FACTS = [
+  {
+    failedFact: "castingTime",
+    message: "Save-gated damage requires an action casting time.",
+  },
+  {
+    failedFact: "phaseAttachment",
+    message: "Save-gated damage has an unsupported target attachment.",
+  },
+  {
+    failedFact: "range",
+    message:
+      "Save-gated damage has an unsupported spell range for its target shape.",
+  },
+  {
+    failedFact: "extraPhase",
+    message:
+      "Save-gated damage has an unsupported additional activation phase.",
+  },
+  {
+    failedFact: "missingPhase",
+    message: "Save-gated damage is missing a required activation phase.",
+  },
+  {
+    failedFact: "successOutcome",
+    message:
+      "Save-gated damage has an unsupported saving-throw success outcome.",
+  },
+  {
+    failedFact: "failedSaveEffect",
+    message: "Save-gated damage has an unsupported failed-save effect.",
+  },
+  {
+    failedFact: "damageType",
+    message: "Save-gated damage has an unsupported damage type.",
+  },
+  {
+    failedFact: "requiredFacts",
+    message: "Save-gated damage could not retain its required narrowed facts.",
+  },
+] as const satisfies readonly [
+  { readonly failedFact: string; readonly message: string },
+  ...{ readonly failedFact: string; readonly message: string }[],
+];
+type SaveGateFailedFact = (typeof SAVE_GATE_FAILED_FACTS)[number]["failedFact"];
+type StaticFactsWithoutCommonKeys<StaticFacts extends object> = {
+  readonly [K in Extract<
+    keyof StaticFacts,
+    keyof SpellDefinitionRuleFacts
+  >]: never;
+};
+type SaveGateStaticFacts<StaticFacts extends object> = StaticFacts &
+  StaticFactsWithoutCommonKeys<StaticFacts>;
+type SaveGatedDamageMechanicsProjection =
+  | { readonly tag: "notRepresented" }
+  | {
+      readonly tag: "unsupported";
+      readonly issues: ReadonlyNonEmptyArray<SaveGatedDamageMechanicsIssue>;
+    }
+  | {
+      readonly tag: "supported";
+      readonly facts: SaveGatedDamageMechanicsFacts;
+      readonly evidence: SpellProcedureMechanicsEvidence;
+    };
+
+/** Build the common static owner result without widening the execution view. */
+export function saveGateMechanicsInspection<
+  P extends BattleSpellProcedureKey,
+  I extends SupportedSpellInvocation,
+  StaticFacts extends object,
+>(input: {
+  readonly source: SpellMechanicsAdmissionSource;
+  readonly procedure: P;
+  readonly projection:
+    | { readonly tag: "notRepresented" }
+    | {
+        readonly tag: "unsupported";
+        readonly issues: ReadonlyNonEmptyArray<SpellProcedureAdmissionIssue<P>>;
+      }
+    | {
+        readonly tag: "supported";
+        readonly facts: SaveGateStaticFacts<StaticFacts>;
+        readonly evidence: SpellProcedureMechanicsEvidence;
+      };
+  readonly admit: (
+    facts: SpellDefinitionRuleFacts & SaveGateStaticFacts<StaticFacts>,
+    source: BattleSpellExecutionSource,
+    ctx: SpellAdmissionContext,
+  ) => readonly I[];
+}): SpellProcedureMechanicsInspection<
+  P,
+  SpellDefinitionRuleFacts & SaveGateStaticFacts<StaticFacts>,
+  I
+> {
+  const { source, procedure, projection, admit } = input;
+  return Match.value(projection).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      notRepresented: () => ({
+        tag: "notRepresented" as const,
+      }),
+      unsupported: ({ issues }) => ({
+        tag: "unsupported" as const,
+        issues,
+      }),
+      supported: ({ facts, evidence }) => {
+        const admittedFacts = {
+          ...source.spellDefinitionRuleFacts,
+          ...facts,
+        };
+        return {
+          tag: "supported" as const,
+          admitted: saveGateReadyMechanics({
+            procedure,
+            facts: admittedFacts,
+            evidence,
+            admit,
+          }),
+        };
+      },
+    }),
+  );
+}
+
+/** Bind only copied static facts into the contextual closure. */
+function saveGateReadyMechanics<
+  P extends BattleSpellProcedureKey,
+  Facts extends SpellDefinitionRuleFacts,
+  I extends SupportedSpellInvocation,
+>(input: {
+  readonly procedure: P;
+  readonly facts: Facts;
+  readonly evidence: SpellProcedureMechanicsEvidence;
+  readonly admit: (
+    facts: Facts,
+    source: BattleSpellExecutionSource,
+    ctx: SpellAdmissionContext,
+  ) => readonly I[];
+}): {
+  readonly binding: "ready";
+  readonly procedure: P;
+  readonly facts: Facts;
+  readonly evidence: SpellProcedureMechanicsEvidence;
+  readonly admit: (
+    source: BattleSpellExecutionSource,
+    ctx: SpellAdmissionContext,
+  ) => readonly I[];
+} {
+  const { procedure, facts, evidence, admit } = input;
+  return {
+    binding: "ready",
+    procedure,
+    facts,
+    evidence,
+    admit: (source, ctx) => admit(facts, source, ctx),
+  };
+}
 type WeaponDamageReductionRepeatSavePhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
@@ -178,7 +405,7 @@ const WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_RANGE_FEET = 60;
 const WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_AMOUNT = 1;
 const WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_UNIT = "minute";
 
-function spellHasActionCastingTime(spell: BattleSpellAdmissionSource): boolean {
+function spellHasActionCastingTime(spell: SpellMechanicsSource): boolean {
   return topLevelSpellCastingTime(spell.mechanics)?.kind === "action";
 }
 
@@ -208,7 +435,7 @@ function selfOriginConeSaveGatePhase(
 }
 
 function hasPointRangeFeet(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   rangeFeet: number,
 ): boolean {
   const range = spell.mechanics.range;
@@ -216,7 +443,7 @@ function hasPointRangeFeet(
 }
 
 function hasOneMinuteConcentrationDuration(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
 ): boolean {
   const duration = spell.mechanics.duration;
   return (
@@ -226,7 +453,7 @@ function hasOneMinuteConcentrationDuration(
   );
 }
 
-function hasOneRoundTimedDuration(spell: BattleSpellAdmissionSource): boolean {
+function hasOneRoundTimedDuration(spell: SpellMechanicsSource): boolean {
   const duration = spell.mechanics.duration;
   return (
     duration.kind === "timed" &&
@@ -1282,64 +1509,384 @@ export function supportedSaveGateDamageProfile(
     readonly characterLevel?: number;
   } & DamageSpellSource,
 ): readonly SupportedSpellInvocation[] {
-  const spell = input.spell;
-  if (spell.mechanics.family !== "activation") {
+  const projection = saveGatedDamageMechanicsFacts(input.spell);
+  if (projection.tag !== "supported") {
     return [];
   }
+  if (
+    isCantripSpellAccess(input.access)
+      ? input.spell.spellDefinitionRuleFacts.level !== 0
+      : input.spell.spellDefinitionRuleFacts.level < 1
+  ) {
+    return [];
+  }
+  return saveGatedDamageInvocationsFromFacts({
+    ...input,
+    spell: battleSpellExecutionSourceFromAdmission(input.spell),
+    facts: {
+      ...input.spell.spellDefinitionRuleFacts,
+      ...projection.facts,
+    },
+  });
+}
+
+/** Parse the save-gate mechanics once, without access, slot, or caster state. */
+export function saveGatedDamageMechanicsFacts(
+  spell: SpellMechanicsSource,
+): SaveGatedDamageMechanicsProjection {
+  if (spell.mechanics.family !== "activation") {
+    return { tag: "notRepresented" };
+  }
   const phase = spell.mechanics.phases[0];
-  const postSaveAreaEffect =
-    phase?.kind === "save_gate"
-      ? saveGatedDamagePostSaveAreaEffect(
-          spell,
-          phase,
-          spell.mechanics.phases[1],
-        )
-      : null;
-  const saveRollModeRule =
-    phase?.kind === "save_gate"
-      ? saveGatedDamageSaveRollModeRule(spell, phase)
-      : null;
-  const targeting =
-    phase?.kind === "save_gate"
-      ? saveGatedDamageTargeting(spell, phase.attachment)
-      : null;
+  if (phase?.kind !== "save_gate") {
+    return { tag: "notRepresented" };
+  }
+  if (!isSaveGatedDamageRootShape(phase)) {
+    return { tag: "notRepresented" };
+  }
+  const postSaveAreaEffect = saveGatedDamagePostSaveAreaEffect(
+    spell,
+    phase,
+    spell.mechanics.phases[1],
+  );
+  const targeting = saveGatedDamageTargeting(spell, phase.attachment);
   const rangeFeet =
     targeting?.kind === "singleCombatant"
       ? singleTargetSpellRangeFeet(spell.mechanics.range)
       : targeting === null
         ? null
         : areaSaveGateSpellRangeFeet(spell.mechanics.range, targeting);
-  const failedSaveEffects =
-    phase?.kind === "save_gate"
-      ? supportedSaveGateFailedSaveEffects(
-          spell,
-          phase,
-          phase.onFail,
-          postSaveAreaEffect,
-        )
-      : null;
-  if (
-    (isCantripSpellAccess(input.access)
-      ? spell.mechanics.level !== 0
-      : spell.mechanics.level < 1) ||
-    !spellHasActionCastingTime(spell) ||
-    rangeFeet === null ||
-    spell.mechanics.phases.length !==
-      saveGatedDamagePhaseCount(postSaveAreaEffect) ||
-    phase?.kind !== "save_gate" ||
-    targeting === null ||
-    !saveGateDamageSuccessIsSupported(phase) ||
+  const failedSaveEffects = supportedSaveGateFailedSaveEffects(
+    spell,
+    phase,
+    phase.onFail,
+    postSaveAreaEffect,
+  );
+  const issues: SaveGatedDamageMechanicsIssue[] = [];
+  if (!spellHasActionCastingTime(spell)) {
+    issues.push(
+      saveGateMechanicsIssue(
+        "castingTime",
+        spellMechanicsHeaderPath("castingTime"),
+      ),
+    );
+  }
+  if (targeting === null) {
+    issues.push(
+      saveGateMechanicsIssue(
+        "phaseAttachment",
+        spellActivationAttachmentPath(PositiveInteger(1)),
+      ),
+    );
+  }
+  if (targeting !== null && rangeFeet === null) {
+    issues.push(
+      saveGateMechanicsIssue("range", spellMechanicsHeaderPath("range")),
+    );
+  }
+  const expectedPhaseCount = saveGatedDamagePhaseCount(postSaveAreaEffect);
+  if (spell.mechanics.phases.length !== expectedPhaseCount) {
+    const firstMissingOrExtraPhase =
+      Math.min(spell.mechanics.phases.length, expectedPhaseCount) + 1;
+    if (spell.mechanics.phases.length > expectedPhaseCount) {
+      for (
+        let phaseOrdinal = expectedPhaseCount + 1;
+        phaseOrdinal <= spell.mechanics.phases.length;
+        phaseOrdinal += 1
+      ) {
+        issues.push(
+          saveGateMechanicsIssue(
+            "extraPhase",
+            spellActivationPhasePath(PositiveInteger(phaseOrdinal)),
+          ),
+        );
+      }
+    } else {
+      issues.push(
+        saveGateMechanicsIssue(
+          "missingPhase",
+          spellActivationPhasePath(PositiveInteger(firstMissingOrExtraPhase)),
+        ),
+      );
+    }
+  }
+  if (!saveGateDamageSuccessIsSupported(phase)) {
+    issues.push(
+      saveGateMechanicsIssue(
+        "successOutcome",
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ),
+    );
+  }
+  const narrowedFailedSaveEffects =
     failedSaveEffects === null
+      ? null
+      : saveGatedDamageFailedSaveEffects(failedSaveEffects);
+  if (failedSaveEffects === null) {
+    issues.push(
+      saveGateMechanicsIssue(
+        "failedSaveEffect",
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ),
+    );
+  } else if (narrowedFailedSaveEffects === null) {
+    issues.push(
+      saveGateMechanicsIssue(
+        "damageType",
+        spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+      ),
+    );
+  }
+  const nonEmptyIssues = saveGateNonEmpty(issues);
+  if (nonEmptyIssues !== undefined) {
+    return { tag: "unsupported", issues: nonEmptyIssues };
+  }
+  const readyFacts = saveGateReadyFacts({
+    targeting,
+    rangeFeet,
+    failedSaveEffects: narrowedFailedSaveEffects,
+  });
+  if (readyFacts === null) {
+    return {
+      tag: "unsupported",
+      issues: [
+        saveGateMechanicsIssue(
+          "requiredFacts",
+          spellActivationPhasePath(PositiveInteger(1)),
+        ),
+      ],
+    };
+  }
+  return {
+    tag: "supported",
+    facts: {
+      ability: phase.ability,
+      dc: phase.dc,
+      targeting: readyFacts.targeting,
+      rangeFeet: readyFacts.rangeFeet,
+      saveRollModeRule: saveGatedDamageSaveRollModeRule(spell, phase),
+      successDamage: phase.onSuccess.kind === "half_damage" ? "half" : "none",
+      failedSaveEffects: readyFacts.failedSaveEffects,
+      postSaveAreaEffect,
+    },
+    evidence: saveGatedDamageMechanicsEvidence(spell, postSaveAreaEffect),
+  };
+}
+
+type SaveGateReadyFacts = {
+  readonly targeting: SaveGatedDamageSpellTargeting;
+  readonly rangeFeet: MovementFeet;
+  readonly failedSaveEffects: SaveGatedDamageFailedSaveEffects;
+};
+
+function saveGateReadyFacts(input: {
+  readonly targeting: SaveGatedDamageSpellTargeting | null;
+  readonly rangeFeet: MovementFeet | null;
+  readonly failedSaveEffects: SaveGatedDamageFailedSaveEffects | null;
+}): SaveGateReadyFacts | null {
+  if (
+    input.targeting === null ||
+    input.rangeFeet === null ||
+    input.failedSaveEffects === null
   ) {
+    return null;
+  }
+  const { targeting, rangeFeet, failedSaveEffects } = input;
+  return { targeting, rangeFeet, failedSaveEffects };
+}
+
+function isSaveGatedDamageRootShape(phase: SaveGatePhase): boolean {
+  if (phase.repeatSaves !== undefined) {
+    return false;
+  }
+  return phase.onFail.kind === "damage"
+    ? true
+    : phase.onFail.kind === "composite" &&
+        phase.onFail.effects[0]?.kind === "damage";
+}
+
+function saveGateMechanicsIssue(
+  failedFact: SaveGateFailedFact,
+  mechanicsPath: SpellMechanicsBranchPath,
+): SaveGatedDamageMechanicsIssue {
+  const definition = SAVE_GATE_FAILED_FACTS.find(
+    (candidate) => candidate.failedFact === failedFact,
+  );
+  if (definition === undefined) {
+    throw new Error(
+      "SaveGateFailedFact derives from SAVE_GATE_FAILED_FACTS and must have a definition.",
+    );
+  }
+  return {
+    tag: "spellProcedureAdmissionIssue",
+    procedure: "saveGatedDamage",
+    failedFact,
+    mechanicsPath,
+    message: definition.message,
+  };
+}
+
+function saveGateNonEmpty<T>(
+  values: readonly T[],
+): ReadonlyNonEmptyArray<T> | undefined {
+  const [first, ...rest] = values;
+  return first === undefined ? undefined : [first, ...rest];
+}
+
+function saveGatedDamageFailedSaveEffects(
+  effects: SaveGateFailedSaveEffects,
+): SaveGatedDamageFailedSaveEffects | null {
+  const damage = isDamageType(effects.damage.damageType)
+    ? { ...effects.damage, damageType: effects.damage.damageType }
+    : null;
+  if (damage === null) {
+    return null;
+  }
+  const additionalDamageComponents = effects.additionalDamageComponents.map(
+    (damage) =>
+      isDamageType(damage.damageType)
+        ? { ...damage, damageType: damage.damageType }
+        : null,
+  );
+  const typedAdditionalDamageComponents = additionalDamageComponents.filter(
+    isSaveGatedDamageEffectWithType,
+  );
+  if (
+    typedAdditionalDamageComponents.length !== additionalDamageComponents.length
+  ) {
+    return null;
+  }
+  return {
+    ...effects,
+    damage,
+    additionalDamageComponents: typedAdditionalDamageComponents,
+  };
+}
+
+function isSaveGatedDamageEffectWithType(
+  effect: SaveGatedDamageEffect | null,
+): effect is SaveGatedDamageEffect {
+  return effect !== null;
+}
+
+function saveGatedDamageMechanicsEvidence(
+  spell: SpellMechanicsSource,
+  postSaveAreaEffect: SpellPostSaveAreaEffect | null,
+): SpellProcedureMechanicsEvidence {
+  const consumed: [SpellMechanicsBranchPath, ...SpellMechanicsBranchPath[]] = [
+    spellMechanicsHeaderPath("level"),
+    spellMechanicsHeaderPath("school"),
+    spellMechanicsHeaderPath("range"),
+    spellMechanicsHeaderPath("components"),
+    spellMechanicsHeaderPath("duration"),
+    spellMechanicsHeaderPath("castingTime"),
+    spellMechanicsHeaderPath("family"),
+    ...saveGateDurationPaths(spell.mechanics.duration),
+    spellActivationPhasePath(PositiveInteger(1)),
+    spellActivationAttachmentPath(PositiveInteger(1)),
+    spellActivationEffectPath(PositiveInteger(1), PositiveInteger(1)),
+  ];
+  const secondPhase =
+    spell.mechanics.family === "activation"
+      ? spell.mechanics.phases[1]
+      : undefined;
+  if (postSaveAreaEffect !== null && secondPhase?.kind === "direct") {
+    consumed.push(
+      spellActivationPhasePath(PositiveInteger(2)),
+      spellActivationAttachmentPath(PositiveInteger(2)),
+      ...(secondPhase.effects ?? []).map((_, index) =>
+        spellActivationEffectPath(
+          PositiveInteger(2),
+          PositiveInteger(index + 1),
+        ),
+      ),
+    );
+  }
+  consumed.push(...saveGateMaterialPaths(spell.mechanics.components));
+  return { consumed, unowned: [] };
+}
+
+function saveGateDurationPaths(
+  duration: BattleSpellAdmissionSource["mechanics"]["duration"],
+): readonly SpellMechanicsBranchPath[] {
+  return Match.value(duration).pipe(
+    Match.when({ kind: "instantaneous" }, () => []),
+    Match.when({ kind: "timed" }, (timed) => [
+      spellDurationValuePath(),
+      ...(timed.value.upcastTiers ?? []).map((_, index) =>
+        spellDurationExtensionPath(PositiveInteger(index + 1)),
+      ),
+      ...(timed.earlyEnd ?? []).map((_, index) =>
+        spellDurationEndingPath(PositiveInteger(index + 1)),
+      ),
+      ...(timed.permanentAfter === undefined
+        ? []
+        : [
+            spellDurationEndingPath(
+              PositiveInteger((timed.earlyEnd?.length ?? 0) + 1),
+            ),
+          ]),
+    ]),
+    Match.when({ kind: "concentration" }, (concentration) => [
+      spellDurationValuePath(),
+      ...(concentration.earlyEnd ?? []).map((_, index) =>
+        spellDurationEndingPath(PositiveInteger(index + 1)),
+      ),
+      ...(concentration.permanentIfMaintainedFull === true
+        ? [
+            spellDurationEndingPath(
+              PositiveInteger((concentration.earlyEnd?.length ?? 0) + 1),
+            ),
+          ]
+        : []),
+    ]),
+    Match.when({ kind: "permanent" }, (permanent) =>
+      (permanent.endsOn ?? []).map((_, index) =>
+        spellDurationEndingPath(PositiveInteger(index + 1)),
+      ),
+    ),
+    Match.when({ kind: "slot_tiered" }, (slotTiered) => [
+      ...saveGateDurationPaths(slotTiered.base),
+      ...slotTiered.tiers.map((_, index) =>
+        spellDurationExtensionPath(PositiveInteger(index + 1)),
+      ),
+    ]),
+    Match.exhaustive,
+  );
+}
+
+function saveGateMaterialPaths(
+  components: BattleSpellAdmissionSource["mechanics"]["components"],
+): readonly SpellMechanicsBranchPath[] {
+  if (components.m === false) {
     return [];
   }
-  const primaryDamage = failedSaveEffects.damage;
-  if (!isDamageType(primaryDamage.damageType)) {
-    return [];
+  const paths: SpellMechanicsBranchPath[] = [];
+  const hasCost =
+    typeof components.m === "object" ||
+    ("materialCostGp" in components && components.materialCostGp !== undefined);
+  const hasConsumption =
+    "materialConsumed" in components && components.materialConsumed === true;
+  if (hasCost) {
+    paths.push(spellMaterialComponentPath("cost"));
   }
+  if (hasConsumption) {
+    paths.push(spellMaterialComponentPath("consumption"));
+  }
+  return paths;
+}
+
+export function saveGatedDamageInvocationsFromFacts(
+  input: {
+    readonly spell: SaveGatedDamageInvocation["spell"];
+    readonly facts: SpellDefinitionRuleFacts & SaveGatedDamageMechanicsFacts;
+    readonly slotLevel?: SpellSlotLevel;
+    readonly characterLevel?: number;
+  } & DamageSpellSource,
+): readonly SaveGatedDamageInvocation[] {
   const primaryDamageExpr = supportedDamageAmountExpr({
-    amount: primaryDamage.amount,
-    spellLevel: spell.mechanics.level,
+    amount: input.facts.failedSaveEffects.damage.amount,
+    spellLevel: input.facts.level,
     slotLevel: input.slotLevel,
     characterLevel: input.characterLevel,
   });
@@ -1349,48 +1896,49 @@ export function supportedSaveGateDamageProfile(
   const damageComponents: [
     SupportedDamageComponent,
     ...SupportedDamageComponent[],
-  ] = [{ expr: primaryDamageExpr, damageType: primaryDamage.damageType }];
-  for (const damage of failedSaveEffects.additionalDamageComponents) {
-    if (!isDamageType(damage.damageType)) {
-      return [];
-    }
+  ] = [
+    {
+      expr: primaryDamageExpr,
+      damageType: input.facts.failedSaveEffects.damage.damageType,
+    },
+  ];
+  for (const damage of input.facts.failedSaveEffects
+    .additionalDamageComponents) {
     const expr = supportedDamageAmountExpr({
       amount: damage.amount,
-      spellLevel: spell.mechanics.level,
+      spellLevel: input.facts.level,
       slotLevel: input.slotLevel,
       characterLevel: input.characterLevel,
     });
-    if (expr === null) {
+    if (expr === null || !isDamageType(damage.damageType)) {
       return [];
     }
     damageComponents.push({ expr, damageType: damage.damageType });
   }
   const [resolvedPrimaryDamage, ...additionalDamageComponents] =
     damageComponents;
-
   const saveGatedInvocation = {
     procedure: "saveGatedDamage" as const,
-    spell,
+    spell: input.spell,
     castingTime: { kind: "action" as const },
-    ability: phase.ability,
-    dc: phase.dc,
-    targeting,
+    ability: input.facts.ability,
+    dc: input.facts.dc,
+    targeting: input.facts.targeting,
     damage: {
       expr: resolvedPrimaryDamage.expr,
       damageType: resolvedPrimaryDamage.damageType,
     },
     additionalDamageComponents,
-    successDamage: (phase.onSuccess.kind === "half_damage"
-      ? "half"
-      : "none") as "half" | "none",
-    rangeFeet,
-    failedSavePostDamageRiders: failedSaveEffects.postDamageRiders,
-    failedSaveConditionEffects: failedSaveEffects.conditionEffects,
-    failedSaveAbilityChoices: failedSaveEffects.abilityChoices,
-    saveRollModeRule,
-    ...(postSaveAreaEffect === null ? {} : { postSaveAreaEffect }),
+    successDamage: input.facts.successDamage,
+    rangeFeet: input.facts.rangeFeet,
+    failedSavePostDamageRiders: input.facts.failedSaveEffects.postDamageRiders,
+    failedSaveConditionEffects: input.facts.failedSaveEffects.conditionEffects,
+    failedSaveAbilityChoices: input.facts.failedSaveEffects.abilityChoices,
+    saveRollModeRule: input.facts.saveRollModeRule,
+    ...(input.facts.postSaveAreaEffect === null
+      ? {}
+      : { postSaveAreaEffect: input.facts.postSaveAreaEffect }),
   };
-
   return [{ ...damageSpellSource(input), ...saveGatedInvocation }];
 }
 
@@ -1495,7 +2043,7 @@ export function saveGateTargeting(
 }
 
 function saveGatedDamageTargeting(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   attachment: Attachment,
 ): SaveGatedDamageSpellTargeting | null {
   return (
@@ -1507,7 +2055,7 @@ function saveGatedDamageTargeting(
 }
 
 function level5SelfOriginConeTargeting(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   attachment: Attachment,
 ): Extract<SpellTargeting, { readonly kind: "selfOriginCone" }> | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
@@ -1529,7 +2077,7 @@ function level5SelfOriginConeTargeting(
 }
 
 function largeFireSphereTargeting(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   attachment: Attachment,
 ): Extract<SpellTargeting, { readonly kind: "pointOriginSphere" }> | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
@@ -1550,7 +2098,7 @@ function largeFireSphereTargeting(
 }
 
 function smallThunderSphereTargeting(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   attachment: Attachment,
 ): Extract<SpellTargeting, { readonly kind: "pointOriginSphere" }> | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
@@ -1621,7 +2169,7 @@ function fixedPointRangeFeet(
 }
 
 export function supportedSaveGateFailedSaveEffects(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effect: SaveGateFailureEffect,
   postSaveAreaEffect: SpellPostSaveAreaEffect | null = null,
@@ -1729,7 +2277,7 @@ type FailedSaveConditionSupport = {
 };
 
 function supportedFailedSaveConditionEffects(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effects: readonly SaveGateFailureEffect[],
 ): FailedSaveConditionSupport | null {
@@ -1742,7 +2290,7 @@ function supportedFailedSaveConditionEffects(
 }
 
 function chosenAbilitySaveDisadvantageConditionSupport(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effects: readonly SaveGateFailureEffect[],
 ): FailedSaveConditionSupport | null {
@@ -1806,7 +2354,7 @@ function chosenAbilitySaveDisadvantageConditionSupport(
 }
 
 function isChosenAbilitySaveDisadvantageSpellShape(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): spell is TimedBattleSpell {
   return (
@@ -1850,7 +2398,7 @@ function chosenAbilitySaveDisadvantageChoices(
 }
 
 export function supportedFailedSavePostDamageRiders(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effects: readonly SaveGateFailureEffect[],
   postSaveAreaEffect: SpellPostSaveAreaEffect | null = null,
@@ -1897,7 +2445,7 @@ export function supportedFailedSavePostDamageRiders(
 }
 
 function isFailedSaveForcedReactionMovementShape(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   effect: SaveGateFailureEffect,
 ): boolean {
@@ -1940,7 +2488,7 @@ function isFailedSaveForcedReactionMovementDamageShape(
 }
 
 function saveGatedDamagePostSaveAreaEffect(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
@@ -1966,7 +2514,7 @@ function saveGatedDamagePhaseCount(
 }
 
 function saveGatedDamageSaveRollModeRule(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): SpellSavingThrowRollModeRule | null {
   return isSmallThunderSphereSaveGateDamageShape(spell, phase)
@@ -1975,7 +2523,7 @@ function saveGatedDamageSaveRollModeRule(
 }
 
 function objectIgnitingSphericalBurstPostSaveAreaEffect(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
@@ -2023,7 +2571,7 @@ function objectIgnitingSphericalBurstPostSaveAreaEffect(
 }
 
 function objectAffectingThunderBurstPostSaveAreaEffect(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
@@ -2034,7 +2582,7 @@ function objectAffectingThunderBurstPostSaveAreaEffect(
 }
 
 function isSmallThunderSphereSaveGateDamageShape(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): boolean {
   const damage = phase.onFail;
@@ -2071,7 +2619,7 @@ function isSmallThunderSphereSaveGateDamageShape(
 }
 
 function forcedMovementCubeBurstPostSaveAreaEffect(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
   directPhase: SpellActivationPhase | undefined,
 ): SpellPostSaveAreaEffect | null {
@@ -2161,7 +2709,7 @@ function isSelfOriginCubeFailedSaveDamageShape(
 }
 
 export function isPsychicDamageNextAttackDisadvantageRiderShape(
-  spell: BattleSpellAdmissionSource,
+  spell: SpellMechanicsSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): boolean {
   return (
