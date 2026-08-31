@@ -19,7 +19,7 @@ module battleRuntimeBlurAttackRollDefense {
   import battleRuntimePerceptionGatedAttackRollDefense.* from "./battle-runtime-perception-gated-attack-roll-defense"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeSpellAttackFacts.* from "./battle-runtime-spell-attack-facts"
+  import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
 
   pure val blurAttackRollDefenseEffect: ActiveEffect = Blurred
 
