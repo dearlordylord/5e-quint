@@ -76,6 +76,56 @@ receipt for the reconciled source line. Focused Battle MBT and runtime suites
 remain semantic projection evidence; they are not substituted for the QNT
 sweep or the terminal workspace gates.
 
+## Master-reconciliation declaration certificate
+
+At the current reconciliation through `ad053d7de`, the fixed Surface and Battle
+Runtime consumer graph contains exactly 530 declaration files and 4,667,450
+bytes. The 10 MiB byte cap is unchanged and leaves 5,818,310 bytes of margin;
+the file cap is the exact reviewed count, not a permissive growth allowance.
+The SHA-256 of the sorted relative-path ledger is
+`fd48241ce438eb0f780a8fc8bfaf0035af6f4d0c686f2590dbe965420794083e`.
+The SHA-256 of the sorted ledger that binds every relative path to its file
+SHA-256 is
+`b196b26a3dd9aa80064b55d867f41344f133738325c10895cc7290f406420809`.
+
+The pinned comparison baseline is commit `38e79b814`. Its independently
+reproduced distribution contains 523 files and 3,962,445 bytes. Its sorted
+POSIX relative-path ledger, one path per line including the final newline, has
+SHA-256
+`05479f0c8ae9b75bb263ca7dc10cb61ed68fef4da3ba57cd54f4603d41a55cb8`.
+Relative to that baseline, the current graph adds these ten declarations:
+
+- `packages/battle-runtime/src/battle-reducer/codec-building-blocks.d.ts`
+- `packages/battle-runtime/src/druid-wild-shape-known-form-runtime.d.ts`
+- `packages/battle-runtime/src/procedure-admission/stat-block-procedure-execution-decision.d.ts`
+- `packages/battle-runtime/src/procedure-execution/stat-block-procedure-sections.d.ts`
+- `packages/battle-runtime/src/stat-block-attack-damage-selection.d.ts`
+- `packages/battle-runtime/src/stat-block-authored-projection.d.ts`
+- `packages/battle-runtime/src/stat-block-presentation-contract.d.ts`
+- `packages/surface/src/surface/generated/srd-unit-aggregate.d.ts`
+- `packages/surface/src/surface/stat-block-catalog-contract.d.ts`
+- `packages/surface/src/surface/stat-block-speed-readers.d.ts`
+
+It removes the three Surface runtime/data declarations
+`stat-block-catalog.d.ts`, `stat-block-catalog-core.d.ts`, and
+`stat-block-catalog-data.d.ts`. The lightweight Stat Block catalog type is
+owned by
+[`stat-block-catalog-contract.ts`](../../../packages/surface/src/surface/stat-block-catalog-contract.ts),
+so type-only consumers do not pull the runtime catalog into the public graph.
+The generated 1,599,076-byte `srd-stat-block-aggregate.d.ts` and its
+`stat-block-identity.d.ts` dependency are consequently absent.
+
+The SDK setup runtime instead consumes the eager canonical Unit collection,
+whose data owner imports the generated 572,677-byte
+`srd-unit-aggregate.d.ts`. That declaration accounts for the complete growth
+from the reviewed 529-file graph immediately preceding the final reconciliation.
+The focused relocated-supervisor test proves initialization, transcript,
+replay, and declaration emission for this graph. The canonical measure and
+limits remain executable beside the emitter in
+[`consumer-distribution.ts`](../../../scripts/raw-swarm/sdk-player/consumer-distribution.ts);
+this certificate does not claim that the pending #386 terminal public gates
+have run.
+
 ## Shipped boundaries and review convergence
 
 The reviewed clean-consumer evidence exercises the packaged MCP, application,
@@ -118,6 +168,6 @@ is intentionally unchanged by this report.
 | Exact installed and shipped Effect cohort              | Complete and verifier-owned                                                           |
 | Immutable oracle and finite reviewed deltas            | Complete and certificate-owned                                                        |
 | Packaged/containerized lifecycle boundaries            | Complete in reviewed focused evidence; terminal quality receipt pending               |
-| RAW/domain/QNT/runtime/architecture review convergence | Complete, including the 133/133 selected-owner sweep                                  |
+| RAW/domain/QNT/runtime/architecture review convergence | Complete, including the selected-owner sweep receipt above                            |
 | Public `typecheck`, `test`, and `quality:milestone`    | Pending at the final committed tip                                                    |
 | Live #386 and SR-00 receipt closure                    | Pending the three terminal receipts                                                   |
