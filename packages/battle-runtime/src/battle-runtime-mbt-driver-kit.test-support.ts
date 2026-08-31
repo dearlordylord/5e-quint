@@ -25,8 +25,6 @@ import {
   ITFVariant,
 } from "@firfi/quint-connect/effect";
 import { Match, Result, Schema, SchemaGetter } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { expect } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { type Ability, type SurfaceSkill } from "@dnd/shared/game-facts";
@@ -106,7 +104,7 @@ import type {
   BattleInterruptSubject,
   CharacterProcedureBattleSubject,
 } from "./battle-subjects.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   BATTLE_INVALID_REASON_CODES,
@@ -132,6 +130,7 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
@@ -1582,19 +1581,9 @@ function startBattleSessionRight(
 ): BattleRuntimeSession {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
-}
-
-function requireBattleStatBlockCombatantSource(
-  statBlock: Parameters<typeof battleStatBlockCombatantSource>[0],
-) {
-  const source = battleStatBlockCombatantSource(statBlock);
-  if (Result.isFailure(source)) {
-    throw new Error(battleStateInitIssueMessage(source.failure));
-  }
-  return source.success;
 }
 
 export function reducerRouteStartBattle(
@@ -17007,7 +16996,7 @@ function interruptShieldCharacterCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {
@@ -17626,7 +17615,7 @@ function deathSavingThrowCharacterInit(input: {
   readonly initiative: number;
   readonly currentHp: number;
   readonly zeroHpLifecycle?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["zeroHpLifecycle"];
 }): BattleCreatureInit {
@@ -17716,7 +17705,7 @@ function preserveLifeUnitRef(
     null | "unsupported"
   >,
 ): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unitRef = battleUnitRefWithSupportProfiles({
@@ -17740,7 +17729,7 @@ function preserveLifeUnitRef(
 function extraAttackUnitRef(
   unit: UnitRecord,
 ): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unitRef = battleUnitRefWithSupportProfiles({
@@ -17756,7 +17745,7 @@ function extraAttackUnitRef(
 function adrenalineRushUnitRef(
   unit: UnitRecord,
 ): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unitRef = battleUnitRefWithSupportProfiles({
@@ -17787,7 +17776,7 @@ function activeFeatureSpellBenefitUnit(): Extract<
 function unitRefWithSupportProfilesForMbt(
   unit: UnitRecord,
 ): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unitRef = battleUnitRefWithSupportProfiles({
@@ -17803,7 +17792,7 @@ function unitRefWithSupportProfilesForMbt(
 function rogueSteadyAimUnitRef(
   unit: UnitRecord,
 ): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unitRef = battleUnitRefWithSupportProfiles({
@@ -17844,7 +17833,7 @@ function resourceUsesRemaining(
 
 function daggerAttack(): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"]
 > {
@@ -17866,7 +17855,7 @@ function daggerAttack(): NonNullable<
 }
 
 function baseUnarmedStrike(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["unarmedStrike"] {
   return {
@@ -17885,21 +17874,15 @@ function baseUnarmedStrike(): Extract<
 function skeletonCreatureInit(input: {
   readonly initiative: number;
 }): BattleCreatureInit {
-  const projected = Result.getOrThrow(
-    projectAuthoredStatBlock(skeletonMultiattackStatBlock()),
-  );
+  const statBlock = skeletonMultiattackStatBlock();
   return {
     combatantId: skeletonId,
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: requireBattleStatBlockCombatantSource(projected.runtime),
-      currentHp: Hp(13),
-      tempHp: Hp(0),
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: [],
-      presentation: projected.presentation,
-    },
+    statBlock,
+    currentHp: Hp(13),
+    tempHp: Hp(0),
+    ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    conditions: [],
   };
 }
 

@@ -25,7 +25,7 @@ import {
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   type AvailableBattleAct,
-  type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -39,7 +39,7 @@ import {
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
 } from "./unit-feature-support.ts";
 import type { PassiveFeatUnit } from "./unit-profile-admission-catalog.test-support.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   archerySupportProfile,
   archeryUnitId,
@@ -78,12 +78,12 @@ import {
 export function archeryBattle(input: {
   readonly attack: NonNullable<
     Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["attack"]
   >;
   readonly characterUnitRefs?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
 }): BattleRuntimeSession {
@@ -107,33 +107,33 @@ export function archeryBattle(input: {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
 
 export function savageAttackerBattle(input: {
   readonly attack: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"];
   readonly characterUnitRefs?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
   readonly classLevels?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
   readonly currentHp?: number;
   readonly maxHp?: number;
   readonly tempHp?: number;
   readonly resources?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
   readonly unitFeatures?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"];
 }): BattleRuntimeSession {
@@ -163,18 +163,18 @@ export function savageAttackerBattle(input: {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
 
 export function greatWeaponFightingBattle(input: {
   readonly attack: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"];
   readonly selectedLoadout: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["selectedLoadout"];
 }): BattleRuntimeSession {
@@ -198,14 +198,14 @@ export function greatWeaponFightingBattle(input: {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
 
 export function combatProwessBattle(input: {
   readonly attack: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"];
   readonly cantrips?: readonly SpellRecord[];
@@ -270,14 +270,14 @@ export function combatProwessBattle(input: {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
 
 export function extraAttackBattle(
   characterUnitRefs: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"],
 ): BattleState {
@@ -301,7 +301,7 @@ export function extraAttackBattle(
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -309,7 +309,7 @@ export function extraAttackBattle(
 export function fastMovementBattle(
   input: {
     readonly armorClass?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["armorClass"];
   } = {},
@@ -336,7 +336,7 @@ export function fastMovementBattle(
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -344,7 +344,7 @@ export function fastMovementBattle(
 export function rovingBattle(
   input: {
     readonly armorClass?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["armorClass"];
   } = {},
@@ -371,7 +371,7 @@ export function rovingBattle(
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -379,11 +379,11 @@ export function rovingBattle(
 export function monkUnarmoredMovementBattle(
   input: {
     readonly armorClass?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["armorClass"];
     readonly selectedLoadout?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCombatantInit["creatureInit"],
       { readonly kind: "character" }
     >["selectedLoadout"];
   } = {},
@@ -413,7 +413,7 @@ export function monkUnarmoredMovementBattle(
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success.state;
 }
@@ -455,7 +455,7 @@ export function relentlessEnduranceBattle(input: {
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -500,7 +500,7 @@ export function adrenalineRushBattle(
   });
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isFailure(result)) {
-    throw new Error(battleStateInitIssueMessage(result.failure));
+    throw new Error(battleInitializationIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -650,7 +650,7 @@ export function extraAttackBattleUnitRef(
     | typeof paladinExtraAttackUnitId
     | typeof rangerExtraAttackUnitId = fighterExtraAttackUnitId,
 ): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unit = unitLibrary.requireUnit(unitId);
@@ -671,7 +671,7 @@ export function extraAttackBattleUnitRef(
 }
 
 export function attackDamageRiderBattleUnitRef(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unit = unitLibrary.requireUnit(rogueSneakAttackUnitId);
@@ -692,7 +692,7 @@ export function attackDamageRiderBattleUnitRef(): Extract<
 }
 
 export function savageAttackerBattleUnitRef(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unit = unitLibrary.requireUnit(savageAttackerUnitId);
@@ -713,7 +713,7 @@ export function savageAttackerBattleUnitRef(): Extract<
 }
 
 export function greatWeaponFightingBattleUnitRef(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unit = unitLibrary.requireUnit(greatWeaponFightingUnitId);
@@ -734,7 +734,7 @@ export function greatWeaponFightingBattleUnitRef(): Extract<
 }
 
 export function archeryBattleUnitRef(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unit = archeryFeatureUnit();
@@ -755,7 +755,7 @@ export function archeryBattleUnitRef(): Extract<
 }
 
 export function combatProwessBattleUnitRef(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unit = unitLibrary.requireUnit(boonOfCombatProwessUnitId);
@@ -776,7 +776,7 @@ export function combatProwessBattleUnitRef(): Extract<
 }
 
 export function fastMovementBattleUnitRef(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unit = unitLibrary.requireUnit(barbarianFastMovementUnitId);
@@ -797,7 +797,7 @@ export function fastMovementBattleUnitRef(): Extract<
 }
 
 export function rovingBattleUnitRef(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unit = unitLibrary.requireUnit(rangerRovingUnitId);
@@ -818,7 +818,7 @@ export function rovingBattleUnitRef(): Extract<
 }
 
 export function monkUnarmoredMovementBattleUnitRef(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unit = unitLibrary.requireUnit(monkUnarmoredMovementUnitId);
@@ -839,7 +839,7 @@ export function monkUnarmoredMovementBattleUnitRef(): Extract<
 }
 
 export function adrenalineRushBattleUnitRef(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["characterUnitRefs"][number] {
   const unit = unitLibrary.requireUnit(orcAdrenalineRushUnitId);
@@ -998,7 +998,7 @@ export function shieldArmorClassState(): ReturnType<
 }
 
 export function shieldLoadout(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCombatantInit["creatureInit"],
   { readonly kind: "character" }
 >["selectedLoadout"] {
   return {

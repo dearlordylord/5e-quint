@@ -28,6 +28,7 @@ import {
   resolveBattleSubject,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleFill,
   type BattleHole,
   type BattleProcedureExecutionRef,
@@ -41,7 +42,6 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import {
   battleAmmunitionStock,
@@ -92,27 +92,27 @@ export function characterCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly attack?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["attack"];
   readonly offHandAttack?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["offHandAttack"];
   readonly characterUnitRefs?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["characterUnitRefs"];
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
   readonly classLevels?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
   readonly d20Statistics?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["d20Statistics"];
   readonly weaponProficiencies?: readonly WeaponProficiency[];
@@ -120,27 +120,27 @@ export function characterCreature(input: {
   readonly maxHp?: number;
   readonly tempHp?: number;
   readonly resources?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
   readonly metamagic?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["metamagic"];
   readonly conditions?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["conditions"];
   readonly armorClass?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["armorClass"];
   readonly selectedLoadout?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["selectedLoadout"];
   readonly unitFeatures?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["unitFeatures"];
 }): BattleCreatureInit {
@@ -318,19 +318,13 @@ export function statBlockCreature(input: {
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: Result.getOrThrow(
-        battleStatBlockCombatantSource(projected.runtime),
-      ),
-      currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
-      tempHp: Hp(0),
-      ammunitionStocks: requiredAmmunitionKinds(attacks).map((ammunition) =>
-        battleAmmunitionStock(ammunition, 20),
-      ),
-      conditions: [],
-      presentation: projected.presentation,
-    },
+    statBlock: input.statBlock,
+    currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
+    tempHp: Hp(0),
+    ammunitionStocks: requiredAmmunitionKinds(attacks).map((ammunition) =>
+      battleAmmunitionStock(ammunition, 20),
+    ),
+    conditions: [],
   };
 }
 
@@ -405,7 +399,7 @@ export function zeroAbilityWeaponAttack(
 
 export function sameClubMainAndOffHandLoadout(): NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCombatantInit["creatureInit"],
     { readonly kind: "character" }
   >["selectedLoadout"]
 > {
