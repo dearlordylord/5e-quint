@@ -312,20 +312,20 @@ export type OracleBattleStateInitIssue = Schema.Schema.Type<
 >;
 
 const BattleProjectionIssueSchema = Schema.Struct({
-  tag: Schema.Literal("characterBattleEncounterProjectionIssue"),
+  tag: Schema.Literal("battleEncounterProjectionIssue"),
   origin: Schema.Literal("characterSheet"),
   combatantId: CombatantId,
   issue: CharacterBattleCreatureInitIssueSchema,
 });
 const StatBlockBattleProjectionIssueSchema = Schema.Struct({
-  tag: Schema.Literal("characterBattleEncounterProjectionIssue"),
+  tag: Schema.Literal("battleEncounterProjectionIssue"),
   origin: Schema.Literal("statBlock"),
   combatantId: CombatantId,
   issue: BattleStateInitIssueSchema,
 });
 
 const BattleProjectionIssuesSchema = Schema.Struct({
-  tag: Schema.Literal("characterBattleEncounterProjectionIssues"),
+  tag: Schema.Literal("battleEncounterProjectionIssues"),
   issues: Schema.NonEmptyArray(
     Schema.Union([
       BattleProjectionIssueSchema,

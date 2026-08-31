@@ -39,6 +39,7 @@ import {
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
 import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   OracleBattleCheckpointSchema,
   OracleBattleContinuationSchema,
@@ -79,20 +80,44 @@ const statBlockRecord = statBlockCatalog.getStatBlock(
 if (Option.isNone(statBlockRecord)) {
   throw new Error("SRD stat-block fixture must be available.");
 }
+const genericAdmissionStatBlockRecord = statBlockCatalog.getStatBlock(
+  statBlockId("stat_block_goblin_warrior"),
+);
+if (Option.isNone(genericAdmissionStatBlockRecord)) {
+  throw new Error(
+    "SRD generic-admission Stat Block fixture must be available.",
+  );
+}
+const { swarm: _swarm, ...projectionFailureStatBlock } =
+  statBlockRecord.value.statBlock;
+const projectionFailureStatBlockRecord = {
+  ...statBlockRecord.value,
+  statBlock: {
+    ...projectionFailureStatBlock,
+    size: { kind: "alternatives", options: ["small", "medium"] },
+  },
+} satisfies StatBlockRecord;
 const projectionFailureStatBlockCatalog: StatBlockCatalog = {
   ...statBlockCatalog,
   getStatBlock: (id) =>
     id === statBlockRecord.value.id
+      ? Option.some(projectionFailureStatBlockRecord)
+      : statBlockCatalog.getStatBlock(id),
+};
+const interleavedInitializationFailureStatBlockCatalog: StatBlockCatalog = {
+  ...projectionFailureStatBlockCatalog,
+  getStatBlock: (id) =>
+    id === genericAdmissionStatBlockRecord.value.id
       ? Option.some({
-          ...statBlockRecord.value,
+          ...genericAdmissionStatBlockRecord.value,
           statBlock: {
-            ...statBlockRecord.value.statBlock,
+            ...genericAdmissionStatBlockRecord.value.statBlock,
             immunities: decodeCreatureImmunityDeclarationSync({
               conditions: ["prone"],
             }),
           },
         })
-      : statBlockCatalog.getStatBlock(id),
+      : projectionFailureStatBlockCatalog.getStatBlock(id),
 };
 
 const statBlockBattle = statBlockBattleFor([
@@ -1942,12 +1967,8 @@ describe("Opaque Oracle Case and Trace contract", () => {
     if (rejection.tag === "rejected") {
       expect(rejection.issues).toHaveLength(1);
       const projectionIssues = rejection.issues[0];
-      expect(projectionIssues?.tag).toBe(
-        "characterBattleEncounterProjectionIssues",
-      );
-      if (
-        projectionIssues?.tag === "characterBattleEncounterProjectionIssues"
-      ) {
+      expect(projectionIssues?.tag).toBe("battleEncounterProjectionIssues");
+      if (projectionIssues?.tag === "battleEncounterProjectionIssues") {
         expect(JSON.stringify(projectionIssues)).not.toContain("message");
         expect(projectionIssues.issues).toHaveLength(2);
         expect(
@@ -1958,6 +1979,79 @@ describe("Opaque Oracle Case and Trace contract", () => {
         ]);
       }
     }
+
+    const interleaved = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: {
+          roster: {
+            tag: "statBlocks",
+            entries: [
+              {
+                combatantId: combatantId("oracle:projection-before"),
+                statBlockId: statBlockRecord.value.id,
+                initiative: 2,
+                ammunitionStocks: {},
+                conditions: [],
+                tempHp: 0,
+              },
+              {
+                combatantId: combatantId("oracle:generic-middle"),
+                statBlockId: genericAdmissionStatBlockRecord.value.id,
+                initiative: 1,
+                ammunitionStocks: {},
+                conditions: ["prone"],
+                tempHp: 0,
+              },
+              {
+                combatantId: combatantId("oracle:projection-after"),
+                statBlockId: statBlockRecord.value.id,
+                initiative: 0,
+                ammunitionStocks: {},
+                conditions: [],
+                tempHp: 0,
+              },
+            ],
+          },
+          attempts: [],
+        },
+      },
+      unitLibrary,
+      statBlockCatalog: interleavedInitializationFailureStatBlockCatalog,
+    });
+    const interleavedOutcome = interleaved.creation.outcome;
+    expect(interleavedOutcome.tag).toBe("built");
+    if (interleavedOutcome.tag !== "built") return;
+    expect(interleavedOutcome.sheet.tag).toBe("constructed");
+    if (interleavedOutcome.sheet.tag !== "constructed") return;
+    expect(interleavedOutcome.sheet.battle).toEqual({
+      tag: "rejected",
+      issues: [
+        {
+          tag: "battleEncounterProjectionIssues",
+          issues: [
+            expect.objectContaining({
+              origin: "statBlock",
+              combatantId: combatantId("oracle:projection-before"),
+            }),
+          ],
+        },
+        {
+          tag: "battleStateInitRejected",
+          issue: { tag: "battleStateInitIssue" },
+        },
+        {
+          tag: "battleEncounterProjectionIssues",
+          issues: [
+            expect.objectContaining({
+              origin: "statBlock",
+              combatantId: combatantId("oracle:projection-after"),
+            }),
+          ],
+        },
+      ],
+    });
 
     const missing = evaluateDecodedCase({
       case: {

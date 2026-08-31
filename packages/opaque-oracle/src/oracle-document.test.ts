@@ -722,16 +722,16 @@ describe("Opaque Oracle document JSON Schemas", () => {
       ]),
       battleEntryRejectedTrace([
         {
-          tag: "characterBattleEncounterProjectionIssues",
+          tag: "battleEncounterProjectionIssues",
           issues: [
             {
-              tag: "characterBattleEncounterProjectionIssue",
+              tag: "battleEncounterProjectionIssue",
               origin: "characterSheet",
               combatantId: "oracle:character",
               issue: { tag: "battleCreatureInitIssue" },
             },
             {
-              tag: "characterBattleEncounterProjectionIssue",
+              tag: "battleEncounterProjectionIssue",
               origin: "statBlock",
               combatantId: "oracle:stat-block",
               issue: { tag: "battleStateInitIssue" },
