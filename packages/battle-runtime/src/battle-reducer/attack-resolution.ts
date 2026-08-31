@@ -807,17 +807,7 @@ export function resolveShakeAwakeFromHitPointBudgetCondition(
   /* v8 ignore stop -- @preserve */
   const targetId = targetFill.value;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !hitPointBudgetConditionShakeAwakeTargetChoices(
-      input.state,
-      input.subject.actorId,
-    ).includes(targetId) ||
-    !hasHitPointBudgetConditionShakeAwakeSpatialFact(
-      targetFill.spatialFacts ?? [],
-      input.subject.actorId,
-      targetId,
-    )
-  ) {
+  if (!hitPointBudgetConditionShakeAwakeTargetIsAdmitted(input, targetFill)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
@@ -881,17 +871,7 @@ export function resolveShakeAwakeFromSaveGatedAreaControl(
   /* v8 ignore stop -- @preserve */
   const targetId = targetFill.value;
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !saveGatedAreaControlShakeAwakeTargetChoices(
-      input.state,
-      input.subject.actorId,
-    ).includes(targetId) ||
-    !hasSaveGatedAreaControlShakeAwakePhysicalReachability(
-      targetFill.spatialFacts ?? [],
-      input.subject.actorId,
-      targetId,
-    )
-  ) {
+  if (!saveGatedAreaControlShakeAwakeTargetIsAdmitted(input, targetFill)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
@@ -917,6 +897,45 @@ export function resolveShakeAwakeFromSaveGatedAreaControl(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+type ShakeAwakeTargetFill = Extract<
+  BattleFill,
+  { readonly kind: "targetChoice" }
+>;
+
+function hitPointBudgetConditionShakeAwakeTargetIsAdmitted(
+  input: Parameters<typeof resolveShakeAwakeFromHitPointBudgetCondition>[0],
+  targetFill: ShakeAwakeTargetFill,
+): boolean {
+  return (
+    hitPointBudgetConditionShakeAwakeTargetChoices(
+      input.state,
+      input.subject.actorId,
+    ).includes(targetFill.value) &&
+    hasHitPointBudgetConditionShakeAwakeSpatialFact(
+      targetFill.spatialFacts ?? [],
+      input.subject.actorId,
+      targetFill.value,
+    )
+  );
+}
+
+function saveGatedAreaControlShakeAwakeTargetIsAdmitted(
+  input: Parameters<typeof resolveShakeAwakeFromSaveGatedAreaControl>[0],
+  targetFill: ShakeAwakeTargetFill,
+): boolean {
+  return (
+    saveGatedAreaControlShakeAwakeTargetChoices(
+      input.state,
+      input.subject.actorId,
+    ).includes(targetFill.value) &&
+    hasSaveGatedAreaControlShakeAwakePhysicalReachability(
+      targetFill.spatialFacts ?? [],
+      input.subject.actorId,
+      targetFill.value,
+    )
+  );
 }
 
 export function resolveHide(
