@@ -6,6 +6,7 @@ import {
   characterCreationIssueMessage,
   characterEquipmentItemSourceFromId,
   type CharacterBuild,
+  type CharacterEquipmentItemId,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
 import {
@@ -115,17 +116,12 @@ type SelectedLoadoutEquipmentDefinitions = {
   readonly armorFacts: CharacterSheetArmorDefinitionFacts | undefined;
   readonly shield: SelectedShield | undefined;
 };
+type ArmorClassLoadoutItemId = CharacterEquipmentItemId | null | undefined;
 
 function selectedLoadoutEquipmentDefinitions(
   unitLibrary: UnitCatalog,
-  armorItemId:
-    | Parameters<typeof characterEquipmentItemSourceFromId>[0]
-    | null
-    | undefined,
-  shieldItemId:
-    | Parameters<typeof characterEquipmentItemSourceFromId>[0]
-    | null
-    | undefined,
+  armorItemId: ArmorClassLoadoutItemId,
+  shieldItemId: ArmorClassLoadoutItemId,
 ): Result.Result<SelectedLoadoutEquipmentDefinitions, CharacterSheetIssue> {
   const armor = selectedEquipmentUnit(unitLibrary, armorItemId);
   if (Result.isFailure(armor)) return Result.fail(armor.failure);
@@ -154,10 +150,7 @@ function selectedLoadoutEquipmentDefinitions(
 
 function selectedEquipmentUnit(
   unitLibrary: UnitCatalog,
-  equipmentItemId:
-    | Parameters<typeof characterEquipmentItemSourceFromId>[0]
-    | null
-    | undefined,
+  equipmentItemId: ArmorClassLoadoutItemId,
 ): Result.Result<UnitRecord | undefined, CharacterSheetIssue> {
   if (equipmentItemId == null) return Result.succeed(undefined);
   return getRequiredUnit(
