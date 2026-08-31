@@ -989,6 +989,36 @@ describe("Surface authored string role traversal", () => {
     expect(roles.filter((role) => role === "vocabulary")).toHaveLength(302);
   });
 
+  it("matches a deeply recursive sole tagged branch without recursive decoding", () => {
+    type RecursiveCodec = Schema.Codec<unknown, unknown>;
+    const recursive: RecursiveCodec = Schema.suspend(() =>
+      Schema.Union([
+        Schema.Struct({
+          kind: Schema.Literal("leaf"),
+          text: surfaceSchemaRole<string, string, never, never>(Schema.String, {
+            category: "prose",
+            evidence: "summary",
+          }),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("next"),
+          next: recursive,
+        }),
+      ]),
+    );
+    const schema = Schema.Union([recursive, Schema.Unknown]);
+    const types = unionTypes(schema);
+    const value = Array.from({ length: 1_024 }).reduce<unknown>(
+      (next) => ({ kind: "next", next }),
+      { kind: "leaf", text: "deep" },
+    );
+
+    const selected = traversal.matchingUnionBranches(types, value);
+    const retained = traversal.decoderCompatibleUnionBranches(types, value);
+    expect(selected).toHaveLength(2);
+    expect(selected).toEqual(retained);
+  });
+
   it("traverses decoded transformation outputs", () => {
     const text = surfaceSchemaRole<string, string, never, never>(
       Schema.String,
