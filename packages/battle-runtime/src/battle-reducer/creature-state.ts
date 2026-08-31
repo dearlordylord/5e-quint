@@ -87,6 +87,7 @@ import { characterExecutionFromUnits } from "../character-execution-admission.ts
 import {
   parseSupportedUnitFeatureProfile,
   type BattleUnitSupportProfileIssue,
+  type SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
 import {
   type BattleCreatureKnockOutLifecycle,
@@ -513,6 +514,10 @@ export function battleCreatureStateAdmissionFromInit(
       };
     }
     const classLevels = parsedClassLevels.success;
+    const resourceUnitFeatureAdmissions = admitCharacterResourceUnitFeatures(
+      creatureInit.resources ?? [],
+      classLevels,
+    );
     const spellAccessUnits = [
       ...(creatureInit.resources ?? []),
       ...(creatureInit.unitFeatures ?? []),
@@ -525,7 +530,10 @@ export function battleCreatureStateAdmissionFromInit(
     );
     const initIssues = [
       characterResourceInitIssue(creatureInit, classLevels),
-      characterDruidWildShapeAvailableFormsInitIssue(creatureInit, classLevels),
+      characterDruidWildShapeAvailableFormsInitIssue(
+        creatureInit,
+        resourceUnitFeatureAdmissions,
+      ),
     ].flatMap((issue) =>
       issue !== null && Result.isFailure(issue) ? [issue.failure] : [],
     );
@@ -569,14 +577,11 @@ export function battleCreatureStateAdmissionFromInit(
         (resource) => resource.unit,
       ),
       unitFeatureProfiles: [
-        ...(creatureInit.resources ?? []).flatMap((resource) => {
-          if (explicitFeatureUnitIds.has(resource.unit.id)) return [];
-          const profile = parseSupportedUnitFeatureProfile(
-            resource.unit,
-            classLevels,
-          );
-          return profile === null ? [] : [profile];
-        }),
+        ...resourceUnitFeatureAdmissions.flatMap(({ unitId, profile }) =>
+          profile === null || explicitFeatureUnitIds.has(unitId)
+            ? []
+            : [profile],
+        ),
         ...(creatureInit.unitFeatures ?? []),
       ],
       units: characterUnits,
@@ -1115,19 +1120,29 @@ export function characterResourceInitIssue(
   return null;
 }
 
-/* v8 ignore start -- @preserve -- Malformed character initialization: admitted Druid Wild Shape state has at most one owning resource and threads only forms accepted by that resource profile. */
-export function characterDruidWildShapeAvailableFormsInitIssue(
-  creatureInit: CharacterBattleCreatureInit,
+type CharacterResourceUnitFeatureAdmission = {
+  readonly unitId: UnitId;
+  readonly profile: SupportedUnitFeatureProfile | null;
+};
+
+function admitCharacterResourceUnitFeatures(
+  resources: readonly CharacterBattleResourceInit[],
   classLevels: CharacterBattleClassLevels,
+): readonly CharacterResourceUnitFeatureAdmission[] {
+  return resources.map((resource) => ({
+    unitId: resource.unit.id,
+    profile: parseSupportedUnitFeatureProfile(resource.unit, classLevels),
+  }));
+}
+
+/* v8 ignore start -- @preserve -- Malformed character initialization: admitted Druid Wild Shape state has at most one owning resource and threads only forms accepted by that resource profile. */
+function characterDruidWildShapeAvailableFormsInitIssue(
+  creatureInit: CharacterBattleCreatureInit,
+  resourceUnitFeatureAdmissions: readonly CharacterResourceUnitFeatureAdmission[],
 ): Result.Result<never, BattleStateInitLeafIssue> | null {
-  const wildShapeProfiles = (creatureInit.resources ?? []).flatMap(
-    (resource) => {
-      const profile = parseSupportedUnitFeatureProfile(
-        resource.unit,
-        classLevels,
-      );
-      return profile?.kind === "druidWildShapeKnownForm" ? [profile] : [];
-    },
+  const wildShapeProfiles = resourceUnitFeatureAdmissions.flatMap(
+    ({ profile }) =>
+      profile?.kind === "druidWildShapeKnownForm" ? [profile] : [],
   );
   if (wildShapeProfiles.length > 1) {
     return battleStateInitIssue(

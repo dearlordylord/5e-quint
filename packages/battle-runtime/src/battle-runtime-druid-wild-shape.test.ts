@@ -2544,6 +2544,31 @@ test("rejects omitted Wild Shape available-form subset for a direct battle init"
   }
 });
 
+test("rejects duplicate Wild Shape resources through the shared resource admission", () => {
+  const wildShape = unitLibrary.requireUnit("druid_wild_shape");
+  const result = startBattle({
+    battleId: battleId("battle-druid-wild-shape-duplicate-resource"),
+    combatants: [
+      characterSeed({
+        combatantId: druidId,
+        displayName: "Druid",
+        initiative: 20,
+        classLevels: [{ className: "druid", level: 2 }],
+        resources: [{ unit: wildShape }, { unit: wildShape }],
+        druidWildShapeAvailableForms: druidWildShapeKnownFormsWith(catId),
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
+      "Druid Wild Shape battle initialization supports exactly one Druid Wild Shape resource.; Duplicate character battle resource unit: druid_wild_shape",
+    );
+  }
+});
+
 test("rejects ineligible known Beast forms before battle initialization", () => {
   const wildShapeUnit = unitLibrary.requireUnit("druid_wild_shape");
   expect(parseSupportedUnitFeatureProfile(wildShapeUnit, [])).toBeNull();
@@ -2608,6 +2633,34 @@ test("projects canonical level-2 Wild Shape access and rejects a transform-free 
   expect(
     parseSupportedUnitFeatureProfile(withoutTransform, levelTwo),
   ).toBeNull();
+
+  const validInit = characterSeed({
+    combatantId: druidId,
+    displayName: "Druid",
+    initiative: 20,
+    classLevels: [{ className: "druid", level: 2 }],
+    resources: [{ unit: wildShape }],
+    druidWildShapeAvailableForms: druidWildShapeKnownFormsWith(catId),
+  });
+  const battle = startBattle({
+    battleId: battleId("battle-druid-wild-shape-transform-free-resource"),
+    combatants: [
+      {
+        ...validInit,
+        creatureInit: {
+          ...validInit.creatureInit,
+          resources: [{ unit: withoutTransform }],
+        },
+      },
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+  expect(Result.isFailure(battle)).toBe(true);
+  if (Result.isFailure(battle)) {
+    expect(battleStateInitIssueMessage(battle.failure)).toBe(
+      "Druid Wild Shape available forms require the Druid Wild Shape feature.",
+    );
+  }
 });
 
 test("rejects decoded synthetic Wild Shape mechanics outside the admitted support profile", () => {
