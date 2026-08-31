@@ -108,8 +108,10 @@ report with aggregate synchronization, total strict catalog decoding,
 homogeneous SRD provenance, installed membership, scoped fidelity, and MCP
 catalog reachability. It proves the complete 334-occurrence to 330-identity to
 330-installed-record catalog without persisting a receipt or support ledger.
-Passing it does not claim runtime execution (#114), selected-graph binding
-(#117), or Hit Dice fidelity; required quality-gate wiring is owned separately.
+The required `pnpm quality:milestone` gate invokes this public diagnostic after
+Surface publication checks. Passing it does not claim runtime execution (#114),
+selected-graph binding (#117), or Hit Dice fidelity, and introduces no receipt,
+baseline, allowlist, support status, or completion ledger.
 
 The `surface/catalog-install` boundary composes that portable decode with
 context-independent Static Mechanics Admission in one atomic operation.

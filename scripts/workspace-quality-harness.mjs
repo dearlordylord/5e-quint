@@ -488,6 +488,34 @@ function selfTest() {
     /(?:^|&&\s*)pnpm run coverage:body(?:\s*&&|$)/,
     "The public quality gate must run the workspace coverage thresholds.",
   );
+  assert.equal(
+    rootPackage.scripts["check:srd-stat-block-catalog"],
+    "pnpm exec tsx scripts/check-srd-stat-block-catalog.ts",
+    "The public SRD Stat Block catalog diagnostic must retain its exact alias.",
+  );
+  const qualityBodyCommands =
+    rootPackage.scripts["quality:body"].split(/\s*&&\s*/u);
+  const catalogDiagnosticCommand = "pnpm check:srd-stat-block-catalog";
+  assert.equal(
+    qualityBodyCommands.filter(
+      (command) => command === catalogDiagnosticCommand,
+    ).length,
+    1,
+    "The quality body must invoke the public SRD Stat Block catalog diagnostic exactly once.",
+  );
+  const catalogDiagnosticIndex = qualityBodyCommands.indexOf(
+    catalogDiagnosticCommand,
+  );
+  assert.equal(
+    qualityBodyCommands[catalogDiagnosticIndex - 1],
+    "pnpm check:surface-content-publication",
+    "The catalog diagnostic must immediately follow Surface publication checks.",
+  );
+  assert.equal(
+    qualityBodyCommands[catalogDiagnosticIndex + 1],
+    "pnpm check:stat-block-procedure-pressure:self-test",
+    "The catalog diagnostic must precede the execution-evidence families.",
+  );
   const configured = Object.keys(PACKAGE_POLICIES);
   assert.deepEqual(inventoryIssues(configured, configured), {
     missing: [],
