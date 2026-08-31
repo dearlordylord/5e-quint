@@ -64,6 +64,7 @@ import {
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
@@ -860,10 +861,7 @@ function weaponAttack(
   weaponUnitId: (typeof weaponMasteryPropertyScenarios)[WeaponMasteryPropertyUnitId]["weaponUnitId"],
   weaponMasteries: readonly { readonly weaponUnitId: UnitId }[],
 ): NonNullable<
-  Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["attack"]
+  Extract<CharacterBattleCreatureInit, { readonly kind: "character" }>["attack"]
 > {
   const weapon = unitLibrary.requireUnit(weaponUnitId);
   if (weapon.kind !== "weapon") {
@@ -882,7 +880,7 @@ function weaponAttack(
 }
 
 function baseUnarmedStrike(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCreatureInit,
   { readonly kind: "character" }
 >["unarmedStrike"] {
   return {

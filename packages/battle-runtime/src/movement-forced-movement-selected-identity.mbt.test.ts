@@ -41,6 +41,7 @@ import {
   type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleProcedureExecutionRef,
@@ -1629,12 +1630,12 @@ function movementCompelledMovementBattle(input: {
   readonly caster?: {
     readonly displayName?: string;
     readonly spellcasting?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCreatureInit,
       { readonly kind: "character" }
     >["spellcasting"];
     readonly characterUnitRefs?: readonly BattleUnitRef[];
     readonly classLevels?: Extract<
-      BattleCreatureInit["creatureInit"],
+      CharacterBattleCreatureInit,
       { readonly kind: "character" }
     >["classLevels"];
   };
@@ -1686,12 +1687,12 @@ function movementCompelledMovementCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"];
   readonly characterUnitRefs?: readonly BattleUnitRef[];
   readonly classLevels?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["classLevels"];
   readonly currentHp?: number;

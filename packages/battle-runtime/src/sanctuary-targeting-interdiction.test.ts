@@ -35,6 +35,7 @@ import {
   snapshotBattle,
   startBattle,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -2162,7 +2163,7 @@ function characterCreature(
   displayName: string,
   initiative: number,
   spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"],
   classLevel = 1,

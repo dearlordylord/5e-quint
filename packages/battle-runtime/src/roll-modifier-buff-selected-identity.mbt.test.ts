@@ -40,6 +40,7 @@ import {
   startBattle,
   type BattleActiveEffect,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
@@ -505,7 +506,7 @@ function rollModifierBuffCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {

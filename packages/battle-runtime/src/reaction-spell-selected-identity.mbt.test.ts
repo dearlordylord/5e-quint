@@ -38,6 +38,7 @@ import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleInterruptSubject,
@@ -738,7 +739,7 @@ function reactionSpellCreature(input: {
   readonly initiative: number;
   readonly classLevel?: number | undefined;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {

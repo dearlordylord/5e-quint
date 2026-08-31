@@ -62,6 +62,7 @@ import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type BattleActiveEffect,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleInterruptSubject,
@@ -702,7 +703,7 @@ function castInvisibilityOnTargets(
 
 type CharacterSpellcastingInit = NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"]
 >;

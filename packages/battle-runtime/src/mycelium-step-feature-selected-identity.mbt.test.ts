@@ -24,6 +24,7 @@ import {
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleResolutionResult,
   type BattleRuntimeSession,
   type BattleState,
@@ -172,7 +173,7 @@ function characterCombatant(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly characterUnitRefs: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["characterUnitRefs"];
 }): BattleCreatureInit {

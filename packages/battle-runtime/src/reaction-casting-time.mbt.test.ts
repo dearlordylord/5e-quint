@@ -68,6 +68,7 @@ import {
   snapshotBattle,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleInterruptSubject,
@@ -529,7 +530,7 @@ function requireRouteEvents(
 
 type CharacterSpellcastingInit = NonNullable<
   Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"]
 >;

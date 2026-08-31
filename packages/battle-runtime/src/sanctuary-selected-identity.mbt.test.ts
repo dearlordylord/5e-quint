@@ -31,6 +31,7 @@ import {
   type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -1241,7 +1242,7 @@ function characterCreature(
   displayName: string,
   initiative: number,
   spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"],
 ): BattleCreatureInit {

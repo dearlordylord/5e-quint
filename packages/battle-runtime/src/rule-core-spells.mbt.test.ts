@@ -73,6 +73,7 @@ import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts"
 import {
   battleAreaId,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   battleId,
@@ -1861,7 +1862,7 @@ function characterCreature(input: {
   readonly currentHp?: number;
   readonly armorClass?: ReturnType<typeof defaultArmorClassState>;
   readonly spellcasting?: Extract<
-    BattleCreatureInit["creatureInit"],
+    CharacterBattleCreatureInit,
     { readonly kind: "character" }
   >["spellcasting"];
 }): BattleCreatureInit {

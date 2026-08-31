@@ -55,6 +55,7 @@ import {
   objectInvisibleBenefitDenied,
   snapshotBattle,
   type BattleCreatureInit,
+  type CharacterBattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleLightEmitter,
@@ -781,7 +782,7 @@ function starryWispCasterCreatureInit(input: {
 }
 
 function baseUnarmedStrike(): Extract<
-  BattleCreatureInit["creatureInit"],
+  CharacterBattleCreatureInit,
   { readonly kind: "character" }
 >["unarmedStrike"] {
   return {
