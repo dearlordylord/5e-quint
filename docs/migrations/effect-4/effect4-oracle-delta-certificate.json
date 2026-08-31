@@ -8,7 +8,7 @@
   },
   "candidate": {
     "byteLength": 50667014,
-    "sha256": "bc95144d489f310abe399cf15524ad09a49cd69dc2d2752a9ecb55ac9c37e077"
+    "sha256": "07c9cd2b3e812fa7426df112c4f66dcb91a62dfd9da1406e9e279cc5b941dc44"
   },
   "delta": {
     "algorithm": "canonical-keyed-collection-delta-v2",
@@ -236,6 +236,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "01d53f6567c7d5372ce01139d519458e8143f935de835052d4a126471297fa0a",
+          "candidateSha256": "fa96958f5a77989e5bc359de2411b7ab837c7118620d09c6a739a4426517b3eb",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_musket.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "02ab983ccd386119d8e425e3f82b10582cd5ceea8105b87693b76c54b88b47a0",
           "candidateSha256": "6b0c1925e4a5690052361d7d8f440a52670d26d092e90e5f8d679011eb94cb67",
           "operation": "changed",
@@ -277,7 +291,7 @@
       {
         "delta": {
           "baselineSha256": "02c4732c8a1aa03f6e8727f459f03b9abc2c843202caabdd3b827c41494c50a9",
-          "candidateSha256": "a144bc8422f511ad259d0c8ef459bae5bf7b0d9e9e49a729d2a5e3e9a4541359",
+          "candidateSha256": "9a2f9f2036aa3f2f35fd6a30839af27d5f5a943eed0e984380fa9d1d7df1ab73",
           "operation": "changed",
           "segments": [
             "surface",
@@ -441,6 +455,20 @@
           ]
         },
         "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "0316df722cefd34e7e997d80408e1761822ef7166062817e45c36a5a227d8e7d",
+          "candidateSha256": "3c90faf2a35f225ccc7313c44f5552b934925c6868ee75caa1d3d5d621b987e2",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_sling.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -1148,6 +1176,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "07d961b4441af9213b46b56dbf0727702888a63ad1952ff3616430f09c8170be",
+          "candidateSha256": "9bea2229d7b87b9ec122b7c1629ce40a3c61220035c0acf119c6aa446c958df6",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_whip.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "07fed48211c987bf6f0ec2b471bc20627c4c63465d472da0d3739929c935c569",
           "candidateSha256": "93785753eeec54e79ee5f9a7d0da24cc80d7de92160c7ca4ecc576eafa93d513",
           "operation": "changed",
@@ -1439,6 +1481,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "0a89b7b23893a92fab7b7389613e298c06681ccfcd9253bc6517c671892f2589",
+          "candidateSha256": "3eb86308a2708efd428b931a04f77489b82a8ae57aa960f2f08b352710aebbe9",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_longsword.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "0a9903c4613aa6a117403102ec9a8d9e721dfb2acea76466e959c801c7ba2fb0",
           "candidateSha256": "1e3e01d5b2d2ff8193fc0e6b18e0fc666e36ada7bdaed18103bf8441d8ddfc85",
           "operation": "changed",
@@ -1689,6 +1745,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "0cf4d5933ab68f10d591c776eaaecf2ef6f38248bf26c7d1690847188b7c7c1e",
+          "candidateSha256": "5b2e2407a8958d736d1f53d10b501046d6401f31c4e7939076d5d02676d91b8b",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_blowgun.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "0d8dcfca017642701eff295d4f6b13dc6d664531b1d5b3cf03254affd1287f90",
           "candidateSha256": "2e3f9126024125dd727df0f9c0901a3960c31ed9079f67cb33480fe5c7f8d8ec",
           "operation": "changed",
@@ -1851,6 +1921,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "0f7ce971e0a28c8ad3db0a91d9173340b7dbf0e754ccf05a004a3bc3de6e5957",
+          "candidateSha256": "a2630ab51724b00674a39981781534c32e8bebd45873f03f3bb7d25869235bdd",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_lance.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "0f91141235891b6a108a28dd9ce8b03e587856e955417250c39ba735cc4f3352",
           "candidateSha256": "29f33f141adb2c15700cf07a95e72e636d4f6893f3c419dc4c7d8a260ce7415a",
           "operation": "changed",
@@ -3325,6 +3409,34 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "106b01081b601abf64d1ae4f235a72fc7fdb23c9ea53ed015312c3f96a9ae4c4",
+          "candidateSha256": "0cd55165dba79a26276de2c1bfc678ac66429a913c15f25845412e79673aadcb",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_shortsword.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "107dfebdb455250b8451869a76d1bb5a871060680ec24161e11d48e9d71353d5",
+          "candidateSha256": "845e96f33bc6d92c2c8609dbc25de40f8d7ac7a237f4404d1513ba3ef1a204a9",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_dart.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -3874,6 +3986,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "1184d999f23ecad6cca632a6a4d265ba9c47022f1b552c299f30868eb018bd6f",
+          "candidateSha256": "95c9a722010e30da9ceb3ff60556c15c679f0ee0ab29c3711da3a4d4f91fa25f",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_flail.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -5132,6 +5258,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "12d5c8efffcff4eef06afc38dab6d08b78500258fec0aadcf5a8640510aed536",
+          "candidateSha256": "861888e35e9150ad990b8bb1ee390c8b87204b141d071bc76e2e15bc77508fd7",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_spear.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "1326b114646067bff3531e5ffae698fc6d6dae55b9c113e3a35f6a7cbafcadec",
           "candidateSha256": "1f189ffa9a4bd1bd26481e65c0d8915f0ba4ef40843c8be1270faf021006f860",
           "operation": "changed",
@@ -5169,6 +5309,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "135be522765ce267b8ca6debeeec6dc4358a1072e2763f337224f417edf456db",
+          "candidateSha256": "dccb41aebdb6a02394601aa3b8ded3f16678236c17acdc6d3e5dc85da07af45f",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_scimitar.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -6583,6 +6737,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "13de8b7ba5ae2628b40c430892f1a2f7e43dce715928196ca2b0a174818fcca4",
+          "candidateSha256": "85f894f851e50b534b6d74b4256098fd9bba05d154605b3df642c605617d98da",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_dagger.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "149024b6454426aa407dbdd46a119711024cf05426cdfa12a836032d01fdb17e",
           "candidateSha256": "00ae0900e3ba03583e3561d76de50754935c10913065d737f9cf4c8e86e54bda",
           "operation": "changed",
@@ -6742,6 +6910,34 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "159582eb043322278a6879e5fccbfdedc51685a56e56feed6b20c315bf870bdf",
+          "candidateSha256": "d492193dd2e397ae6cf2bb6a335cc89771738f579aa6f8da1a05a87150fa392f",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_pistol.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "15bf564a7366dd6f437e3e7d6f7e23c8081bac2819558d32cb28e50a3dda1cfe",
+          "candidateSha256": "4710a6753c87782751fec2bc55f67d138761b141b8d70c0a784a8a4752aa4259",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_musket.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -6930,6 +7126,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "16e7b65437373ecf308288942fdbcc2dc335831d6b0a7b8d3651efb4ba863354",
+          "candidateSha256": "923da5221eff963de4ed75121a104eb95d8b4b6a10d949ac89a290ed9321f213",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_shortbow.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -7569,6 +7779,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "1859c1af35594cc84ee3eaaa7815e46ef7cf33b1f45b0a4dc321ea246f36a763",
+          "candidateSha256": "4e53f5ceaea891c052b031485883dee8e62e3b1438285a3feb3bfc371e54ec25",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_blowgun.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "1891dd1c6c7ffc8ef439914922f29dbc1d74e79b0510369a6392476dcf7d65c3",
           "operation": "removed",
           "segments": [
@@ -8721,6 +8945,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "18bc935500c9a8d11f49290e2301c723c27c1939894aec50329f647be0a7d094",
+          "candidateSha256": "f01c2d9014f3986d9cb07521fef1eb2c2aae70eae69a32a9679f20ef73251a1e",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_longbow.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -8787,6 +9025,20 @@
             "surface",
             "content",
             "@path=packages/surface/content/prismatic_wall.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "1a49727c2e816b4cdcfa0fdff9a375f68dbc58125c6bcfbcf8ada5084cafcc81",
+          "candidateSha256": "5a47864afc4b7d2d4a8c64d69a28f7d9824a014eb67aa301dc6a85c91d2bf788",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_greatclub.dhall",
             "sha256"
           ]
         },
@@ -9108,6 +9360,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "1b0c3bf820e336ae88c6fce735375f55804c397f923af161c324f9b26e29cd23",
+          "candidateSha256": "a37241d0f3a586e62e1b142baf97bc38769234f36a41b4429e1f94f931b0ab51",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_battleaxe.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "1b10cf4db8152649eccc76ae4045bf2deee9f49f97f0b1e8b5ccc6a9eb4192e6",
           "candidateSha256": "e0b812c0b8a4108eb115f624f59e130223c9f322901f626eab12d234379b8b4b",
           "operation": "changed",
@@ -9145,6 +9411,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "1b1bf321b1c48ca010d8e8f29bbbbd9cb1f9cb748cba18b56964816b94e51b05",
+          "candidateSha256": "2421cc9fddbe0553aa013862074b57dde9c91e9ac7f98abdd044ac3ebdb6e168",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_battleaxe.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -9603,6 +9883,34 @@
       },
       {
         "delta": {
+          "baselineSha256": "1c5be08c69c44d30bfba43c7bd076666d51ba3e3d288fe35a5cf59c573d4212b",
+          "candidateSha256": "5510127ed7c60d7d78b4a8094ef56f841b7ef9e1c0b08e1516f4754c25fcaa16",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_war_pick.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "1c9609605dd34af2601f10c4db109729d3694f8681d31fced4f1ed5cb04704f4",
+          "candidateSha256": "7d807d54fd7c8a83588c7e86e88dde328e266341ff88def42e01b2060d9219c3",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_war_pick.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "1d26a019d86e4eccaf8db7889d43982a8464fce0942171f86a1e75fe655044c3",
           "candidateSha256": "c06c171a51464ab3ff02e624260fa7044b67aac6ab905e05e445ab0bee936b53",
           "operation": "changed",
@@ -9855,6 +10163,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "20967d261de1d161c9c4d707805cc021dad04bde8479d862b471b96e8526ea13",
+          "candidateSha256": "4e6a7bc5f34810417713ed92ecb0cef1ff3b1776e2f4c915c789b6c9136423b5",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_quarterstaff.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -10480,6 +10802,20 @@
             "surface",
             "content",
             "@path=packages/surface/content/create_undead.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "2208ae0572ec74210aae78aa051e849446a863b640575a15ade59371a725eb41",
+          "candidateSha256": "4fae83e7acebbfa75d786a8f39c375344b5bf2ecb14796dc30bddb7759e08d3d",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_shortbow.json",
             "sha256"
           ]
         },
@@ -23876,6 +24212,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "25c2028e0bbff32e02ab6e2a4ac2aa4810a6b2f252df6d3a0e867c8dfd509d63",
+          "candidateSha256": "ff76ab3b4de2e32f1879d73c9bfeac5709e7022fea931edbcc2c9b9c71135f41",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_hand_crossbow.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "25c3e024bac75ab429dda921698131901a4e0f77b0122493ae94f8698bf7001c",
           "candidateSha256": "bd34fc3afe332c03363389113ef4d99903b75bc472e419d8cbcdc506539ed532",
           "operation": "changed",
@@ -24477,6 +24827,34 @@
       },
       {
         "delta": {
+          "baselineSha256": "26f96ea273758df32b97f99457df0a670bba7fd5626f8ec981007c353c420998",
+          "candidateSha256": "db5f40cb5e445af120b9d28e30293297b50f2adce5ab64796692cf80faf19dc4",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_quarterstaff.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "27255d80d99f4cd702966d8fb693312969cdc414fb969f0cf1f6ca03541cd89b",
+          "candidateSha256": "b321592152af871a853f632806adb1283e74acf0e6814a69d6a703db5ae38c84",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_spear.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "27501a97b622b5760865e0ad7a6917c81c09897d0f5faf7a2cf34edca49709cd",
           "candidateSha256": "298e4266fbc216d623c348dd83e159ae48ccd7cf66b7f03befdba6c225981935",
           "operation": "changed",
@@ -24568,6 +24946,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "27f857f6dfcd25b9349ba8375c9e9eb166b9769f90c101f5198a0110b78b49d7",
+          "candidateSha256": "a00b9d3be3e12c04899922f073e2394a22399d0098aaf69f7dc083918fb4abaa",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_sickle.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -24807,6 +25199,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "298d359d87b49774147b627d3a5fcaf4affcb464000ad513f72dbfb00641c91c",
+          "candidateSha256": "c3cca4293a372f4a1ddc7b5200010dca1947c84e16f50787546f761b5690da56",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_warhammer.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -26458,6 +26864,20 @@
             "surface",
             "content",
             "@path=packages/surface/content/dimension_door.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "2c504aceb3141a39b701558fde2249674aba7a57c93ed9aede7399be114d6c99",
+          "candidateSha256": "a6be961fdf73aef828a547aaf03d419ce106a4e27c436736261511dc34e6226a",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_rapier.dhall",
             "byteLength"
           ]
         },
@@ -29168,8 +29588,22 @@
       },
       {
         "delta": {
+          "baselineSha256": "31c656391e5af170a3185bd2d2fa6275de21d80d0351fb5ca479f9be4197868c",
+          "candidateSha256": "b390d063dd02f23ec6bfa1ccb02f64cdae46f1af2b2c33596b9929a91b8e1747",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_halberd.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "31dc4263bcfd887e249c3b2a7dc2bdb4933719cb7c9ee24ba29f45b89dae8cf7",
-          "candidateSha256": "99f31b693985f25110352e16d09e501fddb43cbaf6d189c26362a6093fef828a",
+          "candidateSha256": "d165064d3b4f96895cd60654a51691e176179956ba73b04f47093fabc8c39e12",
           "operation": "changed",
           "segments": [
             "surface",
@@ -29642,6 +30076,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "340fd46047478c53c266ffc066953848ef96370426f4467ceadb1c616d017154",
+          "candidateSha256": "f2c347738410f34b07ec330fc7c925037d2f86ce53b961bab56e3feddea9ae5e",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_longbow.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "345a8c83514d8aa75f19a065c0be197d0dba336d4c498f8615cbba64117628c7",
           "candidateSha256": "155282aa29c01e051647043458adc008441b3690c72cea671f155ddd65fedaa1",
           "operation": "changed",
@@ -29693,6 +30141,20 @@
           ]
         },
         "reasonId": "raw-swarm-effect-runtime-artifacts"
+      },
+      {
+        "delta": {
+          "baselineSha256": "35f1a79847dbc5a93d6fc8868b9dbd0a85a3b3593c1b163fad264d8876c5f47f",
+          "candidateSha256": "d4b9fa8390794182aec443232c36555532fc4a1b75d2d4713241bf2cb1917633",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_club.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -33096,6 +33558,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "38500003733a95b652379a66ee15b3192b116bfcfcdb1aa830956af22a82c66c",
+          "candidateSha256": "a09688c8927b7b7277c446387f90b1d7c7f18aadc2c8a36e89b0f0ef7b0da495",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_sling.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "3859dfa9ce43d831b276be70b2ce68f1662586dcaece2cbff58c282175728f1a",
           "candidateSha256": "8569033ca12370278ddbf040c6ee90a1b4e3077c9cfa30497d9b0b2fb73b1cba",
           "operation": "changed",
@@ -33441,7 +33917,13 @@
         "delta": {
           "baselineSha256": "3aa617bfaf2740466e8a485ef2caa14abe1fa16483afc04ec8d5e6a73f8a3701",
           "operation": "removed",
-          "segments": ["persistence", "fixtures", "saved", "value", "tenure"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "saved",
+            "value",
+            "tenure"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -33562,6 +34044,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "3b21b4bc7e793e0394ccc5e033af5c650d97ca1977066ab65ef1970d17f822e8",
+          "candidateSha256": "c77dc1beccedf0e86e309cef94f44ed0c0c7926ccc7e53374c197f958e289c83",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_greatsword.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "3b51ca303059cd809319e28a91dfde03cff97c8290d48cbac555c8d9fef886fa",
           "operation": "removed",
           "segments": [
@@ -33663,6 +34159,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "3bbfb3f9c05fbec6281c939d724e27330f089c8b1091516c8a04b583c2f75e8d",
+          "candidateSha256": "8225a1fce14b754149c3cd9c3f043861249ff868aeb6fbdf4d6418600c619610",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_light_hammer.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "3bf7e474c4ba7b4e0062bd5e413010a0c47cfe9d31b7d0db248060a0bd00d745",
           "candidateSha256": "1335b435ae30d7675b4b7ad0aa3ea46599dfbd51c9867404d493b3d08e6c0c4d",
           "operation": "changed",
@@ -33670,6 +34180,34 @@
             "surface",
             "content",
             "@path=packages/surface/content/cloudkill.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "3d083ddbeaf60d5039dab5b9a9f3ba47d9018019589d7d6d3172ff86d3b97a64",
+          "candidateSha256": "a4a509e1f028f48cc823e734d1dcd446cf7605b70dc7d596706d677c1da63faa",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_battleaxe.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "3d083ddbeaf60d5039dab5b9a9f3ba47d9018019589d7d6d3172ff86d3b97a64",
+          "candidateSha256": "a4a509e1f028f48cc823e734d1dcd446cf7605b70dc7d596706d677c1da63faa",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_dagger.json",
             "byteLength"
           ]
         },
@@ -34173,7 +34711,13 @@
         "delta": {
           "baselineSha256": "3f2a142ac0701fe8bb3e4336f5f4549d99335f6b49e365c722850f83b5171dc3",
           "operation": "removed",
-          "segments": ["mcp", "registered", "end_turn", "inputSchema", "$defs"]
+          "segments": [
+            "mcp",
+            "registered",
+            "end_turn",
+            "inputSchema",
+            "$defs"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -34326,6 +34870,20 @@
             "surface",
             "content",
             "@path=packages/surface/content/produce_flame.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "3f917ae5cc271af5247c93cdd95c04afaa9c6e5f2fe892ee99fd17a1c7b92594",
+          "candidateSha256": "8df0342a5331230c8ef92e098161e0045e1fa06338a0f83f7b711a06cdba4688",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_shortsword.json",
             "sha256"
           ]
         },
@@ -38616,10 +39174,43 @@
       },
       {
         "delta": {
+          "baselineSha256": "42b2e074ee51392a0cbee81cc56db25a3ce9ef2622537f49d546aa4952ef16d9",
+          "candidateSha256": "9e650b45e5f163752621099458fd2ebf44b18e5b94f8d5744f2c2eefabf43bb5",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_halberd.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "42bb2035610aa72f2ae45674ebda0ad487f30af900cbfae10f072870d63e0175",
+          "candidateSha256": "10fe217426ff1edfa8c796d69f79194f2d0339f84c0debe301e1ecf95ba9bb6a",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_longbow.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "431ebf2e715367aef3b2823e3857b25d38e704aaf7004d706846f631cbc19559",
           "candidateSha256": "07bd194cdd2b64df417a5e540efe8634d97cf2a6581f6bfd0ff39056cd4fa713",
           "operation": "changed",
-          "segments": ["persistence", "fixtures", "guest", "tag"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "guest",
+            "tag"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -38628,7 +39219,12 @@
           "baselineSha256": "431ebf2e715367aef3b2823e3857b25d38e704aaf7004d706846f631cbc19559",
           "candidateSha256": "07bd194cdd2b64df417a5e540efe8634d97cf2a6581f6bfd0ff39056cd4fa713",
           "operation": "changed",
-          "segments": ["persistence", "fixtures", "saved", "tag"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "saved",
+            "tag"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -38676,7 +39272,13 @@
         "delta": {
           "baselineSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
           "operation": "removed",
-          "segments": ["persistence", "fixtures", "guest", "value", "revision"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "guest",
+            "value",
+            "revision"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -38684,7 +39286,13 @@
         "delta": {
           "baselineSha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
           "operation": "removed",
-          "segments": ["persistence", "fixtures", "saved", "value", "revision"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "saved",
+            "value",
+            "revision"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -38730,6 +39338,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "43d79a4c5d13d9b820291fde0f3218dda49d4e595356e4cc10e87b05759e2b87",
+          "candidateSha256": "64be5111ad0976f472b284b1fcc98b3928488ae3fb087345636531586cc200f4",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_longsword.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "4472e909f878aef7202387e6a1a5ad6ac1f50d5446bb493021a355809698fa88",
           "candidateSha256": "3a4ba2f6660ff9653e2cf2c2128693535917d22ee0fafd7b85614c878ebdd994",
           "operation": "changed",
@@ -38767,6 +39389,34 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "448a3f4e1c35646f8f9550187f2b2d0bf7ec010bb160982cedb34496783f8e65",
+          "candidateSha256": "3f6e1d6c5ca512d5f9a6670ca314705f59bbd843074d1d5fc33c20de22a70420",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_dart.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "448a3f4e1c35646f8f9550187f2b2d0bf7ec010bb160982cedb34496783f8e65",
+          "candidateSha256": "3f6e1d6c5ca512d5f9a6670ca314705f59bbd843074d1d5fc33c20de22a70420",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_handaxe.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -38821,6 +39471,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "4625c6fcceac9868bf9a7e13bf4280b971e41d6e69f5c7d35610978c5a415432",
+          "candidateSha256": "01e17bf84418c038e353dd3fc8673289dce810e9138f1f2546334e646f9a911f",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_longsword.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -40484,6 +41148,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "4badfd09d953260b35b67fda74320f2122be739f8e928b91928a4956ee73ac3d",
+          "candidateSha256": "5187ead79dfd098e31bf6ce07c7a87881cb69c369b93cfe33c2a805588dacaab",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_heavy_crossbow.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "4c1a28c24f4cd8f757c75ccdd6bd92eb09b4385e4c765ea49ddcd2416ec357db",
           "candidateSha256": "fff7a3f611f63573d921b224c86a54de48de61ec3709322389830dc68349494f",
           "operation": "changed",
@@ -40521,6 +41199,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "4c3c4e46c36538b813fff26ea17e8695dfcde1e87c12593645ffeed40e6a4d0c",
+          "candidateSha256": "f8d260c9482cebe65746726e953c074d2e6b9e94dc8bc3805c0de6a6b0a1b38e",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_mace.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -41198,6 +41890,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "4dde49033139f34c6835a1937c22c7d79d84446d36e44610fd0ffed2c2b372b1",
+          "candidateSha256": "159582eb043322278a6879e5fccbfdedc51685a56e56feed6b20c315bf870bdf",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_greataxe.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "4e16b7d145ddd61e590ce6ca09ac9aaa1196c2939f76c2f17d14302fb436c022",
           "candidateSha256": "5f1db193a202d84e987ebc5b9823e65eed59364c32da4689ff60fda7fbcb8a40",
           "operation": "changed",
@@ -41490,6 +42196,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "4f039e8bde0fde8d42ea25914df1238f0e34870f6f4efbfc3e5524fc535a133a",
+          "candidateSha256": "d2ca079a77bf4e5064e527d64a99d7897fd505e980c359b839bf6b882ea83ab0",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_hand_crossbow.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "4f5688aeb53edff8e27be7fd96bfdf0983a70c3e0da0244c90f0a304c6e6196a",
           "candidateSha256": "087e0e2a6863455e17876bea9a280249f26f3998c5313cb2f49468db05d10289",
           "operation": "changed",
@@ -41718,7 +42438,13 @@
           "baselineSha256": "520c8a1399e4721f8ed300d4e71864a74a6d848337cf35a2d2c8b5311f1982d6",
           "candidateSha256": "ce054e13936dcb03bd2291216e293478fd1579ee0b652075ed8ca783b34db848",
           "operation": "changed",
-          "segments": ["mcp", "registered", "end_battle", "outputSchema", "$id"]
+          "segments": [
+            "mcp",
+            "registered",
+            "end_battle",
+            "outputSchema",
+            "$id"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -41761,6 +42487,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "528586cf3e249156ab4dd164ec7d6942db52effc6b875db0631da12d11d1039f",
+          "candidateSha256": "2e72d24b5df2c4e4fe9ae2f8863073df41543a63a345b388f3e7aa60043feb2a",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_pike.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -41861,6 +42601,20 @@
           ]
         },
         "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "52af6a23f0869c99af62483afcb1a264eb9e172779e2a7d3106044a79975fc0e",
+          "candidateSha256": "a89ba5d1fb5577bc5168c942ec5b0cf675fb4d1fb2cefe47c1e0e248f27ca0f8",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_mace.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -42418,7 +43172,10 @@
           "baselineSha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3",
           "candidateSha256": "1121cfccd5913f0a63fec40a6ffd44ea64f9dc135c66634ba001d10bcf4302a2",
           "operation": "changed",
-          "segments": ["persistence", "formatVersion"]
+          "segments": [
+            "persistence",
+            "formatVersion"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -55446,6 +56203,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "55ffda7728f16d9e1c2108681159cf8bb0d07549f35e84301c1bc03dbd4c3500",
+          "candidateSha256": "718594a1612a6fe298a5119609573840798c362c30116de9aa0964f731687f7f",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_longsword.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "56770ee44c82084c520db45d68d1ce2fe278fbae61e07c33a65b414188178a85",
           "candidateSha256": "dcbea0bcbbe9465e929d0a0139225e9410351ec9a975de7da87af5cde280b352",
           "operation": "changed",
@@ -55783,6 +56554,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "57a81550a91bd3a892d45c9cbacba5774e9062713d0d905046f58e921e59e21d",
+          "candidateSha256": "290f98239c2b27a276bed99e5bb67d71d508a61d4081a54fb678ebf46ca4cb15",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_javelin.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -56261,6 +57046,20 @@
           ]
         },
         "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "5a06a936ced255f8b9201b84beeae071cc80dbe55a0d65d05274c90d3a1c3624",
+          "candidateSha256": "d1c024bc83581884af7d0334c3113caafaf53cfa41cc1f881b1f449e57c2c234",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_sickle.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -56446,6 +57245,20 @@
             "content",
             "@path=packages/surface/content/create_undead.json",
             "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "5b382b18ec21248ebfe74e13a7caa7481992fb2fb7322cb9518c365daf163fc9",
+          "candidateSha256": "36f743f8a33a445c5d5e23cc7ab170e28c635456192f321de2ec7b8faf05e5ac",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_greatsword.json",
+            "sha256"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -56846,6 +57659,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "5cd16be4700a8dc9e5fa233d8c4a2667f318f21c15d9b8c64791d5d15e9539d0",
+          "candidateSha256": "d57980c9d4fee2b75c73ef634bc842cb6d708b2d5087075b78d19f07ed7d12de",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_light_crossbow.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "5cfc16040b950e42cb64e08c89a6e5164f8619b662c97f29c43dd8174d851708",
           "candidateSha256": "e48007a2e4350a6b87bd541be8747bdb6e65aa530a8cfcd7d729a7b0abf94f73",
           "operation": "changed",
@@ -57094,6 +57921,34 @@
             "surface",
             "content",
             "@path=packages/surface/content/stat_block_sphinx_of_wonder.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "5e23145ad105f9f1f0e74c91c86dee03af08ff218ae4c69da00d53bcf81231ce",
+          "candidateSha256": "48f9e8fd9a949e820292515b2fd70a06c12cea048a59d6f2b90891dcca580eee",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_hand_crossbow.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "5e8aa4aac9bc19d491e0a54b92b394e1ba98f9e2c1cfab52a42dff982effdf4b",
+          "candidateSha256": "f914a3811284ffbf907a3ecc99897e430c8f401b200c67643561f3cff73e50ea",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_musket.json",
             "byteLength"
           ]
         },
@@ -57937,6 +58792,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "6610951462c829e50be920c6e4391dfb1ff676dd7ef9adcfe73c6cb80ed67283",
+          "candidateSha256": "1660e12e012e5d143bc8de03230b766ad36046103f56dadab592e233a21ef805",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_flail.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "66628112e23d0d5177f9dd4daba94575c5bccaed179671ec06a328b1b5ec1ad2",
           "operation": "removed",
           "segments": [
@@ -59089,6 +59958,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "66c372637ea5d84e932749f6e6e992f98e0db978781e90f25fa33e7663f7ffed",
+          "candidateSha256": "07a014da4a846aecdd7cb376f857efebac4cd0f69fa59409e0b2f62e9a090667",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_halberd.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -59168,6 +60051,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "692ffbfc55c64cd76fe58496854734a5ef51819c814213e592889717b605ad91",
+          "candidateSha256": "a429d74157079fd6c6488903f5878033641bb0720f9d0d60c753c15a916ed074",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_whip.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -59355,6 +60252,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "6aae908f0885ee0bc886c506963020298eeee7e549084babf7e823f768e08950",
+          "candidateSha256": "effc2d7d8fdf27c0cdcebad026722b7cd3bc42867b38c96f26f7d8c8d2616e94",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_trident.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "6ac8017d82666562b66c9bcc5dc2fda532a08d39290eb268c513c94ccffb232a",
           "candidateSha256": "3b5336bce32bd6225fc21b051e27787b7d48e75c98883d955fa3ae29c48ae505",
           "operation": "changed",
@@ -60027,6 +60938,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "6c5d7a2b5d97961a8fab557d04b0dbed80cdf42afdfea10d2512ce2f86614caa",
+          "candidateSha256": "67e94157a6003c3ad2f3401edf02f0b83a1196122dffb3a3471b59d44cc13f2f",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_greataxe.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -60185,9 +61110,28 @@
           "baselineSha256": "6e07251b09ea114ec94d421db9f2aea54528e7cd958ceda474637b41acafba6c",
           "candidateSha256": "0cab7b214129c81f11768caa8a1a27b77eca8ae2d94d8721a2c119eedcb8a015",
           "operation": "changed",
-          "segments": ["mcp", "registered", "list_stat_blocks", "description"]
+          "segments": [
+            "mcp",
+            "registered",
+            "list_stat_blocks",
+            "description"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "6e4764905d50252d6f89d78e1755b5cde651537424baa81cf7a7b1785cc7c046",
+          "candidateSha256": "53d70a254cc89aaf3a337246a3cae8168f362cab5c2f91621dc8fc712389ff27",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_maul.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -63702,6 +64646,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "6fda59fe7a944323ba277cdc41972baee4f03cb1e79da86a8144c8a764de9404",
+          "candidateSha256": "c84be7e33baaf0180bfab69b1afb542446302ea80ee5a38c7d53caeefacd6116",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_light_crossbow.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "6fec0b4fbeff1ae029a29fdcd257a6f802c7dc1a42785c9264368bccc20158b6",
           "candidateSha256": "0266345044743eaf4b4126df36b99a0cda9a1afed464887fa881d55c9da74b4d",
           "operation": "changed",
@@ -63852,6 +64810,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "718594a1612a6fe298a5119609573840798c362c30116de9aa0964f731687f7f",
+          "candidateSha256": "1b83d57cfef47705ad48c482612c0e6e4aea4422b926d95b0562bf97e63bd82b",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_scimitar.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "71e9d8f325cc86a55ebaaf7881d9f64d3607a26b471052b61215c61627fa6fbd",
           "candidateSha256": "aecae231099708f691f27661b7d8658a3cd9ebfb19a40684fb39a39dab66758c",
           "operation": "changed",
@@ -63956,9 +64928,28 @@
           "baselineSha256": "71fed27ce81949da9113278a24e1645e33224fc08f047b80e8b1c15d01e7a5e9",
           "candidateSha256": "ec1b5c9d55e906b2b792e8b158a3df8d68bca276d15b59680cfa8eb365f73766",
           "operation": "changed",
-          "segments": ["mcp", "registered", "fill_battle_hole", "description"]
+          "segments": [
+            "mcp",
+            "registered",
+            "fill_battle_hole",
+            "description"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "72761e0c472d85f62567e4ba6a560fb268cfc53c13bcb1a53022c137fb4c05ab",
+          "candidateSha256": "b3537ebc91607c273a7305703b29a3825026cd5850eadb6578e10c43d783e447",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_javelin.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -64235,6 +65226,20 @@
           ]
         },
         "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "75000f6bc38e065007da5d6dc84748f957f7a5f151575531d5afac90da2a959c",
+          "candidateSha256": "f0c13b6b9250e2f7a52cbe312d653a8400bc570ee0cd65a04abc84bf558c8190",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_pistol.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -64555,6 +65560,34 @@
           ]
         },
         "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "7757df589d2dcf60b6ef20aca61d7174620e3e109a7eb27bcd49115a976b40e9",
+          "candidateSha256": "f8de392b88cbc0c25ad7724620c3cbc750be7032e2f6c0938eb175dbada2640d",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_greataxe.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "78003ff34922c69c18c2a1a2e2ac8c6eb65db64f54c5adf0136228fa1995eb03",
+          "candidateSha256": "c0575b5f408e0b89f09ad4b27c2fc4815353242ab167b041c2e25b4323a6b1b4",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_club.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -65197,6 +66230,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "7ca6e75cfad914a44ef039330b5b58bca3095beba843b357b9b3bb526d467236",
+          "candidateSha256": "d30b160389a27fac0fe0ba169c0ec9670910c171ff340abc3faf205293760038",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_pistol.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "7cde774d6257cbf4a0cf99e0cd32f63beda106501c681510e97931f414a38791",
           "candidateSha256": "f1a3cff0095c2fd62501f7c42308df86a3ed945c935aeae959fd00dc45d783b3",
           "operation": "changed",
@@ -65479,6 +66526,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "7f0156bbf7286a473496291b5d68e08e213a99286783a35dc054d9db1a161058",
+          "candidateSha256": "12296adce4b9c89e98fceed8517b7a4cbcebb97521e31baaed07e84a64483130",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_scimitar.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "7f4bbc5a5b1ac4816d2331a3d153e100b3a0a2db9c00d59e3c21d01d9e7fc7b4",
           "candidateSha256": "e22d57c5c8bb408e54c0ddad878bb6ddb94a0bc6c5ae79c543cb5cd1e2714891",
           "operation": "changed",
@@ -65757,6 +66818,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "81648ca9fc259570270d372dc503656aea57fb7494f293fa0c0a2fae9dcf4fd3",
+          "candidateSha256": "ee3e9aa66fc8c9e97aceae912b53d97631edb3ebd14d95c3aa08a8d689ec1cf5",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_mace.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "818d9669e985623f025dd297f1dbb41addc6e632b11cdde5eb6ecb44bf01026f",
           "operation": "removed",
           "segments": [
@@ -65960,6 +67035,20 @@
             "content",
             "@path=packages/surface/content/continual_flame.json",
             "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "82d20bdb3ec683c1f2c3429814e7ef9b85ea76d7695c16651ac3b114c6f7839c",
+          "candidateSha256": "f81bab2975735da43f75e6904516ae36e762efdcb6a5847aac2ca5b3ca7bef0e",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_morningstar.json",
+            "byteLength"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -66503,6 +67592,34 @@
       },
       {
         "delta": {
+          "baselineSha256": "83c02ac2d48c863dab2ccf6870455aadfc2cec073b8db269b517c879d76aa6d9",
+          "candidateSha256": "e9a663f3cb7de47d1544f49afd938ffb0a29ff6c96b2276c8de5ac57d33a79ad",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_morningstar.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "83e576c61bcb563ad0a0f9cccf38461d540e54878f4975f29ac6341d80a5caec",
+          "candidateSha256": "7a0c02b0c9d5b023a170efa5cb0e0f27cd619b74738c3da4dbb131bb53a05c8e",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_greatclub.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "840d3086d3bd09b6dc7c7470f4c1e549b944de51ec40124d205040a273a541d3",
           "candidateSha256": "ab96dcdae7ab565018924b5ccd624d7cac6bbd4ca99f9d0855fef7b3b14d33df",
           "operation": "changed",
@@ -66540,6 +67657,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "841d66b513050fe272c862a02890a2814f6469a516d689ecbee150b251c85adc",
+          "candidateSha256": "54d6cc1e324c393f7aa38900dbcc2aa4f14beb4697e33b93584ae507b020ccfc",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_halberd.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -66660,6 +67791,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "84b983f776fa270eac724d630c27d687dc01bde11f0677e7180eff0ce2797883",
+          "candidateSha256": "b4294b263fa7113848704e0c11d8954a91e91b7eed4f28e69f0657c866d7d0d2",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_pike.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -66812,6 +67957,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "862def5bbea1a3782281aef7597a29d4247f1efdfc1f5427f9b5236fbde7245f",
+          "candidateSha256": "ac6a290a34cddf51e98a81e538228d446c12106dc78d851265d1065086ed2d64",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_light_crossbow.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "86593d06de68ec574b02d5f1895547c38c6d9acfc93b5059d13646cc58dfbd7b",
           "candidateSha256": "27b156006860505f04454ce17722a9812160472349530a2bdb650b6864aba92c",
           "operation": "changed",
@@ -66863,6 +68022,34 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "87690d143448b305f4d18e6ba12f946e6c83e225374d56ee00ffdb4a93631467",
+          "candidateSha256": "d15f5173eb5fd6d521d333abf50531f20d99430f714813547ed3c47a83e13edd",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_javelin.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "876a1a9529d504d50f048520f6e5a01a4945a97d5ddbf6424b12a681b2b309e1",
+          "candidateSha256": "b80be33c809bb1833e1d921e40a7279f17454ceb1e46dc1ac5bc18cd395fc7e4",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_hand_crossbow.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -68663,6 +69850,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "8993e221ee63b97cfa9ec1dd7fccba2183c1a5b1cf5acafcd8a6fbe5af6be71c",
+          "candidateSha256": "447eb5400955c5db8665e21462cbf926bb7a2cc759188c7de391f2627372b310",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_maul.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "8998ecbb37a22954672aa78002efcdcbabc2148d2b28121d036e53f762d6eb70",
           "candidateSha256": "d7cfd88a69450a4cba395e910276ed1d0babc633ef3345d6b56884f9ace67931",
           "operation": "changed",
@@ -68880,6 +70081,34 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "8af0215caeb484cef32793849f408d623dea45f2be7ea67c8715f13b2add64fb",
+          "candidateSha256": "dfb34d24b5a36ba80ebc2a1a6b4437fb9b498e49488d1519938554db0892ac52",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_shortbow.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "8c1a3d56a97fd9f3ef270801524156f122d0eadbc424d8804756ebdacdb9e5e2",
+          "candidateSha256": "ffcbfa87eb58761c6ceac95238670c2e9d6db0c573bc817041951df3d5baaadb",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_dart.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -69801,6 +71030,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "8d9bcdac558e606c913189b6ce8db44c6eca9ccaab11f00b8226fc660a119b1e",
+          "candidateSha256": "a15d22597e02677f886949aaaedeb5ed6ea31d499c6820f17fee8717d00dff46",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_maul.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "8dbe356e9d6f35d4b086c54591731c68c6c5de4f63d75bb01ac4d592ed2952a6",
           "candidateSha256": "d4cf27d939d912e8c30852b42cf310d22b677f9285239870bc0f9b681f21e24d",
           "operation": "changed",
@@ -69838,6 +71081,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "8de71b4a1c4818659e810797d870b8d73daff493eb5ab84365541a67ae0abf16",
+          "candidateSha256": "72de1ee293333cc52ebd4c5db303c5a21360a7856c583428adab56d360823200",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_whip.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -70781,6 +72038,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "8f5b74bc39246000138065da5fd53620eeabfcc8ed36bf36a449b31d87f4b3be",
+          "candidateSha256": "b90500984968df198ebf1f7527049deb5ae814e889bcf5e0137194e81076e5c2",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_lance.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "8f63a5dcc6c77d02374f99e4dc382332e0a48f0167cb1ced89d6377d1d8eccbd",
           "candidateSha256": "480ea9d24e43a8fed4935b9240b20de3e496ace820585f553b04a9a65a7b5720",
           "operation": "changed",
@@ -71078,6 +72349,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "8ff1a7ed0cecfe10f0ffcfcf1b50e477531dd3999efccc9d838f9f11e5d62ab2",
+          "candidateSha256": "21be99e441b43a5dc3c1f853d4046549ce37d0b7ec2135921dec22a0da7a5e6a",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_sling.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -71089,6 +72374,20 @@
             "content",
             "@path=packages/surface/content/continual_flame.dhall",
             "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "911c2feab63f767de3e63d9bf2c92ff051978aef459d1a0351b13dd643a59817",
+          "candidateSha256": "207db6cbeab7cf4aa8ddfbcec34f4df58186e3354cbe7822756864df81e7dc6f",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_spear.json",
+            "byteLength"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -72111,6 +73410,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "959c5dc068b8d5c9442c9c391a03cf66549e6041048e76f24015e1c755bf1977",
+          "candidateSha256": "5834860c74b368a6922b8064b557a48518455990c94e56993f04de1ff4803ac9",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_pistol.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "95ebe6c7be037b455ddcbabd5e561c21326393d0b041ef42758ad6815986ec6b",
           "candidateSha256": "1d26a019d86e4eccaf8db7889d43982a8464fce0942171f86a1e75fe655044c3",
           "operation": "changed",
@@ -72365,6 +73678,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "9879fe22d228fcdeaaea0267da9a2e6ac665c37f021fb6a66d8589e6970a7264",
+          "candidateSha256": "3e0561ba4e446ce4e10fc1496ea69ebd4598211e22d860b9a88108d60be64670",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_musket.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -73213,6 +74540,20 @@
             "content",
             "@path=packages/surface/content/flame_blade.dhall",
             "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "9d135535870b2358153499213be650a92aa06bef7bdfeef4fdf01fdf2fdc1c5e",
+          "candidateSha256": "f9ce2bd94556eb603f9dd2b5ca0d21f5ccc9100c0c6daaed3773830639839641",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_javelin.dhall",
+            "byteLength"
           ]
         },
         "reasonId": "surface-authored-contract-convergence"
@@ -75129,7 +76470,13 @@
           "baselineSha256": "9f27402d73b0585b873f21212736fb02014cab6f5fa6a62714eae556bc134f96",
           "candidateSha256": "7417a3cb3455dd9ac5b06fb4f8275182d17c059c618a11a738581d4d842775fe",
           "operation": "changed",
-          "segments": ["mcp", "registered", "end_turn", "outputSchema", "$id"]
+          "segments": [
+            "mcp",
+            "registered",
+            "end_turn",
+            "outputSchema",
+            "$id"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -75352,6 +76699,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "a15be3c21ee8955c3943eb751c0e83c204b839174020c7508c61bfd08d022ff0",
+          "candidateSha256": "05fdee3f11a901376a1bf8475ff908a469b33fce0949569d79296d51df347a3e",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_quarterstaff.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "a1850b27a3c5bff0760fb6ea03f4f4aa9a54991e0eaca6c8f81e75a468f128d2",
           "candidateSha256": "c58c82a924d86e4f1c57e5fc0cb2daa38d7a3399b09ee9e9957fa9f307a07f44",
           "operation": "changed",
@@ -75416,6 +76777,34 @@
       },
       {
         "delta": {
+          "baselineSha256": "a1b5525193efc34ab22479788e6b913e3399f67c6ddcd20ccc7d5941ccb24608",
+          "candidateSha256": "423c827103f0254429fd614e3af6553bd720c8234b6e500ec252a84d5448d02e",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_dagger.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "a1d5d6ed918a8b1b287398f4f7662592d6f5ea91b795fbdb3abb928a1d5f1b3b",
+          "candidateSha256": "bdc54b0389c688202f73761c10816d70ed4feaebae78128c86c74b7f3f08576e",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_warhammer.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "a1ecd7dff23ccda3505bbe5a00bdd310f6e073999b33356e622d22a52f1aa497",
           "candidateSha256": "162f6f5bee273219b3ef5b337c1902ed3cfa00b098526405d5f2e8d8f60b9a7f",
           "operation": "changed",
@@ -75456,6 +76845,34 @@
       },
       {
         "delta": {
+          "baselineSha256": "a20ea7a9868b11e0b2d2598a69e5310b973fd667909f89f9c7c4bbf0144b3ed3",
+          "candidateSha256": "b76ad8af14d4dceeb4ad6ef4dad96a39aebf91c10a11cdfac9e843ba27a6348b",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_pike.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "a210682ef73bb7d168b0deaaf644e3d6b48257adcf48d40a81908232aaef8491",
+          "candidateSha256": "a31f57290e84407f08aa10d715f9fe29a39e036235daef523e19634ac05e42af",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_warhammer.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "a2291af1be89edadcf17a24d4d88c18f834ac1320275575f8fa1d7926f96bc5c",
           "candidateSha256": "dd17823338231a51d3e89eae3cb39506ca5ee2c70f8d839315aa27a829d82426",
           "operation": "changed",
@@ -75493,6 +76910,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "a2b2e77ee9d7e2cea4f491bdb4cebb930ccf7205155137ef6fc64f608f7010a6",
+          "candidateSha256": "b31237ef1ae2d41b28f56e9632c7f8933c13e9c405611899a78959a115cd3a4d",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_greataxe.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -75822,6 +77253,20 @@
             "surface",
             "content",
             "@path=packages/surface/content/thaumaturgy.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "a696266b0be392342a68fdf9385b46d3e9795d178f1537185c19172fcce7fb3f",
+          "candidateSha256": "c5b59df503dfc2a9170f47134a8b88b8820000a2e6ed4cd109d7f6a0d05e3160",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_handaxe.json",
             "byteLength"
           ]
         },
@@ -76218,7 +77663,12 @@
           "baselineSha256": "a8f5725d6169f0cde5d1852caf201b460b61c4872667500eab181da2a9cb09ac",
           "candidateSha256": "9d152894b5ce8c1ff82dae7f1699772242cbc635215403f27f725306edb1bff1",
           "operation": "changed",
-          "segments": ["mcp", "registered", "read_battle_state", "description"]
+          "segments": [
+            "mcp",
+            "registered",
+            "read_battle_state",
+            "description"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -77126,6 +78576,20 @@
             "surface",
             "content",
             "@path=packages/surface/content/ice_knife.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "aa2cb6b6652a9208c917ffc4f589c7a8e51925b8fc11b1d23acc054b2de73945",
+          "candidateSha256": "30af6e569d37f57919825ceb14ff0ccf635799cdbb47d7f2e522eef35a9c2aeb",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_rapier.dhall",
             "sha256"
           ]
         },
@@ -80848,6 +82312,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "ac7f37f131c4f663c7e3411b321bc9d77245b2220171d41b9f76421ece502c69",
+          "candidateSha256": "94d59b76e5b10f74d285313f8c69cc4799f538481dbc05edb8dc62f7a59f6eab",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_flail.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "ac8ab13f27009849768b5f938ffa4418e93815330f6b4f2b923d2c58eb4ec343",
           "candidateSha256": "a6fd3885c705a47834c9ba5635d9c8000a84d7d382352adb875ebb69c4c69443",
           "operation": "changed",
@@ -80885,6 +82363,34 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "ad6981fc1184555f67120357b2a400d0921f6650e73a69dab6eb27b68481e664",
+          "candidateSha256": "f586887111d13e7e43615d22d943403778ce226cd330796fb07b0d45958dab72",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_greatclub.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "ad905186786921765f9094c59bb8ac5f39f5d2e65fe3c9258f016dc511c6f8ed",
+          "candidateSha256": "1a0a9d287c2200ce101248125db491c34e48155e7bf2ffec4161ecbfd91b48dc",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_shortbow.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -87381,6 +88887,34 @@
       },
       {
         "delta": {
+          "baselineSha256": "b0ef7769d270570fe1ab58808890bb70761b8686576d021da265acbb9ffd5a5a",
+          "candidateSha256": "8c4bc799953a87a2fa8386f58264974bdcaf4677d5ec91fd202cc1f9ed0f38bd",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_glaive.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "b10ff9124f683617f617505c956eba6317dcee6dc072ce33e109f19795aaea65",
+          "candidateSha256": "2b7d57e841b57d20427421b6816603b5c19c81482442bae84a551d3f1a4ebcd3",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_light_hammer.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "b1369d21ede6cb8857bab4d37979e0f1d4c5c430daa660d03d002ed63fdd435d",
           "candidateSha256": "ca965b2b531c13ff6ce592746f36f03799c3c2d231bd1a0d1eae50bee0ff5a9a",
           "operation": "changed",
@@ -87418,6 +88952,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "b1f3bd801981f3cb1010e6b1a597c23fe91de97e0e715815c46e1ab1592200e4",
+          "candidateSha256": "f89affeaaef9ca2437ac6bce175ccf0254f13c68a2dc0b2a469ee362d395be3e",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_glaive.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -87486,7 +89034,7 @@
       {
         "delta": {
           "baselineSha256": "b37a110a5614989e3179f3947b5947b47f99620575a77bcd07d0c0b42780205a",
-          "candidateSha256": "bd4e5d5ca39b8dc57f7d175752f5534db2aaf71b406c97380ffe8ce226ff5570",
+          "candidateSha256": "83183cd1c8459c8a790ad238cfeb7d36dc0dbcbdf474e619125acca372773440",
           "operation": "changed",
           "segments": [
             "surface",
@@ -87536,6 +89084,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "b3e3bb4ec46e0c2dd1062e825e6729670afcdee50f747585a4f3bc3846e8300c",
+          "candidateSha256": "250ddc8c156fc0ef9d1087c2f0c5db20b9d48c0e9f4ac73f3e9e4fa3fb032a5a",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_flail.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -94321,6 +95883,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "b74c7cd3b7e7e11bf4d0274754db7b3b3fc5943fa68859a1709f4612b7995af9",
+          "candidateSha256": "3c8aa33075201bd6203850c1c557ce2f9fea680d305a173e7d975b35384aadfd",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_heavy_crossbow.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "b773cff12f95569455c6b1136542f5fd5bbe9974c4cb6a626e53277d21895d6f",
           "candidateSha256": "cca672505024316d13404b1a3a3b4f4de135737637b8f28c08185c60310480cd",
           "operation": "changed",
@@ -95453,6 +97029,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "b9edce858861cabab9be2957c83da1d5781b5ac2012d446a23466658e411f33c",
+          "candidateSha256": "b19d09e35b05f9f64f2aff26f5a66fc6b6aadc4385dcde7be2357768af560186",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_war_pick.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "bb29d396516b359e81e2363b819f8719420cabfc1bd39fb52116e8a479f564ea",
           "candidateSha256": "d23c7237fc3439f216c511662003f612d7d4608eb9063f688673c0eeb6ccade4",
           "operation": "changed",
@@ -95682,6 +97272,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "bcc38b5ee7c982a9a9a581a29e1e1f2749a50e4547bdf451333243374ee794f1",
+          "candidateSha256": "29c4490d35d04d1773a4e6c924d133fac91b6b8d62123301530d830d3192ecb8",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_sling.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "bcd89ed5eccba5ce9d7a5bd7355353c118bf2bb232c719cc2c5ee2d05a2779a7",
           "candidateSha256": "a98c6c4d65700112d9e05b53cfeb3ae24d3b76eeb35529a0ae5f278b1cf5a610",
           "operation": "changed",
@@ -95870,6 +97474,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "be5f6f028a6ea77e7bb71112c0c70f1c92af84ba4a79d59a2dc0ba887b093eb0",
+          "candidateSha256": "667f75a9e955651e4a1dbbc9e8938a0395b3bf3d080aa074acb97e4514ad6eec",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_blowgun.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "be72dcddd246c67af089413aeb3e865db423d67568ea4a155dce9545377ad5df",
           "candidateSha256": "d1130823b67d9833c84096050270313a41c694d1c521fb6f4588d2e5e9aff7e4",
           "operation": "changed",
@@ -95907,6 +97525,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "be83e8a5661fe999658b3079f70ca83ffcd12e2ae164044ef6050e548357a739",
+          "candidateSha256": "a7a219d940441ca5d725c0dc7ef1f01506a3d6b978e3f4238c77fc1718f466f3",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_morningstar.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -96142,6 +97774,34 @@
       },
       {
         "delta": {
+          "baselineSha256": "bfdba9adccec0b22b41a8cafd2b6abcff2e032ba8d5255f179bfc21c779941ef",
+          "candidateSha256": "92e53faddb51e1a813405792db446548d010e256a4f5982eb885daba861d247b",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_greatsword.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "bff4865435befee179beab1406e00df0b42cbc30d95f4a4d25eb3bcd9bce7b8b",
+          "candidateSha256": "05b142d23d35e71ae827c41e1f93cf15180ac56d7a343eaad397007b794b6a8e",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_mace.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "c03b980f1677a038045d533fc367c051c72dbaa3f63427f98e00bd55d98d6d28",
           "operation": "removed",
           "segments": [
@@ -96288,6 +97948,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "c11eae0cc2e648efe410effd75e64dfca8f6b6532b51f6cfa29e5c03503be0d7",
+          "candidateSha256": "83e576c61bcb563ad0a0f9cccf38461d540e54878f4975f29ac6341d80a5caec",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_rapier.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -96822,6 +98496,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "c297216a6c8543500c38712ec0114c133e1386c3c870ba60d4ae721db67b0226",
+          "candidateSha256": "0e51bd60452b74ce9075683eeadada9338f0fe5daba786adc6f3492203d21f29",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_maul.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -98685,6 +100373,34 @@
           ]
         },
         "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "c5b59df503dfc2a9170f47134a8b88b8820000a2e6ed4cd109d7f6a0d05e3160",
+          "candidateSha256": "a6e27db66275c9c2a2779d4e9ad561dc33b22b0d9ad68c882acf50314e9b9716",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_light_hammer.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "c5baa2977d74c91e4549e1b0f0be331761c8b4eb910feb9dfb6f91bbc53fa174",
+          "candidateSha256": "01a8c3f9990790c6ec892ee0c49021caa35f4ae62aa8a6ad051eaa02b85bd6ad",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_war_pick.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -100653,6 +102369,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "c9035cbcd0d583b8bddbae7f6414a8a04ddad33d025972da43062be2f3422191",
+          "candidateSha256": "4bb33c782cf1cdafed6f95ecfafe5b2c58938fc4fe508761f0c5c44dd85dbe61",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_spear.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "c98525f069267d90a807af9f663a1737f759599ea6f86919bdc1529358c6496a",
           "candidateSha256": "46508f115a130cc0236e5754521428e230404e3e77dd4a18b43b2266cd4c1de2",
           "operation": "changed",
@@ -101372,6 +103102,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "ccf96e2f02892fafe326bd27fb2e8426e2ccc6df230c4b66746833c8ff2abb11",
+          "candidateSha256": "d6ddac914f927a17046537e049c8bdc0e8adc026707dbb23740cad49f6a22cf2",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_scimitar.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -103071,6 +104815,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "cdfba543ee8ef7fdb3d8b587648cc22dd792bbd6272cc5447307c7c106c2374c",
+          "candidateSha256": "33a8ee57a72a5a276025b0b436811f6ab55757534345255d35ef39eaad1a9709",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_shortsword.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "ce39d32a6674d697161e79266ded4ab36c414f7f9bfdd368fd8e773ecc672ff2",
           "candidateSha256": "caa4f9b555954c2e73e726e2680e83de5d2ca975b443a0797cee80456f752278",
           "operation": "changed",
@@ -103336,6 +105094,34 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "d05dd95f7ec068988015cb6c4536510191eaba0ebbd7a6c9feb55c73650cc698",
+          "candidateSha256": "168c51e76cd2e17b80e145f1222c0bcab672adccc3e0cfe6996382cf54737a14",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_lance.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "d0a7492161635391d7f60ecec1a487a335251e5e814d9c5206e9d55dd8bfcbf5",
+          "candidateSha256": "2415e01b88c1283eb54fa6917b7204aa6840bcea15564738b459b3e56b2b3eb2",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_heavy_crossbow.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -103985,6 +105771,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "d23950675736059cb6f06c4a957d51ad2609eff20f4816a19146ecda602b179c",
+          "candidateSha256": "6f813f516b1c9981db2207d5d273625762dd35f159bb6575114ad425da922ab9",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_heavy_crossbow.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "d23c7237fc3439f216c511662003f612d7d4608eb9063f688673c0eeb6ccade4",
           "candidateSha256": "0b4f66b6a0848255abc248dc216d7bc5a4bf9b034f009bec04738a500ea61383",
           "operation": "changed",
@@ -104142,6 +105942,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "d2fa227b6bcfb05679e52e67492b659f1cbdab5480820691dfd052ea342b159b",
+          "candidateSha256": "419366d10711c31925bb9c0a82ee306d52dde649fd179190560a109f821d381d",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_dagger.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -116054,7 +117868,13 @@
         "delta": {
           "baselineSha256": "d84fac02ad4e6075f999e807b59a02d353eb23d9085761f28c8127a6be9189f1",
           "operation": "removed",
-          "segments": ["persistence", "fixtures", "guest", "value", "tenure"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "guest",
+            "value",
+            "tenure"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -116100,6 +117920,34 @@
       },
       {
         "delta": {
+          "baselineSha256": "d8b6bb49c4a2719b65d29d960931d1a94eab71a062a70152400d645bac960c04",
+          "candidateSha256": "54b6a69abf3d359a46449c61fd6b5694a5a91371028fb66190b7c94d23cbee45",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_blowgun.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "d8cb5aef9a5e2a9ca97425e3fa7c82815f0f559beb0bf54a456bc381dcdfff23",
+          "candidateSha256": "f930004daaa6f6ae040fa38641a36aa99f38f1048da4139227d4d9f5dcfd9514",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_trident.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "d8fb37c9f03b0df4b9d98ee9056d7352704c0d1965a285038934ed8fca61b1e3",
           "candidateSha256": "95ebe6c7be037b455ddcbabd5e561c21326393d0b041ef42758ad6815986ec6b",
           "operation": "changed",
@@ -116140,6 +117988,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "d8fe58276c778c4d24db4fb6bea36fb7d6c5f8b0d3f13c934f8c45702dd2b33b",
+          "candidateSha256": "0898f9ed9a508448b71bc8fad64e8c47a72fc9fdb6745ff7077683f77e0d56f5",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_morningstar.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "d90a5a3368c37373200ccd7078cbf828e1c0b98b103cefa95a059d47989bce25",
           "candidateSha256": "a642c59fa3bbdce19424b8053bd327ea065cedb054e98a2959ab393d1fccd663",
           "operation": "changed",
@@ -116147,6 +118009,20 @@
             "surface",
             "content",
             "@path=packages/surface/content/insect_plague.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "d998ce7ad090455e357503c3ef7b969239c0b5202242ec65cc3c3298dc71154f",
+          "candidateSha256": "2522f290d782a883810b75eba5b81bc2ef0f1bea2310f557b903edc9b1edee71",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_pike.dhall",
             "sha256"
           ]
         },
@@ -116231,6 +118107,34 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "da04afebaec6ea3d43dc3a0e66b790ab13751b00fd81aa1f882986c097c36298",
+          "candidateSha256": "69efeae55712345aa4720e37d4b119281f8e1716f693c96fcc67caa6b4db1b35",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_greatclub.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "da77d41765ae50d130eadbbd413b9a4bf657be1b22a8e3878321364168318c3e",
+          "candidateSha256": "cdcd917f056f7ac411843a3271c15220c4b0815abd9366196211c154b6aa26b4",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_handaxe.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -116375,6 +118279,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "dbab815a82ec29eccf0d366b5a38faae264854757144d0ede80dd6158bfb6410",
+          "candidateSha256": "d914c5f16a61ac94045632232061852238f917aa015e5db71eb6573424fa84cd",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_sickle.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "dbebda70e3ebca0c3f85ca7c24ed020cfbb39c588604cd34801762d1233ad8fc",
           "candidateSha256": "6c3ca3e122a31cc0b9717ee38092c624e03d70d998a54f6ae1fc97a001bc872e",
           "operation": "changed",
@@ -116412,6 +118330,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "dc588def39a5446c1fddb6bf9dbd1308fb56c822417c23a1c57a49a24c485713",
+          "candidateSha256": "e4d2ac1c6d50cd5ebc7c2544d6b5a37c0d743b01cd96c62331e1b00ca9f4c2eb",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_dart.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -116736,6 +118668,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "de4b966c1e4d66e3ced42c19ca8e9bf9ad6906911d2d9b25edc081185d05c4ca",
+          "candidateSha256": "a739c9f8c9968c03553730c28210af55c32a2748834e750b889d63dc4e7545ea",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_sickle.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "df1814a4d60bf45b6b584400424e7cee58013a79297e3003bd82bbd54f315b83",
           "candidateSha256": "9c9a3413a32cf07ee1d2fc11d34e8a9ff39b591a519b7f23e0c74b2223a91ea1",
           "operation": "changed",
@@ -116888,6 +118834,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "e043c662bc456d809131f79ac8444973f9aed48a3287965dab7964a5f080c180",
+          "candidateSha256": "d468265197d1fd6798a670e4b782e824b5b71ec230ed4d18b6ddfbf116753456",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_shortsword.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -117075,7 +119035,12 @@
           "baselineSha256": "e10047905fe255897a54fa019b02d0daac0bf0de714a57b88ccc40b47f5ae77c",
           "candidateSha256": "cbde51eb4d0b89ed5e67754e34891947e447bc88f3445b5061d8f60ed270b727",
           "operation": "changed",
-          "segments": ["mcp", "registered", "roll_dice", "description"]
+          "segments": [
+            "mcp",
+            "registered",
+            "roll_dice",
+            "description"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -117158,6 +119123,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "e241926445a1418cbd878e79fb8ef22e6bd8081f374a31e0850a21efe0f90ff4",
+          "candidateSha256": "fc2972efad3b3bfa6f37f8a0ce53c7994063ac810e48b02f8869bc54ce29f6df",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_rapier.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -118483,6 +120462,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "e77b3ceb09906f63abb22781d13ee9b5600e10fb813ba5ee9ae5e7b9c23ea95f",
+          "candidateSha256": "a7191b2b5a89b88087e6c3d2e095c97f92c2aeaaf2cdb47601f5091ec588a1d4",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_club.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "e7bab2d264cf5ee76bd399cc0da2a17bb0cbc49d79b20adceef7df9572681f5e",
           "candidateSha256": "9bb49876d7ba68c6521e3a5acf712be425ab14157677e3ca9663b00491f05e4d",
           "operation": "changed",
@@ -118577,6 +120570,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "e921165ea35f8e84c53de667e57fe6174cc657eca31e51a76b79998fb763d917",
+          "candidateSha256": "cc5006c0efd02b84a8ec23a227745da13592c590c8ee66b63c0678f7a6a42437",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_greatsword.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "e921900b53467fe234f5ef0285a6698f0742b1ddfd1e545bb3ce143154a681f8",
           "candidateSha256": "738abb4df4de1e7ff20de95b76695963af28814612e80a91fa2b66f025640682",
           "operation": "changed",
@@ -118628,6 +120635,20 @@
           ]
         },
         "reasonId": "raw-swarm-effect-runtime-artifacts"
+      },
+      {
+        "delta": {
+          "baselineSha256": "e9766b1d8691907ab69585eb496766c058acace1dbb88d82844d42d6feb82d60",
+          "candidateSha256": "cbb648ae79a542e81755d9e70127d8f304267eab5ce2e69174f1bed0b0b4ac58",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_lance.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -118773,6 +120794,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "ea77d81ddb334afc32e632cacb7c300a0c1afc4d6bee60c09e781cf111351d9d",
+          "candidateSha256": "411c7d21507b483dddae33a6d5b10c98a25a9c586cde5d97ee4a2b155dd3b09f",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_battleaxe.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -118961,6 +120996,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "ec1ce429911653dd49e90f0c113619a9f46e38eb65c5ab45f98d1dc44e2646fe",
+          "candidateSha256": "e0adbbe65edf2f2b57287413d0feb38a82e25fd92e73e528d9d88eaf1771960a",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_light_crossbow.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -119311,6 +121360,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "edfc68614a2f49d4802d6c8191c253c50c38e34839d8fb6e442a8648fcf773f2",
+          "candidateSha256": "c1b98d8684e22c825404abae80fc843b61eab1ace9a19e6b3f9cf0f038c8230f",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_glaive.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -120746,15 +122809,63 @@
       },
       {
         "delta": {
+          "baselineSha256": "eeab06f96dc21c8fb8d413d36e23fd0f0900726f563efcd6f2168c53b551298a",
+          "candidateSha256": "c6ea0652e0a4ae21f6c4731c01bec30ec3635adcc56a64c36e6105d7e41a47c7",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_trident.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "eeb0a151322bbeb33a642c345cef15522e1268edef4099674ed1e3287510c9d6",
           "candidateSha256": "360a7dc432577949da2a664c17df9268581eaed97baf6a910ff48ca9eae29e87",
           "operation": "changed",
-          "segments": ["mcp", "registered", "roll_dice", "outputSchema", "$id"]
+          "segments": [
+            "mcp",
+            "registered",
+            "roll_dice",
+            "outputSchema",
+            "$id"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
       {
         "delta": {
+          "baselineSha256": "ef73453a27cf6aa972f7aa1b0745f920a129c6ab5288cb005cb7c4e083d1d604",
+          "candidateSha256": "626e40367602fe56cb5b14c1df78f2b5c043b44e415d64c89d0d980492e42588",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_club.json",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "ef9ed6a07aeb6396010caee93b23b435445e2f0c84f8b2d721d1b8f9f6d95648",
+          "candidateSha256": "0b0b8cd177096dc48fedfa582996b0b2fe0dd7a6648f0792898689d10753e86d",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_longbow.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "efa265549c9a78b5f31f990c569e85fde4d54fab63ed58c54ea6db83a94dbd38",
           "candidateSha256": "96d690c82960e9649775ba0a9e34515c869c6eab53a3c0b5a67e0cf6cc998930",
           "operation": "changed",
@@ -120832,6 +122943,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "f04632fadec3d6d9d2577c15d10a91c58f266fcbf524e76b0d7d21edc2e66a08",
+          "candidateSha256": "3ab59827985f8b5fb5b14f1f897489a9565e4b03464abca3ac0bfce4c3fe9e68",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_quarterstaff.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -125168,6 +127293,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "f34ea22fb8b463d02f79b313bd0ef3d3e50c8e91c6d8785775990b150339e2f9",
+          "candidateSha256": "562b970e8dfb005da801d94d8e0ccc4fdd3f0fbd9e06eac11018629f3f20a2ac",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_light_hammer.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "f362a335b71828067da55d605337bc27498d9156c40032cfcd91698d43e8d80d",
           "operation": "removed",
           "segments": [
@@ -125443,6 +127582,20 @@
           ]
         },
         "reasonId": "mcp-registration-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "f475840a358dc9799c2a34fdd6c7130562da20c741c591e59ab8569feb220ee4",
+          "candidateSha256": "9a88ae9c34bd65ce72ea644f07e9f684e7b6b49e3650f136e0f8c428bcb3869c",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_glaive.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -126175,7 +128328,7 @@
       {
         "delta": {
           "baselineSha256": "fa39529ae8918c2cb33041a4d15cd2573c1d5beffdfb6a5784e84840725950fd",
-          "candidateSha256": "7db3f31b0a2e7222395eca837b4cb6e26a5a1c3114fd84037d0da94c861dda5a",
+          "candidateSha256": "061bc1d8343f322448e913fb128b7ea60358a3b0f4af86292a8272424df9e861",
           "operation": "changed",
           "segments": [
             "surface",
@@ -126188,6 +128341,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "fa59590321d671bad3bbfbc6f1c235a6ab530e389597b77a772142f8dea40d66",
+          "candidateSha256": "bf2cfde5eb804beea213b6ed68432eb3ec4530a533f6301e3684d06a9144c04e",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_warhammer.dhall",
+            "byteLength"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "fa77eeeb8aa1d70515ec7385d62dd84472660e6d7b96a9a033ff053d008fbb16",
           "candidateSha256": "f1240ff6af5e30c4e433f663da9b55d7f9ff4bbdfe9f8a264cdef8337f98ebeb",
           "operation": "changed",
@@ -126195,6 +128362,20 @@
             "surface",
             "content",
             "@path=packages/surface/content/command.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
+          "baselineSha256": "faae515aa473d2d7c5908d251bb389d015661686880c8b5b672a1e2fd83d1895",
+          "candidateSha256": "e32af994594b5f91da9e1b7615cd882a5816c9bcebcb8a2192e2914d33cef455",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_trident.dhall",
             "sha256"
           ]
         },
@@ -126698,7 +128879,13 @@
         "delta": {
           "baselineSha256": "fdef9925044994da47813be619a43c5dab379132bcad18aac4076ce180f59b34",
           "operation": "removed",
-          "segments": ["mcp", "registered", "end_turn", "outputSchema", "type"]
+          "segments": [
+            "mcp",
+            "registered",
+            "end_turn",
+            "outputSchema",
+            "type"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -126914,6 +129101,20 @@
       },
       {
         "delta": {
+          "baselineSha256": "ff2ece8618a8034fac1081fd2fde615da3d400f2aef5122869a7fa8e5d2f01f7",
+          "candidateSha256": "3f7d3e3a2214cdde5b14a791238e9316607d2b394d605aca9c24341e7cd63468",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_whip.json",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
+      },
+      {
+        "delta": {
           "baselineSha256": "ff8b19815634ec1deb4a1c344040b98fe4610b104710249ad086cdf126fa4642",
           "candidateSha256": "8248bd4b3eb426480d7d490683c3173e6cffa173a7daaa4f9cd110df2380ba7c",
           "operation": "changed",
@@ -126951,6 +129152,20 @@
           ]
         },
         "reasonId": "mcp-protocol-contract-migration"
+      },
+      {
+        "delta": {
+          "baselineSha256": "ffa6c8c462772ea34b698a4ce5158beb6c1fc4748c2e6e2903c230b7e0a95b96",
+          "candidateSha256": "8939daf8d0bccfc2d61dfe2bbba16cfb40b4930532cb814977d12278d5b5a922",
+          "operation": "changed",
+          "segments": [
+            "surface",
+            "content",
+            "@path=packages/surface/content/weapon_handaxe.dhall",
+            "sha256"
+          ]
+        },
+        "reasonId": "surface-authored-contract-convergence"
       },
       {
         "delta": {
@@ -128435,7 +130650,13 @@
         "delta": {
           "candidateSha256": "12c9b6bf32355180cb46072e7d41712daba34ba890cb91187f55f6c5864e3532",
           "operation": "added",
-          "segments": ["persistence", "fixtures", "guest", "value", "tag"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "guest",
+            "value",
+            "tag"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -128443,7 +130664,13 @@
         "delta": {
           "candidateSha256": "12c9b6bf32355180cb46072e7d41712daba34ba890cb91187f55f6c5864e3532",
           "operation": "added",
-          "segments": ["persistence", "fixtures", "saved", "value", "tag"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "saved",
+            "value",
+            "tag"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -161785,7 +164012,13 @@
         "delta": {
           "candidateSha256": "9268dc3739412703975284a5ea88d563372735b5f994bde77f1a8202a2845d29",
           "operation": "added",
-          "segments": ["persistence", "fixtures", "guest", "value", "reason"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "guest",
+            "value",
+            "reason"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -161793,7 +164026,13 @@
         "delta": {
           "candidateSha256": "9268dc3739412703975284a5ea88d563372735b5f994bde77f1a8202a2845d29",
           "operation": "added",
-          "segments": ["persistence", "fixtures", "saved", "value", "reason"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "saved",
+            "value",
+            "reason"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -163588,7 +165827,13 @@
         "delta": {
           "candidateSha256": "9eabd79e1040d255934cb963b9d9bbfdeb4905789ad6f8bb51d9a884c6975a6f",
           "operation": "added",
-          "segments": ["mcp", "registered", "end_turn", "outputSchema", "anyOf"]
+          "segments": [
+            "mcp",
+            "registered",
+            "end_turn",
+            "outputSchema",
+            "anyOf"
+          ]
         },
         "reasonId": "mcp-registration-contract-migration"
       },
@@ -185258,7 +187503,13 @@
         "delta": {
           "candidateSha256": "de23f313873ee739f2416aa0c0589c29bc31bcc1ed9a60be737bb30979d27a65",
           "operation": "added",
-          "segments": ["persistence", "fixtures", "guest", "value", "message"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "guest",
+            "value",
+            "message"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -185266,7 +187517,13 @@
         "delta": {
           "candidateSha256": "de23f313873ee739f2416aa0c0589c29bc31bcc1ed9a60be737bb30979d27a65",
           "operation": "added",
-          "segments": ["persistence", "fixtures", "saved", "value", "message"]
+          "segments": [
+            "persistence",
+            "fixtures",
+            "saved",
+            "value",
+            "message"
+          ]
         },
         "reasonId": "persisted-session-effect-schema-migration"
       },
@@ -194558,7 +196815,7 @@
         "reasonId": "surface-authored-contract-convergence"
       }
     ],
-    "identitySha256": "ba67544243e10d3d719604d27e2a125d6e6b368f5e490085b2d36e33411bd05e",
+    "identitySha256": "b8a867f7c681af144dbc43bc33d2de966692e7eb4552173782cb41d53edc8dd4",
     "reviewedReasons": [
       {
         "changedCollectionAuthorityIds": [],
@@ -194609,7 +196866,9 @@
         "siteSha256": "0aa3cc8bb60ed27ea4e5e0bdf8b44accc094e935c174934070247482a0b27da5"
       },
       {
-        "changedCollectionAuthorityIds": ["raw-swarm-artifacts"],
+        "changedCollectionAuthorityIds": [
+          "raw-swarm-artifacts"
+        ],
         "deltaCount": 63,
         "deltaIdentitySha256": "28c0a02e0c02135dfd2c87213229a7664375c686d59940d8e78973ddc37efa1d",
         "id": "raw-swarm-effect-runtime-artifacts",
@@ -194623,7 +196882,7 @@
       {
         "changedCollectionAuthorityIds": [],
         "deltaCount": 4,
-        "deltaIdentitySha256": "80042b3e3768f6a9df8001be2e053944ff99717be82e79827723d0d7407d39b2",
+        "deltaIdentitySha256": "63b88af5242b2afbd7a6866a3dca0b5d20c83f36b4ab0476d15b9b4b3c88c79c",
         "id": "surface-publication-contract-convergence",
         "operations": {
           "added": 0,
@@ -194633,19 +196892,21 @@
         "siteSha256": "e91697ac1ffd254ef06de3a1ac9c90d0aaa36ae30bc2c1bbdaf48e4a30f89270"
       },
       {
-        "changedCollectionAuthorityIds": ["surface-content-artifacts"],
-        "deltaCount": 773,
-        "deltaIdentitySha256": "2a16d7c5522dc6d70d7821134da6ac7eb57b059b8290806aaeebe284d898320d",
+        "changedCollectionAuthorityIds": [
+          "surface-content-artifacts"
+        ],
+        "deltaCount": 925,
+        "deltaIdentitySha256": "18374918ab474f1c80114709ba1411ba0a98bacee92a6b1b93a3c7ac8d08b679",
         "id": "surface-authored-contract-convergence",
         "operations": {
           "added": 651,
-          "changed": 122,
+          "changed": 274,
           "removed": 0
         },
-        "siteSha256": "fa170ff71862794a42dab6db6afffdd6cc51eb3620f202d3bf659db0a8233ed2"
+        "siteSha256": "eaf713a63453d62a4559cfca4bb548878cb2479d02131616430c2a87f08cd966"
       }
     ],
-    "totalCount": 8811
+    "totalCount": 8963
   },
   "formatVersion": 2
 }
