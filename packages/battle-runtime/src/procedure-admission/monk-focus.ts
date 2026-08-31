@@ -1,0 +1,574 @@
+import type { AuthoredUnitSource } from "@dnd/surface/surface/types";
+import { PositiveInteger, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  unitMechanicsPath,
+  type UnitMechanicsPath,
+} from "@dnd/surface/surface/mechanics-graph-path";
+import { Match } from "effect";
+
+import type { CharacterBattleClassLevels } from "../character-class-level.ts";
+import type { BattleResourcePoolExecutionRef } from "../identity.ts";
+
+export const MONK_FOCUS_OPTION_PROCEDURE_KINDS = [
+  "bonusActionUnarmedStrikeSequence",
+  "bonusActionDefensiveModes",
+  "bonusActionMobilityModes",
+] as const;
+export type MonkFocusOptionProcedureKind =
+  (typeof MONK_FOCUS_OPTION_PROCEDURE_KINDS)[number];
+
+export type MonkFocusResourceFacts = {
+  readonly kind: "useCount";
+  readonly cap: {
+    readonly kind: "linearPerClassLevel";
+    readonly className: "monk";
+    readonly base: 2;
+    readonly perLevel: 1;
+    readonly startingAtLevel: 2;
+  };
+  readonly resetCadence: "shortOrLongRest";
+};
+
+export type MonkFocusSaveDcFacts = {
+  readonly kind: "classFeatureAbilitySaveDc";
+  readonly base: 8;
+  readonly ability: "wis";
+  readonly includesProficiencyBonus: true;
+};
+
+export type MonkFocusOptionProcedureFacts =
+  | {
+      readonly kind: "bonusActionUnarmedStrikeSequence";
+      readonly focusPointCost: 1;
+      readonly strikeCount: 2;
+    }
+  | {
+      readonly kind: "bonusActionDefensiveModes";
+      readonly freeAction: "disengage";
+      readonly focusPointCost: 1;
+      readonly focusActions: readonly ["disengage", "dodge"];
+    }
+  | {
+      readonly kind: "bonusActionMobilityModes";
+      readonly freeAction: "dash";
+      readonly focusPointCost: 1;
+      readonly focusActions: readonly ["disengage", "dash"];
+      readonly jumpDistanceMultiplier: {
+        readonly multiplier: 2;
+        readonly expires: "endOfTurn";
+      };
+    };
+
+export type MonkFocusProcedureFacts = {
+  readonly kind: "monkFocusBattleOptions";
+  readonly effectSaveDc: MonkFocusSaveDcFacts;
+  readonly flurryOfBlows: Extract<
+    MonkFocusOptionProcedureFacts,
+    { readonly kind: "bonusActionUnarmedStrikeSequence" }
+  >;
+  readonly patientDefense: Extract<
+    MonkFocusOptionProcedureFacts,
+    { readonly kind: "bonusActionDefensiveModes" }
+  >;
+  readonly stepOfTheWind: Extract<
+    MonkFocusOptionProcedureFacts,
+    { readonly kind: "bonusActionMobilityModes" }
+  >;
+};
+
+export type MonkFocusPathEvidence = {
+  readonly disposition: "consumed" | "unowned";
+  readonly branch:
+    | { readonly kind: "useCountResource" }
+    | { readonly kind: "restResetCadence" }
+    | { readonly kind: "saveDc" }
+    | {
+        readonly kind: "optionIdentity" | "optionExecution";
+        readonly procedureKind: MonkFocusOptionProcedureKind;
+      };
+  readonly mechanicsPath: UnitMechanicsPath;
+};
+
+export type AdmittedMonkFocusProcedure = {
+  readonly binding: {
+    readonly tag: "required";
+    readonly requirements: {
+      readonly resource: { readonly kind: "sameSourceUseCountResource" };
+      readonly classLevel: {
+        readonly kind: "canonicalClassLevel";
+        readonly className: "monk";
+      };
+    };
+  };
+  readonly resource: MonkFocusResourceFacts;
+  readonly facts: MonkFocusProcedureFacts;
+  readonly evidence: readonly MonkFocusPathEvidence[];
+};
+
+export const MONK_FOCUS_ADMISSION_FAILED_FACTS = [
+  "unsupportedUseCountResource",
+  "unsupportedResetCadence",
+  "unsupportedSaveDc",
+  "unsupportedOptionTiming",
+  "unexpectedOptionCount",
+  "unsupportedOptionProcedure",
+  "duplicateOptionProcedureKind",
+  "missingOptionProcedureKind",
+] as const;
+export type MonkFocusAdmissionFailedFact =
+  (typeof MONK_FOCUS_ADMISSION_FAILED_FACTS)[number];
+
+export type MonkFocusProcedureAdmissionIssue = {
+  readonly tag: "monkFocusProcedureAdmissionIssue";
+  readonly failedFact: MonkFocusAdmissionFailedFact;
+  readonly procedureKind?: MonkFocusOptionProcedureKind;
+  readonly mechanicsPath: UnitMechanicsPath;
+  readonly message: string;
+};
+
+export type MonkFocusProcedureAdmission =
+  | { readonly tag: "notBattleOwned" }
+  | {
+      readonly tag: "admitted";
+      readonly source: { readonly unitId: AuthoredUnitSource["id"] };
+      readonly procedure: AdmittedMonkFocusProcedure;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly issues: ReadonlyNonEmptyArray<MonkFocusProcedureAdmissionIssue>;
+    };
+
+type ResourceContainerMechanics = Extract<
+  Extract<AuthoredUnitSource, { readonly kind: "class_feature" }>["mechanics"],
+  { readonly family: "resource_container" }
+>;
+type MonkFocusBattleExecution = NonNullable<
+  ResourceContainerMechanics["optionSet"]["initialOptions"][number]["battleExecution"]
+>;
+
+type OptionObservation = {
+  readonly ordinal: number;
+  readonly procedureKind: MonkFocusOptionProcedureKind | null;
+  readonly supported: boolean;
+};
+
+export function admitMonkFocusProcedure(
+  unit: AuthoredUnitSource,
+): MonkFocusProcedureAdmission {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "resource_container"
+  ) {
+    return { tag: "notBattleOwned" };
+  }
+  const mechanics = unit.mechanics;
+  const observations = inspectOptionProcedures(mechanics);
+  if (!observations.some(({ procedureKind }) => procedureKind !== null)) {
+    return { tag: "notBattleOwned" };
+  }
+  const issues = monkFocusAdmissionIssues(mechanics, observations);
+  const [firstIssue, ...remainingIssues] = issues;
+  if (firstIssue !== undefined) {
+    return { tag: "rejected", issues: [firstIssue, ...remainingIssues] };
+  }
+  return {
+    tag: "admitted",
+    source: { unitId: unit.id },
+    procedure: admittedMonkFocusProcedure(observations),
+  };
+}
+
+function inspectOptionProcedures(
+  mechanics: ResourceContainerMechanics,
+): readonly OptionObservation[] {
+  return mechanics.optionSet.initialOptions.map((option, index) => {
+    const inspection = inspectMonkFocusOptionProcedure(option.battleExecution);
+    return {
+      ordinal: index + 1,
+      procedureKind: inspection?.procedureKind ?? null,
+      supported: inspection?.supported ?? false,
+    };
+  });
+}
+
+function inspectMonkFocusOptionProcedure(
+  execution: MonkFocusBattleExecution | undefined,
+): Pick<OptionObservation, "procedureKind" | "supported"> | null {
+  if (execution === undefined) return null;
+  return Match.value(execution).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      bonus_action_unarmed_strike_sequence: (value) =>
+        optionInspection(
+          "bonusActionUnarmedStrikeSequence",
+          value.focusPointCost === 1 && value.strikeCount === 2,
+        ),
+      bonus_action_defensive_modes: (value) =>
+        optionInspection(
+          "bonusActionDefensiveModes",
+          value.freeAction === "disengage" &&
+            value.focusPointCost === 1 &&
+            value.focusActions.length === 2 &&
+            value.focusActions[0] === "disengage" &&
+            value.focusActions[1] === "dodge",
+        ),
+      bonus_action_mobility_modes: (value) =>
+        optionInspection(
+          "bonusActionMobilityModes",
+          value.freeAction === "dash" &&
+            value.focusPointCost === 1 &&
+            value.focusActions.length === 2 &&
+            value.focusActions[0] === "disengage" &&
+            value.focusActions[1] === "dash" &&
+            value.jumpDistanceMultiplier.multiplier === 2 &&
+            value.jumpDistanceMultiplier.expires === "end_of_turn",
+        ),
+    }),
+  );
+}
+
+function optionInspection(
+  procedureKind: MonkFocusOptionProcedureKind,
+  supported: boolean,
+): Pick<OptionObservation, "procedureKind" | "supported"> {
+  return { procedureKind, supported };
+}
+
+function monkFocusAdmissionIssues(
+  mechanics: ResourceContainerMechanics,
+  observations: readonly OptionObservation[],
+): readonly MonkFocusProcedureAdmissionIssue[] {
+  const issues: MonkFocusProcedureAdmissionIssue[] = [];
+  if (!monkFocusResourceIsSupported(mechanics)) {
+    issues.push(
+      admissionIssue(
+        "unsupportedUseCountResource",
+        resourcePath(),
+        "Monk Focus requires its class-level use-count resource.",
+      ),
+    );
+  }
+  if (mechanics.resetCadence.kind !== "short_or_long_rest") {
+    issues.push(
+      admissionIssue(
+        "unsupportedResetCadence",
+        generalFactPath(1),
+        "Monk Focus requires full recovery on a Short or Long Rest.",
+      ),
+    );
+  }
+  if (!monkFocusSaveDcIsSupported(mechanics)) {
+    issues.push(
+      admissionIssue(
+        "unsupportedSaveDc",
+        generalFactPath(2),
+        "Monk Focus requires its Wisdom-based class-feature save DC.",
+      ),
+    );
+  }
+  if (mechanics.optionSet.timing !== "resource_use") {
+    issues.push(
+      admissionIssue(
+        "unsupportedOptionTiming",
+        rootMechanicsPath(),
+        "Monk Focus options must be selected when the resource is used.",
+      ),
+    );
+  }
+  if (observations.length !== MONK_FOCUS_OPTION_PROCEDURE_KINDS.length) {
+    issues.push(
+      admissionIssue(
+        "unexpectedOptionCount",
+        rootMechanicsPath(),
+        "Monk Focus requires exactly three option procedures.",
+      ),
+    );
+  }
+  for (const observation of observations) {
+    if (observation.procedureKind === null || !observation.supported) {
+      issues.push(
+        admissionIssue(
+          "unsupportedOptionProcedure",
+          effectPath(observation.ordinal),
+          "Each Monk Focus option requires one completely supported execution procedure.",
+          observation.procedureKind ?? undefined,
+        ),
+      );
+    }
+  }
+  for (const procedureKind of MONK_FOCUS_OPTION_PROCEDURE_KINDS) {
+    const matching = observations.filter(
+      (observation) => observation.procedureKind === procedureKind,
+    );
+    if (matching.length === 0) {
+      issues.push(
+        admissionIssue(
+          "missingOptionProcedureKind",
+          rootMechanicsPath(),
+          `Monk Focus requires the ${procedureKind} procedure.`,
+          procedureKind,
+        ),
+      );
+    }
+    for (const duplicate of matching.slice(1)) {
+      issues.push(
+        admissionIssue(
+          "duplicateOptionProcedureKind",
+          effectPath(duplicate.ordinal),
+          `Monk Focus must not repeat the ${procedureKind} procedure.`,
+          procedureKind,
+        ),
+      );
+    }
+  }
+  return issues;
+}
+
+function monkFocusResourceIsSupported(
+  mechanics: ResourceContainerMechanics,
+): boolean {
+  const resource = mechanics.resource;
+  return (
+    resource.kind === "use_count" &&
+    resource.cap.kind === "linear_per_level" &&
+    resource.cap.axis === "class" &&
+    resource.cap.base === 2 &&
+    resource.cap.perLevel === 1 &&
+    resource.cap.startingAtLevel === 2
+  );
+}
+
+function monkFocusSaveDcIsSupported(
+  mechanics: ResourceContainerMechanics,
+): boolean {
+  return (
+    mechanics.effectSaveDc?.kind === "class_feature_ability_save_dc" &&
+    mechanics.effectSaveDc.base === 8 &&
+    mechanics.effectSaveDc.ability === "wis"
+  );
+}
+
+function admittedMonkFocusProcedure(
+  observations: readonly OptionObservation[],
+): AdmittedMonkFocusProcedure {
+  return {
+    binding: {
+      tag: "required",
+      requirements: {
+        resource: { kind: "sameSourceUseCountResource" },
+        classLevel: { kind: "canonicalClassLevel", className: "monk" },
+      },
+    },
+    resource: {
+      kind: "useCount",
+      cap: {
+        kind: "linearPerClassLevel",
+        className: "monk",
+        base: 2,
+        perLevel: 1,
+        startingAtLevel: 2,
+      },
+      resetCadence: "shortOrLongRest",
+    },
+    facts: monkFocusProcedureFacts(),
+    evidence: monkFocusEvidence(observations),
+  };
+}
+
+function monkFocusProcedureFacts(): MonkFocusProcedureFacts {
+  return {
+    kind: "monkFocusBattleOptions",
+    effectSaveDc: {
+      kind: "classFeatureAbilitySaveDc",
+      base: 8,
+      ability: "wis",
+      includesProficiencyBonus: true,
+    },
+    flurryOfBlows: {
+      kind: "bonusActionUnarmedStrikeSequence",
+      focusPointCost: 1,
+      strikeCount: 2,
+    },
+    patientDefense: {
+      kind: "bonusActionDefensiveModes",
+      freeAction: "disengage",
+      focusPointCost: 1,
+      focusActions: ["disengage", "dodge"],
+    },
+    stepOfTheWind: {
+      kind: "bonusActionMobilityModes",
+      freeAction: "dash",
+      focusPointCost: 1,
+      focusActions: ["disengage", "dash"],
+      jumpDistanceMultiplier: { multiplier: 2, expires: "endOfTurn" },
+    },
+  };
+}
+
+function monkFocusEvidence(
+  observations: readonly OptionObservation[],
+): readonly MonkFocusPathEvidence[] {
+  return [
+    {
+      disposition: "consumed",
+      branch: { kind: "useCountResource" },
+      mechanicsPath: resourcePath(),
+    },
+    {
+      disposition: "consumed",
+      branch: { kind: "restResetCadence" },
+      mechanicsPath: generalFactPath(1),
+    },
+    {
+      disposition: "consumed",
+      branch: { kind: "saveDc" },
+      mechanicsPath: generalFactPath(2),
+    },
+    ...observations.flatMap((observation) =>
+      observation.procedureKind === null
+        ? []
+        : [
+            {
+              disposition: "unowned",
+              branch: {
+                kind: "optionIdentity",
+                procedureKind: observation.procedureKind,
+              },
+              mechanicsPath: generalFactPath(observation.ordinal + 2),
+            } satisfies MonkFocusPathEvidence,
+            {
+              disposition: "consumed",
+              branch: {
+                kind: "optionExecution",
+                procedureKind: observation.procedureKind,
+              },
+              mechanicsPath: effectPath(observation.ordinal),
+            } satisfies MonkFocusPathEvidence,
+          ],
+    ),
+  ];
+}
+
+function admissionIssue(
+  failedFact: MonkFocusAdmissionFailedFact,
+  mechanicsPath: UnitMechanicsPath,
+  message: string,
+  procedureKind?: MonkFocusOptionProcedureKind,
+): MonkFocusProcedureAdmissionIssue {
+  return {
+    tag: "monkFocusProcedureAdmissionIssue",
+    failedFact,
+    ...(procedureKind === undefined ? {} : { procedureKind }),
+    mechanicsPath,
+    message,
+  };
+}
+
+export type MonkFocusProcedureBindingInput = {
+  readonly resourcePoolRefsByUnitId: ReadonlyMap<
+    AuthoredUnitSource["id"],
+    BattleResourcePoolExecutionRef
+  >;
+  readonly classLevels: CharacterBattleClassLevels;
+};
+
+export const MONK_FOCUS_BINDING_ISSUE_REASONS = [
+  "sameSourceResourceMissing",
+  "canonicalMonkClassLevelMissing",
+] as const;
+export type MonkFocusBindingIssueReason =
+  (typeof MONK_FOCUS_BINDING_ISSUE_REASONS)[number];
+
+export type MonkFocusProcedureBindingIssue = {
+  readonly tag: "monkFocusProcedureBindingIssue";
+  readonly reason: MonkFocusBindingIssueReason;
+  readonly message: string;
+};
+
+export type ReadyMonkFocusProcedure = {
+  readonly binding: "ready";
+  readonly source: {
+    readonly kind: "resourcePool";
+    readonly resourcePoolRef: BattleResourcePoolExecutionRef;
+  };
+  readonly facts: MonkFocusProcedureFacts;
+};
+
+export type MonkFocusProcedureBinding =
+  | { readonly tag: "bound"; readonly procedure: ReadyMonkFocusProcedure }
+  | {
+      readonly tag: "rejected";
+      readonly issues: ReadonlyNonEmptyArray<MonkFocusProcedureBindingIssue>;
+    };
+
+export function bindMonkFocusProcedure(
+  admitted: {
+    readonly sourceUnitId: AuthoredUnitSource["id"];
+    readonly procedure: AdmittedMonkFocusProcedure;
+  },
+  input: MonkFocusProcedureBindingInput,
+): MonkFocusProcedureBinding {
+  const resourcePoolRef = input.resourcePoolRefsByUnitId.get(
+    admitted.sourceUnitId,
+  );
+  const monkClassLevelMissing = !input.classLevels.some(
+    (classLevelEntry) => classLevelEntry.className === "monk",
+  );
+  const missingResourceIssue: MonkFocusProcedureBindingIssue = {
+    tag: "monkFocusProcedureBindingIssue",
+    reason: "sameSourceResourceMissing",
+    message: "Monk Focus binding requires its same-source use-count resource.",
+  };
+  const missingClassLevelIssue: MonkFocusProcedureBindingIssue = {
+    tag: "monkFocusProcedureBindingIssue",
+    reason: "canonicalMonkClassLevelMissing",
+    message: "Monk Focus binding requires the canonical Monk class level.",
+  };
+  if (resourcePoolRef === undefined) {
+    return {
+      tag: "rejected",
+      issues: monkClassLevelMissing
+        ? [missingResourceIssue, missingClassLevelIssue]
+        : [missingResourceIssue],
+    };
+  }
+  if (monkClassLevelMissing) {
+    return { tag: "rejected", issues: [missingClassLevelIssue] };
+  }
+  return {
+    tag: "bound",
+    procedure: {
+      binding: "ready",
+      source: { kind: "resourcePool", resourcePoolRef },
+      facts: admitted.procedure.facts,
+    },
+  };
+}
+
+function rootMechanicsPath(): UnitMechanicsPath {
+  return unitMechanicsPath([{ kind: "singleton", role: "recordMechanics" }]);
+}
+
+function resourcePath(): UnitMechanicsPath {
+  return unitMechanicsPath([
+    { kind: "singleton", role: "recordMechanics" },
+    { kind: "singleton", role: "resource" },
+  ]);
+}
+
+function generalFactPath(ordinal: number): UnitMechanicsPath {
+  return childOccurrencePath("generalFact", ordinal);
+}
+
+function effectPath(ordinal: number): UnitMechanicsPath {
+  return childOccurrencePath("effect", ordinal);
+}
+
+function childOccurrencePath(
+  role: "generalFact" | "effect",
+  ordinal: number,
+): UnitMechanicsPath {
+  return unitMechanicsPath([
+    { kind: "singleton", role: "recordMechanics" },
+    { kind: "occurrence", role, ordinal: PositiveInteger(ordinal) },
+  ]);
+}
