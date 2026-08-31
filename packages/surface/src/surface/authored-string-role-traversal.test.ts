@@ -83,6 +83,11 @@ const inspectSurfaceSchemaValue = <A>(schema: Schema.Schema<A>, value: A) => {
   return { issues, visits };
 };
 
+const unionTypes = (schema: Schema.Schema<unknown>): readonly AST.AST[] => {
+  if (!AST.isUnion(schema.ast)) throw new Error("expected union schema");
+  return schema.ast.types;
+};
+
 describe("Surface authored string role traversal", () => {
   it("preserves schema-owned role validation and idempotence", () => {
     const reference = surfaceSchemaRole(Schema.String, {
@@ -551,6 +556,109 @@ describe("Surface authored string role traversal", () => {
       },
     );
     expect(roles).toEqual(["vocabulary", "prose"]);
+  });
+
+  it("selects a sole decoded literal branch exactly like decoder compatibility", () => {
+    const schema = Schema.Union([
+      Schema.Struct({
+        kind: Schema.Literal("alpha"),
+        text: surfaceSchemaRole(Schema.String, {
+          category: "prose",
+          evidence: "summary",
+        }),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("beta"),
+        text: surfaceSchemaRole(Schema.String, {
+          category: "identity",
+          kind: "label",
+        }),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("gamma"),
+        text: surfaceSchemaRole(Schema.String, {
+          category: "protocol",
+          kind: "choiceKey",
+        }),
+      }),
+    ]);
+    const types = unionTypes(schema);
+
+    fc.assert(
+      fc.property(
+        fc.constantFrom("alpha", "beta", "gamma"),
+        fc.string(),
+        (kind, text) => {
+          const value = { kind, text };
+          expect(traversal.matchingUnionBranches(types, value)).toEqual(
+            traversal.decoderCompatibleUnionBranches(types, value),
+          );
+        },
+      ),
+      { numRuns: 50 },
+    );
+
+    const sharedDiscriminator = Schema.Union([
+      Schema.Struct({
+        kind: Schema.Literal("shared"),
+        alpha: Schema.Number,
+        text: surfaceSchemaRole(Schema.String, {
+          category: "prose",
+          evidence: "summary",
+        }),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("shared"),
+        beta: Schema.Boolean,
+        text: surfaceSchemaRole(Schema.String, {
+          category: "identity",
+          kind: "label",
+        }),
+      }),
+    ]);
+    const sharedTypes = unionTypes(sharedDiscriminator);
+    fc.assert(
+      fc.property(
+        fc.oneof(
+          fc.record({
+            kind: fc.constant("shared"),
+            alpha: fc.integer(),
+            text: fc.string(),
+          }),
+          fc.record({
+            kind: fc.constant("shared"),
+            beta: fc.boolean(),
+            text: fc.string(),
+          }),
+        ),
+        (value) => {
+          expect(traversal.matchingUnionBranches(sharedTypes, value)).toEqual(
+            traversal.decoderCompatibleUnionBranches(sharedTypes, value),
+          );
+        },
+      ),
+      { numRuns: 50 },
+    );
+  });
+
+  it("preserves decoder-compatible relation order for corpus records", () => {
+    const representativeIds = new Set([
+      "class_fighter",
+      "druid_wild_shape",
+      "find_familiar",
+      "stat_block_skeleton",
+    ]);
+    const records = traversal
+      .readSurfaceRecords()
+      .filter((record: { readonly id: string }) =>
+        representativeIds.has(record.id),
+      );
+    expect(
+      records.map((record: { readonly id: string }) => record.id).sort(),
+    ).toEqual([...representativeIds].sort());
+    expect(traversal.collectAuthoredRelations(records)).toEqual(
+      traversal.collectAuthoredRelationsWithDecoderCompatibleUnions(records),
+    );
   });
 
   it("uses tuple shape and element compatibility for union reachability", () => {

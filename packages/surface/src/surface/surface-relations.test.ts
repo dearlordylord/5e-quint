@@ -224,10 +224,8 @@ describe("canonical Surface authored relations", () => {
 
     // The corpus audit is a test-only independent oracle. Production traversal
     // receives this already-decoded aggregate and never scans content files.
-    const expected = corpusAudit
-      .collectAuthoredRelations(sourceRecords)
-      .map(relationKey)
-      .sort();
+    const oracleRelations = corpusAudit.collectAuthoredRelations(sourceRecords);
+    const expected = oracleRelations.map(relationKey).sort();
     expect(actual.success.map(relationKey).sort()).toEqual(expected);
 
     // Keep the distinction explicit: these records are schema-decodable but
@@ -236,8 +234,7 @@ describe("canonical Surface authored relations", () => {
       ...srdSurface.units.map((record) => String(record.id)),
       ...srdSurface.statBlocks.map((record) => String(record.id)),
     ]);
-    const publishedExpected = corpusAudit
-      .collectAuthoredRelations(sourceRecords)
+    const publishedExpected = oracleRelations
       .filter((relation) => publishedIds.has(relation.id))
       .map(relationKey)
       .sort();
