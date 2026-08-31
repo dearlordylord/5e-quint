@@ -44,7 +44,7 @@ import {
 } from "@dnd/shared/types";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
-import { EFFECT_OCCURRENCE_SOURCE_KINDS } from "../character-execution-vocabulary.ts";
+import { EFFECT_OCCURRENCE_SOURCE_KINDS } from "../effect-occurrence-source-vocabulary.ts";
 import { BATTLE_ACTIVE_EFFECT_KINDS } from "../active-effect/types.ts";
 import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import {
@@ -712,30 +712,17 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     firstTargetId: CombatantId,
     secondTargetId: CombatantId,
   }),
-  Schema.Union([
-    Schema.Struct({
-      kind: Schema.Literal("weaponMasteryPushDisposition"),
-      attackerId: CombatantId,
-      targetId: CombatantId,
-      procedureRef: BattleAttackProcedureExecutionRef,
-      attackAbility: BattleAttackExecutionAbilitySchema,
-      attackDamageType: DamageTypeSchema,
-      attackName: Schema.optionalKey(Schema.Never),
-      statBlockDamageSelection: Schema.optionalKey(Schema.Never),
-      disposition: BattleImmediateAreaPushDispositionSchema,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("weaponMasteryPushDisposition"),
-      attackerId: CombatantId,
-      targetId: CombatantId,
-      procedureRef: BattleStatBlockProcedureExecutionRef,
-      attackAbility: Schema.optionalKey(Schema.Never),
-      attackDamageType: Schema.optionalKey(Schema.Never),
-      attackName: Schema.optionalKey(Schema.Never),
-      statBlockDamageSelection: StatBlockAttackDamageSelection,
-      disposition: BattleImmediateAreaPushDispositionSchema,
-    }),
-  ]),
+  Schema.Struct({
+    kind: Schema.Literal("weaponMasteryPushDisposition"),
+    attackerId: CombatantId,
+    targetId: CombatantId,
+    procedureRef: BattleAttackProcedureExecutionRef,
+    attackAbility: BattleAttackExecutionAbilitySchema,
+    attackDamageType: DamageTypeSchema,
+    attackName: Schema.optionalKey(Schema.Never),
+    statBlockDamageSelection: Schema.optionalKey(Schema.Never),
+    disposition: BattleImmediateAreaPushDispositionSchema,
+  }),
   Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("attackTargetDistance"),
@@ -6213,7 +6200,7 @@ const StatBlockProcedureBindingSnapshotSchema = Schema.Union([
   Schema.Struct({
     procedureRef: BattleStatBlockProcedureExecutionRef,
     procedure: EffectOccurrenceSourceProcedureSchema,
-    resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
+    resourcePoolRefs: Schema.Tuple([]),
   }),
 ]);
 
@@ -6398,9 +6385,6 @@ function statBlockProcedurePoolShapeIsValid(
   ).length;
   const limitedUsePoolCount = pools.length - legendaryPoolCount;
   if (binding.procedure.kind === "unarmedStrike") {
-    return pools.length === 0;
-  }
-  if (binding.procedure.kind === "effectOccurrenceSource") {
     return pools.length === 0;
   }
   if (binding.procedure.kind === "multiattack") {
@@ -6753,33 +6737,7 @@ function characterBattleCreatureSnapshotInvariantsHold(
       characterOrigin.execution.scopeRef,
       combatantId,
     ) &&
-    characterOrigin.execution.procedureBindings.every((binding) =>
-      battleProcedureExecutionRefBelongsToScope(
-        binding.procedureRef,
-        characterOrigin.execution.scopeRef,
-      ),
-    ) &&
-    new Set(
-      characterOrigin.execution.procedureBindings.map(
-        (binding) => binding.procedureRef,
-      ),
-    ).size === characterOrigin.execution.procedureBindings.length &&
-    characterOrigin.execution.procedureBindings.every((binding) => {
-      const procedure = binding.procedure;
-      if (
-        procedure.kind !== "unitFeature" &&
-        procedure.kind !== "unitSupportProfile"
-      ) {
-        return true;
-      }
-      const source = procedure.source;
-      return (
-        source.kind === "intrinsic" ||
-        characterOrigin.resources.some(
-          (resource) => resource.resourcePoolRef === source.resourcePoolRef,
-        )
-      );
-    }) &&
+    characterProcedureBindingsAreValid(characterOrigin) &&
     characterOrigin.resources.every((resource) =>
       battleResourcePoolExecutionRefBelongsToScope(
         resource.resourcePoolRef,
@@ -6799,6 +6757,45 @@ function characterBattleCreatureSnapshotInvariantsHold(
     ) &&
     new Set(attackProcedureRefs).size === attackProcedureRefs.length &&
     characterWildShapeFormScopesAreValid(characterOrigin, combatantId)
+  );
+}
+
+function characterProcedureBindingsAreValid(
+  characterOrigin: EncodedCharacterBattleCreatureOrigin,
+): boolean {
+  const { procedureBindings, scopeRef } = characterOrigin.execution;
+  return (
+    procedureBindings.every((binding) =>
+      battleProcedureExecutionRefBelongsToScope(binding.procedureRef, scopeRef),
+    ) &&
+    new Set(procedureBindings.map((binding) => binding.procedureRef)).size ===
+      procedureBindings.length &&
+    procedureBindings.every((binding) =>
+      characterProcedureBindingSourceIsValid(
+        binding,
+        characterOrigin.resources,
+      ),
+    )
+  );
+}
+
+function characterProcedureBindingSourceIsValid(
+  binding: EncodedCharacterBattleCreatureOrigin["execution"]["procedureBindings"][number],
+  resources: EncodedCharacterBattleCreatureOrigin["resources"],
+): boolean {
+  const { procedure } = binding;
+  if (
+    procedure.kind !== "unitFeature" &&
+    procedure.kind !== "unitSupportProfile"
+  ) {
+    return true;
+  }
+  return (
+    procedure.source.kind === "intrinsic" ||
+    resources.some(
+      (resource) =>
+        resource.resourcePoolRef === procedure.source.resourcePoolRef,
+    )
   );
 }
 
@@ -8765,34 +8762,72 @@ function serializedBattleHoleOwnsBoundExecutionReferences(input: {
     expectedProcedureRefs === undefined
       ? undefined
       : new Set<string>(expectedProcedureRefs);
-  return serializedBattleHoleExecutionReferences(hole).every((reference) => {
-    if (!boundExecutionRefs.has(reference.ref)) return false;
-    if (reference.kind === "effectOccurrence") {
-      return serializedEffectOccurrenceReferenceIsOwned(
-        reference,
-        combatants,
-        storedLightEmitters,
-      );
-    }
-    if (
-      reference.kind === "subjectProcedure" &&
-      expectedProcedureRefStrings !== undefined &&
-      expectedProcedureRefStrings.size > 0 &&
-      !expectedProcedureRefStrings.has(reference.ref)
-    ) {
-      return false;
-    }
-    if (reference.ownerId === undefined) return true;
-    const owner = combatants.find(
-      (combatant) => combatant.combatantId === reference.ownerId,
+  return serializedBattleHoleExecutionReferences(hole).every((reference) =>
+    serializedBattleHoleExecutionReferenceIsOwned({
+      reference,
+      combatants,
+      storedLightEmitters,
+      boundExecutionRefs,
+      expectedProcedureRefStrings,
+    }),
+  );
+}
+
+function serializedBattleHoleExecutionReferenceIsOwned(input: {
+  readonly reference: SerializedExecutionReferenceOwnership;
+  readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly storedLightEmitters: readonly EncodedBattleStoredLightEmitter[];
+  readonly boundExecutionRefs: ReadonlySet<string>;
+  readonly expectedProcedureRefStrings: ReadonlySet<string> | undefined;
+}): boolean {
+  const { reference } = input;
+  if (!input.boundExecutionRefs.has(reference.ref)) return false;
+  if (reference.kind === "effectOccurrence") {
+    return serializedEffectOccurrenceReferenceIsOwned(
+      reference,
+      input.combatants,
+      input.storedLightEmitters,
     );
-    return (
-      owner !== undefined &&
-      serializedCombatantAuthoritativeExecutionReferences(owner).includes(
-        reference.ref,
-      )
-    );
-  });
+  }
+  if (!serializedSubjectProcedureReferenceIsExpected(reference, input)) {
+    return false;
+  }
+  return serializedExecutionReferenceOwnerIsValid(reference, input.combatants);
+}
+
+function serializedSubjectProcedureReferenceIsExpected(
+  reference: Exclude<
+    SerializedExecutionReferenceOwnership,
+    { readonly kind: "effectOccurrence" }
+  >,
+  input: {
+    readonly expectedProcedureRefStrings: ReadonlySet<string> | undefined;
+  },
+): boolean {
+  if (reference.kind !== "subjectProcedure") return true;
+  const expected = input.expectedProcedureRefStrings;
+  return (
+    expected === undefined || expected.size === 0 || expected.has(reference.ref)
+  );
+}
+
+function serializedExecutionReferenceOwnerIsValid(
+  reference: Exclude<
+    SerializedExecutionReferenceOwnership,
+    { readonly kind: "effectOccurrence" }
+  >,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  if (reference.ownerId === undefined) return true;
+  const owner = combatants.find(
+    (combatant) => combatant.combatantId === reference.ownerId,
+  );
+  return (
+    owner !== undefined &&
+    serializedCombatantAuthoritativeExecutionReferences(owner).includes(
+      reference.ref,
+    )
+  );
 }
 
 function serializedBattleHolesOwnBoundExecutionReferences(input: {
@@ -9437,32 +9472,49 @@ function battleSnapshotInvariantsHold(
     snapshot.readiedResponses.actionsOrMovements.every((readied) =>
       serializedReadiedResponseIsBound(snapshot.combatants, readied),
     ) &&
-    snapshot.storedLightEmitters.every((emitter) => {
-      const owners = snapshot.combatants.filter((combatant) =>
-        battleEffectExecutionRefBelongsToScope(
-          emitter.effectRef,
-          combatant.origin.execution.scopeRef,
-        ),
-      );
-      return (
-        owners.length === 1 &&
-        battleEffectExecutionRefOrdinalIsBefore(
-          emitter.effectRef,
-          owners[0]!.origin.execution.scopeRef,
-          owners[0]!.nextEffectOrdinal,
-        ) &&
-        serializedLightEmitterOwnsSource(emitter, snapshot.combatants)
-      );
-    }) &&
+    battleSnapshotEnvironmentalSourcesAreValid(snapshot) &&
+    snapshot.combatants.every((combatant) =>
+      battleSnapshotExecutionScopesBelongToBattle(snapshot.battleId, combatant),
+    )
+  );
+}
+
+function battleSnapshotEnvironmentalSourcesAreValid(
+  snapshot: BattleSnapshotInvariantInput,
+): boolean {
+  return (
+    snapshot.storedLightEmitters.every((emitter) =>
+      serializedStoredLightEmitterIsValid(emitter, snapshot.combatants),
+    ) &&
     snapshot.lightEmitters.every((emitter) =>
       serializedLightEmitterOwnsSource(emitter, snapshot.combatants),
     ) &&
     snapshot.obscurementZones.every((zone) =>
       serializedObscurementZoneOwnsSource(zone, snapshot.combatants),
-    ) &&
-    snapshot.combatants.every((combatant) =>
-      battleSnapshotExecutionScopesBelongToBattle(snapshot.battleId, combatant),
     )
+  );
+}
+
+function serializedStoredLightEmitterIsValid(
+  emitter: EncodedBattleStoredLightEmitter,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const owners = combatants.filter((combatant) =>
+    battleEffectExecutionRefBelongsToScope(
+      emitter.effectRef,
+      combatant.origin.execution.scopeRef,
+    ),
+  );
+  const owner = owners[0];
+  return (
+    owners.length === 1 &&
+    owner !== undefined &&
+    battleEffectExecutionRefOrdinalIsBefore(
+      emitter.effectRef,
+      owner.origin.execution.scopeRef,
+      owner.nextEffectOrdinal,
+    ) &&
+    serializedLightEmitterOwnsSource(emitter, combatants)
   );
 }
 

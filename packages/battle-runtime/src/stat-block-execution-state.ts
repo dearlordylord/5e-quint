@@ -558,14 +558,17 @@ export type StatBlockProcedure =
   | EffectOccurrenceSourceProcedure;
 
 /**
- * A known spellcasting procedure has no procedure-owned resource pools;
- * group invocation selection owns those references. This conditional is
- * deliberately distributive so a heterogeneous binding remains a union whose
- * spellcasting branch cannot carry a top-level resource reference.
+ * Spellcasting and effect-occurrence source procedures have no procedure-owned
+ * resource pools. Spellcasting group invocation selection owns its resource
+ * references; effect-occurrence sources only restore an existing effect. This
+ * conditional is deliberately distributive so those branches cannot carry a
+ * top-level resource reference.
  */
 export type StatBlockProcedureBindingFor<
   TProcedure extends StatBlockProcedure,
-> = TProcedure extends StatBlockSpellcastingProcedure
+> = TProcedure extends
+  | StatBlockSpellcastingProcedure
+  | EffectOccurrenceSourceProcedure
   ? {
       readonly procedureRef: BattleStatBlockProcedureExecutionRef;
       readonly resourcePoolRefs: readonly [];

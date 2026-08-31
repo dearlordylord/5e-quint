@@ -17,7 +17,7 @@ import type {
   StatBlockRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
-import { Match, Result } from "effect";
+import { Brand, Match, Result } from "effect";
 import type {
   AttackDamageAbilityModifierChoice,
   CharacterUnarmedStrikeActionOption,
@@ -617,7 +617,10 @@ export type StatBlockBattleCreatureInit = {
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly conditions: readonly StatBlockInitialCondition[];
   readonly presentation: BattleStatBlockPresentationSource;
-};
+} & Brand.Brand<"StatBlockBattleCreatureInit">;
+
+const StatBlockBattleCreatureInit =
+  Brand.nominal<StatBlockBattleCreatureInit>();
 
 type BattleCreatureInitCommon = {
   readonly combatantId: CombatantId;
@@ -679,7 +682,7 @@ function battleCreatureInitFromRuntimeStatBlock(
   return Result.succeed({
     combatantId: input.combatantId,
     initiative: input.initiative,
-    creatureInit: {
+    creatureInit: StatBlockBattleCreatureInit({
       kind: "statBlock",
       source: input.statBlock,
       currentHp: input.currentHp ?? maxHp,
@@ -687,7 +690,7 @@ function battleCreatureInitFromRuntimeStatBlock(
       ammunitionStocks: input.ammunitionStocks,
       conditions: input.conditions,
       presentation: input.presentation,
-    },
+    }),
   });
 }
 

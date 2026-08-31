@@ -974,7 +974,6 @@ function effectOccurrenceSourceBindingsAreCanonical(
     (binding, index) =>
       binding.procedure.kind === "effectOccurrenceSource" &&
       effectOccurrenceSourceRefCounts.get(binding.procedure.effectRef) === 1 &&
-      binding.resourcePoolRefs.length === 0 &&
       binding.procedureRef ===
         battleStatBlockProcedureExecutionRef(
           scopeRef,
