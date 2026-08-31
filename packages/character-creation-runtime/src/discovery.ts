@@ -767,13 +767,17 @@ function isClassFeatureAcquisitionCantripGrantSpellList(
   );
 }
 
-export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
+type SelectedClassFeatureAcquisitionGrantChoiceHolesInput = {
   readonly choices: readonly CharacterChoiceSelection[];
   readonly classUnitId: UnitRecord["id"];
   readonly classFacts: ReadableClassCreationFacts;
   readonly classLevel: number;
   readonly unitLibrary: UnitCatalog;
-}): readonly ChoiceCreationHole[] {
+};
+
+export function selectedClassFeatureAcquisitionGrantChoiceHoles(
+  input: SelectedClassFeatureAcquisitionGrantChoiceHolesInput,
+): readonly ChoiceCreationHole[] {
   const primaryCantrips = selectedPrimaryCantripOptionIds(input);
   return input.choices.flatMap((selection) =>
     selectedClassFeatureGrantChoiceHoles(selection, input, primaryCantrips),
@@ -781,7 +785,7 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
 }
 
 function selectedPrimaryCantripOptionIds(
-  input: Parameters<typeof selectedClassFeatureAcquisitionGrantChoiceHoles>[0],
+  input: SelectedClassFeatureAcquisitionGrantChoiceHolesInput,
 ): ReadonlySet<CreationChoiceOptionId> {
   return new Set(
     input.choices.flatMap((choice) =>
@@ -796,7 +800,7 @@ function selectedPrimaryCantripOptionIds(
 
 function selectedClassFeatureGrantChoiceHoles(
   selection: CharacterChoiceSelection,
-  input: Parameters<typeof selectedClassFeatureAcquisitionGrantChoiceHoles>[0],
+  input: SelectedClassFeatureAcquisitionGrantChoiceHolesInput,
   primaryCantrips: ReadonlySet<CreationChoiceOptionId>,
 ): readonly ChoiceCreationHole[] {
   if (selection.kind !== "unitChoice") return [];
@@ -820,7 +824,7 @@ function selectedClassFeatureGrantChoiceHoles(
 
 function selectedClassFeatureAcquisitionMechanics(
   selection: Extract<CharacterChoiceSelection, { readonly kind: "unitChoice" }>,
-  input: Parameters<typeof selectedClassFeatureAcquisitionGrantChoiceHoles>[0],
+  input: SelectedClassFeatureAcquisitionGrantChoiceHolesInput,
 ):
   | Extract<
       CharacterCreationClassFeatureFacts["mechanics"],
@@ -845,7 +849,7 @@ function selectedClassFeatureAcquisitionMechanics(
 function selectedClassFeatureGrantHole(
   grant: EffectAtom,
   selection: Extract<CharacterChoiceSelection, { readonly kind: "unitChoice" }>,
-  input: Parameters<typeof selectedClassFeatureAcquisitionGrantChoiceHoles>[0],
+  input: SelectedClassFeatureAcquisitionGrantChoiceHolesInput,
   primaryCantrips: ReadonlySet<CreationChoiceOptionId>,
 ): readonly ChoiceCreationHole[] {
   if (grant.kind === "grant_feat") {
@@ -875,7 +879,7 @@ function selectedClassFeatureGrantHole(
 function selectedClassFeatureCantripGrantHole(
   grant: GrantSpellAccessChoice,
   featureUnitId: UnitRecord["id"],
-  input: Parameters<typeof selectedClassFeatureAcquisitionGrantChoiceHoles>[0],
+  input: SelectedClassFeatureAcquisitionGrantChoiceHolesInput,
   primaryCantrips: ReadonlySet<CreationChoiceOptionId>,
 ): readonly ChoiceCreationHole[] {
   const spellcasting = classSpellcastingCreation(
@@ -1504,11 +1508,15 @@ export function startingEquipmentChoiceHole(
   });
 }
 
-export function hasSupportedCoinEquipmentPath(input: {
+type SupportedCoinEquipmentPathInput = {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
   readonly supportProfile: CharacterCreationSupportProfile;
-}): boolean {
+};
+
+export function hasSupportedCoinEquipmentPath(
+  input: SupportedCoinEquipmentPathInput,
+): boolean {
   const facts = supportedCoinEquipmentFacts(input);
   if (facts === undefined) return false;
 
@@ -1534,9 +1542,7 @@ export function hasSupportedCoinEquipmentPath(input: {
   );
 }
 
-function supportedCoinEquipmentFacts(
-  input: Parameters<typeof hasSupportedCoinEquipmentPath>[0],
-) {
+function supportedCoinEquipmentFacts(input: SupportedCoinEquipmentPathInput) {
   const selectionIds = supportedCoinEquipmentSelectionIds(input);
   if (selectionIds === undefined) return undefined;
   const classFacts = supportedCoinEquipmentClassFacts(
@@ -1553,7 +1559,7 @@ function supportedCoinEquipmentFacts(
 }
 
 function supportedCoinEquipmentSelectionIds(
-  input: Parameters<typeof hasSupportedCoinEquipmentPath>[0],
+  input: SupportedCoinEquipmentPathInput,
 ) {
   const progression = input.draft.selections.progression;
   const backgroundUnitId = input.draft.selections.background;

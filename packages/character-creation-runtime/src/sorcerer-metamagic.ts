@@ -60,10 +60,14 @@ export type CharacterBuildSorcererMetamagicFactsIssue = {
   readonly message: string;
 };
 
-export function characterBuildSorcererMetamagicFacts(input: {
+type CharacterBuildSorcererMetamagicFactsInput = {
   readonly build: Pick<CharacterBuild, "progression" | "features">;
   readonly unitLibrary: UnitCatalog;
-}): Result.Result<
+};
+
+export function characterBuildSorcererMetamagicFacts(
+  input: CharacterBuildSorcererMetamagicFactsInput,
+): Result.Result<
   CharacterBuildSorcererMetamagicFacts | undefined,
   CharacterBuildSorcererMetamagicFactsIssue
 > {
@@ -145,7 +149,7 @@ export function characterBuildSorcererMetamagicFacts(input: {
 }
 
 function missingSorcererMetamagicFacts(
-  input: Parameters<typeof characterBuildSorcererMetamagicFacts>[0],
+  input: CharacterBuildSorcererMetamagicFactsInput,
   featureUnitIds: readonly UnitRecord["id"][],
 ): ReturnType<typeof characterBuildSorcererMetamagicFacts> {
   const hasSelections = input.build.features.some(

@@ -300,7 +300,7 @@ function inspectCharacterDefinitionLink(input: {
   }
 }
 
-function inspectCharacterDefinitionUnitLink(input: {
+type CharacterDefinitionUnitLinkInspection = {
   readonly link: SurfaceAuthoredRelation & { readonly targetKind: "unit" };
   readonly linkPath: UnitMechanicsPath;
   readonly issues: CharacterDefinitionAdmissionIssue[];
@@ -308,7 +308,11 @@ function inspectCharacterDefinitionUnitLink(input: {
   readonly owningClassName:
     | Extract<UnitRecord, { readonly kind: "class" }>["className"]
     | undefined;
-}): void {
+};
+
+function inspectCharacterDefinitionUnitLink(
+  input: CharacterDefinitionUnitLinkInspection,
+): void {
   const expectation = expectedCharacterDefinitionTarget(input.link);
   if (expectation.tag === "unowned") {
     addAdmissionIssue(
@@ -348,7 +352,7 @@ function inspectCharacterDefinitionUnitLink(input: {
 }
 
 function inspectMissingCharacterDefinitionUnitLink(
-  input: Parameters<typeof inspectCharacterDefinitionUnitLink>[0],
+  input: CharacterDefinitionUnitLinkInspection,
 ): void {
   if (input.link.relationKind !== "dependency") return;
   addAdmissionIssue(
@@ -370,10 +374,7 @@ function characterDefinitionTargetMatchesExpectation(
 }
 
 function characterDefinitionTargetBelongsToOwningClass(
-  input: Pick<
-    Parameters<typeof inspectCharacterDefinitionUnitLink>[0],
-    "owningClassName"
-  >,
+  input: Pick<CharacterDefinitionUnitLinkInspection, "owningClassName">,
   target: UnitRecord,
   expectation: Exclude<
     ReturnType<typeof expectedCharacterDefinitionTarget>,
