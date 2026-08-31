@@ -41,6 +41,7 @@ import {
   type AuthoredExecutableProcedureEntry,
   type BattleStatBlockUnsupportedProcedureBinding,
 } from "./procedure-admission/stat-block-procedure-execution-decision.ts";
+import { mapReadonlyNonEmptyArray } from "./readonly-non-empty-array.ts";
 
 type BattleStatBlockProjectionScalarFailureReason =
   | "nonLiteralSize"
@@ -195,10 +196,10 @@ function authoredStatBlockScalarProjection(
 > {
   const size = literalSize(source.size);
   if (size === null) return Result.fail(failure("nonLiteralSize"));
-  const concreteSpeeds = source.speeds.filter(isStandaloneCreatureSpeed);
-  if (concreteSpeeds.length !== source.speeds.length) {
+  if (!areStandaloneCreatureSpeeds(source.speeds)) {
     return Result.fail(failure("unresolvedGmSpeedChoice"));
   }
+  const concreteSpeeds = source.speeds;
   if (concreteSpeeds.some((speed) => "availability" in speed)) {
     return Result.fail(failure("unsupportedFormRestrictedSpeed"));
   }
@@ -216,7 +217,7 @@ function authoredStatBlockScalarProjection(
   }
   return Result.succeed({
     size,
-    speeds: nonEmptyRuntimeValues(concreteSpeeds.map(runtimeSpeed)),
+    speeds: mapReadonlyNonEmptyArray(concreteSpeeds, runtimeSpeed),
     legendaryActionUses: legendaryActionUses.success,
   });
 }
@@ -651,6 +652,12 @@ function isStandaloneCreatureSpeed(
   );
 }
 
+function areStandaloneCreatureSpeeds(
+  speeds: ReadonlyNonEmptyArray<StandaloneStatBlockSpeedEntry>,
+): speeds is ReadonlyNonEmptyArray<StandaloneCreatureSpeed> {
+  return speeds.every(isStandaloneCreatureSpeed);
+}
+
 function runtimeSense(
   sense: NonNullable<StandaloneStatBlock["senses"]>[number],
 ): BattleStatBlockRuntimeSense {
@@ -685,17 +692,6 @@ function authoredLegendaryActionUses(
     ),
     Match.exhaustive,
   );
-}
-
-function nonEmptyRuntimeValues<T>(
-  values: readonly (T | null)[],
-): ReadonlyNonEmptyArray<T> {
-  const present = values.filter((value): value is T => value !== null);
-  const [first, ...rest] = present;
-  if (first === undefined) {
-    throw new Error("Projection requires a non-empty runtime collection.");
-  }
-  return [first, ...rest];
 }
 
 function failure(

@@ -156,6 +156,7 @@ describe("spell damage fill projections", () => {
       damageRoll,
       false,
       {
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
         spatialFacts: [],
         damageSourceId: spellCasterId,
         sourcePenaltyDamageByType: new Map<DamageType, number>([["cold", 3]]),
@@ -184,7 +185,10 @@ describe("spell damage fill projections", () => {
       invocation,
       damageRoll,
       false,
-      { spatialFacts: [] },
+      {
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
+        spatialFacts: [],
+      },
     );
 
     expect(Number(requireCombatant(state, spellTargetId).hp)).toBe(4);
@@ -234,7 +238,11 @@ describe("spell damage fill projections", () => {
       invocation,
       damageRoll,
       false,
-      { spatialFacts: [], damageSourceId: spellCasterId },
+      {
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
+        spatialFacts: [],
+        damageSourceId: spellCasterId,
+      },
     );
 
     expect(state).toBe(stateWithPenalty);
@@ -265,7 +273,11 @@ describe("spell damage fill projections", () => {
       invocation,
       damageRoll,
       false,
-      { spatialFacts: [], damageSourceId: spellCasterId },
+      {
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
+        spatialFacts: [],
+        damageSourceId: spellCasterId,
+      },
     );
 
     expect(state).toBe(stateWithResistance);

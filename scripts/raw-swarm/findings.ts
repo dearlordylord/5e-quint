@@ -137,7 +137,7 @@ export type FindingAuthority = Schema.Schema.Type<typeof AuthoritySchema>;
 const ArtifactPointerSchema = Schema.Struct({
   kind: Schema.Literal("artifact"),
   authorityRole: Schema.Trimmed.check(Schema.isNonEmpty()),
-  line: Schema.optional(PositiveIntegerSchema),
+  line: Schema.optionalKey(PositiveIntegerSchema),
 });
 const SdkSequencePointerSchema = Schema.Struct({
   kind: Schema.Literal("sdkSequence"),
@@ -168,10 +168,10 @@ const FindingSchema = Schema.Struct({
   category: Schema.Literals(FINDING_CATEGORIES),
   kind: Schema.Literals(FINDING_KINDS),
   summary: Schema.Trimmed.check(Schema.isNonEmpty()),
-  detail: Schema.optional(Schema.Trimmed.check(Schema.isNonEmpty())),
+  detail: Schema.optionalKey(Schema.Trimmed.check(Schema.isNonEmpty())),
   pointer: FindingPointerSchema,
-  fingerprint: Schema.optional(HashSchema),
-  githubIssueNumber: Schema.optional(PositiveIntegerSchema),
+  fingerprint: Schema.optionalKey(HashSchema),
+  githubIssueNumber: Schema.optionalKey(PositiveIntegerSchema),
 });
 export type Finding = Schema.Schema.Type<typeof FindingSchema>;
 

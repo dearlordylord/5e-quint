@@ -102,4 +102,38 @@ describe("Surface base schemas", () => {
     ).toBe(true);
     expect(readSurfaceSchemaRole(Schema.String.ast)).toBeUndefined();
   });
+
+  test("uses absence as the single generic source-role spelling", () => {
+    expect(
+      isSurfaceSchemaRole({
+        category: "reference",
+        relation: "unit-reference",
+        targetKind: "unit",
+      }),
+    ).toBe(true);
+    expect(
+      isSurfaceSchemaRole({
+        category: "reference",
+        relation: "unit-reference",
+        targetKind: "unit",
+        sourceRole: "class-feature-grant",
+      }),
+    ).toBe(true);
+    expect(
+      isSurfaceSchemaRole({
+        category: "reference",
+        relation: "unit-reference",
+        targetKind: "unit",
+        sourceRole: "generic",
+      }),
+    ).toBe(false);
+    expect(
+      isSurfaceSchemaRole({
+        category: "reference",
+        relation: "stat-block-reference",
+        targetKind: "statBlock",
+        sourceRole: "class-feature-grant",
+      }),
+    ).toBe(false);
+  });
 });

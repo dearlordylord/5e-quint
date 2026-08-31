@@ -43,7 +43,7 @@ let weapon =
               }
             ]
           : List WeaponProperty
-      , mastery = "slow"
+      , masteryUnitId = "mastery_slow"
       , weightPounds = Some 2
       , costGp = 0.1
       }

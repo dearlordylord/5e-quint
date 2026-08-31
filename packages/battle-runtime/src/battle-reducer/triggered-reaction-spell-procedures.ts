@@ -30,6 +30,7 @@ import {
   damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHole } from "./staged-condition-repeat-save.ts";
 import {
   applyAvailableSourceDamageRollPenalty,
   damageAmountByTypeAfterTargetAdjustments,
@@ -685,6 +686,9 @@ export function resolveTriggeredReactionSaveGatedDamage(
       target,
       damageAmount,
       fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+        fillSet.damageRoll.holeId,
+      ),
     });
   if (saveGatedConditionWithRepeatSaveCheck.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [
@@ -759,8 +763,13 @@ export function resolveTriggeredReactionSaveGatedDamage(
       saveDamageResult,
       damageDisposition,
       sourceDamageRollPenaltyRoll,
-      saveGatedConditionWithRepeatDamageRepeatSaves:
-        saveGatedConditionWithRepeatLifecycleFills,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: saveGatedConditionWithRepeatLifecycleFills,
+        occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          fillSet.damageRoll.holeId,
+        ),
+      },
       damageSourceId: input.subject.reactorId,
       spatialFacts: fillSet.targetSpatialFacts,
       ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),

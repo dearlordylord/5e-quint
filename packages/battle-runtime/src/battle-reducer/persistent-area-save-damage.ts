@@ -40,7 +40,10 @@ import type {
   StationaryPersistentAreaSaveDamageSpellProcedureExecution,
 } from "../procedure-execution/spell-procedure-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import {
+  concentrationSavingThrowHole,
+  resolveSaveGatedConditionDamageRepeatSave,
+} from "./damage-apply.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -73,6 +76,7 @@ import {
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 
 type PersistentAreaSaveDamageOccurrence = Extract<
   BattleActiveEffect,
@@ -115,6 +119,7 @@ type PersistentAreaResolvedHoleIds = {
   readonly damage: BattleHoleId;
   readonly concentration: BattleHoleId | null;
   readonly disposition: BattleHoleId | null;
+  readonly damageRepeatSaves: readonly BattleHoleId[];
 };
 
 type PersistentAreaResolutionContext =
@@ -146,6 +151,7 @@ export type TranslatingPersistentAreaMovementSaveDamageSequenceResult =
       readonly damageHoleIds: ReadonlySet<BattleHoleId>;
       readonly concentrationHoleIds: ReadonlySet<BattleHoleId>;
       readonly dispositionHoleIds: ReadonlySet<BattleHoleId>;
+      readonly damageRepeatSaveHoleIds: ReadonlySet<BattleHoleId>;
     }
   | {
       readonly tag: "result";
@@ -362,6 +368,7 @@ export function resolveTranslatingPersistentAreaMovementSaveDamageSequence(input
   const damageHoleIds = new Set<BattleHoleId>();
   const concentrationHoleIds = new Set<BattleHoleId>();
   const dispositionHoleIds = new Set<BattleHoleId>();
+  const damageRepeatSaveHoleIds = new Set<BattleHoleId>();
   let parentPositionMatched = Match.value(input.replayPlan).pipe(
     byTranslatingPersistentAreaMovementReplayPlanKind(
       "turnBoundaryReplay",
@@ -396,6 +403,7 @@ export function resolveTranslatingPersistentAreaMovementSaveDamageSequence(input
         damageHoleIds,
         concentrationHoleIds,
         dispositionHoleIds,
+        damageRepeatSaveHoleIds,
       },
       step.holeIds,
     );
@@ -414,6 +422,7 @@ export function resolveTranslatingPersistentAreaMovementSaveDamageSequence(input
     damageHoleIds,
     concentrationHoleIds,
     dispositionHoleIds,
+    damageRepeatSaveHoleIds,
   };
 }
 
@@ -493,6 +502,7 @@ function addPersistentAreaResolvedHoleIds(
     readonly damageHoleIds: Set<BattleHoleId>;
     readonly concentrationHoleIds: Set<BattleHoleId>;
     readonly dispositionHoleIds: Set<BattleHoleId>;
+    readonly damageRepeatSaveHoleIds: Set<BattleHoleId>;
   },
   holeIds: PersistentAreaResolvedHoleIds,
 ): void {
@@ -503,6 +513,9 @@ function addPersistentAreaResolvedHoleIds(
   }
   if (holeIds.disposition !== null) {
     target.dispositionHoleIds.add(holeIds.disposition);
+  }
+  for (const holeId of holeIds.damageRepeatSaves) {
+    target.damageRepeatSaveHoleIds.add(holeId);
   }
 }
 
@@ -741,6 +754,13 @@ function resolvePersistentAreaSaveDamageStep(input: {
     adjustedDamage: damageStage.value.adjustedDamage,
   });
   if (concentrationStage.tag === "result") return concentrationStage;
+  const damageRepeatSaveStage = resolvePersistentAreaDamageRepeatSaveStage({
+    procedure,
+    context,
+    damageHole,
+    adjustedDamage: damageStage.value.adjustedDamage,
+  });
+  if (damageRepeatSaveStage.tag === "result") return damageRepeatSaveStage;
   const dispositionStage = resolvePersistentAreaDispositionStage({
     procedure,
     context,
@@ -753,6 +773,7 @@ function resolvePersistentAreaSaveDamageStep(input: {
     damageHole,
     concentration: concentrationStage.value,
     dispositionHole: dispositionStage.value.hole,
+    damageRepeatSaveHoles: damageRepeatSaveStage.value.holes,
   });
   const consumedFillIssue = persistentAreaConsumedFillIssue({
     procedure,
@@ -767,6 +788,7 @@ function resolvePersistentAreaSaveDamageStep(input: {
     resolution.subject.actorId,
     damageStage.value.adjustedDamage,
     {
+      saveGatedConditionDamageRepeatSave: damageRepeatSaveStage.value.context,
       damageSourceId: effect.sourceCombatantId,
       damageDisposition: damageDispositionForTarget(
         dispositionStage.value.hole === null
@@ -802,6 +824,10 @@ function persistentAreaResolvedHoleIds(input: {
   readonly dispositionHole: ReturnType<
     typeof zeroHitPointReplacementDispositionHole
   >;
+  readonly damageRepeatSaveHoles: Extract<
+    ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+    { readonly tag: "ok" }
+  >["holes"];
 }): PersistentAreaResolvedHoleIds {
   return {
     save: input.saveHole.holeId,
@@ -809,6 +835,7 @@ function persistentAreaResolvedHoleIds(input: {
     concentration: persistentAreaConcentrationHoleId(input.concentration),
     disposition:
       input.dispositionHole === null ? null : input.dispositionHole.holeId,
+    damageRepeatSaves: input.damageRepeatSaveHoles.map((hole) => hole.holeId),
   };
 }
 
@@ -1051,6 +1078,56 @@ function resolvePersistentAreaConcentrationStage(input: {
   return { tag: "resolved", value: { tag: "answered", hole, fill } };
 }
 
+function resolvePersistentAreaDamageRepeatSaveStage(input: {
+  readonly procedure: ParsedPersistentAreaSaveDamageProcedure;
+  readonly context: PersistentAreaResolutionContext;
+  readonly damageHole:
+    | BattleStationaryPersistentAreaSaveDamageRollHole
+    | BattleTranslatingPersistentAreaSaveDamageRollHole;
+  readonly adjustedDamage: ReturnType<typeof persistentAreaAdjustedDamage>;
+}): PersistentAreaStage<
+  Extract<
+    ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+    { readonly tag: "ok" }
+  >
+> {
+  const { resolution, target } = input.procedure;
+  const repeatSave = resolveSaveGatedConditionDamageRepeatSave({
+    state: resolution.state,
+    target,
+    damageAmount: input.adjustedDamage,
+    fills: resolution.fills.filter(
+      (
+        fill,
+      ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+        fill.kind === "savingThrowOutcome",
+    ),
+    damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+      holeId: input.damageHole.holeId,
+      targetId: target.combatantId,
+    }),
+  });
+  return Match.value(repeatSave).pipe(
+    Match.when({ tag: "invalid" }, ({ message }) =>
+      persistentAreaStepResult(
+        input.context,
+        invalidResult(resolution.state, "invalidFill", message),
+      ),
+    ),
+    Match.when({ tag: "needsHoles" }, ({ missingHoles }) =>
+      persistentAreaStepResult(
+        input.context,
+        needsHolesResult(resolution.state, resolution.subject, missingHoles),
+      ),
+    ),
+    Match.when({ tag: "ok" }, (resolved) => ({
+      tag: "resolved" as const,
+      value: resolved,
+    })),
+    Match.exhaustive,
+  );
+}
+
 function resolvePersistentAreaDispositionStage(input: {
   readonly procedure: ParsedPersistentAreaSaveDamageProcedure;
   readonly context: PersistentAreaResolutionContext;
@@ -1107,6 +1184,9 @@ function persistentAreaConsumedFillIssue(input: {
   }
   if (input.holeIds.disposition !== null) {
     consumedHoleIds.add(input.holeIds.disposition);
+  }
+  for (const holeId of input.holeIds.damageRepeatSaves) {
+    consumedHoleIds.add(holeId);
   }
   /* v8 ignore start -- @preserve -- Malformed fill set: every supplied fill must answer a hole derived for this exact replay subject. */
   if (
@@ -1469,31 +1549,36 @@ function persistentAreaSaveDamageEffectForRef(
         | TranslatingPersistentAreaAreaHazardEffect;
     }
   | undefined {
-  let located:
-    | {
-        readonly effectOwnerId: CombatantId;
-        readonly effect: PersistentAreaSaveDamageOccurrence;
-      }
-    | undefined;
-  for (const [effectOwnerId, combatant] of state.combatants) {
-    for (const candidate of combatant.activeEffects) {
-      if (candidate.effectRef !== effectRef) {
-        continue;
-      }
-      if (located !== undefined) return undefined;
-      if (!isAppearanceTriggeredPersistentAreaSaveDamage(candidate)) {
-        return undefined;
-      }
-      located = { effectOwnerId, effect: candidate };
-    }
-  }
+  const located = uniqueAppearanceTriggeredPersistentAreaEffect(
+    state,
+    effectRef,
+  );
   if (located === undefined) return undefined;
   const source = state.combatants.get(located.effect.sourceCombatantId);
   if (source === undefined) return undefined;
   const bound = boundPersistentAreaSaveDamageEffect(source, located.effect);
+  return projectAppearanceTriggeredPersistentAreaEffect(
+    located.effectOwnerId,
+    expectedLifecycle,
+    bound,
+  );
+}
+
+function projectAppearanceTriggeredPersistentAreaEffect(
+  effectOwnerId: CombatantId,
+  expectedLifecycle: "stationary" | "sourceTurnTranslation",
+  bound: ReturnType<typeof boundPersistentAreaSaveDamageEffect>,
+):
+  | {
+      readonly effectOwnerId: CombatantId;
+      readonly effect:
+        | StationaryPersistentAreaAreaHazardEffect
+        | TranslatingPersistentAreaAreaHazardEffect;
+    }
+  | undefined {
   if (expectedLifecycle === "stationary" && bound?.kind === "stationary") {
     return {
-      effectOwnerId: located.effectOwnerId,
+      effectOwnerId,
       effect: {
         ...bound.effect,
         save: { ability: bound.facts.ability, dc: bound.facts.dc },
@@ -1504,7 +1589,7 @@ function persistentAreaSaveDamageEffectForRef(
   return expectedLifecycle === "sourceTurnTranslation" &&
     bound?.kind === "sourceTurnTranslation"
     ? {
-        effectOwnerId: located.effectOwnerId,
+        effectOwnerId,
         effect: {
           ...bound.effect,
           save: { ability: bound.facts.ability, dc: bound.facts.dc },
@@ -1512,6 +1597,34 @@ function persistentAreaSaveDamageEffectForRef(
         },
       }
     : undefined;
+}
+
+function uniqueAppearanceTriggeredPersistentAreaEffect(
+  state: BattleState,
+  effectRef: BattleEffectExecutionRef,
+):
+  | {
+      readonly effectOwnerId: CombatantId;
+      readonly effect: PersistentAreaSaveDamageOccurrence;
+    }
+  | undefined {
+  let located:
+    | {
+        readonly effectOwnerId: CombatantId;
+        readonly effect: PersistentAreaSaveDamageOccurrence;
+      }
+    | undefined;
+  for (const [effectOwnerId, combatant] of state.combatants) {
+    for (const candidate of combatant.activeEffects) {
+      if (candidate.effectRef !== effectRef) continue;
+      if (located !== undefined) return undefined;
+      if (!isAppearanceTriggeredPersistentAreaSaveDamage(candidate)) {
+        return undefined;
+      }
+      located = { effectOwnerId, effect: candidate };
+    }
+  }
+  return located;
 }
 
 function isAppearanceTriggeredPersistentAreaSaveDamage(

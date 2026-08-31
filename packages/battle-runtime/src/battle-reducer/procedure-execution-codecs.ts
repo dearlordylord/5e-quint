@@ -389,9 +389,9 @@ export const PassiveDamageResistanceProcedureExecutionSchema = Schema.Struct({
     damageType: Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("draconicAncestry"),
-        holeId: Schema.Literal(
+        holeId: Schema.Literals([
           "species_dragonborn_draconic_ancestry_damage_type",
-        ),
+        ]),
         value: DamageTypeSchema,
       }),
       Schema.Struct({ kind: Schema.Literal("fixed"), value: DamageTypeSchema }),
@@ -734,9 +734,9 @@ export const AttackDamageRiderProcedureExecutionSchema = Schema.Union([
     optional: Schema.Literal(true),
     usageLimit: Schema.Literal("oncePerTurn"),
     trigger: Schema.Literal("finesseOrRangedAttackWithAdvantageOrAlly"),
-    eligibility: Schema.Literal(
+    eligibility: Schema.Literals([
       "advantageOrNonIncapacitatedAllyWithin5ftOfTargetWithoutDisadvantage",
-    ),
+    ]),
     classLevel: ClassLevel,
     dice: Schema.Struct({
       kind: Schema.Literal("classLevelTable"),
@@ -1147,9 +1147,9 @@ export const StunningStrikeProcedureExecutionSchema = Schema.Struct({
       }),
       attackRoll: Schema.Struct({
         mode: Schema.Literal("advantage"),
-        appliesTo: Schema.Literal(
+        appliesTo: Schema.Literals([
           "nextAttackRollAgainstTargetBeforeExpiration",
-        ),
+        ]),
       }),
     }),
   }),

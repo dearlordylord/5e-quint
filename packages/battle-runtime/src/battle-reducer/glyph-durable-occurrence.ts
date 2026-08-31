@@ -74,6 +74,7 @@ import type {
   BattleGlyphExplosiveRuneDamageRollHole,
   BattleGlyphExplosiveRuneSavingThrowOutcomeHole,
   BattleHole,
+  BattleHoleId,
   BattleResolutionCheckpointBoundary,
   BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
   BattleSpellDamageReductionRollHole,
@@ -120,6 +121,7 @@ import {
   damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import {
   battleDamageTargets,
   type BattleDamageTarget,
@@ -510,6 +512,7 @@ type GlyphExplosiveRuneReleaseWitnessValidationFailure =
   | "damageDispositionMismatch"
   | "saveGatedConditionWithRepeatDamageRepeatSaveMismatch";
 type GlyphExplosiveRuneDamageLifecycle = {
+  readonly damageRollHoleId: BattleHoleId;
   readonly damageRollTotal: number;
   readonly damageTargets: readonly {
     readonly targetId: CombatantId;
@@ -2444,10 +2447,15 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
   readonly savingThrowOutcomes: GlyphExplosiveRuneSavingThrowOutcomes;
 }): GlyphExplosiveRuneDamageLifecycleCheck {
   const areaMembership = input.witness.areaMembership;
+  const damageRollHole = glyphExplosiveRuneDamageRollHole({
+    profile: input.profile,
+    effect: input.effect,
+  });
   if (areaMembership.kind === "noCreaturesInArea") {
     return {
       tag: "ok",
       lifecycle: {
+        damageRollHoleId: damageRollHole.holeId,
         damageRollTotal: 0,
         damageTargets: [],
         concentrationSavingThrowHoles: [],
@@ -2456,14 +2464,11 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
       },
     };
   }
-  const damageRollHole = glyphExplosiveRuneDamageRollHole({
-    profile: input.profile,
-    effect: input.effect,
-  });
-  if (areaMembership.damageRoll === undefined) {
+  const damageRoll = areaMembership.damageRoll;
+  if (damageRoll === undefined) {
     return { tag: "needsHoles", holes: [damageRollHole] };
   }
-  const damageRollTotal = rolledDiceTotal(areaMembership.damageRoll.value);
+  const damageRollTotal = rolledDiceTotal(damageRoll.value);
   const damageTargets = glyphExplosiveRuneDamageTargets({
     state: input.state,
     effect: input.effect,
@@ -2600,6 +2605,12 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
         state: input.state,
         target,
         damageAmount: damage.damageAmount,
+        damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget(
+          {
+            holeId: damageRoll.holeId,
+            targetId: target.combatantId,
+          },
+        ),
       }),
     );
   const invalidSaveGatedConditionWithRepeatRepeatSaveCheck =
@@ -2610,6 +2621,11 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
             state: input.state,
             target,
             damageAmount: damage.damageAmount,
+            damageOccurrenceKey:
+              saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+                holeId: damageRoll.holeId,
+                targetId: target.combatantId,
+              }),
           });
         return damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck(
           {
@@ -2620,6 +2636,11 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
               areaMembership.saveGatedConditionWithRepeatDamageRepeatSaves,
               holes,
             ),
+            damageOccurrenceKey:
+              saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+                holeId: damageRoll.holeId,
+                targetId: target.combatantId,
+              }),
           },
         );
       })
@@ -2667,6 +2688,7 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
   return {
     tag: "ok",
     lifecycle: {
+      damageRollHoleId: damageRollHole.holeId,
       damageRollTotal,
       damageTargets: damageLifecycleTargets.map(({ target, damage }) => ({
         targetId: target.combatantId,
@@ -2815,6 +2837,12 @@ function applyGlyphExplosiveRuneDamage(input: {
         state,
         target: spellReduction.target,
         damageAmount,
+        damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget(
+          {
+            holeId: input.lifecycle.damageRollHoleId,
+            targetId,
+          },
+        ),
       });
     const saveGatedConditionWithRepeatRepeatSaveFills = fillsMatchingHoleIds(
       areaMembership.saveGatedConditionWithRepeatDamageRepeatSaves,
@@ -2838,8 +2866,14 @@ function applyGlyphExplosiveRuneDamage(input: {
       ),
       linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         concentrationFills,
-      saveGatedConditionWithRepeatDamageRepeatSaves:
-        saveGatedConditionWithRepeatRepeatSaveFills,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: saveGatedConditionWithRepeatRepeatSaveFills,
+        occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+          holeId: input.lifecycle.damageRollHoleId,
+          targetId,
+        }),
+      },
     });
   }
   return { tag: "ok", state, damageRollTotal: input.lifecycle.damageRollTotal };

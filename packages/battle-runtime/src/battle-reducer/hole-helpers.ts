@@ -769,7 +769,7 @@ export function ordinaryObjectAttackOptionIsSupported(
       const actor = state.combatants.get(actorId);
       return (
         actor?.origin.kind === "character" &&
-        !option.hasWeaponMastery &&
+        !("masteryProperty" in option.weapon) &&
         activeSpellWeaponDamageRiders(actor, option).length === 0 &&
         eligibleWeaponDamageDiceRollChoiceProcedureRefs(state, actorId, option)
           .length === 0 &&

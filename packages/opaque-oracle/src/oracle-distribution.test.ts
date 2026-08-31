@@ -20,7 +20,10 @@ import { Result, Match, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { buildOracleDistribution } from "../scripts/build-distribution.ts";
-import { checkOracleDistribution } from "../scripts/check-distribution.ts";
+import {
+  checkOracleDistribution,
+  inspectOracleDistributionImports,
+} from "../scripts/check-distribution.ts";
 import { decodeOracleEvaluationBatchJson } from "./oracle-case-trace.ts";
 import { decodeOracleCorpusJson } from "./oracle-corpus.ts";
 import type { OracleTrace } from "./oracle-case-trace-schema.ts";
@@ -829,6 +832,54 @@ function assertEvaluated(
 }
 
 describe("Opaque Oracle source-free distribution", () => {
+  test("distinguishes module imports from import-like string payloads", () => {
+    expect(
+      inspectOracleDistributionImports(
+        "const generated = 'import * as Option from \"effect/Option\"';",
+      ),
+    ).toBeUndefined();
+    expect(
+      inspectOracleDistributionImports(
+        'import * as Option from "effect/Option";',
+      ),
+    ).toEqual({ tag: "unresolvedImport", specifier: "effect/Option" });
+    expect(inspectOracleDistributionImports('import "effect/Option";')).toEqual(
+      { tag: "unresolvedImport", specifier: "effect/Option" },
+    );
+    expect(
+      inspectOracleDistributionImports(
+        'export { Option } from "effect/Option";',
+      ),
+    ).toEqual({ tag: "unresolvedImport", specifier: "effect/Option" });
+    expect(
+      inspectOracleDistributionImports('void import("effect/Option");'),
+    ).toEqual({ tag: "unresolvedImport", specifier: "effect/Option" });
+    expect(
+      inspectOracleDistributionImports("void import(`effect/Option`);"),
+    ).toEqual({ tag: "unresolvedImport", specifier: "effect/Option" });
+    expect(
+      inspectOracleDistributionImports(
+        'void import("effect/Option", { with: { type: "json" } });',
+      ),
+    ).toEqual({ tag: "unresolvedImport", specifier: "effect/Option" });
+    expect(
+      inspectOracleDistributionImports(
+        'const specifier = "effect/Option"; void import(specifier);',
+      ),
+    ).toEqual({ tag: "unresolvedImport", specifier: "specifier" });
+    expect(
+      inspectOracleDistributionImports(
+        'import { readFile } from "node:fs"; void readFile;',
+      ),
+    ).toBeUndefined();
+    expect(
+      inspectOracleDistributionImports('import "node:not-a-real-module";'),
+    ).toEqual({
+      tag: "unresolvedImport",
+      specifier: "node:not-a-real-module",
+    });
+  });
+
   test("is deterministic, verifies identity, runs offline from another directory, and preserves stream laws", async () => {
     const temporaryRoot = mkdtempSync(
       join(tmpdir(), "opaque-oracle-distribution-"),

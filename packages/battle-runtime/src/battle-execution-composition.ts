@@ -65,10 +65,6 @@ export function resolveAdmittedBattleSubject(
   options: BattleInterruptRouteOptions = {},
 ): BattleResolutionResult {
   const executionRegistry = spellProcedureExecutionRegistry();
-  const handledInterruptTrigger =
-    options.replayingInterruptedProcedure === true
-      ? options.handledInterruptOccurrence?.trigger
-      : options.handledInterruptTrigger;
   return battleResolutionWithExecutionSnapshot(
     input.state,
     resolveAdmittedBattleSubjectWithRegistry(
@@ -77,7 +73,9 @@ export function resolveAdmittedBattleSubject(
       BATTLE_ATTACK_ROUTE_RESOLVERS,
       options,
     ),
-    handledInterruptTrigger,
+    "handledInterruptTrigger" in options
+      ? options.handledInterruptTrigger
+      : undefined,
   );
 }
 

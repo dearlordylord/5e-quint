@@ -14,6 +14,7 @@ import {
   battleId,
   battleObjectId,
   admitCharacterWeaponAttackExecutionWeapon,
+  admitResolvedCharacterWeaponAttackExecutionWeapon,
   characterId,
   combatantId,
   initiativeScore,
@@ -27,6 +28,7 @@ import {
   type CharacterBattleClassLevelInits,
   type CharacterWeaponAttackActionOption,
 } from "@dnd/battle-runtime";
+import { resolveWeaponMasteryReference } from "@dnd/surface/surface/unit-catalog";
 import {
   Hp,
   abilityModifier,
@@ -1422,6 +1424,7 @@ function character(
     attack === null
       ? attack
       : reconcileMcpCharacterWeaponAttack(
+          root,
           attack,
           selectedLoadout.weapon,
           input.weaponMasteries,
@@ -1532,7 +1535,6 @@ function weaponAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability,
     abilityModifier: abilityModifier(mod),
@@ -1542,6 +1544,7 @@ function weaponAttack(
 }
 
 function reconcileMcpCharacterWeaponAttack(
+  root: Root,
   attack: CharacterWeaponAttackActionOption,
   loadoutWeapon:
     | NonNullable<CharacterCreatureInit["selectedLoadout"]["weapon"]>
@@ -1552,16 +1555,41 @@ function reconcileMcpCharacterWeaponAttack(
     loadoutWeapon === undefined
       ? attack.weaponObjectId
       : battleObjectId(loadoutWeapon.itemId);
-  const hasWeaponMastery =
+  const masteryIsSelected =
     weaponMasteries === undefined
-      ? attack.hasWeaponMastery
+      ? "masteryProperty" in attack.weapon
       : weaponMasteries.some(
           (mastery) => mastery.weaponUnitId === attack.weapon.weaponUnitId,
         );
+  if (!masteryIsSelected) {
+    const weapon =
+      "masteryProperty" in attack.weapon
+        ? (({ masteryProperty: _property, ...withoutMastery }) =>
+            withoutMastery)(attack.weapon)
+        : attack.weapon;
+    return { ...attack, weapon, weaponObjectId: loadoutObjectId };
+  }
+  if ("masteryProperty" in attack.weapon) {
+    return { ...attack, weaponObjectId: loadoutObjectId };
+  }
+  const weapon = root.unitLibrary.requireUnit(attack.weapon.weaponUnitId);
+  if (weapon.kind !== "weapon") {
+    throw new Error(`Expected weapon Unit: ${attack.weapon.weaponUnitId}`);
+  }
+  const resolution = Result.getOrThrow(
+    resolveWeaponMasteryReference(weapon, root.unitLibrary),
+  );
+  const admitted = Result.getOrThrow(
+    admitResolvedCharacterWeaponAttackExecutionWeapon(
+      resolution,
+      loadoutObjectId,
+      [{ weaponUnitId: weapon.id }],
+    ),
+  );
   return {
     ...attack,
+    weapon: admitted.weapon,
     weaponObjectId: loadoutObjectId,
-    hasWeaponMastery,
   };
 }
 

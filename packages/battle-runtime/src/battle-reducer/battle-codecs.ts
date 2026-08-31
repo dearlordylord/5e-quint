@@ -1014,9 +1014,9 @@ const BattleTargetSpatialFactSchema = Schema.Union([
     rangeFeet: MovementFeet,
   }),
   Schema.Struct({
-    kind: Schema.Literal(
+    kind: Schema.Literals([
       "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange",
-    ),
+    ]),
     beneficiaryId: CombatantId,
     damageSourceId: CombatantId,
     targetId: CombatantId,
@@ -6386,7 +6386,7 @@ function statBlockProcedurePoolShapeIsValid(
     (pool) => pool.kind === "legendaryActions",
   ).length;
   const limitedUsePoolCount = pools.length - legendaryPoolCount;
-  if (binding.procedure.kind === "unarmedStrike") {
+  if (statBlockProcedureRequiresNoResourcePools(binding.procedure.kind)) {
     return pools.length === 0;
   }
   if (binding.procedure.kind === "multiattack") {
@@ -6403,6 +6403,12 @@ function statBlockProcedurePoolShapeIsValid(
     return legendaryPoolCount === 0;
   }
   return legendaryPoolCount <= 1 && limitedUsePoolCount <= 1;
+}
+
+function statBlockProcedureRequiresNoResourcePools(
+  kind: StatBlockProcedureBindingInvariantInput["procedure"]["kind"],
+): boolean {
+  return kind === "unarmedStrike" || kind === "effectOccurrenceSource";
 }
 
 function statBlockProcedureResourcePoolRefs(
@@ -6610,7 +6616,7 @@ const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
   resources: Schema.Array(BattleCharacterResourceSnapshotSchema),
   druidWildShapeAvailableForms: Schema.Array(
     Schema.Struct({
-      statBlockId: Schema.String,
+      statBlockId: StatBlockId,
       execution: StatBlockExecutionSnapshotSchema,
     }),
   ),
@@ -6637,7 +6643,7 @@ const BattleAmmunitionStocksSchema = Schema.Array(
 
 const StatBlockBattleCreatureOriginSnapshotSchema = Schema.Struct({
   kind: Schema.Literal("statBlock"),
-  statBlockId: Schema.String,
+  statBlockId: StatBlockId,
   execution: StatBlockExecutionSnapshotSchema,
 });
 

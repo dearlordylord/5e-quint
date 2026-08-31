@@ -45,7 +45,11 @@ import {
 import { difficultyClass } from "@dnd/shared/types";
 
 import { Match } from "effect";
-import type { BattleProcedureExecutionRef } from "../identity.ts";
+import type {
+  BattleProcedureExecutionRef,
+  BattleStatBlockProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 
 import * as Result from "effect/Result";
 
@@ -62,8 +66,6 @@ import {
 } from "../battle-subjects.ts";
 
 import { spendCharacterResourceUse } from "../character-battle-resource-execution.ts";
-
-import { CombatantId } from "../identity.ts";
 
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
@@ -173,6 +175,7 @@ import {
   statBlockMultiattackResourcesAvailable,
 } from "../stat-block-execution-state.ts";
 import type {
+  StatBlockMultiattackDispatchResourceDemand,
   StatBlockBonusActionOptionProcedure,
   StatBlockMultiattackProcedure,
   StatBlockProcedureBindingFor,
@@ -1039,42 +1042,23 @@ export function resolveMultiattack(
       "Attack is no longer available for the current actor.",
     );
   }
-  const multiattackDispatchResources = Match.value(dispatchResourceDemand).pipe(
-    Match.when({ kind: "allListedDispatches" }, ({ procedureRefs }) =>
-      procedureRefs.map(
-        (attackProcedureRef): StatBlockMultiattackActionResource => ({
-          kind: "action",
-          source: "statBlockMultiattack",
-          sourceOwnerId: input.subject.actorId,
-          sourceProcedureRef: multiattackBinding.procedureRef,
-          dispatch: { kind: "listedOccurrence", attackProcedureRef },
-        }),
-      ),
-    ),
-    Match.when(
-      { kind: "oneListedDispatch" },
-      ({ procedureRefs }): readonly StatBlockMultiattackActionResource[] => [
-        {
-          kind: "action",
-          source: "statBlockMultiattack",
-          sourceOwnerId: input.subject.actorId,
-          sourceProcedureRef: multiattackBinding.procedureRef,
-          dispatch: {
-            kind: "oneListedChoice",
-            attackProcedureRefs: procedureRefs,
-          },
-        },
-      ],
-    ),
-    Match.exhaustive,
-  );
-  const nextStateWithPendingDispatches = {
+  const grantedDispatchResources = combatantHasSaveGatedTurnConstraintBundle(
+    input.state,
+    actor,
+  )
+    ? []
+    : statBlockMultiattackDispatchActionResources({
+        actorId: input.subject.actorId,
+        sourceProcedureRef: multiattackBinding.procedureRef,
+        demand: dispatchResourceDemand,
+      });
+  const nextStateWithPendingDispatches: BattleState = {
     ...input.state,
     currentTurnResources: {
       ...spent.success,
       actionResources: [
         ...spent.success.actionResources,
-        ...multiattackDispatchResources,
+        ...grantedDispatchResources,
       ],
     },
   };
@@ -1082,7 +1066,7 @@ export function resolveMultiattack(
     origin.execution,
     multiattackBinding,
   );
-  const nextState = {
+  const nextState: BattleState = {
     ...nextStateWithPendingDispatches,
     combatants: new Map(nextStateWithPendingDispatches.combatants).set(
       actor.combatantId,
@@ -1097,6 +1081,36 @@ export function resolveMultiattack(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function statBlockMultiattackDispatchActionResources(input: {
+  readonly actorId: CombatantId;
+  readonly sourceProcedureRef: BattleStatBlockProcedureExecutionRef;
+  readonly demand: StatBlockMultiattackDispatchResourceDemand;
+}): readonly StatBlockMultiattackActionResource[] {
+  const resource = (
+    dispatch: StatBlockMultiattackActionResource["dispatch"],
+  ): StatBlockMultiattackActionResource => ({
+    kind: "action",
+    source: "statBlockMultiattack",
+    sourceOwnerId: input.actorId,
+    sourceProcedureRef: input.sourceProcedureRef,
+    dispatch,
+  });
+  return Match.value(input.demand).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      allListedDispatches: ({ procedureRefs }) =>
+        procedureRefs.map((attackProcedureRef) =>
+          resource({ kind: "listedOccurrence", attackProcedureRef }),
+        ),
+      oneListedDispatch: ({ procedureRefs }) => [
+        resource({
+          kind: "oneListedChoice",
+          attackProcedureRefs: procedureRefs,
+        }),
+      ],
+    }),
+  );
 }
 
 export function resolveSearch(

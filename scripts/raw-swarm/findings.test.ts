@@ -16,6 +16,7 @@ import { afterEach, describe, expect, test } from "vitest";
 
 import {
   authorityFor,
+  FindingsProjectionSchema,
   findingsFromGenerationLedger,
   projectExecutionFindings,
   readFindingsProjection,
@@ -2877,6 +2878,48 @@ describe("Raw Swarm findings projection", () => {
         }),
       ]),
     );
+  });
+
+  test("admits omitted finding metadata and rejects explicit undefined", () => {
+    const input = fixture();
+    const finding = makeFinding({
+      stage: "player",
+      category: "informational-observation",
+      kind: "informational-observation",
+      summary: "Omission-only metadata",
+      pointer: { kind: "artifact", authorityRole: "transcript" },
+    });
+    const projection = {
+      ...projectExecutionFindings({
+        transcriptPath: input.transcriptRelative,
+        evidenceSetDirectory: input.runRelative,
+        reviewPaths: [],
+        scenarioReviewPaths: [],
+        generationLedgerPaths: [],
+        issueLinks: [],
+      }),
+      findings: [finding],
+    };
+    const decode = Schema.decodeUnknownResult(FindingsProjectionSchema, {
+      onExcessProperty: "error",
+    });
+
+    expect(Result.isSuccess(decode(projection))).toBe(true);
+    for (const explicitUndefinedFinding of [
+      { ...finding, detail: undefined },
+      { ...finding, fingerprint: undefined },
+      { ...finding, githubIssueNumber: undefined },
+      {
+        ...finding,
+        pointer: { ...finding.pointer, line: undefined },
+      },
+    ]) {
+      expect(
+        Result.isFailure(
+          decode({ ...projection, findings: [explicitUndefinedFinding] }),
+        ),
+      ).toBe(true);
+    }
   });
 
   test("does not downgrade a structurally malformed SDK transcript to zero calls", () => {

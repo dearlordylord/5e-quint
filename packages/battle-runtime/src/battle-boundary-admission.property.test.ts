@@ -1961,6 +1961,7 @@ describe("battle boundary admission owners", () => {
           BattleFill,
           { kind: "rolledDice" }
         >,
+        saveGatedConditionWithRepeatDamageRepeatSaves: [],
         damageRelationshipDecisions:
           relationshipParse.decisionsByRelationshipHole,
       });
@@ -1973,6 +1974,7 @@ describe("battle boundary admission owners", () => {
         redirectTarget: undefined,
         redirectSave: undefined,
         redirectDamage: undefined,
+        saveGatedConditionWithRepeatDamageRepeatSaves: [],
         damageRelationshipDecisions:
           relationshipParse.decisionsByRelationshipHole,
       }),

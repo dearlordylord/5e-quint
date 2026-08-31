@@ -149,20 +149,20 @@ export function adminProjection(
     if (presentedBattle.success === null) {
       return Result.fail("Active Battle projection is missing its envelope.");
     }
-    return Result.succeed({
+    return Result.succeed<AdminSessionProjection>({
       battle: presentedBattle.success,
       characters: characters.success,
       session: { ...sessionSummary, battleState: projectedBattleState },
     });
   }
   if (projectedBattleState.tag === "none") {
-    return Result.succeed({
+    return Result.succeed<AdminSessionProjection>({
       battle: null,
       characters: characters.success,
       session: { ...sessionSummary, battleState: projectedBattleState },
     });
   }
-  return Result.succeed({
+  return Result.succeed<AdminSessionProjection>({
     battle: null,
     characters: characters.success,
     session: { ...sessionSummary, battleState: projectedBattleState },

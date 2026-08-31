@@ -15,7 +15,7 @@ export type CharacterBuildClassFeatureOwnerLevelIssue = {
 export function characterBuildClassFeatureOwnerLevel(input: {
   readonly build: Pick<CharacterBuild, "progression">;
   readonly unitLibrary: UnitCatalog;
-  readonly feature: Pick<ClassFeatureRecord, "className" | "name">;
+  readonly feature: Pick<ClassFeatureRecord, "className">;
 }): Result.Result<number, CharacterBuildClassFeatureOwnerLevelIssue> {
   for (const classUnitId of progressionClassUnitIds(input.build.progression)) {
     const classUnit = input.unitLibrary.getUnit(classUnitId);
@@ -31,7 +31,7 @@ export function characterBuildClassFeatureOwnerLevel(input: {
   }
   return Result.fail({
     tag: "classFeatureOwnerLevelIssue",
-    message: `${input.feature.name} projection requires ${classNameLabel(input.feature.className)} class progression.`,
+    message: `Class-feature projection requires ${classNameLabel(input.feature.className)} class progression.`,
   });
 }
 

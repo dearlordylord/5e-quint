@@ -9,7 +9,7 @@
   },
   "id": "weapon_rapier",
   "kind": "weapon",
-  "mastery": "vex",
+  "masteryUnitId": "mastery_vex",
   "name": "Rapier",
   "properties": [
     {

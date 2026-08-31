@@ -486,6 +486,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
         continuation: {
           kind: "damageOnly",
           concentrationSavingThrows: [],
+          saveGatedConditionWithRepeatDamageRepeatSaves: [],
           damageDisposition: { kind: "ordinaryDamage" },
           attackDamageRiders: [],
         },
@@ -600,6 +601,7 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
         continuation: {
           kind: "damageOnly",
           concentrationSavingThrows: [],
+          saveGatedConditionWithRepeatDamageRepeatSaves: [],
           damageDisposition: { kind: "ordinaryDamage" },
           attackDamageRiders: [],
         },

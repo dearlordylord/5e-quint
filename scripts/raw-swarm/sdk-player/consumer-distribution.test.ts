@@ -16,6 +16,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
+import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 import { buildSync } from "esbuild";
 
@@ -26,10 +27,13 @@ import { attemptSource } from "./attempt-source.ts";
 import {
   assertPublicDeclarationBundle,
   buildConsumerDistribution,
+  PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE,
   PUBLIC_DECLARATION_BUNDLE_MAX_BYTES,
   PUBLIC_DECLARATION_BUNDLE_MAX_FILES,
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN,
   PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE,
+  publicDeclarationDiagnosticBaselineMismatches,
+  type PublicDeclarationSerializationDiagnosticBaselineEntry,
 } from "./consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
@@ -70,11 +74,41 @@ function copyDistribution(source: string, destination: string): void {
   writeFileSync(configPath, config);
 }
 
+function declarationDiagnosticAtLocation(
+  baseline: PublicDeclarationSerializationDiagnosticBaselineEntry,
+  line: number,
+  column: number,
+): string {
+  return `${baseline.owner}(${String(line)},${String(column)}): error ${baseline.code}: ${baseline.message}`.replaceAll(
+    "<repo>",
+    repoRoot,
+  );
+}
+
+function observedPinnedDeclarationDiagnostics(
+  firstLine: number,
+  column: number,
+): readonly string[] {
+  return PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE.flatMap(
+    (baseline, fingerprintIndex) =>
+      Array.from({ length: baseline.count }, (_, occurrenceIndex) =>
+        declarationDiagnosticAtLocation(
+          baseline,
+          firstLine + fingerprintIndex + occurrenceIndex,
+          column,
+        ),
+      ),
+  );
+}
+
 describe("SDK player consumer distribution", () => {
   test("bounds the declaration bundle to accessible declaration files", () => {
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(530);
     expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(10 * 1024 * 1024);
-    expect(PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN).toBe(5_818_310);
+    expect(PUBLIC_DECLARATION_BUNDLE_REVIEWED_BYTE_MARGIN).toBe(
+      PUBLIC_DECLARATION_BUNDLE_MAX_BYTES -
+        PUBLIC_DECLARATION_BUNDLE_REVIEWED_MEASURE.bytes,
+    );
     const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-gate-"));
     writeFileSync(
       join(directory, "allowed.d.ts"),
@@ -118,6 +152,85 @@ describe("SDK player consumer distribution", () => {
         `Public declaration bundle has ${String(PUBLIC_DECLARATION_BUNDLE_MAX_FILES + 1)} files; maximum is ${String(PUBLIC_DECLARATION_BUNDLE_MAX_FILES)}`,
       ),
     );
+  });
+
+  test("accepts the exact pinned diagnostic multiset across line shifts", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 1, max: 100_000 }),
+        fc.integer({ min: 1, max: 1_000 }),
+        (firstLine, column) => {
+          expect(
+            publicDeclarationDiagnosticBaselineMismatches(
+              observedPinnedDeclarationDiagnostics(firstLine, column),
+            ),
+          ).toEqual([]);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  test("rejects an added identical diagnostic beyond its pinned count", () => {
+    const exactDiagnostics = observedPinnedDeclarationDiagnostics(100, 14);
+    const duplicate = exactDiagnostics.find(
+      (diagnostic) =>
+        diagnostic.includes("schema-spell.ts") && diagnostic.includes("TS7056"),
+    );
+    if (duplicate === undefined) {
+      throw new Error("Expected pinned schema-spell TS7056 diagnostic.");
+    }
+    expect(
+      publicDeclarationDiagnosticBaselineMismatches([
+        ...exactDiagnostics,
+        duplicate,
+      ]),
+    ).toEqual([duplicate]);
+  });
+
+  test("surfaces a missing pinned diagnostic occurrence", () => {
+    const [omitted, ...remainingDiagnostics] =
+      observedPinnedDeclarationDiagnostics(200, 14);
+    if (omitted === undefined) {
+      throw new Error("Expected nonempty pinned declaration diagnostics.");
+    }
+    const firstBaseline =
+      PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE[0];
+    if (firstBaseline === undefined) {
+      throw new Error("Expected nonempty declaration diagnostic baseline.");
+    }
+    expect(
+      publicDeclarationDiagnosticBaselineMismatches(remainingDiagnostics),
+    ).toEqual([
+      expect.stringContaining(
+        `${firstBaseline.owner}: error ${firstBaseline.code}: ${firstBaseline.message}`,
+      ),
+    ]);
+  });
+
+  test("rejects a new named diagnostic in a pinned owner", () => {
+    const exactDiagnostics = observedPinnedDeclarationDiagnostics(300, 14);
+    const pinnedOwner = PUBLIC_DECLARATION_SERIALIZATION_DIAGNOSTIC_BASELINE[0];
+    if (pinnedOwner === undefined) {
+      throw new Error("Expected nonempty declaration diagnostic baseline.");
+    }
+    const newNamedDiagnostic = declarationDiagnosticAtLocation(
+      {
+        owner: pinnedOwner.owner,
+        code: "TS4023",
+        message:
+          "Exported variable 'UnexpectedStatBlockExecutionSnapshotSchema' has or is using name 'UnexpectedPrivateType' from external module \"<repo>/packages/surface/src/surface/schema-spell\" but cannot be named.",
+        count: 1,
+      },
+      300,
+      14,
+    );
+    expect(
+      publicDeclarationDiagnosticBaselineMismatches([
+        ...exactDiagnostics,
+        newNamedDiagnostic,
+      ]),
+    ).toEqual([newNamedDiagnostic]);
   });
 
   test(
@@ -197,8 +310,6 @@ describe("SDK player consumer distribution", () => {
         "packages/character-battle-runtime/src/battle-handoff-issue.d.ts",
         "packages/character-battle-runtime/src/character-battle-route.d.ts",
         "packages/character-battle-runtime/src/origin-feat-selected-reference-projection.d.ts",
-        "packages/surface/src/surface/generated/srd-stat-block-aggregate.d.ts",
-        "packages/surface/src/surface/stat-block-identity.d.ts",
         "scripts/raw-swarm/transcript.d.ts",
         "scripts/raw-swarm/raw-swarm-identities.d.ts",
       ]) {

@@ -53,6 +53,7 @@ import {
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHole } from "./staged-condition-repeat-save.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
   activeMarkedDamageRiders,
@@ -1316,6 +1317,8 @@ function resolveReactionAttackDamageTransaction(input: {
   const sharedContinuationFacts = {
     kind: "damageOnly" as const,
     concentrationSavingThrows: fillSet.concentrationSavingThrows,
+    saveGatedConditionWithRepeatDamageRepeatSaves:
+      fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
     damageDisposition: fillSet.damageDisposition,
     ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
   };
@@ -1402,6 +1405,8 @@ function resolveReactionAttackDamageTransaction(input: {
       target: spellReduction.target,
       damageAmount: reducedDamageAmount,
       fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      damageOccurrenceKey:
+        saveGatedConditionDamageOccurrenceKeyForHole(damageEventHoleId),
     });
 
   if (saveGatedConditionWithRepeatSaveCheck.tag === "needsHoles") {
@@ -1444,8 +1449,12 @@ function resolveReactionAttackDamageTransaction(input: {
     damageDisposition: fillSet.damageDisposition,
     ...pathDamageApplication,
     concentrationSavingThrow: primaryConcentrationSavingThrow,
-    saveGatedConditionWithRepeatDamageRepeatSaves:
-      fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+    saveGatedConditionDamageRepeatSave: {
+      kind: "repeatSave",
+      fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      occurrenceKey:
+        saveGatedConditionDamageOccurrenceKeyForHole(damageEventHoleId),
+    },
     linkedDefenseResistanceDamageShareConcentrationSavingThrows:
       fillSet.concentrationSavingThrows,
     spatialFacts: targetSpatialFacts,

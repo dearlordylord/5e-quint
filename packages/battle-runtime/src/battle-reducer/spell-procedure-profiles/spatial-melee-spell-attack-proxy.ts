@@ -181,6 +181,64 @@ function admitSpatialMeleeSpellAttackProxyAttackProxy(
   });
 }
 
+function spatialMeleeSpellAttackProxyRepeatEffectIsAvailable(
+  effect: BattleActiveEffect,
+  ctx: SpellAdmissionContext,
+): effect is Extract<
+  BattleActiveEffect,
+  { readonly kind: "spatialMeleeSpellAttackProxy" }
+> {
+  return (
+    effect.kind === "spatialMeleeSpellAttackProxy" &&
+    effect.sourceCombatantId === ctx.actor.combatantId &&
+    !spellAdmissionOngoingSpellEffectSuppressed(
+      ctx,
+      magicSuppressionOngoingSpellEffectRefForActiveEffect(effect),
+    ) &&
+    spatialMeleeSpellAttackProxyRepeatIsLaterTurn(effect, ctx)
+  );
+}
+
+function spatialMeleeSpellAttackProxyRepeatBindingFor(
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spatialMeleeSpellAttackProxy" }
+  >,
+  ctx: SpellAdmissionContext,
+) {
+  const procedure = ctx.actor.origin.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "spellInvocation" &&
+      binding.procedure.execution.procedure ===
+        "spatialMeleeSpellAttackProxy" &&
+      binding.procedure.execution.operation === "repositionAndAttack" &&
+      binding.procedure.execution.activeEffectRef === effect.effectRef &&
+      binding.procedure.execution.activeEffectSourceProcedureRef ===
+        effect.sourceProcedureRef,
+  )?.procedure;
+  return procedure?.kind === "spellInvocation" ? procedure.execution : null;
+}
+
+function spatialMeleeSpellAttackProxyRepeatExecutionFacts(
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spatialMeleeSpellAttackProxy" }
+  >,
+  ctx: SpellAdmissionContext,
+) {
+  const source = characterRetainedSpellProcedureExecution(
+    ctx.actor.origin.execution,
+    effect.sourceProcedureRef,
+  );
+  if (source?.procedure !== "spatialMeleeSpellAttackProxy") return null;
+  if (source.operation !== "createAndAttack") return null;
+  const repeat = spatialMeleeSpellAttackProxyRepeatBindingFor(effect, ctx);
+  if (repeat === null) return null;
+  if (repeat.procedure !== "spatialMeleeSpellAttackProxy") return null;
+  if (repeat.operation !== "repositionAndAttack") return null;
+  return { source, repeat };
+}
+
 function admitSpatialMeleeSpellAttackProxyRepeatAttack(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
@@ -190,40 +248,14 @@ function admitSpatialMeleeSpellAttackProxyRepeatAttack(
   }
   return ctx.actor.activeEffects.flatMap(
     (effect): readonly SpatialMeleeSpellAttackProxyRepeatAttackInvocation[] => {
-      if (
-        effect.kind !== "spatialMeleeSpellAttackProxy" ||
-        effect.sourceCombatantId !== ctx.actor.combatantId ||
-        spellAdmissionOngoingSpellEffectSuppressed(
-          ctx,
-          magicSuppressionOngoingSpellEffectRefForActiveEffect(effect),
-        ) ||
-        !spatialMeleeSpellAttackProxyRepeatIsLaterTurn(effect, ctx)
-      ) {
+      if (!spatialMeleeSpellAttackProxyRepeatEffectIsAvailable(effect, ctx)) {
         return [];
       }
-      const source = characterRetainedSpellProcedureExecution(
-        ctx.actor.origin.execution,
-        effect.sourceProcedureRef,
+      const execution = spatialMeleeSpellAttackProxyRepeatExecutionFacts(
+        effect,
+        ctx,
       );
-      const repeat = ctx.actor.origin.execution.procedureBindings.find(
-        (binding) =>
-          binding.procedure.kind === "spellInvocation" &&
-          binding.procedure.execution.procedure ===
-            "spatialMeleeSpellAttackProxy" &&
-          binding.procedure.execution.operation === "repositionAndAttack" &&
-          binding.procedure.execution.activeEffectRef === effect.effectRef &&
-          binding.procedure.execution.activeEffectSourceProcedureRef ===
-            effect.sourceProcedureRef,
-      )?.procedure;
-      if (
-        source?.procedure !== "spatialMeleeSpellAttackProxy" ||
-        source.operation !== "createAndAttack" ||
-        repeat?.kind !== "spellInvocation" ||
-        repeat.execution.procedure !== "spatialMeleeSpellAttackProxy" ||
-        repeat.execution.operation !== "repositionAndAttack"
-      ) {
-        return [];
-      }
+      if (execution === null) return [];
       return [
         {
           access: {
@@ -237,12 +269,12 @@ function admitSpatialMeleeSpellAttackProxyRepeatAttack(
           actionCost: "bonusAction",
           activeEffect: effect,
           targeting: { kind: "singleCombatant" },
-          repeatTargeting: repeat.execution.repeatTargeting,
-          damage: source.damage,
-          attackKind: source.attackKind,
-          attackBonus: source.attackBonus,
-          forceReachFeet: source.forceReachFeet,
-          repeatMoveMaxFeet: source.repeatMoveMaxFeet,
+          repeatTargeting: execution.repeat.repeatTargeting,
+          damage: execution.source.damage,
+          attackKind: execution.source.attackKind,
+          attackBonus: execution.source.attackBonus,
+          forceReachFeet: execution.source.forceReachFeet,
+          repeatMoveMaxFeet: execution.source.repeatMoveMaxFeet,
         },
       ];
     },
@@ -375,18 +407,58 @@ function isSupportedSpatialMeleeSpellAttackProxyMissEffect(
 function isSupportedSpatialMeleeSpellAttackProxyDamageAmount(
   amount: DiceAmount,
 ): amount is SupportedSpatialMeleeSpellAttackProxyDamageAmount {
+  if (
+    amount.kind !== "linear_per_level" ||
+    amount.axis !== "slot" ||
+    amount.startingAtLevel !== 2
+  ) {
+    return false;
+  }
   return (
-    amount.kind === "linear_per_level" &&
-    amount.axis === "slot" &&
-    amount.startingAtLevel === 2 &&
-    amount.base.dice === 1 &&
-    amount.base.dieSize === 8 &&
-    amount.base.flat === undefined &&
-    amount.base.spellcastingMod === true &&
-    amount.base.abilityModifier === undefined &&
-    amount.perLevel.dice === 1 &&
-    amount.perLevel.dieSize === 8 &&
-    amount.perLevel.flat === undefined
+    isSupportedSpatialMeleeSpellAttackProxyBaseDamage(amount.base) &&
+    isSupportedSpatialMeleeSpellAttackProxyPerLevelDamage(amount.perLevel)
+  );
+}
+
+function isSupportedSpatialMeleeSpellAttackProxyBaseDamage(
+  amount: DiceExpr,
+): boolean {
+  return (
+    amount.dice === 1 &&
+    amount.dieSize === 8 &&
+    amount.flat === undefined &&
+    amount.spellcastingMod === true &&
+    amount.abilityModifier === undefined
+  );
+}
+
+function isSupportedSpatialMeleeSpellAttackProxyPerLevelDamage(
+  amount: DiceExprDelta,
+): boolean {
+  return amount.dice === 1 && amount.dieSize === 8 && amount.flat === undefined;
+}
+
+function sameSpatialMeleeSpellAttackProxyBaseDamage(
+  left: SupportedSpatialMeleeSpellAttackProxyDamageAmount["base"],
+  right: SupportedSpatialMeleeSpellAttackProxyDamageAmount["base"],
+): boolean {
+  return (
+    left.dice === right.dice &&
+    left.dieSize === right.dieSize &&
+    left.flat === right.flat &&
+    left.spellcastingMod === right.spellcastingMod &&
+    left.abilityModifier === right.abilityModifier
+  );
+}
+
+function sameSpatialMeleeSpellAttackProxyPerLevelDamage(
+  left: SupportedSpatialMeleeSpellAttackProxyDamageAmount["perLevel"],
+  right: SupportedSpatialMeleeSpellAttackProxyDamageAmount["perLevel"],
+): boolean {
+  return (
+    left.dice === right.dice &&
+    left.dieSize === right.dieSize &&
+    left.flat === right.flat
   );
 }
 
@@ -398,14 +470,14 @@ function sameSpatialMeleeSpellAttackProxyDamageEffect(
     left.damageType === right.damageType &&
     left.amount.axis === right.amount.axis &&
     left.amount.startingAtLevel === right.amount.startingAtLevel &&
-    left.amount.base.dice === right.amount.base.dice &&
-    left.amount.base.dieSize === right.amount.base.dieSize &&
-    left.amount.base.flat === right.amount.base.flat &&
-    left.amount.base.spellcastingMod === right.amount.base.spellcastingMod &&
-    left.amount.base.abilityModifier === right.amount.base.abilityModifier &&
-    left.amount.perLevel.dice === right.amount.perLevel.dice &&
-    left.amount.perLevel.dieSize === right.amount.perLevel.dieSize &&
-    left.amount.perLevel.flat === right.amount.perLevel.flat
+    sameSpatialMeleeSpellAttackProxyBaseDamage(
+      left.amount.base,
+      right.amount.base,
+    ) &&
+    sameSpatialMeleeSpellAttackProxyPerLevelDamage(
+      left.amount.perLevel,
+      right.amount.perLevel,
+    )
   );
 }
 

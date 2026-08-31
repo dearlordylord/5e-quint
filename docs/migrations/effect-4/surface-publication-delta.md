@@ -13,14 +13,14 @@ The aggregate evidence is closed over the symmetric union of authored record
 identities. Each semantic delta is explicitly `changed`, `added`, or `removed`,
 has the hashes applicable to that shape, and has one reviewed semantic class.
 The current candidate has 39 changed records, 344 additions, and no removals.
-The changed set comprises the previously reviewed 18 Unit changes plus 21
-pre-existing Stat Blocks reconstructed from the canonical SRD corpus. The
-additions comprise 35 Units and 309 Stat Blocks. Changed-record classes are
-persistent rule facts, companion lifecycle, modal ongoing effect,
-identity-free execution vocabulary, and truthful illumination emission; every
-addition is classified only as authored catalog membership.
-The certificate schema couples those five classes to `changed`; `added` and
-`removed` accept only the catalog-membership class.
+Their changed-record classes are persistent rule facts, companion lifecycle,
+modal ongoing effect, identity-free execution vocabulary, truthful illumination
+emission, and authored Stat Block fidelity. The last class records the 21
+pre-existing Stat Blocks moving from the reduced Effect 3 shape to the canonical
+SRD Stat Block contract, including structured mechanics, resources,
+communication, and ordered procedures. The certificate schema couples those
+six classes to `changed`; `added` and `removed` accept only the
+catalog-membership class.
 The baseline and candidate membership evidence each record counts and ordered
 identity hashes for every family, so a classified addition or removal can
 change one snapshot without contradicting the other.
@@ -36,7 +36,7 @@ spell fields first. The evidence records both complete key orders and the
 canonical value hash. The verifier discovers key-order changes only within
 records whose canonical values are equal and rejects unclassified, stale, or
 substituted order evidence. The exact canonical record hashes authenticate the
-semantic content of the 18 record changes, and the whole-artifact byte digests
+semantic content of the 39 record changes, and the whole-artifact byte digests
 authenticate their byte layout; the verifier does not claim any ordering inside
 those semantic changes as an independent order-only delta.
 

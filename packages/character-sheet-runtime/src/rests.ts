@@ -42,6 +42,12 @@ import {
 } from "@dnd/surface/surface/character-creation-readers";
 import { Result, Match, Option } from "effect";
 
+import {
+  projectCharacterSheetClassFeature,
+  projectCharacterSheetSpeciesTrait,
+  type CharacterSheetClassFeatureFacts,
+  type CharacterSheetSpeciesTraitFacts,
+} from "./character-feature-projection.ts";
 import { companionAfterLongRest } from "./companions.ts";
 import {
   druidCircleLandAfterLongRest,
@@ -108,28 +114,21 @@ import {
   isCharacterSheetWithSpellSlots,
 } from "./spell-slots.ts";
 
-type CharacterSheetClassFeatureRecord = Extract<
-  UnitRecord,
-  { readonly kind: "class_feature" }
->;
 type PactSlotRecoveryMechanics = Extract<
-  CharacterSheetClassFeatureRecord["mechanics"],
+  CharacterSheetClassFeatureFacts["mechanics"],
   { readonly family: "pact_slot_recovery" }
 >;
-type CharacterSheetPactSlotRecoveryFeature =
-  CharacterSheetClassFeatureRecord & {
-    readonly mechanics: PactSlotRecoveryMechanics;
-  };
+type CharacterSheetPactSlotRecoveryFeature = CharacterSheetClassFeatureFacts & {
+  readonly mechanics: PactSlotRecoveryMechanics;
+};
 type CharacterSheetPactSlotRecoveryProfile = {
   readonly feature: CharacterSheetPactSlotRecoveryFeature;
   readonly classUnitId: UnitRecord["id"];
 };
-type CharacterSheetRestTriggeredHeroicInspirationFeature = Extract<
-  UnitRecord,
-  { readonly kind: "species_trait" }
-> & {
-  readonly mechanics: RestTriggeredHeroicInspirationMechanics;
-};
+type CharacterSheetRestTriggeredHeroicInspirationFeature =
+  CharacterSheetSpeciesTraitFacts & {
+    readonly mechanics: RestTriggeredHeroicInspirationMechanics;
+  };
 
 const RANGER_TIRELESS_UNIT_ID = "ranger_tireless" as const;
 
@@ -587,7 +586,11 @@ function characterSheetHasLongRestHeroicInspirationGrant(input: {
     if (Result.isFailure(trait)) {
       return Result.fail(trait.failure);
     }
-    if (isLongRestHeroicInspirationFeature(trait.success)) {
+    const projection = projectCharacterSheetSpeciesTrait(trait.success);
+    if (
+      Option.isSome(projection) &&
+      isLongRestHeroicInspirationFeature(projection.value)
+    ) {
       return Result.succeed(true);
     }
   }
@@ -595,14 +598,13 @@ function characterSheetHasLongRestHeroicInspirationGrant(input: {
 }
 
 function isLongRestHeroicInspirationFeature(
-  unit: UnitRecord,
-): unit is CharacterSheetRestTriggeredHeroicInspirationFeature {
+  facts: CharacterSheetSpeciesTraitFacts,
+): facts is CharacterSheetRestTriggeredHeroicInspirationFeature {
   return (
-    unit.kind === "species_trait" &&
-    unit.mechanics.family === "rest_triggered_heroic_inspiration" &&
-    unit.mechanics.trigger.kind === "finish_rest" &&
-    unit.mechanics.trigger.rest === "long" &&
-    unit.mechanics.grant.kind === "heroic_inspiration"
+    facts.mechanics.family === "rest_triggered_heroic_inspiration" &&
+    facts.mechanics.trigger.kind === "finish_rest" &&
+    facts.mechanics.trigger.rest === "long" &&
+    facts.mechanics.grant.kind === "heroic_inspiration"
   );
 }
 
@@ -837,13 +839,15 @@ export function pactSlotRecoveryProfileForBuild(
     for (const grant of facts.value.featureGrants) {
       if (grant.level > classLevel) continue;
       const feature = unitLibrary.getUnit(grant.unitId);
+      const projection = Option.isSome(feature)
+        ? projectCharacterSheetClassFeature(feature.value)
+        : Option.none();
       if (
-        Option.isSome(feature) &&
-        isPactSlotRecoveryFeature(feature.value) &&
+        isPactSlotRecoveryFeatureOption(projection) &&
         unit.success.kind === "class" &&
-        unit.success.className === feature.value.className
+        unit.success.className === projection.value.className
       ) {
-        profiles.push({ feature: feature.value, classUnitId });
+        profiles.push({ feature: projection.value, classUnitId });
       }
     }
   }
@@ -871,18 +875,23 @@ export function pactSlotRecoveryProfileForBuild(
 }
 
 function isPactSlotRecoveryFeature(
-  unit: UnitRecord,
-): unit is CharacterSheetPactSlotRecoveryFeature {
+  facts: CharacterSheetClassFeatureFacts,
+): facts is CharacterSheetPactSlotRecoveryFeature {
   return (
-    unit.kind === "class_feature" &&
-    unit.mechanics.family === "pact_slot_recovery" &&
-    unit.mechanics.activationCost.kind === "one_minute_rite" &&
-    unit.mechanics.resource.kind === "pact_slots" &&
-    unit.mechanics.resource.source === "class_record_pact_magic" &&
-    unit.mechanics.requiresExpendedSlots === true &&
-    unit.mechanics.recoveryCap.kind === "half_maximum_rounded_up" &&
-    unit.mechanics.resetCadence.kind === "long_rest"
+    facts.mechanics.family === "pact_slot_recovery" &&
+    facts.mechanics.activationCost.kind === "one_minute_rite" &&
+    facts.mechanics.resource.kind === "pact_slots" &&
+    facts.mechanics.resource.source === "class_record_pact_magic" &&
+    facts.mechanics.requiresExpendedSlots === true &&
+    facts.mechanics.recoveryCap.kind === "half_maximum_rounded_up" &&
+    facts.mechanics.resetCadence.kind === "long_rest"
   );
+}
+
+function isPactSlotRecoveryFeatureOption(
+  feature: Option.Option<CharacterSheetClassFeatureFacts>,
+): feature is Option.Some<CharacterSheetPactSlotRecoveryFeature> {
+  return Option.isSome(feature) && isPactSlotRecoveryFeature(feature.value);
 }
 
 function characterSheetLongRestBuild<TBuild extends CharacterBuild>(

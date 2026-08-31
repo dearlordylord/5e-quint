@@ -37,6 +37,7 @@ module battleRuntimeHoleKinds {
     | SelfTransformationModeChoiceHoleKind
     | ShoveOutcomeHoleKind
     | SkillChoiceHoleKind
+    | SlowSomaticSpellFailureOutcomeHoleKind
     | TurnConstraintSomaticSpellFailureOutcomeHoleKind
     | SpellTargetAllocationHoleKind
     | SpellTargetListHoleKind

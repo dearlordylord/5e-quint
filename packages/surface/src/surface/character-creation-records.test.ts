@@ -1995,6 +1995,7 @@ describe("character-creation Surface records", () => {
           recordId: "species_dragonborn",
           species: "dragonborn",
           creatureType: "humanoid",
+          draconicAncestry: speciesDragonbornInput.draconicAncestry,
           size: { kind: "fixed", size: "medium" },
           speed: { walkFeet: 30 },
           traits: {

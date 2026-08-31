@@ -55,6 +55,12 @@ import {
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import { spellDefinitionHasPricedOrConsumedMaterialComponent } from "./battle-reducer/spells-invocation-guards.ts";
 import { isNonSpellStatBlockProcedureBinding } from "./stat-block-execution-state.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import {
+  statBlockProcedurePresentationsForActor,
+  statBlockProjectionIssuesForActor,
+} from "./stat-block-presentation.ts";
+import type { BattleRuntimeContext } from "./battle-runtime-context.ts";
 
 type CharacterSeedInput = Parameters<typeof characterSeed>[0];
 
@@ -140,16 +146,8 @@ import {
   type WildShapeLoadoutObjectRef,
 } from "./index.ts";
 import { canonicalHeldObjectIdsForActor } from "./battle-reducer/compelled-behavior-discovery.ts";
-import {
-  statBlockProcedurePresentations,
-  statBlockProcedurePresentationsForActor,
-  statBlockProjectionIssuesForActor,
-} from "./stat-block-presentation.ts";
-import type {
-  BattleRuntimeContext,
-  BattleRuntimeSession,
-} from "./battle-runtime-context.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
+import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
 import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import { shillelaghUnitId } from "./unit-profile-admission-catalog.test-support.ts";
@@ -2543,7 +2541,7 @@ test("rejects omitted Wild Shape available-form subset for a direct battle init"
 
   expect(Result.isFailure(result)).toBe(true);
   if (Result.isFailure(result)) {
-    expect(battleInitializationIssueMessage(result.failure)).toBe(
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
       "Druid Wild Shape battle initialization requires an available known-form subset.",
     );
   }
@@ -2708,10 +2706,7 @@ test("filters unsupported Wild Shape procedure forms without dropping later supp
 
   expect(Result.isSuccess(result)).toBe(true);
   if (Result.isSuccess(result)) {
-    expect(result.success.map((form) => form.id)).toEqual([
-      ridingHorseId,
-      syntheticUntypedCoordinatedShapeId,
-    ]);
+    expect(result.success.map((form) => form.id)).toEqual([ridingHorseId]);
   }
 });
 
@@ -4347,7 +4342,6 @@ function weakTrueFormWeaponAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: abilityModifier(-1),

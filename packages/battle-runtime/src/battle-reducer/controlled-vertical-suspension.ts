@@ -238,9 +238,7 @@ function controlledVerticalSuspensionMovementEffectAdmission(
     return {
       tag: "invalid",
       message:
-        activeEffect === undefined
-          ? "ControlledVerticalSuspension movement witness was supplied for a target that is not controlledVerticalSuspension."
-          : "ControlledVerticalSuspension movement witness does not match the active ControlledVerticalSuspension effect.",
+        controlledVerticalSuspensionMovementEffectMismatchMessage(activeEffect),
     };
   }
   /* v8 ignore start -- @preserve -- Stale ControlledVerticalSuspension witness: discovery copies the active effect's source combatant and procedure identity into the movement fact. */
@@ -270,6 +268,14 @@ function controlledVerticalSuspensionMovementEffectAdmission(
         message:
           "ControlledVerticalSuspension movement source procedure is unavailable.",
       };
+}
+
+function controlledVerticalSuspensionMovementEffectMismatchMessage(
+  activeEffect: ControlledVerticalSuspensionActiveEffect | undefined,
+): string {
+  return activeEffect === undefined
+    ? "ControlledVerticalSuspension movement witness was supplied for a target that is not controlledVerticalSuspension."
+    : "ControlledVerticalSuspension movement witness does not match the active ControlledVerticalSuspension effect.";
 }
 
 function validateMatchedControlledVerticalSuspensionMovementFact(

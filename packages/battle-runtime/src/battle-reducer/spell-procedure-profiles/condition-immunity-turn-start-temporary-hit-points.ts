@@ -345,9 +345,9 @@ const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
-      procedure: Schema.Literal(
+      procedure: Schema.Literals([
         "conditionImmunityAndTurnStartTemporaryHitPoints",
-      ),
+      ]),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       targeting: Schema.Struct({

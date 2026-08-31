@@ -396,6 +396,92 @@ describe("effect lifecycle route boundary", () => {
     ]);
   });
 
+  test("routes the failed initial Sleep save and the resolved caster turn", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("effect-route-sleep-initial-save"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("sleep")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Target",
+          initiative: 10,
+        }),
+      ],
+    });
+    const act = findAct(session, magicSubject("sleep"));
+    const initialSave = requireHole(act.initialHoles, "savingThrowOutcome");
+    const failedInitialSave = savingThrowOutcomeFill(initialSave, [
+      { targetId: goblinId, succeeded: false },
+    ]);
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [failedInitialSave],
+    });
+    expect(cast.tag).toBe("resolved");
+    expect(
+      hitPointBudgetConditionRepeatSaveRouteForResolution(
+        {
+          state: session.state,
+          subject: act.subject,
+          fills: [failedInitialSave],
+        },
+        cast,
+      ),
+    ).toEqual([
+      {
+        kind: "resolveBattleSubject",
+        subject: "repeatSaveConditionEffect",
+        fill: "savingThrowOutcome",
+        holes: [],
+        owner: "battleConditionLifecycle",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "repeatSaveConditionEffect",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "repeatSaveConditionEffect",
+        holes: [],
+        owner: "battleConcentration",
+      },
+    ]);
+
+    const castState = requireResolved(cast).state;
+    const casterTurnSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: wizardId,
+      command: "endTurn" as const,
+    };
+    const casterTurn = endTurn({ state: castState, actorId: wizardId });
+    expect(
+      hitPointBudgetConditionRepeatSaveRouteForResolution(
+        { state: castState, subject: casterTurnSubject, fills: [] },
+        casterTurn,
+      ),
+    ).toEqual([
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "repeatSaveConditionEffect",
+        holes: [],
+        owner: "battleTurnBoundary",
+      },
+    ]);
+  });
+
   test("routes Sleep repeat saves and Concentration teardown at the turn boundary", () => {
     const initialSleep = battleAfterFailedSleepInitialSave({
       battle: "effect-route-sleep-repeat-save",
@@ -450,11 +536,15 @@ describe("effect lifecycle route boundary", () => {
         { state: sleeping, subject: endTurnSubject, fills: [saveFill] },
         repeated,
       ),
-    ).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ owner: "battleConditionLifecycle" }),
-      ]),
-    );
+    ).toEqual([
+      {
+        kind: "resolveBattleSubject",
+        subject: "repeatSaveConditionEffect",
+        fill: "savingThrowOutcome",
+        holes: [],
+        owner: "battleConditionLifecycle",
+      },
+    ]);
 
     const endConcentrationSubject = {
       tag: "runtimeCommand" as const,

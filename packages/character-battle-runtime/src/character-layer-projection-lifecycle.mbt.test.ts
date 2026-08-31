@@ -66,7 +66,6 @@ import {
 
 import { authoredStatBlockBattleInit } from "./ammunition-stock.test-support.ts";
 import { requireResultSuccess as requireSuccess } from "./result.test-support.ts";
-
 const characterLifecycleLayers = [
   "Draft",
   "Build",

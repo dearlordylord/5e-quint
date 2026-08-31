@@ -1,9 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.species-lineage-trait-projection
 import { Result, Option } from "effect";
-import { readSpeciesCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import type {
   GnomishLineageMechanics,
-  SpeciesTraitRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import type {
@@ -12,8 +10,13 @@ import type {
   UnitCatalog,
 } from "./types.ts";
 import { GNOMISH_LINEAGE_CHOICE_KEY } from "./phase1-manifest.ts";
+import { projectCharacterDefinition } from "./character-definition-projection.ts";
+import {
+  projectCharacterCreationFeature,
+  type CharacterCreationSpeciesTraitFacts,
+} from "./character-feature-projection.ts";
 
-type GnomishLineageTraitUnit = SpeciesTraitRecord & {
+type GnomishLineageTraitUnit = CharacterCreationSpeciesTraitFacts & {
   readonly mechanics: GnomishLineageMechanics;
 };
 
@@ -96,27 +99,34 @@ function gnomishLineageSourceForBuild(input: {
     );
   }
 
-  const speciesFacts = readSpeciesCreationFacts(speciesUnit.value);
-  if (speciesFacts.tag !== "readable") {
+  const speciesProjection = projectCharacterDefinition(speciesUnit.value);
+  if (
+    speciesProjection.tag !== "readable" ||
+    speciesProjection.value.kind !== "species"
+  ) {
     return projectionIssue(
       "Selected Gnomish Lineage requires a readable species Unit.",
     );
   }
 
-  const sources = Object.values(speciesFacts.value.traits).flatMap(
+  const sources = Object.values(speciesProjection.value.facts.traits).flatMap(
     (traitUnitId): readonly GnomishLineageSource[] => {
       const traitUnit = input.unitLibrary.getUnit(traitUnitId);
-      if (
-        Option.isNone(traitUnit) ||
-        !isGnomishLineageTraitUnit(traitUnit.value)
-      ) {
+      if (Option.isNone(traitUnit)) {
         return [];
       }
+      const projection = projectCharacterCreationFeature(traitUnit.value);
+      if (
+        projection.tag !== "readable" ||
+        projection.value.kind !== "species_trait" ||
+        !isGnomishLineageTraitUnit(projection.value.facts)
+      )
+        return [];
 
       return [
         {
           traitUnitId: traitUnit.value.id,
-          mechanics: traitUnit.value.mechanics,
+          mechanics: projection.value.facts.mechanics,
         },
       ];
     },
@@ -135,10 +145,9 @@ function gnomishLineageSourceForBuild(input: {
 }
 
 function isGnomishLineageTraitUnit(
-  unit: UnitRecord,
+  unit: CharacterCreationSpeciesTraitFacts,
 ): unit is GnomishLineageTraitUnit {
   return (
-    unit.kind === "species_trait" &&
     unit.mechanics.family === "species_lineage_choice" &&
     unit.mechanics.choiceKey === GNOMISH_LINEAGE_CHOICE_KEY
   );

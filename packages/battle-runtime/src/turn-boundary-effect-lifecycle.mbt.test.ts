@@ -50,10 +50,17 @@ import {
   characterSeed,
   damageRollFillWithGroups,
   fighterId,
+  findAct,
   findHole,
   goblinId,
+  magicSubject,
+  resolveBattleSubject,
   savingThrowOutcomeFill,
+  spellRecord,
+  startBattleSessionRight,
   startBattleRight,
+  wizardId,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
   battleReducerStartRouteEvent,
@@ -69,20 +76,11 @@ import {
   type BattleState,
   type OngoingFeatureSourceKey,
 } from "./index.ts";
-import {
-  spellProcedureExecution,
-  type UnitFeatureProcedureExecution,
-} from "./character-execution-admission.ts";
+import type { UnitFeatureProcedureExecution } from "./character-execution-admission.ts";
 import {
   battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest,
   type LowLevelEffectOccurrenceTemplate,
 } from "./low-level-effect-occurrence.test-support.ts";
-import { supportedPreparedStagedSaveConditionProfile } from "./battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts";
-import {
-  spellAdmissionSource,
-  spellRecord,
-} from "./unit-profile-admission-spell-record.test-support.ts";
-import { sleepUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 
 type TurnBoundaryLifecycleScenario =
   | "init"
@@ -934,68 +932,40 @@ function battleWithTurnBoundaryEffectsAndConditionSave(): BattleState {
   }).state;
 }
 
-function requireExactlyOneSleepStagedSaveConditionInvocation(): ReturnType<
-  typeof supportedPreparedStagedSaveConditionProfile
->[number] {
-  const invocations = supportedPreparedStagedSaveConditionProfile(
-    spellAdmissionSource(spellRecord(sleepUnitId)),
-    [
-      {
-        spellLevel: spellSlotLevel(1),
-        payment: { tag: "slot" },
-      },
-    ],
-  );
-  const invocation = invocations[0];
-  if (invocations.length !== 1 || invocation === undefined) {
-    throw new Error(
-      `Expected exactly one Sleep staged-save procedure profile, got ${invocations.length}.`,
-    );
-  }
-  return invocation;
-}
-
 function battleWithTurnBoundaryEffectsAndSleepRepeatSave(): BattleState {
-  const battle = battleWithTurnBoundaryEffects();
-  const allocated = battleStateWithLowLevelSourceOwnedEffectOccurrenceForTest({
-    state: battle,
-    sourceCombatantId: goblinId,
-    ownerId: fighterId,
-    effect: stagedSaveConditionPendingRepeatEffect(),
+  const session = startBattleSessionRight({
+    battleId: battleId("battle-turn-boundary-sleep-repeat-save-frontier"),
+    combatants: [
+      characterSeed({ combatantId: fighterId, initiative: 15 }),
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Sleep caster",
+        initiative: 20,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          cantrips: [],
+          preparedSpells: [spellRecord("sleep")],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        }),
+      }),
+      characterSeed({ combatantId: goblinId, initiative: 10 }),
+    ],
   });
-  const goblin = requireCombatant(allocated.state, goblinId);
-  if (goblin.origin.kind !== "character") {
-    throw new Error("Expected the Sleep repeat-save source to be a character.");
-  }
-  const sleepInvocation = requireExactlyOneSleepStagedSaveConditionInvocation();
-  return {
-    ...allocated.state,
-    combatants: new Map(allocated.state.combatants).set(goblinId, {
-      ...goblin,
-      concentration: {
-        sourceProcedureRef: allocated.sourceProcedureRef,
-        effectKind: "spellEffect",
-      },
-      origin: {
-        ...goblin.origin,
-        execution: {
-          ...goblin.origin.execution,
-          procedureBindings: goblin.origin.execution.procedureBindings.map(
-            (binding) =>
-              binding.procedureRef === allocated.sourceProcedureRef
-                ? {
-                    procedureRef: binding.procedureRef,
-                    procedure: {
-                      kind: "spellInvocation",
-                      execution: spellProcedureExecution(sleepInvocation),
-                    },
-                  }
-                : binding,
-          ),
-        },
-      },
-    }),
-  };
+  const act = findAct(session, magicSubject("sleep"));
+  const initialSave = findHole(act.initialHoles, "savingThrowOutcome");
+  const cast = resolveBattleSubject({
+    state: session.state,
+    subject: act.subject,
+    fills: [
+      savingThrowOutcomeFill(initialSave, [
+        { targetId: fighterId, succeeded: false },
+      ]),
+    ],
+  });
+  assertResolved(cast, "Sleep mixed-boundary setup cast");
+  const fighterTurn = endTurn({ state: cast.state, actorId: wizardId });
+  assertResolved(fighterTurn, "Sleep mixed-boundary caster turn");
+  return battleWithTurnBoundaryEffects({ baseBattle: fighterTurn.state });
 }
 
 function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
@@ -1024,18 +994,6 @@ function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
         effectKind: "spellEffect",
       },
     }),
-  };
-}
-
-function stagedSaveConditionPendingRepeatEffect(): Extract<
-  LowLevelEffectOccurrenceTemplate,
-  { readonly kind: "stagedSaveConditionPendingRepeat" }
-> {
-  return {
-    kind: "stagedSaveConditionPendingRepeat",
-    conditionHadNonSpellSource: false,
-    repeatAt: { kind: "endOfTurn", combatantId: fighterId, round: Round(1) },
-    expiresAt: { kind: "concentration", combatantId: goblinId },
   };
 }
 

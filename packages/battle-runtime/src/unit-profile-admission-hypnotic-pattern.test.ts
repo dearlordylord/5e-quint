@@ -411,7 +411,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       damageAmount: damageAmount(1),
       deathFailuresAtZeroHp: 1,
       damageSourceId: spellCasterId,
-      saveGatedConditionWithRepeatDamageRepeatSaves: [],
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
     });
     const target = requireCombatant(damaged, spellTargetId);
     expect(
@@ -583,7 +583,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       damageAmount: damageAmount(1),
       deathFailuresAtZeroHp: 1,
       damageSourceId: spellCasterId,
-      saveGatedConditionWithRepeatDamageRepeatSaves: [],
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
     });
     const target = requireCombatant(damaged, spellTargetId);
     expect(

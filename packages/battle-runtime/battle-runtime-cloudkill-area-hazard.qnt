@@ -2,11 +2,12 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-cloudkill-area-hazard
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 //
-// Focused semantic owner for Cloudkill. Spatial membership and the direction
-// away from the caster are table facts. This model owns the resulting runtime
-// protocol: the persistent Sphere, its shared once-per-turn save ledger,
-// source-start movement distance, ordered movement targets, save/damage
-// continuation, and spell cleanup.
+// SRD-named BattleState projection and proof witness over the identity-free
+// persistent-area and trigger semantic owners. Spatial membership and the
+// direction away from the caster are table facts. This witness exercises the
+// resulting runtime protocol: the persistent Sphere, its shared once-per-turn
+// save ledger, source-start movement distance, ordered movement targets,
+// save/damage continuation, and spell cleanup.
 //
 // RAW anchors:
 // - Spells/Descriptions-A-D.md#Cloudkill: Action; Concentration up to 10

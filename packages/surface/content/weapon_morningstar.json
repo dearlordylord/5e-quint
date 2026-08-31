@@ -9,7 +9,7 @@
   },
   "id": "weapon_morningstar",
   "kind": "weapon",
-  "mastery": "sap",
+  "masteryUnitId": "mastery_sap",
   "name": "Morningstar",
   "provenance": {
     "kind": "srd-5.2.1",

@@ -184,6 +184,16 @@ describe("canonical Surface authored relations", () => {
     expect(
       result.success.some(
         (relation) =>
+          relation.sourceKind === "unit" &&
+          "sourceRole" in relation &&
+          relation.sourceRecordId === "class_fighter" &&
+          relation.targetRecordId === "subclass_fighter_champion" &&
+          relation.sourceRole === "class-subclass-choice",
+      ),
+    ).toBe(true);
+    expect(
+      result.success.some(
+        (relation) =>
           relation.sourceRecordId === "druid_wild_shape" &&
           relation.targetKind === "statBlock" &&
           relation.relation === "recommended-stat-block-reference",

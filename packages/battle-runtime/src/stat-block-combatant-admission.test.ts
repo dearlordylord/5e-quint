@@ -3,10 +3,7 @@ import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
-import {
-  decodeCreatureImmunityDeclarationSync,
-  StatBlockProcedureResourceOrdinalSchema,
-} from "@dnd/surface/surface/schema";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
 import type { BattleCreatureInit } from "./battle-init.ts";
@@ -34,7 +31,6 @@ import {
   startBattleRight,
   monsterResourceStatBlock,
   statBlockRecord,
-  expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary,
   projectedStatBlockRuntimeSource,
 } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY

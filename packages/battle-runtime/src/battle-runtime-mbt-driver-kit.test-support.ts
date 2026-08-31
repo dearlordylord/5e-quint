@@ -81,6 +81,7 @@ import {
   wizardId as interruptWizardId,
   resolveBattleSubject,
   nonSpellExecutableProcedureEntry,
+  projectedStatBlockRuntimeSource,
   type BattleActSelectorForTest,
 } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
@@ -17835,7 +17836,6 @@ function daggerAttack(): NonNullable<
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: abilityModifier(3),

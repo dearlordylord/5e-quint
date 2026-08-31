@@ -53,7 +53,7 @@ let weapon =
               }
             ]
           : List WeaponProperty
-      , mastery = "cleave"
+      , masteryUnitId = "mastery_cleave"
       , weightPounds = Some 6
       , costGp = 20
       }

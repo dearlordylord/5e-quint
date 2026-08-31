@@ -520,6 +520,7 @@ describe("damage and hit point lifecycle helpers", () => {
       throw new Error("Expected the synthetic combatants.");
     }
     const zeroDamage = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state,
       target,
       damageAmount: 0,
@@ -529,6 +530,7 @@ describe("damage and hit point lifecycle helpers", () => {
 
     expect(
       applyAttackDamageAmount({
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
         state,
         attackerId: fighterId,
         targetId: combatantId("missing-target"),

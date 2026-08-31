@@ -67,9 +67,11 @@ import {
   findHole,
   goblinAttackSubject,
   goblinId,
+  hasCondition,
   interruptDecisionFill,
   reactionModifierChoice,
   requireHole,
+  requireResolved,
   resolveBattleInterrupt,
   resolveBattleSubject,
   rolledDiceGroup,
@@ -77,9 +79,13 @@ import {
   skeletonId,
   statBlockAttackSubjectForTest,
   statBlockCreatureInit,
+  startBattleSessionRight,
   startBattleRight,
   snapshotBattle,
   targetFill,
+  testLongswordAttack,
+  wizardId,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import type {
   AttackSpellDamageAddition,
@@ -90,9 +96,12 @@ import { REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE } from "./unit-featur
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   knownWillingSpellTargetFill,
+  savingThrowOutcomeFill,
   spellAct,
+  spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { statBlockWithCreatureType } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   flyUnitId,
   spellCasterId,
@@ -1025,6 +1034,235 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       ],
     });
     expect(resumed.tag).toBe("resolved");
+  });
+
+  test("resumes interrupted positive attack damage through a durable condition repeat-save continuation", () => {
+    const modifier = cuttingWordsDamageOnlyUnit();
+    const conditionSpell = spellRecord("hideous_laughter");
+    const targetStatBlock = statBlockWithCreatureType("humanoid");
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-interrupt-condition-damage-repeat-save"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Synthetic condition caster and damage responder",
+          initiative: 30,
+          classLevels: [
+            { className: "wizard", level: 1 },
+            { className: "bard", level: 3 },
+          ],
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [conditionSpell],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+          resources: [cuttingWordsResource({ unit: modifier })],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(modifier, [
+              { className: "wizard", level: classLevel(1) },
+              { className: "bard", level: classLevel(3) },
+            ]),
+          ],
+          characterUnitRefs: [
+            {
+              unit: modifier,
+              supportProfiles: [
+                REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
+              ],
+            },
+          ],
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Synthetic attack owner",
+          initiative: 20,
+          attack: testLongswordAttack(),
+        }),
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          statBlockName: "Synthetic condition target",
+          initiative: 10,
+          statBlock: {
+            ...targetStatBlock,
+            statBlock: {
+              ...targetStatBlock.statBlock,
+              hp: { kind: "literal", value: 20 },
+            },
+          },
+          currentHp: 20,
+        }),
+      ],
+    });
+    const conditionAct = spellAct({
+      session,
+      spellId: "hideous_laughter",
+      slotLevel: 1,
+    });
+    const conditionTarget = findHole(
+      conditionAct.initialHoles,
+      "spellTargetList",
+    );
+    const conditionTargetFill = spellTargetListFill(
+      conditionTarget,
+      wizardId,
+      "hideous_laughter",
+      [goblinId],
+    );
+    const awaitingConditionSave = resolveBattleSubject({
+      state: session.state,
+      subject: conditionAct.subject,
+      fills: [conditionTargetFill],
+    });
+    if (awaitingConditionSave.tag !== "needsHoles") {
+      throw new Error("Expected the admitted condition spell save.");
+    }
+    const conditionSave = requireHole(
+      awaitingConditionSave,
+      "savingThrowOutcome",
+    );
+    const conditioned = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: conditionAct.subject,
+        fills: [
+          conditionTargetFill,
+          savingThrowOutcomeFill(conditionSave, [
+            { targetId: goblinId, succeeded: false },
+          ]),
+        ],
+      }),
+    );
+    const attackerTurn = requireResolved(
+      resolveBattleSubject({
+        state: conditioned.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: wizardId,
+          command: "endTurn",
+        },
+        fills: [],
+      }),
+    );
+    const subject = fighterAttackSubject(attackerTurn.state, "Longsword");
+    const target = attackInitialTargetHole(attackerTurn.state, subject);
+    const attackRoll = attackRollHoleAfterTarget(
+      attackerTurn.state,
+      target,
+      subject,
+      goblinId,
+    );
+    const attackPrefix = [
+      targetFill(target, goblinId),
+      attackRollFill(attackRoll, {
+        total: 20,
+        naturalD20: 15,
+        rollMode: "advantage",
+      }),
+    ];
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: attackerTurn.state,
+        subject,
+        fills: attackPrefix,
+      }),
+      "rolledDice",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state: attackerTurn.state,
+      subject,
+      fills: [...attackPrefix, damageRollFill(damage, 6)],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected the attack-damage Reaction window.");
+    }
+    const choice = reactionModifierChoice(
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
+      modifier.id,
+      "damageRollReduction",
+    );
+    const pendingRepeatSave = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: wizardId,
+          choice: {
+            kind: "reactionRollOrDamageReduction",
+            procedureRef: choice.modifier.procedureRef,
+            modifierKind: "damageRollReduction",
+            fills: [
+              {
+                kind: "rolledDice",
+                holeId: choice.initialHoles[0]!.holeId,
+                value: [rolledDiceGroup([3])],
+              },
+            ],
+          },
+        },
+      ),
+    });
+    if (pendingRepeatSave.tag !== "needsHoles") {
+      throw new Error("Expected a damage-triggered condition repeat save.");
+    }
+    expect(pendingRepeatSave.state.interruptStack.at(-1)?.kind).toBe(
+      "attackDamageContinuationRepeatSave",
+    );
+    const repeatSave = requireHole(pendingRepeatSave, "savingThrowOutcome");
+    expect(repeatSave).toMatchObject({
+      saveGatedConditionRepeatSave: {
+        targetId: goblinId,
+        trigger: "damage",
+      },
+    });
+
+    const interruptStackBeforeWrongFill =
+      pendingRepeatSave.state.interruptStack;
+    const wrongHole = resolveBattleSubject({
+      state: pendingRepeatSave.state,
+      subject,
+      fills: [
+        {
+          ...savingThrowOutcomeFill(repeatSave, [
+            { targetId: goblinId, succeeded: true },
+          ]),
+          holeId: holeId("wrong-attack-damage-repeat-save-hole"),
+        },
+      ],
+    });
+    expect(wrongHole).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Attack damage repeat save fill does not match the pending Saving Throw hole.",
+    });
+    expect(pendingRepeatSave.state.interruptStack).toEqual(
+      interruptStackBeforeWrongFill,
+    );
+
+    const resumed = requireResolved(
+      resolveBattleSubject({
+        state: pendingRepeatSave.state,
+        subject,
+        fills: [
+          savingThrowOutcomeFill(repeatSave, [
+            { targetId: goblinId, succeeded: true },
+          ]),
+        ],
+      }),
+    );
+    const resolvedTarget = resumed.state.combatants.get(goblinId);
+    expect(resolvedTarget?.hp).toBe(14);
+    expect(
+      resolvedTarget === undefined
+        ? true
+        : hasCondition(resolvedTarget.conditions, "prone"),
+    ).toBe(false);
+    expect(
+      resolvedTarget?.activeEffects.some(
+        (effect) => effect.kind === "saveGatedConditionWithRepeat",
+      ),
+    ).toBe(false);
   });
 });
 

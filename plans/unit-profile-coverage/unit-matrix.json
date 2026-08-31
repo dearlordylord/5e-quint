@@ -1837,6 +1837,7 @@
         "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
       ],
       "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts",
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "sourceBoundary": "Caller-supplied Sleep Sphere membership, caller-supplied non-sleeper facts, and retained Stat Block Exhaustion Immunity facts",
@@ -2112,9 +2113,10 @@
         "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-condition.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "sourceBoundary": "The runtime consumes typed table-supplied Grease ground-area identity and affected-target membership witnesses for appearance saves, table-triggered enter-area/end-turn save subjects for active hazards, and typed total-distance plus Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, path selection, and grid geometry derivation remain runtime-detached table adjudication/presentation outside this profile.",
       "taskRefs": [
@@ -4452,13 +4454,14 @@
         "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
       ],
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-condition-escape.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+        "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Web spell, caller-supplied point-origin Cube area identity, table-triggered enters-area and starts-turn-in-area save subjects, table-supplied no-longer-in-webs or area-removed cleanup subjects, and caller-supplied movement path facts for travel through active Web Difficult Terrain. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active Web area effect state with side length, once-per-creature-per-turn entry-save limiting, failed-save Restrained application, Strength (Athletics) escape cleanup, noncumulative Difficult Terrain movement-cost validation for active Web areas, Lightly Obscured Cube projection for sight/perception consumers, and cleanup on Concentration or duration end. Automatic geometry, area membership, pathfinding, anchoring/layering collapse, flat-surface depth presentation, and fire-exposed 5-foot Cube burn-away/damage derivation remain table/spatial/environment facts rather than parallel runtime map state.",
@@ -40651,9 +40654,10 @@
             "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-condition.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+            "packages/battle-runtime/src/battle-state-execution.ts"
           ],
           "sourceBoundary": "The runtime consumes typed table-supplied Grease ground-area identity and affected-target membership witnesses for appearance saves, table-triggered enter-area/end-turn save subjects for active hazards, and typed total-distance plus Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, path selection, and grid geometry derivation remain runtime-detached table adjudication/presentation outside this profile.",
           "taskRefs": [
@@ -47773,6 +47777,7 @@
             "packages/shared-algebras/proofs/rule-core/spell-staged-save-condition-lifecycle-core.qnt"
           ],
           "runtimeOwners": [
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/hit-point-budget-condition-admission.ts",
             "packages/battle-runtime/src/battle-state-execution.ts"
           ],
           "sourceBoundary": "Caller-supplied Sleep Sphere membership, caller-supplied non-sleeper facts, and retained Stat Block Exhaustion Immunity facts",
@@ -49716,13 +49721,14 @@
             "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
           ],
           "runtimeOwners": [
-            "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+            "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/persistent-area-save-condition-escape.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
             "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
+            "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Web spell, caller-supplied point-origin Cube area identity, table-triggered enters-area and starts-turn-in-area save subjects, table-supplied no-longer-in-webs or area-removed cleanup subjects, and caller-supplied movement path facts for travel through active Web Difficult Terrain. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active Web area effect state with side length, once-per-creature-per-turn entry-save limiting, failed-save Restrained application, Strength (Athletics) escape cleanup, noncumulative Difficult Terrain movement-cost validation for active Web areas, Lightly Obscured Cube projection for sight/perception consumers, and cleanup on Concentration or duration end. Automatic geometry, area membership, pathfinding, anchoring/layering collapse, flat-surface depth presentation, and fire-exposed 5-foot Cube burn-away/damage derivation remain table/spatial/environment facts rather than parallel runtime map state.",

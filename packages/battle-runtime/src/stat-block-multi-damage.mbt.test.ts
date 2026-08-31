@@ -1,4 +1,5 @@
 import { movementFeet } from "@dnd/shared/types";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
   battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest,
@@ -15,7 +16,6 @@ import type {
   AuthoredExecutableProcedure,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
-import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 
 import {
   MBT_TEST_TIMEOUT_MS,

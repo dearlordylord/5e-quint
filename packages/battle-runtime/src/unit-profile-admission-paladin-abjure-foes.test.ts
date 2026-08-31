@@ -318,6 +318,7 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
     expect(hasMoveAct(dodged, spellTargetId)).toBe(false);
 
     const damaged = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: resolved,
       target: failedTarget,
       damageAmount: damageAmount(1),

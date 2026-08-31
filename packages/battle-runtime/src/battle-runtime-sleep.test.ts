@@ -1128,6 +1128,7 @@ describe("battle runtime: Sleep", () => {
     const sleepingTarget = sleeping.combatants.get(goblinId)!;
 
     const noDamage = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: sleeping,
       target: sleepingTarget,
       damageAmount: 0,
@@ -1144,6 +1145,7 @@ describe("battle runtime: Sleep", () => {
     });
 
     const damaged = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: sleeping,
       target: sleepingTarget,
       damageAmount: 1,
@@ -1151,6 +1153,7 @@ describe("battle runtime: Sleep", () => {
       damageSourceId: fighterId,
     });
     const damagedAgain = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: damaged,
       target: damaged.combatants.get(goblinId)!,
       damageAmount: 1,
@@ -1216,6 +1219,7 @@ describe("battle runtime: Sleep", () => {
     ).state;
     const incapacitatedTarget = sleptIncapacitated.combatants.get(goblinId)!;
     const afterIncapacitatedDamage = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: sleptIncapacitated,
       target: incapacitatedTarget,
       damageAmount: 1,
@@ -1296,6 +1300,7 @@ describe("battle runtime: Sleep", () => {
     ).state;
     const unconsciousTarget = repeated.combatants.get(goblinId)!;
     const afterUnconsciousDamage = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: repeated,
       target: unconsciousTarget,
       damageAmount: 1,

@@ -1,6 +1,6 @@
 import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard unit-feature.metamagic-heightened-save-disadvantage
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 //
 // The persistentAreaSaveCondition Spell Procedure Profile: action-time Spell Slot
@@ -55,17 +55,6 @@ type PersistentAreaSaveConditionMechanics = Extract<
   BattleSpellAdmissionSource["mechanics"],
   { readonly family: "ongoing_effect" }
 >;
-type PersistentAreaSaveConditionMechanicsShape =
-  PersistentAreaSaveConditionMechanics & {
-    readonly range: Extract<
-      PersistentAreaSaveConditionMechanics["range"],
-      { readonly kind: "point" }
-    > & { readonly feet: number };
-    readonly duration: Extract<
-      PersistentAreaSaveConditionMechanics["duration"],
-      { readonly kind: "timed" }
-    >;
-  };
 type PersistentAreaSaveConditionPhase = Extract<
   NonNullable<PersistentAreaSaveConditionMechanics["initialPhase"]>,
   { readonly kind: "save_gate" }
@@ -86,6 +75,12 @@ type PersistentAreaSaveConditionPhase = Extract<
 
 type PersistentAreaSaveConditionResolveInput =
   SpellProcedureProfileResolveInput<PersistentAreaSaveConditionSpellInvocation>;
+
+const PERSISTENT_AREA_SAVE_CONDITION_LEVEL = 1;
+const PERSISTENT_AREA_SAVE_CONDITION_RANGE_FEET = 60;
+const PERSISTENT_AREA_SAVE_CONDITION_DURATION_MINUTES = 1;
+const PERSISTENT_AREA_SAVE_CONDITION_OPERATION_COUNT = 3;
+const PERSISTENT_AREA_SAVE_CONDITION_SIDE_FEET = 10;
 
 function admitPersistentAreaSaveCondition(
   spell: PersistentAreaSaveConditionSpellInvocation["spell"],
@@ -142,31 +137,16 @@ function persistentAreaSaveConditionSpell(
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }
-  const phase = spell.mechanics.initialPhase;
-  const passiveOperation = spell.mechanics.operations.find(
-    (operation) => operation.trigger.kind === "passive",
-  );
-  const enterOperation = spell.mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_enters_area",
-  );
-  const endTurnOperation = spell.mechanics.operations.find(
-    (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
-  );
-  const durationTicks =
-    spell.mechanics.duration.kind === "timed"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.value)
-      : null;
-  if (
-    !persistentAreaSaveConditionEnvelopeIsSupported(spell.mechanics) ||
-    !isPersistentAreaSaveConditionPhase(phase) ||
-    passiveOperation?.effect.kind !== "area_is_difficult_terrain" ||
-    !isPersistentAreaSaveConditionEffect(enterOperation?.effect) ||
-    !isPersistentAreaSaveConditionEffect(endTurnOperation?.effect) ||
-    durationTicks === null ||
-    Result.isFailure(durationTicks)
-  ) {
+  if (!hasPersistentAreaSaveConditionSpellContract(spell.mechanics)) {
     return null;
   }
+  const phase = spell.mechanics.initialPhase;
+  if (!isPersistentAreaSaveConditionPhase(phase)) return null;
+  if (!hasPersistentAreaSaveConditionOperations(spell.mechanics)) return null;
+  const durationTicks = persistentAreaSaveConditionDurationTicks(
+    spell.mechanics,
+  );
+  if (durationTicks === null) return null;
 
   return {
     phase,
@@ -174,24 +154,55 @@ function persistentAreaSaveConditionSpell(
       kind: "pointOriginGroundSquare",
       sideFeet: movementFeet(phase.attachment.value.shape.sideFeet),
     },
-    durationTicks: durationTicks.success,
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
+    durationTicks,
+    rangeFeet: movementFeet(PERSISTENT_AREA_SAVE_CONDITION_RANGE_FEET),
   };
 }
 
-function persistentAreaSaveConditionEnvelopeIsSupported(
+function hasPersistentAreaSaveConditionSpellContract(
   mechanics: PersistentAreaSaveConditionMechanics,
-): mechanics is PersistentAreaSaveConditionMechanicsShape {
+): boolean {
   return (
-    mechanics.level === 1 &&
+    mechanics.level === PERSISTENT_AREA_SAVE_CONDITION_LEVEL &&
     mechanics.castingTime.kind === "action" &&
     mechanics.range.kind === "point" &&
-    mechanics.range.feet === 60 &&
+    mechanics.range.feet === PERSISTENT_AREA_SAVE_CONDITION_RANGE_FEET &&
     mechanics.duration.kind === "timed" &&
     mechanics.duration.value.unit === "minute" &&
-    mechanics.duration.value.amount === 1 &&
-    mechanics.operations.length === 3
+    mechanics.duration.value.amount ===
+      PERSISTENT_AREA_SAVE_CONDITION_DURATION_MINUTES &&
+    mechanics.operations.length ===
+      PERSISTENT_AREA_SAVE_CONDITION_OPERATION_COUNT
   );
+}
+
+function hasPersistentAreaSaveConditionOperations(
+  mechanics: PersistentAreaSaveConditionMechanics,
+): boolean {
+  const passiveOperation = mechanics.operations.find(
+    (operation) => operation.trigger.kind === "passive",
+  );
+  const enterOperation = mechanics.operations.find(
+    (operation) => operation.trigger.kind === "on_creature_enters_area",
+  );
+  const endTurnOperation = mechanics.operations.find(
+    (operation) => operation.trigger.kind === "on_creature_ends_turn_in_area",
+  );
+  return (
+    passiveOperation?.effect.kind === "area_is_difficult_terrain" &&
+    isPersistentAreaSaveConditionEffect(enterOperation?.effect) &&
+    isPersistentAreaSaveConditionEffect(endTurnOperation?.effect)
+  );
+}
+
+function persistentAreaSaveConditionDurationTicks(
+  mechanics: PersistentAreaSaveConditionMechanics,
+): ElapsedTimeTicks | null {
+  if (mechanics.duration.kind !== "timed") return null;
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    mechanics.duration.value,
+  );
+  return Result.isFailure(durationTicks) ? null : durationTicks.success;
 }
 
 function isPersistentAreaSaveConditionPhase(
@@ -203,7 +214,8 @@ function isPersistentAreaSaveConditionPhase(
     phase.attachment.value.kind === "area" &&
     phase.attachment.value.origin.kind === "point_within_range" &&
     phase.attachment.value.shape.kind === "ground_square" &&
-    phase.attachment.value.shape.sideFeet === 10
+    phase.attachment.value.shape.sideFeet ===
+      PERSISTENT_AREA_SAVE_CONDITION_SIDE_FEET
   );
 }
 
@@ -216,16 +228,27 @@ function isPersistentAreaSaveConditionEffect(
   NonNullable<typeof effect>,
   { readonly kind: "save_gate" }
 > {
-  const failedEffect = effect?.kind === "save_gate" ? effect.onFail : undefined;
+  if (effect?.kind !== "save_gate") return false;
+  if (!hasNoPersistentAreaSaveConditionRepeatSaves(effect)) return false;
+  if (effect.ability !== "dex") return false;
+  if (effect.dc.kind !== "caster_spell_save_dc") return false;
+  if (effect.onSuccess.kind !== "none") return false;
   return (
-    effect?.kind === "save_gate" &&
-    (!("repeatSaves" in effect) || effect.repeatSaves === undefined) &&
-    effect.ability === "dex" &&
-    effect.dc.kind === "caster_spell_save_dc" &&
-    effect.onSuccess.kind === "none" &&
-    failedEffect?.kind === "apply_condition" &&
-    failedEffect.condition === "prone"
+    effect.onFail.kind === "apply_condition" &&
+    effect.onFail.condition === "prone"
   );
+}
+
+function hasNoPersistentAreaSaveConditionRepeatSaves(
+  effect: Extract<
+    NonNullable<
+      | PersistentAreaSaveConditionMechanics["initialPhase"]
+      | PersistentAreaSaveConditionMechanics["operations"][number]["effect"]
+    >,
+    { readonly kind: "save_gate" }
+  >,
+): boolean {
+  return !("repeatSaves" in effect) || effect.repeatSaves === undefined;
 }
 
 function discoverPersistentAreaSaveConditionCastAct(

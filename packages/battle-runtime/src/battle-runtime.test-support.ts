@@ -112,6 +112,7 @@ import type {
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import {
   buildUnitCatalog,
+  resolveWeaponMasteryReference,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import acidSplashInput from "../../surface/content/acid_splash.json";
@@ -202,7 +203,10 @@ import {
   spellProcedureExecution,
   type CharacterUnitProcedureQuery,
 } from "./character-execution-admission.ts";
-import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import {
+  admitCharacterWeaponAttackExecutionWeapon,
+  admitResolvedCharacterWeaponAttackExecutionWeapon,
+} from "./character-weapon-execution-admission.ts";
 import { characterBattleCreatureInitWeaponAttack } from "./battle-init.ts";
 import {
   attackExecutionSelectionForOption,
@@ -246,7 +250,6 @@ export function battleSubjectUsesOnlyStatBlockDamageComponentNotationForTest(
   );
 }
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
-import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
 import {
   armorOfShadowsSpellInvocationRef,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -936,7 +939,7 @@ export function startBattleRight(
 ): BattleState {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleInitializationIssueMessage(result.failure));
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
   registerStatBlockPresentationsForTest(result.success);
   return result.success.state;
@@ -947,7 +950,7 @@ export function startBattleSessionRight(
 ): BattleRuntimeSession {
   const result = startBattle(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleInitializationIssueMessage(result.failure));
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
   registerStatBlockPresentationsForTest(result.success);
   return result.success;
@@ -992,7 +995,7 @@ export function addBattleCombatantRight(
 ): BattleState {
   const result = addBattleCombatant(input);
   if (Result.isFailure(result)) {
-    throw new Error(battleInitializationIssueMessage(result.failure));
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -2403,17 +2406,6 @@ function resolveBattleSubjectWithOptionalFamiliarAdmission(
   ) {
     return resolveBattleSubjectRuntime(input);
   }
-  const storedCompanion = input.state.companions.get(input.subject.actorId);
-  const authoredForm =
-    storedCompanion === undefined || !("resolvedStatBlockId" in storedCompanion)
-      ? undefined
-      : Option.getOrUndefined(
-          catalog.getStatBlock(storedCompanion.resolvedStatBlockId),
-        );
-  const presentation =
-    authoredForm === undefined
-      ? undefined
-      : Result.getOrThrow(projectAuthoredStatBlock(authoredForm)).presentation;
   const admission = admitSpawnedCompanionReappearance({
     state: input.state,
     casterId: input.subject.actorId,
@@ -2422,15 +2414,6 @@ function resolveBattleSubjectWithOptionalFamiliarAdmission(
         Option.map(catalog.getStatBlock(id), projectedStatBlockRuntimeSource),
     },
   });
-  if (Result.isSuccess(admission) && presentation !== undefined) {
-    statBlockPresentationsByExecutionScopeForTest.set(
-      String(
-        admission.success.mechanics.combatantAdmission.origin.execution
-          .scopeRef,
-      ),
-      presentation,
-    );
-  }
   return Result.isFailure(admission)
     ? resolveBattleSubjectRuntime(input)
     : resolveAdmittedCompanionReappearanceSubject({
@@ -3981,7 +3964,6 @@ export function testCharacterWeaponAttackForUnit(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -4042,7 +4024,6 @@ export function testDaggerAttack(): TestCharacterWeaponAttack {
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -4060,7 +4041,6 @@ export function testShortswordAttack(): TestCharacterWeaponAttack {
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -4078,7 +4058,6 @@ export function testQuarterstaffAttack(): TestCharacterWeaponAttack {
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -4098,7 +4077,6 @@ export function testGreataxeAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: ability,
@@ -4110,12 +4088,17 @@ export function testRangedCleaveLongbowAttack(): TestCharacterWeaponAttack {
   if (unit.kind !== "weapon") {
     throw new Error("Expected Longbow weapon Unit.");
   }
+  const resolution = Result.getOrThrow(
+    resolveWeaponMasteryReference(unit, unitLibrary),
+  );
   return {
     kind: "weapon",
-    ...admitCharacterWeaponAttackExecutionWeapon(
-      unit,
-      battleObjectId(`main:${unit.id}`),
-      [],
+    ...Result.getOrThrow(
+      admitResolvedCharacterWeaponAttackExecutionWeapon(
+        resolution,
+        battleObjectId(`main:${unit.id}`),
+        [{ weaponUnitId: unit.id }],
+      ),
     ),
     ability: "dex",
     abilityModifier: battleAbilityModifier(3),
@@ -4131,7 +4114,7 @@ export function testRangedCleaveLongbowUnitRef(): BattleUnitRef {
   return {
     unit: {
       ...weapon,
-      mastery: "cleave",
+      masteryUnitId: parseUnitId("mastery_cleave"),
     } satisfies WeaponRecord,
     supportProfiles: [],
   };
@@ -4148,7 +4131,6 @@ export function testLightHammerAttack(): TestCharacterWeaponAttack {
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: battleAbilityModifier(3),
@@ -4196,8 +4178,8 @@ export function statBlockCreatureInit(input: {
     ]).map((ammunition) => battleAmmunitionStock(ammunition, 20));
   return {
     combatantId: input.combatantId ?? goblinId,
-    initiative: initiativeScore(input.initiative),
     statBlock: namedStatBlock,
+    initiative: initiativeScore(input.initiative),
     currentHp: Hp(input.currentHp ?? maxHp),
     tempHp: Hp(input.tempHp ?? 0),
     ammunitionStocks,

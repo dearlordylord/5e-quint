@@ -69,7 +69,7 @@ const CapabilityDescriptorSchema = Schema.Struct({
   roles: Schema.Array(CapabilityRoleSchema).pipe(
     Schema.check(Schema.isMinLength(1)),
   ),
-  operation: Schema.optional(Schema.Literals(PUBLIC_CAPABILITY_OPERATIONS)),
+  operation: Schema.optionalKey(Schema.Literals(PUBLIC_CAPABILITY_OPERATIONS)),
   summary: Schema.Trimmed.check(Schema.isNonEmpty()),
   boundary: Schema.Trimmed.check(Schema.isNonEmpty()),
 }).pipe(

@@ -11,7 +11,7 @@ import {
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
-import { damageAmount as toDamageAmount } from "@dnd/shared/types";
+import { damageAmount as toDamageAmount, Index } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import {
   type ActionSpellBattleResolutionInput,
@@ -85,7 +85,10 @@ import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
 } from "./domain-constants.ts";
-import { isSaveGatedConditionWithRepeatDamageRepeatSaveFill } from "./staged-condition-repeat-save.ts";
+import {
+  isSaveGatedConditionWithRepeatDamageRepeatSaveFill,
+  saveGatedConditionDamageOccurrenceKeyForChainedSpellStep,
+} from "./staged-condition-repeat-save.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -737,12 +740,12 @@ export function resolveChainedSpellAttackDamageAct(input: {
       target,
       sourcePenalty.damageByType,
     );
-    const damageEventKey = [
-      "battle:spell:chained-damage-event",
-      input.invocation.sourceProcedureRef,
-      stepIndex,
-      target.combatantId,
-    ].join(":");
+    const damageOccurrenceKey =
+      saveGatedConditionDamageOccurrenceKeyForChainedSpellStep({
+        sourceProcedureRef: input.invocation.sourceProcedureRef,
+        stepIndex: Index(stepIndex),
+        targetId: target.combatantId,
+      });
     const concentrationLifecycleHoles =
       damageLifecycleConcentrationSavingThrowHoles({
         state: replayState,
@@ -810,7 +813,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         state: replayState,
         target,
         damageAmount,
-        damageEventKey,
+        damageOccurrenceKey: damageOccurrenceKey,
       });
     const stagedConditionLifecycleFills = matchingHoleIdFills(
       fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
@@ -822,7 +825,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         target,
         damageAmount,
         fills: stagedConditionLifecycleFills,
-        damageEventKey,
+        damageOccurrenceKey: damageOccurrenceKey,
       });
     if (stagedConditionSaveCheck.tag === "needsHoles") {
       return needsHolesResult(replayState, input.input.subject, [
@@ -891,9 +894,11 @@ export function resolveChainedSpellAttackDamageAct(input: {
         damageDisposition,
         linkedDefenseResistanceDamageShareConcentrationSavingThrows:
           concentrationLifecycleFills,
-        saveGatedConditionWithRepeatDamageRepeatSaves:
-          stagedConditionLifecycleFills,
-        saveGatedConditionWithRepeatDamageRepeatSaveEventKey: damageEventKey,
+        saveGatedConditionDamageRepeatSave: {
+          kind: "repeatSave",
+          fills: stagedConditionLifecycleFills,
+          occurrenceKey: damageOccurrenceKey,
+        },
         damageSourceId: input.actorId,
         spatialFacts: step.target.spatialFacts,
         ...optionalProperty(
@@ -1557,11 +1562,9 @@ type ChainedSpellDamageContext = {
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
   >[];
-  readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
-    BattleFill,
-    { readonly kind: "savingThrowOutcome" }
-  >[];
-  readonly saveGatedConditionWithRepeatDamageRepeatSaveEventKey?: string;
+  readonly saveGatedConditionDamageRepeatSave: Parameters<
+    typeof applyBattleHitPointDamage
+  >[0]["saveGatedConditionDamageRepeatSave"];
   readonly damageSourceId: CombatantId;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
   readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
@@ -1586,9 +1589,7 @@ export function applyChainedSpellDamage(
     concentrationSavingThrow: context.concentrationSavingThrow,
     linkedDefenseResistanceDamageShareConcentrationSavingThrows:
       context.linkedDefenseResistanceDamageShareConcentrationSavingThrows,
-    saveGatedConditionWithRepeatDamageRepeatSaves:
-      context.saveGatedConditionWithRepeatDamageRepeatSaves,
-    saveGatedConditionWithRepeatDamageRepeatSaveEventKey:
-      context.saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
+    saveGatedConditionDamageRepeatSave:
+      context.saveGatedConditionDamageRepeatSave,
   });
 }

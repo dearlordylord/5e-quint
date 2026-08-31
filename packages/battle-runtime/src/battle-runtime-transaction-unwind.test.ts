@@ -1074,7 +1074,7 @@ describe("battle runtime transaction completion unwind", () => {
     expect(declined.frontier.kind).toBe("ordinaryHoles");
     expect(requireHole(declined, "rolledDice")).toMatchObject({
       kind: "rolledDice",
-      attack: { kind: "statBlockAttack", damageNotation: "rolled" },
+      attack: { kind: "statBlockAttack" },
     });
   });
 

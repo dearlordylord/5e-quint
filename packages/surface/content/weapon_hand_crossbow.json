@@ -9,7 +9,7 @@
   },
   "id": "weapon_hand_crossbow",
   "kind": "weapon",
-  "mastery": "vex",
+  "masteryUnitId": "mastery_vex",
   "name": "Hand Crossbow",
   "properties": [
     {

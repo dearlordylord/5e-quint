@@ -62,7 +62,7 @@ import type { BattleFill, BattleHole, BattleSubject } from "./index.ts";
  * Excluded fields:
  *   - Authored Unit identity such as `weaponUnitId` used at composition time for
  *     Weapon Mastery / Tactical Master eligibility. These are admitted as
- *     parsed mechanical facts (`hasWeaponMastery`) and are identical between
+ *     parsed mechanical facts (the admitted mastery property) and are identical between
  *     original and renamed states; the underlying Unit ids are not renamed by
  *     this witness because doing so would change which mechanical facts are
  *     admitted at composition time.
@@ -319,7 +319,7 @@ function renameInertIdentityFields(state: BattleState): BattleState {
 function renameSnapshotInertIdentityFields(
   snapshot: BattleSnapshot,
 ): BattleSnapshot {
-  const syntheticStatBlockId = "synthetic-stat-block-id-witness";
+  const syntheticStatBlockId = statBlockId("synthetic-stat-block-id-witness");
 
   return {
     ...snapshot,

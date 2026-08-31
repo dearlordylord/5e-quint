@@ -9,7 +9,7 @@
   },
   "id": "weapon_light_hammer",
   "kind": "weapon",
-  "mastery": "nick",
+  "masteryUnitId": "mastery_nick",
   "name": "Light Hammer",
   "properties": [
     {

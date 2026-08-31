@@ -1055,4 +1055,6 @@ export {
 export {
   admitCharacterWeaponAttackExecutionWeapon,
   admitCharacterWeaponExecutionWeapon,
+  admitResolvedCharacterWeaponAttackExecutionWeapon,
+  admitResolvedCharacterWeaponExecutionWeapon,
 } from "./character-weapon-execution-admission.ts";

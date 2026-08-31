@@ -955,6 +955,46 @@ describe("Surface authored string role traversal", () => {
     }
   });
 
+  it("walks every variadic reference before a trailing identity", () => {
+    const schema = Schema.TupleWithRest(Schema.Tuple([]), [
+      surfaceSchemaRole<string, string, never, never>(Schema.String, {
+        category: "reference",
+        relation: "unit-reference",
+        targetKind: "unit",
+      }),
+      surfaceSchemaRole<string, string, never, never>(Schema.String, {
+        category: "identity",
+        kind: "label",
+      }),
+    ]);
+    const value = Schema.decodeUnknownSync(schema)([
+      "reference-one",
+      "reference-two",
+      "reference-three",
+      "trailing-identity",
+    ]);
+
+    const inspected = inspectSurfaceSchemaValue(schema, value);
+
+    expect(inspected.issues).toEqual([]);
+    expect(
+      inspected.visits.map(({ path, value: visited, role }) => ({
+        path,
+        value: visited,
+        role: role.category,
+      })),
+    ).toEqual([
+      { path: "value[0]", value: "reference-one", role: "reference" },
+      { path: "value[1]", value: "reference-two", role: "reference" },
+      { path: "value[2]", value: "reference-three", role: "reference" },
+      {
+        path: "value[3]",
+        value: "trailing-identity",
+        role: "identity",
+      },
+    ]);
+  });
+
   it("rejects overlapping tagged branches with conflicting roles", () => {
     const schema = Schema.Union([
       Schema.Struct({

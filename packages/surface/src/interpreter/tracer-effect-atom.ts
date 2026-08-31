@@ -11,24 +11,7 @@ import { traceObjectAndBarrierEffectAtom } from "./tracer-effect-objects-barrier
 import { traceAttachmentAndAreaEffectAtom } from "./tracer-effect-attachments-areas.ts";
 
 import { traceCompositeAndCountermagicEffectAtom } from "./tracer-effect-composite-countermagic.ts";
-
-const ILLUMINATION_EFFECT_KINDS = [
-  "emit_bright_and_dim_illumination",
-  "emit_bright_illumination",
-  "emit_dim_illumination",
-  "emit_dim_illumination_until_end_of_caster_next_turn",
-] as const;
-
-type IlluminationEffectAtom = Extract<
-  AreaDirectEffectAtom,
-  { readonly kind: (typeof ILLUMINATION_EFFECT_KINDS)[number] }
->;
-
-export function isIlluminationEffectAtom(
-  effect: AreaDirectEffectAtom,
-): effect is IlluminationEffectAtom {
-  return ILLUMINATION_EFFECT_KINDS.some((kind) => kind === effect.kind);
-}
+import { isIlluminationEffectAtom } from "./tracer-effect-illumination.ts";
 
 export function traceEffectAtom(
   e: AreaDirectEffectAtom,

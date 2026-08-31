@@ -2,17 +2,23 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { Match } from "effect";
+import { Brand, Match } from "effect";
 import type {
   BattleCreatureState,
   BattleFill,
+  BattleHoleId,
   BattleSaveGatedConditionRepeatSavingThrowOutcomeHole,
   BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowRollModeProjection,
   BattleSavingThrowOutcomeValue,
   BattleState,
 } from "../battle-state-execution.ts";
-import type { CombatantId } from "../identity.ts";
+import type {
+  BattleProcedureExecutionRef,
+  BattleStartTurnOccurrenceId,
+  CombatantId,
+} from "../identity.ts";
+import type { Index, Round } from "@dnd/shared/types";
 import {
   STAGED_CONDITION_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
   STAGED_CONDITION_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX,
@@ -24,13 +30,135 @@ import {
   type BoundSaveGatedConditionWithRepeatEffect,
 } from "./spell-modifier-binding.ts";
 
-const DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY = "damage";
-
 export type SaveGatedConditionWithRepeatEffect =
   BoundSaveGatedConditionWithRepeatEffect;
 
+export type SaveGatedConditionDamageOccurrenceKey = string &
+  Brand.Brand<"SaveGatedConditionDamageOccurrenceKey">;
+
+const SaveGatedConditionDamageOccurrenceKey =
+  Brand.nominal<SaveGatedConditionDamageOccurrenceKey>();
+
+type SaveGatedConditionDamageOccurrenceIdentity =
+  | { readonly kind: "hole"; readonly holeId: BattleHoleId }
+  | {
+      readonly kind: "holeTarget";
+      readonly holeId: BattleHoleId;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly kind: "chainedSpellStep";
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      readonly stepIndex: Index;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly kind: "startTurn";
+      readonly actorId: CombatantId;
+      readonly round: Round;
+      readonly occurrenceId: BattleStartTurnOccurrenceId;
+    }
+  | {
+      readonly kind: "attackResume";
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      readonly targetId: CombatantId;
+    };
+
+function framedDamageOccurrencePart(value: string | number): string {
+  const text = String(value);
+  return `${text.length}:${text}`;
+}
+
+function saveGatedConditionDamageOccurrenceKey(
+  identity: SaveGatedConditionDamageOccurrenceIdentity,
+): SaveGatedConditionDamageOccurrenceKey {
+  const parts = Match.value(identity).pipe(
+    Match.when({ kind: "hole" }, ({ holeId }) => ["hole", holeId]),
+    Match.when({ kind: "holeTarget" }, ({ holeId, targetId }) => [
+      "holeTarget",
+      holeId,
+      targetId,
+    ]),
+    Match.when(
+      { kind: "chainedSpellStep" },
+      ({ sourceProcedureRef, stepIndex, targetId }) => [
+        "chainedSpellStep",
+        sourceProcedureRef,
+        stepIndex,
+        targetId,
+      ],
+    ),
+    Match.when({ kind: "startTurn" }, ({ actorId, round, occurrenceId }) => [
+      "startTurn",
+      actorId,
+      Number(round),
+      occurrenceId,
+    ]),
+    Match.when({ kind: "attackResume" }, ({ sourceProcedureRef, targetId }) => [
+      "attackResume",
+      sourceProcedureRef,
+      targetId,
+    ]),
+    Match.exhaustive,
+  );
+  return SaveGatedConditionDamageOccurrenceKey(
+    parts.map(framedDamageOccurrencePart).join(""),
+  );
+}
+
+export function saveGatedConditionDamageOccurrenceKeyForHole(
+  holeId: BattleHoleId,
+): SaveGatedConditionDamageOccurrenceKey {
+  return saveGatedConditionDamageOccurrenceKey({ kind: "hole", holeId });
+}
+
+export function saveGatedConditionDamageOccurrenceKeyForHoleTarget(input: {
+  readonly holeId: BattleHoleId;
+  readonly targetId: CombatantId;
+}): SaveGatedConditionDamageOccurrenceKey {
+  return saveGatedConditionDamageOccurrenceKey({
+    kind: "holeTarget",
+    ...input,
+  });
+}
+
+export function saveGatedConditionDamageOccurrenceKeyForChainedSpellStep(input: {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly stepIndex: Index;
+  readonly targetId: CombatantId;
+}): SaveGatedConditionDamageOccurrenceKey {
+  return saveGatedConditionDamageOccurrenceKey({
+    kind: "chainedSpellStep",
+    ...input,
+  });
+}
+
+export function saveGatedConditionDamageOccurrenceKeyForStartTurn(input: {
+  readonly actorId: CombatantId;
+  readonly round: Round;
+  readonly occurrenceId: BattleStartTurnOccurrenceId;
+}): SaveGatedConditionDamageOccurrenceKey {
+  return saveGatedConditionDamageOccurrenceKey({ kind: "startTurn", ...input });
+}
+
+export function saveGatedConditionDamageOccurrenceKeyForAttackResume(input: {
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly targetId: CombatantId;
+}): SaveGatedConditionDamageOccurrenceKey {
+  return saveGatedConditionDamageOccurrenceKey({
+    kind: "attackResume",
+    ...input,
+  });
+}
+
 type SaveGatedConditionRepeatSaveTrigger =
   BattleSaveGatedConditionRepeatSavingThrowOutcomeHole["saveGatedConditionRepeatSave"]["trigger"];
+type SaveGatedConditionRepeatSaveOccurrence =
+  | { readonly trigger: "endTurn" }
+  | {
+      readonly trigger: "damage";
+      readonly occurrenceKey: SaveGatedConditionDamageOccurrenceKey;
+    };
 type SavingThrowOutcomeFill = Extract<
   BattleFill,
   { readonly kind: "savingThrowOutcome" }
@@ -90,16 +218,15 @@ function saveGatedConditionRepeatSaveHoleKeyPrefix(
 export function saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: SaveGatedConditionWithRepeatEffect,
-  trigger: SaveGatedConditionRepeatSaveTrigger,
-  damageEventKey: string = DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY,
+  occurrence: SaveGatedConditionRepeatSaveOccurrence,
   targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleSaveGatedConditionRepeatSavingThrowOutcomeHole {
   const key = [
-    saveGatedConditionRepeatSaveHoleKeyPrefix(trigger),
+    saveGatedConditionRepeatSaveHoleKeyPrefix(occurrence.trigger),
     [
       targetId,
       effect.effectRef,
-      ...(trigger === "damage" ? [damageEventKey] : []),
+      ...(occurrence.trigger === "damage" ? [occurrence.occurrenceKey] : []),
     ]
       .map(repeatSaveKeyPart)
       .join(":"),
@@ -115,7 +242,7 @@ export function saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
       effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
-      trigger,
+      trigger: occurrence.trigger,
       save: effect.save,
     },
     ability: effect.save.ability,
@@ -125,7 +252,7 @@ export function saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
       saveGatedConditionWithRepeatRepeatSavingThrowRollModeProjections(
         targetId,
         effect,
-        trigger,
+        occurrence.trigger,
       ),
     targetFlatBonuses,
   };
@@ -149,7 +276,7 @@ function saveGatedConditionWithRepeatRepeatSavingThrowRollModeProjections(
 export function saveGatedConditionWithRepeatDamageRepeatSaveHoles(
   state: BattleState,
   target: BattleCreatureState,
-  damageEventKey: string = DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY,
+  occurrenceKey: SaveGatedConditionDamageOccurrenceKey,
 ): BattleSaveGatedConditionRepeatSavingThrowOutcomeHole[] {
   return target.activeEffects.flatMap((effect) => {
     const boundEffect =
@@ -161,8 +288,7 @@ export function saveGatedConditionWithRepeatDamageRepeatSaveHoles(
           saveGatedConditionWithRepeatRepeatSavingThrowOutcomeHole(
             target.combatantId,
             boundEffect,
-            "damage",
-            damageEventKey,
+            { trigger: "damage", occurrenceKey },
             linkedDefenseResistanceDamageShareSavingThrowFlatBonusProjectionsForTarget(
               target,
             ),
@@ -184,13 +310,13 @@ export function saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget(
   state: BattleState,
   target: BattleCreatureState,
   fills: readonly SavingThrowOutcomeFill[],
-  damageEventKey: string = DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY,
+  occurrenceKey: SaveGatedConditionDamageOccurrenceKey,
 ): readonly SavingThrowOutcomeFill[] {
   const holeIds = new Set(
     saveGatedConditionWithRepeatDamageRepeatSaveHoles(
       state,
       target,
-      damageEventKey,
+      occurrenceKey,
     ).map((hole) => hole.holeId),
   );
   return fills.filter((fill) => holeIds.has(fill.holeId));
@@ -201,14 +327,14 @@ export function saveGatedConditionWithRepeatDamageRepeatSaveFillCheck(input: {
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
   readonly fills: readonly SavingThrowOutcomeFill[];
-  readonly damageEventKey?: string | undefined;
+  readonly occurrenceKey: SaveGatedConditionDamageOccurrenceKey;
 }): SaveGatedConditionWithRepeatDamageRepeatSaveFillCheckResult {
   const holes =
     input.damageAmount > 0
       ? saveGatedConditionWithRepeatDamageRepeatSaveHoles(
           input.state,
           input.target,
-          input.damageEventKey,
+          input.occurrenceKey,
         )
       : [];
   return checkSaveGatedConditionWithRepeatDamageRepeatSaveFills({

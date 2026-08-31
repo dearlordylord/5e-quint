@@ -809,6 +809,24 @@ describe("stored Character Build parser", () => {
     );
   });
 
+  test("projects a stored alignment to its exact domain fields", () => {
+    const parsed = requireSuccess(
+      parseCharacterBuild(
+        {
+          ...fighterBuild,
+          alignment: {
+            ...fighterBuild.alignment,
+            externalAnnotation: "must not survive boundary parsing",
+          },
+        },
+        unitLibrary,
+      ),
+    );
+
+    expect(parsed.alignment).toEqual(fighterBuild.alignment);
+    expect(parsed.alignment).not.toHaveProperty("externalAnnotation");
+  });
+
   test.each([
     {
       name: "a non-object build",
@@ -1201,6 +1219,35 @@ describe("stored Character Build parser", () => {
         },
       },
       expected: "Character Build weapon loadout is invalid.",
+    },
+    {
+      name: "an off-hand item id in the main-hand loadout",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          ...fighterBuild.equipment,
+          loadout: {
+            weapon: {
+              itemId: "off:weapon_quarterstaff",
+              grip: "one_handed",
+            },
+          },
+        },
+      },
+      expected: "Character Build equipment item slot is invalid.",
+    },
+    {
+      name: "a main-hand item id in the off-hand loadout",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          ...fighterBuild.equipment,
+          loadout: {
+            offHandWeapon: { itemId: "main:weapon_quarterstaff" },
+          },
+        },
+      },
+      expected: "Character Build equipment item slot is invalid.",
     },
     {
       name: "a loadout item that is not owned",

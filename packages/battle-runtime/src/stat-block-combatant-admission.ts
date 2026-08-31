@@ -146,32 +146,10 @@ export function admitBattleStatBlockCombatantSource(input: {
       combatantId: input.combatantId,
       origin: {
         statBlockId: statBlock.id,
-        mechanics: {
-          creatureType: statBlock.statBlock.creatureType,
-          speeds: statBlock.statBlock.speeds,
-          abilityScores: statBlock.statBlock.abilityScores,
-          savingThrowModifiers: statBlock.statBlock.savingThrowModifiers ?? [],
-          skillModifiers: statBlock.statBlock.skillModifiers ?? [],
-          vulnerabilities:
-            statBlock.statBlock.vulnerabilities?.damageTypes ?? [],
-          resistances: statBlock.statBlock.resistances?.damageTypes ?? [],
-          immunities: {
-            damageTypes:
-              statBlock.statBlock.immunities !== undefined &&
-              "damageTypes" in statBlock.statBlock.immunities
-                ? statBlock.statBlock.immunities.damageTypes
-                : [],
-            conditions:
-              statBlock.statBlock.immunities !== undefined &&
-              "conditions" in statBlock.statBlock.immunities
-                ? statBlock.statBlock.immunities.conditions
-                : [],
-          },
-          specialSenses: statBlock.statBlock.senses ?? [],
-          initiativeModifier: statBlock.statBlock.initiativeModifier,
-          initiativeScore: statBlock.statBlock.initiativeScore,
-          passivePerception: statBlock.statBlock.passivePerception,
-        },
+        mechanics: statBlockCombatantMechanics(
+          statBlock.statBlock,
+          statBlock.statBlock.resistances?.damageTypes ?? [],
+        ),
         execution: allocation.execution,
       },
       initialization: {
@@ -185,6 +163,42 @@ export function admitBattleStatBlockCombatantSource(input: {
       },
     }),
   );
+}
+
+function statBlockCombatantMechanics(
+  statBlock: BattleStatBlockCombatantFacts,
+  resistances: AdmittedBattleStatBlockCombatant["origin"]["mechanics"]["resistances"],
+): AdmittedBattleStatBlockCombatant["origin"]["mechanics"] {
+  return {
+    creatureType: statBlock.creatureType,
+    speeds: statBlock.speeds,
+    abilityScores: statBlock.abilityScores,
+    savingThrowModifiers: statBlock.savingThrowModifiers ?? [],
+    skillModifiers: statBlock.skillModifiers ?? [],
+    vulnerabilities: statBlock.vulnerabilities?.damageTypes ?? [],
+    resistances,
+    immunities: statBlockFixedImmunities(statBlock),
+    specialSenses: statBlock.senses ?? [],
+    initiativeModifier: statBlock.initiativeModifier,
+    initiativeScore: statBlock.initiativeScore,
+    passivePerception: statBlock.passivePerception,
+  };
+}
+
+function statBlockFixedImmunities(
+  statBlock: BattleStatBlockCombatantFacts,
+): AdmittedBattleStatBlockCombatant["origin"]["mechanics"]["immunities"] {
+  return {
+    damageTypes:
+      statBlock.immunities !== undefined &&
+      "damageTypes" in statBlock.immunities
+        ? statBlock.immunities.damageTypes
+        : [],
+    conditions:
+      statBlock.immunities !== undefined && "conditions" in statBlock.immunities
+        ? statBlock.immunities.conditions
+        : [],
+  };
 }
 
 export function battleStatBlockCombatantSource(

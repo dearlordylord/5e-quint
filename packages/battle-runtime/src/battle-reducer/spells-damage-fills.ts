@@ -55,7 +55,10 @@ import {
   damageAmountByTypeMapEntries,
   type SpellDamageReductionConsumption,
 } from "./damage-helpers.ts";
-import { applyBattleHitPointDamage } from "./damage-apply.ts";
+import {
+  applyBattleHitPointDamage,
+  type SaveGatedConditionDamageRepeatSaveContext,
+} from "./damage-apply.ts";
 import {
   attackRollMissToHitReplacementHolePayload,
   signedModifier,
@@ -2011,12 +2014,7 @@ type ResolvedSpellDamageContext = {
         { readonly kind: "concentrationSavingThrow" }
       >[]
     | undefined;
-  readonly saveGatedConditionWithRepeatDamageRepeatSaves?:
-    | readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[]
-    | undefined;
-  readonly saveGatedConditionWithRepeatDamageRepeatSaveEventKey?:
-    | string
-    | undefined;
+  readonly saveGatedConditionDamageRepeatSave: SaveGatedConditionDamageRepeatSaveContext;
   readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
   readonly damageSourceId?: CombatantId | undefined;
   readonly spatialFacts: readonly BattleTargetSpatialFact[];
@@ -2055,8 +2053,7 @@ export function applyResolvedSpellDamage(
   const {
     concentrationSavingThrow,
     linkedDefenseResistanceDamageShareConcentrationSavingThrows,
-    saveGatedConditionWithRepeatDamageRepeatSaves,
-    saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
+    saveGatedConditionDamageRepeatSave,
     damageDisposition = { kind: "ordinaryDamage" },
     damageSourceId,
     spatialFacts,
@@ -2086,14 +2083,7 @@ export function applyResolvedSpellDamage(
       "linkedDefenseResistanceDamageShareConcentrationSavingThrows",
       linkedDefenseResistanceDamageShareConcentrationSavingThrows,
     ),
-    ...optionalProperty(
-      "saveGatedConditionWithRepeatDamageRepeatSaves",
-      saveGatedConditionWithRepeatDamageRepeatSaves,
-    ),
-    ...optionalProperty(
-      "saveGatedConditionWithRepeatDamageRepeatSaveEventKey",
-      saveGatedConditionWithRepeatDamageRepeatSaveEventKey,
-    ),
+    saveGatedConditionDamageRepeatSave,
   });
 }
 

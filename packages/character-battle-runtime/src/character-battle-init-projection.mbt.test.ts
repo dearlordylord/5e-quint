@@ -55,7 +55,6 @@ import {
 
 import { authoredStatBlockBattleInit } from "./ammunition-stock.test-support.ts";
 import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
-
 const battleInitProjectionScenarios = [
   "init",
   "sheet-hit-points-armor-class-conditions-and-profiles",

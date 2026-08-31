@@ -44,6 +44,11 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
 
+import {
+  projectCharacterSheetClassFeature,
+  type CharacterSheetClassFeatureFacts,
+} from "./character-feature-projection.ts";
+
 import { characterSheetResources } from "./resources.ts";
 import { characterSheetSpellInvocation } from "./spell-invocation.ts";
 import { spendCharacterSheetSpellSlot } from "./spell-slots.ts";
@@ -541,10 +546,7 @@ function retainedCompanionInvocationSpell(input: {
   return requiredSpellRecord(input.unitLibrary, input.spellId);
 }
 
-type RetainedCompanionSpellCastFeature = Extract<
-  ClassFeatureRecord,
-  { readonly kind: "class_feature" }
-> & {
+type RetainedCompanionSpellCastFeature = CharacterSheetClassFeatureFacts & {
   readonly mechanics: Extract<
     ClassFeatureRecord["mechanics"],
     { readonly family: "druid_wild_companion_spell_cast" }
@@ -575,28 +577,31 @@ function retainedCompanionSpellCastFeature(
       `Unknown retained companion feature Unit id: ${input.source.featureUnitId}`,
     );
   }
-  if (!isSupportedRetainedCompanionSpellCastFeature(unit.value)) {
+  const projection = projectCharacterSheetClassFeature(unit.value);
+  if (
+    Option.isNone(projection) ||
+    !isSupportedRetainedCompanionSpellCastFeature(projection.value)
+  ) {
     return characterSheetIssue(
       "Retained companion class-feature spell source must match the supported familiar-like spell-cast profile.",
     );
   }
-  return Result.succeed(unit.value);
+  return Result.succeed(projection.value);
 }
 
 function isSupportedRetainedCompanionSpellCastFeature(
-  unit: UnitRecord,
-): unit is RetainedCompanionSpellCastFeature {
+  facts: CharacterSheetClassFeatureFacts,
+): facts is RetainedCompanionSpellCastFeature {
   return (
-    unit.kind === "class_feature" &&
-    unit.className === "druid" &&
-    unit.mechanics.family === "druid_wild_companion_spell_cast" &&
-    unit.mechanics.spellId === "find_familiar" &&
-    unit.mechanics.activationCost.kind === "standard_action" &&
-    unit.mechanics.activationCost.action === "magic" &&
-    unit.mechanics.componentOverride.material === "not_required" &&
-    unit.mechanics.spellModeOverride.kind ===
+    facts.className === "druid" &&
+    facts.mechanics.family === "druid_wild_companion_spell_cast" &&
+    facts.mechanics.spellId === "find_familiar" &&
+    facts.mechanics.activationCost.kind === "standard_action" &&
+    facts.mechanics.activationCost.action === "magic" &&
+    facts.mechanics.componentOverride.material === "not_required" &&
+    facts.mechanics.spellModeOverride.kind ===
       "fixed_creature_type_mode_option" &&
-    unit.mechanics.spellModeOverride.optionId === "fey"
+    facts.mechanics.spellModeOverride.optionId === "fey"
   );
 }
 

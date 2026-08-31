@@ -3,9 +3,10 @@
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
 //
-// Focused semantic owner for Insect Plague. Table-supplied membership facts
-// select a qualified trigger; this slice deliberately does not derive geometry,
-// paths, line of sight, or occupants.
+// SRD-named BattleState projection and proof witness over the identity-free
+// persistent-area and trigger semantic owners. Table-supplied membership facts
+// select a qualified trigger; this witness deliberately does not derive
+// geometry, paths, line of sight, or occupants.
 //
 // RAW anchors:
 // - Spells/Descriptions-E-L.md "Insect Plague": Action; level 5;

@@ -40,7 +40,6 @@ import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts"
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
 import { resolveStationaryPersistentAreaAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
 import { invalidResult } from "../result-helpers.ts";
-import { hasSharedNonEmptyOncePerTurnLimitGroup } from "./once-per-turn-limit-group-admission.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -50,6 +49,7 @@ import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
+import { sharedOncePerTurnLimitGroup } from "./usage-limit-admission.ts";
 
 type StationaryPersistentAreaAreaHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -163,6 +163,11 @@ function persistentAreaSaveDamageSpell(
     stationaryPersistentAreaSaveGateDamageAmount(initialPhase);
   const initialUsageLimit =
     initialPhase?.kind === "save_gate" ? initialPhase.usageLimit : undefined;
+  const saveLimitGroup = sharedOncePerTurnLimitGroup([
+    initialUsageLimit,
+    enterOperation?.usageLimit,
+    endTurnOperation?.usageLimit,
+  ]);
 
   if (
     mechanics.level !== STATIONARY_PERSISTENT_AREA_LEVEL ||
@@ -184,11 +189,8 @@ function persistentAreaSaveDamageSpell(
       null ||
     stationaryPersistentAreaSaveGateDamageAmount(endTurnOperation?.effect) ===
       null ||
-    !hasSharedNonEmptyOncePerTurnLimitGroup([
-      initialUsageLimit,
-      enterOperation?.usageLimit,
-      endTurnOperation?.usageLimit,
-    ])
+    saveLimitGroup === null ||
+    saveLimitGroup.length === 0
   ) {
     return null;
   }

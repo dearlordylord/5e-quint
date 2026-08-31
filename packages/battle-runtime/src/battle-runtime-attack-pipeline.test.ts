@@ -84,6 +84,45 @@ import {
 } from "./battle-reducer/attack-resolution.ts";
 
 describe("battle runtime: attack pipeline boundaries", () => {
+  test("attack-roll holes omit unavailable feature choices and reject explicit empty choices", () => {
+    const state = fighterVsGoblinBattle();
+    const fighter = state.combatants.get(fighterId);
+    if (
+      fighter?.origin.kind !== "character" ||
+      fighter.origin.attack === null
+    ) {
+      throw new Error("Expected the fighter attack fixture.");
+    }
+
+    const attackRoll = attackRollHole(
+      undefined,
+      fighter.origin.attack,
+      undefined,
+      [],
+    );
+    expect(attackRoll).not.toHaveProperty("ongoingFeatureActivations");
+    expect(attackRoll).not.toHaveProperty("missToHitReplacements");
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleHoleSchema)(attackRoll),
+      ),
+    ).toBe(true);
+
+    for (const propertyName of [
+      "ongoingFeatureActivations",
+      "missToHitReplacements",
+    ] as const) {
+      expect(
+        Result.isFailure(
+          Schema.decodeUnknownResult(BattleHoleSchema)({
+            ...attackRoll,
+            [propertyName]: [],
+          }),
+        ),
+      ).toBe(true);
+    }
+  });
+
   test("attack holes project bound character attacks into the canonical unbound shape", () => {
     const state = fighterVsGoblinBattle();
     const fighter = state.combatants.get(fighterId);

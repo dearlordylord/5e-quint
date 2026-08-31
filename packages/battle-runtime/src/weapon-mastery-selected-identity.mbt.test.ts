@@ -24,7 +24,7 @@ import {
   attackExecutionSelectionForSubjectForTest,
   attackTargetSpatialFact,
 } from "./battle-runtime.test-support.ts";
-import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
+import { admitResolvedCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
 
 import {
@@ -48,6 +48,7 @@ import {
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
+  resolveWeaponMasteryReference,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 
@@ -867,12 +868,17 @@ function weaponAttack(
   if (weapon.kind !== "weapon") {
     throw new Error(`Expected ${weaponUnitId} weapon Unit.`);
   }
+  const resolution = Result.getOrThrow(
+    resolveWeaponMasteryReference(weapon, unitLibrary),
+  );
   return {
     kind: "weapon",
-    ...admitCharacterWeaponAttackExecutionWeapon(
-      weapon,
-      battleObjectId(`main:${weapon.id}`),
-      weaponMasteries,
+    ...Result.getOrThrow(
+      admitResolvedCharacterWeaponAttackExecutionWeapon(
+        resolution,
+        battleObjectId(`main:${weapon.id}`),
+        weaponMasteries,
+      ),
     ),
     ability: "str",
     abilityModifier: abilityModifier(3),

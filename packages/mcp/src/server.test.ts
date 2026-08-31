@@ -144,6 +144,7 @@ import {
   buildUnitCatalog,
   defineSrdUnitCollection,
   srdUnitCollection,
+  type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
 import { adminProjection } from "./admin-mirror.ts";
 
@@ -2015,10 +2016,7 @@ describe("MCP server route", () => {
     }
     const unsupportedUnit: UnitRecord = {
       ...uncannyDodgeUnit,
-      provenance: {
-        kind: "xphb",
-        section: "structured-input-only",
-      },
+      provenance: { kind: "synthetic-test", section: "synthetic-test" },
       mechanics: {
         family: "reaction_roll_or_damage_reduction",
         modifiers: [
@@ -4217,8 +4215,11 @@ describe("MCP server route", () => {
     const secondDraftId = "draft:mcp-runtime-owner-invalid-second";
     createFinalizedFighterSheet(root, firstDraftId);
     createFinalizedFighterSheet(root, secondDraftId);
-    const baseStatBlock = Option.getOrThrow(
-      root.statBlockCatalog.getStatBlock(statBlockId("stat_block_skeleton")),
+    const baseStatBlock = assertSrd521StatBlock(
+      assertStatBlockForTest(
+        root.statBlockCatalog,
+        statBlockId("stat_block_skeleton"),
+      ),
     );
     const unsupportedStatBlock = {
       ...baseStatBlock,
@@ -10999,7 +11000,7 @@ function initialClassHoleIds(): readonly CreationHoleIdText[] {
 function fighterUnitLibraryWithClassFeatureGrant(
   unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
   featureUnit: Extract<UnitRecord, { readonly kind: "class_feature" }>,
-): ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"] {
+): UnitCatalog {
   const fighter = unitLibrary.requireUnit("class_fighter");
   if (fighter.kind !== "class") {
     throw new Error("Expected Fighter class Unit.");
@@ -11151,7 +11152,7 @@ function characterBuildForClassProgression(input: {
 function unitLibraryWithOverrides(
   unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
   overrides: readonly UnitRecord[],
-): ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"] {
+): UnitCatalog {
   const unitById = new Map(
     unitLibrary.listUnits().map((unit) => [unit.id, unit]),
   );

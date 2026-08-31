@@ -427,7 +427,7 @@ describe("Slow active-penalties MBT parity", () => {
     const multiattackTurn = endCasterTurnForMultiattackTarget(multiattackCast);
     const multiattackActivated =
       activateSlowedStatBlockMultiattack(multiattackTurn);
-    const multiattackDispatched =
+    const multiattacked =
       resolveChosenSlowedStatBlockMultiattackDispatch(multiattackActivated);
     expect(
       saveGatedTurnConstraintBundleProjection(multiattackTurn),
@@ -450,7 +450,7 @@ describe("Slow active-penalties MBT parity", () => {
       lastResult: "multiattackActivated",
     });
     expect(
-      saveGatedTurnConstraintBundleProjection(multiattackDispatched),
+      saveGatedTurnConstraintBundleProjection(multiattacked),
     ).toMatchObject({
       currentTurnRole: "multiattackTarget",
       turnActionOrBonusChoice: "action",
@@ -1424,6 +1424,7 @@ function endSlowConcentrationAfterAction(
     damageAmount: 1,
     deathFailuresAtZeroHp: 1,
     concentrationSavingThrow: concentrationFill,
+    saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
   });
   return {
     battle: battleRuntimeSessionForTest({

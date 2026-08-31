@@ -32,6 +32,7 @@ import type {
   BattleAcrobaticMovementFact,
   BattleAreaDifficultTerrainMovementFact,
   BattleAreaDifficultTerrainSource,
+  BattleActiveEffect,
   BattleBrutalStrikeForcefulBlowMovementFact,
   BattleCompelledApproachMovementFact,
   BattleCompelledFleeMovementFact,
@@ -76,7 +77,10 @@ import {
   currentActorId,
   zeroHpLifecycleIsTerminal,
 } from "./creature-state-leaves.ts";
-import { concentrationSavingThrowHole } from "./damage-apply.ts";
+import {
+  concentrationSavingThrowHole,
+  resolveSaveGatedConditionDamageRepeatSave,
+} from "./damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import { rolledDiceFillForHole } from "./fill-hole-protocol.ts";
@@ -108,6 +112,7 @@ import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applyPreparedSlotSpellDamage } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
 import { attackTargetIsLegal } from "./attack-spatial.ts";
 
@@ -948,6 +953,43 @@ type MovementEffectsAfterMovementResult =
     }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" | "needsHoles" }>;
 
+type MovementDamageConcentrationResolution =
+  | {
+      readonly tag: "resolved";
+      readonly fill:
+        | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+        | undefined;
+    }
+  | {
+      readonly tag: "needsHole";
+      readonly hole: NonNullable<
+        ReturnType<typeof concentrationSavingThrowHole>
+      >;
+    };
+
+function resolveMovementDamageConcentration(
+  target: BattleCreatureState,
+  damageAmount: number,
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >[],
+  consumedFills: Set<BattleFill>,
+): MovementDamageConcentrationResolution {
+  const hole = concentrationSavingThrowHole(target, damageAmount);
+  if (hole === null) return { tag: "resolved", fill: undefined };
+  const fill = concentrationSavingThrowFillFor(
+    fills.filter(
+      (candidate) =>
+        candidate.holeId === hole.holeId && !consumedFills.has(candidate),
+    ),
+    hole,
+  );
+  if (fill === undefined) return { tag: "needsHole", hole };
+  consumedFills.add(fill);
+  return { tag: "resolved", fill };
+}
+
 export function resolveMovementEffectsAfterMovement(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;
@@ -1034,27 +1076,52 @@ export function resolveMovementEffectsAfterMovement(input: {
       request,
       damageFill,
     );
-    const concentrationHole = concentrationSavingThrowHole(
+    const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+      state: nextState,
       target,
       damageAmount,
+      fills: input.extraFills.filter(
+        (
+          fill,
+        ): fill is Extract<
+          BattleFill,
+          { readonly kind: "savingThrowOutcome" }
+        > => fill.kind === "savingThrowOutcome" && !consumedFills.has(fill),
+      ),
+      damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+        holeId: damageHole.holeId,
+        targetId: target.combatantId,
+      }),
+    });
+    if (damageRepeatSave.tag === "invalid") {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        damageRepeatSave.message,
+      );
+    }
+    if (damageRepeatSave.tag === "needsHoles") {
+      return needsHolesResult(
+        input.state,
+        input.subject,
+        damageRepeatSave.missingHoles,
+      );
+    }
+    for (const fill of damageRepeatSave.context.fills) {
+      consumedFills.add(fill);
+    }
+    const concentrationResolution = resolveMovementDamageConcentration(
+      target,
+      damageAmount,
+      concentrationSavingThrowFills,
+      consumedFills,
     );
-    const concentrationFill =
-      concentrationHole === null
-        ? undefined
-        : concentrationSavingThrowFillFor(
-            concentrationSavingThrowFills.filter(
-              (fill) =>
-                fill.holeId === concentrationHole.holeId &&
-                !consumedFills.has(fill),
-            ),
-            concentrationHole,
-          );
-    if (concentrationHole !== null && concentrationFill === undefined) {
-      return needsHolesResult(input.state, input.subject, [concentrationHole]);
+    if (concentrationResolution.tag === "needsHole") {
+      return needsHolesResult(input.state, input.subject, [
+        concentrationResolution.hole,
+      ]);
     }
-    if (concentrationFill !== undefined) {
-      consumedFills.add(concentrationFill);
-    }
+    const concentrationFill = concentrationResolution.fill;
 
     const damageDispositionHole = zeroHitPointReplacementDispositionHole({
       damageSourceId: request.effect.sourceCombatantId,
@@ -1115,7 +1182,7 @@ export function resolveMovementEffectsAfterMovement(input: {
           input.movement.moverId,
         ),
         linkedDefenseResistanceDamageShareConcentrationSavingThrows: [],
-        saveGatedConditionWithRepeatDamageRepeatSaves: [],
+        saveGatedConditionDamageRepeatSave: damageRepeatSave.context,
         spatialFacts: [],
       },
     );
@@ -1389,10 +1456,7 @@ function validateDirectionalPersistentAreaMovementFact(
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !Number.isInteger(fact.totalDistanceFeet) ||
-    fact.totalDistanceFeet <= 0
-  ) {
+  if (!isPositiveIntegerMovementDistance(fact.totalDistanceFeet)) {
     return {
       tag: "invalid",
       message:
@@ -1401,10 +1465,7 @@ function validateDirectionalPersistentAreaMovementFact(
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !Number.isInteger(fact.closerDistanceFeet) ||
-    fact.closerDistanceFeet <= 0
-  ) {
+  if (!isPositiveIntegerMovementDistance(fact.closerDistanceFeet)) {
     return {
       tag: "invalid",
       message:
@@ -1440,6 +1501,10 @@ function validateDirectionalPersistentAreaMovementFact(
   };
 }
 
+function isPositiveIntegerMovementDistance(distance: MovementFeet): boolean {
+  return Number.isInteger(distance) && distance > 0;
+}
+
 function activeDirectionalPersistentAreaForMovementFact(
   state: BattleState,
   fact: BattleDirectionalPersistentAreaMovementFact,
@@ -1448,16 +1513,25 @@ function activeDirectionalPersistentAreaForMovementFact(
   const effect = source?.activeEffects.find(
     (candidate) => candidate.effectRef === fact.effectRef,
   );
-  if (
-    effect?.kind !== "directionalPersistentArea" ||
-    effect.sourceCombatantId !== fact.sourceCombatantId ||
-    effect.sourceProcedureRef !== fact.sourceProcedureRef ||
-    effect.areaId !== fact.areaId ||
-    effect.directionId !== fact.directionId
-  ) {
+  if (effect?.kind !== "directionalPersistentArea") return null;
+  if (!directionalPersistentAreaEffectMatchesMovementFact(effect, fact))
     return null;
-  }
   return boundDirectionalPersistentAreaEffect(state, effect) ?? null;
+}
+
+function directionalPersistentAreaEffectMatchesMovementFact(
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "directionalPersistentArea" }
+  >,
+  fact: BattleDirectionalPersistentAreaMovementFact,
+): boolean {
+  return (
+    effect.sourceCombatantId === fact.sourceCombatantId &&
+    effect.sourceProcedureRef === fact.sourceProcedureRef &&
+    effect.areaId === fact.areaId &&
+    effect.directionId === fact.directionId
+  );
 }
 
 type AreaMovementCostFactResult =

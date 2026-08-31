@@ -1,9 +1,10 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 //
-// Focused literal projection witnesses. The semantic owner separately proves
-// transaction behavior; these states connect its deterministic RAW outcomes
-// to production without copying the reducer into the MBT driver.
+// Focused literal projection witnesses. The identity-free semantic owners and
+// SRD-named BattleState proof witness separately establish transaction
+// behavior; these states connect deterministic RAW outcomes to production
+// without copying the reducer into the MBT driver.
 module battleRuntimeCloudkillAreaHazardMbt {
   type CloudkillMbtTarget =
     | NoCloudkillMbtTarget

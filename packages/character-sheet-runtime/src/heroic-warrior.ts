@@ -3,12 +3,13 @@ import {
   characterBuildFeatureUnitIds,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
-import type {
-  CombatTurnStartHeroicInspirationMechanics,
-  UnitRecord,
-} from "@dnd/surface/surface/types";
+import type { CombatTurnStartHeroicInspirationMechanics } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
 
+import {
+  projectCharacterSheetClassFeature,
+  type CharacterSheetClassFeatureFacts,
+} from "./character-feature-projection.ts";
 import {
   CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
   characterSheetIssue,
@@ -16,12 +17,10 @@ import {
   type CharacterSheetIssue,
 } from "./sheet-types.ts";
 
-type CharacterSheetCombatTurnStartHeroicInspirationFeature = Extract<
-  UnitRecord,
-  { readonly kind: "class_feature" }
-> & {
-  readonly mechanics: CombatTurnStartHeroicInspirationMechanics;
-};
+type CharacterSheetCombatTurnStartHeroicInspirationFeature =
+  CharacterSheetClassFeatureFacts & {
+    readonly mechanics: CombatTurnStartHeroicInspirationMechanics;
+  };
 
 export function useHeroicWarriorAtCombatTurnStart(input: {
   readonly sheet: CharacterSheet;
@@ -63,22 +62,25 @@ function combatTurnStartHeroicInspirationFeature(input: {
       return characterSheetIssue(`Missing class feature Unit ${unitId}.`);
     }
     /* v8 ignore stop -- @preserve */
-    if (isCombatTurnStartHeroicInspirationFeature(unit.value)) {
-      return Result.succeed(unit.value);
+    const projection = projectCharacterSheetClassFeature(unit.value);
+    if (
+      Option.isSome(projection) &&
+      isCombatTurnStartHeroicInspirationFeature(projection.value)
+    ) {
+      return Result.succeed(projection.value);
     }
   }
   return Result.succeed(undefined);
 }
 
 function isCombatTurnStartHeroicInspirationFeature(
-  unit: UnitRecord,
-): unit is CharacterSheetCombatTurnStartHeroicInspirationFeature {
+  facts: CharacterSheetClassFeatureFacts,
+): facts is CharacterSheetCombatTurnStartHeroicInspirationFeature {
   return (
-    unit.kind === "class_feature" &&
-    unit.mechanics.family === "combat_turn_start_heroic_inspiration" &&
-    unit.mechanics.trigger.kind === "start_turn" &&
-    unit.mechanics.trigger.encounter === "combat" &&
-    unit.mechanics.trigger.requiresMissingHeroicInspiration === true &&
-    unit.mechanics.grant.kind === "heroic_inspiration"
+    facts.mechanics.family === "combat_turn_start_heroic_inspiration" &&
+    facts.mechanics.trigger.kind === "start_turn" &&
+    facts.mechanics.trigger.encounter === "combat" &&
+    facts.mechanics.trigger.requiresMissingHeroicInspiration === true &&
+    facts.mechanics.grant.kind === "heroic_inspiration"
   );
 }

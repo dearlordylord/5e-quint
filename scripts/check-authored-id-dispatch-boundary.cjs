@@ -1544,14 +1544,8 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
     "light",
     "packages/battle-runtime/src/battle-reducer/spatial-effect-routes.ts",
     [
-      { identifier: "movableLightRoute", roles: ["declaration-identifier"] },
-      { identifier: "objectLightRoute", roles: ["declaration-identifier"] },
       {
-        identifier: "movableLightCompositionRoute",
-        roles: ["declaration-identifier"],
-      },
-      {
-        identifier: "objectLightCompositionRoute",
+        identifier: "objectLightInvocationRoute",
         roles: ["declaration-identifier"],
       },
     ],
@@ -1567,6 +1561,85 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
       },
     ],
     "light names the generic illumination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/collision-reposition-persistent-area-save-damage.ts",
+    [
+      {
+        identifier: "ramMovablePersistentAreaLightIsSupported",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the generic illumination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "light",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/movable-illumination-manifestation.ts",
+    [
+      {
+        identifier: "MovableLightMechanics",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "movableLightBasicFactsAreSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "movableLightOperations",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "MovableLightOperations",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "movableLightOperationFacts",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "movableLightProfileShape",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "light names the generic movable illumination mechanic",
+  ),
+  ...exactCollisionsAt(
+    "resistance",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/linked-defense-damage-share-profile.ts",
+    [
+      {
+        identifier: "LinkedDefenseResistanceDamageShareMechanics",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "linkedDefenseResistanceDamageShareSpellEnvelope",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier:
+          "linkedDefenseResistanceDamageShareCastingFactsAreSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "linkedDefenseResistanceDamageShareAttachmentIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "linkedDefenseResistanceDamageShareBondRangeIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier: "linkedDefenseResistanceDamageShareTargetIsSupported",
+        roles: ["declaration-identifier"],
+      },
+      {
+        identifier:
+          "linkedDefenseResistanceDamageSharePairedMaterialIsSupported",
+        roles: ["declaration-identifier"],
+      },
+    ],
+    "resistance names the generic linked damage relationship",
   ),
   ...exactCollisionsAt(
     "resistance",
@@ -1594,9 +1667,9 @@ const EXECUTION_IDENTITY_COLLISION_EXEMPTIONS = [
 ];
 
 const EXECUTION_IDENTITY_COLLISION_SITE_EVIDENCE = {
-  sha256: "1a6b83fc6597ebcb817af5b723557f9e8e3cc219562c584de14f3e45bc4ecc02",
-  siteCount: 1294,
-  violationCount: 1405,
+  sha256: "b41864844453571868ca9e4da4caa933df08b086afa8f3e482e06ff943d8788d",
+  siteCount: 1308,
+  violationCount: 1418,
 };
 
 function escapeForRegExp(text) {
@@ -2853,7 +2926,7 @@ function assertBattleReplayAstSelfTests() {
       procedure: Procedure,
     })
     const rerollCodec = Schema.Struct({
-      spellDamageReroll: Schema.optionalWith(Schema.Struct({
+      spellDamageReroll: Schema.optionalKey(Schema.Struct({
         dice: Schema.Array(Schema.Struct({ dieRef: Ref })),
       })),
     })
@@ -2869,12 +2942,12 @@ function assertBattleReplayAstSelfTests() {
     const codec = Schema.Struct({
       kind: Schema.Literal("spellTargetList"),
       sourceProcedureRef: Ref,
-      procedure: Schema.optionalWith(Schema.Never, { exact: true }),
+      procedure: Schema.optionalKey(Schema.Never),
     })
     const rerollCodec = Schema.Struct({
-      spellDamageReroll: Schema.optionalWith(Schema.Struct({
+      spellDamageReroll: Schema.optionalKey(Schema.Struct({
         dice: Schema.Array(Schema.Struct({
-          dieRef: Schema.optionalWith(Schema.Never, { exact: true }),
+          dieRef: Schema.optionalKey(Schema.Never),
         })),
       })),
     })
@@ -2892,12 +2965,12 @@ function assertBattleReplayAstSelfTests() {
     const rerollPayloadCodec = Schema.Struct({
       dice: Schema.Array(rerollDieCodec),
     })
-    const spellDamageReroll = Schema.optionalWith(rerollPayloadCodec)
+    const spellDamageReroll = Schema.optionalKey(rerollPayloadCodec)
     const fillCodec = Schema.Struct({ spellDamageReroll })
   `;
   const strictExtractedSchemaFixture = `
     const removedTargetFields = {
-      procedure: Schema.optionalWith(Schema.Never, { exact: true }),
+      procedure: Schema.optionalKey(Schema.Never),
     }
     const targetListFields = {
       kind: Schema.Literal("spellTargetList"),
@@ -2905,10 +2978,10 @@ function assertBattleReplayAstSelfTests() {
     }
     const targetListCodec = Schema.Struct(targetListFields)
     const removedDieFields = {
-      dieRef: Schema.optionalWith(Schema.Never, { exact: true }),
+      dieRef: Schema.optionalKey(Schema.Never),
     }
     const rerollDieCodec = Schema.Struct({ ...removedDieFields })
-    const spellDamageReroll = Schema.optionalWith(
+    const spellDamageReroll = Schema.optionalKey(
       Schema.Struct({ dice: Schema.Array(rerollDieCodec) }),
     )
     const fillCodec = Schema.Struct({ spellDamageReroll })

@@ -41,6 +41,7 @@ import {
   knownWillingSpellTargetListFill,
   spellAct,
   spellTargetListFill,
+  savingThrowOutcomeFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   breakBattleConcentration,

@@ -22,6 +22,10 @@ import {
   type SurfacePublicationExcerptSource,
   type SurfacePublicationBuildIssue,
 } from "./srd-surface-publication-artifacts.ts";
+import {
+  describeSurfacePublicationDeltaIssue,
+  verifySurfacePublicationDelta,
+} from "../packages/surface/src/surface/publication-delta-verifier.ts";
 import { buildSrdSurfacePortableCases } from "./generate-surface-portable-cases.ts";
 import {
   readSrdStatBlockParity,
@@ -35,10 +39,6 @@ import {
 } from "./surface-publication-peer-observations.ts";
 import { discoverCanonicalSurfaceContentPeers } from "./surface-content-peer-discovery.ts";
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
-import {
-  describeSurfacePublicationDeltaIssue,
-  verifySurfacePublicationDelta,
-} from "../packages/surface/src/surface/publication-delta-verifier.ts";
 import { effectRuntimeForPackageOwners } from "#dnd-package-effect-runtime";
 
 const { Result, Schema } = effectRuntimeForPackageOwners(["surface"]).effect;
@@ -99,6 +99,10 @@ export type PublicationIssue =
   | {
       readonly kind: "publication-generation-failed";
       readonly issue: SurfacePublicationBuildIssue;
+    }
+  | {
+      readonly kind: "publication-delta-verification-failed";
+      readonly message: string;
     }
   | {
       readonly kind: "peer-family-mismatch";
@@ -1380,6 +1384,8 @@ function main(): void {
         console.error(
           `- publication-generation-failed: ${describeSurfacePublicationBuildIssue(issue.issue)}`,
         );
+      } else if (issue.kind === "publication-delta-verification-failed") {
+        console.error(`- ${issue.message}`);
       } else if (issue.kind === "peer-family-mismatch") {
         console.error(
           `- peer-family-mismatch: ${issue.peer} from ${issue.source} advertises ${issue.actualRecordKind}; expected ${issue.expectedRecordKind}`,

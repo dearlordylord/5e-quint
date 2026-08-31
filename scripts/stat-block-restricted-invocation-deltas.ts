@@ -135,9 +135,13 @@ type ProcedureSection =
   | "reactions"
   | "legendaryActions";
 
+type ProcedureEntry = NonNullable<
+  SrdStatBlockRecord["statBlock"]["actions"]
+>[number];
+
 function procedureSections(record: SrdStatBlockRecord): readonly {
   readonly section: ProcedureSection;
-  readonly entries: NonNullable<SrdStatBlockRecord["statBlock"]["actions"]>;
+  readonly entries: readonly ProcedureEntry[];
 }[] {
   return [
     { section: "actions", entries: record.statBlock.actions ?? [] },

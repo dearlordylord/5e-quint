@@ -9,7 +9,7 @@
   },
   "id": "weapon_war_pick",
   "kind": "weapon",
-  "mastery": "sap",
+  "masteryUnitId": "mastery_sap",
   "name": "War Pick",
   "properties": [
     {

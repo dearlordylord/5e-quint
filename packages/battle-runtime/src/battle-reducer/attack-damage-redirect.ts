@@ -20,7 +20,11 @@ import { CombatantId } from "../identity.ts";
 
 import { combatantCanSee } from "./creature-state-leaves.ts";
 
-import { applyAttackDamageAmount } from "./damage-apply.ts";
+import {
+  applyAttackDamageAmount,
+  resolveSaveGatedConditionDamageRepeatSave,
+} from "./damage-apply.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import {
   damageRelationshipDecisionFillCheck,
   type DamageRelationshipDecisionsByHole,
@@ -196,9 +200,17 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
   readonly redirectDamage:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
     | undefined;
+  readonly saveGatedConditionWithRepeatDamageRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[];
   readonly damageRelationshipDecisions: DamageRelationshipDecisionsByHole;
 }):
-  | { readonly tag: "ok"; readonly state: BattleState }
+  | {
+      readonly tag: "ok";
+      readonly state: BattleState;
+      readonly damageRepeatSaveHoleIds: readonly BattleHole["holeId"][];
+    }
   | {
       readonly tag: "needsHoles";
       readonly state: BattleState;
@@ -237,7 +249,7 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
   }
   /* v8 ignore stop -- @preserve */
   if (offers.length === 0) {
-    return { tag: "ok", state: input.state };
+    return { tag: "ok", state: input.state, damageRepeatSaveHoleIds: [] };
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (offers.length > 1) {
@@ -254,7 +266,7 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
       input.redirectSave === undefined &&
       input.redirectDamage === undefined
     ) {
-      return { tag: "ok", state: input.state };
+      return { tag: "ok", state: input.state, damageRepeatSaveHoleIds: [] };
     }
     return {
       tag: "invalid",
@@ -302,7 +314,7 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
       offer,
     );
     if (holes.length === 0) {
-      return { tag: "ok", state: input.state };
+      return { tag: "ok", state: input.state, damageRepeatSaveHoleIds: [] };
     }
     return {
       tag: "needsHoles",
@@ -335,11 +347,33 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
         holes: relationshipDecision.holes,
       };
     }
-    return { tag: "ok", state: resourceSpent };
+    return { tag: "ok", state: resourceSpent, damageRepeatSaveHoleIds: [] };
   }
-  const redirectTarget = resourceSpent.combatants.get(selection.value.targetId);
+  return resolveFailedAttackDamageReductionRedirect({
+    input,
+    offer,
+    resourceSpent,
+    selection: selection.value,
+  });
+}
+
+function resolveFailedAttackDamageReductionRedirect(input: {
+  readonly input: Parameters<
+    typeof resolveAttackDamageReductionZeroDamageRedirectAfterReduction
+  >[0];
+  readonly offer: AttackDamageReductionZeroDamageRedirectAvailableOffer;
+  readonly resourceSpent: BattleState;
+  readonly selection: Pick<
+    AttackDamageReductionZeroDamageRedirectSelection,
+    "targetId" | "redirectedDamageRoll"
+  >;
+}): ReturnType<
+  typeof resolveAttackDamageReductionZeroDamageRedirectAfterReduction
+> {
+  const { offer, resourceSpent, selection } = input;
+  const redirectTarget = resourceSpent.combatants.get(selection.targetId);
   if (redirectTarget === undefined) {
-    return { tag: "ok", state: resourceSpent };
+    return { tag: "ok", state: resourceSpent, damageRepeatSaveHoleIds: [] };
   }
   const redirectedDamage = attackDamageEventAmountForTarget(
     resourceSpent,
@@ -351,7 +385,7 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
           damageType: offer.redirect.originalDamageType,
           amount: Math.max(
             0,
-            selection.value.redirectedDamageRoll +
+            selection.redirectedDamageRoll +
               Number(offer.redirect.damageAbilityModifier),
           ),
         },
@@ -367,13 +401,13 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
       Number(redirectedDamage) > 0
         ? [
             {
-              targetId: selection.value.targetId,
+              targetId: selection.targetId,
               damageAmount: toDamageAmount(Number(redirectedDamage)),
             },
           ]
         : [],
-    spatialFacts: input.redirectTarget?.spatialFacts ?? [],
-    decisionsByRelationshipHole: input.damageRelationshipDecisions,
+    spatialFacts: input.input.redirectTarget?.spatialFacts ?? [],
+    decisionsByRelationshipHole: input.input.damageRelationshipDecisions,
   });
   if (relationshipDecision.tag === "invalid") {
     return relationshipDecision;
@@ -385,18 +419,72 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
       holes: relationshipDecision.holes,
     };
   }
+  return applyAcceptedAttackDamageReductionRedirect({
+    state: resourceSpent,
+    target: redirectTarget,
+    targetId: selection.targetId,
+    damage: redirectedDamage,
+    damageSourceId: offer.reactorId,
+    fills: input.input.saveGatedConditionWithRepeatDamageRepeatSaves,
+    redirectTargetFill: input.input.redirectTarget,
+    relationshipDecision,
+  });
+}
+
+function applyAcceptedAttackDamageReductionRedirect(input: {
+  readonly state: BattleState;
+  readonly target: BattleCreatureState;
+  readonly targetId: CombatantId;
+  readonly damage: DamageAmount;
+  readonly damageSourceId: CombatantId;
+  readonly fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[];
+  readonly redirectTargetFill:
+    | Extract<BattleFill, { readonly kind: "targetChoice" }>
+    | undefined;
+  readonly relationshipDecision: Extract<
+    ReturnType<typeof damageRelationshipDecisionFillCheck>,
+    { readonly tag: "ok" }
+  >;
+}): ReturnType<
+  typeof resolveAttackDamageReductionZeroDamageRedirectAfterReduction
+> {
+  const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+    state: input.state,
+    target: input.target,
+    damageAmount: Number(input.damage),
+    fills: input.fills,
+    damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+      holeId: ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID,
+      targetId: input.targetId,
+    }),
+  });
+  if (damageRepeatSave.tag === "invalid") {
+    return damageRepeatSave;
+  }
+  if (damageRepeatSave.tag === "needsHoles") {
+    return {
+      tag: "needsHoles",
+      state: input.state,
+      holes: damageRepeatSave.missingHoles,
+    };
+  }
   return {
     tag: "ok",
+    damageRepeatSaveHoleIds: damageRepeatSave.holes.map((hole) => hole.holeId),
     state: applyAttackDamageAmount({
-      state: resourceSpent,
-      attackerId: offer.reactorId,
-      targetId: selection.value.targetId,
-      damageAmount: redirectedDamage,
+      state: input.state,
+      attackerId: input.damageSourceId,
+      targetId: input.targetId,
+      damageAmount: input.damage,
       deathFailuresAtZeroHp: 1,
       damageDisposition: { kind: "ordinaryDamage" },
       attackDamageRiders: [],
-      spatialFacts: input.redirectTarget?.spatialFacts ?? [],
-      relationshipDecisions: relationshipDecision.decisions,
+      saveGatedConditionDamageRepeatSave: damageRepeatSave.context,
+      spatialFacts: input.redirectTargetFill?.spatialFacts ?? [],
+      relationshipDecisions: input.relationshipDecision.decisions,
     }),
   };
 }

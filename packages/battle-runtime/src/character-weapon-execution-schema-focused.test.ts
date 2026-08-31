@@ -15,7 +15,7 @@ const syntheticWeapon = {
     damageType: "slashing",
   },
   properties: [],
-  mastery: "sap",
+  masteryProperty: "sap",
   costGp: 1,
 } as const;
 
@@ -34,6 +34,17 @@ describe("character weapon execution codec", () => {
     expect(Result.isSuccess(encoded)).toBe(true);
     if (Result.isFailure(encoded)) return;
     expect(encoded.success).toEqual(syntheticWeapon);
+  });
+
+  test("preserves the distinct unselected weapon state without a mastery projection", () => {
+    const { masteryProperty: _property, ...unselectedWeapon } = syntheticWeapon;
+    const decoded = Schema.decodeUnknownResult(
+      CharacterWeaponAttackExecutionWeaponSchema,
+    )(unselectedWeapon);
+
+    expect(Result.isSuccess(decoded)).toBe(true);
+    if (Result.isFailure(decoded)) return;
+    expect(decoded.success).not.toHaveProperty("masteryProperty");
   });
 
   test("rejects a malformed weapon damage type at the precise nested field", () => {

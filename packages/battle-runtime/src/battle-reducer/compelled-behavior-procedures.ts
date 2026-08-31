@@ -85,6 +85,228 @@ type CompelledBehaviorReplayRoute = {
   readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
 };
 
+type CompelledApproachSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "executeCompelledApproach";
+  }
+>;
+
+type CompelledFleeSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "executeCompelledFlee";
+  }
+>;
+
+type CompelledApproachInput =
+  BattleResolutionInputForSubject<CompelledApproachSubject> &
+    CompelledBehaviorReplayRoute;
+
+type CompelledFleeInput =
+  BattleResolutionInputForSubject<CompelledFleeSubject> &
+    CompelledBehaviorReplayRoute;
+
+type CompelledMovementFill = Extract<BattleFill, { readonly kind: "movement" }>;
+type NonEmptyCompelledMovementFills = readonly [
+  CompelledMovementFill,
+  ...CompelledMovementFill[],
+];
+
+function nonEmptyCompelledMovementFills(
+  fills: readonly CompelledMovementFill[],
+): NonEmptyCompelledMovementFills | null {
+  const [first, ...remaining] = fills;
+  return first === undefined ? null : [first, ...remaining];
+}
+
+type CompelledApproachMovementAdmission =
+  | {
+      readonly tag: "ok";
+      readonly movement: BattleResolvedMovement;
+      readonly movedWithinFiveFeetOfSource: boolean;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly result: Extract<
+        BattleResolutionResult,
+        { readonly tag: "invalid" }
+      >;
+    };
+
+function admitCompelledApproachMovement(
+  input: CompelledApproachInput,
+  movementFills: NonEmptyCompelledMovementFills,
+): CompelledApproachMovementAdmission {
+  /* v8 ignore start -- @preserve -- Malformed fill set: compelled approach behavior exposes exactly one Movement hole. */
+  if (movementFills.length > 1) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "compelled approach behavior accepts one Movement fill.",
+      ),
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  const movementFill = movementFills[0];
+  /* v8 ignore start -- @preserve -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for compelled approach behavior. */
+  if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Movement fill does not match the requested compelled approach behavior hole.",
+      ),
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  const approachFact = movementFill.value.compelledApproach;
+  /* v8 ignore start -- @preserve -- Malformed fill: a compelled approach behavior Movement value must carry the route/proximity facts required by that command. */
+  if (approachFact === undefined) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "compelled approach behavior requires caller-supplied shortest/direct route and proximity facts.",
+      ),
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  const movement = parseBattleMovement(
+    input.state,
+    input.subject.actorId,
+    movementFill,
+    { kind: "compelledApproach" },
+  );
+  /* v8 ignore start -- @preserve -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or compelled approach behavior constraints. */
+  if (movement.tag === "invalid") {
+    return {
+      tag: "invalid",
+      result: invalidResult(input.state, "invalidFill", movement.message),
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  return {
+    tag: "ok",
+    movement: movement.movement,
+    movedWithinFiveFeetOfSource: approachFact.movedWithinFiveFeetOfSource,
+  };
+}
+
+type CompelledFleeMovementAdmission =
+  | { readonly tag: "ok"; readonly movement: BattleResolvedMovement }
+  | {
+      readonly tag: "invalid";
+      readonly result: Extract<
+        BattleResolutionResult,
+        { readonly tag: "invalid" }
+      >;
+    };
+
+function admitCompelledFleeMovement(
+  input: CompelledFleeInput,
+  movementFills: NonEmptyCompelledMovementFills,
+): CompelledFleeMovementAdmission {
+  /* v8 ignore start -- @preserve -- Malformed fill set: compelled flee behavior exposes exactly one Movement hole. */
+  if (movementFills.length > 1) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "compelled flee behavior accepts one Movement fill.",
+      ),
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  const movementFill = movementFills[0];
+  /* v8 ignore start -- @preserve -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for compelled flee behavior. */
+  if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Movement fill does not match the requested compelled flee behavior hole.",
+      ),
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed fill: a compelled flee behavior Movement value must carry the fastest-available moving-away route facts required by that command. */
+  if (movementFill.value.compelledFlee === undefined) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "compelled flee behavior requires caller-supplied fastest-available moving-away route facts.",
+      ),
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  const movementBudgetFeet = battleMovementBudgetForActor(
+    input.state,
+    input.subject.actorId,
+    movementFill.value.speedKind,
+  ).remainingFeet;
+  /* v8 ignore start -- @preserve -- Malformed fill: compelled flee behavior requires the route to consume the selected remaining Movement budget exactly. */
+  if (movementFill.value.movementCostFeet !== movementBudgetFeet) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "compelled flee behavior must spend the selected remaining Movement budget.",
+      ),
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  const movement = parseBattleMovement(
+    input.state,
+    input.subject.actorId,
+    movementFill,
+    { kind: "compelledFlee" },
+  );
+  /* v8 ignore start -- @preserve -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or compelled flee behavior constraints. */
+  if (movement.tag === "invalid") {
+    return {
+      tag: "invalid",
+      result: invalidResult(input.state, "invalidFill", movement.message),
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  return { tag: "ok", movement: movement.movement };
+}
+
+function compelledMovementOpportunityReactionWindow(
+  input: CompelledApproachInput | CompelledFleeInput,
+  movement: BattleResolvedMovement,
+): BattleResolutionResult | null {
+  const threats = opportunityAttackThreatsForMovement(input.state, movement);
+  if (threats.length === 0) return null;
+  if (input.handledInterruptTrigger === "opportunityAttack") return null;
+  return maybeOpenInterruptWindow(
+    input.state,
+    {
+      trigger: "opportunityAttack",
+      moverId: input.subject.actorId,
+      threats,
+      continuation: {
+        kind: "replay",
+        subject: input.subject,
+        fills: input.fills,
+      },
+    },
+    undefined,
+  );
+}
+
 type CompelledBehaviorReplayParentPositionFields =
   | { readonly replayParentPosition?: never }
   | {
@@ -438,16 +660,7 @@ function resolveExecuteCompelledDropCommand(
 }
 
 function resolveCompelledApproachCommand(
-  input: BattleResolutionInputForSubject<
-    Extract<
-      BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "executeCompelledApproach";
-      }
-    >
-  > &
-    CompelledBehaviorReplayRoute,
+  input: CompelledApproachInput,
 ): BattleResolutionResult {
   const effect = compelledNextTurnBehaviorEffectForSubject(
     input.state,
@@ -467,7 +680,8 @@ function resolveCompelledApproachCommand(
     (fill): fill is Extract<BattleFill, { readonly kind: "movement" }> =>
       fill.kind === "movement",
   );
-  if (movementFills.length === 0) {
+  const nonEmptyMovementFills = nonEmptyCompelledMovementFills(movementFills);
+  if (nonEmptyMovementFills === null) {
     if (!combatantCanMoveInState(input.state, input.subject.actorId)) {
       /* v8 ignore start -- @preserve -- Malformed fill set: a compelled approach behavior subject with no available movement exposes no fill holes, so callers cannot supply fills. */
       if (input.fills.length > 0) {
@@ -493,78 +707,22 @@ function resolveCompelledApproachCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- @preserve -- Malformed fill set: compelled approach behavior exposes exactly one Movement hole. */
-  if (movementFills.length > 1) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "compelled approach behavior accepts one Movement fill.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const movementFill = movementFills[0]!;
-  /* v8 ignore start -- @preserve -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for compelled approach behavior. */
-  if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Movement fill does not match the requested compelled approach behavior hole.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const approachFact = movementFill.value.compelledApproach;
-  /* v8 ignore start -- @preserve -- Malformed fill: a compelled approach behavior Movement value must carry the route/proximity facts required by that command. */
-  if (approachFact === undefined) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "compelled approach behavior requires caller-supplied shortest/direct route and proximity facts.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const movement = parseBattleMovement(
-    input.state,
-    input.subject.actorId,
-    movementFill,
-    {
-      kind: "compelledApproach",
-    },
+  const movementAdmission = admitCompelledApproachMovement(
+    input,
+    nonEmptyMovementFills,
   );
-  /* v8 ignore start -- @preserve -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or compelled approach behavior constraints. */
-  if (movement.tag === "invalid") {
-    return invalidResult(input.state, "invalidFill", movement.message);
-  }
-  /* v8 ignore stop -- @preserve */
+  if (movementAdmission.tag === "invalid") return movementAdmission.result;
   const extraFills = input.fills.filter((fill) => fill.kind !== "movement");
-  const threats = opportunityAttackThreatsForMovement(
-    input.state,
-    movement.movement,
+  const reactionWindow = compelledMovementOpportunityReactionWindow(
+    input,
+    movementAdmission.movement,
   );
-  if (
-    threats.length > 0 &&
-    input.handledInterruptTrigger !== "opportunityAttack"
-  ) {
-    const reactionWindow = maybeOpenInterruptWindow(
-      input.state,
-      {
-        trigger: "opportunityAttack",
-        moverId: input.subject.actorId,
-        threats,
-        continuation: {
-          kind: "replay",
-          subject: input.subject,
-          fills: input.fills,
-        },
-      },
-      undefined,
-    );
-    if (reactionWindow !== null) return reactionWindow;
-  }
+  if (reactionWindow !== null) return reactionWindow;
   return resolveCompelledApproachAfterMovement({
     state: input.state,
     subject: input.subject,
-    movement: movement.movement,
-    movedWithinFiveFeetOfSource: approachFact.movedWithinFiveFeetOfSource,
+    movement: movementAdmission.movement,
+    movedWithinFiveFeetOfSource: movementAdmission.movedWithinFiveFeetOfSource,
     parentFills: input.fills,
     endTurnFills: extraFills,
     ...compelledBehaviorReplayParentPositionFields(input.replayParentPosition),
@@ -652,16 +810,7 @@ function resolveCompelledApproachAfterMovement(input: {
 }
 
 function resolveCompelledFleeCommand(
-  input: BattleResolutionInputForSubject<
-    Extract<
-      BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "executeCompelledFlee";
-      }
-    >
-  > &
-    CompelledBehaviorReplayRoute,
+  input: CompelledFleeInput,
 ): BattleResolutionResult {
   const effect = compelledNextTurnBehaviorEffectForSubject(
     input.state,
@@ -681,7 +830,8 @@ function resolveCompelledFleeCommand(
     (fill): fill is Extract<BattleFill, { readonly kind: "movement" }> =>
       fill.kind === "movement",
   );
-  if (movementFills.length === 0) {
+  const nonEmptyMovementFills = nonEmptyCompelledMovementFills(movementFills);
+  if (nonEmptyMovementFills === null) {
     if (!combatantCanMoveInState(input.state, input.subject.actorId)) {
       const withoutPending = stateWithoutCompelledNextTurnBehaviorEffect(
         input.state,
@@ -702,91 +852,21 @@ function resolveCompelledFleeCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- @preserve -- Malformed fill set: compelled flee behavior exposes exactly one Movement hole. */
-  if (movementFills.length > 1) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "compelled flee behavior accepts one Movement fill.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const movementFill = movementFills[0]!;
-  /* v8 ignore start -- @preserve -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for compelled flee behavior. */
-  if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Movement fill does not match the requested compelled flee behavior hole.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const fleeFact = movementFill.value.compelledFlee;
-  /* v8 ignore start -- @preserve -- Malformed fill: a compelled flee behavior Movement value must carry the fastest-available moving-away route facts required by that command. */
-  if (fleeFact === undefined) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "compelled flee behavior requires caller-supplied fastest-available moving-away route facts.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const movementBudgetFeet = battleMovementBudgetForActor(
-    input.state,
-    input.subject.actorId,
-    movementFill.value.speedKind,
-  ).remainingFeet;
-  /* v8 ignore start -- @preserve -- Malformed fill: compelled flee behavior requires the route to consume the selected remaining Movement budget exactly. */
-  if (movementFill.value.movementCostFeet !== movementBudgetFeet) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "compelled flee behavior must spend the selected remaining Movement budget.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  const movement = parseBattleMovement(
-    input.state,
-    input.subject.actorId,
-    movementFill,
-    {
-      kind: "compelledFlee",
-    },
+  const movementAdmission = admitCompelledFleeMovement(
+    input,
+    nonEmptyMovementFills,
   );
-  /* v8 ignore start -- @preserve -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or compelled flee behavior constraints. */
-  if (movement.tag === "invalid") {
-    return invalidResult(input.state, "invalidFill", movement.message);
-  }
-  /* v8 ignore stop -- @preserve */
+  if (movementAdmission.tag === "invalid") return movementAdmission.result;
   const extraFills = input.fills.filter((fill) => fill.kind !== "movement");
-  const threats = opportunityAttackThreatsForMovement(
-    input.state,
-    movement.movement,
+  const reactionWindow = compelledMovementOpportunityReactionWindow(
+    input,
+    movementAdmission.movement,
   );
-  if (
-    threats.length > 0 &&
-    input.handledInterruptTrigger !== "opportunityAttack"
-  ) {
-    const reactionWindow = maybeOpenInterruptWindow(
-      input.state,
-      {
-        trigger: "opportunityAttack",
-        moverId: input.subject.actorId,
-        threats,
-        continuation: {
-          kind: "replay",
-          subject: input.subject,
-          fills: input.fills,
-        },
-      },
-      undefined,
-    );
-    if (reactionWindow !== null) return reactionWindow;
-  }
+  if (reactionWindow !== null) return reactionWindow;
   return resolveCompelledFleeAfterMovement({
     state: input.state,
     subject: input.subject,
-    movement: movement.movement,
+    movement: movementAdmission.movement,
     parentFills: input.fills,
     endTurnFills: extraFills,
     ...compelledBehaviorReplayParentPositionFields(input.replayParentPosition),

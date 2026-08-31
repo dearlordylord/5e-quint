@@ -15,11 +15,15 @@ import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reduc
 import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
 import type {
   BattleAreaId,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   BattleStatBlockExecutionScopeRef,
   CombatantId,
 } from "./identity.ts";
-import { spellActiveEffectForExecutionRef } from "./effect-execution-ref.ts";
+import {
+  spellActiveEffectForExecutionRef,
+  type ReplayAddressableSpellActiveEffect,
+} from "./effect-execution-ref.ts";
 import { boundAttackExecutionSelectionMatchesOption } from "./battle-action-options.ts";
 import {
   attackActionOptionsForActor,
@@ -387,32 +391,12 @@ function intrinsicActPresentationText(
   subject: IntrinsicBattleSubject,
 ): { readonly label: string; readonly summary: string } {
   if (subject.tag === "action" && subject.action === "escapeSpellRestraint") {
-    const effect = [...state.combatants.values()].flatMap((combatant) => {
-      const candidate = spellActiveEffectForExecutionRef(
-        combatant.activeEffects,
-        subject.effectRef,
-      );
-      return candidate === undefined ? [] : [candidate];
-    })[0];
-    if (effect !== undefined && "sourceProcedureRef" in effect) {
-      const source = spellPresentationSourceForProcedure(
-        state,
-        context,
-        effect.sourceCombatantId,
-        effect.sourceProcedureRef,
-      );
-      if (source !== undefined) {
-        const invocation = source.invocation;
-        const help = subject.actorId !== subject.targetId;
-        const label = `${help ? "Help escape" : "Escape"} ${invocation.spell.name}`;
-        return {
-          label,
-          summary: help
-            ? `Use an action while within reach of the target to attempt to end ${invocation.spell.name}.`
-            : `Use an action to attempt to end ${invocation.spell.name}.`,
-        };
-      }
-    }
+    const presentation = escapeSpellRestraintPresentationText(
+      state,
+      context,
+      subject,
+    );
+    if (presentation !== undefined) return presentation;
   }
   if (subject.tag === "runtimeCommand") {
     const spellCommandPresentation = runtimeSpellCommandPresentationText(
@@ -428,23 +412,11 @@ function intrinsicActPresentationText(
     subject.tag === "runtimeCommand" &&
     subject.command === "fixedCostMovementReplacement"
   ) {
-    const actor = state.combatants.get(subject.actorId);
-    const effect = spellActiveEffectForExecutionRef(
-      actor?.activeEffects ?? [],
-      subject.effectRef,
+    const presentation = fixedCostMovementReplacementPresentationText(
+      state,
+      subject,
     );
-    if (effect?.kind === "fixedCostMovementReplacement") {
-      const boundEffect = boundFixedCostMovementReplacementEffect(
-        state,
-        effect,
-      );
-      if (boundEffect !== undefined) {
-        return {
-          label: "Jump",
-          summary: `Spend ${boundEffect.movementCostFeet} feet of Movement to jump up to ${maxFixedCostMovementReplacementDistanceFeet(state, subject.actorId, boundEffect)} feet using table-supplied landing facts.`,
-        };
-      }
-    }
+    if (presentation !== undefined) return presentation;
   }
   const statBlockText = statBlockProcedurePresentationText(
     state,
@@ -664,6 +636,77 @@ function activeSpellEffectForAreaId(
   for (const combatant of state.combatants.values()) {
     const effect = combatant.activeEffects.find(
       (candidate) => "areaId" in candidate && candidate.areaId === areaId,
+    );
+    if (effect !== undefined) return effect;
+  }
+  return undefined;
+}
+
+type EscapeSpellRestraintSubject = Extract<
+  IntrinsicBattleSubject,
+  { readonly tag: "action"; readonly action: "escapeSpellRestraint" }
+>;
+
+function escapeSpellRestraintPresentationText(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: EscapeSpellRestraintSubject,
+): { readonly label: string; readonly summary: string } | undefined {
+  const effect = spellActiveEffectInBattle(state, subject.effectRef);
+  if (effect === undefined || !("sourceProcedureRef" in effect)) {
+    return undefined;
+  }
+  const source = spellPresentationSourceForProcedure(
+    state,
+    context,
+    effect.sourceCombatantId,
+    effect.sourceProcedureRef,
+  );
+  if (source === undefined) return undefined;
+  const help = subject.actorId !== subject.targetId;
+  const label = `${help ? "Help escape" : "Escape"} ${source.invocation.spell.name}`;
+  return {
+    label,
+    summary: help
+      ? `Use an action while within reach of the target to attempt to end ${source.invocation.spell.name}.`
+      : `Use an action to attempt to end ${source.invocation.spell.name}.`,
+  };
+}
+
+type FixedCostMovementReplacementSubject = Extract<
+  IntrinsicBattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "fixedCostMovementReplacement";
+  }
+>;
+
+function fixedCostMovementReplacementPresentationText(
+  state: BattleState,
+  subject: FixedCostMovementReplacementSubject,
+): { readonly label: string; readonly summary: string } | undefined {
+  const actor = state.combatants.get(subject.actorId);
+  const effect = spellActiveEffectForExecutionRef(
+    actor?.activeEffects ?? [],
+    subject.effectRef,
+  );
+  if (effect?.kind !== "fixedCostMovementReplacement") return undefined;
+  const boundEffect = boundFixedCostMovementReplacementEffect(state, effect);
+  if (boundEffect === undefined) return undefined;
+  return {
+    label: "Jump",
+    summary: `Spend ${boundEffect.movementCostFeet} feet of Movement to jump up to ${maxFixedCostMovementReplacementDistanceFeet(state, subject.actorId, boundEffect)} feet using table-supplied landing facts.`,
+  };
+}
+
+function spellActiveEffectInBattle(
+  state: BattleState,
+  effectRef: BattleEffectExecutionRef,
+): ReplayAddressableSpellActiveEffect | undefined {
+  for (const combatant of state.combatants.values()) {
+    const effect = spellActiveEffectForExecutionRef(
+      combatant.activeEffects,
+      effectRef,
     );
     if (effect !== undefined) return effect;
   }

@@ -15,6 +15,10 @@ import {
 import { Result, Option } from "effect";
 
 import {
+  projectCharacterSheetClassFeature,
+  type CharacterSheetClassFeatureFacts,
+} from "./character-feature-projection.ts";
+import {
   RITUAL_ADDITIONAL_CASTING_TIME_MINUTES,
   characterSheetIssue,
   getRequiredUnit,
@@ -30,15 +34,12 @@ import {
   type SpellcastingCharacterBuild,
 } from "./sheet-types.ts";
 
-type CharacterSheetClassFeatureRecord = Extract<
-  UnitRecord,
-  { readonly kind: "class_feature" }
->;
 type SpellbookRitualAccessMechanics = Extract<
-  CharacterSheetClassFeatureRecord["mechanics"],
+  CharacterSheetClassFeatureFacts["mechanics"],
   { readonly family: "spellbook_ritual_access" }
 >;
-type CharacterSheetSpellbookRitualFeature = CharacterSheetClassFeatureRecord & {
+type CharacterSheetSpellbookRitualFeature = CharacterSheetClassFeatureFacts & {
+  readonly unitId: UnitRecord["id"];
   readonly mechanics: SpellbookRitualAccessMechanics;
 };
 
@@ -100,7 +101,7 @@ export function characterSheetSpellbookRitualAccessesForBuild(input: {
         tag: "spellbookRitual",
         spell: spell.success,
         spellcastingSourceUnitId: source.sourceUnitId,
-        featureUnitId: feature.success.id,
+        featureUnitId: feature.success.unitId,
       });
     }
   }
@@ -232,7 +233,7 @@ function characterSheetSpellbookRitualAccessForSpell(
       tag: "spellbookRitual",
       spell: spell.success,
       spellcastingSourceUnitId: source.sourceUnitId,
-      featureUnitId: feature.success.id,
+      featureUnitId: feature.success.unitId,
     });
   }
   return characterSheetIssue(
@@ -281,7 +282,7 @@ function optionalSpellbookRitualAccessFeatureForSource(input: {
     build: input.build,
     unitLibrary: input.unitLibrary,
     classUnitId: input.sourceUnitId,
-    featureUnitId: feature.success.id,
+    featureUnitId: feature.success.unitId,
   });
   /* v8 ignore start -- @preserve -- The spellcasting source and its class feature grants are correlated by parsed Character Build facts. */
   if (Result.isFailure(sourceGrantsFeature)) {
@@ -330,8 +331,12 @@ function optionalSpellbookRitualAccessFeatureForBuild(
       continue;
     }
     /* v8 ignore stop -- @preserve */
-    if (isSpellbookRitualAccessFeature(unit.value)) {
-      features.push(unit.value);
+    const projection = projectCharacterSheetClassFeature(unit.value);
+    if (
+      Option.isSome(projection) &&
+      isSpellbookRitualAccessFeature(projection.value)
+    ) {
+      features.push({ unitId: unit.value.id, ...projection.value });
     }
   }
   if (features.length === 0) {
@@ -398,12 +403,11 @@ const CHARACTER_SHEET_SPELLBOOK_RITUAL_REJECTED_ROUTE = [
 ] as const satisfies CharacterSheetSpellbookRitualInvocationRoute;
 
 function isSpellbookRitualAccessFeature(
-  unit: UnitRecord,
-): unit is CharacterSheetSpellbookRitualFeature {
+  facts: CharacterSheetClassFeatureFacts,
+): facts is Omit<CharacterSheetSpellbookRitualFeature, "unitId"> {
   return (
-    unit.kind === "class_feature" &&
-    unit.mechanics.family === "spellbook_ritual_access" &&
-    unit.mechanics.source === "spellbook" &&
-    unit.mechanics.preparationRequirement === "not_prepared"
+    facts.mechanics.family === "spellbook_ritual_access" &&
+    facts.mechanics.source === "spellbook" &&
+    facts.mechanics.preparationRequirement === "not_prepared"
   );
 }

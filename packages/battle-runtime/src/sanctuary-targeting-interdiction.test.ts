@@ -1683,6 +1683,7 @@ describe("Sanctuary targeting interdiction", () => {
       castSanctuary(battleWithSanctuary(), attackerId),
     );
     const afterDamage = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: damageSourceWarded.state,
       target: combatant(damageSourceWarded.state, wardedId),
       damageAmount: 1,

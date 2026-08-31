@@ -746,39 +746,60 @@ function matchingTrackedOngoingSpellOccurrences(
   );
   const activeEffects = [...state.combatants.values()].flatMap((combatant) =>
     combatant.activeEffects.flatMap((effect) => {
-      if (
-        !isTrackedDispellableOngoingSpellActiveEffect(effect) ||
-        !dispellableActiveEffectMatchesOngoingTarget(effect, target) ||
-        combatant.origin.kind !== "character" ||
-        effect.sourceCombatantId !== combatant.combatantId
-      ) {
-        return [];
-      }
-      const source = characterRetainedSpellProcedureExecution(
-        combatant.origin.execution,
-        effect.sourceProcedureRef,
+      const occurrence = matchingTrackedOngoingSpellActiveEffectOccurrence(
+        combatant,
+        effect,
+        target,
       );
-      if (
-        source === undefined ||
-        (source.procedure !== "objectContactDamage" &&
-          !(
-            source.procedure === "spatialMeleeSpellAttackProxy" &&
-            source.operation === "createAndAttack"
-          ))
-      ) {
-        return [];
-      }
-      return [
-        {
-          kind: "activeEffect" as const,
-          ownerId: combatant.combatantId,
-          effect,
-          sourceSpellLevel: spellInvocationEffectiveSpellLevel(source),
-        },
-      ];
+      return occurrence === undefined ? [] : [occurrence];
     }),
   );
   return [...lightEmitters, ...activeEffects];
+}
+
+function matchingTrackedOngoingSpellActiveEffectOccurrence(
+  combatant: BattleCreatureState,
+  effect: BattleActiveEffect,
+  target: BattleOngoingSpellTarget,
+):
+  | Extract<
+      BattleTrackedOngoingSpellOccurrence,
+      { readonly kind: "activeEffect" }
+    >
+  | undefined {
+  if (combatant.origin.kind !== "character") return undefined;
+  if (!activeEffectMatchesOngoingSpellTarget(effect, target)) {
+    return undefined;
+  }
+  if (effect.sourceCombatantId !== combatant.combatantId) return undefined;
+  const source = characterRetainedSpellProcedureExecution(
+    combatant.origin.execution,
+    effect.sourceProcedureRef,
+  );
+  if (source === undefined) return undefined;
+  if (
+    source.procedure !== "objectContactDamage" &&
+    (source.procedure !== "spatialMeleeSpellAttackProxy" ||
+      source.operation !== "createAndAttack")
+  ) {
+    return undefined;
+  }
+  return {
+    kind: "activeEffect",
+    ownerId: combatant.combatantId,
+    effect,
+    sourceSpellLevel: spellInvocationEffectiveSpellLevel(source),
+  };
+}
+
+function activeEffectMatchesOngoingSpellTarget(
+  effect: BattleActiveEffect,
+  target: BattleOngoingSpellTarget,
+): effect is TrackedDispellableOngoingSpellActiveEffect {
+  return (
+    isTrackedDispellableOngoingSpellActiveEffect(effect) &&
+    dispellableActiveEffectMatchesOngoingTarget(effect, target)
+  );
 }
 
 function spellLightEmitterMatchesOngoingTarget(

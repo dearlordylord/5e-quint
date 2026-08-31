@@ -91,6 +91,7 @@ type SaveGateFailedEffect = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
 >["onFail"];
+type SaveGatePhase = Extract<ActivationPhase, { readonly kind: "save_gate" }>;
 type ModifyRollAdvantageEffect = Extract<
   SaveGateFailedEffect,
   { readonly kind: "modify_roll_advantage" }
@@ -161,6 +162,7 @@ const HUMANOID_PARALYSIS_TARGET_CREATURE_TYPES = [
 ] as const satisfies readonly [CreatureType, ...CreatureType[]];
 const CREATURE_PARALYSIS_BASE_SPELL_LEVEL = 5;
 const CREATURE_PARALYSIS_RANGE_FEET = 90;
+const AREA_RESTRAINT_RANGE_FEET = 90;
 const AREA_CONDITION_IMMUNITY_BASE_SPELL_LEVEL = 2;
 const AREA_CONDITION_IMMUNITY_RANGE_FEET = 60;
 const AREA_CONDITION_IMMUNITY_RADIUS_FEET = 20;
@@ -178,6 +180,66 @@ const WEAPON_DAMAGE_REDUCTION_REPEAT_SAVE_DURATION_UNIT = "minute";
 
 function spellHasActionCastingTime(spell: BattleSpellAdmissionSource): boolean {
   return topLevelSpellCastingTime(spell.mechanics)?.kind === "action";
+}
+
+function allAdmissionFactsHold(...facts: readonly boolean[]): boolean {
+  return facts.every(Boolean);
+}
+
+function pointOriginCubeSaveGatePhase(
+  phase: ActivationPhase | undefined,
+): { readonly phase: SaveGatePhase; readonly sideFeet: number } | null {
+  if (phase?.kind !== "save_gate") return null;
+  if (phase.attachment.kind !== "hole") return null;
+  if (phase.attachment.value.kind !== "area") return null;
+  if (phase.attachment.value.origin.kind !== "point_within_range") return null;
+  if (phase.attachment.value.shape.kind !== "cube") return null;
+  return { phase, sideFeet: phase.attachment.value.shape.sideFeet };
+}
+
+function selfOriginConeSaveGatePhase(
+  phase: ActivationPhase | undefined,
+): { readonly phase: SaveGatePhase; readonly lengthFeet: number } | null {
+  if (phase?.kind !== "save_gate") return null;
+  if (phase.attachment.kind !== "area") return null;
+  if (phase.attachment.origin.kind !== "self") return null;
+  if (phase.attachment.shape.kind !== "cone") return null;
+  return { phase, lengthFeet: phase.attachment.shape.lengthFeet };
+}
+
+function hasPointRangeFeet(
+  spell: BattleSpellAdmissionSource,
+  rangeFeet: number,
+): boolean {
+  const range = spell.mechanics.range;
+  return range.kind === "point" && range.feet === rangeFeet;
+}
+
+function hasOneMinuteConcentrationDuration(
+  spell: BattleSpellAdmissionSource,
+): boolean {
+  const duration = spell.mechanics.duration;
+  return (
+    duration.kind === "concentration" &&
+    duration.upTo.unit === "minute" &&
+    duration.upTo.amount === 1
+  );
+}
+
+function hasOneRoundTimedDuration(spell: BattleSpellAdmissionSource): boolean {
+  const duration = spell.mechanics.duration;
+  return (
+    duration.kind === "timed" &&
+    duration.value.unit === "round" &&
+    duration.value.amount === 1
+  );
+}
+
+function isFailedSaveCondition(
+  effect: SaveGateFailedEffect,
+  condition: Condition,
+): boolean {
+  return effect.kind === "apply_condition" && effect.condition === condition;
 }
 
 export function hasSaveGateRepeatSaves(
@@ -659,39 +721,34 @@ export function areaSaveGatedAttackRollAdvantageSpell(
   if (spell.mechanics.family !== "activation") {
     return null;
   }
-  const phase = spell.mechanics.phases[0];
-  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
-  const failedSaveFacts = visibilityGrantingAreaFailedSaveFacts(failedEffect);
+  const saveGate = pointOriginCubeSaveGatePhase(spell.mechanics.phases[0]);
+  if (saveGate === null) return null;
+  const phase = saveGate.phase;
+  const failedSaveFacts = visibilityGrantingAreaFailedSaveFacts(phase.onFail);
   if (
-    spell.mechanics.level !== 1 ||
-    !spellHasActionCastingTime(spell) ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 60 ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.phases.length !== 1 ||
-    phase?.kind !== "save_gate" ||
-    hasSaveGateRepeatSaves(phase) ||
-    phase.ability !== "dex" ||
-    phase.dc.kind !== "caster_spell_save_dc" ||
-    phase.onSuccess.kind !== "none" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "area" ||
-    phase.attachment.value.origin.kind !== "point_within_range" ||
-    phase.attachment.value.shape.kind !== "cube" ||
-    phase.attachment.value.shape.sideFeet !==
-      SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET ||
-    failedSaveFacts === null
+    !allAdmissionFactsHold(
+      spell.mechanics.level === 1,
+      spellHasActionCastingTime(spell),
+      hasPointRangeFeet(spell, 60),
+      hasOneMinuteConcentrationDuration(spell),
+      spell.mechanics.phases.length === 1,
+      !hasSaveGateRepeatSaves(phase),
+      phase.ability === "dex",
+      phase.dc.kind === "caster_spell_save_dc",
+      phase.onSuccess.kind === "none",
+      saveGate.sideFeet === SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET,
+      failedSaveFacts !== null,
+    )
   ) {
     return null;
   }
+  if (failedSaveFacts === null) return null;
 
   return {
     phase,
     targeting: {
       kind: "pointOriginCube",
-      sideFeet: movementFeet(phase.attachment.value.shape.sideFeet),
+      sideFeet: movementFeet(saveGate.sideFeet),
     },
     effect: {
       kind: "saveGatedTargetProjection",
@@ -699,7 +756,7 @@ export function areaSaveGatedAttackRollAdvantageSpell(
       expiresAt: { kind: "concentration", combatantId: actorId },
     },
     illumination: failedSaveFacts.illumination,
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
+    rangeFeet: movementFeet(60),
   };
 }
 
@@ -708,45 +765,66 @@ function visibilityGrantingAreaFailedSaveFacts(
 ): {
   readonly illumination: SaveGateAttackRollAdvantageSpell["illumination"];
 } | null {
-  if (effect?.kind !== "composite" || effect.effects.length !== 3) {
-    return null;
-  }
+  if (effect === undefined) return null;
+  if (effect.kind !== "composite") return null;
+  if (effect.effects.length !== 3) return null;
   const attackAdvantageEffects = effect.effects.filter(
-    (candidate): candidate is ModifyRollAdvantageEffect =>
-      candidate.kind === "modify_roll_advantage" &&
-      candidate.mode === "advantage" &&
-      sameStringSet(candidate.on, ["attack_roll"]),
+    isAttackRollAdvantageEffect,
   );
   const suppressesInvisible = effect.effects.some(
-    (candidate) =>
-      candidate.kind === "suppress_condition_benefit" &&
-      candidate.condition === "invisible",
+    isInvisibleBenefitSuppression,
   );
-  const illuminationEffects = effect.effects.filter(
-    (candidate) => candidate.kind === "emit_dim_illumination",
+  const illumination = singleDimIlluminationFacts(effect.effects);
+  if (attackAdvantageEffects.length !== 1) return null;
+  if (!suppressesInvisible) return null;
+  if (illumination === null) return null;
+  if (illumination.emission.kind !== "dim") return null;
+  return {
+    illumination: {
+      emission: illumination.emission,
+      opaqueCoverInteraction: {
+        kind: illumination.opaqueCoverInteraction.kind,
+      },
+    },
+  };
+}
+
+type DimIlluminationEffect = Extract<
+  SaveGateFailedEffect,
+  { readonly kind: "emit_dim_illumination" }
+>;
+
+function singleDimIlluminationFacts(
+  effects: readonly SaveGateFailedEffect[],
+): ReturnType<typeof illuminationEmissionFactsFromSurface> | null {
+  const illuminationEffects = effects.filter(
+    (candidate): candidate is DimIlluminationEffect =>
+      candidate.kind === "emit_dim_illumination",
   );
-  const illumination =
-    illuminationEffects.length === 1 &&
-    illuminationEffects[0]?.kind === "emit_dim_illumination"
-      ? illuminationEmissionFactsFromSurface({
-          effect: illuminationEffects[0],
-          opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
-        })
-      : null;
-  return attackAdvantageEffects.length === 1 &&
-    attackAdvantageEffects[0] !== undefined &&
-    suppressesInvisible &&
-    illumination?.emission.kind === "dim" &&
-    illumination !== null
-    ? {
-        illumination: {
-          emission: illumination.emission,
-          opaqueCoverInteraction: {
-            kind: illumination.opaqueCoverInteraction.kind,
-          },
-        },
-      }
-    : null;
+  if (illuminationEffects.length !== 1) return null;
+  return illuminationEmissionFactsFromSurface({
+    effect: illuminationEffects[0]!,
+    opaqueCoverInteraction: { kind: "doesNotBlockEmission" },
+  });
+}
+
+function isAttackRollAdvantageEffect(
+  effect: SaveGateFailedEffect,
+): effect is ModifyRollAdvantageEffect {
+  return (
+    effect.kind === "modify_roll_advantage" &&
+    allAdmissionFactsHold(
+      effect.mode === "advantage",
+      sameStringSet(effect.on, ["attack_roll"]),
+    )
+  );
+}
+
+function isInvisibleBenefitSuppression(effect: SaveGateFailedEffect): boolean {
+  return (
+    effect.kind === "suppress_condition_benefit" &&
+    effect.condition === "invisible"
+  );
 }
 
 export function creatureTypeRestrictedCharmSaveGateConditionSpell(
@@ -858,7 +936,7 @@ export function sensoryConditionChoiceSaveGateSpell(
       },
     },
     saveRollModeRule: null,
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
+    rangeFeet: movementFeet(90),
   };
 }
 
@@ -1100,38 +1178,35 @@ export function hitPointBudgetBlindedSaveGateConditionSpell(
   if (spell.mechanics.family !== "activation") {
     return null;
   }
-  const phase = spell.mechanics.phases[0];
-  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
+  const saveGate = selfOriginConeSaveGatePhase(spell.mechanics.phases[0]);
+  if (saveGate === null) return null;
+  const phase = saveGate.phase;
+  const failedEffect = phase.onFail;
   if (
-    spell.mechanics.level !== 1 ||
-    !spellHasActionCastingTime(spell) ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "timed" ||
-    spell.mechanics.duration.value.unit !== "round" ||
-    spell.mechanics.duration.value.amount !== 1 ||
-    spell.mechanics.phases.length !== 1 ||
-    phase?.kind !== "save_gate" ||
-    hasSaveGateRepeatSaves(phase) ||
-    phase.ability !== "con" ||
-    phase.dc.kind !== "caster_spell_save_dc" ||
-    phase.onSuccess.kind !== "none" ||
-    phase.attachment.kind !== "area" ||
-    phase.attachment.origin.kind !== "self" ||
-    phase.attachment.shape.kind !== "cone" ||
-    phase.attachment.shape.lengthFeet !==
-      SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET ||
-    failedEffect?.kind !== "apply_condition" ||
-    failedEffect.condition !== HIT_POINT_BUDGET_FAILED_SAVE_CONDITION
+    !allAdmissionFactsHold(
+      spell.mechanics.level === 1,
+      spellHasActionCastingTime(spell),
+      spell.mechanics.range.kind === "self",
+      hasOneRoundTimedDuration(spell),
+      spell.mechanics.phases.length === 1,
+      !hasSaveGateRepeatSaves(phase),
+      phase.ability === "con",
+      phase.dc.kind === "caster_spell_save_dc",
+      phase.onSuccess.kind === "none",
+      saveGate.lengthFeet === SUPPORTED_SELF_CONE_SAVE_GATE_LENGTH_FEET,
+      isFailedSaveCondition(
+        failedEffect,
+        HIT_POINT_BUDGET_FAILED_SAVE_CONDITION,
+      ),
+    )
   ) {
     return null;
   }
-  const coneShape = phase.attachment.shape;
-
   return {
     phase,
     targeting: () => ({
       kind: "selfOriginCone",
-      lengthFeet: movementFeet(coneShape.lengthFeet),
+      lengthFeet: movementFeet(saveGate.lengthFeet),
     }),
     targetCreatureTypes: null,
     effect: {
@@ -1153,40 +1228,32 @@ export function persistentAreaRestrainedSaveGateConditionSpell(
   if (spell.mechanics.family !== "activation") {
     return null;
   }
-  const phase = spell.mechanics.phases[0];
-  const failedEffect = phase?.kind === "save_gate" ? phase.onFail : undefined;
+  const saveGate = pointOriginCubeSaveGatePhase(spell.mechanics.phases[0]);
+  if (saveGate === null) return null;
+  const phase = saveGate.phase;
+  const failedEffect = phase.onFail;
   if (
-    spell.mechanics.level !== 1 ||
-    !spellHasActionCastingTime(spell) ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== 90 ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.phases.length !== 1 ||
-    phase?.kind !== "save_gate" ||
-    hasSaveGateRepeatSaves(phase) ||
-    phase.ability !== "str" ||
-    phase.dc.kind !== "caster_spell_save_dc" ||
-    phase.onSuccess.kind !== "none" ||
-    phase.attachment.kind !== "hole" ||
-    phase.attachment.value.kind !== "area" ||
-    phase.attachment.value.origin.kind !== "point_within_range" ||
-    phase.attachment.value.shape.kind !== "cube" ||
-    phase.attachment.value.shape.sideFeet !==
-      SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET ||
-    failedEffect?.kind !== "apply_condition" ||
-    failedEffect.condition !== AREA_RESTRAINT_FAILED_SAVE_CONDITION
+    !allAdmissionFactsHold(
+      spell.mechanics.level === 1,
+      spellHasActionCastingTime(spell),
+      hasPointRangeFeet(spell, AREA_RESTRAINT_RANGE_FEET),
+      hasOneMinuteConcentrationDuration(spell),
+      spell.mechanics.phases.length === 1,
+      !hasSaveGateRepeatSaves(phase),
+      phase.ability === "str",
+      phase.dc.kind === "caster_spell_save_dc",
+      phase.onSuccess.kind === "none",
+      saveGate.sideFeet === SUPPORTED_POINT_CUBE_SAVE_GATE_SIDE_FEET,
+      isFailedSaveCondition(failedEffect, AREA_RESTRAINT_FAILED_SAVE_CONDITION),
+    )
   ) {
     return null;
   }
-  const cubeShape = phase.attachment.value.shape;
-
   return {
     phase,
     targeting: () => ({
       kind: "pointOriginCubeExcludingCaster",
-      sideFeet: movementFeet(cubeShape.sideFeet),
+      sideFeet: movementFeet(saveGate.sideFeet),
     }),
     targetCreatureTypes: null,
     effect: {
@@ -1204,7 +1271,7 @@ export function persistentAreaRestrainedSaveGateConditionSpell(
       repeatSave: null,
     },
     saveRollModeRule: null,
-    rangeFeet: movementFeet(spell.mechanics.range.feet),
+    rangeFeet: movementFeet(AREA_RESTRAINT_RANGE_FEET),
   };
 }
 
@@ -1856,19 +1923,19 @@ function isFailedSaveForcedReactionMovementDamageShape(
   effect: Extract<SaveGateFailureEffect, { readonly kind: "damage" }>,
 ): boolean {
   const amount = effect.amount;
-  return (
-    effect.damageType === "psychic" &&
-    amount.kind === "linear_per_level" &&
-    amount.axis === "slot" &&
-    amount.startingAtLevel === 1 &&
-    amount.base.dice === 3 &&
-    amount.base.dieSize === 6 &&
-    amount.base.flat === undefined &&
-    amount.base.spellcastingMod === undefined &&
-    amount.base.abilityModifier === undefined &&
-    amount.perLevel.dice === 1 &&
-    amount.perLevel.dieSize === undefined &&
-    amount.perLevel.flat === undefined
+  if (amount.kind !== "linear_per_level") return false;
+  return allAdmissionFactsHold(
+    effect.damageType === "psychic",
+    amount.axis === "slot",
+    amount.startingAtLevel === 1,
+    amount.base.dice === 3,
+    amount.base.dieSize === 6,
+    amount.base.flat === undefined,
+    amount.base.spellcastingMod === undefined,
+    amount.base.abilityModifier === undefined,
+    amount.perLevel.dice === 1,
+    amount.perLevel.dieSize === undefined,
+    amount.perLevel.flat === undefined,
   );
 }
 
@@ -1971,35 +2038,35 @@ function isSmallThunderSphereSaveGateDamageShape(
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
 ): boolean {
   const damage = phase.onFail;
-  return (
-    spell.mechanics.level === SMALL_THUNDER_SPHERE_BASE_SPELL_LEVEL &&
-    spellHasActionCastingTime(spell) &&
-    spell.mechanics.range.kind === "point" &&
-    spell.mechanics.range.feet === SMALL_THUNDER_SPHERE_RANGE_FEET &&
-    spell.mechanics.duration.kind === "instantaneous" &&
-    phase.ability === "con" &&
-    phase.dc.kind === "caster_spell_save_dc" &&
-    phase.onSuccess.kind === "half_damage" &&
-    phase.attachment.kind === "hole" &&
-    phase.attachment.value.kind === "area" &&
-    phase.attachment.value.origin.kind === "point_within_range" &&
-    phase.attachment.value.shape.kind === "sphere" &&
+  if (spell.mechanics.range.kind !== "point") return false;
+  if (phase.attachment.kind !== "hole") return false;
+  if (phase.attachment.value.kind !== "area") return false;
+  if (phase.attachment.value.origin.kind !== "point_within_range") return false;
+  if (phase.attachment.value.shape.kind !== "sphere") return false;
+  if (damage.kind !== "damage") return false;
+  if (damage.amount.kind !== "linear_per_level") return false;
+  return allAdmissionFactsHold(
+    spell.mechanics.level === SMALL_THUNDER_SPHERE_BASE_SPELL_LEVEL,
+    spellHasActionCastingTime(spell),
+    spell.mechanics.range.feet === SMALL_THUNDER_SPHERE_RANGE_FEET,
+    spell.mechanics.duration.kind === "instantaneous",
+    phase.ability === "con",
+    phase.dc.kind === "caster_spell_save_dc",
+    phase.onSuccess.kind === "half_damage",
     phase.attachment.value.shape.radiusFeet ===
-      SMALL_THUNDER_SPHERE_RADIUS_FEET &&
-    damage.kind === "damage" &&
-    damage.damageType === "thunder" &&
-    damage.amount.kind === "linear_per_level" &&
-    damage.amount.axis === "slot" &&
-    damage.amount.startingAtLevel === SMALL_THUNDER_SPHERE_BASE_SPELL_LEVEL &&
-    damage.amount.base.dice === SMALL_THUNDER_SPHERE_BASE_DAMAGE_DICE &&
-    damage.amount.base.dieSize === SMALL_THUNDER_SPHERE_DAMAGE_DIE_SIZE &&
+      SMALL_THUNDER_SPHERE_RADIUS_FEET,
+    damage.damageType === "thunder",
+    damage.amount.axis === "slot",
+    damage.amount.startingAtLevel === SMALL_THUNDER_SPHERE_BASE_SPELL_LEVEL,
+    damage.amount.base.dice === SMALL_THUNDER_SPHERE_BASE_DAMAGE_DICE,
+    damage.amount.base.dieSize === SMALL_THUNDER_SPHERE_DAMAGE_DIE_SIZE,
     damage.amount.perLevel.dice ===
-      SMALL_THUNDER_SPHERE_SLOT_DAMAGE_DICE_INCREMENT &&
-    damage.amount.perLevel.dieSize === undefined &&
-    damage.amount.base.flat === undefined &&
-    damage.amount.base.spellcastingMod === undefined &&
-    damage.amount.base.abilityModifier === undefined &&
-    damage.amount.perLevel.flat === undefined
+      SMALL_THUNDER_SPHERE_SLOT_DAMAGE_DICE_INCREMENT,
+    damage.amount.perLevel.dieSize === undefined,
+    damage.amount.base.flat === undefined,
+    damage.amount.base.spellcastingMod === undefined,
+    damage.amount.base.abilityModifier === undefined,
+    damage.amount.perLevel.flat === undefined,
   );
 }
 
@@ -2077,19 +2144,19 @@ function isSelfOriginCubeFailedSaveDamageShape(
   effect: Extract<SaveGateFailureEffect, { readonly kind: "damage" }>,
 ): boolean {
   const amount = effect.amount;
-  return (
-    effect.damageType === "thunder" &&
-    amount.kind === "linear_per_level" &&
-    amount.axis === "slot" &&
-    amount.startingAtLevel === 1 &&
-    amount.base.dice === 2 &&
-    amount.base.dieSize === 8 &&
-    amount.base.flat === undefined &&
-    amount.base.spellcastingMod === undefined &&
-    amount.base.abilityModifier === undefined &&
-    amount.perLevel.dice === 1 &&
-    amount.perLevel.dieSize === undefined &&
-    amount.perLevel.flat === undefined
+  if (amount.kind !== "linear_per_level") return false;
+  return allAdmissionFactsHold(
+    effect.damageType === "thunder",
+    amount.axis === "slot",
+    amount.startingAtLevel === 1,
+    amount.base.dice === 2,
+    amount.base.dieSize === 8,
+    amount.base.flat === undefined,
+    amount.base.spellcastingMod === undefined,
+    amount.base.abilityModifier === undefined,
+    amount.perLevel.dice === 1,
+    amount.perLevel.dieSize === undefined,
+    amount.perLevel.flat === undefined,
   );
 }
 

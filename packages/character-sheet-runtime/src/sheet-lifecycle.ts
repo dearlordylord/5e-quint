@@ -62,6 +62,7 @@ import {
   CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
   CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES,
   CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
+  CHARACTER_SHEET_EXHAUSTION_LEVELS,
   characterSheetId,
   characterSheetIssue,
   type CharacterSheet,
@@ -800,14 +801,10 @@ function parseStoredExhaustionLevel(
   value: unknown,
 ): Result.Result<CharacterSheetExhaustionLevel, CharacterSheetIssue> {
   if (value === undefined) return Result.succeed(0);
-  if (
-    typeof value === "number" &&
-    Number.isInteger(value) &&
-    value >= 0 &&
-    value <= 6
-  ) {
-    return Result.succeed(value as CharacterSheetExhaustionLevel);
-  }
+  const exhaustionLevel = CHARACTER_SHEET_EXHAUSTION_LEVELS.find(
+    (candidate) => candidate === value,
+  );
+  if (exhaustionLevel !== undefined) return Result.succeed(exhaustionLevel);
   /* v8 ignore start -- @preserve -- Malformed stored sheet: Exhaustion is not an integer in the closed 0-through-6 range. */
   return characterSheetIssue(
     "Character Sheet Exhaustion level must be an integer from 0 to 6.",

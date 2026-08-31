@@ -53,6 +53,7 @@ import {
   damageLifecycleConcentrationSavingThrowFillCheck,
   damageLifecycleSaveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
 } from "./damage-apply.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHole } from "./staged-condition-repeat-save.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 
 import {
@@ -845,6 +846,8 @@ function resolveBonusActionAttack(
           continuation: {
             kind: "damageOnly",
             concentrationSavingThrows: fillSet.concentrationSavingThrows,
+            saveGatedConditionWithRepeatDamageRepeatSaves:
+              fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
             damageDisposition: fillSet.damageDisposition,
             attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
             ...optionalProperty(
@@ -911,6 +914,9 @@ function resolveBonusActionAttack(
         target: spellReduction.target,
         damageAmount,
         fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+        damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          fillSet.damageRoll.holeId,
+        ),
       });
     if (saveGatedConditionWithRepeatSaveCheck.tag === "needsHoles") {
       return needsHolesResult(spellReducedState, input.subject, [
@@ -936,8 +942,13 @@ function resolveBonusActionAttack(
       attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
       weaponDamageDiceRollChoice: selectedDamageDiceChoice ?? undefined,
       concentrationSavingThrow: primaryConcentrationSavingThrow,
-      saveGatedConditionWithRepeatDamageRepeatSaves:
-        fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
+        occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+          fillSet.damageRoll.holeId,
+        ),
+      },
       linkedDefenseResistanceDamageShareConcentrationSavingThrows:
         fillSet.concentrationSavingThrows,
       spatialFacts: fillSet.targetSpatialFacts,

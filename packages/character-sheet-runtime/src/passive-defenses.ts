@@ -20,6 +20,10 @@ import type {
 import { Result, Option } from "effect";
 
 import {
+  projectCharacterSheetClassFeature,
+  type CharacterSheetClassFeatureFacts,
+} from "./character-feature-projection.ts";
+import {
   characterSheetIssue,
   type CharacterSheet,
   type CharacterSheetAuraOfCourage,
@@ -242,9 +246,8 @@ export function empoweredEvocationDamageRollModifier(input: {
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- The owned feature Unit failed the exact spell-damage modifier profile used to admit this operation. */
   if (
-    featureOwned.success.kind !== "class_feature" ||
     featureOwned.success.mechanics.family !==
-      "spell_damage_roll_ability_modifier"
+    "spell_damage_roll_ability_modifier"
   ) {
     return characterSheetIssue(
       "Empowered Evocation requires supported spell damage roll modifier facts.",
@@ -480,7 +483,10 @@ function ownedClassFeature(
     readonly unitLibrary: UnitCatalog;
   },
   featureUnitId: UnitRecord["id"],
-): Result.Result<UnitRecord | undefined, CharacterSheetIssue> {
+): Result.Result<
+  CharacterSheetClassFeatureFacts | undefined,
+  CharacterSheetIssue
+> {
   if (
     !characterBuildFeatureUnitIds(input.build, input.unitLibrary).includes(
       featureUnitId,
@@ -495,7 +501,8 @@ function ownedClassFeature(
   }
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Internal projection invariant: V8 maps the non-class-feature edge to this conditional, but characterBuildFeatureUnitIds yields only ids admitted as class-feature Units. */
-  if (unit.value.kind === "class_feature") return Result.succeed(unit.value);
+  const projection = projectCharacterSheetClassFeature(unit.value);
+  if (Option.isSome(projection)) return Result.succeed(projection.value);
   return characterSheetIssue(`${featureUnitId} is not a class feature Unit.`);
   /* v8 ignore stop -- @preserve */
 }

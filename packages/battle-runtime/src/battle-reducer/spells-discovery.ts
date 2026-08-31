@@ -641,15 +641,22 @@ export function spellInvocationCasterPrerequisiteIsMet(
           effect.effectRef === invocation.activeEffect.effectRef &&
           effect.sourceCombatantId === actor.combatantId,
       )) &&
-    (invocation.procedure !== "spatialMeleeSpellAttackProxy" ||
-      invocation.operation !== "repositionAndAttack" ||
-      actor.activeEffects.some(
-        (effect) =>
-          effect.kind === "spatialMeleeSpellAttackProxy" &&
-          effect.effectRef === invocation.activeEffect.effectRef &&
-          effect.sourceCombatantId === actor.combatantId,
-      )) &&
+    spatialMeleeSpellAttackProxyPrerequisiteIsMet(actor, invocation) &&
     movableLightManifestationPrerequisiteIsMet(actor, invocation)
+  );
+}
+
+function spatialMeleeSpellAttackProxyPrerequisiteIsMet(
+  actor: BattleCreatureState,
+  invocation: BattleExecutableSpellInvocation,
+): boolean {
+  if (invocation.procedure !== "spatialMeleeSpellAttackProxy") return true;
+  if (invocation.operation !== "repositionAndAttack") return true;
+  return actor.activeEffects.some(
+    (effect) =>
+      effect.kind === "spatialMeleeSpellAttackProxy" &&
+      effect.effectRef === invocation.activeEffect.effectRef &&
+      effect.sourceCombatantId === actor.combatantId,
   );
 }
 
@@ -657,15 +664,13 @@ function movableLightManifestationPrerequisiteIsMet(
   actor: BattleCreatureState,
   invocation: BattleExecutableSpellInvocation,
 ): boolean {
-  return (
-    invocation.procedure !== "movableLightManifestation" ||
-    invocation.operation !== "reposition" ||
-    actor.activeEffects.some(
-      (effect) =>
-        effect.kind === "movableLightManifestation" &&
-        effect.effectRef === invocation.activeEffectRef &&
-        effect.sourceCombatantId === actor.combatantId,
-    )
+  if (invocation.procedure !== "movableLightManifestation") return true;
+  if (invocation.operation !== "reposition") return true;
+  return actor.activeEffects.some(
+    (effect) =>
+      effect.kind === "movableLightManifestation" &&
+      effect.effectRef === invocation.activeEffectRef &&
+      effect.sourceCombatantId === actor.combatantId,
   );
 }
 

@@ -29,7 +29,11 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { MovementFeet, type DifficultyClass } from "@dnd/shared/types";
+import {
+  MovementFeet,
+  type DamageType,
+  type DifficultyClass,
+} from "@dnd/shared/types";
 import type { DiceExpr } from "@dnd/surface/surface/types";
 import * as Result from "effect/Result";
 import {
@@ -62,6 +66,7 @@ import {
   applyBattleHitPointDamage,
   applyHpHealing,
   breakBattleConcentration,
+  resolveSaveGatedConditionDamageRepeatSave,
 } from "./damage-apply.ts";
 import { damageAmountByTypeAfterTargetAdjustments } from "./damage-helpers.ts";
 import {
@@ -93,6 +98,7 @@ import {
 } from "./ongoing-feature-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { scoreModifier } from "./domain-helpers.ts";
+import { saveGatedConditionDamageOccurrenceKeyForHoleTarget } from "./staged-condition-repeat-save.ts";
 import { combatantShapeShiftingSuppressed } from "./shape-shifting.ts";
 import {
   type ResolvedWildShapeEquipmentDisposition,
@@ -338,24 +344,31 @@ export function resolveUnitFeatureHeldWeaponActivation(
       "Sacred Weapon requires a selected held Melee weapon.",
     );
   }
-  const resource = actor.origin.resources.find(
-    (candidate) =>
-      candidate.resourcePoolRef ===
-      unitFeature.sacredWeapon.spends.resourcePoolRef,
+  const resource = availableSacredWeaponResource(
+    actor,
+    unitFeature.sacredWeapon.spends.resourcePoolRef,
   );
-  if (resource === undefined || !resourceHasUsesRemaining(resource)) {
+  if (resource === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
       "Sacred Weapon has no Channel Divinity uses remaining.",
     );
   }
-  const spentAction = Result.getOrThrow(
-    spendActivationResource(input.state.currentTurnResources, {
+  const spentAction = spendActivationResource(
+    input.state.currentTurnResources,
+    {
       kind: "action",
       action: unitFeature.sacredWeapon.activationCost.action,
-    }),
+    },
   );
+  if (Result.isFailure(spentAction)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Sacred Weapon requires an available action.",
+    );
+  }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration({
     unit: unitFeature.sacredWeapon.duration.unit,
     amount: unitFeature.sacredWeapon.duration.amount,
@@ -407,7 +420,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
   };
   const nextState = {
     ...input.state,
-    currentTurnResources: spentAction,
+    currentTurnResources: spentAction.success,
     combatants: new Map(input.state.combatants).set(
       actor.combatantId,
       nextActor,
@@ -418,6 +431,18 @@ export function resolveUnitFeatureHeldWeaponActivation(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function availableSacredWeaponResource(
+  actor: CharacterBattleCreatureState,
+  resourcePoolRef: CharacterBattleResourceState["resourcePoolRef"],
+): CharacterBattleResourceState | undefined {
+  const resource = actor.origin.resources.find(
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
+  );
+  return resource !== undefined && resourceHasUsesRemaining(resource)
+    ? resource
+    : undefined;
 }
 
 function resolvePaladinSacredWeaponDismissUnitFeature(
@@ -782,51 +807,170 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
     savingThrowTargetIds,
     relationshipFacts,
   );
-  const damageRollTotal = rolledDiceTotal(fills.value.damageRoll.value);
-  const savingThrows = fills.value.savingThrows;
-  const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
-    (state, targetId) => {
-      const target = state.combatants.get(targetId);
-      /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves every damage target exists, and spending the feature resource preserves combatant-map membership. */
-      if (target === undefined) {
-        return state;
-      }
-      /* v8 ignore stop -- @preserve */
-      const outcome = validation.outcomesByTargetId.get(targetId);
-      const damageBeforeTargetAdjustments =
-        outcome?.succeeded === true
-          ? Math.floor(damageRollTotal / 2)
-          : damageRollTotal;
-      const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+  return resolveMagicActionAreaSaveDamageHealingAfterSpend({
+    input,
+    actor,
+    damageType: unitFeature.damageHealing.damage.damageType,
+    damageTargetIds: validation.damageTargetIds,
+    outcomesByTargetId: validation.outcomesByTargetId,
+    healingTargetId: validation.healingTargetId,
+    damageRoll: fills.value.damageRoll,
+    healingRoll: fills.value.healingRoll,
+    savingThrows: fills.value.savingThrows,
+    damageRepeatSaves: fills.value.damageRepeatSaves,
+    stateAfterSpend,
+  });
+}
+
+type UnitFeatureAreaDamageRepeatSave = Extract<
+  ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+  { readonly tag: "ok" }
+>;
+
+type UnitFeatureAreaDamageEntry = {
+  readonly targetId: CombatantId;
+  readonly damageAmount: number;
+  readonly damageRepeatSave: UnitFeatureAreaDamageRepeatSave;
+};
+
+function resolveUnitFeatureAreaDamageEntries(input: {
+  readonly state: BattleState;
+  readonly damageTargetIds: readonly CombatantId[];
+  readonly outcomesByTargetId: ReadonlyMap<
+    CombatantId,
+    BattleSavingThrowOutcome
+  >;
+  readonly damageRollTotal: number;
+  readonly damageType: DamageType;
+  readonly damageRollHoleId: BattleHoleId;
+  readonly damageRepeatSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[];
+  readonly unmatchedFillMessage: string;
+}):
+  | {
+      readonly tag: "ok";
+      readonly entries: readonly UnitFeatureAreaDamageEntry[];
+    }
+  | Extract<
+      ReturnType<typeof resolveSaveGatedConditionDamageRepeatSave>,
+      { readonly tag: "invalid" | "needsHoles" }
+    > {
+  const entries: UnitFeatureAreaDamageEntry[] = [];
+  for (const targetId of input.damageTargetIds) {
+    const target = input.state.combatants.get(targetId);
+    /* v8 ignore start -- @preserve -- Validation proves every affected target exists in the current battle. */
+    if (target === undefined) continue;
+    /* v8 ignore stop -- @preserve */
+    const damageRollTotal =
+      input.outcomesByTargetId.get(targetId)?.succeeded === true
+        ? Math.floor(input.damageRollTotal / 2)
+        : input.damageRollTotal;
+    const damageAmount = damageAmountByTypeAfterTargetAdjustments(
+      input.state,
+      target,
+      new Map([[input.damageType, damageRollTotal]]),
+    );
+    const damageRepeatSave = resolveSaveGatedConditionDamageRepeatSave({
+      state: input.state,
+      target,
+      damageAmount,
+      fills: input.damageRepeatSaves,
+      damageOccurrenceKey: saveGatedConditionDamageOccurrenceKeyForHoleTarget({
+        holeId: input.damageRollHoleId,
+        targetId,
+      }),
+    });
+    if (damageRepeatSave.tag !== "ok") return damageRepeatSave;
+    entries.push({ targetId, damageAmount, damageRepeatSave });
+  }
+  const acceptedHoleIds = new Set(
+    entries.flatMap((entry) =>
+      entry.damageRepeatSave.holes.map((hole) => hole.holeId),
+    ),
+  );
+  if (
+    input.damageRepeatSaves.some((fill) => !acceptedHoleIds.has(fill.holeId))
+  ) {
+    return { tag: "invalid", message: input.unmatchedFillMessage };
+  }
+  return { tag: "ok", entries };
+}
+
+function applyUnitFeatureAreaDamageEntries(input: {
+  readonly state: BattleState;
+  readonly entries: readonly UnitFeatureAreaDamageEntry[];
+  readonly damageSourceId: CombatantId;
+  readonly spatialFacts: readonly BattleTargetSpatialFact[];
+}): BattleState {
+  return input.entries.reduce<BattleState>((state, entry) => {
+    const target = state.combatants.get(entry.targetId);
+    /* v8 ignore start -- @preserve -- Damage-entry discovery proves every target exists, and damage application preserves combatant-map membership. */
+    if (target === undefined) return state;
+    /* v8 ignore stop -- @preserve */
+    return normalizeBattleGrapples(
+      applyBattleHitPointDamage({
+        saveGatedConditionDamageRepeatSave: entry.damageRepeatSave.context,
         state,
         target,
-        new Map([
-          [
-            unitFeature.damageHealing.damage.damageType,
-            damageBeforeTargetAdjustments,
-          ],
-        ]),
-      );
-      return normalizeBattleGrapples(
-        applyBattleHitPointDamage({
-          state,
-          target,
-          damageAmount,
-          deathFailuresAtZeroHp: 1,
-          damageSourceId: actor.combatantId,
-          spatialFacts: savingThrows.spatialFacts ?? [],
-        }),
-      );
-    },
-    stateAfterSpend,
-  );
-  const healingTarget = stateAfterDamage.combatants.get(
-    validation.healingTargetId,
-  );
-  /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves the healing target exists, and damage application preserves combatant-map membership. */
+        damageAmount: entry.damageAmount,
+        deathFailuresAtZeroHp: 1,
+        damageSourceId: input.damageSourceId,
+        spatialFacts: input.spatialFacts,
+      }),
+    );
+  }, input.state);
+}
+
+function resolveMagicActionAreaSaveDamageHealingAfterSpend(input: {
+  readonly input: UnitFeatureBattleResolutionInput;
+  readonly actor: CharacterBattleCreatureState;
+  readonly stateAfterSpend: BattleState;
+  readonly damageTargetIds: readonly CombatantId[];
+  readonly outcomesByTargetId: ReadonlyMap<
+    CombatantId,
+    BattleSavingThrowOutcome
+  >;
+  readonly healingTargetId: CombatantId;
+  readonly damageType: DamageType;
+  readonly damageRoll: MagicActionAreaSaveDamageHealingRollFill;
+  readonly healingRoll: MagicActionAreaSaveDamageHealingRollFill;
+  readonly savingThrows: MagicActionAreaSaveDamageHealingSavingThrowFill;
+  readonly damageRepeatSaves: readonly MagicActionAreaSaveDamageHealingSavingThrowFill[];
+}): BattleResolutionResult {
+  const damage = resolveUnitFeatureAreaDamageEntries({
+    state: input.input.state,
+    damageTargetIds: input.damageTargetIds,
+    outcomesByTargetId: input.outcomesByTargetId,
+    damageRollTotal: rolledDiceTotal(input.damageRoll.value),
+    damageType: input.damageType,
+    damageRollHoleId: input.damageRoll.holeId,
+    damageRepeatSaves: input.damageRepeatSaves,
+    unmatchedFillMessage:
+      "Magic Action damage repeat save fill does not match a damaged target.",
+  });
+  if (damage.tag === "invalid") {
+    return invalidResult(input.input.state, "invalidFill", damage.message);
+  }
+  if (damage.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      damage.missingHoles,
+    );
+  }
+  const stateAfterDamage = applyUnitFeatureAreaDamageEntries({
+    state: input.stateAfterSpend,
+    entries: damage.entries,
+    damageSourceId: input.actor.combatantId,
+    spatialFacts: input.savingThrows.spatialFacts ?? [],
+  });
+  const healingTarget = stateAfterDamage.combatants.get(input.healingTargetId);
+  /* v8 ignore start -- @preserve -- Validation proves the healing target exists, and damage application preserves combatant-map membership. */
   if (healingTarget === undefined) {
     return invalidResult(
-      input.state,
+      input.input.state,
       "staleSubject",
       "Magic Action healing target is no longer in the battle.",
     );
@@ -835,11 +979,8 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   const stateAfterHealing = {
     ...stateAfterDamage,
     combatants: new Map(stateAfterDamage.combatants).set(
-      validation.healingTargetId,
-      applyHpHealing(
-        healingTarget,
-        rolledDiceTotal(fills.value.healingRoll.value),
-      ),
+      input.healingTargetId,
+      applyHpHealing(healingTarget, rolledDiceTotal(input.healingRoll.value)),
     ),
   };
   return {
@@ -1843,6 +1984,7 @@ type AttackActionAreaSaveDamageReplacementFillSet = {
   readonly damageRoll:
     | AttackActionAreaSaveDamageReplacementRollFill
     | undefined;
+  readonly damageRepeatSaves: readonly AttackActionAreaSaveDamageReplacementSavingThrowFill[];
 };
 
 function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
@@ -1985,43 +2127,60 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const damageRollTotal = rolledDiceTotal(damageRoll.value);
-  const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
-    (state, targetId) => {
-      const target = state.combatants.get(targetId);
-      /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves every affected target exists, and spending the Attack action and feature resource preserves combatant-map membership. */
-      if (target === undefined) {
-        return state;
-      }
-      /* v8 ignore stop -- @preserve */
-      const outcome = validation.outcomesByTargetId.get(targetId);
-      const damageBeforeTargetAdjustments =
-        outcome?.succeeded === true
-          ? Math.floor(damageRollTotal / 2)
-          : damageRollTotal;
-      const damageAmount = damageAmountByTypeAfterTargetAdjustments(
-        state,
-        target,
-        new Map([
-          [
-            unitFeature.breath.damage.damageType.value,
-            damageBeforeTargetAdjustments,
-          ],
-        ]),
-      );
-      return normalizeBattleGrapples(
-        applyBattleHitPointDamage({
-          state,
-          target,
-          damageAmount,
-          deathFailuresAtZeroHp: 1,
-          damageSourceId: actor.combatantId,
-          spatialFacts: fills.value.savingThrows?.spatialFacts ?? [],
-        }),
-      );
-    },
+  return resolveAttackActionAreaSaveDamageAfterSpend({
+    input,
+    actor,
     stateAfterSpend,
-  );
+    damageTargetIds: validation.damageTargetIds,
+    outcomesByTargetId: validation.outcomesByTargetId,
+    damageType: unitFeature.breath.damage.damageType.value,
+    damageRoll,
+    damageRepeatSaves: fills.value.damageRepeatSaves,
+    savingThrows: fills.value.savingThrows,
+  });
+}
+
+function resolveAttackActionAreaSaveDamageAfterSpend(input: {
+  readonly input: UnitFeatureBattleResolutionInput;
+  readonly actor: CharacterBattleCreatureState;
+  readonly stateAfterSpend: BattleState;
+  readonly damageTargetIds: readonly CombatantId[];
+  readonly outcomesByTargetId: ReadonlyMap<
+    CombatantId,
+    BattleSavingThrowOutcome
+  >;
+  readonly damageType: DamageType;
+  readonly damageRoll: AttackActionAreaSaveDamageReplacementRollFill;
+  readonly damageRepeatSaves: readonly AttackActionAreaSaveDamageReplacementSavingThrowFill[];
+  readonly savingThrows: AttackActionAreaSaveDamageReplacementSavingThrowFill;
+}): BattleResolutionResult {
+  const damage = resolveUnitFeatureAreaDamageEntries({
+    state: input.input.state,
+    damageTargetIds: input.damageTargetIds,
+    outcomesByTargetId: input.outcomesByTargetId,
+    damageRollTotal: rolledDiceTotal(input.damageRoll.value),
+    damageType: input.damageType,
+    damageRollHoleId: input.damageRoll.holeId,
+    damageRepeatSaves: input.damageRepeatSaves,
+    unmatchedFillMessage:
+      "Area damage replacement repeat save fill does not match a damaged target.",
+  });
+  if (damage.tag === "invalid") {
+    return invalidResult(input.input.state, "invalidFill", damage.message);
+  }
+  if (damage.tag === "needsHoles") {
+    return needsHolesResult(
+      input.input.state,
+      input.input.subject,
+      damage.missingHoles,
+    );
+  }
+  const stateAfterDamage = applyUnitFeatureAreaDamageEntries({
+    state: input.stateAfterSpend,
+    entries: damage.entries,
+    damageSourceId: input.actor.combatantId,
+    spatialFacts: input.savingThrows.spatialFacts ?? [],
+  });
   return {
     tag: "resolved",
     state: stateAfterDamage,
@@ -2044,7 +2203,14 @@ function attackActionAreaSaveDamageReplacementFills(
     | AttackActionAreaSaveDamageReplacementSavingThrowFill
     | undefined;
   let damageRoll: AttackActionAreaSaveDamageReplacementRollFill | undefined;
-  for (const fill of fills) {
+  const damageRepeatSaves = unitFeatureDamageRepeatSaveFills(
+    fills,
+    attackActionAreaSaveDamageReplacementSavingThrowHoleId(procedureRef),
+  );
+  const damageRepeatSaveSet = new Set<BattleFill>(damageRepeatSaves);
+  for (const fill of fills.filter(
+    (candidate) => !damageRepeatSaveSet.has(candidate),
+  )) {
     if (
       fill.kind === "savingThrowOutcome" &&
       fill.holeId ===
@@ -2097,7 +2263,23 @@ function attackActionAreaSaveDamageReplacementFills(
     };
     /* v8 ignore stop -- @preserve */
   }
-  return { tag: "ok", value: { savingThrows, damageRoll } };
+  return {
+    tag: "ok",
+    value: { savingThrows, damageRoll, damageRepeatSaves },
+  };
+}
+
+function unitFeatureDamageRepeatSaveFills(
+  fills: readonly BattleFill[],
+  primarySavingThrowHoleId: BattleHoleId,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[] {
+  return fills.filter(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome" &&
+      fill.holeId !== primarySavingThrowHoleId,
+  );
 }
 
 function validateAttackActionAreaSaveDamageReplacementSavingThrows(input: {
@@ -2311,6 +2493,7 @@ type MagicActionAreaSaveDamageHealingFillSet = {
     | undefined;
   readonly damageRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
   readonly healingRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
+  readonly damageRepeatSaves: readonly MagicActionAreaSaveDamageHealingSavingThrowFill[];
 };
 
 type MagicActionSaveGatedConditionSavingThrowFill = Extract<
@@ -2581,7 +2764,14 @@ function magicActionAreaSaveDamageHealingFills(
   let healingTarget: MagicActionAreaSaveDamageHealingTargetFill | undefined;
   let damageRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
   let healingRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
-  for (const fill of fills) {
+  const damageRepeatSaves = unitFeatureDamageRepeatSaveFills(
+    fills,
+    magicActionAreaSaveDamageHealingSavingThrowHoleId(procedureRef),
+  );
+  const damageRepeatSaveSet = new Set<BattleFill>(damageRepeatSaves);
+  for (const fill of fills.filter(
+    (candidate) => !damageRepeatSaveSet.has(candidate),
+  )) {
     if (
       fill.kind === "savingThrowOutcome" &&
       fill.holeId ===
@@ -2682,7 +2872,13 @@ function magicActionAreaSaveDamageHealingFills(
   }
   return {
     tag: "ok",
-    value: { savingThrows, healingTarget, damageRoll, healingRoll },
+    value: {
+      savingThrows,
+      healingTarget,
+      damageRoll,
+      healingRoll,
+      damageRepeatSaves,
+    },
   };
 }
 

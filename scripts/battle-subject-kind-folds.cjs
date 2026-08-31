@@ -336,6 +336,12 @@ function extractBattleSubjectKindCases(rootPath) {
       resolvingBindings.delete(node.text);
       return;
     }
+    if (ts.isArrayLiteralExpression(node)) {
+      for (const element of node.elements) {
+        visitSchema(element, resolvingBindings);
+      }
+      return;
+    }
     if (!ts.isCallExpression(node)) return;
     if (
       isSchemaCall(node, "Struct") ||

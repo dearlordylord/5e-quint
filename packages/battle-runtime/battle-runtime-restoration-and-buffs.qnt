@@ -236,11 +236,13 @@ module battleRuntimeRestorationAndBuffs {
               state: resolveFeatherFallSpell(
                 cleaned,
                 target,
-                VisibleCreatureFalls({
+                {
+                  kind: VisibleCreatureFalls({
+                    distanceFeet: fallingCreatureMitigationTriggerRangeFeet,
+                  }),
                   reactor: data.featherFallReactor,
                   fallingCreature: target,
-                  distanceFeet: fallingCreatureMitigationTriggerRangeFeet,
-                }),
+                },
                 data.featherFallTargets,
                 Set(target),
                 data.featherFallTargets.size(),

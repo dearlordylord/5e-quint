@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleep-target-admission
 //
 // The stagedSaveCondition Spell Procedure Profile: action-time Spell Slot
 // casting where creatures chosen in a point-origin Sphere make a Wisdom Saving
@@ -88,18 +89,6 @@ type StagedSaveConditionPhase = Extract<
     ];
   };
 };
-
-type StagedSaveGatePhase = Extract<
-  ActivationPhase,
-  { readonly kind: "save_gate" }
->;
-type StagedSaveConditionFailedEffect = Extract<
-  StagedSaveGatePhase["onFail"],
-  { readonly kind: "composite" }
->["effects"][number];
-type StagedSaveConditionRepeatSave = NonNullable<
-  StagedSaveGatePhase["repeatSaves"]
->[number];
 
 type StagedSaveConditionResolveInput =
   SpellProcedureProfileResolveInput<StagedSaveConditionSpellInvocation>;
@@ -215,57 +204,78 @@ function isStagedSaveConditionPhase(
   phase: ActivationPhase | undefined,
 ): phase is StagedSaveConditionPhase {
   if (phase?.kind !== "save_gate") return false;
-  const repeatSave =
-    phase.repeatSaves?.length === 1 ? phase.repeatSaves[0] : undefined;
+  return (
+    stagedSaveConditionBaseFactsAreSupported(phase) &&
+    stagedSaveConditionAttachmentIsSupported(phase) &&
+    stagedSaveConditionAutomaticSuccessIsSupported(phase) &&
+    stagedSaveConditionFailureIsSupported(phase) &&
+    stagedSaveConditionRepeatSaveIsSupported(phase)
+  );
+}
+
+type SaveGatePhase = Extract<ActivationPhase, { readonly kind: "save_gate" }>;
+
+function stagedSaveConditionBaseFactsAreSupported(
+  phase: SaveGatePhase,
+): boolean {
   return (
     phase.ability === "wis" &&
     phase.dc.kind === "caster_spell_save_dc" &&
-    phase.onSuccess.kind === "none" &&
-    stagedSaveConditionAttachmentIsSupported(phase.attachment) &&
-    hasStagedSaveAutomaticSuccess(phase.autoSuccessIfTarget) &&
-    stagedSaveConditionFailureIsSupported(phase.onFail) &&
-    stagedSaveConditionRepeatIsSupported(repeatSave)
+    phase.onSuccess.kind === "none"
   );
 }
 
 function stagedSaveConditionAttachmentIsSupported(
-  attachment: StagedSaveGatePhase["attachment"],
+  phase: SaveGatePhase,
 ): boolean {
+  const attachment = phase.attachment;
+  if (attachment.kind !== "hole") return false;
+  if (attachment.value.kind !== "area") return false;
+  if (attachment.value.origin.kind !== "point_within_range") return false;
+  if (attachment.value.shape.kind !== "sphere") return false;
   return (
-    attachment.kind === "hole" &&
-    attachment.value.kind === "area" &&
-    attachment.value.origin.kind === "point_within_range" &&
-    attachment.value.shape.kind === "sphere" &&
     attachment.value.shape.radiusFeet ===
-      SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET
+    SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET
   );
 }
 
-function stagedSaveConditionFailureIsSupported(
-  failure: StagedSaveGatePhase["onFail"],
+function stagedSaveConditionAutomaticSuccessIsSupported(
+  phase: SaveGatePhase,
 ): boolean {
-  if (failure.kind !== "composite" || failure.effects.length !== 2) {
-    return false;
-  }
+  const automaticSuccess = phase.autoSuccessIfTarget;
+  if (automaticSuccess?.kind !== "any") return false;
+  if (automaticSuccess.predicates.length !== 2) return false;
+  const [doesNotSleep, exhaustionImmunity] = automaticSuccess.predicates;
+  if (exhaustionImmunity?.kind !== "has_condition_immunity") return false;
   return (
-    isStagedSaveInitialCondition(failure.effects[0]) &&
-    isStagedSaveEscapeAction(failure.effects[1])
+    doesNotSleep?.kind === "does_not_sleep" &&
+    exhaustionImmunity.condition === "exhaustion"
   );
 }
 
-function isStagedSaveInitialCondition(
-  effect: StagedSaveConditionFailedEffect | undefined,
+function stagedSaveConditionFailureIsSupported(phase: SaveGatePhase): boolean {
+  const failure = phase.onFail;
+  if (failure.kind !== "composite") return false;
+  if (failure.effects.length !== 2) return false;
+  return (
+    isIncapacitatedFailure(failure.effects[0]) &&
+    isShakeAwakeEscape(failure.effects[1])
+  );
+}
+
+function isIncapacitatedFailure(
+  effect: SaveGatePhase["onFail"] | undefined,
 ): boolean {
   return (
     effect?.kind === "apply_condition" && effect.condition === "incapacitated"
   );
 }
 
-function isStagedSaveEscapeAction(
-  effect: StagedSaveConditionFailedEffect | undefined,
+function isShakeAwakeEscape(
+  effect: SaveGatePhase["onFail"] | undefined,
 ): boolean {
+  if (effect?.kind !== "target_effect_escape_action") return false;
   return (
-    effect?.kind === "target_effect_escape_action" &&
     effect.actor === "another_creature" &&
     effect.cost === "action" &&
     effect.method === "shake_awake" &&
@@ -273,30 +283,26 @@ function isStagedSaveEscapeAction(
   );
 }
 
-function stagedSaveConditionRepeatIsSupported(
-  repeatSave: StagedSaveConditionRepeatSave | undefined,
+function stagedSaveConditionRepeatSaveIsSupported(
+  phase: SaveGatePhase,
 ): boolean {
+  const repeatSaves = phase.repeatSaves ?? [];
+  if (repeatSaves.length !== 1) return false;
+  const repeatSave = repeatSaves[0];
+  if (repeatSave === undefined) return false;
   return (
-    repeatSave?.cadence === "end_of_target_turn" &&
+    repeatSave.cadence === "end_of_target_turn" &&
     repeatSave.rollMode === undefined &&
     repeatSave.onSuccess === "ends_on_target" &&
-    repeatSave.onFailAgain?.kind === "apply_condition" &&
-    repeatSave.onFailAgain.condition === "unconscious"
+    isUnconsciousFailure(repeatSave.onFailAgain)
   );
 }
 
-function hasStagedSaveAutomaticSuccess(
-  automaticSuccess: Extract<
-    ActivationPhase,
-    { readonly kind: "save_gate" }
-  >["autoSuccessIfTarget"],
+function isUnconsciousFailure(
+  effect: SaveGatePhase["onFail"] | undefined,
 ): boolean {
   return (
-    automaticSuccess?.kind === "any" &&
-    automaticSuccess.predicates.length === 2 &&
-    automaticSuccess.predicates[0]?.kind === "does_not_sleep" &&
-    automaticSuccess.predicates[1]?.kind === "has_condition_immunity" &&
-    automaticSuccess.predicates[1].condition === "exhaustion"
+    effect?.kind === "apply_condition" && effect.condition === "unconscious"
   );
 }
 

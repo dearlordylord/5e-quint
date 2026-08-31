@@ -4,9 +4,8 @@ import type { IdGen } from "./tracer-rule-labels.ts";
 
 import { traceActionRestriction } from "./tracer-action-restrictions.ts";
 
-import { isIlluminationEffectAtom } from "./tracer-effect-atom.ts";
-
 import { traceDiceAmountScaling } from "./tracer-scaling.ts";
+import { isIlluminationEffectAtom } from "./tracer-effect-illumination.ts";
 
 // Emit scaling nodes for effect atoms that carry a DiceAmount.
 export function traceEffectAtomScaling(

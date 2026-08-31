@@ -20,6 +20,7 @@ import {
 } from "@dnd/surface/surface/types";
 import { Result, Match, Option } from "effect";
 
+import { projectCharacterSheetClassFeature } from "./character-feature-projection.ts";
 import {
   characterSheetIssue,
   type CharacterSheet,
@@ -402,16 +403,18 @@ function druidCircleLandPreparedSpellAccessGrantsForBuild(input: {
     input.unitLibrary,
   )) {
     const unit = input.unitLibrary.getUnit(unitId);
+    const feature = Option.isSome(unit)
+      ? projectCharacterSheetClassFeature(unit.value)
+      : Option.none();
     if (
-      Option.isNone(unit) ||
-      unit.value.kind !== "class_feature" ||
-      unit.value.mechanics.family !== "passive"
+      Option.isNone(feature) ||
+      feature.value.mechanics.family !== "passive"
     ) {
       continue;
     }
-    for (const grant of unit.value.mechanics.grants) {
+    for (const grant of feature.value.mechanics.grants) {
       if (grant.kind === "grant_land_choice_prepared_spell_access") {
-        grants.push({ sourceUnitId: unit.value.id, grant });
+        grants.push({ sourceUnitId: unitId, grant });
       }
     }
   }

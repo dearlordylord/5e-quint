@@ -19,25 +19,21 @@ module battleRuntimeJumpMovement {
   pure def jumpMovementReplacementMaxDistanceFeet(state: BattleState): int =
     fixedCostMovementReplacementMaximumDistanceFeet(30, state.jumpDistanceMultiplier)
 
-  pure def jumpMovementReplacementLandingProjection(
-    landing: JumpMovementLandingFact,
-  ): FixedCostMovementReplacementLanding =
-    match landing {
+  pure def jumpMovementReplacementLandingIsLegal(landing: JumpMovementLandingFact): bool =
+    fixedCostMovementReplacementLandingIsLegal(match landing {
       | JumpLegalLandingNoCheck => FixedCostMovementReplacementLegalLanding
       | JumpLegalLandingAcrobaticsPassed => FixedCostMovementReplacementLegalLanding
       | JumpLegalLandingAcrobaticsFailed => FixedCostMovementReplacementLegalLandingWithProne
       | JumpIllegalLanding => FixedCostMovementReplacementIllegalLanding
-    }
-
-  pure def jumpMovementReplacementLandingIsLegal(landing: JumpMovementLandingFact): bool =
-    fixedCostMovementReplacementLandingIsLegal(
-      jumpMovementReplacementLandingProjection(landing),
-    )
+    })
 
   pure def jumpMovementReplacementLandingAppliesProne(landing: JumpMovementLandingFact): bool =
-    fixedCostMovementReplacementLandingAppliesProne(
-      jumpMovementReplacementLandingProjection(landing),
-    )
+    fixedCostMovementReplacementLandingAppliesProne(match landing {
+      | JumpLegalLandingNoCheck => FixedCostMovementReplacementLegalLanding
+      | JumpLegalLandingAcrobaticsPassed => FixedCostMovementReplacementLegalLanding
+      | JumpLegalLandingAcrobaticsFailed => FixedCostMovementReplacementLegalLandingWithProne
+      | JumpIllegalLanding => FixedCostMovementReplacementIllegalLanding
+    })
 
   pure def activeEffectsContainAvailableJumpMovementReplacement(effects: Set[ActiveEffect]): bool =
     effects.exists(effect => match effect {

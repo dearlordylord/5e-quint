@@ -138,21 +138,26 @@ function afterHitDamageAndIlluminationSpellProjection(
   readonly illumination: AfterHitDamageAndIlluminationSpellInvocation["illumination"];
   readonly expiresAt: AfterHitDamageAndIlluminationSpellInvocation["activeEffect"]["expiresAt"];
 } | null {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return null;
+  }
+  const mechanics = spell.mechanics;
+  if (!hasAfterHitDamageAndIlluminationInvocationShape(mechanics)) {
+    return null;
+  }
+  if (mechanics.duration.kind !== "concentration") {
+    return null;
+  }
+  if (mechanics.attachment.kind !== "hole") {
+    return null;
+  }
+  if (mechanics.attachment.value.kind !== "target") {
+    return null;
+  }
   if (
-    spell.mechanics.family !== "ongoing_effect" ||
-    spell.mechanics.level !== 2 ||
-    spell.mechanics.castingTime.kind !== "bonus_action" ||
-    spell.mechanics.castingTime.trigger?.kind !== "after_hit_with" ||
-    spell.mechanics.castingTime.trigger.attack !==
-      "melee_weapon_or_unarmed_strike" ||
-    spell.mechanics.range.kind !== "self" ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.attachment.kind !== "hole" ||
-    spell.mechanics.attachment.value.kind !== "target" ||
-    spell.mechanics.attachment.value.selection.mode !== "one" ||
-    !hasThreePassiveAfterHitOperations(spell.mechanics)
+    mechanics.duration.upTo.unit !== "minute" ||
+    mechanics.duration.upTo.amount !== 1 ||
+    mechanics.attachment.value.selection.mode !== "one"
   ) {
     return null;
   }
@@ -183,7 +188,7 @@ function afterHitDamageAndIlluminationSpellProjection(
     (effect) => effect.kind === "suppress_condition_benefit",
   );
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.upTo,
+    mechanics.duration.upTo,
   );
   if (
     initialPhase?.kind !== "direct" ||
@@ -194,7 +199,8 @@ function afterHitDamageAndIlluminationSpellProjection(
     damage?.kind !== "damage" ||
     damage.damageType !== "radiant" ||
     damage.amount === undefined ||
-    !hasVisibleAfterHitIllumination(illumination) ||
+    (illumination?.emission.kind !== "bright" &&
+      illumination?.emission.kind !== "brightAndDim") ||
     attackAdvantage?.kind !== "modify_roll_advantage" ||
     attackAdvantage.mode !== "advantage" ||
     attackAdvantage.affects !== "rolls_against_self" ||
@@ -224,32 +230,30 @@ function afterHitDamageAndIlluminationSpellProjection(
   };
 }
 
-function hasThreePassiveAfterHitOperations(
-  mechanics: Extract<
-    BattleSpellAdmissionSource["mechanics"],
-    { readonly family: "ongoing_effect" }
-  >,
+type OngoingEffectSpellMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "ongoing_effect" }
+>;
+
+function hasAfterHitDamageAndIlluminationInvocationShape(
+  mechanics: OngoingEffectSpellMechanics,
 ): boolean {
-  return (
-    mechanics.operations.length === 3 &&
+  if (mechanics.castingTime.kind !== "bonus_action") {
+    return false;
+  }
+  const trigger = mechanics.castingTime.trigger;
+  if (trigger?.kind !== "after_hit_with") {
+    return false;
+  }
+  return [
+    mechanics.level === 2,
+    trigger.attack === "melee_weapon_or_unarmed_strike",
+    mechanics.range.kind === "self",
+    mechanics.operations.length === 3,
     mechanics.operations.every(
       (operation) => operation.trigger.kind === "passive",
-    )
-  );
-}
-
-function hasVisibleAfterHitIllumination(
-  illumination: ReturnType<typeof illuminationEmissionFactsFromSurface> | null,
-): illumination is NonNullable<typeof illumination> & {
-  readonly emission: Extract<
-    NonNullable<typeof illumination>["emission"],
-    { readonly kind: "bright" | "brightAndDim" }
-  >;
-} {
-  return (
-    illumination?.emission.kind === "bright" ||
-    illumination?.emission.kind === "brightAndDim"
-  );
+    ),
+  ].every(Boolean);
 }
 
 function discoverAfterHitDamageAndIlluminationCastAct(): readonly BattleActDiscoveryCandidate[] {

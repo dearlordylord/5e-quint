@@ -108,7 +108,11 @@ export function spellAttackProcedureRouteForDiscoveredAct(
     invocation.procedure === "spellAttackSequence"
       ? spellAttackSequenceRouteHoles(holes)
       : holes,
-    spellAttackDiscoveryOwner(invocation),
+    invocation.procedure === "spellAttackSequence"
+      ? "battleSpellAttackProcedure"
+      : spellInvocationUsesSpellSlot(invocation)
+        ? "battleSpellSlotAndActionEconomy"
+        : "battleActionEconomy",
   );
   const objectTargetBoundary =
     invocation.procedure !== "spellAttackSequence" &&
@@ -126,17 +130,6 @@ export function spellAttackProcedureRouteForDiscoveredAct(
         ]
       : [];
   return nonEmptyRouteEvents([actionEconomyEvent, ...objectTargetBoundary]);
-}
-
-function spellAttackDiscoveryOwner(
-  invocation: NonNullable<ReturnType<typeof spellInvocationForRouteSubject>>,
-): BattleReducerRouteOwnerGroup {
-  if (invocation.procedure === "spellAttackSequence") {
-    return "battleSpellAttackProcedure";
-  }
-  return "resource" in invocation && invocation.resource.tag === "spellSlot"
-    ? "battleSpellSlotAndActionEconomy"
-    : "battleActionEconomy";
 }
 
 function spellAttackSequenceRouteHoles(
@@ -369,7 +362,7 @@ export function saveGatedSpellRouteForDiscoveredAct(
     discoverBattleActsRoute(
       "saveGatedSpell",
       battleReducerRouteHoles(act.initialHoles),
-      "resource" in invocation && invocation.resource.tag === "spellSlot"
+      spellInvocationUsesSpellSlot(invocation)
         ? "battleSpellSlotAndActionEconomy"
         : "battleActionEconomy",
     ),
@@ -421,10 +414,15 @@ function isSlotSpellSubject(
   return (
     subject.tag === "actionSpell" &&
     invocation !== undefined &&
-    "resource" in invocation &&
-    invocation.resource.tag === "spellSlot" &&
+    spellInvocationUsesSpellSlot(invocation) &&
     invocation.procedure === "repeatedDamageAllocation"
   );
+}
+
+function spellInvocationUsesSpellSlot(
+  invocation: NonNullable<ReturnType<typeof spellInvocationForRouteSubject>>,
+): boolean {
+  return "resource" in invocation && invocation.resource.tag === "spellSlot";
 }
 
 function isSaveGatedSpellResolution(

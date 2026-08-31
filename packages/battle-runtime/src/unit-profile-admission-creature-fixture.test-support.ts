@@ -42,12 +42,13 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
-import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import {
   battleAmmunitionStock,
   requiredAmmunitionKinds,
 } from "./battle-ammunition.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { statBlockAttackDamageSelectionUsesOnlyComponentNotation } from "./stat-block-attack-damage-selection.ts";
 import {
   spellCasterId,
   spellTargetId,
@@ -318,13 +319,19 @@ export function statBlockCreature(input: {
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
-    statBlock: input.statBlock,
-    currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
-    tempHp: Hp(0),
-    ammunitionStocks: requiredAmmunitionKinds(attacks).map((ammunition) =>
-      battleAmmunitionStock(ammunition, 20),
-    ),
-    conditions: [],
+    creatureInit: {
+      kind: "statBlock",
+      source: Result.getOrThrow(
+        battleStatBlockCombatantSource(projected.runtime),
+      ),
+      currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
+      tempHp: Hp(0),
+      ammunitionStocks: requiredAmmunitionKinds(attacks).map((ammunition) =>
+        battleAmmunitionStock(ammunition, 20),
+      ),
+      conditions: [],
+      presentation: projected.presentation,
+    },
   };
 }
 
@@ -390,7 +397,6 @@ export function zeroAbilityWeaponAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: weapon.usage === "ranged" ? "dex" : "str",
     abilityModifier: abilityModifier(0),

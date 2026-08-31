@@ -85,6 +85,39 @@ describe("Raw Swarm capability projection", () => {
     ).toBe(true);
   });
 
+  test("admits an omitted operation and rejects explicit undefined", () => {
+    const capabilityWithoutOperation =
+      CANONICAL_CAPABILITY_PROJECTION.capabilities.find(
+        (capability) => capability.operation === undefined,
+      );
+    expect(capabilityWithoutOperation).toBeDefined();
+    if (capabilityWithoutOperation === undefined) return;
+    const projection = {
+      ...CANONICAL_CAPABILITY_PROJECTION,
+      capabilities: [capabilityWithoutOperation],
+    };
+
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(CapabilityProjectionSchema, {
+          onExcessProperty: "error",
+        })(projection),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(CapabilityProjectionSchema, {
+          onExcessProperty: "error",
+        })({
+          ...projection,
+          capabilities: [
+            { ...capabilityWithoutOperation, operation: undefined },
+          ],
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("renders bounded role context without declaration or document bundles", () => {
     for (const role of CAPABILITY_ROLES) {
       const context = capabilityContextForRole(role);

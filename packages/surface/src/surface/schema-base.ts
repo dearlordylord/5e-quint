@@ -43,6 +43,7 @@ export const SURFACE_PROJECTION_KINDS = [
 export const SURFACE_UNIT_REFERENCE_RELATIONS = [
   "excluded-armor-reference",
   "item-reference",
+  "mastery-reference",
   "spell-reference",
   "subclass-choice",
   "unit-reference",
@@ -68,6 +69,17 @@ export const SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS = [
   "stat-block-reference",
 ] as const;
 
+/**
+ * A generic relation is not enough to determine the owning mechanics branch.
+ * These source roles are attached at the schema field that establishes the
+ * relation, then carried by the authored-link collector.
+ */
+export const SURFACE_LINK_SOURCE_ROLES = [
+  "generic",
+  "class-feature-grant",
+  "class-subclass-choice",
+] as const;
+
 export type SurfaceUnitReferenceRelation =
   (typeof SURFACE_UNIT_REFERENCE_RELATIONS)[number];
 export type SurfaceUnitDependencyRelation =
@@ -81,6 +93,11 @@ export type SurfaceProtocolKind = (typeof SURFACE_PROTOCOL_KINDS)[number];
 export type SurfaceProseEvidencePolicy =
   (typeof SURFACE_PROSE_EVIDENCE_POLICIES)[number];
 export type SurfaceProjectionKind = (typeof SURFACE_PROJECTION_KINDS)[number];
+export type SurfaceLinkSourceRole = (typeof SURFACE_LINK_SOURCE_ROLES)[number];
+export type SurfaceSpecializedLinkSourceRole = Exclude<
+  SurfaceLinkSourceRole,
+  "generic"
+>;
 
 export type SurfaceSchemaFieldRole =
   | {
@@ -106,6 +123,8 @@ export type SurfaceSchemaFieldRole =
       readonly category: "reference";
       readonly relation: SurfaceUnitReferenceRelation;
       readonly targetKind: "unit";
+      /** Absence is the single spelling of the generic source role. */
+      readonly sourceRole?: SurfaceSpecializedLinkSourceRole;
     }
   | {
       readonly category: "reference";
@@ -116,6 +135,8 @@ export type SurfaceSchemaFieldRole =
       readonly category: "dependency";
       readonly relation: SurfaceUnitDependencyRelation;
       readonly targetKind: "unit";
+      /** Absence is the single spelling of the generic source role. */
+      readonly sourceRole?: SurfaceSpecializedLinkSourceRole;
     }
   | {
       readonly category: "dependency";
@@ -194,10 +215,21 @@ export function isSurfaceSchemaRole(
       role.category === "reference"
         ? SURFACE_STAT_BLOCK_REFERENCE_RELATIONS
         : SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS;
+    const linkKeys = ["category", "relation", "targetKind"] as const;
+    const linkKeysWithSourceRole = [...linkKeys, "sourceRole"] as const;
+    const hasSourceRole = Object.hasOwn(role, "sourceRole");
     return (
-      exactRoleKeys(role, ["category", "relation", "targetKind"]) &&
+      (exactRoleKeys(role, linkKeys) ||
+        exactRoleKeys(role, linkKeysWithSourceRole)) &&
       typeof role.relation === "string" &&
       typeof role.targetKind === "string" &&
+      (!hasSourceRole ||
+        (role.targetKind === "unit" &&
+          typeof role.sourceRole === "string" &&
+          role.sourceRole !== "generic" &&
+          SURFACE_LINK_SOURCE_ROLES.some(
+            (sourceRole) => sourceRole === role.sourceRole,
+          ))) &&
       ((role.targetKind === "unit" &&
         unitRelations.some((relation) => relation === role.relation)) ||
         (role.targetKind === "statBlock" &&
@@ -213,7 +245,9 @@ function surfaceSchemaRoleKey(value: unknown): string | undefined {
     return `${value.category}:${value.kind}`;
   }
   if (value.category === "reference" || value.category === "dependency") {
-    return `${value.category}:${value.targetKind}:${value.relation}`;
+    const sourceRole =
+      "sourceRole" in value ? (value.sourceRole ?? "generic") : "generic";
+    return `${value.category}:${value.targetKind}:${value.relation}:${sourceRole}`;
   }
   if (value.category === "projection") return `projection:${value.kind}`;
   if (value.category === "prose") return `prose:${value.evidence}`;

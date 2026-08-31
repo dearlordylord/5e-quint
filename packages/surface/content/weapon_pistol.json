@@ -9,7 +9,7 @@
   },
   "id": "weapon_pistol",
   "kind": "weapon",
-  "mastery": "vex",
+  "masteryUnitId": "mastery_vex",
   "name": "Pistol",
   "properties": [
     {

@@ -9,7 +9,7 @@
   },
   "id": "weapon_trident",
   "kind": "weapon",
-  "mastery": "topple",
+  "masteryUnitId": "mastery_topple",
   "name": "Trident",
   "properties": [
     {

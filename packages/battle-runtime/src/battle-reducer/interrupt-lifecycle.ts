@@ -240,7 +240,35 @@ export function resolveInterruptLifecycleDecision(input: {
     );
   }
   if (admittedChoice.tag === "modifier") {
-    return resolveInterruptModifierChoice(input, frame, admittedChoice);
+    const currentChoice = reactionRollOrDamageReductionChoices(
+      input.state,
+      frame,
+    ).find(
+      (candidate): candidate is BattleInterruptProcedureModifierChoice =>
+        candidate.kind === "reactionModifier" &&
+        candidate.responderId === admittedChoice.choice.responderId &&
+        candidate.modifier.procedureRef ===
+          admittedChoice.choice.modifier.procedureRef &&
+        candidate.modifier.kind === admittedChoice.choice.modifier.kind,
+    );
+    if (currentChoice === undefined) {
+      return withoutInterruptRoute(
+        invalidResult(
+          input.state,
+          "staleSubject",
+          "The selected Reaction modifier is no longer bound to this responder.",
+        ),
+      );
+    }
+    return withInterruptRoute(
+      resolveReactionRollOrDamageReduction({
+        state: input.state,
+        frame,
+        choice: currentChoice,
+        selection: admittedChoice.selection,
+        execution: input.execution,
+      }),
+    );
   }
 
   const choice = admittedChoice.choice;
@@ -253,9 +281,7 @@ export function resolveInterruptLifecycleDecision(input: {
       fills: admittedChoice.selection.fills,
       ...optionalProperty(
         "spatialMeleeSpellAttackProxyCommitCheckpoint",
-        frame.continuation.kind === "replay"
-          ? frame.continuation.spatialMeleeSpellAttackProxyCommitCheckpoint
-          : undefined,
+        spatialMeleeSpellAttackProxyCommitCheckpoint(frame),
       ),
     },
   };
@@ -292,9 +318,7 @@ export function resolveInterruptLifecycleDecision(input: {
       replayingInterruptedProcedure: true,
       ...optionalProperty(
         "spatialMeleeSpellAttackProxyCommitCheckpoint",
-        frame.continuation.kind === "replay"
-          ? frame.continuation.spatialMeleeSpellAttackProxyCommitCheckpoint
-          : undefined,
+        spatialMeleeSpellAttackProxyCommitCheckpoint(frame),
       ),
     },
     [admittedActiveInterruptProcedure]: true,
@@ -311,50 +335,12 @@ function interruptChoiceReactionIsUnavailable(
   return resource === "reaction" && !combatantCanTakeReactions(responder);
 }
 
-function resolveInterruptModifierChoice(
-  input: Parameters<typeof resolveInterruptLifecycleDecision>[0],
+function spatialMeleeSpellAttackProxyCommitCheckpoint(
   frame: BattleInterruptCheckpoint,
-  admittedChoice: Extract<
-    NonNullable<ReturnType<typeof admittedInterruptChoice>>,
-    { readonly tag: "modifier" }
-  >,
-): InterruptLifecycleDecisionOutcome {
-  const currentChoice = reactionRollOrDamageReductionChoices(
-    input.state,
-    frame,
-  ).find((candidate) =>
-    reactionModifierChoiceMatches(candidate, admittedChoice.choice),
-  );
-  if (currentChoice === undefined) {
-    return withoutInterruptRoute(
-      invalidResult(
-        input.state,
-        "staleSubject",
-        "The selected Reaction modifier is no longer bound to this responder.",
-      ),
-    );
-  }
-  return withInterruptRoute(
-    resolveReactionRollOrDamageReduction({
-      state: input.state,
-      frame,
-      choice: currentChoice,
-      selection: admittedChoice.selection,
-      execution: input.execution,
-    }),
-  );
-}
-
-function reactionModifierChoiceMatches(
-  candidate: BattleInterruptProcedureChoice,
-  selected: BattleInterruptProcedureModifierChoice,
-): candidate is BattleInterruptProcedureModifierChoice {
-  return (
-    candidate.kind === "reactionModifier" &&
-    candidate.responderId === selected.responderId &&
-    candidate.modifier.procedureRef === selected.modifier.procedureRef &&
-    candidate.modifier.kind === selected.modifier.kind
-  );
+) {
+  return frame.continuation.kind === "replay"
+    ? frame.continuation.spatialMeleeSpellAttackProxyCommitCheckpoint
+    : undefined;
 }
 
 /**

@@ -27,6 +27,8 @@ import {
   STANDARD_LANGUAGES,
   toolProficiencyId,
   type CharacterBuild,
+  type AlignmentMorality,
+  type AlignmentOrder,
   type CharacterBuildBookOfShadowsSpellAccess,
   type CharacterBuildEldritchInvocationRepeatableChoice,
   type CharacterBuildEquipment,
@@ -37,6 +39,7 @@ import {
   type CharacterBuildSpellcastingFocus,
   type CharacterBuildSpellcastingSource,
   type CharacterEquipmentItemId,
+  type CharacterEquipmentItemSlot,
   type CopperPieceAmount,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
@@ -83,6 +86,10 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Result, Option } from "effect";
 
+import {
+  projectCharacterSheetClassFeature,
+  type CharacterSheetClassFeatureFacts,
+} from "./character-feature-projection.ts";
 import { featurePreparedSpellIdsForBuild } from "./class-feature-spells.ts";
 import { isDruidCircleLandChoice } from "./druid-features.ts";
 import { parseHp } from "./hit-points.ts";
@@ -1088,12 +1095,15 @@ function hasSelectedWarlockEldritchInvocation(
       return false;
     }
     const source = unitLibrary.getUnit(feature.selectedFromUnitId);
+    const projection = Option.isSome(source)
+      ? projectCharacterSheetClassFeature(source.value)
+      : Option.none();
     /* v8 ignore start -- @preserve -- Malformed stored build: a selected Pact of the Tome invocation references a missing or non-feature source Unit. */
-    if (Option.isNone(source) || source.value.kind !== "class_feature") {
+    if (Option.isNone(projection)) {
       return false;
     }
     /* v8 ignore stop -- @preserve */
-    const mechanics = source.value.mechanics;
+    const mechanics = projection.value.mechanics;
     return (
       mechanics.family === "feature_choice" &&
       mechanics.optionSource.kind === "class_feature_options" &&
@@ -1306,11 +1316,13 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
   readonly unitLibrary: UnitCatalog;
 }): Result.Result<void, CharacterSheetIssue> {
   const sourceUnit = input.unitLibrary.getUnit(input.languageFact.sourceUnitId);
+  const projection = Option.isSome(sourceUnit)
+    ? projectCharacterSheetClassFeature(sourceUnit.value)
+    : Option.none();
   /* v8 ignore start -- @preserve -- Malformed stored build: a class-feature language fact must reference its admitted passive class-feature Unit. */
   if (
-    Option.isNone(sourceUnit) ||
-    sourceUnit.value.kind !== "class_feature" ||
-    sourceUnit.value.mechanics.family !== "passive"
+    Option.isNone(projection) ||
+    projection.value.mechanics.family !== "passive"
   ) {
     return characterSheetIssue(
       `Character Build class-feature language does not match source Unit ${input.languageFact.sourceUnitId}.`,
@@ -1320,7 +1332,7 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
 
   if (input.languageFact.kind === "classFeatureLanguageChoice") {
     /* v8 ignore start -- @preserve -- Malformed stored build: a choice language fact references a source with no language-choice grant. */
-    return storedClassFeatureLanguageChoiceGrantCount(sourceUnit.value) ===
+    return storedClassFeatureLanguageChoiceGrantCount(projection.value) ===
       undefined
       ? characterSheetIssue(
           `Character Build class-feature language does not match source Unit ${input.languageFact.sourceUnitId}.`,
@@ -1329,7 +1341,7 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
     /* v8 ignore stop -- @preserve */
   }
 
-  const matches = sourceUnit.value.mechanics.grants.some((grant) => {
+  const matches = projection.value.mechanics.grants.some((grant) => {
     if (grant.kind !== "grant_language") return false;
     const language = languageFromSurfaceLanguageId(grant.languageId);
     return (
@@ -1358,20 +1370,22 @@ function storedClassFeatureLanguageProjection(input: {
   const choiceCountsBySourceUnitId = new Map<UnitRecord["id"], number>();
   for (const sourceUnitId of input.ownedClassFeatureUnitIds) {
     const sourceUnit = input.unitLibrary.getUnit(sourceUnitId);
+    const projection = Option.isSome(sourceUnit)
+      ? projectCharacterSheetClassFeature(sourceUnit.value)
+      : Option.none();
     if (
-      Option.isNone(sourceUnit) ||
-      sourceUnit.value.kind !== "class_feature" ||
-      sourceUnit.value.mechanics.family !== "passive"
+      Option.isNone(projection) ||
+      projection.value.mechanics.family !== "passive"
     ) {
       continue;
     }
     const choiceCount = storedClassFeatureLanguageChoiceGrantCount(
-      sourceUnit.value,
+      projection.value,
     );
     if (choiceCount !== undefined) {
       choiceCountsBySourceUnitId.set(sourceUnitId, choiceCount);
     }
-    for (const grant of sourceUnit.value.mechanics.grants) {
+    for (const grant of projection.value.mechanics.grants) {
       if (grant.kind !== "grant_language") continue;
       const language = languageFromSurfaceLanguageId(grant.languageId);
       /* v8 ignore start -- @preserve -- Malformed installed content: a supported fixed-language grant carries an id outside the shared language codec. */
@@ -1397,17 +1411,14 @@ function storedClassFeatureLanguageProjection(input: {
 }
 
 function storedClassFeatureLanguageChoiceGrantCount(
-  sourceUnit: UnitRecord,
+  sourceFacts: CharacterSheetClassFeatureFacts,
 ): number | undefined {
   /* v8 ignore start -- @preserve -- Unsupported stored language source: only admitted passive class-feature Units can contribute a language-choice count. */
-  if (
-    sourceUnit.kind !== "class_feature" ||
-    sourceUnit.mechanics.family !== "passive"
-  ) {
+  if (sourceFacts.mechanics.family !== "passive") {
     return undefined;
     /* v8 ignore stop -- @preserve */
   }
-  const choiceGrantCount = sourceUnit.mechanics.grants.reduce(
+  const choiceGrantCount = sourceFacts.mechanics.grants.reduce(
     (count, grant) =>
       grant.kind === "grant_language_choice" &&
       grant.source === "character_creation_language_tables"
@@ -1421,14 +1432,23 @@ function storedClassFeatureLanguageChoiceGrantCount(
 function parseStoredAlignment(
   value: unknown,
 ): Result.Result<CharacterBuild["alignment"], CharacterSheetIssue> {
-  if (
-    !isRecord(value) ||
-    !ALIGNMENT_ORDERS.some((order) => order === value.order) ||
-    !ALIGNMENT_MORALITIES.some((morality) => morality === value.morality)
-  ) {
+  if (!isRecord(value)) {
     return characterSheetIssue("Character Build requires alignment.");
   }
-  return Result.succeed(value as CharacterBuild["alignment"]);
+  const order = value.order;
+  const morality = value.morality;
+  if (!isAlignmentOrder(order) || !isAlignmentMorality(morality)) {
+    return characterSheetIssue("Character Build requires alignment.");
+  }
+  return Result.succeed({ order, morality });
+}
+
+function isAlignmentOrder(value: unknown): value is AlignmentOrder {
+  return ALIGNMENT_ORDERS.some((order) => order === value);
+}
+
+function isAlignmentMorality(value: unknown): value is AlignmentMorality {
+  return ALIGNMENT_MORALITIES.some((morality) => morality === value);
 }
 
 function parseStoredAbilityScores(
@@ -2235,7 +2255,7 @@ function parseStoredLoadout(
     ...(offHandWeapon.success === undefined
       ? {}
       : { offHandWeapon: offHandWeapon.success }),
-  } as CharacterBuildEquipment["loadout"]);
+  });
 }
 
 function parseStoredMainWeapon(
@@ -2255,13 +2275,10 @@ function parseStoredMainWeapon(
     return characterSheetIssue("Character Build weapon loadout is invalid.");
   }
   /* v8 ignore stop -- @preserve */
-  const parsedItemId = itemId.success as NonNullable<
-    CharacterBuildEquipment["loadout"]["weapon"]
-  >["itemId"];
   if (Object.keys(value).some((key) => key !== "itemId" && key !== "grip")) {
     return characterSheetIssue("Character Build weapon loadout is invalid.");
   }
-  return Result.succeed({ itemId: parsedItemId, grip: "one_handed" });
+  return Result.succeed({ itemId: itemId.success, grip: "one_handed" });
 }
 
 function parseStoredOffHandWeapon(
@@ -2286,16 +2303,19 @@ function parseStoredOffHandWeapon(
   }
   /* v8 ignore stop -- @preserve */
   return Result.succeed({
-    itemId: itemId.success as NonNullable<
-      CharacterBuildEquipment["loadout"]["offHandWeapon"]
-    >["itemId"],
+    itemId: itemId.success,
   });
 }
 
-function parseOptionalEquipmentItemId(
+function parseOptionalEquipmentItemId<
+  const Slot extends CharacterEquipmentItemSlot,
+>(
   value: unknown,
-  slot: "armor" | "shield" | "main" | "off",
-): Result.Result<CharacterEquipmentItemId | undefined, CharacterSheetIssue> {
+  slot: Slot,
+): Result.Result<
+  CharacterEquipmentItemId<Slot> | undefined,
+  CharacterSheetIssue
+> {
   if (value === undefined) return Result.succeed(undefined);
   /* v8 ignore start -- @preserve -- Malformed stored build: an equipment item id is non-string, unparseable, or belongs to a different loadout slot. */
   if (typeof value !== "string") {
@@ -2308,7 +2328,9 @@ function parseOptionalEquipmentItemId(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Result.succeed(characterEquipmentItemId(parsed.success));
+  return Result.succeed(
+    characterEquipmentItemId({ slot, unitId: parsed.success.unitId }),
+  );
 }
 
 function isAbility(value: unknown): value is Ability {

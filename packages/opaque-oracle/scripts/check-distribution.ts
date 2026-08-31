@@ -1,5 +1,5 @@
 import { lstatSync, readFileSync, readdirSync, type Dirent } from "node:fs";
-import { builtinModules } from "node:module";
+import { isBuiltin } from "node:module";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -86,7 +86,7 @@ export function checkOracleDistribution(
       });
     }
   }
-  const importIssue = inspectImports(executable);
+  const importIssue = inspectOracleDistributionImports(executable);
   if (importIssue !== undefined) return Result.fail(importIssue);
   const repositoryRoot = resolve(packageRoot, "../..");
   if (executable.includes(repositoryRoot)) {
@@ -127,37 +127,44 @@ function inspectBytes(path: string): OracleDistributionCheckIssue | undefined {
   return undefined;
 }
 
-function inspectImports(
+export function inspectOracleDistributionImports(
   text: string,
 ): OracleDistributionCheckIssue | undefined {
   const source = ts.createSourceFile(
-    "oracle.mjs",
+    ORACLE_DISTRIBUTION_FILE_NAMES.executable,
     text,
     ts.ScriptTarget.Latest,
-    true,
+    false,
     ts.ScriptKind.JS,
   );
   let issue: OracleDistributionCheckIssue | undefined;
-  const inspectSpecifier = (specifier: ts.Expression | undefined): void => {
+  const inspectModuleSpecifier = (moduleSpecifier: ts.Expression): void => {
+    if (issue !== undefined) return;
+    const specifier = ts.isStringLiteralLike(moduleSpecifier)
+      ? moduleSpecifier.text
+      : moduleSpecifier.getText(source);
     if (
-      issue !== undefined ||
-      specifier === undefined ||
-      !ts.isStringLiteralLike(specifier) ||
-      isBuiltinSpecifier(specifier.text)
+      !ts.isStringLiteralLike(moduleSpecifier) ||
+      !isBuiltinSpecifier(specifier)
     ) {
-      return;
+      issue = { tag: "unresolvedImport", specifier };
     }
-    issue = { tag: "unresolvedImport", specifier: specifier.text };
   };
   const visit = (node: ts.Node): void => {
     if (issue !== undefined) return;
-    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
-      inspectSpecifier(node.moduleSpecifier);
+    if (ts.isImportDeclaration(node)) {
+      inspectModuleSpecifier(node.moduleSpecifier);
+    } else if (
+      ts.isExportDeclaration(node) &&
+      node.moduleSpecifier !== undefined
+    ) {
+      inspectModuleSpecifier(node.moduleSpecifier);
     } else if (
       ts.isCallExpression(node) &&
-      node.expression.kind === ts.SyntaxKind.ImportKeyword
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments.length >= 1
     ) {
-      inspectSpecifier(node.arguments[0]);
+      inspectModuleSpecifier(node.arguments[0]!);
     }
     ts.forEachChild(node, visit);
   };
@@ -166,11 +173,7 @@ function inspectImports(
 }
 
 function isBuiltinSpecifier(specifier: string): boolean {
-  return (
-    specifier.startsWith("node:") ||
-    builtinModules.includes(specifier) ||
-    specifier === "assert/strict"
-  );
+  return isBuiltin(specifier);
 }
 
 function runCli(): void {

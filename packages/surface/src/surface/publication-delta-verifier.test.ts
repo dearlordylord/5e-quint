@@ -636,9 +636,16 @@ describe("Surface publication delta verifier", () => {
     expect(issueKinds(result)).toContain("certificate-invalid");
   }, 180_000);
 
-  test.each(["added", "removed"] as const)(
-    "rejects a %s delta classified as a content change",
-    (kind) => {
+  test.each([
+    ["added", "authored-cross-record-reference"],
+    ["removed", "authored-cross-record-reference"],
+    ["added", "authored-persistent-rule-facts"],
+    ["removed", "authored-persistent-rule-facts"],
+    ["added", "authored-stat-block-fidelity"],
+    ["removed", "authored-stat-block-fidelity"],
+  ] as const)(
+    "rejects a %s delta classified as %s",
+    (kind, semanticClass) => {
       const result = withFixture(
         (paths) => {
           certifyMembershipDelta(paths, kind);
@@ -647,7 +654,7 @@ describe("Surface publication delta verifier", () => {
             paths.certificatePath,
             certificate.replace(
               '"semanticClass": "authored-catalog-membership"',
-              '"semanticClass": "authored-persistent-rule-facts"',
+              `"semanticClass": "${semanticClass}"`,
             ),
           );
         },

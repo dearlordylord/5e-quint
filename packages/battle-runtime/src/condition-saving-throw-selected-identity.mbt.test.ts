@@ -866,15 +866,22 @@ function resolveSleepRepeatSaveAndDeathSaveMixedFrontierRoute(): readonly Battle
     }),
   );
   const repeatSave = requireHole(repeat.holes, "savingThrowOutcome");
-  const deathSave = requireHole(repeat.holes, "deathSavingThrow");
-  const resolved = requireResolvedResult(
+  const repeatSaveFill = savingThrowOutcomeFill(repeatSave, [
+    { targetId, succeeded: false },
+  ]);
+  const deathSaveFrontier = requireNeedsHolesResult(
     resolveBattleSubject({
       state: repeat.state,
       subject,
-      fills: [
-        savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: false }]),
-        deathSavingThrowFill(deathSave, 10),
-      ],
+      fills: [repeatSaveFill],
+    }),
+  );
+  const deathSave = requireHole(deathSaveFrontier.holes, "deathSavingThrow");
+  const resolved = requireResolvedResult(
+    resolveBattleSubject({
+      state: deathSaveFrontier.state,
+      subject,
+      fills: [repeatSaveFill, deathSavingThrowFill(deathSave, 10)],
     }),
   );
   return [
@@ -883,6 +890,7 @@ function resolveSleepRepeatSaveAndDeathSaveMixedFrontierRoute(): readonly Battle
     ...routeEventsOf(cast),
     ...optionalRouteEventsOf(targetTurn),
     ...routeEventsOf(repeat),
+    ...routeEventsOf(deathSaveFrontier),
     ...routeEventsOf(resolved),
   ];
 }

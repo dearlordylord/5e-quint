@@ -66,7 +66,6 @@ import { battleProcedureExecutionRefForTest } from "./sdk-integration.test-suppo
 
 import { authoredStatBlockBattleInit } from "./ammunition-stock.test-support.ts";
 import { requireResultSuccess as requireSuccess } from "./result.test-support.ts";
-
 const settlementScenarios = [
   "init",
   "settle-hit-points-conditions-slots-and-preserved-sheet-state",

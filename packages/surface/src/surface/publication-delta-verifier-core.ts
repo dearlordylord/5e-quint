@@ -20,9 +20,11 @@ type AggregateRecordFamily = (typeof AGGREGATE_RECORD_FAMILIES)[number];
 
 const REVIEWED_CHANGED_RECORD_DELTA_CLASSES = [
   "authored-companion-lifecycle",
+  "authored-cross-record-reference",
   "authored-execution-vocabulary",
   "authored-modal-ongoing-effect",
   "authored-persistent-rule-facts",
+  "authored-stat-block-fidelity",
   "truthful-illumination-emission",
 ] as const;
 const REVIEWED_MEMBERSHIP_DELTA_CLASSES = [

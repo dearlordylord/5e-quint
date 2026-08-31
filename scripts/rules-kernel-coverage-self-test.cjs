@@ -1404,11 +1404,12 @@ function runSelfTest() {
     [
       "import { Schema } from 'effect';",
       "const battleInterruptAttackExecutionSelectionWithFields = (fields) => Schema.Struct(fields);",
-      "export const BattleSubjectSchema = Schema.Union(",
-      "  Schema.Struct({ tag: Schema.Literal('companionLifecycle'), action: Schema.Literals(['temporarilyDismiss', 'reappear']) }),",
+      "const companionLifecycle = Schema.Struct({ tag: Schema.Literal('companionLifecycle'), action: Schema.Literals(['temporarilyDismiss', 'reappear']) });",
+      "export const BattleSubjectSchema = Schema.Union([",
+      "  companionLifecycle,",
       "  Schema.Struct({ tag: Schema.Literal('spawnedCompanionTouchSpellProxy'), spellAction: Schema.Literals(['action', 'bonusAction']) }),",
       "  battleInterruptAttackExecutionSelectionWithFields({ tag: Schema.Literal('runtimeCommand'), command: Schema.Literal('retaliationAttack') }),",
-      ");",
+      "]);",
     ].join("\n") + "\n",
   );
   assert.deepEqual(
@@ -1418,7 +1419,7 @@ function runSelfTest() {
       "companionLifecycle",
       "runtimeCommandRetaliationAttack",
     ],
-    "BattleSubject extraction must follow Schema.Literals and interrupt-selection field wrappers.",
+    "BattleSubject extraction must follow Effect 4 Schema.Union arrays, identifier bindings, Schema.Literals, and interrupt-selection field wrappers.",
   );
   writeFile(sampleBattleSubjectsPath, sampleBattleSubjectsText);
 

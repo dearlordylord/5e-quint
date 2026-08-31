@@ -100,6 +100,20 @@ type RamMovablePersistentAreaProfileShape = {
   readonly ramMaxMoveFeet: number;
   readonly damageAmount: RamMovablePersistentAreaSaveEffect["onFail"]["amount"];
 };
+type RamMovablePersistentAreaMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "ongoing_effect" }
+>;
+type RamMovablePersistentAreaSphereHole = {
+  readonly holeId: string;
+  readonly value: Extract<
+    Extract<
+      RamMovablePersistentAreaMechanics["attachment"],
+      { readonly kind: "hole" }
+    >["value"],
+    { readonly kind: "area" }
+  >;
+};
 
 const RAM_MOVABLE_PERSISTENT_AREA_LEVEL = 2;
 const RAM_MOVABLE_PERSISTENT_AREA_RANGE_FEET = 60;
@@ -115,6 +129,183 @@ const RAM_MOVABLE_PERSISTENT_AREA_LIGHT_DIM_ADDITIONAL_FEET = 20;
 const RAM_MOVABLE_PERSISTENT_AREA_BASE_DAMAGE_DICE = 2;
 const RAM_MOVABLE_PERSISTENT_AREA_DAMAGE_DIE_SIZE = 6;
 const RAM_MOVABLE_PERSISTENT_AREA_DAMAGE_DICE_PER_SLOT_LEVEL = 1;
+
+function ramMovablePersistentAreaDurationTicks(
+  mechanics: RamMovablePersistentAreaMechanics,
+): ElapsedTimeTicks | null {
+  if (mechanics.duration.kind !== "concentration") return null;
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    mechanics.duration.upTo,
+  );
+  return Result.isFailure(durationTicks) ? null : durationTicks.success;
+}
+
+function ramMovablePersistentAreaBasicFactsAreSupported(
+  mechanics: RamMovablePersistentAreaMechanics,
+): boolean {
+  return (
+    mechanics.level === RAM_MOVABLE_PERSISTENT_AREA_LEVEL &&
+    mechanics.castingTime.kind === "action" &&
+    mechanics.range.kind === "point" &&
+    mechanics.range.feet === RAM_MOVABLE_PERSISTENT_AREA_RANGE_FEET &&
+    mechanics.operations.length === RAM_MOVABLE_PERSISTENT_AREA_OPERATION_COUNT
+  );
+}
+
+function ramMovablePersistentAreaDurationIsSupported(
+  mechanics: RamMovablePersistentAreaMechanics,
+): boolean {
+  return (
+    mechanics.duration.kind === "concentration" &&
+    mechanics.duration.upTo.unit === "minute" &&
+    mechanics.duration.upTo.amount ===
+      RAM_MOVABLE_PERSISTENT_AREA_DURATION_MINUTES
+  );
+}
+
+function ramMovablePersistentAreaSphereHole(
+  mechanics: RamMovablePersistentAreaMechanics,
+): RamMovablePersistentAreaSphereHole | null {
+  const attachment = mechanics.attachment;
+  return attachment.kind === "hole" && attachment.value.kind === "area"
+    ? { holeId: attachment.holeId, value: attachment.value }
+    : null;
+}
+
+function ramMovablePersistentAreaSphereIsSupported(
+  sphereHole: RamMovablePersistentAreaSphereHole,
+): boolean {
+  const sphereArea = sphereHole.value;
+  return (
+    sphereArea.origin.kind === "point_within_range" &&
+    sphereArea.shape.kind === "sphere" &&
+    sphereArea.shape.radiusFeet === RAM_MOVABLE_PERSISTENT_AREA_RADIUS_FEET
+  );
+}
+
+function ramMovablePersistentAreaOperations(
+  mechanics: RamMovablePersistentAreaMechanics,
+) {
+  return {
+    endTurn: mechanics.operations.find(
+      (operation) =>
+        operation.trigger.kind ===
+          "on_creature_ends_turn_within_distance_of_area" &&
+        operation.trigger.distanceFeet ===
+          RAM_MOVABLE_PERSISTENT_AREA_END_DISTANCE_FEET,
+    ),
+    ram: mechanics.operations.find(
+      (operation) =>
+        operation.trigger.kind === "on_area_moves_into_creature_space",
+    ),
+    reposition: mechanics.operations.find(
+      (operation) =>
+        operation.trigger.kind === "on_caster_spends_action" &&
+        operation.trigger.cost.kind === "bonus_action" &&
+        operation.effect.kind === "reposition_attachment",
+    ),
+    ignite: mechanics.operations.find(
+      (operation) =>
+        operation.trigger.kind === "passive" &&
+        operation.effect.kind === "ignite_objects",
+    ),
+    light: mechanics.operations.find(
+      (operation) =>
+        operation.trigger.kind === "passive" &&
+        operation.effect.kind === "emit_bright_and_dim_illumination",
+    ),
+  };
+}
+
+type RamMovablePersistentAreaOperations = ReturnType<
+  typeof ramMovablePersistentAreaOperations
+>;
+
+function ramMovablePersistentAreaDamageAmount(
+  operations: RamMovablePersistentAreaOperations,
+  areaHoleId: string,
+): RamMovablePersistentAreaProfileShape["damageAmount"] | null {
+  if (
+    !isRamMovablePersistentAreaSaveEffect(
+      operations.endTurn?.effect,
+      areaHoleId,
+    )
+  ) {
+    return null;
+  }
+  if (
+    !isRamMovablePersistentAreaSaveEffect(operations.ram?.effect, areaHoleId)
+  ) {
+    return null;
+  }
+  return operations.endTurn.effect.onFail.amount;
+}
+
+function ramMovablePersistentAreaRamMaxMoveFeet(
+  operation: RamMovablePersistentAreaOperations["reposition"],
+): number | null {
+  return operation?.effect.kind === "reposition_attachment" &&
+    operation.effect.maxMoveFeet ===
+      RAM_MOVABLE_PERSISTENT_AREA_RAM_MAX_MOVE_FEET
+    ? operation.effect.maxMoveFeet
+    : null;
+}
+
+function ramMovablePersistentAreaIgnitionIsSupported(
+  operation: RamMovablePersistentAreaOperations["ignite"],
+): boolean {
+  return (
+    operation?.effect.kind === "ignite_objects" &&
+    operation.effect.filter.material === "flammable" &&
+    operation.effect.filter.targetRelation === "not_worn_or_carried"
+  );
+}
+
+function ramMovablePersistentAreaLightIsSupported(
+  operation: RamMovablePersistentAreaOperations["light"],
+): boolean {
+  return (
+    operation?.effect.kind === "emit_bright_and_dim_illumination" &&
+    operation.effect.brightRadiusFeet ===
+      RAM_MOVABLE_PERSISTENT_AREA_LIGHT_BRIGHT_RADIUS_FEET &&
+    operation.effect.dimAdditionalFeet ===
+      RAM_MOVABLE_PERSISTENT_AREA_LIGHT_DIM_ADDITIONAL_FEET
+  );
+}
+
+function ramMovablePersistentAreaOperationFacts(
+  operations: RamMovablePersistentAreaOperations,
+  areaHoleId: string,
+): Pick<
+  RamMovablePersistentAreaProfileShape,
+  "damageAmount" | "ramMaxMoveFeet"
+> | null {
+  const damageAmount = ramMovablePersistentAreaDamageAmount(
+    operations,
+    areaHoleId,
+  );
+  if (damageAmount === null) return null;
+  const ramMaxMoveFeet = ramMovablePersistentAreaRamMaxMoveFeet(
+    operations.reposition,
+  );
+  if (ramMaxMoveFeet === null) return null;
+  if (!ramMovablePersistentAreaIgnitionIsSupported(operations.ignite)) {
+    return null;
+  }
+  if (!ramMovablePersistentAreaLightIsSupported(operations.light)) return null;
+  return { damageAmount, ramMaxMoveFeet };
+}
+
+function ramMovablePersistentAreaOperationFactsForSphere(
+  mechanics: RamMovablePersistentAreaMechanics,
+  sphereHole: RamMovablePersistentAreaSphereHole | null,
+): ReturnType<typeof ramMovablePersistentAreaOperationFacts> {
+  if (sphereHole === null) return null;
+  return ramMovablePersistentAreaOperationFacts(
+    ramMovablePersistentAreaOperations(mechanics),
+    sphereHole.holeId,
+  );
+}
 
 function admitRamMovablePersistentArea(
   spell: BattleSpellAdmissionSource,
@@ -162,88 +353,28 @@ function ramMovablePersistentAreaSpell(
   if (spell.mechanics.family !== "ongoing_effect") {
     return null;
   }
-  const durationTicks =
-    spell.mechanics.duration.kind === "concentration"
-      ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
-      : null;
-  const attachment = spell.mechanics.attachment;
-  const sphereHole =
-    attachment.kind === "hole" && attachment.value.kind === "area"
-      ? attachment
-      : null;
-  const sphereArea = sphereHole?.value ?? null;
-  const endTurnOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind ===
-        "on_creature_ends_turn_within_distance_of_area" &&
-      operation.trigger.distanceFeet ===
-        RAM_MOVABLE_PERSISTENT_AREA_END_DISTANCE_FEET,
+  const mechanics = spell.mechanics;
+  const durationTicks = ramMovablePersistentAreaDurationTicks(mechanics);
+  const sphereHole = ramMovablePersistentAreaSphereHole(mechanics);
+  const operationFacts = ramMovablePersistentAreaOperationFactsForSphere(
+    mechanics,
+    sphereHole,
   );
-  const ramOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "on_area_moves_into_creature_space",
-  );
-  const repositionOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "on_caster_spends_action" &&
-      operation.trigger.cost.kind === "bonus_action" &&
-      operation.effect.kind === "reposition_attachment",
-  );
-  const igniteOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "passive" &&
-      operation.effect.kind === "ignite_objects",
-  );
-  const lightOperation = spell.mechanics.operations.find(
-    (operation) =>
-      operation.trigger.kind === "passive" &&
-      operation.effect.kind === "emit_bright_and_dim_illumination",
-  );
-
   if (
-    spell.mechanics.level !== RAM_MOVABLE_PERSISTENT_AREA_LEVEL ||
-    spell.mechanics.castingTime.kind !== "action" ||
-    spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== RAM_MOVABLE_PERSISTENT_AREA_RANGE_FEET ||
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !==
-      RAM_MOVABLE_PERSISTENT_AREA_DURATION_MINUTES ||
-    spell.mechanics.operations.length !==
-      RAM_MOVABLE_PERSISTENT_AREA_OPERATION_COUNT ||
     durationTicks === null ||
-    Result.isFailure(durationTicks) ||
-    sphereArea?.kind !== "area" ||
-    sphereArea?.origin.kind !== "point_within_range" ||
-    sphereArea.shape.kind !== "sphere" ||
-    sphereArea.shape.radiusFeet !== RAM_MOVABLE_PERSISTENT_AREA_RADIUS_FEET ||
-    !isRamMovablePersistentAreaSaveEffect(
-      endTurnOperation?.effect,
-      sphereHole?.holeId,
-    ) ||
-    !isRamMovablePersistentAreaSaveEffect(
-      ramOperation?.effect,
-      sphereHole?.holeId,
-    ) ||
-    repositionOperation?.effect.kind !== "reposition_attachment" ||
-    repositionOperation.effect.maxMoveFeet !==
-      RAM_MOVABLE_PERSISTENT_AREA_RAM_MAX_MOVE_FEET ||
-    igniteOperation?.effect.kind !== "ignite_objects" ||
-    igniteOperation.effect.filter.material !== "flammable" ||
-    igniteOperation.effect.filter.targetRelation !== "not_worn_or_carried" ||
-    lightOperation?.effect.kind !== "emit_bright_and_dim_illumination" ||
-    lightOperation.effect.brightRadiusFeet !==
-      RAM_MOVABLE_PERSISTENT_AREA_LIGHT_BRIGHT_RADIUS_FEET ||
-    lightOperation.effect.dimAdditionalFeet !==
-      RAM_MOVABLE_PERSISTENT_AREA_LIGHT_DIM_ADDITIONAL_FEET
+    sphereHole === null ||
+    !ramMovablePersistentAreaBasicFactsAreSupported(mechanics) ||
+    !ramMovablePersistentAreaDurationIsSupported(mechanics) ||
+    !ramMovablePersistentAreaSphereIsSupported(sphereHole) ||
+    operationFacts === null
   ) {
     return null;
   }
   return {
-    durationTicks: durationTicks.success,
+    durationTicks,
     diameterFeet: RAM_MOVABLE_PERSISTENT_AREA_DIAMETER_FEET,
-    ramMaxMoveFeet: repositionOperation.effect.maxMoveFeet,
-    damageAmount: endTurnOperation.effect.onFail.amount,
+    ramMaxMoveFeet: operationFacts.ramMaxMoveFeet,
+    damageAmount: operationFacts.damageAmount,
   };
 }
 

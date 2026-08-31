@@ -31,6 +31,8 @@ import {
 // UNIT-IDENTITY-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Result } from "effect";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { describe, expect, it } from "vitest";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
@@ -128,7 +130,7 @@ import {
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { battleInitializationIssueMessage } from "./battle-reducer/api-lifecycle.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import type { BattleInterruptSubject } from "./battle-subjects.ts";
 
 type Level1BuffMarkSmiteSelectedIdentityAction =
@@ -2117,6 +2119,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         throw new Error("Expected Hunter's Mark target.");
       }
       state = applyBattleHitPointDamage({
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
         state,
         target: markedTarget,
         damageAmount: 1,
@@ -2208,6 +2211,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         throw new Error("Expected Hex cursed target.");
       }
       state = applyBattleHitPointDamage({
+        saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
         state,
         target: cursedTarget,
         damageAmount: 1,
@@ -2678,7 +2682,7 @@ function level1BuffMarkSmiteSession(
     ],
   });
   if (Result.isFailure(result)) {
-    throw new Error(battleInitializationIssueMessage(result.failure));
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
   return result.success;
 }
@@ -2773,14 +2777,21 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
     statBlockLibrary,
     statBlockId("stat_block_goblin_warrior"),
   );
+  const projected = Result.getOrThrow(projectAuthoredStatBlock(statBlock));
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
-    statBlock,
-    currentHp: Hp(statBlock.statBlock.hp.value),
-    tempHp: Hp(0),
-    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
-    conditions: [],
+    creatureInit: {
+      kind: "statBlock",
+      source: Result.getOrThrow(
+        battleStatBlockCombatantSource(projected.runtime),
+      ),
+      currentHp: Hp(projected.runtime.statBlock.hp.value),
+      tempHp: Hp(0),
+      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+      conditions: [],
+      presentation: projected.presentation,
+    },
   };
 }
 
@@ -2953,7 +2964,6 @@ function zeroAbilityWeaponAttack(
     ...admitCharacterWeaponAttackExecutionWeapon(
       weapon,
       battleObjectId(`main:${weapon.id}`),
-      [],
     ),
     ability: "str",
     abilityModifier: abilityModifier(0),

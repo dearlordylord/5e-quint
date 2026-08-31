@@ -1,4 +1,9 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
+//
+// Focused MBT projection witness connecting the SRD-named BattleState proof
+// witness and identity-free persistent-area and trigger semantic owners to the
+// production runtime without duplicating their reducers.
 
 module battleRuntimeInsectPlagueAreaHazardMbt {
   import battleRuntimeInsectPlagueAreaHazard.* from "./battle-runtime-insect-plague-area-hazard"

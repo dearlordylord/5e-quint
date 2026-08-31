@@ -1,16 +1,26 @@
 # Authored execution identity audit
 
-This audit blocks the final Effect 4 milestone at revision
-`bb03daff98938b993661e7b9ad19481f0572cd5f`. It is a design and inventory
-checkpoint, not a runtime implementation.
+This audit began as the blocking design and inventory checkpoint at revision
+`bb03daff98938b993661e7b9ad19481f0572cd5f`. Its finding and architecture below
+are retained as the historical migration requirement. The integrated source
+through `b8ef76bec`, with certification artifacts refreshed at `0cd6b8133`,
+implements the generic execution vocabulary and the AST-backed authored
+identity boundary described here.
 
-The decisive finding is that authored spell names remain executable procedure,
-active-effect, subject, command, hole, fill, checkpoint, registry-key, and error
-message identities. The current checker rejects direct dispatch through
-`spell.id`, `spell.name`, and provenance, but it does not reject an authored
-name that has already been copied into a new runtime discriminator. The
-machine-readable cohort is
+The original decisive finding was that authored spell names remained
+executable procedure, active-effect, subject, command, hole, fill, checkpoint,
+registry-key, and error-message identities, while the earlier checker rejected
+only direct `spell.id`, `spell.name`, and provenance dispatch. The current
+boundary also rejects authored identity laundered into runtime discriminants,
+keys, and messages. The machine-readable cohort remains
 [`authored-execution-identity-cohort.json`](authored-execution-identity-cohort.json).
+
+Standards review of the integrated tree converged after the final shared
+usage-limit-admission correction. That review found no remaining authored
+identity or PHB+ execution-boundary defect. This is not yet the final issue
+certificate: final Spec review Round 2, proof/MBT evidence, broad gates, and
+live #381/#386 closure remain pending in
+[`final-parity-report.md`](./final-parity-report.md).
 
 ## Canonical architecture
 

@@ -1,6 +1,6 @@
-import { BattlePresentedCheckpointFrontierEnvelopeSchema } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
+import { BattlePresentationEnvelopeSchema } from "./battle-tool-output.ts";
 import { battleEnvelopeMatchesActiveSession } from "./battle-envelope-correlation.ts";
 import { CharacterSessionRowSchema } from "./character-tool-output.ts";
 import {
@@ -67,7 +67,7 @@ export const AdminSessionProjectionSchema = Schema.Union([
       ...AdminMirrorSessionSummaryFields,
       battleState: McpActiveBattleStateSnapshotSchema,
     }),
-    battle: BattlePresentedCheckpointFrontierEnvelopeSchema,
+    battle: BattlePresentationEnvelopeSchema,
     characters: Schema.Array(CharacterSessionRowSchema),
   }).pipe(
     Schema.check(

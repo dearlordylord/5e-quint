@@ -71,6 +71,7 @@ import {
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import {
+  saveGatedConditionDamageOccurrenceKeyForHole,
   saveGatedConditionWithRepeatDamageRepeatSaveFillCheck,
   saveGatedConditionWithRepeatDamageRepeatSaveFillsForTarget,
 } from "./staged-condition-repeat-save.ts";
@@ -878,7 +879,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     }
     /* v8 ignore stop -- @preserve */
   }
-  const damageEventKey = String(
+  const damageOccurrenceKey = saveGatedConditionDamageOccurrenceKeyForHole(
     spellAttackSequencePartDamageDispositionHoleKey(
       input.invocation,
       input.partIndex,
@@ -934,7 +935,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       postRemarkableAthleteMovementState,
       spellReduction.target,
       input.fillSet.saveGatedConditionWithRepeatDamageRepeatSaves,
-      damageEventKey,
+      damageOccurrenceKey,
     );
   const stagedConditionSaveCheck =
     saveGatedConditionWithRepeatDamageRepeatSaveFillCheck({
@@ -942,7 +943,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       target: spellReduction.target,
       damageAmount: spellDamageAmount,
       fills: relevantStagedConditionDamageRepeatSaves,
-      damageEventKey,
+      occurrenceKey: damageOccurrenceKey,
     });
   if (stagedConditionSaveCheck.tag === "needsHoles") {
     return needsHolesResult(
@@ -1021,9 +1022,11 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       spellDamageReductionRoll: spellReductionRoll,
       spellDamageReductionRollHoleForReduction: spellReductionRollHoleForPart,
       sourceDamageRollPenaltyRoll,
-      saveGatedConditionWithRepeatDamageRepeatSaves:
-        relevantStagedConditionDamageRepeatSaves,
-      saveGatedConditionWithRepeatDamageRepeatSaveEventKey: damageEventKey,
+      saveGatedConditionDamageRepeatSave: {
+        kind: "repeatSave",
+        fills: relevantStagedConditionDamageRepeatSaves,
+        occurrenceKey: damageOccurrenceKey,
+      },
       damageSourceId: input.actorId,
       spatialFacts: input.target.spatialFacts,
       ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),

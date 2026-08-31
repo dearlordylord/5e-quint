@@ -7,6 +7,8 @@ import {
 } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { spellTeleportDestinationHole } from "./battle-reducer/spells-holes-fills.ts";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { saveGatedConditionDamageOccurrenceKeyForHole } from "./battle-reducer/staged-condition-repeat-save.ts";
 import {
   saveGatedConditionWithRepeatUnitId,
   mistyStepUnitId,
@@ -267,7 +269,12 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
             combatantId: spellCasterId,
           },
         },
-        "damage",
+        {
+          trigger: "damage",
+          occurrenceKey: saveGatedConditionDamageOccurrenceKeyForHole(
+            holeId("stale-misty-step-hideous-laughter-damage-save"),
+          ),
+        },
       );
 
     expect(

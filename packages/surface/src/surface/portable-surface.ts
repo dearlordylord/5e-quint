@@ -536,16 +536,20 @@ const SUPPORTED_STRUCTURAL_AST_TAGS = new Set<SchemaAST.AST["_tag"]>([
   "BigInt",
   "Boolean",
   "Declaration",
+  "Enum",
   "Literal",
   "Never",
+  "Null",
   "Number",
   "ObjectKeyword",
   "String",
   "Symbol",
+  "TemplateLiteral",
   "Arrays",
   "Objects",
   "Undefined",
   "Union",
+  "UniqueSymbol",
   "Unknown",
   "Void",
 ]);
@@ -555,14 +559,18 @@ const NON_LITERAL_AST_TAGS = new Set<SchemaAST.AST["_tag"]>([
   "BigInt",
   "Boolean",
   "Declaration",
+  "Enum",
   "Never",
+  "Null",
   "Number",
   "ObjectKeyword",
   "String",
   "Symbol",
+  "TemplateLiteral",
   "Arrays",
   "Objects",
   "Undefined",
+  "UniqueSymbol",
   "Unknown",
   "Void",
 ]);
@@ -800,6 +808,7 @@ function isStringDependencyAst(ast: SchemaAST.AST): ast is StringDependencyAst {
 function isNoopDependencyAst(ast: SchemaAST.AST): boolean {
   return (
     ast._tag === "Boolean" ||
+    ast._tag === "Null" ||
     ast._tag === "Number" ||
     ast._tag === "Never" ||
     ast._tag === "Unknown"

@@ -33,6 +33,10 @@ import {
 import { Result, Option } from "effect";
 
 import {
+  projectCharacterSheetClassFeature,
+  type CharacterSheetClassFeatureFacts,
+} from "./character-feature-projection.ts";
+import {
   characterSheetCurrentHp,
   recoverCharacterSheetHitPoints,
 } from "./hit-points.ts";
@@ -531,10 +535,14 @@ export function restSpellSlotRecoveryProfileForBuild(
     const unit = getRequiredUnit(unitLibrary, unitId);
     /* v8 ignore next -- @preserve -- A build-owned recovery feature id must resolve in the same Unit catalog. */
     if (Result.isFailure(unit)) return Result.fail(unit.failure);
-    if (!isRestSpellSlotRecoveryFeature(unit.success)) {
+    const projection = projectCharacterSheetClassFeature(unit.success);
+    if (
+      Option.isNone(projection) ||
+      !isRestSpellSlotRecoveryFeature(projection.value)
+    ) {
       continue;
     }
-    features.push(unit.success);
+    features.push({ unitId: unit.success.id, ...projection.value });
   }
   if (features.length === 0) {
     return characterSheetIssue(
@@ -563,16 +571,13 @@ export function restSpellSlotRecoveryProfileForBuild(
   });
 }
 
-type CharacterSheetClassFeatureRecord = Extract<
-  UnitRecord,
-  { readonly kind: "class_feature" }
->;
 type RestSpellSlotRecoveryMechanics = Extract<
-  CharacterSheetClassFeatureRecord["mechanics"],
+  CharacterSheetClassFeatureFacts["mechanics"],
   { readonly family: "rest_spell_slot_recovery" }
 >;
 type CharacterSheetRestSpellSlotRecoveryFeature =
-  CharacterSheetClassFeatureRecord & {
+  CharacterSheetClassFeatureFacts & {
+    readonly unitId: UnitRecord["id"];
     readonly mechanics: RestSpellSlotRecoveryMechanics;
   };
 type CharacterSheetRestSpellSlotRecoveryProfile = {
@@ -1065,14 +1070,13 @@ function restSpellSlotRecoveryProfileForFeature(input: {
 }
 
 function isRestSpellSlotRecoveryFeature(
-  unit: UnitRecord,
-): unit is CharacterSheetRestSpellSlotRecoveryFeature {
+  facts: CharacterSheetClassFeatureFacts,
+): facts is Omit<CharacterSheetRestSpellSlotRecoveryFeature, "unitId"> {
   return (
-    unit.kind === "class_feature" &&
-    unit.mechanics.family === "rest_spell_slot_recovery" &&
-    unit.mechanics.recoveryTrigger === "short_rest" &&
-    unit.mechanics.resetCadence.kind === "long_rest" &&
-    unit.mechanics.recoveredSlotLevelCap.kind === "half_class_level_rounded_up"
+    facts.mechanics.family === "rest_spell_slot_recovery" &&
+    facts.mechanics.recoveryTrigger === "short_rest" &&
+    facts.mechanics.resetCadence.kind === "long_rest" &&
+    facts.mechanics.recoveredSlotLevelCap.kind === "half_class_level_rounded_up"
   );
 }
 

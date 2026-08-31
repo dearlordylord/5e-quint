@@ -1122,97 +1122,106 @@ export function battleObscurementZones(
     (combatant): readonly BattleObscurementZone[] =>
       combatant.activeEffects.flatMap(
         (effect): readonly BattleObscurementZone[] => {
-          if (effect.kind === "persistentAreaTrait") {
-            const radiusFeet = persistentAreaTraitRadiusFeet(state, effect);
-            return radiusFeet === undefined
-              ? []
-              : [
-                  {
-                    kind: "spellObscurementZone",
-                    sourceProcedureRef: effect.sourceProcedureRef,
-                    sourceCombatantId: effect.sourceCombatantId,
-                    obscurement: "heavilyObscured",
-                    area: {
-                      kind: "pointOriginSphere",
-                      areaId: effect.areaId,
-                      radiusFeet,
-                    },
-                    expiresAt: effect.expiresAt,
-                  },
-                ];
-          }
-          if (effect.kind === "magicalDarknessPointOrigin") {
-            const radiusFeet = magicalDarknessPointOriginRadiusFeet(
-              state,
-              effect,
-            );
-            return radiusFeet === undefined
-              ? []
-              : [
-                  {
-                    kind: "spellMagicalDarknessZone",
-                    sourceProcedureRef: effect.sourceProcedureRef,
-                    sourceCombatantId: effect.sourceCombatantId,
-                    area: {
-                      kind: "pointOriginSphere",
-                      areaId: effect.areaId,
-                      radiusFeet,
-                    },
-                    expiresAt: effect.expiresAt,
-                  },
-                ];
-          }
-          if (effect.kind === "persistentAreaSaveConditionEscape") {
-            const boundEffect = boundPersistentAreaSaveConditionEscapeEffect(
-              state,
-              effect,
-            );
-            return boundEffect === undefined
-              ? []
-              : [
-                  {
-                    kind: "spellObscurementZone",
-                    sourceProcedureRef: effect.sourceProcedureRef,
-                    sourceCombatantId: effect.sourceCombatantId,
-                    obscurement: "lightlyObscured",
-                    area: {
-                      kind: "pointOriginCube",
-                      areaId: effect.areaId,
-                      sideFeet: boundEffect.sideFeet,
-                    },
-                    expiresAt: effect.expiresAt,
-                  },
-                ];
-          }
-          if (effect.kind === "persistentAreaSaveComposite") {
-            const boundEffect = boundPersistentAreaSaveCompositeEffect(
-              state,
-              effect,
-            );
-            return boundEffect === undefined
-              ? []
-              : [
-                  {
-                    kind: "spellObscurementZone",
-                    sourceProcedureRef: effect.sourceProcedureRef,
-                    sourceCombatantId: effect.sourceCombatantId,
-                    obscurement: "heavilyObscured",
-                    area: {
-                      kind: "pointOriginCylinder",
-                      areaId: effect.areaId,
-                      radiusFeet: boundEffect.radiusFeet,
-                      heightFeet: boundEffect.heightFeet,
-                    },
-                    expiresAt: effect.expiresAt,
-                  },
-                ];
-          }
-          return effect.kind === "persistentAreaSaveDamage"
-            ? persistentAreaSaveDamageObscurementZone(state, effect)
-            : [];
+          const directZone = directSpellObscurementZone(state, effect);
+          return directZone.length > 0
+            ? directZone
+            : saveGatedSpellObscurementZone(state, effect);
         },
       ),
   );
+}
+
+function directSpellObscurementZone(
+  state: BattleState,
+  effect: BattleActiveEffect,
+): readonly BattleObscurementZone[] {
+  if (effect.kind === "persistentAreaTrait") {
+    const radiusFeet = persistentAreaTraitRadiusFeet(state, effect);
+    return radiusFeet === undefined
+      ? []
+      : [
+          {
+            kind: "spellObscurementZone",
+            sourceProcedureRef: effect.sourceProcedureRef,
+            sourceCombatantId: effect.sourceCombatantId,
+            obscurement: "heavilyObscured",
+            area: {
+              kind: "pointOriginSphere",
+              areaId: effect.areaId,
+              radiusFeet,
+            },
+            expiresAt: effect.expiresAt,
+          },
+        ];
+  }
+  if (effect.kind !== "magicalDarknessPointOrigin") return [];
+  const radiusFeet = magicalDarknessPointOriginRadiusFeet(state, effect);
+  return radiusFeet === undefined
+    ? []
+    : [
+        {
+          kind: "spellMagicalDarknessZone",
+          sourceProcedureRef: effect.sourceProcedureRef,
+          sourceCombatantId: effect.sourceCombatantId,
+          area: {
+            kind: "pointOriginSphere",
+            areaId: effect.areaId,
+            radiusFeet,
+          },
+          expiresAt: effect.expiresAt,
+        },
+      ];
+}
+
+function saveGatedSpellObscurementZone(
+  state: BattleState,
+  effect: BattleActiveEffect,
+): readonly BattleObscurementZone[] {
+  if (effect.kind === "persistentAreaSaveConditionEscape") {
+    const boundEffect = boundPersistentAreaSaveConditionEscapeEffect(
+      state,
+      effect,
+    );
+    return boundEffect === undefined
+      ? []
+      : [
+          {
+            kind: "spellObscurementZone",
+            sourceProcedureRef: effect.sourceProcedureRef,
+            sourceCombatantId: effect.sourceCombatantId,
+            obscurement: "lightlyObscured",
+            area: {
+              kind: "pointOriginCube",
+              areaId: effect.areaId,
+              sideFeet: boundEffect.sideFeet,
+            },
+            expiresAt: effect.expiresAt,
+          },
+        ];
+  }
+  if (effect.kind === "persistentAreaSaveComposite") {
+    const boundEffect = boundPersistentAreaSaveCompositeEffect(state, effect);
+    return boundEffect === undefined
+      ? []
+      : [
+          {
+            kind: "spellObscurementZone",
+            sourceProcedureRef: effect.sourceProcedureRef,
+            sourceCombatantId: effect.sourceCombatantId,
+            obscurement: "heavilyObscured",
+            area: {
+              kind: "pointOriginCylinder",
+              areaId: effect.areaId,
+              radiusFeet: boundEffect.radiusFeet,
+              heightFeet: boundEffect.heightFeet,
+            },
+            expiresAt: effect.expiresAt,
+          },
+        ];
+  }
+  return effect.kind === "persistentAreaSaveDamage"
+    ? persistentAreaSaveDamageObscurementZone(state, effect)
+    : [];
 }
 
 function persistentAreaSaveDamageObscurementZone(

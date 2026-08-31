@@ -198,9 +198,10 @@ export type UnitChoiceKeyIssue = {
 export function unitChoiceKey(
   value: string,
 ): Result.Result<UnitChoiceKey, UnitChoiceKeyIssue> {
-  return UNIT_CHOICE_KEYS.some((key) => key === value)
-    ? Result.succeed(value as UnitChoiceKey)
-    : Result.fail({ tag: "unsupportedUnitChoiceKey", value });
+  const key = UNIT_CHOICE_KEYS.find((candidate) => candidate === value);
+  return key === undefined
+    ? Result.fail({ tag: "unsupportedUnitChoiceKey", value })
+    : Result.succeed(key);
 }
 
 export type CreationChoiceOptionId = string &

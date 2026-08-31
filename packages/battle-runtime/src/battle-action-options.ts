@@ -65,7 +65,6 @@ export type CharacterWeaponAttackActionOption = {
   readonly kind: "weapon";
   readonly weapon: CharacterWeaponAttackExecutionWeapon;
   readonly weaponObjectId: BattleObjectId;
-  readonly hasWeaponMastery: boolean;
   readonly ability: Ability;
   readonly abilityModifier: AbilityModifier;
   readonly attackBonus?: AttackBonus;

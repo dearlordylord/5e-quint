@@ -1,10 +1,10 @@
 import { Result } from "effect";
 import { describe, expect, test } from "vitest";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { DieRollResult, Hp } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
   type BattleFill,

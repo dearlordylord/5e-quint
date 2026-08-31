@@ -5,7 +5,7 @@ module battleRuntimeSorcererMetamagicHeightenedSelectedIdentityMbt {
 
   type Hole = | NoHole
 
-  type SorcererMetamagicHeightenedSelectedIdentityScenarioOutcome = | Init | HeightenedSaveGatedDamage | HeightenedHideousLaughter | HeightenedGreaseEntrySave | HeightenedGustOfWindEndTurnSave | HeightenedSaveGatedConditionEndTurnSave
+  type SorcererMetamagicHeightenedSelectedIdentityScenarioOutcome = | Init | HeightenedSaveGatedDamage | HeightenedStagedCondition | HeightenedGreaseEntrySave | HeightenedGustOfWindEndTurnSave | HeightenedSaveGatedConditionEndTurnSave
 
   type SorcererMetamagicHeightenedSelectedIdentityWitnessState = {
     magicActionAvailable: bool,
@@ -48,10 +48,10 @@ module battleRuntimeSorcererMetamagicHeightenedSelectedIdentityMbt {
       witnessResolved(NoHole))
   }
 
-  action doResolveHeightenedHideousLaughter = all {
+  action doResolveHeightenedStagedCondition = all {
     qState.protocol.result == WInit,
     recordProjection(
-      false, true, 2, 10, 1, HeightenedHideousLaughter,
+      false, true, 2, 10, 1, HeightenedStagedCondition,
       witnessResolved(NoHole))
   }
 
@@ -78,7 +78,7 @@ module battleRuntimeSorcererMetamagicHeightenedSelectedIdentityMbt {
 
   action step = any {
     doResolveHeightenedSaveGatedDamage,
-    doResolveHeightenedHideousLaughter,
+    doResolveHeightenedStagedCondition,
     doResolveHeightenedGreaseEntrySave,
     doResolveHeightenedGustOfWindEndTurnSave,
     doResolveHeightenedSaveGatedConditionEndTurnSave,

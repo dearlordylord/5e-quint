@@ -1,3 +1,4 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 // UNIT-PROFILE-COVERAGE: runtime-owner stat-block.attack-procedure
 import {
@@ -33,7 +34,10 @@ import {
   BattleStatBlockProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
-import { STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES } from "../battle-action-options.ts";
+import {
+  STAT_BLOCK_ATTACK_ROLL_ADVANTAGE_PREDICATES,
+  type SupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import { StatBlockAttackDamageComponentRef } from "../stat-block-attack-damage-selection.ts";
 import { selectedStatBlockAttackDamageHasCanonicalComponentRefs } from "../statblock-attack-damage-support.ts";
 import {
@@ -217,6 +221,7 @@ export const SpellPostDamageRiderSchema = Schema.Union([
 
 const AttackDamageAbilityModifierChoiceFields = {
   procedureRefs: Schema.NonEmptyArray(BattleProcedureExecutionRef),
+  unitIds: Schema.optionalKey(Schema.Never),
   appliedDamageAbilityModifier: AbilityModifier,
   declinedDamageAbilityModifier: AbilityModifier,
 } as const;
@@ -234,7 +239,6 @@ export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("weapon"),
   weapon: CharacterWeaponAttackExecutionWeaponSchema,
   weaponObjectId: BattleObjectId,
-  hasWeaponMastery: Schema.Boolean,
   ability: AbilitySchema,
   abilityModifier: AbilityModifier,
   attackBonus: Schema.optionalKey(AttackBonus),
@@ -244,22 +248,9 @@ export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
   ),
   damageBonus: Schema.optionalKey(Schema.Number),
   damageTypeChoices: Schema.optionalKey(
-    Schema.NonEmptyArray(DamageTypeSchema).pipe(
-      Schema.refine(
-        (
-          choices,
-        ): choices is readonly [
-          typeof DamageTypeSchema.Type,
-          typeof DamageTypeSchema.Type,
-          ...(typeof DamageTypeSchema.Type)[],
-        ] => choices.length >= 2,
-        {
-          /* v8 ignore next -- @preserve -- Only malformed authored weapon data requests this diagnostic; valid choices are parsed through the two-or-more predicate above. */
-          message:
-            "Weapon attack damage type choices must contain at least two choices.",
-        },
-      ),
-    ),
+    Schema.TupleWithRest(Schema.Tuple([DamageTypeSchema, DamageTypeSchema]), [
+      DamageTypeSchema,
+    ]),
   ),
   alternateAbilityChoices: Schema.optionalKey(
     Schema.NonEmptyArray(
@@ -409,14 +400,21 @@ export const SupportedAttackActionOptionSchema = Schema.Union([
     damageBonus: Schema.optionalKey(Schema.Number),
   }),
   StatBlockAttackActionOptionSchema,
-]);
-const MechanicalStatBlockAttackActionOptionSchema =
-  StatBlockAttackActionOptionSchema;
+]) satisfies Schema.Codec<SupportedAttackActionOption, unknown>;
+
+const MechanicalStatBlockAttackActionOptionSchema = Schema.Struct({
+  kind: Schema.Literal("statBlockAttack"),
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+  attack: SelectedStatBlockAttackRollMechanicsSchema,
+  traitAttackRollModes: Schema.optionalKey(
+    Schema.NonEmptyArray(StatBlockTraitAttackRollModeSchema),
+  ),
+});
+
 const MechanicalCharacterWeaponAttackActionOptionSchema = Schema.Struct({
   kind: Schema.Literal("weapon"),
   weapon: CharacterWeaponAttackExecutionWeaponFactsSchema,
   weaponObjectId: BattleObjectId,
-  hasWeaponMastery: Schema.Boolean,
   ability: AbilitySchema,
   abilityModifier: AbilityModifier,
   attackBonus: Schema.optionalKey(AttackBonus),

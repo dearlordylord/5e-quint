@@ -56,6 +56,7 @@ import type {
   CharacterBattleCreatureInitWeaponAttack,
 } from "../battle-init.ts";
 import type { CharacterWeaponAttackActionOption } from "../battle-action-options.ts";
+import type { CharacterWeaponAttackExecutionWeapon } from "../character-weapon-execution-schema.ts";
 import {
   weaponMasteryIsSelectedForWeapon,
   type CharacterBattleWeaponMasterySelection,
@@ -163,7 +164,7 @@ function characterInitWeaponAttackExecutionRefs(
 ): Result.Result<
   {
     readonly weaponObjectId: BattleObjectId;
-    readonly hasWeaponMastery: boolean;
+    readonly weapon: CharacterWeaponAttackExecutionWeapon;
   },
   BattleStateInitLeafIssue
 > {
@@ -173,13 +174,28 @@ function characterInitWeaponAttackExecutionRefs(
   ) {
     return weaponLoadoutMismatchIssue(slot);
   }
-  return Result.succeed({
-    weaponObjectId: loadoutWeapon.itemId,
-    hasWeaponMastery: weaponMasteryIsSelectedForWeapon(
-      attack.weapon.weaponUnitId,
-      weaponMasteries,
-    ),
-  });
+  const masteryIsSelected = weaponMasteryIsSelectedForWeapon(
+    attack.weapon.weaponUnitId,
+    weaponMasteries,
+  );
+  if (masteryIsSelected && !("masteryProperty" in attack.weapon)) {
+    return battleStateInitIssue(
+      `Character battle init ${slot} weapon ${attack.weapon.weaponUnitId} has a selected mastery but no admitted mastery execution projection.`,
+    );
+  }
+  if (masteryIsSelected) {
+    return Result.succeed({
+      weaponObjectId: loadoutWeapon.itemId,
+      weapon: attack.weapon,
+    });
+  }
+  const weapon =
+    "masteryProperty" in attack.weapon
+      ? (({ masteryProperty: _property, ...withoutMastery }) => withoutMastery)(
+          attack.weapon,
+        )
+      : attack.weapon;
+  return Result.succeed({ weaponObjectId: loadoutWeapon.itemId, weapon });
 }
 
 function characterInitWeaponAttackWithExecutionRefs(
@@ -201,8 +217,8 @@ function characterInitWeaponAttackWithExecutionRefs(
   }
   return Result.succeed({
     ...attack,
+    weapon: refs.success.weapon,
     weaponObjectId: refs.success.weaponObjectId,
-    hasWeaponMastery: refs.success.hasWeaponMastery,
   });
 }
 

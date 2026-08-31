@@ -30,10 +30,19 @@ import {
   thresholdTierValueAtClassLevel,
 } from "./class-level-scaling.ts";
 import type { CharacterBuild } from "./types.ts";
+import { projectCharacterCreationClassFeatureFacts } from "./character-feature-projection.ts";
 
 export const DRUID_WILD_SHAPE_UNIT_ID = authoredUnitId("druid_wild_shape");
 
 const byKind = Match.discriminator("kind");
+
+type DruidWildShapeFeatureFacts = ReturnType<
+  typeof projectCharacterCreationClassFeatureFacts<DruidWildShapeFeatureRecord>
+>;
+type DruidWildShapeFeatureSource = {
+  readonly unitId: UnitRecord["id"];
+  readonly facts: DruidWildShapeFeatureFacts;
+};
 
 export type CharacterBuildDruidWildShapeFacts = {
   readonly unitId: UnitRecord["id"];
@@ -111,11 +120,11 @@ export function characterBuildDruidWildShapeFacts(input: {
   const druidLevel = classLevelForWildShapeFeature({
     build: input.build,
     unitLibrary: input.unitLibrary,
-    feature,
+    feature: feature.facts,
   });
   if (Result.isFailure(druidLevel)) return Result.fail(druidLevel.failure);
 
-  const knownFormRoster = wildShapeKnownFormRoster(feature);
+  const knownFormRoster = wildShapeKnownFormRoster(feature.facts);
   /* v8 ignore start -- @preserve -- Admission retains Wild Shape only after proving its Beast-form roster exists. */
   if (knownFormRoster === undefined) {
     return druidWildShapeFactsIssue(
@@ -123,7 +132,7 @@ export function characterBuildDruidWildShapeFacts(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  const useCountCap = feature.mechanics.resource.cap;
+  const useCountCap = feature.facts.mechanics.resource.cap;
   const maxChallengeRating = knownFormRoster.maxChallengeRating;
   const knownFormCount = classLevelChoiceCountAtLevel(
     knownFormRoster.knownForms,
@@ -141,13 +150,13 @@ export function characterBuildDruidWildShapeFacts(input: {
   }
   /* v8 ignore stop -- @preserve */
   return Result.succeed({
-    unitId: feature.id,
+    unitId: feature.unitId,
     useCount: {
       maximum: resourceCount(
         thresholdTierValueAtClassLevel(useCountCap, druidLevel.success),
       ),
       shortRestRefill: resourceCount(
-        feature.mechanics.resetCadence.shortRestRefill,
+        feature.facts.mechanics.resetCadence.shortRestRefill,
       ),
       longRestRefillsAll: true,
     },
@@ -176,17 +185,20 @@ function characterDruidWildShapeFeatureUnit(input: {
   readonly build: Pick<CharacterBuild, "progression" | "features">;
   readonly unitLibrary: UnitCatalog;
 }): Result.Result<
-  DruidWildShapeFeatureRecord | undefined,
+  DruidWildShapeFeatureSource | undefined,
   CharacterBuildDruidWildShapeFactsIssue
 > {
-  const matches: DruidWildShapeFeatureRecord[] = [];
+  const matches: DruidWildShapeFeatureSource[] = [];
   for (const unitId of characterBuildFeatureUnitIds(
     input.build,
     input.unitLibrary,
   )) {
     const unit = input.unitLibrary.getUnit(unitId);
     if (Option.isSome(unit) && isDruidWildShapeFeatureRecord(unit.value)) {
-      matches.push(unit.value);
+      matches.push({
+        unitId: unit.value.id,
+        facts: projectCharacterCreationClassFeatureFacts(unit.value),
+      });
     }
   }
   if (matches.length > 1) {
@@ -355,7 +367,7 @@ export function validateDruidWildShapeKnownFormRecords(input: {
 function classLevelForWildShapeFeature(input: {
   readonly build: Pick<CharacterBuild, "progression">;
   readonly unitLibrary: UnitCatalog;
-  readonly feature: DruidWildShapeFeatureRecord;
+  readonly feature: DruidWildShapeFeatureFacts;
 }): Result.Result<number, CharacterBuildDruidWildShapeFactsIssue> {
   for (const classUnitId of progressionClassUnitIds(input.build.progression)) {
     const classUnit = input.unitLibrary.getUnit(classUnitId);
@@ -375,7 +387,7 @@ function classLevelForWildShapeFeature(input: {
 }
 
 function wildShapeKnownFormRoster(
-  feature: DruidWildShapeFeatureRecord,
+  feature: DruidWildShapeFeatureFacts,
 ): DruidWildShapeKnownFormsRoster | undefined {
   return druidWildShapeKnownFormRosterFromPhase(feature.mechanics.phases[0]);
 }

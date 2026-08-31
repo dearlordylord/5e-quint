@@ -56,6 +56,16 @@ type UnreferencedStatBlockAttackDamageComponent =
       "componentRef"
     >;
 
+type SupportedStatBlockAdvantageBonusDamage =
+  | { readonly kind: "absent" }
+  | {
+      readonly kind: "present";
+      readonly component: UnreferencedStatBlockAttackDamageComponent & {
+        readonly componentRef: typeof statBlockAdvantageBonusDamageComponentRef;
+      };
+    }
+  | { readonly kind: "unsupported" };
+
 const selectedStatBlockAttackDamage =
   Brand.nominal<SelectedStatBlockAttackDamage>();
 
@@ -78,6 +88,28 @@ export function supportedStatBlockAttackDamage(
 export function supportedStatBlockAttackDamage(
   attack: CreatureAttackHitEffects,
 ): StatBlockAttackDamage | null {
+  const effects = supportedStatBlockAttackDamageEffects(attack);
+  if (effects === null) return null;
+  const baseComponents = referencedStatBlockBaseDamageComponents(effects);
+  if (baseComponents === null) return null;
+  const advantageBonus = supportedStatBlockAdvantageBonusDamage(
+    effects,
+    baseComponents[0].damageType,
+  );
+  return Match.value(advantageBonus).pipe(
+    Match.when({ kind: "absent" }, () => ({ baseComponents })),
+    Match.when({ kind: "present" }, ({ component }) => ({
+      baseComponents,
+      advantageBonus: component,
+    })),
+    Match.when({ kind: "unsupported" }, () => null),
+    Match.exhaustive,
+  );
+}
+
+function supportedStatBlockAttackDamageEffects(
+  attack: CreatureAttackHitEffects,
+): readonly SupportedStatBlockAttackDamageEffect[] | null {
   const effects: SupportedStatBlockAttackDamageEffect[] = [];
   for (const effect of attack.onHit) {
     const parsed = supportedStatBlockAttackDamageEffect(effect);
@@ -89,6 +121,12 @@ export function supportedStatBlockAttackDamage(
     }
     effects.push(parsed);
   }
+  return effects;
+}
+
+function referencedStatBlockBaseDamageComponents(
+  effects: readonly SupportedStatBlockAttackDamageEffect[],
+): ReadonlyNonEmptyArray<StatBlockAttackDamageComponent> | null {
   const unreferencedBaseComponents = nonEmpty(
     effects.flatMap((effect) =>
       effect.kind === "base" ? [effect.component] : [],
@@ -116,38 +154,34 @@ export function supportedStatBlockAttackDamage(
   if (baseComponents === null) {
     return null;
   }
+  return baseComponents;
+}
 
+function supportedStatBlockAdvantageBonusDamage(
+  effects: readonly SupportedStatBlockAttackDamageEffect[],
+  baseDamageType: StatBlockAttackDamageComponent["damageType"],
+): SupportedStatBlockAdvantageBonusDamage {
   const advantageBonuses = effects.flatMap((effect) =>
     effect.kind === "advantageBonus" ? [effect.component] : [],
   );
   if (advantageBonuses.length > 1) {
-    return null;
+    return { kind: "unsupported" };
   }
   const unreferencedAdvantageBonus = advantageBonuses[0];
-  const advantageBonus =
-    unreferencedAdvantageBonus === undefined
-      ? undefined
-      : withStatBlockDamageComponentRef(
-          unreferencedAdvantageBonus,
-          statBlockAdvantageBonusDamageComponentRef,
-        );
-  if (
-    advantageBonus !== undefined &&
-    advantageBonus.damageType !== baseComponents[0].damageType
-  ) {
-    return null;
-  }
+  if (unreferencedAdvantageBonus === undefined) return { kind: "absent" };
+  const advantageBonus = withStatBlockDamageComponentRef(
+    unreferencedAdvantageBonus,
+    statBlockAdvantageBonusDamageComponentRef,
+  );
+  if (advantageBonus.damageType !== baseDamageType)
+    return { kind: "unsupported" };
   const advantageBonusIndex = effects.findIndex(
     (effect) => effect.kind === "advantageBonus",
   );
   if (advantageBonusIndex > 0 && advantageBonusIndex < effects.length - 1) {
-    return null;
+    return { kind: "unsupported" };
   }
-
-  return {
-    baseComponents,
-    ...optionalProperty("advantageBonus", advantageBonus),
-  };
+  return { kind: "present", component: advantageBonus };
 }
 
 function supportedStatBlockAttackDamageEffect(
@@ -389,10 +423,14 @@ export function selectedStatBlockAttackDamageHasCanonicalComponentRefs(
   ]);
 }
 
-function withStatBlockDamageComponentRef(
+function withStatBlockDamageComponentRef<
+  ComponentRef extends StatBlockAttackDamageComponentRef,
+>(
   component: UnreferencedStatBlockAttackDamageComponent,
-  componentRef: StatBlockAttackDamageComponentRef,
-): StatBlockAttackDamageComponent {
+  componentRef: ComponentRef,
+): UnreferencedStatBlockAttackDamageComponent & {
+  readonly componentRef: ComponentRef;
+} {
   return { ...component, componentRef };
 }
 

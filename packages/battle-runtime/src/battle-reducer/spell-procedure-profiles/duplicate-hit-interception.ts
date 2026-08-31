@@ -207,9 +207,9 @@ const DuplicateHitInterceptionInvocationSchema = spellProcedureExecutionSchema(
       ...BattleEffectOccurrenceTemplateSchemaFields,
       kind: Schema.Literal("duplicateHitInterception"),
       sourceCombatantId: CombatantId,
-      remainingDuplicates: Schema.Literal(
+      remainingDuplicates: Schema.Literals([
         DUPLICATE_HIT_INTERCEPTION_INITIAL_DUPLICATES,
-      ),
+      ]),
       expiresAt: DurationBattleActiveEffectExpirationSchema,
     }),
   }),

@@ -9,7 +9,7 @@
   },
   "id": "weapon_greatclub",
   "kind": "weapon",
-  "mastery": "push",
+  "masteryUnitId": "mastery_push",
   "name": "Greatclub",
   "properties": [
     {

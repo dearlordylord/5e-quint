@@ -1,13 +1,19 @@
-import { Option } from "effect";
+import { Option, Result } from "effect";
 import { UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
 import type {
+  MasteryRecord,
   SpellcastingClassRecord,
   Provenance,
   SrdProvenance,
   SrdUnitRecord,
   StartingEquipmentChoice,
   UnitRecord,
+  WeaponRecord,
 } from "./types.ts";
+import {
+  unitMechanicsPath,
+  type UnitMechanicsPath,
+} from "./mechanics-graph-path.ts";
 
 export type Srd521CollectionProvenance = Pick<SrdProvenance, "kind">;
 
@@ -28,6 +34,97 @@ export type UnitCatalog = {
   readonly listUnits: () => readonly UnitRecord[];
   readonly requireUnit: (id: string) => UnitRecord;
 };
+
+type NonMasteryUnitRecord = Exclude<UnitRecord, MasteryRecord>;
+
+type WeaponMasteryReferenceIssueFields = {
+  readonly root: { readonly kind: "unit"; readonly id: UnitId };
+  readonly mechanicsPath: UnitMechanicsPath;
+  readonly fieldPath: "masteryUnitId";
+  readonly masteryUnitId: UnitId;
+};
+
+export type WeaponMasteryReferenceIssue =
+  | (WeaponMasteryReferenceIssueFields & {
+      readonly tag: "missing";
+    })
+  | (WeaponMasteryReferenceIssueFields & {
+      readonly tag: "wrongKind";
+      readonly actualKind: NonMasteryUnitRecord["kind"];
+    });
+
+export type WeaponMasteryReferenceGraph = {
+  readonly resolved: readonly WeaponMasteryReferenceResolution[];
+  readonly issues: readonly WeaponMasteryReferenceIssue[];
+};
+
+export type WeaponMasteryReferenceResolution = {
+  readonly weapon: WeaponRecord;
+  readonly mastery: MasteryRecord;
+};
+
+const WEAPON_MASTERY_REFERENCE_MECHANICS_PATH = unitMechanicsPath([
+  { kind: "singleton", role: "recordMechanics" },
+  { kind: "singleton", role: "reference" },
+]);
+
+function weaponMasteryReferenceIssueFields(
+  weapon: WeaponRecord,
+): WeaponMasteryReferenceIssueFields {
+  return {
+    root: { kind: "unit", id: weapon.id },
+    mechanicsPath: WEAPON_MASTERY_REFERENCE_MECHANICS_PATH,
+    fieldPath: "masteryUnitId",
+    masteryUnitId: weapon.masteryUnitId,
+  };
+}
+
+export function resolveWeaponMasteryReference(
+  weapon: WeaponRecord,
+  unitCatalog: UnitCatalog,
+): Result.Result<
+  WeaponMasteryReferenceResolution,
+  WeaponMasteryReferenceIssue
+> {
+  const referenced = unitCatalog.getUnit(weapon.masteryUnitId);
+  if (Option.isNone(referenced)) {
+    return Result.fail({
+      tag: "missing",
+      ...weaponMasteryReferenceIssueFields(weapon),
+    });
+  }
+  return referenced.value.kind === "mastery"
+    ? Result.succeed({ weapon, mastery: referenced.value })
+    : Result.fail({
+        tag: "wrongKind",
+        ...weaponMasteryReferenceIssueFields(weapon),
+        actualKind: referenced.value.kind,
+      });
+}
+
+export function inspectWeaponMasteryReferenceGraph(input: {
+  readonly weaponRoots: readonly WeaponRecord[];
+  readonly unitCatalog: UnitCatalog;
+}): WeaponMasteryReferenceGraph {
+  const resolutions = input.weaponRoots.map((weapon) => ({
+    weapon,
+    result: resolveWeaponMasteryReference(weapon, input.unitCatalog),
+  }));
+  return {
+    resolved: resolutions.flatMap(({ result }) =>
+      Result.match(result, {
+        onFailure: () => [],
+        onSuccess: (resolution) => [resolution],
+      }),
+    ),
+    issues: resolutions.flatMap(({ result }) =>
+      Result.match(result, {
+        onFailure: (issue) => [issue],
+        onSuccess: () => [],
+      }),
+    ),
+  };
+}
 
 export type AuthoredUnitReferenceResolution = {
   readonly authoredReference: string;

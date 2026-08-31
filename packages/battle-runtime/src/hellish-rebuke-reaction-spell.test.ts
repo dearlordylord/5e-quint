@@ -476,6 +476,7 @@ describe("Hellish Rebuke Reaction spell", () => {
     }
     const delayedDamageAmount = damageAmount(1);
     const afterDelayedDamage = applyBattleHitPointDamage({
+      saveGatedConditionDamageRepeatSave: { kind: "noRepeatSave" },
       state: damagerTurn.state,
       target: requireCombatant(damagerTurn.state, spellCasterId),
       damageAmount: delayedDamageAmount,

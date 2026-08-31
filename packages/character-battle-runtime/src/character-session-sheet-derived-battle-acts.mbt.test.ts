@@ -62,7 +62,6 @@ import { battleProcedureExecutionRefForHole } from "./sdk-integration.test-suppo
 
 import { authoredStatBlockBattleInit } from "./ammunition-stock.test-support.ts";
 import { requireResultSuccess as expectSuccess } from "./result.test-support.ts";
-
 type SheetDerivedOutcome =
   | "init"
   | "missing-wielded-weapon-rejected"
